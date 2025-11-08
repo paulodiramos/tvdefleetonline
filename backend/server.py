@@ -642,7 +642,7 @@ async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_
 
 @api_router.post("/vehicles", response_model=Vehicle)
 async def create_vehicle(vehicle_data: VehicleCreate, current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTOR, UserRole.PARCEIRO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle_dict = vehicle_data.model_dump()
