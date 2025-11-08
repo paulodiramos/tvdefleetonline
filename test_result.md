@@ -101,3 +101,191 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: |
+  TVDEFleet.com - Sistema de gestão de frota com 3 fases de implementação:
+  
+  FASE 1: Restrições de Permissão para Parceiros
+  - Parceiros não podem criar receitas ou despesas
+  - Apenas visualizar e confirmar pagamentos
+  
+  FASE 2: Sistema de Upload de Arquivos
+  - Upload de documentos de motoristas
+  - Upload de comprovantes de pagamento
+  - Conversão automática de imagens para PDF
+  - Armazenamento em disco persistente
+  
+  FASE 3: Sistema de Alertas Automáticos
+  - Alertas para vencimento de seguros
+  - Alertas para vencimento de inspeções
+  - Alertas para vencimento de licenças TVDE
+  - Alertas para manutenção baseada em KM
+  - Verificação automática a cada 6 horas
+
+backend:
+  - task: "Restrição de permissões - Parceiros não podem criar receitas"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Adicionada verificação de role==PARCEIRO nos endpoints POST /expenses e POST /revenues. Retorna 403 se parceiro tentar criar."
+
+  - task: "Restrição de permissões - Parceiros não podem criar despesas"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Adicionada verificação de role==PARCEIRO no endpoint POST /expenses. Retorna 403 se parceiro tentar criar."
+
+  - task: "Sistema de upload de arquivos com conversão para PDF"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Implementado processo completo: função process_uploaded_file() que salva arquivo original e converte imagens para PDF usando Pillow e ReportLab. Criados diretórios /app/backend/uploads/motoristas e /app/backend/uploads/pagamentos."
+
+  - task: "Upload de documentos de motorista"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Atualizado endpoint POST /motoristas/{motorista_id}/upload-document para usar novo sistema. Salva arquivos em disco e converte imagens para PDF automaticamente."
+
+  - task: "Upload de documentos de pagamento"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Atualizado endpoint POST /pagamentos/{pagamento_id}/upload-documento para usar novo sistema. Salva arquivos em disco e converte imagens para PDF."
+
+  - task: "Endpoint para servir arquivos"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Criado endpoint GET /files/{folder}/{filename} para servir arquivos de uploads protegidos por autenticação."
+
+  - task: "Sistema de alertas - Modelos e função de verificação"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Criados modelos Alerta, AlertaCreate. Implementada função check_and_create_alerts() que verifica veículos e motoristas e cria alertas para documentos vencendo."
+
+  - task: "Endpoints de alertas"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Criados endpoints: GET /alertas (listar), POST /alertas/verificar (trigger manual), PUT /alertas/{id}/resolver, PUT /alertas/{id}/ignorar, GET /alertas/dashboard-stats"
+
+  - task: "Verificação automática de alertas"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Implementado background task que executa check_and_create_alerts() a cada 6 horas. Iniciado no startup do app. Logs confirmam execução bem-sucedida."
+
+frontend:
+  - task: "Atualização necessária - Integração com sistema de alertas"
+    implemented: false
+    working: "NA"
+    file: "frontend/src/pages/Dashboard.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Frontend precisa ser atualizado para exibir alertas no dashboard. Endpoint backend já está pronto."
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Restrição de permissões - Parceiros não podem criar receitas"
+    - "Restrição de permissões - Parceiros não podem criar despesas"
+    - "Sistema de upload de arquivos com conversão para PDF"
+    - "Upload de documentos de motorista"
+    - "Upload de documentos de pagamento"
+    - "Endpoint para servir arquivos"
+    - "Sistema de alertas - Modelos e função de verificação"
+    - "Endpoints de alertas"
+    - "Verificação automática de alertas"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: |
+        Implementadas as 3 fases solicitadas:
+        
+        FASE 1 COMPLETA: Adicionadas verificações de permissão nos endpoints POST /expenses e POST /revenues.
+        Parceiros agora recebem 403 Forbidden ao tentar criar receitas ou despesas.
+        
+        FASE 2 COMPLETA: Sistema de upload de arquivos implementado com:
+        - Funções convert_image_to_pdf() e process_uploaded_file()
+        - Bibliotecas Pillow e ReportLab instaladas
+        - Diretórios de upload criados em /app/backend/uploads/
+        - Endpoints de upload atualizados para motoristas e pagamentos
+        - Endpoint GET /files/ para servir arquivos
+        
+        FASE 3 COMPLETA: Sistema de alertas automáticos implementado com:
+        - Modelos Alerta e AlertaCreate
+        - Função check_and_create_alerts() que verifica vencimentos
+        - 5 endpoints de gestão de alertas
+        - Background task executando verificações a cada 6 horas
+        - Verificação inicial no startup do app
+        
+        Backend testado e funcionando. Logs mostram sistema de alertas ativo.
+        Pronto para testes backend completos.
