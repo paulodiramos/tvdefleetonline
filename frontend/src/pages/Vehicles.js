@@ -8,30 +8,68 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, Car, Edit, Trash2, Shield, Wrench, Calendar } from 'lucide-react';
+import { Plus, Car, Edit, Trash2, AlertCircle, Calendar, Fuel } from 'lucide-react';
 
 const Vehicles = ({ user, onLogout }) => {
   const [vehicles, setVehicles] = useState([]);
+  const [parceiros, setParceiros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newVehicle, setNewVehicle] = useState({
     marca: '',
     modelo: '',
     matricula: '',
-    ano: new Date().getFullYear(),
+    data_matricula: '',
+    validade_matricula: '',
     cor: '',
-    tipo: 'sedan',
-    disponibilidade: {
-      status: 'disponivel',
-      comissao_full_time: 0,
-      comissao_part_time: 0
-    }
+    combustivel: 'gasolina',
+    caixa: 'manual',
+    lugares: 5,
+    parceiro_id: '',
+    tipo_contrato: {
+      tipo: 'aluguer',
+      valor_aluguer: 0,
+      comissao_parceiro: 0,
+      comissao_motorista: 0,
+      inclui_combustivel: false,
+      inclui_via_verde: false,
+      regime: 'full_time',
+      horarios_disponiveis: ''
+    },
+    categorias_uber: {
+      uberx: false,
+      share: false,
+      electric: false,
+      black: false,
+      comfort: false,
+      xl: false,
+      xxl: false,
+      pet: false,
+      package: false
+    },
+    categorias_bolt: {
+      economy: false,
+      comfort: false,
+      executive: false,
+      xl: false,
+      green: false,
+      xxl: false,
+      motorista_privado: false,
+      pet: false
+    },
+    via_verde_disponivel: false,
+    cartao_frota_disponivel: false
   });
 
   useEffect(() => {
     fetchVehicles();
+    if (user.role === 'admin' || user.role === 'gestao') {
+      fetchParceiros();
+    }
   }, []);
 
   const fetchVehicles = async () => {
@@ -45,6 +83,15 @@ const Vehicles = ({ user, onLogout }) => {
     }
   };
 
+  const fetchParceiros = async () => {
+    try {
+      const response = await axios.get(`${API}/parceiros`);
+      setParceiros(response.data);
+    } catch (error) {
+      console.error('Erro ao carregar parceiros');
+    }
+  };
+
   const handleAddVehicle = async (e) => {
     e.preventDefault();
     try {
@@ -52,22 +99,58 @@ const Vehicles = ({ user, onLogout }) => {
       toast.success('Veículo adicionado com sucesso!');
       setShowAddDialog(false);
       fetchVehicles();
-      setNewVehicle({
-        marca: '',
-        modelo: '',
-        matricula: '',
-        ano: new Date().getFullYear(),
-        cor: '',
-        tipo: 'sedan',
-        disponibilidade: {
-          status: 'disponivel',
-          comissao_full_time: 0,
-          comissao_part_time: 0
-        }
-      });
+      resetForm();
     } catch (error) {
-      toast.error('Erro ao adicionar veículo');
+      toast.error(error.response?.data?.detail || 'Erro ao adicionar veículo');
     }
+  };
+
+  const resetForm = () => {
+    setNewVehicle({
+      marca: '',
+      modelo: '',
+      matricula: '',
+      data_matricula: '',
+      validade_matricula: '',
+      cor: '',
+      combustivel: 'gasolina',
+      caixa: 'manual',
+      lugares: 5,
+      parceiro_id: '',
+      tipo_contrato: {
+        tipo: 'aluguer',
+        valor_aluguer: 0,
+        comissao_parceiro: 0,
+        comissao_motorista: 0,
+        inclui_combustivel: false,
+        inclui_via_verde: false,
+        regime: 'full_time',
+        horarios_disponiveis: ''
+      },
+      categorias_uber: {
+        uberx: false,
+        share: false,
+        electric: false,
+        black: false,
+        comfort: false,
+        xl: false,
+        xxl: false,
+        pet: false,
+        package: false
+      },
+      categorias_bolt: {
+        economy: false,
+        comfort: false,
+        executive: false,
+        xl: false,
+        green: false,
+        xxl: false,
+        motorista_privado: false,
+        pet: false
+      },
+      via_verde_disponivel: false,
+      cartao_frota_disponivel: false
+    });
   };
 
   const handleDeleteVehicle = async (vehicleId) => {
@@ -82,17 +165,9 @@ const Vehicles = ({ user, onLogout }) => {
     }
   };
 
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      disponivel: { label: 'Disponível', color: 'bg-emerald-100 text-emerald-700' },
-      atribuido: { label: 'Atribuído', color: 'bg-blue-100 text-blue-700' },
-      manutencao: { label: 'Manutenção', color: 'bg-amber-100 text-amber-700' },
-      seguro: { label: 'Seguro', color: 'bg-red-100 text-red-700' },
-      sinistro: { label: 'Sinistro', color: 'bg-red-100 text-red-700' },
-      venda: { label: 'Venda', color: 'bg-slate-100 text-slate-700' }
-    };
-    const config = statusConfig[status] || statusConfig.disponivel;
-    return <Badge className={config.color}>{config.label}</Badge>;
+  const getContratoLabel = (tipo) => {
+    const labels = { aluguer: 'Aluguer', comissao: 'Comissão', motorista_privado: 'Privado' };
+    return labels[tipo] || tipo;
   };
 
   if (loading) {
@@ -111,9 +186,9 @@ const Vehicles = ({ user, onLogout }) => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-4xl font-bold text-slate-800 mb-2">Veículos</h1>
-            <p className="text-slate-600">Gerir a frota de veículos</p>
+            <p className="text-slate-600">Gerir frota de veículos</p>
           </div>
-          {(user.role === 'admin' || user.role === 'gestor_associado' || user.role === 'parceiro_associado') && (
+          {(user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro' || user.role === 'operacional') && (
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
               <DialogTrigger asChild>
                 <Button className="bg-emerald-600 hover:bg-emerald-700" data-testid="add-vehicle-button">
@@ -121,73 +196,230 @@ const Vehicles = ({ user, onLogout }) => {
                   Adicionar Veículo
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" data-testid="add-vehicle-dialog">
+              <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" data-testid="add-vehicle-dialog">
                 <DialogHeader>
                   <DialogTitle>Adicionar Novo Veículo</DialogTitle>
                 </DialogHeader>
-                <form onSubmit={handleAddVehicle} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="marca">Marca</Label>
-                      <Input id="marca" value={newVehicle.marca} onChange={(e) => setNewVehicle({...newVehicle, marca: e.target.value})} required data-testid="vehicle-marca-input" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="modelo">Modelo</Label>
-                      <Input id="modelo" value={newVehicle.modelo} onChange={(e) => setNewVehicle({...newVehicle, modelo: e.target.value})} required data-testid="vehicle-modelo-input" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="matricula">Matrícula</Label>
-                      <Input id="matricula" value={newVehicle.matricula} onChange={(e) => setNewVehicle({...newVehicle, matricula: e.target.value})} required data-testid="vehicle-matricula-input" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="ano">Ano</Label>
-                      <Input id="ano" type="number" value={newVehicle.ano} onChange={(e) => setNewVehicle({...newVehicle, ano: parseInt(e.target.value)})} required data-testid="vehicle-ano-input" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cor">Cor</Label>
-                      <Input id="cor" value={newVehicle.cor} onChange={(e) => setNewVehicle({...newVehicle, cor: e.target.value})} required data-testid="vehicle-cor-input" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="tipo">Tipo</Label>
-                      <Select value={newVehicle.tipo} onValueChange={(value) => setNewVehicle({...newVehicle, tipo: value})}>
-                        <SelectTrigger data-testid="vehicle-tipo-select">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="sedan">Sedan</SelectItem>
-                          <SelectItem value="suv">SUV</SelectItem>
-                          <SelectItem value="van">Van</SelectItem>
-                          <SelectItem value="eletrico">Elétrico</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Status de Disponibilidade</Label>
-                    <Select 
-                      value={newVehicle.disponibilidade.status} 
-                      onValueChange={(value) => setNewVehicle({...newVehicle, disponibilidade: {...newVehicle.disponibilidade, status: value}})}
-                    >
-                      <SelectTrigger data-testid="vehicle-status-select">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="disponivel">Disponível</SelectItem>
-                        <SelectItem value="atribuido">Atribuído</SelectItem>
-                        <SelectItem value="manutencao">Manutenção</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="comissao_full">Comissão Full Time (€)</Label>
-                      <Input id="comissao_full" type="number" step="0.01" value={newVehicle.disponibilidade.comissao_full_time} onChange={(e) => setNewVehicle({...newVehicle, disponibilidade: {...newVehicle.disponibilidade, comissao_full_time: parseFloat(e.target.value)}})} data-testid="vehicle-comissao-full-input" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="comissao_part">Comissão Part Time (€)</Label>
-                      <Input id="comissao_part" type="number" step="0.01" value={newVehicle.disponibilidade.comissao_part_time} onChange={(e) => setNewVehicle({...newVehicle, disponibilidade: {...newVehicle.disponibilidade, comissao_part_time: parseFloat(e.target.value)}})} data-testid="vehicle-comissao-part-input" />
-                    </div>
-                  </div>
+                <form onSubmit={handleAddVehicle} className="space-y-6">
+                  <Tabs defaultValue="basico" className="w-full">
+                    <TabsList className="grid w-full grid-cols-4">
+                      <TabsTrigger value="basico">Dados Básicos</TabsTrigger>
+                      <TabsTrigger value="contrato">Contrato</TabsTrigger>
+                      <TabsTrigger value="uber">Uber</TabsTrigger>
+                      <TabsTrigger value="bolt">Bolt</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="basico" className="space-y-4 mt-4">
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {(user.role === 'admin' || user.role === 'gestao') && (
+                          <div className="space-y-2 col-span-2 md:col-span-3">
+                            <Label>Parceiro *</Label>
+                            <Select value={newVehicle.parceiro_id} onValueChange={(value) => setNewVehicle({...newVehicle, parceiro_id: value})} required>
+                              <SelectTrigger data-testid="vehicle-parceiro-select">
+                                <SelectValue placeholder="Selecionar parceiro" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {parceiros.map(p => (
+                                  <SelectItem key={p.id} value={p.id}>{p.name} {p.empresa && `- ${p.empresa}`}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                        <div className="space-y-2">
+                          <Label>Marca *</Label>
+                          <Input value={newVehicle.marca} onChange={(e) => setNewVehicle({...newVehicle, marca: e.target.value})} required data-testid="vehicle-marca-input" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Modelo *</Label>
+                          <Input value={newVehicle.modelo} onChange={(e) => setNewVehicle({...newVehicle, modelo: e.target.value})} required data-testid="vehicle-modelo-input" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Matrícula *</Label>
+                          <Input value={newVehicle.matricula} onChange={(e) => setNewVehicle({...newVehicle, matricula: e.target.value.toUpperCase()})} required placeholder="AB-12-CD" data-testid="vehicle-matricula-input" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Data Matrícula *</Label>
+                          <Input type="date" value={newVehicle.data_matricula} onChange={(e) => setNewVehicle({...newVehicle, data_matricula: e.target.value})} required data-testid="vehicle-data-matricula-input" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Validade Matrícula *</Label>
+                          <Input type="date" value={newVehicle.validade_matricula} onChange={(e) => setNewVehicle({...newVehicle, validade_matricula: e.target.value})} required data-testid="vehicle-validade-input" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Cor *</Label>
+                          <Input value={newVehicle.cor} onChange={(e) => setNewVehicle({...newVehicle, cor: e.target.value})} required data-testid="vehicle-cor-input" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Combustível *</Label>
+                          <Select value={newVehicle.combustivel} onValueChange={(value) => setNewVehicle({...newVehicle, combustivel: value})}>
+                            <SelectTrigger data-testid="vehicle-combustivel-select">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="gasolina">Gasolina</SelectItem>
+                              <SelectItem value="diesel">Diesel</SelectItem>
+                              <SelectItem value="eletrico">Elétrico</SelectItem>
+                              <SelectItem value="hibrido">Híbrido</SelectItem>
+                              <SelectItem value="gnv">GNV</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Caixa *</Label>
+                          <Select value={newVehicle.caixa} onValueChange={(value) => setNewVehicle({...newVehicle, caixa: value})}>
+                            <SelectTrigger data-testid="vehicle-caixa-select">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="manual">Manual</SelectItem>
+                              <SelectItem value="automatica">Automática</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Lugares *</Label>
+                          <Input type="number" min="2" max="9" value={newVehicle.lugares} onChange={(e) => setNewVehicle({...newVehicle, lugares: parseInt(e.target.value)})} required data-testid="vehicle-lugares-input" />
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-6 pt-4 border-t">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="via_verde" 
+                            checked={newVehicle.via_verde_disponivel}
+                            onCheckedChange={(checked) => setNewVehicle({...newVehicle, via_verde_disponivel: checked})}
+                            data-testid="vehicle-viaverde-checkbox"
+                          />
+                          <Label htmlFor="via_verde" className="cursor-pointer">Via Verde Disponível</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="cartao_frota" 
+                            checked={newVehicle.cartao_frota_disponivel}
+                            onCheckedChange={(checked) => setNewVehicle({...newVehicle, cartao_frota_disponivel: checked})}
+                            data-testid="vehicle-cartaofrota-checkbox"
+                          />
+                          <Label htmlFor="cartao_frota" className="cursor-pointer">Cartão Frota Disponível</Label>
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="contrato" className="space-y-4 mt-4">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Tipo de Contrato *</Label>
+                          <Select value={newVehicle.tipo_contrato.tipo} onValueChange={(value) => setNewVehicle({...newVehicle, tipo_contrato: {...newVehicle.tipo_contrato, tipo: value}})}>
+                            <SelectTrigger data-testid="vehicle-contrato-tipo-select">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="aluguer">Aluguer</SelectItem>
+                              <SelectItem value="comissao">Comissão</SelectItem>
+                              <SelectItem value="motorista_privado">Motorista Privado</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        {newVehicle.tipo_contrato.tipo === 'aluguer' && (
+                          <div className="space-y-2">
+                            <Label>Valor Aluguer (€/dia) *</Label>
+                            <Input type="number" step="0.01" value={newVehicle.tipo_contrato.valor_aluguer} onChange={(e) => setNewVehicle({...newVehicle, tipo_contrato: {...newVehicle.tipo_contrato, valor_aluguer: parseFloat(e.target.value)}})} required data-testid="vehicle-valor-aluguer-input" />
+                          </div>
+                        )}
+
+                        {newVehicle.tipo_contrato.tipo === 'comissao' && (
+                          <>
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2">
+                                <Label>Comissão Parceiro (%) *</Label>
+                                <Input type="number" step="0.01" value={newVehicle.tipo_contrato.comissao_parceiro} onChange={(e) => setNewVehicle({...newVehicle, tipo_contrato: {...newVehicle.tipo_contrato, comissao_parceiro: parseFloat(e.target.value)}})} required data-testid="vehicle-comissao-parceiro-input" />
+                              </div>
+                              <div className="space-y-2">
+                                <Label>Comissão Motorista (%) *</Label>
+                                <Input type="number" step="0.01" value={newVehicle.tipo_contrato.comissao_motorista} onChange={(e) => setNewVehicle({...newVehicle, tipo_contrato: {...newVehicle.tipo_contrato, comissao_motorista: parseFloat(e.target.value)}})} required data-testid="vehicle-comissao-motorista-input" />
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-6">
+                              <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id="inclui_combustivel" 
+                                  checked={newVehicle.tipo_contrato.inclui_combustivel}
+                                  onCheckedChange={(checked) => setNewVehicle({...newVehicle, tipo_contrato: {...newVehicle.tipo_contrato, inclui_combustivel: checked}})}
+                                  data-testid="vehicle-inclui-combustivel-checkbox"
+                                />
+                                <Label htmlFor="inclui_combustivel" className="cursor-pointer">Inclui Combustível</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id="inclui_via_verde" 
+                                  checked={newVehicle.tipo_contrato.inclui_via_verde}
+                                  onCheckedChange={(checked) => setNewVehicle({...newVehicle, tipo_contrato: {...newVehicle.tipo_contrato, inclui_via_verde: checked}})}
+                                  data-testid="vehicle-inclui-viaverde-checkbox"
+                                />
+                                <Label htmlFor="inclui_via_verde" className="cursor-pointer">Inclui Via Verde</Label>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Regime *</Label>
+                              <Select value={newVehicle.tipo_contrato.regime} onValueChange={(value) => setNewVehicle({...newVehicle, tipo_contrato: {...newVehicle.tipo_contrato, regime: value}})}>
+                                <SelectTrigger data-testid="vehicle-regime-select">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="full_time">Full Time</SelectItem>
+                                  <SelectItem value="part_time">Part Time</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            {newVehicle.tipo_contrato.regime === 'part_time' && (
+                              <div className="space-y-2">
+                                <Label>Horários Disponíveis</Label>
+                                <Input value={newVehicle.tipo_contrato.horarios_disponiveis} onChange={(e) => setNewVehicle({...newVehicle, tipo_contrato: {...newVehicle.tipo_contrato, horarios_disponiveis: e.target.value}})} placeholder="Ex: 09:00-18:00" data-testid="vehicle-horarios-input" />
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="uber" className="space-y-4 mt-4">
+                      <Label className="text-base font-semibold">Categorias Uber</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {Object.keys(newVehicle.categorias_uber).map(cat => (
+                          <div key={cat} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`uber_${cat}`}
+                              checked={newVehicle.categorias_uber[cat]}
+                              onCheckedChange={(checked) => setNewVehicle({...newVehicle, categorias_uber: {...newVehicle.categorias_uber, [cat]: checked}})}
+                              data-testid={`vehicle-uber-${cat}-checkbox`}
+                            />
+                            <Label htmlFor={`uber_${cat}`} className="cursor-pointer capitalize">
+                              {cat === 'uberx' ? 'UberX' : cat === 'xxl' ? 'XXL' : cat === 'xl' ? 'XL' : cat.charAt(0).toUpperCase() + cat.slice(1)}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="bolt" className="space-y-4 mt-4">
+                      <Label className="text-base font-semibold">Categorias Bolt</Label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {Object.keys(newVehicle.categorias_bolt).map(cat => (
+                          <div key={cat} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`bolt_${cat}`}
+                              checked={newVehicle.categorias_bolt[cat]}
+                              onCheckedChange={(checked) => setNewVehicle({...newVehicle, categorias_bolt: {...newVehicle.categorias_bolt, [cat]: checked}})}
+                              data-testid={`vehicle-bolt-${cat}-checkbox`}
+                            />
+                            <Label htmlFor={`bolt_${cat}`} className="cursor-pointer capitalize">
+                              {cat === 'xxl' ? 'XXL' : cat === 'xl' ? 'XL' : cat.replace('_', ' ').split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
                   <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" data-testid="submit-vehicle-button">
                     Adicionar Veículo
                   </Button>
@@ -210,35 +442,54 @@ const Vehicles = ({ user, onLogout }) => {
               <Card key={vehicle.id} className="card-hover" data-testid={`vehicle-card-${vehicle.id}`}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
-                    <div>
+                    <div className="flex-1">
                       <CardTitle className="text-lg">{vehicle.marca} {vehicle.modelo}</CardTitle>
-                      <p className="text-sm text-slate-500 mt-1">{vehicle.matricula}</p>
+                      <p className="text-sm text-slate-500 mt-1 font-mono">{vehicle.matricula}</p>
+                      <div className="flex items-center space-x-2 mt-2">
+                        <Badge className="bg-blue-100 text-blue-700">
+                          {getContratoLabel(vehicle.tipo_contrato.tipo)}
+                        </Badge>
+                        {vehicle.alerta_validade && (
+                          <Badge className="bg-amber-100 text-amber-700">
+                            <AlertCircle className="w-3 h-3 mr-1" />
+                            Validade próxima
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     <Car className="w-8 h-8 text-emerald-600" />
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-600">Ano:</span>
-                    <span className="font-medium">{vehicle.ano}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-600">Cor:</span>
-                    <span className="font-medium">{vehicle.cor}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-slate-600">Status:</span>
-                    {getStatusBadge(vehicle.disponibilidade.status)}
-                  </div>
-                  {vehicle.seguro && (
-                    <div className="pt-3 border-t border-slate-200">
-                      <div className="flex items-center space-x-2 text-sm text-slate-600">
-                        <Shield className="w-4 h-4" />
-                        <span>Seguro: {vehicle.seguro.seguradora}</span>
+                <CardContent className="space-y-3">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Cor:</span>
+                      <span className="font-medium capitalize">{vehicle.cor}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-600">Combustível:</span>
+                      <div className="flex items-center space-x-1">
+                        <Fuel className="w-3 h-3 text-slate-500" />
+                        <span className="font-medium capitalize">{vehicle.combustivel}</span>
                       </div>
                     </div>
-                  )}
-                  {(user.role === 'admin' || user.role === 'gestor_associado') && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Caixa:</span>
+                      <span className="font-medium capitalize">{vehicle.caixa}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Lugares:</span>
+                      <span className="font-medium">{vehicle.lugares}</span>
+                    </div>
+                    <div className="flex items-center justify-between pt-2 border-t">
+                      <span className="text-slate-600">Validade:</span>
+                      <div className="flex items-center space-x-1">
+                        <Calendar className="w-3 h-3 text-slate-500" />
+                        <span className="font-medium text-xs">{new Date(vehicle.validade_matricula).toLocaleDateString('pt-PT')}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {(user.role === 'admin' || user.role === 'gestao') && (
                     <div className="flex space-x-2 pt-3 border-t border-slate-200">
                       <Button variant="outline" size="sm" className="flex-1" data-testid={`edit-vehicle-${vehicle.id}`}>
                         <Edit className="w-4 h-4 mr-1" />
