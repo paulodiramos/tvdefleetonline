@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Plus, TrendingUp, TrendingDown, DollarSign, Upload } from 'lucide-react';
+import { Plus, TrendingUp, TrendingDown, DollarSign, Upload, FileSpreadsheet } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Financials = ({ user, onLogout }) => {
   const [vehicles, setVehicles] = useState([]);
