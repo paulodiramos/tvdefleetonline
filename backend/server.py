@@ -437,12 +437,21 @@ async def register_motorista(motorista_data: MotoristaCreate):
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
     
+    # Generate provisional password if needed
+    if motorista_data.senha_provisoria or not motorista_data.password:
+        provisional_pass = motorista_data.phone.replace(" ", "")[-9:]
+        password_to_hash = provisional_pass
+        senha_provisoria = True
+    else:
+        password_to_hash = motorista_data.password
+        senha_provisoria = False
+    
     user_dict = {
         "id": str(uuid.uuid4()),
         "email": motorista_data.email,
         "name": motorista_data.name,
         "role": UserRole.MOTORISTA,
-        "password": hash_password(motorista_data.password),
+        "password": hash_password(password_to_hash),
         "phone": motorista_data.phone,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "approved": False
@@ -450,10 +459,20 @@ async def register_motorista(motorista_data: MotoristaCreate):
     await db.users.insert_one(user_dict)
     
     motorista_dict = motorista_data.model_dump()
-    motorista_dict.pop("password")
+    motorista_dict.pop("password", None)
     motorista_dict["id"] = user_dict["id"]
-    motorista_dict["documents"] = {"license_photo": None, "cv_file": None, "profile_photo": None, "additional_docs": []}
+    motorista_dict["documents"] = {
+        "license_photo": None, 
+        "cv_file": None, 
+        "profile_photo": None,
+        "documento_identificacao": None,
+        "licenca_tvde": None,
+        "registo_criminal": None,
+        "contrato": None,
+        "additional_docs": []
+    }
     motorista_dict["approved"] = False
+    motorista_dict["senha_provisoria"] = senha_provisoria
     motorista_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     
     await db.motoristas.insert_one(motorista_dict)
