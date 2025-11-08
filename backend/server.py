@@ -185,7 +185,8 @@ async def check_and_create_alerts():
                             "criado_em": datetime.now(timezone.utc).isoformat()
                         }
                         await db.alertas.insert_one(alert)
-            except:
+            except Exception as e:
+                logger.error(f"Error creating alert: {e}")
                 pass
         
         # Check insurance expiry
@@ -216,7 +217,8 @@ async def check_and_create_alerts():
                             "criado_em": datetime.now(timezone.utc).isoformat()
                         }
                         await db.alertas.insert_one(alert)
-            except:
+            except Exception as e:
+                logger.error(f"Error creating alert: {e}")
                 pass
         
         # Check next inspection
@@ -247,7 +249,8 @@ async def check_and_create_alerts():
                             "criado_em": datetime.now(timezone.utc).isoformat()
                         }
                         await db.alertas.insert_one(alert)
-            except:
+            except Exception as e:
+                logger.error(f"Error creating alert: {e}")
                 pass
         
         # Check maintenance (based on km)
@@ -315,7 +318,8 @@ async def check_and_create_alerts():
                             "criado_em": datetime.now(timezone.utc).isoformat()
                         }
                         await db.alertas.insert_one(alert)
-            except:
+            except Exception as e:
+                logger.error(f"Error creating alert: {e}")
                 pass
         
         # Check driver's license expiry
@@ -346,7 +350,8 @@ async def check_and_create_alerts():
                             "criado_em": datetime.now(timezone.utc).isoformat()
                         }
                         await db.alertas.insert_one(alert)
-            except:
+            except Exception as e:
+                logger.error(f"Error creating alert: {e}")
                 pass
 
 # ==================== MODELS ====================
