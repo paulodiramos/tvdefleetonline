@@ -16,8 +16,8 @@ const Layout = ({ user, onLogout, children }) => {
     { path: '/financials', icon: DollarSign, label: 'Financeiro' }
   ];
 
-  // Add Parceiros for admin and gestor
-  if (user.role === 'admin' || user.role === 'gestor_associado') {
+  // Add Parceiros for admin and gestao
+  if (user.role === 'admin' || user.role === 'gestao') {
     navItems.splice(2, 0, { path: '/parceiros', icon: Building, label: 'Parceiros' });
   }
 
