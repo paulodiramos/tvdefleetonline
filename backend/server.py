@@ -407,6 +407,7 @@ class Parceiro(BaseModel):
     validade_certidao_comercial: str
     gestor_associado_id: Optional[str] = None
     total_vehicles: int = 0
+    campos_customizados: Dict[str, Any] = {}  # Campos adicionais customizáveis
     created_at: datetime
     # Campos antigos mantidos como opcionais para compatibilidade
     name: Optional[str] = None
