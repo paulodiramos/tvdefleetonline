@@ -1534,7 +1534,8 @@ async def import_csv(file: UploadFile = File(...), import_type: str = Form(...),
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    content = await file.read()
+    # TODO: Implement CSV parsing and import logic
+    # content = await file.read()
     
     return {"message": f"CSV import for {import_type} will be processed", "filename": file.filename}
 
