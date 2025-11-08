@@ -2441,6 +2441,143 @@ async def cancel_subscription(
     
     return {"message": "Subscription cancelled successfully"}
 
+# ==================== CSV UPLOAD ENDPOINTS ====================
+
+@api_router.post("/operacional/upload-csv-uber")
+async def upload_csv_uber(
+    file: UploadFile = File(...),
+    motorista_id: str = Form(...),
+    periodo_inicio: str = Form(...),
+    periodo_fim: str = Form(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload Uber CSV earnings file"""
+    # Check feature access
+    if not await check_feature_access(current_user, "upload_csv_ganhos"):
+        raise HTTPException(
+            status_code=403,
+            detail="Upgrade para plano com acesso a upload de CSVs"
+        )
+    
+    # Read file content
+    file_content = await file.read()
+    
+    # Process CSV
+    result = await process_uber_csv(file_content, motorista_id, periodo_inicio, periodo_fim)
+    
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["error"])
+    
+    return result
+
+@api_router.post("/operacional/upload-csv-bolt")
+async def upload_csv_bolt(
+    file: UploadFile = File(...),
+    motorista_id: str = Form(...),
+    periodo_inicio: str = Form(...),
+    periodo_fim: str = Form(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload Bolt CSV earnings file"""
+    # Check feature access
+    if not await check_feature_access(current_user, "upload_csv_ganhos"):
+        raise HTTPException(
+            status_code=403,
+            detail="Upgrade para plano com acesso a upload de CSVs"
+        )
+    
+    # Read file content
+    file_content = await file.read()
+    
+    # Process CSV
+    result = await process_bolt_csv(file_content, motorista_id, periodo_inicio, periodo_fim)
+    
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["error"])
+    
+    return result
+
+@api_router.post("/operacional/upload-excel-combustivel")
+async def upload_excel_combustivel(
+    file: UploadFile = File(...),
+    motorista_id: str = Form(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload Prio/Combustível Excel file"""
+    # Check feature access (manual input is allowed in base plan)
+    if not await check_feature_access(current_user, "combustivel_manual"):
+        raise HTTPException(
+            status_code=403,
+            detail="Sem acesso a gestão de combustível"
+        )
+    
+    # Read file content
+    file_content = await file.read()
+    
+    # Process Excel
+    result = await process_prio_excel(file_content, motorista_id)
+    
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["error"])
+    
+    return result
+
+@api_router.get("/operacional/ganhos-motorista/{motorista_id}")
+async def get_ganhos_motorista(
+    motorista_id: str,
+    periodo_inicio: Optional[str] = None,
+    periodo_fim: Optional[str] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get motorista earnings from Uber and Bolt"""
+    query = {"motorista_id": motorista_id}
+    
+    if periodo_inicio and periodo_fim:
+        # Filter by period
+        query["periodo_inicio"] = {"$gte": periodo_inicio}
+        query["periodo_fim"] = {"$lte": periodo_fim}
+    
+    # Get Uber earnings
+    ganhos_uber = await db.ganhos_uber.find(query, {"_id": 0}).to_list(100)
+    total_uber = sum(g["total_pago"] for g in ganhos_uber)
+    
+    # Get Bolt earnings
+    ganhos_bolt = await db.ganhos_bolt.find(query, {"_id": 0}).to_list(100)
+    total_bolt = sum(g["ganhos_liquidos"] for g in ganhos_bolt)
+    
+    # Get fuel transactions
+    fuel_query = {"motorista_id": motorista_id}
+    if periodo_inicio and periodo_fim:
+        fuel_query["data_transacao"] = {"$gte": periodo_inicio, "$lte": periodo_fim}
+    
+    transacoes_combustivel = await db.transacoes_combustivel.find(fuel_query, {"_id": 0}).to_list(500)
+    total_combustivel = sum(t["total"] for t in transacoes_combustivel)
+    
+    return {
+        "motorista_id": motorista_id,
+        "periodo": {
+            "inicio": periodo_inicio,
+            "fim": periodo_fim
+        },
+        "uber": {
+            "registos": len(ganhos_uber),
+            "total": total_uber
+        },
+        "bolt": {
+            "registos": len(ganhos_bolt),
+            "total": total_bolt
+        },
+        "combustivel": {
+            "transacoes": len(transacoes_combustivel),
+            "total": total_combustivel
+        },
+        "resumo": {
+            "ganhos_totais": total_uber + total_bolt,
+            "despesas_combustivel": total_combustivel,
+            "liquido": (total_uber + total_bolt) - total_combustivel
+        }
+    }
+
 # ==================== ALERTAS ENDPOINTS ====================
 
 @api_router.get("/alertas", response_model=List[Alerta])
