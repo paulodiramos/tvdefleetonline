@@ -39,6 +39,11 @@ const Layout = ({ user, onLogout, children }) => {
       items.push({ path: '/upload-csv', icon: Upload, label: 'Upload CSV' });
     }
 
+    // Add Dados de Veículos for admin, gestao, operacional
+    if (user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional') {
+      items.push({ path: '/vehicle-data', icon: Database, label: 'Dados Veículos' });
+    }
+
     // Add Configurações (only admin) - replaces Planos
     if (user.role === 'admin') {
       items.push({ path: '/configuracoes', icon: Settings, label: 'Configurações' });
