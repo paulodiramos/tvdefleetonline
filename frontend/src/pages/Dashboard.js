@@ -3,14 +3,17 @@ import axios from 'axios';
 import { API } from '@/App';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { TrendingUp, TrendingDown, Car, Users, DollarSign, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { TrendingUp, TrendingDown, Car, Users, DollarSign, AlertCircle, AlertTriangle, CheckCircle, X } from 'lucide-react';
 
 const Dashboard = ({ user, onLogout }) => {
   const [stats, setStats] = useState(null);
+  const [alertas, setAlertas] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchStats();
+    fetchAlertas();
   }, []);
 
   const fetchStats = async () => {
@@ -21,6 +24,48 @@ const Dashboard = ({ user, onLogout }) => {
       console.error('Error fetching stats', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAlertas = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/alertas?status=ativo`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Show only high priority alerts on dashboard (limit to 5)
+      const highPriorityAlertas = response.data
+        .filter(a => a.prioridade === 'alta')
+        .slice(0, 5);
+      setAlertas(highPriorityAlertas);
+    } catch (error) {
+      console.error('Error fetching alertas', error);
+    }
+  };
+
+  const handleResolverAlerta = async (alertaId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/alertas/${alertaId}/resolver`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Refresh alertas
+      fetchAlertas();
+    } catch (error) {
+      console.error('Error resolving alerta', error);
+    }
+  };
+
+  const handleIgnorarAlerta = async (alertaId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/alertas/${alertaId}/ignorar`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Refresh alertas
+      fetchAlertas();
+    } catch (error) {
+      console.error('Error ignoring alerta', error);
     }
   };
 
