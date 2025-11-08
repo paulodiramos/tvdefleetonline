@@ -852,6 +852,301 @@ async def get_dashboard_stats(current_user: Dict = Depends(get_current_user)):
         "roi": total_receitas - total_despesas
     }
 
+# ==================== PARCEIRO REPORTS ENDPOINTS ====================
+
+@api_router.get("/reports/parceiro/semanal")
+async def get_parceiro_weekly_report(current_user: Dict = Depends(get_current_user)):
+    if current_user["role"] != UserRole.PARCEIRO:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get vehicles do parceiro
+    vehicles = await db.vehicles.find({"parceiro_id": current_user["id"]}, {"_id": 0, "id": 1}).to_list(1000)
+    vehicle_ids = [v["id"] for v in vehicles]
+    
+    # Get data from last 7 days
+    from datetime import datetime, timedelta
+    seven_days_ago = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+    
+    # Revenues
+    revenues = await db.revenues.find({
+        "vehicle_id": {"$in": vehicle_ids},
+        "data": {"$gte": seven_days_ago}
+    }, {"_id": 0}).to_list(10000)
+    
+    # Expenses
+    expenses = await db.expenses.find({
+        "vehicle_id": {"$in": vehicle_ids},
+        "data": {"$gte": seven_days_ago}
+    }, {"_id": 0}).to_list(10000)
+    
+    total_ganhos = sum([r["valor"] for r in revenues])
+    total_gastos = sum([e["valor"] for e in expenses])
+    lucro = total_ganhos - total_gastos
+    
+    return {
+        "periodo": "ultima_semana",
+        "total_ganhos": total_ganhos,
+        "total_gastos": total_gastos,
+        "lucro": lucro,
+        "roi_percentual": (lucro / total_ganhos * 100) if total_ganhos > 0 else 0
+    }
+
+@api_router.get("/reports/parceiro/por-veiculo")
+async def get_parceiro_vehicle_report(current_user: Dict = Depends(get_current_user)):
+    if current_user["role"] != UserRole.PARCEIRO:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicles = await db.vehicles.find({"parceiro_id": current_user["id"]}, {"_id": 0}).to_list(1000)
+    
+    report = []
+    for vehicle in vehicles:
+        revenues = await db.revenues.find({"vehicle_id": vehicle["id"]}, {"_id": 0}).to_list(10000)
+        expenses = await db.expenses.find({"vehicle_id": vehicle["id"]}, {"_id": 0}).to_list(10000)
+        
+        total_ganhos = sum([r["valor"] for r in revenues])
+        total_gastos = sum([e["valor"] for e in expenses])
+        
+        report.append({
+            "vehicle_id": vehicle["id"],
+            "marca": vehicle["marca"],
+            "modelo": vehicle["modelo"],
+            "matricula": vehicle["matricula"],
+            "total_ganhos": total_ganhos,
+            "total_gastos": total_gastos,
+            "lucro": total_ganhos - total_gastos
+        })
+    
+    return report
+
+@api_router.get("/reports/parceiro/por-motorista")
+async def get_parceiro_motorista_report(current_user: Dict = Depends(get_current_user)):
+    if current_user["role"] != UserRole.PARCEIRO:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get vehicles do parceiro
+    vehicles = await db.vehicles.find({"parceiro_id": current_user["id"]}, {"_id": 0, "id": 1}).to_list(1000)
+    vehicle_ids = [v["id"] for v in vehicles]
+    
+    # Get all revenues with motorista
+    revenues = await db.revenues.find({
+        "vehicle_id": {"$in": vehicle_ids},
+        "motorista_id": {"$ne": None}
+    }, {"_id": 0}).to_list(10000)
+    
+    # Group by motorista
+    motorista_totals = {}
+    for rev in revenues:
+        mid = rev["motorista_id"]
+        if mid not in motorista_totals:
+            motorista_totals[mid] = {"ganhos": 0, "corridas": 0}
+        motorista_totals[mid]["ganhos"] += rev["valor"]
+        motorista_totals[mid]["corridas"] += 1
+    
+    # Get motorista details
+    report = []
+    for mid, data in motorista_totals.items():
+        motorista = await db.motoristas.find_one({"id": mid}, {"_id": 0})
+        if motorista:
+            # Calculate lucro (assuming commission split)
+            lucro_parceiro = data["ganhos"] * 0.2  # Example: 20% for parceiro
+            
+            report.append({
+                "motorista_id": mid,
+                "nome": motorista["name"],
+                "email": motorista["email"],
+                "total_ganhos": data["ganhos"],
+                "total_corridas": data["corridas"],
+                "lucro_parceiro": lucro_parceiro
+            })
+    
+    return report
+
+@api_router.get("/reports/parceiro/proximas-despesas")
+async def get_parceiro_upcoming_expenses(current_user: Dict = Depends(get_current_user)):
+    if current_user["role"] != UserRole.PARCEIRO:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    from datetime import datetime, timedelta
+    
+    vehicles = await db.vehicles.find({"parceiro_id": current_user["id"]}, {"_id": 0}).to_list(1000)
+    
+    upcoming = []
+    today = datetime.now()
+    
+    for vehicle in vehicles:
+        # Check seguro
+        if vehicle.get("seguro") and vehicle["seguro"].get("data_validade"):
+            validade = datetime.fromisoformat(vehicle["seguro"]["data_validade"])
+            if validade > today and (validade - today).days <= 60:
+                upcoming.append({
+                    "tipo": "seguro",
+                    "veiculo": f"{vehicle['marca']} {vehicle['modelo']} ({vehicle['matricula']})",
+                    "descricao": f"Renovação seguro - {vehicle['seguro']['seguradora']}",
+                    "valor": vehicle["seguro"]["preco"],
+                    "data": vehicle["seguro"]["data_validade"],
+                    "dias_restantes": (validade - today).days
+                })
+        
+        # Check matricula validade
+        if vehicle.get("validade_matricula"):
+            validade = datetime.fromisoformat(vehicle["validade_matricula"])
+            if validade > today and (validade - today).days <= 60:
+                upcoming.append({
+                    "tipo": "matricula",
+                    "veiculo": f"{vehicle['marca']} {vehicle['modelo']} ({vehicle['matricula']})",
+                    "descricao": "Renovação matrícula",
+                    "valor": 50.00,  # Estimativa
+                    "data": vehicle["validade_matricula"],
+                    "dias_restantes": (validade - today).days
+                })
+        
+        # Check manutencoes agendadas
+        for manutencao in vehicle.get("manutencoes", []):
+            if manutencao.get("data_proxima"):
+                data_proxima = datetime.fromisoformat(manutencao["data_proxima"])
+                if data_proxima > today and (data_proxima - today).days <= 30:
+                    upcoming.append({
+                        "tipo": "manutencao",
+                        "veiculo": f"{vehicle['marca']} {vehicle['modelo']} ({vehicle['matricula']})",
+                        "descricao": manutencao.get("o_que_fazer", "Manutenção agendada"),
+                        "valor": manutencao.get("custos", 0),
+                        "data": manutencao["data_proxima"],
+                        "dias_restantes": (data_proxima - today).days
+                    })
+    
+    # Sort by dias_restantes
+    upcoming.sort(key=lambda x: x["dias_restantes"])
+    
+    return upcoming
+
+# ==================== PAGAMENTOS ENDPOINTS ====================
+
+@api_router.post("/pagamentos", response_model=Pagamento)
+async def create_pagamento(pagamento_data: PagamentoCreate, current_user: Dict = Depends(get_current_user)):
+    if current_user["role"] != UserRole.PARCEIRO:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    pagamento_dict = pagamento_data.model_dump()
+    pagamento_dict["id"] = str(uuid.uuid4())
+    pagamento_dict["parceiro_id"] = current_user["id"]
+    pagamento_dict["documento_url"] = None
+    pagamento_dict["documento_analisado"] = False
+    pagamento_dict["analise_documento"] = None
+    pagamento_dict["status"] = "pendente"
+    pagamento_dict["pago_em"] = None
+    pagamento_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.pagamentos.insert_one(pagamento_dict)
+    
+    if isinstance(pagamento_dict["created_at"], str):
+        pagamento_dict["created_at"] = datetime.fromisoformat(pagamento_dict["created_at"])
+    
+    return Pagamento(**pagamento_dict)
+
+@api_router.post("/pagamentos/{pagamento_id}/upload-documento")
+async def upload_pagamento_documento(
+    pagamento_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    if current_user["role"] != UserRole.PARCEIRO:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    pagamento = await db.pagamentos.find_one({"id": pagamento_id, "parceiro_id": current_user["id"]})
+    if not pagamento:
+        raise HTTPException(status_code=404, detail="Pagamento not found")
+    
+    # Read file content
+    file_content = await file.read()
+    file_base64 = base64.b64encode(file_content).decode('utf-8')
+    
+    # Mock document analysis (in production, use OCR/AI service)
+    analise = {
+        "tipo_detectado": pagamento["tipo_documento"],
+        "valor_detectado": pagamento["valor"],
+        "confianca": 0.95,
+        "campos_extraidos": {
+            "nif": "123456789",
+            "nome": "Motorista",
+            "valor": pagamento["valor"],
+            "data": datetime.now().strftime('%Y-%m-%d')
+        }
+    }
+    
+    await db.pagamentos.update_one(
+        {"id": pagamento_id},
+        {
+            "$set": {
+                "documento_url": file_base64,
+                "documento_analisado": True,
+                "analise_documento": analise
+            }
+        }
+    )
+    
+    return {
+        "message": "Documento carregado e analisado",
+        "analise": analise
+    }
+
+@api_router.put("/pagamentos/{pagamento_id}/marcar-pago")
+async def marcar_pagamento_pago(pagamento_id: str, current_user: Dict = Depends(get_current_user)):
+    if current_user["role"] != UserRole.PARCEIRO:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    result = await db.pagamentos.update_one(
+        {"id": pagamento_id, "parceiro_id": current_user["id"]},
+        {
+            "$set": {
+                "status": "pago",
+                "pago_em": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Pagamento not found")
+    
+    return {"message": "Pagamento marcado como pago"}
+
+@api_router.get("/pagamentos/semana-atual")
+async def get_pagamentos_semana(current_user: Dict = Depends(get_current_user)):
+    if current_user["role"] != UserRole.PARCEIRO:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    from datetime import datetime, timedelta
+    
+    # Get current week
+    today = datetime.now()
+    start_week = (today - timedelta(days=today.weekday())).strftime('%Y-%m-%d')
+    end_week = (today + timedelta(days=6-today.weekday())).strftime('%Y-%m-%d')
+    
+    pagamentos = await db.pagamentos.find({
+        "parceiro_id": current_user["id"],
+        "periodo_fim": {"$gte": start_week, "$lte": end_week}
+    }, {"_id": 0}).to_list(1000)
+    
+    for p in pagamentos:
+        if isinstance(p.get("created_at"), str):
+            p["created_at"] = datetime.fromisoformat(p["created_at"])
+        if p.get("pago_em") and isinstance(p["pago_em"], str):
+            p["pago_em"] = datetime.fromisoformat(p["pago_em"])
+        
+        # Get motorista info
+        motorista = await db.motoristas.find_one({"id": p["motorista_id"]}, {"_id": 0, "name": 1, "email": 1})
+        if motorista:
+            p["motorista_nome"] = motorista["name"]
+    
+    total_pagar = sum([p["valor"] for p in pagamentos if p["status"] == "pendente"])
+    total_pago = sum([p["valor"] for p in pagamentos if p["status"] == "pago"])
+    
+    return {
+        "pagamentos": pagamentos,
+        "total_pagar": total_pagar,
+        "total_pago": total_pago,
+        "periodo": f"{start_week} a {end_week}"
+    }
+
 # ==================== CSV IMPORT ENDPOINTS ====================
 
 @api_router.post("/import/csv")
