@@ -9,26 +9,26 @@ import { Label } from '@/components/ui/label';
 import { Upload, FileText, TrendingUp, Fuel, AlertCircle } from 'lucide-react';
 
 const UploadCSV = ({ user, onLogout }) => {
-  const [motoristas, setMotoristas] = useState([]);
-  const [selectedMotorista, setSelectedMotorista] = useState('');
   const [periodoInicio, setPeriodoInicio] = useState('');
   const [periodoFim, setPeriodoFim] = useState('');
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
+  const [parceiroInfo, setParceiroInfo] = useState(null);
 
   useEffect(() => {
-    fetchMotoristas();
+    fetchParceiroInfo();
   }, []);
 
-  const fetchMotoristas = async () => {
+  const fetchParceiroInfo = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/motoristas`, {
+      // Get current user info (parceiro/operacional)
+      const response = await axios.get(`${API}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setMotoristas(response.data);
+      setParceiroInfo(response.data);
     } catch (error) {
-      console.error('Error fetching motoristas', error);
+      console.error('Error fetching user info', error);
     }
   };
 
