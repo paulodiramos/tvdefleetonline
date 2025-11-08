@@ -478,6 +478,32 @@ class Pagamento(BaseModel):
     documento_url: Optional[str] = None
     documento_analisado: bool = False
     analise_documento: Optional[Dict[str, Any]] = None
+
+# Alertas Models
+class AlertaCreate(BaseModel):
+    tipo: str  # seguro, inspecao, licenca_tvde, manutencao, validade_matricula
+    entidade_id: str  # vehicle_id or motorista_id
+    entidade_tipo: str  # veiculo, motorista
+    titulo: str
+    descricao: str
+    data_vencimento: str
+    prioridade: str  # alta, media, baixa
+    dias_antecedencia: int = 30
+
+class Alerta(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    tipo: str
+    entidade_id: str
+    entidade_tipo: str
+    titulo: str
+    descricao: str
+    data_vencimento: str
+    prioridade: str
+    dias_antecedencia: int
+    status: str  # ativo, resolvido, ignorado
+    criado_em: datetime
+    resolvido_em: Optional[datetime] = None
     status: str  # pendente, pago, rejeitado
     pago_em: Optional[datetime] = None
     created_at: datetime
