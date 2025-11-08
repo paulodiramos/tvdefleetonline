@@ -531,6 +531,7 @@ class Motorista(BaseModel):
     documents: MotoristaDocuments
     approved: bool = False
     senha_provisoria: bool = False
+    campos_customizados: Dict[str, Any] = {}  # Campos adicionais customizáveis
     created_at: datetime
     approved_by: Optional[str] = None
     approved_at: Optional[datetime] = None
