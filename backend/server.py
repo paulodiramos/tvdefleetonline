@@ -1668,10 +1668,10 @@ async def create_parceiro(parceiro_data: ParceiroCreate, current_user: Dict = De
     user_dict = {
         "id": parceiro_dict["id"],
         "email": parceiro_data.email,
-        "name": parceiro_data.name,
+        "name": parceiro_data.nome_manager,  # Use nome_manager as the user name
         "role": UserRole.PARCEIRO,
         "password": hash_password("parceiro123"),  # Default password
-        "phone": parceiro_data.phone,
+        "phone": parceiro_data.telefone,  # Use telefone as the phone
         "created_at": datetime.now(timezone.utc).isoformat(),
         "approved": True,
         "associated_gestor_id": parceiro_dict.get("gestor_associado_id")
