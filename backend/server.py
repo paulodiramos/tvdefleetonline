@@ -1113,7 +1113,8 @@ async def process_prio_excel(file_content: bytes, motorista_id: str) -> Dict[str
             "success": True,
             "transacoes_importadas": len(transactions),
             "total_litros": total_litros,
-            "total_valor": total_valor
+            "total_valor": total_valor,
+            "excel_salvo": excel_filename
         }
     
     except Exception as e:
