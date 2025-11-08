@@ -14,9 +14,24 @@ import jwt
 import bcrypt
 from io import BytesIO
 import base64
+from PIL import Image
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+import mimetypes
+import shutil
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+# Upload directories
+UPLOAD_DIR = ROOT_DIR / "uploads"
+MOTORISTAS_UPLOAD_DIR = UPLOAD_DIR / "motoristas"
+PAGAMENTOS_UPLOAD_DIR = UPLOAD_DIR / "pagamentos"
+
+# Ensure directories exist
+UPLOAD_DIR.mkdir(exist_ok=True)
+MOTORISTAS_UPLOAD_DIR.mkdir(exist_ok=True)
+PAGAMENTOS_UPLOAD_DIR.mkdir(exist_ok=True)
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
