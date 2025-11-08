@@ -67,22 +67,46 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     user: User
 
-# Motorista Models
+# Motorista Models - EXPANDED
 class MotoristaDocuments(BaseModel):
     license_photo: Optional[str] = None
     cv_file: Optional[str] = None
     profile_photo: Optional[str] = None
+    documento_identificacao: Optional[str] = None
+    licenca_tvde: Optional[str] = None
+    registo_criminal: Optional[str] = None
+    contrato: Optional[str] = None
     additional_docs: List[str] = []
 
 class MotoristaCreate(BaseModel):
     email: EmailStr
-    password: str
+    password: Optional[str] = None  # Optional for admin creation
     name: str
     phone: str
-    license_number: str
-    license_expiry: str
-    address: str
-    emergency_contact: str
+    morada_completa: str
+    codigo_postal: str
+    data_nascimento: str
+    nacionalidade: str
+    tipo_documento: str  # CC, Passaporte, Residencia
+    numero_documento: str
+    validade_documento: str
+    nif: str
+    carta_conducao_numero: str
+    carta_conducao_validade: str
+    licenca_tvde_numero: str
+    licenca_tvde_validade: str
+    codigo_registo_criminal: Optional[str] = None
+    parceiro_atribuido: Optional[str] = None
+    veiculo_atribuido: Optional[str] = None
+    regime: str  # aluguer, comissao, carro_proprio
+    iban: Optional[str] = None
+    email_uber: Optional[str] = None
+    telefone_uber: Optional[str] = None
+    email_bolt: Optional[str] = None
+    telefone_bolt: Optional[str] = None
+    whatsapp: str
+    tipo_pagamento: str  # fatura, recibo_verde, sem_recibo
+    senha_provisoria: bool = False
 
 class Motorista(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -90,12 +114,32 @@ class Motorista(BaseModel):
     email: str
     name: str
     phone: str
-    license_number: str
-    license_expiry: str
-    address: str
-    emergency_contact: str
+    morada_completa: str
+    codigo_postal: str
+    data_nascimento: str
+    nacionalidade: str
+    tipo_documento: str
+    numero_documento: str
+    validade_documento: str
+    nif: str
+    carta_conducao_numero: str
+    carta_conducao_validade: str
+    licenca_tvde_numero: str
+    licenca_tvde_validade: str
+    codigo_registo_criminal: Optional[str] = None
+    parceiro_atribuido: Optional[str] = None
+    veiculo_atribuido: Optional[str] = None
+    regime: str
+    iban: Optional[str] = None
+    email_uber: Optional[str] = None
+    telefone_uber: Optional[str] = None
+    email_bolt: Optional[str] = None
+    telefone_bolt: Optional[str] = None
+    whatsapp: str
+    tipo_pagamento: str
     documents: MotoristaDocuments
     approved: bool = False
+    senha_provisoria: bool = False
     created_at: datetime
     approved_by: Optional[str] = None
     approved_at: Optional[datetime] = None
