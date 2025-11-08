@@ -948,6 +948,17 @@ async def check_feature_access(user: Dict, feature_name: str) -> bool:
 async def process_uber_csv(file_content: bytes, motorista_id: str, periodo_inicio: str, periodo_fim: str) -> Dict[str, Any]:
     """Process Uber CSV file and extract earnings data"""
     try:
+        # Save original CSV file for audit/backup
+        csv_dir = UPLOAD_DIR / "csv" / "uber"
+        csv_dir.mkdir(parents=True, exist_ok=True)
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        csv_filename = f"uber_{motorista_id}_{timestamp}.csv"
+        csv_path = csv_dir / csv_filename
+        
+        with open(csv_path, 'wb') as f:
+            f.write(file_content)
+        
         # Decode CSV
         csv_text = file_content.decode('utf-8-sig')  # Handle BOM
         csv_reader = csv.DictReader(io.StringIO(csv_text))
@@ -967,6 +978,7 @@ async def process_uber_csv(file_content: bytes, motorista_id: str, periodo_inici
                 "periodo_inicio": periodo_inicio,
                 "periodo_fim": periodo_fim,
                 "total_pago": total_pago,
+                "csv_original": f"uploads/csv/uber/{csv_filename}",
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
             
@@ -976,7 +988,8 @@ async def process_uber_csv(file_content: bytes, motorista_id: str, periodo_inici
                 "success": True,
                 "motorista": nome,
                 "total_pago": total_pago,
-                "periodo": f"{periodo_inicio} a {periodo_fim}"
+                "periodo": f"{periodo_inicio} a {periodo_fim}",
+                "csv_salvo": csv_filename
             }
         
         return {"success": False, "error": "Motorista não encontrado no CSV"}
