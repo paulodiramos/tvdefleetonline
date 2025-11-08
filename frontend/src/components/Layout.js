@@ -59,6 +59,16 @@ const Layout = ({ user, onLogout, children }) => {
                 <p className="text-sm font-medium text-slate-800">{user.name}</p>
                 <p className="text-xs text-slate-500 capitalize">{user.role.replace('_', ' ')}</p>
               </div>
+              <Link to="/profile">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden md:flex items-center space-x-2"
+                  data-testid="profile-button"
+                >
+                  <UserCircle className="w-4 h-4" />
+                </Button>
+              </Link>
               <Button
                 variant="outline"
                 size="sm"
