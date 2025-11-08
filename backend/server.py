@@ -757,6 +757,13 @@ async def delete_vehicle(vehicle_id: str, current_user: Dict = Depends(get_curre
 
 @api_router.post("/expenses", response_model=Expense)
 async def create_expense(expense_data: ExpenseCreate, current_user: Dict = Depends(get_current_user)):
+    # Parceiros não podem criar despesas - apenas visualizar e confirmar pagamentos
+    if current_user["role"] == UserRole.PARCEIRO:
+        raise HTTPException(
+            status_code=403, 
+            detail="Parceiros não podem criar despesas. Apenas confirmar pagamentos."
+        )
+    
     expense_dict = expense_data.model_dump()
     expense_dict["id"] = str(uuid.uuid4())
     expense_dict["created_at"] = datetime.now(timezone.utc).isoformat()
