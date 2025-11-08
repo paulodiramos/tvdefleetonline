@@ -12,6 +12,7 @@ import Motoristas from "@/pages/Motoristas";
 import Financials from "@/pages/Financials";
 import PublicSite from "@/pages/PublicSite";
 import MotoristaRegister from "@/pages/MotoristaRegister";
+import Parceiros from "@/pages/Parceiros";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
