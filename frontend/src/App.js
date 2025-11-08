@@ -14,6 +14,8 @@ import PublicSite from "@/pages/PublicSite";
 import MotoristaRegister from "@/pages/MotoristaRegister";
 import Parceiros from "@/pages/Parceiros";
 import Profile from "@/pages/Profile";
+import ParceiroReports from "@/pages/ParceiroReports";
+import Pagamentos from "@/pages/Pagamentos";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
