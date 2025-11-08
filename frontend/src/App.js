@@ -18,6 +18,7 @@ import ParceiroReports from "@/pages/ParceiroReports";
 import Pagamentos from "@/pages/Pagamentos";
 import UploadCSV from "@/pages/UploadCSV";
 import Planos from "@/pages/Planos";
+import Configuracoes from "@/pages/Configuracoes";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
