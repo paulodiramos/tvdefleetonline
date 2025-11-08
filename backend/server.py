@@ -784,6 +784,81 @@ class SubscriptionCreate(BaseModel):
     user_id: str
     plano_id: str
 
+# ==================== CSV DATA MODELS ====================
+
+class GanhoUber(BaseModel):
+    """Dados processados de CSV Uber"""
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    motorista_id: str
+    uuid_motorista_uber: str
+    nome_motorista: str
+    periodo_inicio: str
+    periodo_fim: str
+    total_pago: float
+    created_at: datetime
+
+class GanhoBolt(BaseModel):
+    """Dados processados de CSV Bolt"""
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    motorista_id: str
+    email_motorista: str
+    nome_motorista: str
+    periodo_inicio: str
+    periodo_fim: str
+    ganhos_brutos: float
+    ganhos_liquidos: float
+    viagens_terminadas: int
+    created_at: datetime
+
+class TransacaoCombustivel(BaseModel):
+    """Dados processados de Excel Prio/Combustível"""
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    motorista_id: str
+    cartao: str
+    data_transacao: str
+    hora_transacao: str
+    posto: str
+    combustivel: str
+    litros: float
+    valor_liquido: float
+    iva: float
+    total: float
+    kms: Optional[int] = None
+    created_at: datetime
+
+class ContratoGerado(BaseModel):
+    """Contrato gerado em PDF"""
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    parceiro_id: str
+    motorista_id: str
+    veiculo_id: str
+    tipo_contrato: str  # aluguer, comissao
+    pdf_url: str
+    dados_contrato: Dict[str, Any]
+    status: str  # gerado, assinado, cancelado
+    created_at: datetime
+    assinado_em: Optional[datetime] = None
+
+class Fatura(BaseModel):
+    """Fatura de subscrição"""
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    subscription_id: str
+    user_id: str
+    periodo_referencia: str  # "2025-11"
+    valor_total: float
+    unidades_cobradas: int
+    status: str  # pendente, paga, cancelada
+    pdf_url: Optional[str] = None
+    data_emissao: str
+    data_vencimento: str
+    data_pagamento: Optional[str] = None
+    created_at: datetime
+
 # Alertas Models
 class AlertaCreate(BaseModel):
     tipo: str  # seguro, inspecao, licenca_tvde, manutencao, validade_matricula
