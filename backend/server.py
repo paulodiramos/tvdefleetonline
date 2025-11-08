@@ -445,6 +445,8 @@ class User(UserBase):
     approved: bool = False
     associated_partner_id: Optional[str] = None
     associated_gestor_id: Optional[str] = None
+    subscription_id: Optional[str] = None  # ID da subscrição ativa
+    campos_customizados: Dict[str, Any] = {}  # Campos adicionais customizáveis
 
 class TokenResponse(BaseModel):
     access_token: str
