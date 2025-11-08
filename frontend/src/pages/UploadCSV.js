@@ -111,7 +111,7 @@ const UploadCSV = ({ user, onLogout }) => {
 
       setMessage({ 
         type: 'success', 
-        text: `CSV Bolt importado com sucesso! Ganhos líquidos: €${response.data.ganhos_liquidos}` 
+        text: `CSV Bolt importado! ${response.data.registos_importados} registos, Ganhos líquidos: €${response.data.ganhos_liquidos.toFixed(2)}, Viagens: ${response.data.viagens}` 
       });
       fileInput.value = '';
     } catch (error) {
