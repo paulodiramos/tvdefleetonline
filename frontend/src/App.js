@@ -153,6 +153,12 @@ function App() {
               user ? <Configuracoes user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
+          <Route
+            path="/vehicle-data"
+            element={
+              user ? <VehicleData user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
