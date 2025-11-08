@@ -1056,7 +1056,7 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: Dict = Depen
     vehicle_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
     
     # Calculate alerta_validade (30 days before expiry)
-    validade = datetime.fromisoformat(vehicle_data.validade_matricula)
+    validade = datetime.fromisoformat(vehicle_data.validade_matricula).replace(tzinfo=timezone.utc)
     dias_restantes = (validade - datetime.now(timezone.utc)).days
     vehicle_dict["alerta_validade"] = dias_restantes <= 30
     
