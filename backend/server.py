@@ -1920,6 +1920,213 @@ async def update_admin_settings(
     
     return {"message": "Settings updated", "settings": update_data}
 
+# ==================== SUBSCRIPTION/PLANOS ENDPOINTS ====================
+
+@api_router.post("/admin/planos", response_model=PlanoAssinatura)
+async def create_plano(plano_data: PlanoCreate, current_user: Dict = Depends(get_current_user)):
+    """Admin: Create new subscription plan"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    plano_dict = plano_data.model_dump()
+    plano_dict["id"] = str(uuid.uuid4())
+    plano_dict["ativo"] = True
+    plano_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    plano_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.planos.insert_one(plano_dict)
+    
+    if isinstance(plano_dict["created_at"], str):
+        plano_dict["created_at"] = datetime.fromisoformat(plano_dict["created_at"])
+    if isinstance(plano_dict["updated_at"], str):
+        plano_dict["updated_at"] = datetime.fromisoformat(plano_dict["updated_at"])
+    
+    return PlanoAssinatura(**plano_dict)
+
+@api_router.get("/admin/planos", response_model=List[PlanoAssinatura])
+async def get_planos(current_user: Dict = Depends(get_current_user)):
+    """Admin: Get all subscription plans"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    planos = await db.planos.find({}, {"_id": 0}).to_list(100)
+    
+    for plano in planos:
+        if isinstance(plano["created_at"], str):
+            plano["created_at"] = datetime.fromisoformat(plano["created_at"])
+        if isinstance(plano["updated_at"], str):
+            plano["updated_at"] = datetime.fromisoformat(plano["updated_at"])
+    
+    return planos
+
+@api_router.put("/admin/planos/{plano_id}")
+async def update_plano(
+    plano_id: str,
+    updates: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Admin: Update subscription plan"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.planos.update_one(
+        {"id": plano_id},
+        {"$set": updates}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Plano not found")
+    
+    return {"message": "Plano updated successfully"}
+
+@api_router.get("/planos/public", response_model=List[PlanoAssinatura])
+async def get_public_planos(tipo_usuario: Optional[str] = None):
+    """Public: Get active subscription plans (no auth required)"""
+    query = {"ativo": True}
+    if tipo_usuario:
+        query["tipo_usuario"] = tipo_usuario
+    
+    planos = await db.planos.find(query, {"_id": 0}).to_list(100)
+    
+    for plano in planos:
+        if isinstance(plano["created_at"], str):
+            plano["created_at"] = datetime.fromisoformat(plano["created_at"])
+        if isinstance(plano["updated_at"], str):
+            plano["updated_at"] = datetime.fromisoformat(plano["updated_at"])
+    
+    return planos
+
+@api_router.post("/subscriptions", response_model=UserSubscription)
+async def create_subscription(
+    subscription_data: SubscriptionCreate,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Create or update user subscription"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        # Users can only subscribe themselves
+        if subscription_data.user_id != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Check if plan exists
+    plano = await db.planos.find_one({"id": subscription_data.plano_id}, {"_id": 0})
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plano not found")
+    
+    # Check if user already has a subscription
+    existing = await db.subscriptions.find_one({"user_id": subscription_data.user_id, "status": "ativo"})
+    
+    if existing:
+        # Update existing subscription
+        await db.subscriptions.update_one(
+            {"id": existing["id"]},
+            {
+                "$set": {
+                    "plano_id": subscription_data.plano_id,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+            }
+        )
+        
+        # Update user's subscription_id
+        await db.users.update_one(
+            {"id": subscription_data.user_id},
+            {"$set": {"subscription_id": existing["id"]}}
+        )
+        
+        return UserSubscription(**{**existing, "plano_id": subscription_data.plano_id})
+    
+    # Create new subscription
+    subscription_dict = {
+        "id": str(uuid.uuid4()),
+        "user_id": subscription_data.user_id,
+        "plano_id": subscription_data.plano_id,
+        "status": "ativo",
+        "data_inicio": datetime.now().strftime("%Y-%m-%d"),
+        "data_fim": None,
+        "unidades_ativas": 0,
+        "valor_mensal": 0.0,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.subscriptions.insert_one(subscription_dict)
+    
+    # Update user's subscription_id
+    await db.users.update_one(
+        {"id": subscription_data.user_id},
+        {"$set": {"subscription_id": subscription_dict["id"]}}
+    )
+    
+    if isinstance(subscription_dict["created_at"], str):
+        subscription_dict["created_at"] = datetime.fromisoformat(subscription_dict["created_at"])
+    if isinstance(subscription_dict["updated_at"], str):
+        subscription_dict["updated_at"] = datetime.fromisoformat(subscription_dict["updated_at"])
+    
+    return UserSubscription(**subscription_dict)
+
+@api_router.get("/subscriptions/me", response_model=Dict[str, Any])
+async def get_my_subscription(current_user: Dict = Depends(get_current_user)):
+    """Get current user's subscription details"""
+    subscription_id = current_user.get("subscription_id")
+    
+    if not subscription_id:
+        return {
+            "has_subscription": False,
+            "message": "Nenhuma subscrição ativa"
+        }
+    
+    subscription = await db.subscriptions.find_one({"id": subscription_id}, {"_id": 0})
+    if not subscription:
+        return {
+            "has_subscription": False,
+            "message": "Subscrição não encontrada"
+        }
+    
+    # Get plan details
+    plano = await db.planos.find_one({"id": subscription["plano_id"]}, {"_id": 0})
+    
+    if isinstance(subscription.get("created_at"), str):
+        subscription["created_at"] = datetime.fromisoformat(subscription["created_at"])
+    if isinstance(subscription.get("updated_at"), str):
+        subscription["updated_at"] = datetime.fromisoformat(subscription["updated_at"])
+    
+    return {
+        "has_subscription": True,
+        "subscription": subscription,
+        "plano": plano
+    }
+
+@api_router.put("/subscriptions/{subscription_id}/cancel")
+async def cancel_subscription(
+    subscription_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Cancel a subscription"""
+    subscription = await db.subscriptions.find_one({"id": subscription_id}, {"_id": 0})
+    
+    if not subscription:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    
+    # Only admin, gestor, or the subscription owner can cancel
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        if subscription["user_id"] != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    await db.subscriptions.update_one(
+        {"id": subscription_id},
+        {
+            "$set": {
+                "status": "cancelado",
+                "data_fim": datetime.now().strftime("%Y-%m-%d"),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {"message": "Subscription cancelled successfully"}
+
 # ==================== ALERTAS ENDPOINTS ====================
 
 @api_router.get("/alertas", response_model=List[Alerta])
