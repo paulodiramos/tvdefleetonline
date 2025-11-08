@@ -17,7 +17,8 @@ const Layout = ({ user, onLogout, children }) => {
         { path: '/relatorios', icon: FileText, label: 'Relatórios' },
         { path: '/vehicles', icon: Car, label: 'Veículos' },
         { path: '/motoristas', icon: Users, label: 'Motoristas' },
-        { path: '/pagamentos', icon: CreditCard, label: 'Pagamentos' }
+        { path: '/pagamentos', icon: CreditCard, label: 'Pagamentos' },
+        { path: '/upload-csv', icon: Upload, label: 'Upload CSV' }
       ];
     }
 
@@ -32,6 +33,16 @@ const Layout = ({ user, onLogout, children }) => {
     // Add Parceiros for admin and gestao
     if (user.role === 'admin' || user.role === 'gestao') {
       items.splice(2, 0, { path: '/parceiros', icon: Building, label: 'Parceiros' });
+    }
+
+    // Add Upload CSV for admin and gestao
+    if (user.role === 'admin' || user.role === 'gestao') {
+      items.push({ path: '/upload-csv', icon: Upload, label: 'Upload CSV' });
+    }
+
+    // Add Planos (only admin)
+    if (user.role === 'admin') {
+      items.push({ path: '/planos', icon: Settings, label: 'Planos' });
     }
 
     return items;
