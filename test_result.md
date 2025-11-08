@@ -288,27 +288,31 @@ test_plan:
 agent_communication:
     - agent: "main"
       message: |
-        Implementadas as 3 fases solicitadas:
+        NOVAS IMPLEMENTAÇÕES - Melhorias de Campos:
         
-        FASE 1 COMPLETA: Adicionadas verificações de permissão nos endpoints POST /expenses e POST /revenues.
-        Parceiros agora recebem 403 Forbidden ao tentar criar receitas ou despesas.
+        VEÍCULOS - PART TIME EXPANDIDO:
+        - Adicionado 4 campos de horário livre (horario_turno_1, 2, 3, 4)
+        - Campos de comissão: comissao_parceiro + comissao_motorista (devem somar 100%)
+        - Campo fotos: List[str] (máximo 3 fotos, todas convertidas para PDF)
+        - Endpoint POST /vehicles/{vehicle_id}/upload-photo
+        - Endpoint DELETE /vehicles/{vehicle_id}/photos/{photo_index}
         
-        FASE 2 COMPLETA: Sistema de upload de arquivos implementado com:
-        - Funções convert_image_to_pdf() e process_uploaded_file()
-        - Bibliotecas Pillow e ReportLab instaladas
-        - Diretórios de upload criados em /app/backend/uploads/
-        - Endpoints de upload atualizados para motoristas e pagamentos
-        - Endpoint GET /files/ para servir arquivos
+        PARCEIROS - CAMPOS COMPLETOS:
+        - nome_empresa, contribuinte_empresa (NIF)
+        - morada_completa, codigo_postal (xxxx-xxx), localidade
+        - nome_manager, telefone, telemovel, email
+        - codigo_certidao_comercial, validade_certidao_comercial
+        - Modelos ParceiroCreate e Parceiro atualizados
         
-        FASE 3 COMPLETA: Sistema de alertas automáticos implementado com:
-        - Modelos Alerta e AlertaCreate
-        - Função check_and_create_alerts() que verifica vencimentos
-        - 5 endpoints de gestão de alertas
-        - Background task executando verificações a cada 6 horas
-        - Verificação inicial no startup do app
+        MOTORISTAS - DOCUMENTOS COM FOTO:
+        - cartao_cidadao_foto (Cartão de Cidadão)
+        - carta_conducao_foto (Carta de Condução)
+        - licenca_tvde_foto (Licença TVDE)
+        - comprovativo_morada
+        - iban_comprovativo
+        - Todos convertidos para PDF automaticamente
         
-        Backend testado e funcionando. Logs mostram sistema de alertas ativo.
-        Pronto para testes backend completos.
+        Backend reiniciado com sucesso. Pronto para testes.
     
     - agent: "testing"
       message: |
