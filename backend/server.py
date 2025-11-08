@@ -945,9 +945,6 @@ async def check_feature_access(user: Dict, feature_name: str) -> bool:
 
 # ==================== CSV PROCESSING UTILITIES ====================
 
-import csv
-import io
-
 async def process_uber_csv(file_content: bytes, motorista_id: str, periodo_inicio: str, periodo_fim: str) -> Dict[str, Any]:
     """Process Uber CSV file and extract earnings data"""
     try:
