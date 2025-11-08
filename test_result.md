@@ -421,3 +421,51 @@ agent_communication:
         📊 RESULTADO FINAL: 18/18 testes passaram (100% sucesso)
         
         Sistema TVDEFleet backend está completamente funcional e pronto para produção!
+    
+    - agent: "testing"
+      message: |
+        🚀 TESTES COMPLETOS - NOVAS FUNCIONALIDADES EXPANDIDAS TESTADAS COM SUCESSO!
+        
+        ✅ VEÍCULOS - UPLOAD DE FOTOS: 100% FUNCIONANDO
+        - Upload de até 3 fotos por veículo: ✅ Limite corretamente aplicado
+        - Conversão automática JPG → PDF: ✅ Todas as fotos convertidas
+        - Endpoint DELETE /vehicles/{id}/photos/{index}: ✅ Funcionando
+        - Arquivos salvos em /app/backend/uploads/vehicles/: ✅ Verificado
+        - Retorna erro 400 na 4ª foto (limite respeitado): ✅ Funcionando
+        
+        ✅ PARCEIROS - CAMPOS EXPANDIDOS: 100% FUNCIONANDO
+        - Criação com novos campos completos: ✅ Funcionando
+        - Campos: nome_empresa, contribuinte_empresa, morada_completa, codigo_postal, localidade: ✅ Salvos
+        - Campos: nome_manager, telefone, telemovel, email: ✅ Salvos
+        - Campos: codigo_certidao_comercial, validade_certidao_comercial: ✅ Salvos
+        - Compatibilidade com dados antigos: ✅ Mapeamento automático funcionando
+        
+        ✅ MOTORISTAS - DOCUMENTOS COM FOTO: 100% FUNCIONANDO
+        - cartao_cidadao_foto: ✅ Upload e conversão PDF funcionando
+        - carta_conducao_foto: ✅ Upload e conversão PDF funcionando
+        - licenca_tvde_foto: ✅ Upload e conversão PDF funcionando
+        - comprovativo_morada: ✅ Upload e conversão PDF funcionando
+        - iban_comprovativo: ✅ Upload e conversão PDF funcionando
+        - Arquivos salvos em /app/backend/uploads/motoristas/: ✅ Verificado
+        
+        ✅ VEÍCULOS - CONTRATOS PART-TIME: 100% FUNCIONANDO
+        - Regime part_time com 4 horários configuráveis: ✅ Funcionando
+        - horario_turno_1, horario_turno_2, horario_turno_3, horario_turno_4: ✅ Salvos
+        - Comissões: comissao_parceiro + comissao_motorista: ✅ Funcionando
+        - Testado com 60% + 40% = 100%: ✅ Valores corretos
+        
+        ✅ ENDPOINT DE ARQUIVOS - VEÍCULOS: 100% FUNCIONANDO
+        - GET /api/files/vehicles/{filename}: ✅ Endpoint acessível
+        - Autenticação funcionando: ✅ Sem erros 401/403
+        - Retorna 404 para arquivos inexistentes: ✅ Comportamento correto
+        
+        🔧 CORREÇÕES APLICADAS DURANTE TESTES:
+        - Compatibilidade parceiros: Mapeamento campos antigos → novos
+        - Endpoint arquivos: Adicionada pasta "vehicles" aos folders permitidos
+        - Datetime timezone: Corrigido erro de timezone em criação de veículos
+        - User creation: Atualizado para usar novos campos de parceiros
+        
+        📊 RESULTADO FINAL EXPANDIDO: 25/25 testes passaram (100% sucesso)
+        
+        🎯 TODAS AS NOVAS FUNCIONALIDADES TESTADAS E FUNCIONANDO PERFEITAMENTE!
+        Sistema TVDEFleet expandido está completamente operacional e pronto para produção!
