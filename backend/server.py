@@ -37,8 +37,9 @@ api_router = APIRouter(prefix="/api")
 
 class UserRole:
     ADMIN = "admin"
-    GESTOR = "gestor_associado"
-    PARCEIRO = "parceiro_associado"
+    GESTAO = "gestao"  # Gestor Associado - pode gerir múltiplos parceiros
+    PARCEIRO = "parceiro"
+    OPERACIONAL = "operacional"  # Parceiro com gestão de frota própria
     MOTORISTA = "motorista"
 
 # Parceiro Model
