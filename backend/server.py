@@ -841,6 +841,29 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid token")
 
+async def check_feature_access(user: Dict, feature_name: str) -> bool:
+    """Check if user has access to a specific feature based on their subscription"""
+    # Admin always has access
+    if user["role"] == UserRole.ADMIN:
+        return True
+    
+    # Get user's subscription
+    subscription_id = user.get("subscription_id")
+    if not subscription_id:
+        # No subscription = no access to premium features
+        return False
+    
+    subscription = await db.subscriptions.find_one({"id": subscription_id, "status": "ativo"}, {"_id": 0})
+    if not subscription:
+        return False
+    
+    # Get plan features
+    plano = await db.planos.find_one({"id": subscription["plano_id"]}, {"_id": 0})
+    if not plano:
+        return False
+    
+    return feature_name in plano.get("features", [])
+
 # ==================== AUTH ENDPOINTS ====================
 
 @api_router.post("/auth/register", response_model=User)
