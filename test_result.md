@@ -360,6 +360,7 @@ test_plan:
   test_priority: "completed"
   backend_testing_complete: true
   all_phases_tested: true
+  expanded_features_tested: true
 
 agent_communication:
     - agent: "main"
