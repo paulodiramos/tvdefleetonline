@@ -2716,6 +2716,200 @@ async def get_ganhos_motorista(
         }
     }
 
+# ==================== CONTRATOS ENDPOINTS ====================
+
+@api_router.post("/contratos/gerar")
+async def gerar_contrato(
+    parceiro_id: str = Form(...),
+    motorista_id: str = Form(...),
+    veiculo_id: str = Form(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Generate contract PDF (Parceiro Executive feature)"""
+    # Check feature access
+    if not await check_feature_access(current_user, "contratos"):
+        raise HTTPException(
+            status_code=403,
+            detail="Upgrade para Parceiro Executive para emitir contratos"
+        )
+    
+    # Get data
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    veiculo = await db.vehicles.find_one({"id": veiculo_id}, {"_id": 0})
+    
+    if not parceiro or not motorista or not veiculo:
+        raise HTTPException(status_code=404, detail="Dados não encontrados")
+    
+    # Generate PDF
+    pdf_path = await generate_contrato_pdf(parceiro, motorista, veiculo)
+    
+    # Store contract record
+    contrato = {
+        "id": str(uuid.uuid4()),
+        "parceiro_id": parceiro_id,
+        "motorista_id": motorista_id,
+        "veiculo_id": veiculo_id,
+        "tipo_contrato": veiculo["tipo_contrato"]["tipo"],
+        "pdf_url": pdf_path,
+        "dados_contrato": {
+            "parceiro": parceiro.get("nome_empresa"),
+            "motorista": motorista.get("name"),
+            "veiculo": f"{veiculo.get('marca')} {veiculo.get('modelo')} - {veiculo.get('matricula')}"
+        },
+        "status": "gerado",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "assinado_em": None
+    }
+    
+    await db.contratos.insert_one(contrato)
+    
+    return {
+        "success": True,
+        "contrato_id": contrato["id"],
+        "pdf_url": pdf_path,
+        "message": "Contrato gerado com sucesso"
+    }
+
+@api_router.get("/contratos")
+async def listar_contratos(
+    status: Optional[str] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """List all contracts"""
+    query = {}
+    if status:
+        query["status"] = status
+    
+    contratos = await db.contratos.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+    
+    return contratos
+
+@api_router.put("/contratos/{contrato_id}/assinar")
+async def assinar_contrato(
+    contrato_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Mark contract as signed"""
+    result = await db.contratos.update_one(
+        {"id": contrato_id},
+        {
+            "$set": {
+                "status": "assinado",
+                "assinado_em": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Contrato not found")
+    
+    return {"message": "Contrato marcado como assinado"}
+
+# ==================== BILLING/FATURAS ENDPOINTS ====================
+
+@api_router.post("/admin/gerar-faturas-mensais")
+async def gerar_faturas_mensais(
+    mes_referencia: str = Form(...),  # Format: "2025-11"
+    current_user: Dict = Depends(get_current_user)
+):
+    """Admin: Generate monthly invoices for all active subscriptions"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get all active subscriptions
+    subscriptions = await db.subscriptions.find({"status": "ativo"}, {"_id": 0}).to_list(1000)
+    
+    faturas_geradas = []
+    
+    for sub in subscriptions:
+        # Get plan details
+        plano = await db.planos.find_one({"id": sub["plano_id"]}, {"_id": 0})
+        if not plano:
+            continue
+        
+        # Calculate units (vehicles for parceiro, motoristas for operacional)
+        user = await db.users.find_one({"id": sub["user_id"]}, {"_id": 0})
+        
+        if user["role"] == "parceiro":
+            # Count vehicles
+            unidades = await db.vehicles.count_documents({"parceiro_id": sub["user_id"]})
+        elif user["role"] == "operacional":
+            # Count motoristas
+            unidades = await db.motoristas.count_documents({"parceiro_atribuido": sub["user_id"]})
+        else:
+            unidades = 0
+        
+        valor_total = plano["preco_por_unidade"] * unidades
+        
+        # Update subscription units
+        await db.subscriptions.update_one(
+            {"id": sub["id"]},
+            {"$set": {"unidades_ativas": unidades, "valor_mensal": valor_total}}
+        )
+        
+        # Create invoice
+        data_emissao = datetime.now().strftime("%Y-%m-%d")
+        data_vencimento = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
+        
+        fatura = {
+            "id": str(uuid.uuid4()),
+            "subscription_id": sub["id"],
+            "user_id": sub["user_id"],
+            "periodo_referencia": mes_referencia,
+            "valor_total": valor_total,
+            "unidades_cobradas": unidades,
+            "status": "pendente",
+            "pdf_url": None,  # TODO: Generate invoice PDF
+            "data_emissao": data_emissao,
+            "data_vencimento": data_vencimento,
+            "data_pagamento": None,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.faturas.insert_one(fatura)
+        faturas_geradas.append(fatura)
+    
+    return {
+        "message": "Faturas mensais geradas",
+        "total_faturas": len(faturas_geradas),
+        "valor_total": sum(f["valor_total"] for f in faturas_geradas)
+    }
+
+@api_router.get("/faturas/me")
+async def minhas_faturas(current_user: Dict = Depends(get_current_user)):
+    """Get my invoices"""
+    faturas = await db.faturas.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return faturas
+
+@api_router.put("/admin/faturas/{fatura_id}/marcar-paga")
+async def marcar_fatura_paga(
+    fatura_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Admin: Mark invoice as paid"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    result = await db.faturas.update_one(
+        {"id": fatura_id},
+        {
+            "$set": {
+                "status": "paga",
+                "data_pagamento": datetime.now().strftime("%Y-%m-%d")
+            }
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Fatura not found")
+    
+    return {"message": "Fatura marcada como paga"}
+
 # ==================== ALERTAS ENDPOINTS ====================
 
 @api_router.get("/alertas", response_model=List[Alerta])
