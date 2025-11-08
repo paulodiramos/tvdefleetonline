@@ -945,15 +945,15 @@ async def check_feature_access(user: Dict, feature_name: str) -> bool:
 
 # ==================== CSV PROCESSING UTILITIES ====================
 
-async def process_uber_csv(file_content: bytes, motorista_id: str, periodo_inicio: str, periodo_fim: str) -> Dict[str, Any]:
-    """Process Uber CSV file and extract earnings data"""
+async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio: str, periodo_fim: str) -> Dict[str, Any]:
+    """Process Uber CSV file and extract earnings data (for parceiro/operacional)"""
     try:
         # Save original CSV file for audit/backup
         csv_dir = UPLOAD_DIR / "csv" / "uber"
         csv_dir.mkdir(parents=True, exist_ok=True)
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        csv_filename = f"uber_{motorista_id}_{timestamp}.csv"
+        csv_filename = f"uber_{parceiro_id}_{timestamp}.csv"
         csv_path = csv_dir / csv_filename
         
         with open(csv_path, 'wb') as f:
@@ -963,36 +963,40 @@ async def process_uber_csv(file_content: bytes, motorista_id: str, periodo_inici
         csv_text = file_content.decode('utf-8-sig')  # Handle BOM
         csv_reader = csv.DictReader(io.StringIO(csv_text))
         
-        # Find the motorista row
+        # Process CSV rows (can have multiple motoristas)
+        total_registos = 0
+        total_pago_all = 0
+        
         for row in csv_reader:
             uuid_uber = row.get("UUID do motorista", "")
             nome = f"{row.get('Nome próprio do motorista', '')} {row.get('Apelido do motorista', '')}".strip()
             total_pago = float(row.get("Pago a si", "0").replace(",", ".") or 0)
             
-            # Store in database
-            ganho = {
-                "id": str(uuid.uuid4()),
-                "motorista_id": motorista_id,
-                "uuid_motorista_uber": uuid_uber,
-                "nome_motorista": nome,
-                "periodo_inicio": periodo_inicio,
-                "periodo_fim": periodo_fim,
-                "total_pago": total_pago,
-                "csv_original": f"uploads/csv/uber/{csv_filename}",
-                "created_at": datetime.now(timezone.utc).isoformat()
-            }
-            
-            await db.ganhos_uber.insert_one(ganho)
-            
-            return {
-                "success": True,
-                "motorista": nome,
-                "total_pago": total_pago,
-                "periodo": f"{periodo_inicio} a {periodo_fim}",
-                "csv_salvo": csv_filename
-            }
+            if nome:  # Only process if there's a name
+                # Store in database
+                ganho = {
+                    "id": str(uuid.uuid4()),
+                    "parceiro_id": parceiro_id,
+                    "uuid_motorista_uber": uuid_uber,
+                    "nome_motorista": nome,
+                    "periodo_inicio": periodo_inicio,
+                    "periodo_fim": periodo_fim,
+                    "total_pago": total_pago,
+                    "csv_original": f"uploads/csv/uber/{csv_filename}",
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                
+                await db.ganhos_uber.insert_one(ganho)
+                total_registos += 1
+                total_pago_all += total_pago
         
-        return {"success": False, "error": "Motorista não encontrado no CSV"}
+        return {
+            "success": True,
+            "registos_importados": total_registos,
+            "total_pago": total_pago_all,
+            "periodo": f"{periodo_inicio} a {periodo_fim}",
+            "csv_salvo": csv_filename
+        }
     
     except Exception as e:
         logger.error(f"Error processing Uber CSV: {e}")
