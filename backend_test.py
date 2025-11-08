@@ -530,6 +530,14 @@ startxref
         
         vehicle_id = vehicles_response.json()[0]["id"]
         
+        # Clear existing photos first (delete all photos)
+        for i in range(3):  # Try to delete up to 3 photos
+            delete_response = requests.delete(
+                f"{BACKEND_URL}/vehicles/{vehicle_id}/photos/0",  # Always delete index 0
+                headers=headers
+            )
+            # Don't fail if photo doesn't exist (404 is OK)
+        
         try:
             # Upload 3 photos (should work)
             for i in range(3):
