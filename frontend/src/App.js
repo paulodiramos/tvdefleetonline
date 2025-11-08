@@ -119,6 +119,18 @@ function App() {
               user ? <Profile user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
+          <Route
+            path="/relatorios"
+            element={
+              user ? <ParceiroReports user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/pagamentos"
+            element={
+              user ? <Pagamentos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
