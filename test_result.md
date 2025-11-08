@@ -278,19 +278,12 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Restrição de permissões - Parceiros não podem criar receitas"
-    - "Restrição de permissões - Parceiros não podem criar despesas"
-    - "Sistema de upload de arquivos com conversão para PDF"
-    - "Upload de documentos de motorista"
-    - "Upload de documentos de pagamento"
-    - "Endpoint para servir arquivos"
-    - "Sistema de alertas - Modelos e função de verificação"
-    - "Endpoints de alertas"
-    - "Verificação automática de alertas"
+  current_focus: []
   stuck_tasks: []
-  test_all: true
-  test_priority: "high_first"
+  test_all: false
+  test_priority: "completed"
+  backend_testing_complete: true
+  all_phases_tested: true
 
 agent_communication:
     - agent: "main"
