@@ -129,6 +129,226 @@ async def process_uploaded_file(file: UploadFile, destination_dir: Path, file_id
     
     return result
 
+# ==================== ALERT CHECKING UTILITIES ====================
+
+async def check_and_create_alerts():
+    """
+    Check all vehicles and drivers for expiring documents/maintenance
+    and create alerts if needed
+    """
+    from datetime import date, timedelta
+    
+    # Get admin settings for thresholds
+    admin_settings = await db.admin_settings.find_one({"id": "admin_settings"})
+    if not admin_settings:
+        # Default settings
+        anos_validade_matricula = 20
+        km_aviso_manutencao = 5000
+    else:
+        anos_validade_matricula = admin_settings.get("anos_validade_matricula", 20)
+        km_aviso_manutencao = admin_settings.get("km_aviso_manutencao", 5000)
+    
+    today = date.today()
+    
+    # Check vehicles
+    vehicles = await db.vehicles.find({}, {"_id": 0}).to_list(None)
+    
+    for vehicle in vehicles:
+        vehicle_id = vehicle["id"]
+        
+        # Check registration expiry
+        if vehicle.get("validade_matricula"):
+            try:
+                validade_date = datetime.strptime(vehicle["validade_matricula"], "%Y-%m-%d").date()
+                days_until_expiry = (validade_date - today).days
+                
+                if 0 <= days_until_expiry <= 30:
+                    # Check if alert already exists
+                    existing_alert = await db.alertas.find_one({
+                        "tipo": "validade_matricula",
+                        "entidade_id": vehicle_id,
+                        "status": "ativo"
+                    })
+                    
+                    if not existing_alert:
+                        alert = {
+                            "id": str(uuid.uuid4()),
+                            "tipo": "validade_matricula",
+                            "entidade_id": vehicle_id,
+                            "entidade_tipo": "veiculo",
+                            "titulo": f"Matrícula expira em breve - {vehicle['matricula']}",
+                            "descricao": f"A matrícula do veículo {vehicle['marca']} {vehicle['modelo']} ({vehicle['matricula']}) expira em {days_until_expiry} dias.",
+                            "data_vencimento": vehicle["validade_matricula"],
+                            "prioridade": "alta" if days_until_expiry <= 7 else "media",
+                            "dias_antecedencia": 30,
+                            "status": "ativo",
+                            "criado_em": datetime.now(timezone.utc).isoformat()
+                        }
+                        await db.alertas.insert_one(alert)
+            except:
+                pass
+        
+        # Check insurance expiry
+        if vehicle.get("insurance"):
+            try:
+                validade_date = datetime.strptime(vehicle["insurance"]["data_validade"], "%Y-%m-%d").date()
+                days_until_expiry = (validade_date - today).days
+                
+                if 0 <= days_until_expiry <= 30:
+                    existing_alert = await db.alertas.find_one({
+                        "tipo": "seguro",
+                        "entidade_id": vehicle_id,
+                        "status": "ativo"
+                    })
+                    
+                    if not existing_alert:
+                        alert = {
+                            "id": str(uuid.uuid4()),
+                            "tipo": "seguro",
+                            "entidade_id": vehicle_id,
+                            "entidade_tipo": "veiculo",
+                            "titulo": f"Seguro expira em breve - {vehicle['matricula']}",
+                            "descricao": f"O seguro do veículo {vehicle['marca']} {vehicle['modelo']} ({vehicle['matricula']}) expira em {days_until_expiry} dias.",
+                            "data_vencimento": vehicle["insurance"]["data_validade"],
+                            "prioridade": "alta",
+                            "dias_antecedencia": 30,
+                            "status": "ativo",
+                            "criado_em": datetime.now(timezone.utc).isoformat()
+                        }
+                        await db.alertas.insert_one(alert)
+            except:
+                pass
+        
+        # Check next inspection
+        if vehicle.get("inspection"):
+            try:
+                proxima_date = datetime.strptime(vehicle["inspection"]["proxima_inspecao"], "%Y-%m-%d").date()
+                days_until_inspection = (proxima_date - today).days
+                
+                if 0 <= days_until_inspection <= 30:
+                    existing_alert = await db.alertas.find_one({
+                        "tipo": "inspecao",
+                        "entidade_id": vehicle_id,
+                        "status": "ativo"
+                    })
+                    
+                    if not existing_alert:
+                        alert = {
+                            "id": str(uuid.uuid4()),
+                            "tipo": "inspecao",
+                            "entidade_id": vehicle_id,
+                            "entidade_tipo": "veiculo",
+                            "titulo": f"Inspeção em breve - {vehicle['matricula']}",
+                            "descricao": f"A próxima inspeção do veículo {vehicle['marca']} {vehicle['modelo']} ({vehicle['matricula']}) está marcada para {days_until_inspection} dias.",
+                            "data_vencimento": vehicle["inspection"]["proxima_inspecao"],
+                            "prioridade": "media",
+                            "dias_antecedencia": 30,
+                            "status": "ativo",
+                            "criado_em": datetime.now(timezone.utc).isoformat()
+                        }
+                        await db.alertas.insert_one(alert)
+            except:
+                pass
+        
+        # Check maintenance (based on km)
+        if vehicle.get("maintenance_history"):
+            for maintenance in vehicle["maintenance_history"]:
+                if maintenance.get("km_proxima"):
+                    km_atual = vehicle.get("km_atual", 0)
+                    km_restantes = maintenance["km_proxima"] - km_atual
+                    
+                    if 0 <= km_restantes <= km_aviso_manutencao:
+                        existing_alert = await db.alertas.find_one({
+                            "tipo": "manutencao",
+                            "entidade_id": vehicle_id,
+                            "status": "ativo",
+                            "descricao": {"$regex": maintenance.get("tipo_manutencao", "")}
+                        })
+                        
+                        if not existing_alert:
+                            alert = {
+                                "id": str(uuid.uuid4()),
+                                "tipo": "manutencao",
+                                "entidade_id": vehicle_id,
+                                "entidade_tipo": "veiculo",
+                                "titulo": f"Manutenção necessária - {vehicle['matricula']}",
+                                "descricao": f"O veículo {vehicle['marca']} {vehicle['modelo']} ({vehicle['matricula']}) precisa de {maintenance.get('tipo_manutencao', 'manutenção')} em {km_restantes} km.",
+                                "data_vencimento": "",
+                                "prioridade": "alta" if km_restantes <= 500 else "media",
+                                "dias_antecedencia": 0,
+                                "status": "ativo",
+                                "criado_em": datetime.now(timezone.utc).isoformat()
+                            }
+                            await db.alertas.insert_one(alert)
+    
+    # Check motoristas
+    motoristas = await db.motoristas.find({}, {"_id": 0}).to_list(None)
+    
+    for motorista in motoristas:
+        motorista_id = motorista["id"]
+        
+        # Check TVDE license expiry
+        if motorista.get("licenca_tvde_validade"):
+            try:
+                validade_date = datetime.strptime(motorista["licenca_tvde_validade"], "%Y-%m-%d").date()
+                days_until_expiry = (validade_date - today).days
+                
+                if 0 <= days_until_expiry <= 30:
+                    existing_alert = await db.alertas.find_one({
+                        "tipo": "licenca_tvde",
+                        "entidade_id": motorista_id,
+                        "status": "ativo"
+                    })
+                    
+                    if not existing_alert:
+                        alert = {
+                            "id": str(uuid.uuid4()),
+                            "tipo": "licenca_tvde",
+                            "entidade_id": motorista_id,
+                            "entidade_tipo": "motorista",
+                            "titulo": f"Licença TVDE expira em breve - {motorista['name']}",
+                            "descricao": f"A licença TVDE do motorista {motorista['name']} expira em {days_until_expiry} dias.",
+                            "data_vencimento": motorista["licenca_tvde_validade"],
+                            "prioridade": "alta",
+                            "dias_antecedencia": 30,
+                            "status": "ativo",
+                            "criado_em": datetime.now(timezone.utc).isoformat()
+                        }
+                        await db.alertas.insert_one(alert)
+            except:
+                pass
+        
+        # Check driver's license expiry
+        if motorista.get("carta_conducao_validade"):
+            try:
+                validade_date = datetime.strptime(motorista["carta_conducao_validade"], "%Y-%m-%d").date()
+                days_until_expiry = (validade_date - today).days
+                
+                if 0 <= days_until_expiry <= 30:
+                    existing_alert = await db.alertas.find_one({
+                        "tipo": "carta_conducao",
+                        "entidade_id": motorista_id,
+                        "status": "ativo"
+                    })
+                    
+                    if not existing_alert:
+                        alert = {
+                            "id": str(uuid.uuid4()),
+                            "tipo": "carta_conducao",
+                            "entidade_id": motorista_id,
+                            "entidade_tipo": "motorista",
+                            "titulo": f"Carta de condução expira em breve - {motorista['name']}",
+                            "descricao": f"A carta de condução do motorista {motorista['name']} expira em {days_until_expiry} dias.",
+                            "data_vencimento": motorista["carta_conducao_validade"],
+                            "prioridade": "alta",
+                            "dias_antecedencia": 30,
+                            "status": "ativo",
+                            "criado_em": datetime.now(timezone.utc).isoformat()
+                        }
+                        await db.alertas.insert_one(alert)
+            except:
+                pass
+
 # ==================== MODELS ====================
 
 class UserRole:
