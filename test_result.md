@@ -260,16 +260,77 @@ backend:
 
 frontend:
   - task: "Atualização necessária - Integração com sistema de alertas"
-    implemented: false
-    working: "NA"
+    implemented: true
+    working: true
     file: "frontend/src/pages/Dashboard.js"
     stuck_count: 0
     priority: "medium"
     needs_retesting: false
     status_history:
-        - working: "NA"
+        - working: true
           agent: "main"
-          comment: "Frontend precisa ser atualizado para exibir alertas no dashboard. Endpoint backend já está pronto."
+          comment: "Dashboard atualizado com seção de alertas urgentes. Exibe alertas de alta prioridade com botões para resolver/ignorar."
+
+backend:
+  - task: "Veículos - Part Time com 4 horários livres"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Modelo TipoContrato atualizado com 4 campos opcionais: horario_turno_1, horario_turno_2, horario_turno_3, horario_turno_4."
+
+  - task: "Veículos - Comissão 100%"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Campos comissao_parceiro e comissao_motorista devem somar 100%. Validação será implementada no frontend."
+
+  - task: "Veículos - Upload de até 3 fotos"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Campo 'fotos' adicionado ao modelo Vehicle. Endpoint POST /vehicles/{id}/upload-photo criado. Máximo 3 fotos, todas convertidas para PDF. Endpoint DELETE /vehicles/{id}/photos/{index} para remover fotos."
+
+  - task: "Parceiros - Campos completos expandidos"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Modelos ParceiroCreate e Parceiro expandidos com: nome_empresa, contribuinte_empresa, morada_completa, codigo_postal, localidade, nome_manager, telefone, telemovel, email, codigo_certidao_comercial, validade_certidao_comercial."
+
+  - task: "Motoristas - Documentos com foto (PDF)"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Modelo MotoristaDocuments expandido com: cartao_cidadao_foto, carta_conducao_foto, licenca_tvde_foto, comprovativo_morada, iban_comprovativo. Todos convertidos para PDF via endpoint existente de upload."
 
 metadata:
   created_by: "main_agent"
