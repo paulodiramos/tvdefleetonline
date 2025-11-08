@@ -732,6 +732,52 @@ class Pagamento(BaseModel):
     documento_analisado: bool = False
     analise_documento: Optional[Dict[str, Any]] = None
 
+# ==================== SUBSCRIPTION MODELS ====================
+
+class PlanoAssinatura(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    nome: str  # Ex: "Parceiro Base", "Operacional Premium"
+    tipo_usuario: str  # "parceiro", "operacional"
+    preco_por_unidade: float  # Por veículo (parceiro) ou por motorista (operacional)
+    descricao: str
+    features: List[str]  # Lista de features habilitadas
+    ativo: bool = True
+    created_at: datetime
+    updated_at: datetime
+
+class PlanoCreate(BaseModel):
+    nome: str
+    tipo_usuario: str
+    preco_por_unidade: float
+    descricao: str
+    features: List[str]
+
+class UserSubscription(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    user_id: str
+    plano_id: str
+    status: str  # "ativo", "cancelado", "suspenso", "pagamento_pendente"
+    data_inicio: str
+    data_fim: Optional[str] = None
+    unidades_ativas: int = 0  # Número de veículos (parceiro) ou motoristas (operacional)
+    valor_mensal: float = 0.0  # Calculado: preco_por_unidade * unidades_ativas
+    created_at: datetime
+    updated_at: datetime
+
+class SubscriptionCreate(BaseModel):
+    user_id: str
+    plano_id: str
+
+# Caução Model (para veículos)
+class CaucaoVeiculo(BaseModel):
+    caucao_total: float = 0.0
+    caucao_divisao: str = "total"  # "semanal", "mensal", "total"
+    caucao_valor_semanal: float = 0.0  # Calculado automaticamente
+    caucao_pago: float = 0.0
+    caucao_restante: float = 0.0  # Calculado automaticamente
+
 # Alertas Models
 class AlertaCreate(BaseModel):
     tipo: str  # seguro, inspecao, licenca_tvde, manutencao, validade_matricula
