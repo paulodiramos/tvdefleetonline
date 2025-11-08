@@ -80,8 +80,8 @@ const UploadCSV = ({ user, onLogout }) => {
 
   const handleUploadBolt = async (e) => {
     e.preventDefault();
-    if (!selectedMotorista || !periodoInicio || !periodoFim) {
-      setMessage({ type: 'error', text: 'Preencha todos os campos obrigatórios' });
+    if (!periodoInicio || !periodoFim) {
+      setMessage({ type: 'error', text: 'Preencha o período' });
       return;
     }
 
@@ -97,7 +97,7 @@ const UploadCSV = ({ user, onLogout }) => {
     try {
       const formData = new FormData();
       formData.append('file', fileInput.files[0]);
-      formData.append('motorista_id', selectedMotorista);
+      formData.append('parceiro_id', user.id); // Upload do parceiro logado
       formData.append('periodo_inicio', periodoInicio);
       formData.append('periodo_fim', periodoFim);
 
