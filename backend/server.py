@@ -1441,6 +1441,24 @@ async def update_admin_settings(
     
     return {"message": "Settings updated", "settings": update_data}
 
+# ==================== FILE SERVING ENDPOINT ====================
+from fastapi.responses import FileResponse
+
+@api_router.get("/files/{folder}/{filename}")
+async def serve_file(folder: str, filename: str, current_user: Dict = Depends(get_current_user)):
+    """Serve uploaded files"""
+    allowed_folders = ["motoristas", "pagamentos"]
+    
+    if folder not in allowed_folders:
+        raise HTTPException(status_code=400, detail="Invalid folder")
+    
+    file_path = UPLOAD_DIR / folder / filename
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    return FileResponse(file_path)
+
 app.include_router(api_router)
 
 app.add_middleware(
