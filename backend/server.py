@@ -42,6 +42,19 @@ class UserRole:
     OPERACIONAL = "operacional"  # Parceiro com gestão de frota própria
     MOTORISTA = "motorista"
 
+# User Profile Models
+class UserProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    empresa: Optional[str] = None
+    nif: Optional[str] = None
+    morada: Optional[str] = None
+    niveis_servico: Optional[List[str]] = None  # For operacional role
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str
+
 # Parceiro Model
 class ParceiroCreate(BaseModel):
     name: str
