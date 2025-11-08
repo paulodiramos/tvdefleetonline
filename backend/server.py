@@ -623,7 +623,7 @@ async def get_motoristas(current_user: Dict = Depends(get_current_user)):
 
 @api_router.put("/motoristas/{motorista_id}/approve")
 async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTOR, UserRole.PARCEIRO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     await db.motoristas.update_one(
@@ -705,7 +705,7 @@ async def get_vehicle(vehicle_id: str, current_user: Dict = Depends(get_current_
 
 @api_router.put("/vehicles/{vehicle_id}")
 async def update_vehicle(vehicle_id: str, updates: Dict[str, Any], current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTOR, UserRole.PARCEIRO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
@@ -714,7 +714,7 @@ async def update_vehicle(vehicle_id: str, updates: Dict[str, Any], current_user:
 
 @api_router.delete("/vehicles/{vehicle_id}")
 async def delete_vehicle(vehicle_id: str, current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTOR]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     await db.vehicles.delete_one({"id": vehicle_id})
@@ -823,7 +823,7 @@ async def get_dashboard_stats(current_user: Dict = Depends(get_current_user)):
 
 @api_router.post("/import/csv")
 async def import_csv(file: UploadFile = File(...), import_type: str = Form(...), current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTOR]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     content = await file.read()
@@ -834,7 +834,7 @@ async def import_csv(file: UploadFile = File(...), import_type: str = Form(...),
 
 @api_router.post("/parceiros")
 async def create_parceiro(parceiro_data: ParceiroCreate, current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTOR]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     parceiro_dict = parceiro_data.model_dump()
@@ -842,7 +842,7 @@ async def create_parceiro(parceiro_data: ParceiroCreate, current_user: Dict = De
     parceiro_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     parceiro_dict["total_vehicles"] = 0
     
-    if current_user["role"] == UserRole.GESTOR:
+    if current_user["role"] == UserRole.GESTAO:
         parceiro_dict["gestor_associado_id"] = current_user["id"]
     
     await db.parceiros.insert_one(parceiro_dict)
@@ -869,7 +869,7 @@ async def create_parceiro(parceiro_data: ParceiroCreate, current_user: Dict = De
 @api_router.get("/parceiros", response_model=List[Parceiro])
 async def get_parceiros(current_user: Dict = Depends(get_current_user)):
     query = {}
-    if current_user["role"] == UserRole.GESTOR:
+    if current_user["role"] == UserRole.GESTAO:
         query["gestor_associado_id"] = current_user["id"]
     elif current_user["role"] not in [UserRole.ADMIN]:
         raise HTTPException(status_code=403, detail="Not authorized")
@@ -921,7 +921,7 @@ async def add_vehicle_maintenance(
     manutencao: VehicleMaintenance,
     current_user: Dict = Depends(get_current_user)
 ):
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTOR, UserRole.PARCEIRO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id})
