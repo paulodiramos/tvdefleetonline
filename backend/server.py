@@ -1059,12 +1059,19 @@ async def process_bolt_csv(file_content: bytes, motorista_id: str, periodo_inici
 async def process_prio_excel(file_content: bytes, motorista_id: str) -> Dict[str, Any]:
     """Process Prio Excel file and extract fuel transactions"""
     try:
-        # Save to temp file and read with openpyxl
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp:
-            tmp.write(file_content)
-            tmp_path = tmp.name
+        # Save original Excel file for audit/backup
+        excel_dir = UPLOAD_DIR / "csv" / "combustivel"
+        excel_dir.mkdir(parents=True, exist_ok=True)
         
-        wb = openpyxl.load_workbook(tmp_path)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        excel_filename = f"prio_{motorista_id}_{timestamp}.xlsx"
+        excel_path = excel_dir / excel_filename
+        
+        with open(excel_path, 'wb') as f:
+            f.write(file_content)
+        
+        # Read with openpyxl
+        wb = openpyxl.load_workbook(excel_path)
         sheet = wb.active
         
         # Skip header rows (first 3 rows are empty/header)
