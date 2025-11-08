@@ -633,6 +633,7 @@ class Vehicle(BaseModel):
     km_atual: int = 0
     km_aviso_manutencao: int = 5000
     alertas_manutencao: List[str] = []
+    fotos: List[str] = []  # URLs das fotos (máximo 3, convertidas para PDF)
     created_at: datetime
     updated_at: datetime
     parceiro_id: str
