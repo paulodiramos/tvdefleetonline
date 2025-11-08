@@ -1180,9 +1180,12 @@ async def upload_pagamento_documento(
     if not pagamento:
         raise HTTPException(status_code=404, detail="Pagamento not found")
     
-    # Read file content
-    file_content = await file.read()
-    file_base64 = base64.b64encode(file_content).decode('utf-8')
+    # Process file: save and convert to PDF if image
+    file_id = f"pagamento_{pagamento_id}_{uuid.uuid4()}"
+    file_info = await process_uploaded_file(file, PAGAMENTOS_UPLOAD_DIR, file_id)
+    
+    # Store file path in database (prefer PDF version if available)
+    file_url = file_info["pdf_path"] if file_info["pdf_path"] else file_info["original_path"]
     
     # Mock document analysis (in production, use OCR/AI service)
     analise = {
@@ -1201,7 +1204,7 @@ async def upload_pagamento_documento(
         {"id": pagamento_id},
         {
             "$set": {
-                "documento_url": file_base64,
+                "documento_url": file_url,
                 "documento_analisado": True,
                 "analise_documento": analise
             }
@@ -1210,7 +1213,9 @@ async def upload_pagamento_documento(
     
     return {
         "message": "Documento carregado e analisado",
-        "analise": analise
+        "analise": analise,
+        "file_url": file_url,
+        "converted_to_pdf": file_info["pdf_path"] is not None
     }
 
 @api_router.put("/pagamentos/{pagamento_id}/marcar-pago")
