@@ -146,29 +146,29 @@ class Motorista(BaseModel):
     email: str
     name: str
     phone: str
-    morada_completa: str
-    codigo_postal: str
-    data_nascimento: str
-    nacionalidade: str
-    tipo_documento: str
-    numero_documento: str
-    validade_documento: str
-    nif: str
-    carta_conducao_numero: str
-    carta_conducao_validade: str
-    licenca_tvde_numero: str
-    licenca_tvde_validade: str
+    morada_completa: Optional[str] = None
+    codigo_postal: Optional[str] = None
+    data_nascimento: Optional[str] = None
+    nacionalidade: Optional[str] = None
+    tipo_documento: Optional[str] = None
+    numero_documento: Optional[str] = None
+    validade_documento: Optional[str] = None
+    nif: Optional[str] = None
+    carta_conducao_numero: Optional[str] = None
+    carta_conducao_validade: Optional[str] = None
+    licenca_tvde_numero: Optional[str] = None
+    licenca_tvde_validade: Optional[str] = None
     codigo_registo_criminal: Optional[str] = None
     parceiro_atribuido: Optional[str] = None
     veiculo_atribuido: Optional[str] = None
-    regime: str
+    regime: Optional[str] = None
     iban: Optional[str] = None
     email_uber: Optional[str] = None
     telefone_uber: Optional[str] = None
     email_bolt: Optional[str] = None
     telefone_bolt: Optional[str] = None
-    whatsapp: str
-    tipo_pagamento: str
+    whatsapp: Optional[str] = None
+    tipo_pagamento: Optional[str] = None
     documents: MotoristaDocuments
     approved: bool = False
     senha_provisoria: bool = False
