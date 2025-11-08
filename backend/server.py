@@ -538,6 +538,14 @@ class Motorista(BaseModel):
     approved_by: Optional[str] = None
     approved_at: Optional[datetime] = None
 
+# Caução Model (para veículos) - deve vir antes de Vehicle
+class CaucaoVeiculo(BaseModel):
+    caucao_total: float = 0.0
+    caucao_divisao: str = "total"  # "semanal", "mensal", "total"
+    caucao_valor_semanal: float = 0.0  # Calculado automaticamente
+    caucao_pago: float = 0.0
+    caucao_restante: float = 0.0  # Calculado automaticamente
+
 # Vehicle Models - COMPLETE EXPANDED
 class TipoContrato(BaseModel):
     tipo: str  # aluguer, comissao, motorista_privado
