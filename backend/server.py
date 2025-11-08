@@ -2670,10 +2670,10 @@ async def upload_csv_bolt(
 @api_router.post("/operacional/upload-excel-combustivel")
 async def upload_excel_combustivel(
     file: UploadFile = File(...),
-    motorista_id: str = Form(...),
+    parceiro_id: str = Form(...),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Upload Prio/Combustível Excel file"""
+    """Upload Prio/Combustível Excel file (parceiro/operacional data)"""
     # Check feature access (manual input is allowed in base plan)
     if not await check_feature_access(current_user, "combustivel_manual"):
         raise HTTPException(
@@ -2684,8 +2684,8 @@ async def upload_excel_combustivel(
     # Read file content
     file_content = await file.read()
     
-    # Process Excel
-    result = await process_prio_excel(file_content, motorista_id)
+    # Process Excel (parceiro_id instead of motorista_id)
+    result = await process_prio_excel(file_content, parceiro_id)
     
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["error"])
