@@ -361,6 +361,31 @@ class ROIReport(BaseModel):
     km_percorridos: int
     utilizacao_percentual: float
 
+# Pagamentos Models
+class PagamentoCreate(BaseModel):
+    motorista_id: str
+    valor: float
+    periodo_inicio: str
+    periodo_fim: str
+    tipo_documento: str  # fatura, recibo_verde, outro
+    notas: Optional[str] = None
+
+class Pagamento(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    motorista_id: str
+    parceiro_id: str
+    valor: float
+    periodo_inicio: str
+    periodo_fim: str
+    tipo_documento: str
+    documento_url: Optional[str] = None
+    documento_analisado: bool = False
+    analise_documento: Optional[Dict[str, Any]] = None
+    status: str  # pendente, pago, rejeitado
+    pago_em: Optional[datetime] = None
+    created_at: datetime
+
 # ==================== AUTH UTILITIES ====================
 
 def hash_password(password: str) -> str:
