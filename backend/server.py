@@ -1706,6 +1706,96 @@ async def update_admin_settings(
     
     return {"message": "Settings updated", "settings": update_data}
 
+# ==================== ALERTAS ENDPOINTS ====================
+
+@api_router.get("/alertas", response_model=List[Alerta])
+async def get_alertas(
+    status: Optional[str] = "ativo",
+    prioridade: Optional[str] = None,
+    tipo: Optional[str] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get all active alerts"""
+    query = {}
+    
+    if status:
+        query["status"] = status
+    if prioridade:
+        query["prioridade"] = prioridade
+    if tipo:
+        query["tipo"] = tipo
+    
+    alertas = await db.alertas.find(query, {"_id": 0}).sort("criado_em", -1).to_list(1000)
+    
+    for alerta in alertas:
+        if isinstance(alerta["criado_em"], str):
+            alerta["criado_em"] = datetime.fromisoformat(alerta["criado_em"])
+        if alerta.get("resolvido_em") and isinstance(alerta["resolvido_em"], str):
+            alerta["resolvido_em"] = datetime.fromisoformat(alerta["resolvido_em"])
+    
+    return alertas
+
+@api_router.post("/alertas/verificar")
+async def verificar_alertas(current_user: Dict = Depends(get_current_user)):
+    """Manually trigger alert checking"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    await check_and_create_alerts()
+    
+    return {"message": "Alertas verificados e atualizados"}
+
+@api_router.put("/alertas/{alerta_id}/resolver")
+async def resolver_alerta(alerta_id: str, current_user: Dict = Depends(get_current_user)):
+    """Mark an alert as resolved"""
+    result = await db.alertas.update_one(
+        {"id": alerta_id},
+        {
+            "$set": {
+                "status": "resolvido",
+                "resolvido_em": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Alerta not found")
+    
+    return {"message": "Alerta marcado como resolvido"}
+
+@api_router.put("/alertas/{alerta_id}/ignorar")
+async def ignorar_alerta(alerta_id: str, current_user: Dict = Depends(get_current_user)):
+    """Mark an alert as ignored"""
+    result = await db.alertas.update_one(
+        {"id": alerta_id},
+        {"$set": {"status": "ignorado"}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Alerta not found")
+    
+    return {"message": "Alerta ignorado"}
+
+@api_router.get("/alertas/dashboard-stats")
+async def get_alertas_stats(current_user: Dict = Depends(get_current_user)):
+    """Get alert statistics for dashboard"""
+    alertas_ativos = await db.alertas.count_documents({"status": "ativo"})
+    alertas_alta_prioridade = await db.alertas.count_documents({"status": "ativo", "prioridade": "alta"})
+    
+    # Get count by type
+    tipos = ["seguro", "inspecao", "licenca_tvde", "manutencao", "validade_matricula", "carta_conducao"]
+    por_tipo = {}
+    
+    for tipo in tipos:
+        count = await db.alertas.count_documents({"status": "ativo", "tipo": tipo})
+        por_tipo[tipo] = count
+    
+    return {
+        "total_ativos": alertas_ativos,
+        "alta_prioridade": alertas_alta_prioridade,
+        "por_tipo": por_tipo
+    }
+
 # ==================== FILE SERVING ENDPOINT ====================
 from fastapi.responses import FileResponse
 
