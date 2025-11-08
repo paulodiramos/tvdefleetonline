@@ -126,10 +126,6 @@ const UploadCSV = ({ user, onLogout }) => {
 
   const handleUploadCombustivel = async (e) => {
     e.preventDefault();
-    if (!selectedMotorista) {
-      setMessage({ type: 'error', text: 'Selecione um motorista' });
-      return;
-    }
 
     const fileInput = document.getElementById('combustivel-excel');
     if (!fileInput.files[0]) {
@@ -143,7 +139,7 @@ const UploadCSV = ({ user, onLogout }) => {
     try {
       const formData = new FormData();
       formData.append('file', fileInput.files[0]);
-      formData.append('motorista_id', selectedMotorista);
+      formData.append('parceiro_id', user.id); // Upload do parceiro logado
 
       const token = localStorage.getItem('token');
       const response = await axios.post(`${API}/operacional/upload-excel-combustivel`, formData, {
