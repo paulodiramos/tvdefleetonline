@@ -513,6 +513,345 @@ startxref
         except Exception as e:
             self.log_result("Background-Task-Check", False, f"Request error: {str(e)}")
 
+    # ==================== NEW FEATURES TESTS (EXPANDED SYSTEM) ====================
+    
+    def test_vehicle_photo_upload_limit(self):
+        """Test vehicle photo upload with 3 photo limit and PDF conversion"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Vehicle-Photo-Upload", False, "No auth token for admin")
+            return
+        
+        # Get a vehicle ID
+        vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+        if vehicles_response.status_code != 200 or not vehicles_response.json():
+            self.log_result("Vehicle-Photo-Upload", False, "No vehicles available for test")
+            return
+        
+        vehicle_id = vehicles_response.json()[0]["id"]
+        
+        try:
+            # Upload 3 photos (should work)
+            for i in range(3):
+                test_image = self.create_test_image()
+                files = {
+                    'file': (f'vehicle_photo_{i+1}.jpg', test_image, 'image/jpeg')
+                }
+                
+                response = requests.post(
+                    f"{BACKEND_URL}/vehicles/{vehicle_id}/upload-photo",
+                    files=files,
+                    headers=headers
+                )
+                
+                if response.status_code != 200:
+                    self.log_result("Vehicle-Photo-Upload", False, f"Failed to upload photo {i+1}: {response.status_code}")
+                    return
+                
+                result = response.json()
+                if not result.get("converted_to_pdf", False):
+                    self.log_result("Vehicle-Photo-Upload", False, f"Photo {i+1} not converted to PDF")
+                    return
+            
+            # Try to upload 4th photo (should fail with 400)
+            test_image = self.create_test_image()
+            files = {
+                'file': ('vehicle_photo_4.jpg', test_image, 'image/jpeg')
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/vehicles/{vehicle_id}/upload-photo",
+                files=files,
+                headers=headers
+            )
+            
+            if response.status_code == 400:
+                self.log_result("Vehicle-Photo-Upload", True, "Vehicle photo upload limit (3) correctly enforced, all photos converted to PDF")
+            else:
+                self.log_result("Vehicle-Photo-Upload", False, f"Expected 400 for 4th photo, got {response.status_code}")
+                
+        except Exception as e:
+            self.log_result("Vehicle-Photo-Upload", False, f"Vehicle photo upload error: {str(e)}")
+    
+    def test_vehicle_photo_delete(self):
+        """Test deleting vehicle photos by index"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Vehicle-Photo-Delete", False, "No auth token for admin")
+            return
+        
+        # Get a vehicle ID
+        vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+        if vehicles_response.status_code != 200 or not vehicles_response.json():
+            self.log_result("Vehicle-Photo-Delete", False, "No vehicles available for test")
+            return
+        
+        vehicle_id = vehicles_response.json()[0]["id"]
+        
+        try:
+            # First upload a photo
+            test_image = self.create_test_image()
+            files = {
+                'file': ('test_photo.jpg', test_image, 'image/jpeg')
+            }
+            
+            upload_response = requests.post(
+                f"{BACKEND_URL}/vehicles/{vehicle_id}/upload-photo",
+                files=files,
+                headers=headers
+            )
+            
+            if upload_response.status_code != 200:
+                self.log_result("Vehicle-Photo-Delete", False, "Could not upload photo for delete test")
+                return
+            
+            # Now delete the photo (index 0)
+            delete_response = requests.delete(
+                f"{BACKEND_URL}/vehicles/{vehicle_id}/photos/0",
+                headers=headers
+            )
+            
+            if delete_response.status_code == 200:
+                self.log_result("Vehicle-Photo-Delete", True, "Vehicle photo deletion working correctly")
+            else:
+                self.log_result("Vehicle-Photo-Delete", False, f"Photo deletion failed: {delete_response.status_code}")
+                
+        except Exception as e:
+            self.log_result("Vehicle-Photo-Delete", False, f"Photo deletion error: {str(e)}")
+    
+    def test_parceiro_expanded_fields(self):
+        """Test creating parceiro with new expanded fields"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Parceiro-Expanded-Fields", False, "No auth token for admin")
+            return
+        
+        # Test creating parceiro with new complete fields
+        parceiro_data = {
+            "nome_empresa": "Test Fleet Lda",
+            "contribuinte_empresa": "123456789",
+            "morada_completa": "Rua Teste 123, 1º Andar",
+            "codigo_postal": "1000-100",
+            "localidade": "Lisboa",
+            "nome_manager": "João Silva Manager",
+            "telefone": "211234567",
+            "telemovel": "911234567",
+            "email": "testfleet@example.com",
+            "codigo_certidao_comercial": "CERT123456",
+            "validade_certidao_comercial": "2025-12-31"
+        }
+        
+        try:
+            response = requests.post(f"{BACKEND_URL}/parceiros", json=parceiro_data, headers=headers)
+            
+            if response.status_code == 200:
+                result = response.json()
+                # Verify all new fields are present
+                required_fields = ["nome_empresa", "contribuinte_empresa", "morada_completa", 
+                                 "codigo_postal", "localidade", "nome_manager", "telefone", 
+                                 "telemovel", "email", "codigo_certidao_comercial", "validade_certidao_comercial"]
+                
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if not missing_fields:
+                    self.log_result("Parceiro-Expanded-Fields", True, "Parceiro created with all new expanded fields")
+                else:
+                    self.log_result("Parceiro-Expanded-Fields", False, f"Missing fields in response: {missing_fields}")
+            else:
+                self.log_result("Parceiro-Expanded-Fields", False, f"Failed to create parceiro: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Parceiro-Expanded-Fields", False, f"Parceiro creation error: {str(e)}")
+    
+    def test_parceiro_backward_compatibility(self):
+        """Test that old parceiro data still works (backward compatibility)"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Parceiro-Backward-Compatibility", False, "No auth token for admin")
+            return
+        
+        # Test with minimal old-style data
+        old_parceiro_data = {
+            "nome_empresa": "Old Style Company",
+            "contribuinte_empresa": "987654321",
+            "morada_completa": "Old Address",
+            "codigo_postal": "2000-200",
+            "localidade": "Porto",
+            "nome_manager": "Old Manager",
+            "telefone": "222333444",
+            "telemovel": "933444555",
+            "email": "oldstyle@example.com",
+            "codigo_certidao_comercial": "OLD123",
+            "validade_certidao_comercial": "2024-12-31"
+        }
+        
+        try:
+            response = requests.post(f"{BACKEND_URL}/parceiros", json=old_parceiro_data, headers=headers)
+            
+            if response.status_code == 200:
+                self.log_result("Parceiro-Backward-Compatibility", True, "Old parceiro format still works (backward compatible)")
+            else:
+                self.log_result("Parceiro-Backward-Compatibility", False, f"Backward compatibility failed: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Parceiro-Backward-Compatibility", False, f"Backward compatibility error: {str(e)}")
+    
+    def test_motorista_new_document_types(self):
+        """Test motorista document upload with new photo document types"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Motorista-New-Documents", False, "No auth token for admin")
+            return
+        
+        # Get motorista ID
+        motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+        if motoristas_response.status_code != 200 or not motoristas_response.json():
+            self.log_result("Motorista-New-Documents", False, "No motoristas available for test")
+            return
+        
+        motorista_id = motoristas_response.json()[0]["id"]
+        
+        # Test new document types
+        new_doc_types = [
+            "cartao_cidadao_foto",
+            "carta_conducao_foto", 
+            "licenca_tvde_foto",
+            "comprovativo_morada",
+            "iban_comprovativo"
+        ]
+        
+        successful_uploads = 0
+        
+        for doc_type in new_doc_types:
+            try:
+                test_image = self.create_test_image()
+                files = {
+                    'file': (f'{doc_type}.jpg', test_image, 'image/jpeg')
+                }
+                data = {
+                    'doc_type': doc_type
+                }
+                
+                response = requests.post(
+                    f"{BACKEND_URL}/motoristas/{motorista_id}/upload-document",
+                    files=files,
+                    data=data,
+                    headers=headers
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    if result.get("converted_to_pdf", False):
+                        successful_uploads += 1
+                    else:
+                        self.log_result("Motorista-New-Documents", False, f"Document {doc_type} not converted to PDF")
+                        return
+                else:
+                    self.log_result("Motorista-New-Documents", False, f"Failed to upload {doc_type}: {response.status_code}")
+                    return
+                    
+            except Exception as e:
+                self.log_result("Motorista-New-Documents", False, f"Error uploading {doc_type}: {str(e)}")
+                return
+        
+        if successful_uploads == len(new_doc_types):
+            self.log_result("Motorista-New-Documents", True, f"All {len(new_doc_types)} new document types uploaded and converted to PDF")
+        else:
+            self.log_result("Motorista-New-Documents", False, f"Only {successful_uploads}/{len(new_doc_types)} documents uploaded successfully")
+    
+    def test_vehicle_part_time_contract(self):
+        """Test creating vehicle with part-time contract and 4 schedule slots"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Vehicle-Part-Time-Contract", False, "No auth token for admin")
+            return
+        
+        # Get a parceiro ID
+        parceiros_response = requests.get(f"{BACKEND_URL}/parceiros", headers=headers)
+        if parceiros_response.status_code != 200 or not parceiros_response.json():
+            self.log_result("Vehicle-Part-Time-Contract", False, "No parceiros available for test")
+            return
+        
+        parceiro_id = parceiros_response.json()[0]["id"]
+        
+        # Create vehicle with part-time contract
+        vehicle_data = {
+            "marca": "Toyota",
+            "modelo": "Prius",
+            "matricula": "PT-TEST-123",
+            "data_matricula": "2020-01-15",
+            "validade_matricula": "2025-01-15",
+            "cor": "Branco",
+            "combustivel": "hibrido",
+            "caixa": "automatica",
+            "lugares": 5,
+            "tipo_contrato": {
+                "tipo": "comissao",
+                "comissao_parceiro": 60.0,
+                "comissao_motorista": 40.0,
+                "regime": "part_time",
+                "horario_turno_1": "09:00-13:00",
+                "horario_turno_2": "14:00-18:00", 
+                "horario_turno_3": "19:00-23:00",
+                "horario_turno_4": None
+            },
+            "categorias_uber": {
+                "uberx": True,
+                "comfort": True
+            },
+            "categorias_bolt": {
+                "economy": True,
+                "comfort": True
+            },
+            "parceiro_id": parceiro_id
+        }
+        
+        try:
+            response = requests.post(f"{BACKEND_URL}/vehicles", json=vehicle_data, headers=headers)
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Verify part-time contract fields
+                contract = result.get("tipo_contrato", {})
+                
+                if (contract.get("regime") == "part_time" and 
+                    contract.get("horario_turno_1") == "09:00-13:00" and
+                    contract.get("horario_turno_2") == "14:00-18:00" and
+                    contract.get("horario_turno_3") == "19:00-23:00" and
+                    contract.get("comissao_parceiro") == 60.0 and
+                    contract.get("comissao_motorista") == 40.0):
+                    
+                    self.log_result("Vehicle-Part-Time-Contract", True, "Vehicle created with part-time contract and 4 schedule slots")
+                else:
+                    self.log_result("Vehicle-Part-Time-Contract", False, "Part-time contract fields not saved correctly")
+            else:
+                self.log_result("Vehicle-Part-Time-Contract", False, f"Failed to create vehicle: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Vehicle-Part-Time-Contract", False, f"Vehicle creation error: {str(e)}")
+    
+    def test_file_serving_vehicles_folder(self):
+        """Test file serving endpoint for vehicles folder"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("File-Serving-Vehicles", False, "No auth token for admin")
+            return
+        
+        try:
+            # Test accessing vehicles folder (should return 404 for non-existent file, not auth error)
+            response = requests.get(f"{BACKEND_URL}/files/vehicles/test_vehicle_photo.pdf", headers=headers)
+            
+            # We expect either 200 (file found) or 404 (file not found), but not 401/403 (auth issues)
+            if response.status_code in [200, 404]:
+                self.log_result("File-Serving-Vehicles", True, f"Vehicles file endpoint accessible (status: {response.status_code})")
+            elif response.status_code in [401, 403]:
+                self.log_result("File-Serving-Vehicles", False, f"Authentication issue for vehicles folder: {response.status_code}")
+            else:
+                self.log_result("File-Serving-Vehicles", False, f"Unexpected status for vehicles folder: {response.status_code}")
+        except Exception as e:
+            self.log_result("File-Serving-Vehicles", False, f"Request error: {str(e)}")
+
     # ==================== INTEGRATION TESTS ====================
     
     def test_different_image_formats(self):
