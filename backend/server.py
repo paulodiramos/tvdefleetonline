@@ -2748,6 +2748,53 @@ async def get_ganhos_motorista(
         }
     }
 
+@api_router.get("/operacional/csv-importados/{motorista_id}")
+async def listar_csv_importados(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """List all imported CSVs for a motorista"""
+    # Get Uber CSVs
+    uber_imports = await db.ganhos_uber.find(
+        {"motorista_id": motorista_id},
+        {"_id": 0, "id": 1, "periodo_inicio": 1, "periodo_fim": 1, "total_pago": 1, "csv_original": 1, "created_at": 1}
+    ).sort("created_at", -1).to_list(100)
+    
+    # Get Bolt CSVs
+    bolt_imports = await db.ganhos_bolt.find(
+        {"motorista_id": motorista_id},
+        {"_id": 0, "id": 1, "periodo_inicio": 1, "periodo_fim": 1, "ganhos_liquidos": 1, "csv_original": 1, "created_at": 1}
+    ).sort("created_at", -1).to_list(100)
+    
+    # Get Combustivel Excel
+    combustivel_imports = await db.transacoes_combustivel.aggregate([
+        {"$match": {"motorista_id": motorista_id}},
+        {"$group": {
+            "_id": "$excel_original",
+            "data_primeiro": {"$min": "$data_transacao"},
+            "data_ultimo": {"$max": "$data_transacao"},
+            "total_transacoes": {"$sum": 1},
+            "total_valor": {"$sum": "$total"}
+        }},
+        {"$sort": {"data_ultimo": -1}}
+    ]).to_list(100)
+    
+    return {
+        "motorista_id": motorista_id,
+        "uber": {
+            "total_imports": len(uber_imports),
+            "imports": uber_imports
+        },
+        "bolt": {
+            "total_imports": len(bolt_imports),
+            "imports": bolt_imports
+        },
+        "combustivel": {
+            "total_imports": len(combustivel_imports),
+            "imports": combustivel_imports
+        }
+    }
+
 # ==================== CONTRATOS ENDPOINTS ====================
 
 @api_router.post("/contratos/gerar")
