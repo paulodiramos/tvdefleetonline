@@ -718,6 +718,179 @@ async def import_csv(file: UploadFile = File(...), import_type: str = Form(...),
     
     return {"message": f"CSV import for {import_type} will be processed", "filename": file.filename}
 
+# ==================== PARCEIROS ENDPOINTS ====================
+
+@api_router.post("/parceiros")
+async def create_parceiro(parceiro_data: ParceiroCreate, current_user: Dict = Depends(get_current_user)):
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTOR]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    parceiro_dict = parceiro_data.model_dump()
+    parceiro_dict["id"] = str(uuid.uuid4())
+    parceiro_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    parceiro_dict["total_vehicles"] = 0
+    
+    if current_user["role"] == UserRole.GESTOR:
+        parceiro_dict["gestor_associado_id"] = current_user["id"]
+    
+    await db.parceiros.insert_one(parceiro_dict)
+    
+    # Create user account for parceiro
+    user_dict = {
+        "id": parceiro_dict["id"],
+        "email": parceiro_data.email,
+        "name": parceiro_data.name,
+        "role": UserRole.PARCEIRO,
+        "password": hash_password("parceiro123"),  # Default password
+        "phone": parceiro_data.phone,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "approved": True,
+        "associated_gestor_id": parceiro_dict.get("gestor_associado_id")
+    }
+    await db.users.insert_one(user_dict)
+    
+    if isinstance(parceiro_dict["created_at"], str):
+        parceiro_dict["created_at"] = datetime.fromisoformat(parceiro_dict["created_at"])
+    
+    return Parceiro(**parceiro_dict)
+
+@api_router.get("/parceiros", response_model=List[Parceiro])
+async def get_parceiros(current_user: Dict = Depends(get_current_user)):
+    query = {}
+    if current_user["role"] == UserRole.GESTOR:
+        query["gestor_associado_id"] = current_user["id"]
+    elif current_user["role"] not in [UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    parceiros = await db.parceiros.find(query, {"_id": 0}).to_list(1000)
+    for p in parceiros:
+        if isinstance(p["created_at"], str):
+            p["created_at"] = datetime.fromisoformat(p["created_at"])
+        # Count vehicles
+        p["total_vehicles"] = await db.vehicles.count_documents({"parceiro_id": p["id"]})
+    
+    return parceiros
+
+# ==================== DOCUMENT SEND ENDPOINTS ====================
+
+@api_router.post("/documents/send-email")
+async def send_document_email(
+    document_url: str = Form(...), 
+    recipient_email: str = Form(...),
+    document_type: str = Form(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    # In production, implement actual email sending
+    return {
+        "message": "Email would be sent",
+        "recipient": recipient_email,
+        "document": document_type
+    }
+
+@api_router.post("/documents/send-whatsapp")
+async def send_document_whatsapp(
+    document_url: str = Form(...), 
+    recipient_phone: str = Form(...),
+    document_type: str = Form(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    # In production, implement actual WhatsApp API integration
+    return {
+        "message": "WhatsApp message would be sent",
+        "recipient": recipient_phone,
+        "document": document_type
+    }
+
+# ==================== VEHICLE MAINTENANCE DETAILED ====================
+
+@api_router.post("/vehicles/{vehicle_id}/manutencoes")
+async def add_vehicle_maintenance(
+    vehicle_id: str,
+    manutencao: VehicleMaintenance,
+    current_user: Dict = Depends(get_current_user)
+):
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTOR, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    manutencao_dict = manutencao.model_dump()
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {
+            "$push": {"manutencoes": manutencao_dict},
+            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    return {"message": "Maintenance added", "manutencao_id": manutencao.id}
+
+@api_router.get("/vehicles/{vehicle_id}/manutencoes/{manutencao_id}")
+async def get_maintenance_detail(
+    vehicle_id: str,
+    manutencao_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    for manutencao in vehicle.get("manutencoes", []):
+        if manutencao.get("id") == manutencao_id:
+            return manutencao
+    
+    raise HTTPException(status_code=404, detail="Maintenance not found")
+
+# ==================== ADMIN SETTINGS ====================
+
+@api_router.get("/admin/settings")
+async def get_admin_settings(current_user: Dict = Depends(get_current_user)):
+    settings = await db.settings.find_one({"id": "admin_settings"}, {"_id": 0})
+    if not settings:
+        # Create default settings
+        default_settings = {
+            "id": "admin_settings",
+            "anos_validade_matricula": 20,
+            "km_aviso_manutencao": 5000,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_by": "system"
+        }
+        await db.settings.insert_one(default_settings)
+        settings = default_settings
+    
+    if isinstance(settings.get("updated_at"), str):
+        settings["updated_at"] = datetime.fromisoformat(settings["updated_at"])
+    
+    return settings
+
+@api_router.put("/admin/settings")
+async def update_admin_settings(
+    anos_validade_matricula: Optional[int] = None,
+    km_aviso_manutencao: Optional[int] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    update_data = {"updated_at": datetime.now(timezone.utc).isoformat(), "updated_by": current_user["id"]}
+    
+    if anos_validade_matricula is not None:
+        update_data["anos_validade_matricula"] = anos_validade_matricula
+    
+    if km_aviso_manutencao is not None:
+        update_data["km_aviso_manutencao"] = km_aviso_manutencao
+    
+    await db.settings.update_one(
+        {"id": "admin_settings"},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    return {"message": "Settings updated", "settings": update_data}
+
 app.include_router(api_router)
 
 app.add_middleware(
