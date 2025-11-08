@@ -144,22 +144,30 @@ class Motorista(BaseModel):
     approved_by: Optional[str] = None
     approved_at: Optional[datetime] = None
 
-# Vehicle Models
+# Vehicle Models - EXPANDED
 class VehicleInsurance(BaseModel):
     seguradora: str
     apolice: str
     data_inicio: str
     data_validade: str
     preco: float
+    carta_verde_url: Optional[str] = None
+    condicoes: Optional[str] = None
     notas: Optional[str] = None
 
 class VehicleMaintenance(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     data_intervencao: str
+    tipo_manutencao: str
     descricao: str
+    descricao_detalhada: Optional[str] = None
     custos: float
     oficina: str
     tempo_intervencao: str
     km_intervencao: int
+    data_proxima: Optional[str] = None
+    km_proxima: Optional[int] = None
+    o_que_fazer: Optional[str] = None
 
 class VehiclePart(BaseModel):
     fornecedor: str
@@ -177,7 +185,9 @@ class VehicleTires(BaseModel):
 class VehicleExtinguisher(BaseModel):
     fornecedor: str
     preco: float
+    data_entrega: str
     data_validade: str
+    certificado_url: Optional[str] = None
 
 class VehicleInspection(BaseModel):
     fornecedor: str
@@ -201,21 +211,35 @@ class VehicleFuelCard(BaseModel):
     codigo: str
     plafon: float
 
+class RegimeAluguer(BaseModel):
+    valor_aluguer: float
+    comissao_motorista: float
+    comissao_parceiro: float
+    via_verde_incluida: bool = False
+    combustivel_incluido: bool = False
+    outras_condicoes: Optional[str] = None
+
 class VehicleAvailability(BaseModel):
     status: str  # disponivel, atribuido, manutencao, seguro, sinistro, venda
-    atribuido_a: Optional[str] = None
-    comissao_full_time: Optional[float] = None
-    comissao_part_time: Optional[float] = None
+    motoristas_atribuidos: List[str] = []
+    data_entrega_manutencao: Optional[str] = None
+    tipo_manutencao: Optional[str] = None
+    regime_aluguer: Optional[RegimeAluguer] = None
 
 class VehicleCreate(BaseModel):
     marca: str
     modelo: str
     matricula: str
-    ano: int
+    matricula_dia: int
+    matricula_mes: int
+    matricula_ano: int
+    matricula_validade: str  # calculated based on admin config
     cor: str
     tipo: str
+    km_atual: int = 0
     seguro: Optional[VehicleInsurance] = None
     disponibilidade: VehicleAvailability
+    parceiro_id: Optional[str] = None
 
 class Vehicle(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -223,7 +247,10 @@ class Vehicle(BaseModel):
     marca: str
     modelo: str
     matricula: str
-    ano: int
+    matricula_dia: int
+    matricula_mes: int
+    matricula_ano: int
+    matricula_validade: str
     cor: str
     tipo: str
     seguro: Optional[VehicleInsurance] = None
@@ -238,9 +265,12 @@ class Vehicle(BaseModel):
     disponibilidade: VehicleAvailability
     tem_triangulo_colete: bool = False
     km_atual: int = 0
+    km_aviso_manutencao: int = 5000  # configurable by admin
+    alertas_manutencao: List[str] = []
     created_at: datetime
     updated_at: datetime
     owner_id: Optional[str] = None
+    parceiro_id: Optional[str] = None
 
 # Financial Models
 class ExpenseCreate(BaseModel):
