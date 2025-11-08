@@ -14,6 +14,7 @@ import { Plus, TrendingUp, TrendingDown, DollarSign, Upload, FileSpreadsheet } f
 import { useNavigate } from 'react-router-dom';
 
 const Financials = ({ user, onLogout }) => {
+  const navigate = useNavigate();
   const [vehicles, setVehicles] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [revenues, setRevenues] = useState([]);
