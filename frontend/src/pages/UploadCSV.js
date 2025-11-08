@@ -187,22 +187,13 @@ const UploadCSV = ({ user, onLogout }) => {
             <CardTitle>Informações Gerais</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="motorista">Motorista *</Label>
-              <select
-                id="motorista"
-                value={selectedMotorista}
-                onChange={(e) => setSelectedMotorista(e.target.value)}
-                className="w-full p-2 border rounded-md"
-              >
-                <option value="">Selecione um motorista</option>
-                {motoristas.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {parceiroInfo && (
+              <div className="p-4 bg-slate-50 rounded-lg">
+                <p className="text-sm text-slate-600">Importação para:</p>
+                <p className="text-lg font-semibold">{parceiroInfo.name || parceiroInfo.email}</p>
+                <p className="text-sm text-slate-500">Role: {parceiroInfo.role}</p>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div>
