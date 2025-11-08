@@ -515,12 +515,16 @@ class Motorista(BaseModel):
 class TipoContrato(BaseModel):
     tipo: str  # aluguer, comissao, motorista_privado
     valor_aluguer: Optional[float] = None
-    comissao_parceiro: Optional[float] = None
-    comissao_motorista: Optional[float] = None
+    comissao_parceiro: Optional[float] = None  # % da comissão para o parceiro
+    comissao_motorista: Optional[float] = None  # % da comissão para o motorista (soma deve ser 100%)
     inclui_combustivel: bool = False
     inclui_via_verde: bool = False
     regime: Optional[str] = None  # full_time, part_time
-    horarios_disponiveis: Optional[str] = None  # "09:00-18:00" para part_time
+    # Part-time: 4 turnos livres configuráveis (opcionais)
+    horario_turno_1: Optional[str] = None  # Ex: "09:00-13:00"
+    horario_turno_2: Optional[str] = None  # Ex: "14:00-18:00"
+    horario_turno_3: Optional[str] = None  # Ex: "19:00-23:00"
+    horario_turno_4: Optional[str] = None  # Ex: "00:00-06:00"
 
 class CategoriasUber(BaseModel):
     uberx: bool = False
