@@ -120,6 +120,13 @@ const Financials = ({ user, onLogout }) => {
             <p className="text-slate-600">Gerir receitas e despesas</p>
           </div>
           <div className="flex space-x-2">
+            <Button 
+              onClick={() => navigate('/upload-csv')}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              Importar CSV
+            </Button>
             <Dialog open={showExpenseDialog} onOpenChange={setShowExpenseDialog}>
               <DialogTrigger asChild>
                 <Button variant="outline" className="border-red-600 text-red-600 hover:bg-red-50" data-testid="add-expense-button">
