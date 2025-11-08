@@ -65,7 +65,7 @@ const UploadCSV = ({ user, onLogout }) => {
 
       setMessage({ 
         type: 'success', 
-        text: `CSV Uber importado com sucesso! Total: €${response.data.total_pago}` 
+        text: `CSV Uber importado com sucesso! ${response.data.registos_importados} registos, Total: €${response.data.total_pago.toFixed(2)}` 
       });
       fileInput.value = '';
     } catch (error) {
