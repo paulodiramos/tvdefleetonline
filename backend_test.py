@@ -982,6 +982,17 @@ startxref
         self.test_alertas_resolver_ignorar()
         self.test_background_task_logs()
         
+        # NEW EXPANDED FEATURES
+        print("\n🆕 NEW EXPANDED FEATURES (HIGH PRIORITY)")
+        print("-" * 50)
+        self.test_vehicle_photo_upload_limit()
+        self.test_vehicle_photo_delete()
+        self.test_parceiro_expanded_fields()
+        self.test_parceiro_backward_compatibility()
+        self.test_motorista_new_document_types()
+        self.test_vehicle_part_time_contract()
+        self.test_file_serving_vehicles_folder()
+        
         # Summary
         print("\n" + "=" * 80)
         print("TEST SUMMARY")
