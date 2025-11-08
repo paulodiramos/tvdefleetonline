@@ -6,12 +6,42 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Users, CheckCircle, Clock, FileText } from 'lucide-react';
+import { Users, CheckCircle, Clock, FileText, Plus, Mail, Phone, MapPin, CreditCard } from 'lucide-react';
 
 const Motoristas = ({ user, onLogout }) => {
   const [motoristas, setMotoristas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [selectedMotorista, setSelectedMotorista] = useState(null);
+  const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [newMotorista, setNewMotorista] = useState({
+    email: '',
+    name: '',
+    phone: '',
+    morada_completa: '',
+    codigo_postal: '',
+    data_nascimento: '',
+    nacionalidade: 'Portuguesa',
+    tipo_documento: 'CC',
+    numero_documento: '',
+    validade_documento: '',
+    nif: '',
+    carta_conducao_numero: '',
+    carta_conducao_validade: '',
+    licenca_tvde_numero: '',
+    licenca_tvde_validade: '',
+    regime: 'aluguer',
+    iban: '',
+    whatsapp: '',
+    tipo_pagamento: 'recibo_verde',
+    senha_provisoria: true
+  });
 
   useEffect(() => {
     fetchMotoristas();
@@ -38,6 +68,40 @@ const Motoristas = ({ user, onLogout }) => {
     }
   };
 
+  const handleAddMotorista = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.post(`${API}/motoristas/register`, newMotorista);
+      toast.success('Motorista adicionado! Senha provisória: últimos 9 dígitos do telefone');
+      setShowAddDialog(false);
+      fetchMotoristas();
+      setNewMotorista({
+        email: '',
+        name: '',
+        phone: '',
+        morada_completa: '',
+        codigo_postal: '',
+        data_nascimento: '',
+        nacionalidade: 'Portuguesa',
+        tipo_documento: 'CC',
+        numero_documento: '',
+        validade_documento: '',
+        nif: '',
+        carta_conducao_numero: '',
+        carta_conducao_validade: '',
+        licenca_tvde_numero: '',
+        licenca_tvde_validade: '',
+        regime: 'aluguer',
+        iban: '',
+        whatsapp: '',
+        tipo_pagamento: 'recibo_verde',
+        senha_provisoria: true
+      });
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao adicionar motorista');
+    }
+  };
+
   const getInitials = (name) => {
     return name
       .split(' ')
@@ -60,9 +124,156 @@ const Motoristas = ({ user, onLogout }) => {
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="space-y-6" data-testid="motoristas-page">
-        <div>
-          <h1 className="text-4xl font-bold text-slate-800 mb-2">Motoristas</h1>
-          <p className="text-slate-600">Gerir motoristas e aprovações</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-800 mb-2">Motoristas</h1>
+            <p className="text-slate-600">Gerir motoristas e aprovações</p>
+          </div>
+          {(user.role === 'admin' || user.role === 'gestor_associado' || user.role === 'parceiro_associado') && (
+            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+              <DialogTrigger asChild>
+                <Button className="bg-emerald-600 hover:bg-emerald-700" data-testid="add-motorista-button">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar Motorista
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" data-testid="add-motorista-dialog">
+                <DialogHeader>
+                  <DialogTitle>Adicionar Novo Motorista</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleAddMotorista} className="space-y-6">
+                  <Tabs defaultValue="pessoal" className="w-full">
+                    <TabsList className="grid w-full grid-cols-3">
+                      <TabsTrigger value="pessoal">Dados Pessoais</TabsTrigger>
+                      <TabsTrigger value="documentacao">Documentação</TabsTrigger>
+                      <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="pessoal" className="space-y-4 mt-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Nome Completo *</Label>
+                          <Input value={newMotorista.name} onChange={(e) => setNewMotorista({...newMotorista, name: e.target.value})} required />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Email *</Label>
+                          <Input type="email" value={newMotorista.email} onChange={(e) => setNewMotorista({...newMotorista, email: e.target.value})} required />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Telefone *</Label>
+                          <Input value={newMotorista.phone} onChange={(e) => setNewMotorista({...newMotorista, phone: e.target.value})} required />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>WhatsApp</Label>
+                          <Input value={newMotorista.whatsapp} onChange={(e) => setNewMotorista({...newMotorista, whatsapp: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Data Nascimento</Label>
+                          <Input type="date" value={newMotorista.data_nascimento} onChange={(e) => setNewMotorista({...newMotorista, data_nascimento: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Nacionalidade</Label>
+                          <Input value={newMotorista.nacionalidade} onChange={(e) => setNewMotorista({...newMotorista, nacionalidade: e.target.value})} />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Morada Completa</Label>
+                        <Input value={newMotorista.morada_completa} onChange={(e) => setNewMotorista({...newMotorista, morada_completa: e.target.value})} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Código Postal</Label>
+                        <Input value={newMotorista.codigo_postal} onChange={(e) => setNewMotorista({...newMotorista, codigo_postal: e.target.value})} />
+                      </div>
+                    </TabsContent>
+                    <TabsContent value="documentacao" className="space-y-4 mt-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Tipo Documento</Label>
+                          <Select value={newMotorista.tipo_documento} onValueChange={(value) => setNewMotorista({...newMotorista, tipo_documento: value})}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="CC">Cartão Cidadão</SelectItem>
+                              <SelectItem value="Passaporte">Passaporte</SelectItem>
+                              <SelectItem value="Residencia">Residência</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Nº Documento</Label>
+                          <Input value={newMotorista.numero_documento} onChange={(e) => setNewMotorista({...newMotorista, numero_documento: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Validade Documento</Label>
+                          <Input type="date" value={newMotorista.validade_documento} onChange={(e) => setNewMotorista({...newMotorista, validade_documento: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>NIF</Label>
+                          <Input value={newMotorista.nif} onChange={(e) => setNewMotorista({...newMotorista, nif: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Nº Carta Condução</Label>
+                          <Input value={newMotorista.carta_conducao_numero} onChange={(e) => setNewMotorista({...newMotorista, carta_conducao_numero: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Validade Carta</Label>
+                          <Input type="date" value={newMotorista.carta_conducao_validade} onChange={(e) => setNewMotorista({...newMotorista, carta_conducao_validade: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Nº Licença TVDE</Label>
+                          <Input value={newMotorista.licenca_tvde_numero} onChange={(e) => setNewMotorista({...newMotorista, licenca_tvde_numero: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Validade TVDE</Label>
+                          <Input type="date" value={newMotorista.licenca_tvde_validade} onChange={(e) => setNewMotorista({...newMotorista, licenca_tvde_validade: e.target.value})} />
+                        </div>
+                      </div>
+                    </TabsContent>
+                    <TabsContent value="financeiro" className="space-y-4 mt-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>IBAN</Label>
+                          <Input value={newMotorista.iban} onChange={(e) => setNewMotorista({...newMotorista, iban: e.target.value})} />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Regime</Label>
+                          <Select value={newMotorista.regime} onValueChange={(value) => setNewMotorista({...newMotorista, regime: value})}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="aluguer">Aluguer</SelectItem>
+                              <SelectItem value="comissao">Comissão</SelectItem>
+                              <SelectItem value="carro_proprio">Carro Próprio</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Tipo Pagamento</Label>
+                          <Select value={newMotorista.tipo_pagamento} onValueChange={(value) => setNewMotorista({...newMotorista, tipo_pagamento: value})}>
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="fatura">Fatura</SelectItem>
+                              <SelectItem value="recibo_verde">Recibo Verde</SelectItem>
+                              <SelectItem value="sem_recibo">Sem Recibo</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                        <p className="text-sm text-blue-700"><strong>Nota:</strong> Será criada uma senha provisória com os últimos 9 dígitos do telefone. O motorista deverá alterá-la no primeiro login.</p>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
+                  <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700">
+                    Adicionar Motorista
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         {motoristas.length === 0 ? (
@@ -104,56 +315,198 @@ const Motoristas = ({ user, onLogout }) => {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Telefone:</span>
-                      <span className="font-medium">{motorista.phone}</span>
+                    <div className="flex items-center space-x-2 text-slate-600">
+                      <Phone className="w-4 h-4" />
+                      <span>{motorista.phone}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Carta:</span>
-                      <span className="font-medium">{motorista.license_number}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-600">Validade:</span>
-                      <span className="font-medium">{new Date(motorista.license_expiry).toLocaleDateString('pt-PT')}</span>
-                    </div>
+                    {motorista.carta_conducao_numero && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Carta:</span>
+                        <span className="font-medium">{motorista.carta_conducao_numero}</span>
+                      </div>
+                    )}
+                    {motorista.licenca_tvde_numero && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">TVDE:</span>
+                        <span className="font-medium">{motorista.licenca_tvde_numero}</span>
+                      </div>
+                    )}
+                    {motorista.regime && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Regime:</span>
+                        <Badge variant="outline" className="capitalize">{motorista.regime}</Badge>
+                      </div>
+                    )}
                   </div>
                   
-                  <div className="pt-3 border-t border-slate-200">
-                    <div className="flex items-center space-x-2 text-sm text-slate-600 mb-2">
-                      <FileText className="w-4 h-4" />
-                      <span>Documentos:</span>
-                    </div>
-                    <div className="space-y-1 text-xs">
-                      <div className="flex justify-between">
-                        <span>Carta:</span>
-                        <Badge variant="outline" className={motorista.documents?.license_photo ? "text-emerald-600" : "text-slate-400"}>
-                          {motorista.documents?.license_photo ? 'Enviado' : 'Pendente'}
-                        </Badge>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>CV:</span>
-                        <Badge variant="outline" className={motorista.documents?.cv_file ? "text-emerald-600" : "text-slate-400"}>
-                          {motorista.documents?.cv_file ? 'Enviado' : 'Pendente'}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-
-                  {!motorista.approved && (user.role === 'admin' || user.role === 'gestor_associado' || user.role === 'parceiro_associado') && (
+                  <div className="flex space-x-2 pt-3 border-t border-slate-200">
                     <Button 
-                      className="w-full bg-emerald-600 hover:bg-emerald-700 mt-4"
-                      onClick={() => handleApprove(motorista.id)}
-                      data-testid={`approve-motorista-${motorista.id}`}
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => {
+                        setSelectedMotorista(motorista);
+                        setShowDetailDialog(true);
+                      }}
                     >
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Aprovar Motorista
+                      Ver Detalhes
                     </Button>
-                  )}
+                    {!motorista.approved && (user.role === 'admin' || user.role === 'gestor_associado' || user.role === 'parceiro_associado') && (
+                      <Button 
+                        size="sm" 
+                        className="bg-emerald-600 hover:bg-emerald-700"
+                        onClick={() => handleApprove(motorista.id)}
+                        data-testid={`approve-motorista-${motorista.id}`}
+                      >
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Aprovar
+                      </Button>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
           </div>
         )}
+
+        {/* Detail Dialog */}
+        <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Detalhes do Motorista</DialogTitle>
+            </DialogHeader>
+            {selectedMotorista && (
+              <div className="space-y-6">
+                <div className="flex items-center space-x-4">
+                  <Avatar className="w-20 h-20">
+                    <AvatarFallback className="bg-emerald-100 text-emerald-700 text-2xl font-bold">
+                      {getInitials(selectedMotorista.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <h3 className="text-2xl font-bold">{selectedMotorista.name}</h3>
+                    <p className="text-slate-600">{selectedMotorista.email}</p>
+                  </div>
+                </div>
+
+                <Tabs defaultValue="pessoal" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="pessoal">Pessoal</TabsTrigger>
+                    <TabsTrigger value="docs">Documentação</TabsTrigger>
+                    <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="pessoal" className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-slate-600">Telefone</Label>
+                        <p className="font-medium">{selectedMotorista.phone}</p>
+                      </div>
+                      {selectedMotorista.whatsapp && (
+                        <div>
+                          <Label className="text-slate-600">WhatsApp</Label>
+                          <p className="font-medium">{selectedMotorista.whatsapp}</p>
+                        </div>
+                      )}
+                      {selectedMotorista.data_nascimento && (
+                        <div>
+                          <Label className="text-slate-600">Data Nascimento</Label>
+                          <p className="font-medium">{new Date(selectedMotorista.data_nascimento).toLocaleDateString('pt-PT')}</p>
+                        </div>
+                      )}
+                      {selectedMotorista.nacionalidade && (
+                        <div>
+                          <Label className="text-slate-600">Nacionalidade</Label>
+                          <p className="font-medium">{selectedMotorista.nacionalidade}</p>
+                        </div>
+                      )}
+                    </div>
+                    {selectedMotorista.morada_completa && (
+                      <div>
+                        <Label className="text-slate-600">Morada</Label>
+                        <p className="font-medium">{selectedMotorista.morada_completa}</p>
+                        {selectedMotorista.codigo_postal && <p className="text-sm text-slate-500">{selectedMotorista.codigo_postal}</p>}
+                      </div>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="docs" className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      {selectedMotorista.tipo_documento && (
+                        <div>
+                          <Label className="text-slate-600">Documento</Label>
+                          <p className="font-medium">{selectedMotorista.tipo_documento} - {selectedMotorista.numero_documento}</p>
+                        </div>
+                      )}
+                      {selectedMotorista.nif && (
+                        <div>
+                          <Label className="text-slate-600">NIF</Label>
+                          <p className="font-medium">{selectedMotorista.nif}</p>
+                        </div>
+                      )}
+                      {selectedMotorista.carta_conducao_numero && (
+                        <div>
+                          <Label className="text-slate-600">Carta Condução</Label>
+                          <p className="font-medium">{selectedMotorista.carta_conducao_numero}</p>
+                          <p className="text-xs text-slate-500">Val: {new Date(selectedMotorista.carta_conducao_validade).toLocaleDateString('pt-PT')}</p>
+                        </div>
+                      )}
+                      {selectedMotorista.licenca_tvde_numero && (
+                        <div>
+                          <Label className="text-slate-600">Licença TVDE</Label>
+                          <p className="font-medium">{selectedMotorista.licenca_tvde_numero}</p>
+                          <p className="text-xs text-slate-500">Val: {new Date(selectedMotorista.licenca_tvde_validade).toLocaleDateString('pt-PT')}</p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="financeiro" className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      {selectedMotorista.iban && (
+                        <div>
+                          <Label className="text-slate-600">IBAN</Label>
+                          <p className="font-medium font-mono text-sm">{selectedMotorista.iban}</p>
+                        </div>
+                      )}
+                      {selectedMotorista.regime && (
+                        <div>
+                          <Label className="text-slate-600">Regime</Label>
+                          <Badge className="capitalize">{selectedMotorista.regime}</Badge>
+                        </div>
+                      )}
+                      {selectedMotorista.tipo_pagamento && (
+                        <div>
+                          <Label className="text-slate-600">Tipo Pagamento</Label>
+                          <p className="font-medium capitalize">{selectedMotorista.tipo_pagamento.replace('_', ' ')}</p>
+                        </div>
+                      )}
+                    </div>
+                    {(selectedMotorista.email_uber || selectedMotorista.email_bolt) && (
+                      <div className="pt-4 border-t">
+                        <Label className="text-slate-600 mb-3 block">Plataformas</Label>
+                        <div className="space-y-2">
+                          {selectedMotorista.email_uber && (
+                            <div className="flex items-center justify-between p-2 bg-slate-50 rounded">
+                              <span className="text-sm font-medium">Uber</span>
+                              <span className="text-xs text-slate-600">{selectedMotorista.email_uber}</span>
+                            </div>
+                          )}
+                          {selectedMotorista.email_bolt && (
+                            <div className="flex items-center justify-between p-2 bg-slate-50 rounded">
+                              <span className="text-sm font-medium">Bolt</span>
+                              <span className="text-xs text-slate-600">{selectedMotorista.email_bolt}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </TabsContent>
+                </Tabs>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
