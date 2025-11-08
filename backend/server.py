@@ -1095,7 +1095,7 @@ async def process_prio_excel(file_content: bytes, parceiro_id: str) -> Dict[str,
             
             transacao = {
                 "id": str(uuid.uuid4()),
-                "motorista_id": motorista_id,
+                "parceiro_id": parceiro_id,
                 "cartao": str(row[5] or ""),
                 "data_transacao": data_transacao,
                 "hora_transacao": hora_transacao,
