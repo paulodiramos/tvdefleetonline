@@ -1830,6 +1830,38 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Background task for checking alerts
+import asyncio
+from typing import AsyncGenerator
+
+async def check_alerts_periodically():
+    """Background task to check alerts every 6 hours"""
+    while True:
+        try:
+            logger.info("Running periodic alert check...")
+            await check_and_create_alerts()
+            logger.info("Alert check completed successfully")
+        except Exception as e:
+            logger.error(f"Error during periodic alert check: {e}")
+        
+        # Wait 6 hours before next check
+        await asyncio.sleep(6 * 60 * 60)
+
+@app.on_event("startup")
+async def startup_event():
+    """Run startup tasks"""
+    # Run initial alert check
+    try:
+        logger.info("Running initial alert check...")
+        await check_and_create_alerts()
+        logger.info("Initial alert check completed")
+    except Exception as e:
+        logger.error(f"Error during initial alert check: {e}")
+    
+    # Start background task for periodic checks
+    asyncio.create_task(check_alerts_periodically())
+    logger.info("Background alert checker started")
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
