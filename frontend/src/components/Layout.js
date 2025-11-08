@@ -9,30 +9,35 @@ const Layout = ({ user, onLogout, children }) => {
 
   const isActive = (path) => location.pathname === path;
 
-  const navItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { path: '/vehicles', icon: Car, label: 'Veículos' },
-    { path: '/motoristas', icon: Users, label: 'Motoristas' },
-    { path: '/financials', icon: DollarSign, label: 'Financeiro' }
-  ];
+  // Build navigation items based on role
+  const getNavItems = () => {
+    // For parceiro/operacional role: Replace dashboard with reports, add payments, REMOVE financials
+    if (user.role === 'parceiro' || user.role === 'operacional') {
+      return [
+        { path: '/relatorios', icon: FileText, label: 'Relatórios' },
+        { path: '/vehicles', icon: Car, label: 'Veículos' },
+        { path: '/motoristas', icon: Users, label: 'Motoristas' },
+        { path: '/pagamentos', icon: CreditCard, label: 'Pagamentos' }
+      ];
+    }
 
-  // Add Parceiros for admin and gestao
-  if (user.role === 'admin' || user.role === 'gestao') {
-    navItems.splice(2, 0, { path: '/parceiros', icon: Building, label: 'Parceiros' });
-  }
-
-  // For parceiro/operacional role: Replace dashboard with reports, add payments, REMOVE financials
-  if (user.role === 'parceiro' || user.role === 'operacional') {
-    const parceiroNavItems = [
-      { path: '/relatorios', icon: FileText, label: 'Relatórios' },
+    // Default items for admin, gestao, motorista
+    const items = [
+      { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { path: '/vehicles', icon: Car, label: 'Veículos' },
       { path: '/motoristas', icon: Users, label: 'Motoristas' },
-      { path: '/pagamentos', icon: CreditCard, label: 'Pagamentos' }
+      { path: '/financials', icon: DollarSign, label: 'Financeiro' }
     ];
-    return parceiroNavItems;
-  }
 
-  return navItems;
+    // Add Parceiros for admin and gestao
+    if (user.role === 'admin' || user.role === 'gestao') {
+      items.splice(2, 0, { path: '/parceiros', icon: Building, label: 'Parceiros' });
+    }
+
+    return items;
+  };
+
+  const navItems = getNavItems();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
