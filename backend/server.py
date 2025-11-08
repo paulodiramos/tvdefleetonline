@@ -376,28 +376,44 @@ class ChangePasswordRequest(BaseModel):
     old_password: str
     new_password: str
 
-# Parceiro Model
+# Parceiro Model - EXPANDED
 class ParceiroCreate(BaseModel):
-    name: str
+    nome_empresa: str
+    contribuinte_empresa: str  # NIF da empresa
+    morada_completa: str
+    codigo_postal: str  # Formato: xxxx-xxx
+    localidade: str
+    nome_manager: str
+    telefone: str
+    telemovel: str
     email: EmailStr
-    phone: str
-    empresa: Optional[str] = None
-    nif: Optional[str] = None
-    morada: Optional[str] = None
+    codigo_certidao_comercial: str
+    validade_certidao_comercial: str  # Data validade
     gestor_associado_id: Optional[str] = None
 
 class Parceiro(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
-    name: str
+    nome_empresa: str
+    contribuinte_empresa: str
+    morada_completa: str
+    codigo_postal: str
+    localidade: str
+    nome_manager: str
+    telefone: str
+    telemovel: str
     email: str
-    phone: str
-    empresa: Optional[str] = None
-    nif: Optional[str] = None
-    morada: Optional[str] = None
+    codigo_certidao_comercial: str
+    validade_certidao_comercial: str
     gestor_associado_id: Optional[str] = None
     total_vehicles: int = 0
     created_at: datetime
+    # Campos antigos mantidos como opcionais para compatibilidade
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    empresa: Optional[str] = None
+    nif: Optional[str] = None
+    morada: Optional[str] = None
 
 # Admin Settings Model
 class AdminSettings(BaseModel):
