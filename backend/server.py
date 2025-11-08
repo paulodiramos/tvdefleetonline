@@ -41,6 +41,38 @@ class UserRole:
     PARCEIRO = "parceiro_associado"
     MOTORISTA = "motorista"
 
+# Parceiro Model
+class ParceiroCreate(BaseModel):
+    name: str
+    email: EmailStr
+    phone: str
+    empresa: Optional[str] = None
+    nif: Optional[str] = None
+    morada: Optional[str] = None
+    gestor_associado_id: Optional[str] = None
+
+class Parceiro(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    name: str
+    email: str
+    phone: str
+    empresa: Optional[str] = None
+    nif: Optional[str] = None
+    morada: Optional[str] = None
+    gestor_associado_id: Optional[str] = None
+    total_vehicles: int = 0
+    created_at: datetime
+
+# Admin Settings Model
+class AdminSettings(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = "admin_settings"
+    anos_validade_matricula: int = 20
+    km_aviso_manutencao: int = 5000
+    updated_at: datetime
+    updated_by: str
+
 class UserBase(BaseModel):
     email: EmailStr
     name: str
