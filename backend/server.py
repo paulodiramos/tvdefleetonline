@@ -1096,6 +1096,7 @@ async def process_prio_excel(file_content: bytes, motorista_id: str) -> Dict[str
                 "iva": float(row[13] or 0),
                 "total": float(row[18] or 0),
                 "kms": int(row[14] or 0) if row[14] else None,
+                "excel_original": f"uploads/csv/combustivel/{excel_filename}",
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
             
@@ -1104,9 +1105,6 @@ async def process_prio_excel(file_content: bytes, motorista_id: str) -> Dict[str
         # Store in database
         if transactions:
             await db.transacoes_combustivel.insert_many(transactions)
-        
-        # Clean up temp file
-        os.unlink(tmp_path)
         
         total_litros = sum(t["litros"] for t in transactions)
         total_valor = sum(t["total"] for t in transactions)
