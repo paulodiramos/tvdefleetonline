@@ -21,6 +21,12 @@ const Layout = ({ user, onLogout, children }) => {
     navItems.splice(2, 0, { path: '/parceiros', icon: Building, label: 'Parceiros' });
   }
 
+  // For parceiro role, replace dashboard with reports and add payments
+  if (user.role === 'parceiro' || user.role === 'operacional') {
+    navItems[0] = { path: '/relatorios', icon: FileText, label: 'Relatórios' };
+    navItems.push({ path: '/pagamentos', icon: CreditCard, label: 'Pagamentos' });
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Header */}
