@@ -278,11 +278,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Modelo TipoContrato atualizado com 4 campos opcionais: horario_turno_1, horario_turno_2, horario_turno_3, horario_turno_4."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Veículo criado com sucesso usando regime part_time e 4 horários configuráveis. Campos comissao_parceiro=60% e comissao_motorista=40% funcionando corretamente. Todos os campos de horário salvos adequadamente."
 
   - task: "Veículos - Comissão 100%"
     implemented: true
@@ -290,11 +293,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Campos comissao_parceiro e comissao_motorista devem somar 100%. Validação será implementada no frontend."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Campos de comissão funcionando corretamente. Testado com comissao_parceiro=60% e comissao_motorista=40% (soma 100%). Valores salvos e retornados corretamente na API."
 
   - task: "Veículos - Upload de até 3 fotos"
     implemented: true
@@ -302,11 +308,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Campo 'fotos' adicionado ao modelo Vehicle. Endpoint POST /vehicles/{id}/upload-photo criado. Máximo 3 fotos, todas convertidas para PDF. Endpoint DELETE /vehicles/{id}/photos/{index} para remover fotos."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Sistema de upload de fotos funcionando perfeitamente. Limite de 3 fotos por veículo corretamente aplicado (retorna 400 na 4ª foto). Todas as imagens JPG convertidas para PDF automaticamente. Endpoint DELETE /vehicles/{id}/photos/{index} funcionando. Arquivos salvos em /app/backend/uploads/vehicles/."
 
   - task: "Parceiros - Campos completos expandidos"
     implemented: true
@@ -314,11 +323,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Modelos ParceiroCreate e Parceiro expandidos com: nome_empresa, contribuinte_empresa, morada_completa, codigo_postal, localidade, nome_manager, telefone, telemovel, email, codigo_certidao_comercial, validade_certidao_comercial."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Parceiros com campos expandidos funcionando perfeitamente. Todos os novos campos (nome_empresa, contribuinte_empresa, morada_completa, codigo_postal, localidade, nome_manager, telefone, telemovel, email, codigo_certidao_comercial, validade_certidao_comercial) salvos e retornados corretamente. Compatibilidade com dados antigos mantida através de mapeamento automático de campos."
 
   - task: "Motoristas - Documentos com foto (PDF)"
     implemented: true
@@ -326,11 +338,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Modelo MotoristaDocuments expandido com: cartao_cidadao_foto, carta_conducao_foto, licenca_tvde_foto, comprovativo_morada, iban_comprovativo. Todos convertidos para PDF via endpoint existente de upload."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Todos os 5 novos tipos de documentos de motorista funcionando perfeitamente. Testados: cartao_cidadao_foto, carta_conducao_foto, licenca_tvde_foto, comprovativo_morada, iban_comprovativo. Todas as imagens JPG/PNG convertidas automaticamente para PDF. Arquivos salvos em /app/backend/uploads/motoristas/."
 
 metadata:
   created_by: "main_agent"
