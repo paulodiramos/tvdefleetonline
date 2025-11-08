@@ -1695,6 +1695,31 @@ async def get_parceiros(current_user: Dict = Depends(get_current_user)):
     for p in parceiros:
         if isinstance(p["created_at"], str):
             p["created_at"] = datetime.fromisoformat(p["created_at"])
+        
+        # Backward compatibility: map old fields to new fields if new fields are missing
+        if "nome_empresa" not in p and "empresa" in p:
+            p["nome_empresa"] = p["empresa"]
+        if "contribuinte_empresa" not in p and "nif" in p:
+            p["contribuinte_empresa"] = p["nif"]
+        if "morada_completa" not in p and "morada" in p:
+            p["morada_completa"] = p["morada"]
+        if "codigo_postal" not in p:
+            p["codigo_postal"] = "0000-000"  # Default value
+        if "localidade" not in p:
+            p["localidade"] = "N/A"  # Default value
+        if "nome_manager" not in p and "name" in p:
+            p["nome_manager"] = p["name"]
+        if "telefone" not in p and "phone" in p:
+            p["telefone"] = p["phone"]
+        if "telemovel" not in p:
+            p["telemovel"] = p.get("phone", "N/A")  # Use phone as fallback
+        if "email" not in p:
+            p["email"] = "noemail@example.com"  # Default value
+        if "codigo_certidao_comercial" not in p:
+            p["codigo_certidao_comercial"] = "N/A"  # Default value
+        if "validade_certidao_comercial" not in p:
+            p["validade_certidao_comercial"] = "2099-12-31"  # Default future date
+        
         # Count vehicles
         p["total_vehicles"] = await db.vehicles.count_documents({"parceiro_id": p["id"]})
     
