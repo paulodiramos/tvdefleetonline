@@ -178,6 +178,57 @@ const Dashboard = ({ user, onLogout }) => {
           </Card>
         </div>
 
+        {/* Alertas Section - Only for Admin, Gestor, Operacional */}
+        {(user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional') && alertas.length > 0 && (
+          <Card className="border-red-200 bg-red-50" data-testid="alertas-card">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-red-700">
+                <AlertTriangle className="w-5 h-5" />
+                <span>Alertas Urgentes ({alertas.length})</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {alertas.map((alerta) => (
+                  <div key={alerta.id} className="bg-white p-4 rounded-lg border border-red-200 flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <AlertCircle className="w-4 h-4 text-red-600" />
+                        <h4 className="font-semibold text-slate-800">{alerta.titulo}</h4>
+                      </div>
+                      <p className="text-sm text-slate-600 mb-2">{alerta.descricao}</p>
+                      <div className="flex items-center space-x-4 text-xs text-slate-500">
+                        <span className="capitalize">Tipo: {alerta.tipo.replace('_', ' ')}</span>
+                        {alerta.data_vencimento && (
+                          <span>Vencimento: {alerta.data_vencimento}</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex space-x-2 ml-4">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleResolverAlerta(alerta.id)}
+                        className="text-emerald-600 hover:bg-emerald-50"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleIgnorarAlerta(alerta.id)}
+                        className="text-slate-600 hover:bg-slate-50"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card data-testid="recent-activity-card">
           <CardHeader>
             <CardTitle>Atividade Recente</CardTitle>
