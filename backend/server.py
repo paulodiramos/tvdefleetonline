@@ -2616,12 +2616,12 @@ async def cancel_subscription(
 @api_router.post("/operacional/upload-csv-uber")
 async def upload_csv_uber(
     file: UploadFile = File(...),
-    motorista_id: str = Form(...),
+    parceiro_id: str = Form(...),
     periodo_inicio: str = Form(...),
     periodo_fim: str = Form(...),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Upload Uber CSV earnings file"""
+    """Upload Uber CSV earnings file (parceiro/operacional data)"""
     # Check feature access
     if not await check_feature_access(current_user, "upload_csv_ganhos"):
         raise HTTPException(
@@ -2632,8 +2632,8 @@ async def upload_csv_uber(
     # Read file content
     file_content = await file.read()
     
-    # Process CSV
-    result = await process_uber_csv(file_content, motorista_id, periodo_inicio, periodo_fim)
+    # Process CSV (parceiro_id instead of motorista_id)
+    result = await process_uber_csv(file_content, parceiro_id, periodo_inicio, periodo_fim)
     
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result["error"])
