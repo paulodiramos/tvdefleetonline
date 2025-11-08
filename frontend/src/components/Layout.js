@@ -9,12 +9,15 @@ const Layout = ({ user, onLogout, children }) => {
 
   const isActive = (path) => location.pathname === path;
 
-  const navItems = [
-    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  const navItems = [\n    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/vehicles', icon: Car, label: 'Veículos' },
     { path: '/motoristas', icon: Users, label: 'Motoristas' },
-    { path: '/financials', icon: DollarSign, label: 'Financeiro' }
-  ];
+    { path: '/financials', icon: DollarSign, label: 'Financeiro' }\n  ];
+
+  // Add Parceiros for admin and gestor
+  if (user.role === 'admin' || user.role === 'gestor_associado') {
+    navItems.splice(2, 0, { path: '/parceiros', icon: Building, label: 'Parceiros' });
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
