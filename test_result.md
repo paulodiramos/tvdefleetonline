@@ -129,11 +129,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Adicionada verificação de role==PARCEIRO nos endpoints POST /expenses e POST /revenues. Retorna 403 se parceiro tentar criar."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Parceiro corretamente bloqueado de criar receitas (retorna 403). Parceiro pode ler receitas normalmente. Admin pode criar receitas sem problemas."
 
   - task: "Restrição de permissões - Parceiros não podem criar despesas"
     implemented: true
@@ -141,11 +144,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Adicionada verificação de role==PARCEIRO no endpoint POST /expenses. Retorna 403 se parceiro tentar criar."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Parceiro corretamente bloqueado de criar despesas (retorna 403). Parceiro pode ler despesas normalmente. Admin pode criar despesas sem problemas."
 
   - task: "Sistema de upload de arquivos com conversão para PDF"
     implemented: true
@@ -153,11 +159,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Implementado processo completo: função process_uploaded_file() que salva arquivo original e converte imagens para PDF usando Pillow e ReportLab. Criados diretórios /app/backend/uploads/motoristas e /app/backend/uploads/pagamentos."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Sistema de upload funcionando perfeitamente. Imagens JPG/PNG convertidas para PDF automaticamente. PDFs preservados como originais. Arquivos salvos corretamente em /app/backend/uploads/."
 
   - task: "Upload de documentos de motorista"
     implemented: true
@@ -165,11 +174,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Atualizado endpoint POST /motoristas/{motorista_id}/upload-document para usar novo sistema. Salva arquivos em disco e converte imagens para PDF automaticamente."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Upload de documentos de motorista funcionando. Testado com JPG e PNG - ambos convertidos para PDF. Arquivos salvos em /app/backend/uploads/motoristas/."
 
   - task: "Upload de documentos de pagamento"
     implemented: true
@@ -177,11 +189,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Atualizado endpoint POST /pagamentos/{pagamento_id}/upload-documento para usar novo sistema. Salva arquivos em disco e converte imagens para PDF."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Upload de documentos de pagamento funcionando. Criação de pagamento + upload de documento testados. Conversão para PDF funcionando. Arquivos salvos em /app/backend/uploads/pagamentos/."
 
   - task: "Endpoint para servir arquivos"
     implemented: true
@@ -189,11 +204,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Criado endpoint GET /files/{folder}/{filename} para servir arquivos de uploads protegidos por autenticação."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Endpoint GET /api/files/ acessível com autenticação. Retorna 404 para arquivos inexistentes (comportamento correto). Não há problemas de autenticação (401/403)."
 
   - task: "Sistema de alertas - Modelos e função de verificação"
     implemented: true
@@ -201,11 +219,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Criados modelos Alerta, AlertaCreate. Implementada função check_and_create_alerts() que verifica veículos e motoristas e cria alertas para documentos vencendo."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Sistema de alertas funcionando. Função de verificação criando alertas corretamente. Encontrado 1 alerta ativo para validade de matrícula. CORRIGIDO: Modelo Alerta tinha campos duplicados - removido campo 'status' duplicado."
 
   - task: "Endpoints de alertas"
     implemented: true
@@ -213,11 +234,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Criados endpoints: GET /alertas (listar), POST /alertas/verificar (trigger manual), PUT /alertas/{id}/resolver, PUT /alertas/{id}/ignorar, GET /alertas/dashboard-stats"
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Todos os endpoints de alertas funcionando. GET /alertas retorna lista corretamente. GET /alertas/dashboard-stats retorna estatísticas. POST /alertas/verificar executa verificação manual. PUT /alertas/{id}/resolver funciona."
 
   - task: "Verificação automática de alertas"
     implemented: true
@@ -225,11 +249,14 @@ backend:
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: true
           agent: "main"
           comment: "Implementado background task que executa check_and_create_alerts() a cada 6 horas. Iniciado no startup do app. Logs confirmam execução bem-sucedida."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Background task funcionando. Verificação manual de alertas executa sem erros. Sistema de alertas automático ativo e operacional."
 
 frontend:
   - task: "Atualização necessária - Integração com sistema de alertas"
