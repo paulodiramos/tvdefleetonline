@@ -657,6 +657,8 @@ class Vehicle(BaseModel):
     km_aviso_manutencao: int = 5000
     alertas_manutencao: List[str] = []
     fotos: List[str] = []  # URLs das fotos (máximo 3, convertidas para PDF)
+    caucao: Optional[CaucaoVeiculo] = None  # Caução do veículo
+    campos_customizados: Dict[str, Any] = {}  # Campos adicionais customizáveis
     created_at: datetime
     updated_at: datetime
     parceiro_id: str
