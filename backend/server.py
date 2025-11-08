@@ -729,7 +729,6 @@ class Alerta(BaseModel):
     status: str  # ativo, resolvido, ignorado
     criado_em: datetime
     resolvido_em: Optional[datetime] = None
-    created_at: datetime
 
 # ==================== AUTH UTILITIES ====================
 
