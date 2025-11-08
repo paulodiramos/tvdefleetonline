@@ -784,14 +784,6 @@ class SubscriptionCreate(BaseModel):
     user_id: str
     plano_id: str
 
-# Caução Model (para veículos)
-class CaucaoVeiculo(BaseModel):
-    caucao_total: float = 0.0
-    caucao_divisao: str = "total"  # "semanal", "mensal", "total"
-    caucao_valor_semanal: float = 0.0  # Calculado automaticamente
-    caucao_pago: float = 0.0
-    caucao_restante: float = 0.0  # Calculado automaticamente
-
 # Alertas Models
 class AlertaCreate(BaseModel):
     tipo: str  # seguro, inspecao, licenca_tvde, manutencao, validade_matricula
