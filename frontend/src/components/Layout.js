@@ -9,10 +9,12 @@ const Layout = ({ user, onLogout, children }) => {
 
   const isActive = (path) => location.pathname === path;
 
-  const navItems = [\n    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  const navItems = [
+    { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/vehicles', icon: Car, label: 'Veículos' },
     { path: '/motoristas', icon: Users, label: 'Motoristas' },
-    { path: '/financials', icon: DollarSign, label: 'Financeiro' }\n  ];
+    { path: '/financials', icon: DollarSign, label: 'Financeiro' }
+  ];
 
   // Add Parceiros for admin and gestor
   if (user.role === 'admin' || user.role === 'gestor_associado') {
