@@ -1002,15 +1002,15 @@ async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio
         logger.error(f"Error processing Uber CSV: {e}")
         return {"success": False, "error": str(e)}
 
-async def process_bolt_csv(file_content: bytes, motorista_id: str, periodo_inicio: str, periodo_fim: str) -> Dict[str, Any]:
-    """Process Bolt CSV file and extract earnings data"""
+async def process_bolt_csv(file_content: bytes, parceiro_id: str, periodo_inicio: str, periodo_fim: str) -> Dict[str, Any]:
+    """Process Bolt CSV file and extract earnings data (for parceiro/operacional)"""
     try:
         # Save original CSV file for audit/backup
         csv_dir = UPLOAD_DIR / "csv" / "bolt"
         csv_dir.mkdir(parents=True, exist_ok=True)
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        csv_filename = f"bolt_{motorista_id}_{timestamp}.csv"
+        csv_filename = f"bolt_{parceiro_id}_{timestamp}.csv"
         csv_path = csv_dir / csv_filename
         
         with open(csv_path, 'wb') as f:
@@ -1020,7 +1020,11 @@ async def process_bolt_csv(file_content: bytes, motorista_id: str, periodo_inici
         csv_text = file_content.decode('utf-8-sig')
         csv_reader = csv.DictReader(io.StringIO(csv_text))
         
-        # Find the motorista row
+        # Process CSV rows (can have multiple motoristas)
+        total_registos = 0
+        total_ganhos_liquidos = 0
+        total_viagens = 0
+        
         for row in csv_reader:
             nome = row.get("Motorista", "").strip()
             email = row.get("Email", "").strip()
@@ -1028,33 +1032,35 @@ async def process_bolt_csv(file_content: bytes, motorista_id: str, periodo_inici
             ganhos_liquidos = float(row.get("Ganhos líquidos|€", "0").replace(",", ".") or 0)
             viagens = int(row.get("Viagens terminadas", "0") or 0)
             
-            # Store in database
-            ganho = {
-                "id": str(uuid.uuid4()),
-                "motorista_id": motorista_id,
-                "email_motorista": email,
-                "nome_motorista": nome,
-                "periodo_inicio": periodo_inicio,
-                "periodo_fim": periodo_fim,
-                "ganhos_brutos": ganhos_brutos,
-                "ganhos_liquidos": ganhos_liquidos,
-                "viagens_terminadas": viagens,
-                "csv_original": f"uploads/csv/bolt/{csv_filename}",
-                "created_at": datetime.now(timezone.utc).isoformat()
-            }
-            
-            await db.ganhos_bolt.insert_one(ganho)
-            
-            return {
-                "success": True,
-                "motorista": nome,
-                "ganhos_liquidos": ganhos_liquidos,
-                "viagens": viagens,
-                "periodo": f"{periodo_inicio} a {periodo_fim}",
-                "csv_salvo": csv_filename
-            }
+            if nome:  # Only process if there's a name
+                # Store in database
+                ganho = {
+                    "id": str(uuid.uuid4()),
+                    "parceiro_id": parceiro_id,
+                    "email_motorista": email,
+                    "nome_motorista": nome,
+                    "periodo_inicio": periodo_inicio,
+                    "periodo_fim": periodo_fim,
+                    "ganhos_brutos": ganhos_brutos,
+                    "ganhos_liquidos": ganhos_liquidos,
+                    "viagens_terminadas": viagens,
+                    "csv_original": f"uploads/csv/bolt/{csv_filename}",
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                
+                await db.ganhos_bolt.insert_one(ganho)
+                total_registos += 1
+                total_ganhos_liquidos += ganhos_liquidos
+                total_viagens += viagens
         
-        return {"success": False, "error": "Motorista não encontrado no CSV"}
+        return {
+            "success": True,
+            "registos_importados": total_registos,
+            "ganhos_liquidos": total_ganhos_liquidos,
+            "viagens": total_viagens,
+            "periodo": f"{periodo_inicio} a {periodo_fim}",
+            "csv_salvo": csv_filename
+        }
     
     except Exception as e:
         logger.error(f"Error processing Bolt CSV: {e}")
