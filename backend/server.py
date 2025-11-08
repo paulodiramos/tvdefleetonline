@@ -939,6 +939,156 @@ async def check_feature_access(user: Dict, feature_name: str) -> bool:
     
     return feature_name in plano.get("features", [])
 
+# ==================== CSV PROCESSING UTILITIES ====================
+
+import csv
+import io
+
+async def process_uber_csv(file_content: bytes, motorista_id: str, periodo_inicio: str, periodo_fim: str) -> Dict[str, Any]:
+    """Process Uber CSV file and extract earnings data"""
+    try:
+        # Decode CSV
+        csv_text = file_content.decode('utf-8-sig')  # Handle BOM
+        csv_reader = csv.DictReader(io.StringIO(csv_text))
+        
+        # Find the motorista row
+        for row in csv_reader:
+            uuid_uber = row.get("UUID do motorista", "")
+            nome = f"{row.get('Nome próprio do motorista', '')} {row.get('Apelido do motorista', '')}".strip()
+            total_pago = float(row.get("Pago a si", "0").replace(",", ".") or 0)
+            
+            # Store in database
+            ganho = {
+                "id": str(uuid.uuid4()),
+                "motorista_id": motorista_id,
+                "uuid_motorista_uber": uuid_uber,
+                "nome_motorista": nome,
+                "periodo_inicio": periodo_inicio,
+                "periodo_fim": periodo_fim,
+                "total_pago": total_pago,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            await db.ganhos_uber.insert_one(ganho)
+            
+            return {
+                "success": True,
+                "motorista": nome,
+                "total_pago": total_pago,
+                "periodo": f"{periodo_inicio} a {periodo_fim}"
+            }
+        
+        return {"success": False, "error": "Motorista não encontrado no CSV"}
+    
+    except Exception as e:
+        logger.error(f"Error processing Uber CSV: {e}")
+        return {"success": False, "error": str(e)}
+
+async def process_bolt_csv(file_content: bytes, motorista_id: str, periodo_inicio: str, periodo_fim: str) -> Dict[str, Any]:
+    """Process Bolt CSV file and extract earnings data"""
+    try:
+        # Decode CSV
+        csv_text = file_content.decode('utf-8-sig')
+        csv_reader = csv.DictReader(io.StringIO(csv_text))
+        
+        # Find the motorista row
+        for row in csv_reader:
+            nome = row.get("Motorista", "").strip()
+            email = row.get("Email", "").strip()
+            ganhos_brutos = float(row.get("Ganhos brutos (total)|€", "0").replace(",", ".") or 0)
+            ganhos_liquidos = float(row.get("Ganhos líquidos|€", "0").replace(",", ".") or 0)
+            viagens = int(row.get("Viagens terminadas", "0") or 0)
+            
+            # Store in database
+            ganho = {
+                "id": str(uuid.uuid4()),
+                "motorista_id": motorista_id,
+                "email_motorista": email,
+                "nome_motorista": nome,
+                "periodo_inicio": periodo_inicio,
+                "periodo_fim": periodo_fim,
+                "ganhos_brutos": ganhos_brutos,
+                "ganhos_liquidos": ganhos_liquidos,
+                "viagens_terminadas": viagens,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            await db.ganhos_bolt.insert_one(ganho)
+            
+            return {
+                "success": True,
+                "motorista": nome,
+                "ganhos_liquidos": ganhos_liquidos,
+                "viagens": viagens,
+                "periodo": f"{periodo_inicio} a {periodo_fim}"
+            }
+        
+        return {"success": False, "error": "Motorista não encontrado no CSV"}
+    
+    except Exception as e:
+        logger.error(f"Error processing Bolt CSV: {e}")
+        return {"success": False, "error": str(e)}
+
+async def process_prio_excel(file_content: bytes, motorista_id: str) -> Dict[str, Any]:
+    """Process Prio Excel file and extract fuel transactions"""
+    try:
+        # Save to temp file and read with openpyxl
+        import tempfile
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp:
+            tmp.write(file_content)
+            tmp_path = tmp.name
+        
+        wb = openpyxl.load_workbook(tmp_path)
+        sheet = wb.active
+        
+        # Skip header rows (first 3 rows are empty/header)
+        transactions = []
+        for row in sheet.iter_rows(min_row=5, values_only=True):
+            if not row[3]:  # Skip if no date
+                continue
+            
+            data_transacao = row[3].strftime('%Y-%m-%d') if hasattr(row[3], 'strftime') else str(row[3])
+            hora_transacao = row[4].strftime('%H:%M:%S') if hasattr(row[4], 'strftime') else str(row[4])
+            
+            transacao = {
+                "id": str(uuid.uuid4()),
+                "motorista_id": motorista_id,
+                "cartao": str(row[5] or ""),
+                "data_transacao": data_transacao,
+                "hora_transacao": hora_transacao,
+                "posto": str(row[0] or ""),
+                "combustivel": str(row[10] or ""),
+                "litros": float(row[9] or 0),
+                "valor_liquido": float(row[12] or 0),
+                "iva": float(row[13] or 0),
+                "total": float(row[18] or 0),
+                "kms": int(row[14] or 0) if row[14] else None,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            transactions.append(transacao)
+        
+        # Store in database
+        if transactions:
+            await db.transacoes_combustivel.insert_many(transactions)
+        
+        # Clean up temp file
+        os.unlink(tmp_path)
+        
+        total_litros = sum(t["litros"] for t in transactions)
+        total_valor = sum(t["total"] for t in transactions)
+        
+        return {
+            "success": True,
+            "transacoes_importadas": len(transactions),
+            "total_litros": total_litros,
+            "total_valor": total_valor
+        }
+    
+    except Exception as e:
+        logger.error(f"Error processing Prio Excel: {e}")
+        return {"success": False, "error": str(e)}
+
 # ==================== AUTH ENDPOINTS ====================
 
 @api_router.post("/auth/register", response_model=User)
