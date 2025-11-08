@@ -443,6 +443,104 @@ async def get_me(current_user: Dict = Depends(get_current_user)):
         current_user["created_at"] = datetime.fromisoformat(current_user["created_at"])
     return User(**current_user)
 
+# ==================== USER PROFILE ENDPOINTS ====================
+
+@api_router.put("/profile/update")
+async def update_profile(profile_data: UserProfileUpdate, current_user: Dict = Depends(get_current_user)):
+    update_dict = {k: v for k, v in profile_data.model_dump().items() if v is not None}
+    
+    if not update_dict:
+        raise HTTPException(status_code=400, detail="No data to update")
+    
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": update_dict}
+    )
+    
+    return {"message": "Profile updated successfully"}
+
+@api_router.post("/profile/change-password")
+async def change_password(password_data: ChangePasswordRequest, current_user: Dict = Depends(get_current_user)):
+    user = await db.users.find_one({"id": current_user["id"]})
+    
+    if not verify_password(password_data.old_password, user["password"]):
+        raise HTTPException(status_code=400, detail="Senha antiga incorreta")
+    
+    new_hashed = hash_password(password_data.new_password)
+    
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {"password": new_hashed, "senha_provisoria": False}}
+    )
+    
+    # Update motorista record if exists
+    await db.motoristas.update_one(
+        {"id": current_user["id"]},
+        {"$set": {"senha_provisoria": False}}
+    )
+    
+    return {"message": "Password changed successfully"}
+
+@api_router.get("/profile/permissions")
+async def get_user_permissions(current_user: Dict = Depends(get_current_user)):
+    role = current_user["role"]
+    
+    permissions = {
+        UserRole.ADMIN: {
+            "can_manage_users": True,
+            "can_manage_all_vehicles": True,
+            "can_manage_all_motoristas": True,
+            "can_manage_parceiros": True,
+            "can_view_all_reports": True,
+            "can_configure_system": True,
+            "description": "Acesso total ao sistema"
+        },
+        UserRole.GESTAO: {
+            "can_manage_users": False,
+            "can_manage_all_vehicles": True,
+            "can_manage_all_motoristas": True,
+            "can_manage_parceiros": True,
+            "can_view_all_reports": True,
+            "can_configure_system": False,
+            "description": "Gestão de múltiplos parceiros e frotas"
+        },
+        UserRole.PARCEIRO: {
+            "can_manage_users": False,
+            "can_manage_all_vehicles": False,
+            "can_manage_all_motoristas": False,
+            "can_manage_parceiros": False,
+            "can_view_all_reports": False,
+            "can_configure_system": False,
+            "description": "Gestão de frota atribuída e motoristas associados"
+        },
+        UserRole.OPERACIONAL: {
+            "can_manage_users": False,
+            "can_manage_all_vehicles": False,
+            "can_manage_all_motoristas": False,
+            "can_manage_parceiros": False,
+            "can_view_all_reports": False,
+            "can_configure_system": False,
+            "can_manage_own_fleet": True,
+            "can_set_service_levels": True,
+            "description": "Gestão operacional de frota própria com níveis de serviço"
+        },
+        UserRole.MOTORISTA: {
+            "can_manage_users": False,
+            "can_manage_all_vehicles": False,
+            "can_manage_all_motoristas": False,
+            "can_manage_parceiros": False,
+            "can_view_all_reports": False,
+            "can_configure_system": False,
+            "description": "Acesso a veículos atribuídos e dados pessoais"
+        }
+    }
+    
+    return {
+        "role": role,
+        "permissions": permissions.get(role, {}),
+        "user": current_user
+    }
+
 # ==================== MOTORISTA ENDPOINTS ====================
 
 @api_router.post("/motoristas/register", response_model=Motorista)
