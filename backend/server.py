@@ -677,8 +677,8 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: Dict = Depen
 @api_router.get("/vehicles", response_model=List[Vehicle])
 async def get_vehicles(current_user: Dict = Depends(get_current_user)):
     query = {}
-    if current_user["role"] == UserRole.PARCEIRO:
-        query["owner_id"] = current_user["id"]
+    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        query["parceiro_id"] = current_user["id"]
     
     vehicles = await db.vehicles.find(query, {"_id": 0}).to_list(1000)
     for v in vehicles:
