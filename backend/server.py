@@ -1998,6 +1998,95 @@ async def get_public_planos(tipo_usuario: Optional[str] = None):
     
     return planos
 
+@api_router.post("/admin/seed-planos")
+async def seed_planos(current_user: Dict = Depends(get_current_user)):
+    """Admin: Seed default subscription plans"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Check if plans already exist
+    existing_count = await db.planos.count_documents({})
+    if existing_count > 0:
+        return {"message": f"Planos already exist ({existing_count} planos found). Skipping seed."}
+    
+    default_planos = [
+        # PARCEIRO PLANS
+        {
+            "id": str(uuid.uuid4()),
+            "nome": "Parceiro Base",
+            "tipo_usuario": "parceiro",
+            "preco_por_unidade": 50.0,
+            "descricao": "Acesso a relatórios e gestão de pagamentos",
+            "features": ["relatorios", "pagamentos"],
+            "ativo": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "nome": "Parceiro Premium",
+            "tipo_usuario": "parceiro",
+            "preco_por_unidade": 80.0,
+            "descricao": "Base + Gestão de seguros",
+            "features": ["relatorios", "pagamentos", "seguros"],
+            "ativo": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "nome": "Parceiro Executive",
+            "tipo_usuario": "parceiro",
+            "preco_por_unidade": 120.0,
+            "descricao": "Gestão completa: seguros, manutenções, contas e emissão de contratos",
+            "features": ["relatorios", "pagamentos", "seguros", "manutencoes", "contas", "contratos"],
+            "ativo": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        },
+        # OPERACIONAL PLANS
+        {
+            "id": str(uuid.uuid4()),
+            "nome": "Operacional Base",
+            "tipo_usuario": "operacional",
+            "preco_por_unidade": 30.0,
+            "descricao": "Upload CSV de ganhos Uber/Bolt, inserção manual de combustível e via verde",
+            "features": ["upload_csv_ganhos", "combustivel_manual", "viaverde_manual"],
+            "ativo": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "nome": "Operacional Premium",
+            "tipo_usuario": "operacional",
+            "preco_por_unidade": 50.0,
+            "descricao": "Base + Upload CSV de KM + Gestão de veículos, manutenções e seguros",
+            "features": ["upload_csv_ganhos", "combustivel_manual", "viaverde_manual", "upload_csv_km", "gestao_veiculos", "gestao_manutencoes", "gestao_seguros"],
+            "ativo": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        },
+        {
+            "id": str(uuid.uuid4()),
+            "nome": "Operacional Executive",
+            "tipo_usuario": "operacional",
+            "preco_por_unidade": 80.0,
+            "descricao": "Premium + Ligação automática com fornecedores",
+            "features": ["upload_csv_ganhos", "combustivel_manual", "viaverde_manual", "upload_csv_km", "gestao_veiculos", "gestao_manutencoes", "gestao_seguros", "integracoes_fornecedores"],
+            "ativo": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+    ]
+    
+    await db.planos.insert_many(default_planos)
+    
+    return {
+        "message": "Default subscription plans created successfully",
+        "planos_created": len(default_planos)
+    }
+
 @api_router.post("/subscriptions", response_model=UserSubscription)
 async def create_subscription(
     subscription_data: SubscriptionCreate,
