@@ -789,6 +789,13 @@ async def get_expenses(vehicle_id: Optional[str] = None, current_user: Dict = De
 
 @api_router.post("/revenues", response_model=Revenue)
 async def create_revenue(revenue_data: RevenueCreate, current_user: Dict = Depends(get_current_user)):
+    # Parceiros não podem criar receitas - apenas visualizar e confirmar valores recebidos
+    if current_user["role"] == UserRole.PARCEIRO:
+        raise HTTPException(
+            status_code=403, 
+            detail="Parceiros não podem criar receitas. Apenas confirmar valores recebidos."
+        )
+    
     revenue_dict = revenue_data.model_dump()
     revenue_dict["id"] = str(uuid.uuid4())
     revenue_dict["created_at"] = datetime.now(timezone.utc).isoformat()
