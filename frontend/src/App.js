@@ -133,6 +133,18 @@ function App() {
               user ? <Pagamentos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
+          <Route
+            path="/upload-csv"
+            element={
+              user ? <UploadCSV user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/planos"
+            element={
+              user ? <Planos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
