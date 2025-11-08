@@ -40,9 +40,9 @@ const Layout = ({ user, onLogout, children }) => {
       items.push({ path: '/upload-csv', icon: Upload, label: 'Upload CSV' });
     }
 
-    // Add Planos (only admin)
+    // Add Configurações (only admin) - replaces Planos
     if (user.role === 'admin') {
-      items.push({ path: '/planos', icon: Settings, label: 'Planos' });
+      items.push({ path: '/configuracoes', icon: Settings, label: 'Configurações' });
     }
 
     return items;
