@@ -48,6 +48,87 @@ security = HTTPBearer()
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
+# ==================== FILE UPLOAD UTILITIES ====================
+
+async def convert_image_to_pdf(image_path: Path, output_path: Path) -> Path:
+    """Convert an image file to PDF format"""
+    try:
+        img = Image.open(image_path)
+        
+        # Convert RGBA to RGB if necessary
+        if img.mode == 'RGBA':
+            img = img.convert('RGB')
+        
+        # Get image dimensions
+        img_width, img_height = img.size
+        
+        # Calculate scaling to fit A4 page
+        a4_width, a4_height = A4
+        scale = min(a4_width / img_width, a4_height / img_height) * 0.9
+        
+        new_width = img_width * scale
+        new_height = img_height * scale
+        
+        # Create PDF
+        c = canvas.Canvas(str(output_path), pagesize=A4)
+        
+        # Center image on page
+        x = (a4_width - new_width) / 2
+        y = (a4_height - new_height) / 2
+        
+        c.drawImage(str(image_path), x, y, width=new_width, height=new_height)
+        c.save()
+        
+        return output_path
+    except Exception as e:
+        logging.error(f"Error converting image to PDF: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to convert image to PDF: {str(e)}")
+
+async def save_uploaded_file(file: UploadFile, destination_dir: Path, filename: str) -> Path:
+    """Save uploaded file to destination directory"""
+    try:
+        file_path = destination_dir / filename
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        return file_path
+    except Exception as e:
+        logging.error(f"Error saving file: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to save file: {str(e)}")
+
+async def process_uploaded_file(file: UploadFile, destination_dir: Path, file_id: str) -> Dict[str, str]:
+    """
+    Process uploaded file: save it and convert to PDF if it's an image
+    Returns dict with 'original_path' and 'pdf_path' (if converted)
+    """
+    file_extension = Path(file.filename).suffix.lower()
+    original_filename = f"{file_id}_original{file_extension}"
+    
+    # Save original file
+    original_path = await save_uploaded_file(file, destination_dir, original_filename)
+    
+    result = {
+        "original_path": str(original_path.relative_to(ROOT_DIR)),
+        "pdf_path": None
+    }
+    
+    # Check if file is an image
+    image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp', '.heic', '.heif'}
+    
+    if file_extension in image_extensions:
+        # Convert image to PDF
+        pdf_filename = f"{file_id}.pdf"
+        pdf_path = destination_dir / pdf_filename
+        
+        await convert_image_to_pdf(original_path, pdf_path)
+        result["pdf_path"] = str(pdf_path.relative_to(ROOT_DIR))
+    elif file_extension == '.pdf':
+        # If already PDF, just reference it
+        result["pdf_path"] = result["original_path"]
+    
+    return result
+
 # ==================== MODELS ====================
 
 class UserRole:
