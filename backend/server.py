@@ -1139,6 +1139,89 @@ async def delete_vehicle(vehicle_id: str, current_user: Dict = Depends(get_curre
     await db.vehicles.delete_one({"id": vehicle_id})
     return {"message": "Vehicle deleted"}
 
+@api_router.post("/vehicles/{vehicle_id}/upload-photo")
+async def upload_vehicle_photo(
+    vehicle_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload vehicle photo (max 3 photos, converted to PDF)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Check if vehicle exists
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Check photo limit (max 3)
+    current_photos = vehicle.get("fotos", [])
+    if len(current_photos) >= 3:
+        raise HTTPException(status_code=400, detail="Maximum 3 photos allowed per vehicle")
+    
+    # Process file: save and convert to PDF
+    file_id = f"vehicle_{vehicle_id}_photo_{len(current_photos) + 1}_{uuid.uuid4()}"
+    
+    # Create vehicle photos directory if not exists
+    vehicle_photos_dir = UPLOAD_DIR / "vehicles"
+    vehicle_photos_dir.mkdir(exist_ok=True)
+    
+    file_info = await process_uploaded_file(file, vehicle_photos_dir, file_id)
+    
+    # Store PDF path in database
+    photo_url = file_info["pdf_path"] if file_info["pdf_path"] else file_info["original_path"]
+    
+    # Update vehicle with new photo
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$push": {"fotos": photo_url}}
+    )
+    
+    return {
+        "message": "Photo uploaded successfully",
+        "photo_url": photo_url,
+        "converted_to_pdf": file_info["pdf_path"] is not None,
+        "total_photos": len(current_photos) + 1
+    }
+
+@api_router.delete("/vehicles/{vehicle_id}/photos/{photo_index}")
+async def delete_vehicle_photo(
+    vehicle_id: str,
+    photo_index: int,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Delete a vehicle photo by index (0-2)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    fotos = vehicle.get("fotos", [])
+    if photo_index < 0 or photo_index >= len(fotos):
+        raise HTTPException(status_code=404, detail="Photo not found")
+    
+    # Remove photo from array
+    photo_to_remove = fotos[photo_index]
+    fotos.pop(photo_index)
+    
+    # Update database
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"fotos": fotos}}
+    )
+    
+    # Try to delete file from disk
+    try:
+        photo_path = ROOT_DIR / photo_to_remove
+        if photo_path.exists():
+            photo_path.unlink()
+    except Exception as e:
+        logger.error(f"Error deleting photo file: {e}")
+    
+    return {"message": "Photo deleted successfully"}
+
 # ==================== FINANCIAL ENDPOINTS ====================
 
 @api_router.post("/expenses", response_model=Expense)
