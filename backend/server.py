@@ -1066,15 +1066,15 @@ async def process_bolt_csv(file_content: bytes, parceiro_id: str, periodo_inicio
         logger.error(f"Error processing Bolt CSV: {e}")
         return {"success": False, "error": str(e)}
 
-async def process_prio_excel(file_content: bytes, motorista_id: str) -> Dict[str, Any]:
-    """Process Prio Excel file and extract fuel transactions"""
+async def process_prio_excel(file_content: bytes, parceiro_id: str) -> Dict[str, Any]:
+    """Process Prio Excel file and extract fuel transactions (for parceiro/operacional)"""
     try:
         # Save original Excel file for audit/backup
         excel_dir = UPLOAD_DIR / "csv" / "combustivel"
         excel_dir.mkdir(parents=True, exist_ok=True)
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        excel_filename = f"prio_{motorista_id}_{timestamp}.xlsx"
+        excel_filename = f"prio_{parceiro_id}_{timestamp}.xlsx"
         excel_path = excel_dir / excel_filename
         
         with open(excel_path, 'wb') as f:
