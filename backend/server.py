@@ -710,21 +710,35 @@ async def register_motorista(motorista_data: MotoristaCreate):
     return Motorista(**motorista_dict)
 
 @api_router.post("/motoristas/{motorista_id}/upload-document")
-async def upload_document(motorista_id: str, file: UploadFile = File(...), doc_type: str = Form(...)):
+async def upload_document(
+    motorista_id: str, 
+    file: UploadFile = File(...), 
+    doc_type: str = Form(...),
+    current_user: Dict = Depends(get_current_user)
+):
     motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista not found")
     
-    file_content = await file.read()
-    file_base64 = base64.b64encode(file_content).decode('utf-8')
+    # Process file: save and convert to PDF if image
+    file_id = f"{motorista_id}_{doc_type}_{uuid.uuid4()}"
+    file_info = await process_uploaded_file(file, MOTORISTAS_UPLOAD_DIR, file_id)
+    
+    # Store file path in database (prefer PDF version if available)
+    file_url = file_info["pdf_path"] if file_info["pdf_path"] else file_info["original_path"]
     
     update_field = f"documents.{doc_type}"
     await db.motoristas.update_one(
         {"id": motorista_id},
-        {"$set": {update_field: file_base64}}
+        {"$set": {update_field: file_url}}
     )
     
-    return {"message": "Document uploaded successfully", "doc_type": doc_type}
+    return {
+        "message": "Document uploaded successfully",
+        "doc_type": doc_type,
+        "file_url": file_url,
+        "converted_to_pdf": file_info["pdf_path"] is not None
+    }
 
 @api_router.get("/motoristas", response_model=List[Motorista])
 async def get_motoristas(current_user: Dict = Depends(get_current_user)):
