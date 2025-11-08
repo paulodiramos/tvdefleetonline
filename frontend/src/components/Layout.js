@@ -22,9 +22,8 @@ const Layout = ({ user, onLogout, children }) => {
       ];
     }
 
-    // Default items for admin, gestao, motorista
+    // Default items for admin, gestao, motorista (Dashboard removed - logo handles that)
     const items = [
-      { path: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
       { path: '/vehicles', icon: Car, label: 'Veículos' },
       { path: '/motoristas', icon: Users, label: 'Motoristas' },
       { path: '/financials', icon: DollarSign, label: 'Financeiro' }
