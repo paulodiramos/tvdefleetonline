@@ -1034,7 +1034,6 @@ async def process_prio_excel(file_content: bytes, motorista_id: str) -> Dict[str
     """Process Prio Excel file and extract fuel transactions"""
     try:
         # Save to temp file and read with openpyxl
-        import tempfile
         with tempfile.NamedTemporaryFile(delete=False, suffix='.xlsx') as tmp:
             tmp.write(file_content)
             tmp_path = tmp.name
