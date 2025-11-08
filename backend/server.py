@@ -643,13 +643,27 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: Dict = Depen
     vehicle_dict["id"] = str(uuid.uuid4())
     vehicle_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     vehicle_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
-    vehicle_dict["owner_id"] = current_user["id"]
+    
+    # Calculate alerta_validade (30 days before expiry)
+    validade = datetime.fromisoformat(vehicle_data.validade_matricula)
+    dias_restantes = (validade - datetime.now(timezone.utc)).days
+    vehicle_dict["alerta_validade"] = dias_restantes <= 30
+    
     vehicle_dict["manutencoes"] = []
-    vehicle_dict["pecas"] = []
-    vehicle_dict["pneus"] = []
     vehicle_dict["inspecoes"] = []
-    vehicle_dict["tem_triangulo_colete"] = False
     vehicle_dict["km_atual"] = 0
+    vehicle_dict["km_aviso_manutencao"] = 5000
+    vehicle_dict["alertas_manutencao"] = []
+    vehicle_dict["disponibilidade"] = {
+        "status": "disponivel",
+        "motoristas_atribuidos": [],
+        "data_entrega_manutencao": None,
+        "tipo_manutencao": None
+    }
+    
+    # Set parceiro_id from current user if parceiro/operacional
+    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        vehicle_dict["parceiro_id"] = current_user["id"]
     
     await db.vehicles.insert_one(vehicle_dict)
     
