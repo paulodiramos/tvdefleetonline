@@ -2206,6 +2206,42 @@ async def get_parceiros(current_user: Dict = Depends(get_current_user)):
     
     return parceiros
 
+@api_router.get("/parceiros/{parceiro_id}")
+async def get_parceiro(parceiro_id: str, current_user: Dict = Depends(get_current_user)):
+    """Get specific parceiro by ID"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro not found")
+    
+    # Backward compatibility
+    if isinstance(parceiro.get("created_at"), str):
+        parceiro["created_at"] = datetime.fromisoformat(parceiro["created_at"])
+    
+    return parceiro
+
+@api_router.put("/parceiros/{parceiro_id}")
+async def update_parceiro(
+    parceiro_id: str,
+    updates: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Update parceiro data (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admin can update parceiros")
+    
+    result = await db.parceiros.update_one(
+        {"id": parceiro_id},
+        {"$set": updates}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Parceiro not found")
+    
+    return {"message": "Parceiro updated successfully"}
+
 # ==================== DOCUMENT SEND ENDPOINTS ====================
 
 @api_router.post("/documents/send-email")
