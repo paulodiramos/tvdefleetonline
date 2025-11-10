@@ -200,7 +200,9 @@ const VehicleData = ({ user, onLogout }) => {
         descricao: formData.dano_descricao,
         data: formData.dano_data,
         valor_reparacao: parseFloat(formData.dano_valor_reparacao),
-        estado: formData.dano_estado
+        estado: formData.dano_estado,
+        data_previsao_reparacao: formData.dano_data_previsao_reparacao || null,
+        responsavel: formData.dano_responsavel
       };
       
       await axios.put(`${API}/vehicles/${selectedVehicle}`, {
