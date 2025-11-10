@@ -23,6 +23,7 @@ import VehicleData from "@/pages/VehicleData";
 import VehiclePhotos from "@/pages/VehiclePhotos";
 import EditParceiro from "@/pages/EditParceiro";
 import Contratos from "@/pages/Contratos";
+import RecibosPagamentos from "@/pages/RecibosPagamentos";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
