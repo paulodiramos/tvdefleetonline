@@ -3178,38 +3178,7 @@ async def check_alerts_periodically():
         # Wait 6 hours before next check
         await asyncio.sleep(6 * 60 * 60)
 
-# ==================== CSV TEMPLATE DOWNLOADS ====================
-
-@api_router.get("/templates/csv/{template_name}")
-async def download_csv_template(template_name: str, current_user: Dict = Depends(get_current_user)):
-    """Download CSV template examples"""
-    templates_dir = ROOT_DIR / "templates" / "csv_examples"
-    
-    # Map template names to filenames
-    template_files = {
-        "uber": "uber_example.csv",
-        "bolt": "bolt_example.csv",
-        "prio": "prio_example.xlsx",
-        "viaverde": "viaverde_example.csv",
-        "gps": "gps_example.csv"
-    }
-    
-    if template_name not in template_files:
-        raise HTTPException(status_code=404, detail="Template not found")
-    
-    file_path = templates_dir / template_files[template_name]
-    
-    if not file_path.exists():
-        raise HTTPException(status_code=404, detail="Template file not found")
-    
-    # Set appropriate media type
-    media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" if template_name == "prio" else "text/csv"
-    
-    return FileResponse(
-        path=file_path,
-        media_type=media_type,
-        filename=template_files[template_name]
-    )
+# CSV template endpoint moved to correct location before app.include_router
 
 @app.on_event("startup")
 async def startup_event():
