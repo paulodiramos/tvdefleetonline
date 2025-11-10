@@ -164,6 +164,28 @@ const UploadCSV = ({ user, onLogout }) => {
     }
   };
 
+  const handleDownloadTemplate = async (templateName) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/templates/csv/${templateName}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${templateName}_exemplo.${templateName === 'prio' ? 'xlsx' : 'csv'}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading template', error);
+      setMessage({ type: 'error', text: 'Erro ao baixar template' });
+    }
+  };
+
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="space-y-6">
