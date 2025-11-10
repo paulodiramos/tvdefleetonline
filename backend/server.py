@@ -3177,6 +3177,259 @@ async def serve_file(folder: str, filename: str, current_user: Dict = Depends(ge
     
     return FileResponse(file_path)
 
+
+# ==================== CONTRACT ENDPOINTS ====================
+
+@api_router.post("/contratos/gerar")
+async def gerar_contrato(contrato_data: ContratoCreate, current_user: Dict = Depends(get_current_user)):
+    """Generate a new contract between parceiro, motorista and vehicle"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    try:
+        # Get parceiro data
+        parceiro = await db.users.find_one({"id": contrato_data.parceiro_id}, {"_id": 0})
+        if not parceiro:
+            raise HTTPException(status_code=404, detail="Parceiro not found")
+        
+        # Get motorista data
+        motorista = await db.motoristas.find_one({"id": contrato_data.motorista_id}, {"_id": 0})
+        if not motorista:
+            raise HTTPException(status_code=404, detail="Motorista not found")
+        
+        # Get vehicle data
+        vehicle = await db.vehicles.find_one({"id": contrato_data.vehicle_id}, {"_id": 0})
+        if not vehicle:
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+        
+        # Create contract
+        contrato_id = str(uuid.uuid4())
+        contrato = {
+            "id": contrato_id,
+            "parceiro_id": contrato_data.parceiro_id,
+            "motorista_id": contrato_data.motorista_id,
+            "vehicle_id": contrato_data.vehicle_id,
+            "parceiro_nome": parceiro.get("nome_empresa") or parceiro.get("name") or parceiro.get("email"),
+            "motorista_nome": motorista.get("name"),
+            "vehicle_matricula": vehicle.get("matricula"),
+            "status": "pendente",
+            "parceiro_assinado": False,
+            "motorista_assinado": False,
+            "parceiro_assinatura_data": None,
+            "motorista_assinatura_data": None,
+            "pdf_url": None,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.contratos.insert_one(contrato)
+        
+        return {
+            "message": "Contract generated successfully",
+            "contrato_id": contrato_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating contract: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/contratos")
+async def list_contratos(current_user: Dict = Depends(get_current_user)):
+    """List all contracts"""
+    try:
+        query = {}
+        
+        # Filter by user role
+        if current_user["role"] == UserRole.PARCEIRO:
+            query["parceiro_id"] = current_user["id"]
+        elif current_user["role"] == UserRole.MOTORISTA:
+            query["motorista_id"] = current_user["id"]
+        
+        contratos = await db.contratos.find(query, {"_id": 0}).sort("created_at", -1).to_list(100)
+        return contratos
+        
+    except Exception as e:
+        logger.error(f"Error listing contracts: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/contratos/{contrato_id}")
+async def get_contrato(contrato_id: str, current_user: Dict = Depends(get_current_user)):
+    """Get contract details"""
+    contrato = await db.contratos.find_one({"id": contrato_id}, {"_id": 0})
+    if not contrato:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    return contrato
+
+@api_router.post("/contratos/{contrato_id}/assinar")
+async def assinar_contrato(contrato_id: str, signer_data: Dict[str, str], current_user: Dict = Depends(get_current_user)):
+    """Sign a contract (parceiro or motorista)"""
+    contrato = await db.contratos.find_one({"id": contrato_id}, {"_id": 0})
+    if not contrato:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    signer_type = signer_data.get("signer_type")  # "parceiro" or "motorista"
+    
+    if signer_type == "parceiro":
+        if current_user["role"] != UserRole.PARCEIRO or current_user["id"] != contrato["parceiro_id"]:
+            raise HTTPException(status_code=403, detail="Not authorized to sign as parceiro")
+        
+        update_data = {
+            "parceiro_assinado": True,
+            "parceiro_assinatura_data": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Check if both signed
+        if contrato.get("motorista_assinado"):
+            update_data["status"] = "completo"
+        else:
+            update_data["status"] = "parceiro_assinado"
+            
+    elif signer_type == "motorista":
+        if current_user["role"] != UserRole.MOTORISTA or current_user["id"] != contrato["motorista_id"]:
+            raise HTTPException(status_code=403, detail="Not authorized to sign as motorista")
+        
+        update_data = {
+            "motorista_assinado": True,
+            "motorista_assinatura_data": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Check if both signed
+        if contrato.get("parceiro_assinado"):
+            update_data["status"] = "completo"
+        else:
+            update_data["status"] = "motorista_assinado"
+    else:
+        raise HTTPException(status_code=400, detail="Invalid signer_type")
+    
+    await db.contratos.update_one({"id": contrato_id}, {"$set": update_data})
+    
+    return {"message": "Contract signed successfully", "status": update_data.get("status")}
+
+@api_router.get("/contratos/{contrato_id}/download")
+async def download_contrato(contrato_id: str, current_user: Dict = Depends(get_current_user)):
+    """Download contract PDF"""
+    contrato = await db.contratos.find_one({"id": contrato_id}, {"_id": 0})
+    if not contrato:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    # Generate PDF on-the-fly
+    try:
+        # Get full data
+        parceiro = await db.users.find_one({"id": contrato["parceiro_id"]}, {"_id": 0})
+        motorista = await db.motoristas.find_one({"id": contrato["motorista_id"]}, {"_id": 0})
+        vehicle = await db.vehicles.find_one({"id": contrato["vehicle_id"]}, {"_id": 0})
+        
+        # Create PDF in memory
+        buffer = BytesIO()
+        c = canvas.Canvas(buffer, pagesize=A4)
+        
+        # Title
+        c.setFont("Helvetica-Bold", 18)
+        c.drawString(50, 800, "CONTRATO DE PRESTAÇÃO DE SERVIÇOS TVDE")
+        
+        # Contract ID and Date
+        c.setFont("Helvetica", 10)
+        c.drawString(50, 780, f"Contrato ID: {contrato_id}")
+        c.drawString(50, 765, f"Data: {datetime.fromisoformat(contrato['created_at']).strftime('%d/%m/%Y')}")
+        
+        # Parceiro section
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(50, 730, "PARCEIRO (Contratante)")
+        c.setFont("Helvetica", 10)
+        y_pos = 710
+        c.drawString(50, y_pos, f"Nome/Empresa: {parceiro.get('nome_empresa', parceiro.get('name', 'N/A'))}")
+        y_pos -= 15
+        c.drawString(50, y_pos, f"NIF: {parceiro.get('contribuinte_empresa', 'N/A')}")
+        y_pos -= 15
+        c.drawString(50, y_pos, f"Morada: {parceiro.get('morada_completa', 'N/A')}")
+        y_pos -= 15
+        c.drawString(50, y_pos, f"Email: {parceiro.get('email', 'N/A')}")
+        y_pos -= 15
+        c.drawString(50, y_pos, f"Telefone: {parceiro.get('telefone', 'N/A')}")
+        
+        # Motorista section
+        y_pos -= 30
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(50, y_pos, "MOTORISTA (Contratado)")
+        c.setFont("Helvetica", 10)
+        y_pos -= 20
+        c.drawString(50, y_pos, f"Nome: {motorista.get('name', 'N/A')}")
+        y_pos -= 15
+        c.drawString(50, y_pos, f"Email: {motorista.get('email', 'N/A')}")
+        y_pos -= 15
+        c.drawString(50, y_pos, f"NIF: {motorista.get('professional', {}).get('nif', 'N/A')}")
+        y_pos -= 15
+        c.drawString(50, y_pos, f"Licença TVDE: {motorista.get('professional', {}).get('licenca_tvde', 'N/A')}")
+        
+        # Vehicle section
+        y_pos -= 30
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(50, y_pos, "VEÍCULO")
+        c.setFont("Helvetica", 10)
+        y_pos -= 20
+        c.drawString(50, y_pos, f"Matrícula: {vehicle.get('matricula', 'N/A')}")
+        y_pos -= 15
+        c.drawString(50, y_pos, f"Marca/Modelo: {vehicle.get('marca', 'N/A')} {vehicle.get('modelo', 'N/A')}")
+        y_pos -= 15
+        c.drawString(50, y_pos, f"Ano: {vehicle.get('ano', 'N/A')}")
+        
+        # Contract terms
+        y_pos -= 40
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(50, y_pos, "CLÁUSULAS DO CONTRATO")
+        c.setFont("Helvetica", 9)
+        y_pos -= 20
+        
+        clauses = [
+            "1. O MOTORISTA compromete-se a prestar serviços de transporte de passageiros através de plataformas TVDE.",
+            "2. O veículo identificado permanecerá sob responsabilidade do MOTORISTA durante o período de vigência.",
+            "3. O MOTORISTA deverá manter em dia toda a documentação necessária (licença TVDE, seguro, inspeção).",
+            "4. As despesas de manutenção e combustível serão partilhadas conforme acordado entre as partes.",
+            "5. Este contrato é válido por tempo indeterminado, podendo ser rescindido por qualquer parte.",
+        ]
+        
+        for clause in clauses:
+            c.drawString(50, y_pos, clause)
+            y_pos -= 20
+        
+        # Signatures section
+        y_pos -= 40
+        c.setFont("Helvetica-Bold", 10)
+        
+        # Parceiro signature
+        c.drawString(80, y_pos, "PARCEIRO")
+        c.line(50, y_pos - 5, 250, y_pos - 5)
+        if contrato.get("parceiro_assinado"):
+            c.setFont("Helvetica", 8)
+            c.drawString(50, y_pos - 20, f"Assinado em: {datetime.fromisoformat(contrato['parceiro_assinatura_data']).strftime('%d/%m/%Y %H:%M')}")
+        
+        # Motorista signature
+        c.setFont("Helvetica-Bold", 10)
+        c.drawString(350, y_pos, "MOTORISTA")
+        c.line(320, y_pos - 5, 520, y_pos - 5)
+        if contrato.get("motorista_assinado"):
+            c.setFont("Helvetica", 8)
+            c.drawString(320, y_pos - 20, f"Assinado em: {datetime.fromisoformat(contrato['motorista_assinatura_data']).strftime('%d/%m/%Y %H:%M')}")
+        
+        c.save()
+        buffer.seek(0)
+        
+        return FileResponse(
+            path=buffer,
+            media_type="application/pdf",
+            filename=f"contrato_{contrato_id}.pdf"
+        )
+        
+    except Exception as e:
+        logger.error(f"Error generating contract PDF: {e}")
+        raise HTTPException(status_code=500, detail="Error generating PDF")
+
+
 # ==================== CSV TEMPLATE DOWNLOADS ====================
 
 @api_router.get("/templates/csv/{template_name}")
