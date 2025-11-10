@@ -128,7 +128,8 @@ const VehicleData = ({ user, onLogout }) => {
         inspection: {
           ultima_inspecao: formData.inspecao_data,
           proxima_inspecao: formData.inspecao_proxima,
-          resultado: formData.inspecao_resultado
+          resultado: formData.inspecao_resultado,
+          valor: parseFloat(formData.inspecao_valor)
         }
       }, {
         headers: { Authorization: `Bearer ${token}` }
