@@ -37,6 +37,8 @@ const VehicleData = ({ user, onLogout }) => {
     manutencao_data: '',
     manutencao_valor: '',
     manutencao_km: '',
+    manutencao_proxima_revisao_km: '',
+    manutencao_tempo_proxima_revisao: '',
     
     // Danos
     dano_tipo: '',
