@@ -44,6 +44,11 @@ const Layout = ({ user, onLogout, children }) => {
       items.push({ path: '/vehicle-data', icon: Database, label: 'Dados Veículos' });
     }
 
+    // Add Contratos for admin and parceiros
+    if (user.role === 'admin' || user.role === 'parceiro') {
+      items.push({ path: '/contratos', icon: FileText, label: 'Contratos' });
+    }
+
     // Add Configurações (only admin) - replaces Planos
     if (user.role === 'admin') {
       items.push({ path: '/configuracoes', icon: Settings, label: 'Configurações' });
