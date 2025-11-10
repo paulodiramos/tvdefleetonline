@@ -46,7 +46,9 @@ const VehicleData = ({ user, onLogout }) => {
     dano_descricao: '',
     dano_data: '',
     dano_valor_reparacao: '',
-    dano_estado: 'pendente'
+    dano_estado: 'pendente',
+    dano_data_previsao_reparacao: '',
+    dano_responsavel: 'fleet'
   });
 
   useEffect(() => {
