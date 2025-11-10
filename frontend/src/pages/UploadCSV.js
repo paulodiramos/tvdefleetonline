@@ -353,6 +353,59 @@ const UploadCSV = ({ user, onLogout }) => {
             </form>
           </CardContent>
         </Card>
+
+        {/* Exemplos Via Verde e GPS */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <FileText className="w-5 h-5" />
+                  <span>Via Verde (Em breve)</span>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => handleDownloadTemplate('viaverde')}
+                  type="button"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Exemplo
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-500">
+                Template de exemplo disponível para download. Funcionalidade de upload será adicionada em breve.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <FileText className="w-5 h-5" />
+                  <span>GPS / KM (Em breve)</span>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => handleDownloadTemplate('gps')}
+                  type="button"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Exemplo
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-500">
+                Template de exemplo disponível para download. Funcionalidade de upload será adicionada em breve.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </Layout>
   );
