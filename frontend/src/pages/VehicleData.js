@@ -112,7 +112,8 @@ const VehicleData = ({ user, onLogout }) => {
           numero_apolice: formData.seguro_apolice,
           data_inicio: formData.seguro_data_inicio,
           data_validade: formData.seguro_data_fim,
-          valor_anual: parseFloat(formData.seguro_valor)
+          valor: parseFloat(formData.seguro_valor),
+          periodicidade: formData.seguro_periodicidade
         }
       }, {
         headers: { Authorization: `Bearer ${token}` }
