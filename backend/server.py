@@ -788,6 +788,33 @@ class UserSubscription(BaseModel):
     data_fim: Optional[str] = None
     unidades_ativas: int = 0  # Número de veículos (parceiro) ou motoristas (operacional)
     valor_mensal: float = 0.0  # Calculado: preco_por_unidade * unidades_ativas
+
+
+# ==================== CONTRACT MODELS ====================
+
+class ContratoCreate(BaseModel):
+    parceiro_id: str
+    motorista_id: str
+    vehicle_id: str
+
+class Contrato(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    parceiro_id: str
+    motorista_id: str
+    vehicle_id: str
+    parceiro_nome: str
+    motorista_nome: str
+    vehicle_matricula: str
+    status: str  # "pendente", "parceiro_assinado", "motorista_assinado", "completo"
+    parceiro_assinado: bool = False
+    motorista_assinado: bool = False
+    parceiro_assinatura_data: Optional[str] = None
+    motorista_assinatura_data: Optional[str] = None
+    pdf_url: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
     created_at: datetime
     updated_at: datetime
 
