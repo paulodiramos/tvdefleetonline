@@ -619,10 +619,14 @@ class VehicleExtinguisher(BaseModel):
     certificado_url: Optional[str] = None
 
 class VehicleInspection(BaseModel):
-    fornecedor: str
-    data_inspecao: str
-    proxima_inspecao: str
-    custo: float
+    fornecedor: Optional[str] = None
+    data_inspecao: Optional[str] = None
+    proxima_inspecao: Optional[str] = None
+    custo: Optional[float] = None
+    # New fields for inspection value
+    ultima_inspecao: Optional[str] = None
+    resultado: Optional[str] = None
+    valor: Optional[float] = None
 
 class VehicleAvailability(BaseModel):
     status: str  # disponivel, atribuido, manutencao, seguro, sinistro, venda
