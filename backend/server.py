@@ -3498,6 +3498,188 @@ async def download_contrato(contrato_id: str, current_user: Dict = Depends(get_c
         raise HTTPException(status_code=500, detail="Error generating PDF")
 
 
+
+# ==================== RECIBOS E PAGAMENTOS ENDPOINTS ====================
+
+@api_router.post("/relatorios-ganhos")
+async def criar_relatorio_ganhos(relatorio_data: RelatorioGanhosCreate, current_user: Dict = Depends(get_current_user)):
+    """Create earnings report for a driver (Admin, Gestor, Operacional only)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    try:
+        # Get motorista data
+        motorista = await db.motoristas.find_one({"id": relatorio_data.motorista_id}, {"_id": 0})
+        if not motorista:
+            raise HTTPException(status_code=404, detail="Motorista not found")
+        
+        # Create relatorio
+        relatorio_id = str(uuid.uuid4())
+        relatorio = {
+            "id": relatorio_id,
+            "motorista_id": relatorio_data.motorista_id,
+            "motorista_nome": motorista.get("name"),
+            "periodo_inicio": relatorio_data.periodo_inicio,
+            "periodo_fim": relatorio_data.periodo_fim,
+            "valor_total": relatorio_data.valor_total,
+            "detalhes": relatorio_data.detalhes,
+            "notas": relatorio_data.notas,
+            "status": "pendente_recibo",
+            "recibo_url": None,
+            "recibo_emitido_em": None,
+            "aprovado_pagamento": False,
+            "aprovado_pagamento_por": None,
+            "aprovado_pagamento_em": None,
+            "pago": False,
+            "pago_por": None,
+            "pago_em": None,
+            "comprovativo_pagamento_url": None,
+            "created_by": current_user["id"],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.relatorios_ganhos.insert_one(relatorio)
+        
+        return {"message": "Earnings report created successfully", "relatorio_id": relatorio_id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating earnings report: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/relatorios-ganhos")
+async def list_relatorios_ganhos(current_user: Dict = Depends(get_current_user)):
+    """List earnings reports"""
+    try:
+        query = {}
+        
+        # Filter based on role
+        if current_user["role"] == UserRole.MOTORISTA:
+            query["motorista_id"] = current_user["id"]
+        elif current_user["role"] == UserRole.PARCEIRO:
+            # Get motoristas do parceiro
+            motoristas = await db.motoristas.find({"parceiro_atribuido": current_user["id"]}, {"_id": 0, "id": 1}).to_list(100)
+            motorista_ids = [m["id"] for m in motoristas]
+            query["motorista_id"] = {"$in": motorista_ids}
+        
+        relatorios = await db.relatorios_ganhos.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
+        return relatorios
+        
+    except Exception as e:
+        logger.error(f"Error listing earnings reports: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/relatorios-ganhos/{relatorio_id}/upload-recibo")
+async def upload_recibo(
+    relatorio_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload receipt PDF (Motorista only)"""
+    relatorio = await db.relatorios_ganhos.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    if current_user["role"] != UserRole.MOTORISTA or current_user["id"] != relatorio["motorista_id"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    try:
+        # Create recibos directory
+        recibos_dir = UPLOAD_DIR / "recibos"
+        recibos_dir.mkdir(exist_ok=True)
+        
+        # Process file
+        file_id = f"recibo_{relatorio_id}_{uuid.uuid4()}"
+        file_info = await process_uploaded_file(file, recibos_dir, file_id)
+        
+        # Update relatorio
+        update_data = {
+            "status": "recibo_emitido",
+            "recibo_url": file_info["saved_path"],
+            "recibo_emitido_em": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.relatorios_ganhos.update_one({"id": relatorio_id}, {"$set": update_data})
+        
+        return {"message": "Receipt uploaded successfully", "file_url": file_info["saved_path"]}
+        
+    except Exception as e:
+        logger.error(f"Error uploading receipt: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/relatorios-ganhos/{relatorio_id}/aprovar-pagamento")
+async def aprovar_pagamento(relatorio_id: str, current_user: Dict = Depends(get_current_user)):
+    """Approve payment (Admin, Gestor, Operacional, Parceiro)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    relatorio = await db.relatorios_ganhos.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    if relatorio["status"] != "recibo_emitido":
+        raise HTTPException(status_code=400, detail="Receipt not yet issued")
+    
+    update_data = {
+        "status": "aguardando_pagamento",
+        "aprovado_pagamento": True,
+        "aprovado_pagamento_por": current_user["id"],
+        "aprovado_pagamento_em": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.relatorios_ganhos.update_one({"id": relatorio_id}, {"$set": update_data})
+    
+    return {"message": "Payment approved successfully"}
+
+@api_router.post("/relatorios-ganhos/{relatorio_id}/marcar-pago")
+async def marcar_pago(
+    relatorio_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Mark as paid with payment proof (Admin, Gestor, Operacional, Parceiro)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    relatorio = await db.relatorios_ganhos.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    if not relatorio["aprovado_pagamento"]:
+        raise HTTPException(status_code=400, detail="Payment not yet approved")
+    
+    try:
+        # Create comprova tivos directory
+        comprova_dir = UPLOAD_DIR / "comprov ativos_pagamento"
+        comprova_dir.mkdir(exist_ok=True)
+        
+        # Process file
+        file_id = f"comprovativo_{relatorio_id}_{uuid.uuid4()}"
+        file_info = await process_uploaded_file(file, comprova_dir, file_id)
+        
+        # Update relatorio
+        update_data = {
+            "status": "pago",
+            "pago": True,
+            "pago_por": current_user["id"],
+            "pago_em": datetime.now(timezone.utc).isoformat(),
+            "comprovativo_pagamento_url": file_info["saved_path"],
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.relatorios_ganhos.update_one({"id": relatorio_id}, {"$set": update_data})
+        
+        return {"message": "Marked as paid successfully", "comprovativo_url": file_info["saved_path"]}
+        
+    except Exception as e:
+        logger.error(f"Error marking as paid: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ==================== CSV TEMPLATE DOWNLOADS ====================
 
 @api_router.get("/templates/csv/{template_name}")
