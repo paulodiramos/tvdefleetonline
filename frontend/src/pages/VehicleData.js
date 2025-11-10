@@ -218,6 +218,7 @@ const VehicleData = ({ user, onLogout }) => {
       inspecao_data: '',
       inspecao_proxima: '',
       inspecao_resultado: 'aprovado',
+      inspecao_valor: '',
       manutencao_tipo: '',
       manutencao_descricao: '',
       manutencao_data: '',
