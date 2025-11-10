@@ -243,9 +243,20 @@ const UploadCSV = ({ user, onLogout }) => {
         {/* Upload Uber */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <TrendingUp className="w-5 h-5" />
-              <span>Upload CSV Uber</span>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <TrendingUp className="w-5 h-5" />
+                <span>Upload CSV Uber</span>
+              </div>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => handleDownloadTemplate('uber')}
+                type="button"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Exemplo
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
