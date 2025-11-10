@@ -833,6 +833,58 @@ class Contrato(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+
+
+# ==================== RECIBOS E PAGAMENTOS MODELS ====================
+
+class RelatorioGanhosCreate(BaseModel):
+    motorista_id: str
+    periodo_inicio: str
+    periodo_fim: str
+    valor_total: float
+    detalhes: Dict[str, Any]  # Breakdown de ganhos (uber, bolt, etc)
+    notas: Optional[str] = None
+
+class RelatorioGanhos(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    motorista_id: str
+    motorista_nome: str
+    periodo_inicio: str
+    periodo_fim: str
+    valor_total: float
+    detalhes: Dict[str, Any]
+    notas: Optional[str] = None
+    status: str  # "pendente_recibo", "recibo_emitido", "aguardando_pagamento", "pago"
+    recibo_url: Optional[str] = None
+    recibo_emitido_em: Optional[str] = None
+    aprovado_pagamento: bool = False
+    aprovado_pagamento_por: Optional[str] = None  # user_id
+    aprovado_pagamento_em: Optional[str] = None
+    pago: bool = False
+    pago_por: Optional[str] = None  # user_id
+    pago_em: Optional[str] = None
+    comprovativo_pagamento_url: Optional[str] = None
+    created_by: str  # user_id (admin, gestor, operacional)
+    created_at: datetime
+    updated_at: datetime
+
+class ReciboMotorista(BaseModel):
+    """Recibo emitido pelo motorista"""
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    relatorio_ganhos_id: str
+    motorista_id: str
+    motorista_nome: str
+    motorista_nif: str
+    periodo_inicio: str
+    periodo_fim: str
+    valor_total: float
+    descricao_servicos: str
+    pdf_url: str
+    emitido_em: datetime
+    created_at: datetime
+
 class SubscriptionCreate(BaseModel):
     user_id: str
     plano_id: str
