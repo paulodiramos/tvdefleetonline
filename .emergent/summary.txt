@@ -1,41 +1,39 @@
 <analysis>
-The trajectory outlines the iterative development of a full-stack fleet management application, TVDEFleet.com, using a FastAPI backend, React frontend, and MongoDB database. The process began with the AI engineer scaffolding the basic application structure, including initial backend server and frontend components.
+The AI engineer's work on TVDEFleet.com involved significant feature expansion and architectural refinements across a FastAPI backend, React frontend, and MongoDB. Initial efforts focused on user role management (Admin, Gestor, Parceiro, Motorista), detailed vehicle and driver data models, and basic financial reporting. A key correction from the user refined the Parceiro role to be read-only for revenue/expense creation, which the AI implemented by adding permission checks in .
 
-Development progressed through a series of increasingly detailed feature requests from the user. Key implementation phases included:
-1.  **Initial Scaffolding:** Created basic pages for login, driver registration, dashboard, vehicles, and financials.
-2.  **User Roles & Data Seeding:** Implemented multiple user roles (Admin, Gestor, Parceiro, Motorista) and populated the database with test accounts and vehicle data.
-3.  **Feature Expansion:** Responded to a large user request by significantly expanding the data models for vehicles and drivers in , adding numerous new fields for insurance, maintenance, licenses, and personal details. This phase included debugging a Pydantic validation error caused by schema changes on existing data.
-4.  **Advanced Role Management:** Refined the user role system to include an Operacional profile and updated all permission checks throughout the backend.
-5.  **Reporting & Payments:** Built a reporting and payments section specifically for the Parceiro (Partner) role, including new backend endpoints and frontend pages.
+Subsequent phases included implementing a robust file upload system for driver documents and payment receipts, featuring image-to-PDF conversion using  and . An automatic alert system for deadlines (insurance, maintenance) was also built, with Pydantic models, a background checker, and a dashboard integration.
 
-The most recent interaction involved a critical user clarification: partners should only be able to view reports and confirm payments, not create revenue or expense entries. The AI engineer acknowledged this and was about to implement this permission change in the backend.
+More recently, the project pivoted to a complex subscription plan system for different user roles (Partner, Operational) with tiered features (e.g., insurance management, maintenance, automatic supplier links), vehicle collateral (caucao) management, and enhanced backend models. This also included CSV upload and processing for financial data (Uber, Bolt, Prio), PDF contract generation, and automated billing features. The UI was updated with new pages (, , , , , ), and navigation was adjusted for role-based access. The AI engineer also refined the CSV uploads to associate data with partners/operational users rather than drivers and created administrative tools for plan and configuration management, including currency symbol updates.
 </analysis>
 
 <product_requirements>
-The goal is to build TVDEFleet.com, a comprehensive web application for fleet management. The system is designed to serve multiple user roles with distinct permissions: Admin (full access), Gestor (manager), Parceiro (partner), Operacional (partner with fleet access), and Motorista (driver).
+The goal is TVDEFleet.com, a web app for fleet management with multi-role access (Admin, Gestor, Parceiro, Operacional, Motorista). The application centralizes fleet operations, streamlining vehicle, driver, and financial management to improve efficiency and provide real-time ROI insights.
 
 **Core Features Implemented:**
-*   **User Authentication:** Email/password login with a role-based access control system.
-*   **Vehicle Management:** A detailed database of vehicles including make, model, registration, contract type (rental/commission), and status. Forms for creating and viewing vehicles are implemented.
-*   **Driver Management:** A system for registering drivers with extensive personal and professional details, including document information.
-*   **Partner-Specific Reporting:** Dashboards for partners to view financial summaries, including revenues, expenses, and ROI.
-*   **Payments Module:** A system where drivers can upload payment documents and partners can confirm payments.
-
-**Problem Being Solved:**
-The application centralizes fleet operations, streamlining the management of vehicles, drivers, and finances. It aims to improve efficiency and provide real-time insights into profitability (ROI) for fleet managers and partners. The most recent requirement is to refine partner permissions to be read-only for financial data entry, limiting them to confirming payments and viewing reports.
+*   **User Authentication & RBAC:** Email/password login with role-based access control.
+*   **Vehicle & Driver Management:** Detailed forms and database for vehicles (make, model, contract, status, photos, caução) and drivers (personal, professional, documents with photos).
+*   **Partner-Specific Reporting & Payments:** Partners view reports and confirm payments, but cannot create revenue/expense entries.
+*   **File Uploads:** Driver documents and payment receipts with image-to-PDF conversion.
+*   **Alert System:** Automatic alerts for deadlines (insurance, maintenance).
+*   **Subscription Plans:** Tiered plans for Parceiro and Operacional roles with varying feature access (e.g., insurance, maintenance, supplier integrations). Configurable prices via Admin.
+*   **Financial Data Import:** CSV uploads (Uber, Bolt, Prio, Via Verde, GPS) for gains, fuel, and kilometers, associated with partners/operational users.
+*   **Contract & Invoice Generation:** Automatic PDF contract generation with auto-filled data and automated invoice issuance.
+*   **Admin Configuration:** Centralized configuration page to manage plans, prices, and other settings.
 </product_requirements>
 
 <key_technical_concepts>
-- **Backend:** FastAPI (Python web framework).
-- **Frontend:** React.js.
-- **Database:** MongoDB.
-- **Data Modeling/Validation:** Pydantic models are used extensively in the FastAPI backend to define data schemas, handle validation, and serialize database objects.
-- **Authentication:** A custom, token-based system with Role-Based Access Control (RBAC) enforced at the API endpoint level.
-- **API Architecture:** RESTful API with endpoints for CRUD operations on users, vehicles, drivers, and financial records.
+-   **Backend:** FastAPI (Python) for API services.
+-   **Frontend:** React.js for the user interface.
+-   **Database:** MongoDB for data storage.
+-   **Data Modeling:** Pydantic models for schema definition and validation.
+-   **Authentication/Authorization:** Custom token-based RBAC and feature-based access control.
+-   **File Handling:**  (image processing),  (PDF generation), , , /tmp/fileCOCbiE,  for uploads and data processing.
+-   **Background Tasks:** Asynchronous tasks for alert checking.
+-   **Static File Serving:** FastAPI's  for serving uploaded content.
 </key_technical_concepts>
 
 <code_architecture>
-The application follows a standard monolithic full-stack architecture with a clear separation between the frontend and backend.
+The application uses a monolithic full-stack architecture with clear frontend/backend separation.
 
 **Directory Structure:**
 
@@ -43,38 +41,65 @@ The application follows a standard monolithic full-stack architecture with a cle
 **Key Files:**
 
 -   ****
-    -   **Importance:** This is the single most critical file, containing the entire FastAPI backend logic. It defines all Pydantic models for the database collections (Users, Veiculos, Motoristas, etc.), all API endpoints, authentication logic, and database interaction functions.
-    -   **Changes:** This file has been heavily modified throughout the trajectory. New Pydantic models were added, existing ones were expanded with  fields to ensure backward compatibility, and numerous endpoints were created for vehicle management, driver registration, role management, and partner-specific financial reporting. Permission checks based on user roles were integrated into almost every endpoint.
-
+    -   **Importance:** Central FastAPI backend, defining all data models, API endpoints, authentication, and database interactions.
+    -   **Changes:**
+        -   **Permission Restrictions:** Added role-based access control to  and  endpoints to prevent  from creating entries.
+        -   **File Uploads:** Integrated  and  for image-to-PDF conversion. Added helper functions (, ),  for  static files. Updated  and  endpoints to use the new system. Created  directory and  endpoint. Implemented saving of original CSVs and an endpoint .
+        -   **Alert System:** Introduced  Pydantic models,  function,  endpoint, and scheduled background alert checks on app startup.
+        -   **Subscription Plans:** Added , ,  models. Included  fields ( model) and custom fields in , , , ,  models. Created admin endpoints for plan management (, , ).
+        -   **CSV Processing:** Added models for , , . Included helper functions (, , ). Created endpoints for CSV uploads (, , ), ensuring association with .
+        -   **Contracts & Billing:** Implemented PDF contract generation logic using . Created endpoints for generating contracts () and invoices ().
+        -   **Misc:** , , /tmp/filegLNMvG,  for CSV/Excel handling.  variable cleanup. Added  field to  model. Added  and  endpoints.
 -   ****
-    -   **Importance:** This file serves as the main router for the React application. It uses  to map URL paths to their corresponding page components (e.g.,  maps to the  component).
-    -   **Changes:** It has been updated multiple times to add new routes for newly created pages like , , , and .
-
+    -   **Importance:** Main router for the React application, mapping URLs to components.
+    -   **Changes:** Added new routes for , , , , , .
 -   ****
-    -   **Importance:** This component provides the persistent UI shell, including the navigation bar and sidebar. It's crucial for user navigation and displays links conditionally based on the logged-in user's role.
-    -   **Changes:** It was updated to include navigation links to new pages. Conditional rendering logic was added to ensure that links like Parceiros, Relatórios, and Pagamentos are only visible to users with the appropriate permissions (e.g., Admin, Gestor, Parceiro).
-
+    -   **Importance:** Provides the persistent UI shell, including navigation based on user roles.
+    -   **Changes:** Fixed a React error related to  array structure. Updated to include new navigation links for , , ,  visible to appropriate roles. Removed Dashboard button.
 -   ****
-    -   **Importance:** This page contains the UI for viewing the list of vehicles and the form for creating/editing a vehicle.
-    -   **Changes:** The file was completely rewritten to accommodate a highly detailed vehicle creation form with numerous new fields, including nested conditional logic for contract types (Aluguer vs. Comissao) and Uber/Bolt categories.
-
--   ** & **
-    -   **Importance:** These are the newest pages, built to provide partners with financial reporting and payment confirmation capabilities.
-    -   **Changes:** These files were created from scratch to fetch and display report data from the new backend endpoints and to handle the payment confirmation workflow.
+    -   **Importance:** UI for viewing and managing vehicles.
+    -   **Changes:** Updated to include fields for part-time availability, commission, . Will be updated for photo uploads.
+-   ****
+    -   **Importance:** Displays financial data.
+    -   **Changes:** Added a button to navigate to the CSV import page.
+-   ****
+    -   **Importance:** Main overview page for users.
+    -   **Changes:** Integrated a section to display urgent alerts.
+-   ****
+    -   **Importance:** New page for uploading and processing financial CSVs.
+    -   **Changes:** Created to handle Uber, Bolt, Prio CSV uploads, allowing selection of partner (for Admin/Gestor) and import type.
+-   ****
+    -   **Importance:** New page for Admin to manage subscription plans and prices.
+    -   **Changes:** Created for plan creation/editing with feature selection.
+-   ****
+    -   **Importance:** New centralized page for admin configurations.
+    -   **Changes:** Created to manage global settings and plan configurations, including currency symbol.
+-   ****
+    -   **Importance:** New page for managing vehicle-specific data (inspections, insurance, maintenance, damages).
+    -   **Changes:** Created to allow selection of vehicles by license plate and adding detailed expense information.
+-   ****
+    -   **Importance:** New page for uploading vehicle photos.
+    -   **Changes:** Created to allow uploading up to 3 photos per vehicle.
+-   ****
+    -   **Importance:** New page for Admin to edit partner details.
+    -   **Changes:** Created to provide a form for editing partner information, accessed via an Edit button on the  list.
 </code_architecture>
 
 <pending_tasks>
-- Adjust backend permissions to prevent Partners () from creating revenue or expense entries.
-- Implement the file upload logic for driver documents and payment receipts, including the requested conversion of images to PDF.
-- Implement the automatic alert system (e.g., for insurance expiration, maintenance deadlines) described in the initial requirements.
+-   Add valor da inspeção field to the vehicle data management UI.
+-   Complete the frontend implementation for vehicle photo uploads (3 photos).
+-   Complete the frontend implementation for editing partner details by Admin.
+-   Complete the frontend for subscription plan configuration (Admin).
+-   Complete the frontend for general configuration (Admin).
+-   Implement Phase 3: automatic payment and API integrations with suppliers for Operacional Executive plan.
 </pending_tasks>
 
 <current_work>
-The AI engineer was in the process of refining the permissions for the Parceiro (Partner) user role. The last user message was a critical correction to the business logic: **parceiro nao intruduz receita nem despesa apernas confirma pagamentos de despesas e de motoristas e confirma valores recebidos** (partner does not enter revenue or expenses, only confirms payments for expenses and drivers and confirms received amounts).
+Immediately before this summary request, the AI engineer was addressing a user request to add the valor da inspeção (inspection value) field. This is part of a larger set of recent requests, including implementing vehicle photo uploads, making Admin able to edit partner and vehicle details, and adding a button for CSV imports in the Financials page, as well as refining CSV imports to be associated with partners/operational users.
 
-The engineer acknowledged this and was about to modify the backend code to enforce this rule. This involves updating the API endpoints responsible for creating revenue and expense records in . The plan is to add a permission check at the beginning of these endpoints to ensure that only users with roles other than  can create these financial entries. The work was paused immediately before writing the code to implement this access control logic.
+The AI engineer had just confirmed the last user request: nos dados de veiculos colocar valor da inspeccao (in vehicle data, add inspection value), and stated: Perfeito! Vou adicionar o campo valor da inspeção na página de Dados de Veículos.
 </current_work>
 
 <optional_next_step>
-I will now modify  to update the permissions for the endpoints that create revenue and expenses, restricting access to prevent users with the  role from using them.
+Add the valor da inspeção field to the  page.
 </optional_next_step>
