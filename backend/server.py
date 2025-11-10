@@ -2629,6 +2629,76 @@ async def seed_planos(current_user: Dict = Depends(get_current_user)):
         "planos_created": len(default_planos)
     }
 
+
+
+@api_router.post("/admin/parceiros/{parceiro_id}/atribuir-plano")
+async def atribuir_plano_parceiro(
+    parceiro_id: str,
+    plano_data: Dict[str, str],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Admin: Assign subscription plan to parceiro"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    plano_id = plano_data.get("plano_id")
+    if not plano_id:
+        raise HTTPException(status_code=400, detail="plano_id required")
+    
+    # Check if plano exists
+    plano = await db.planos.find_one({"id": plano_id}, {"_id": 0})
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    
+    # Update parceiro
+    result = await db.users.update_one(
+        {"id": parceiro_id, "role": "parceiro"},
+        {"$set": {
+            "plano_id": plano_id,
+            "plano_status": "ativo",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Parceiro not found")
+    
+    return {"message": "Plan assigned successfully", "plano_id": plano_id}
+
+@api_router.post("/parceiros/{parceiro_id}/solicitar-plano")
+async def solicitar_plano_parceiro(
+    parceiro_id: str,
+    plano_data: Dict[str, str],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Parceiro: Request subscription plan"""
+    if current_user["role"] != UserRole.PARCEIRO or current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    plano_id = plano_data.get("plano_id")
+    if not plano_id:
+        raise HTTPException(status_code=400, detail="plano_id required")
+    
+    # Check if plano exists
+    plano = await db.planos.find_one({"id": plano_id}, {"_id": 0})
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    
+    # Update parceiro with pending status
+    result = await db.users.update_one(
+        {"id": parceiro_id, "role": "parceiro"},
+        {"$set": {
+            "plano_id": plano_id,
+            "plano_status": "pendente",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Parceiro not found")
+    
+    return {"message": "Plan request submitted successfully", "plano_id": plano_id, "status": "pendente"}
+
 @api_router.post("/subscriptions", response_model=UserSubscription)
 async def create_subscription(
     subscription_data: SubscriptionCreate,
