@@ -3653,8 +3653,8 @@ async def marcar_pago(
         raise HTTPException(status_code=400, detail="Payment not yet approved")
     
     try:
-        # Create comprova tivos directory
-        comprova_dir = UPLOAD_DIR / "comprov ativos_pagamento"
+        # Create comprovativos directory
+        comprova_dir = UPLOAD_DIR / "comprovativos_pagamento"
         comprova_dir.mkdir(exist_ok=True)
         
         # Process file
