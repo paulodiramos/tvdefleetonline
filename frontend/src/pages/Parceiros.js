@@ -12,6 +12,7 @@ import { Plus, Building, Mail, Phone, Car, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Parceiros = ({ user, onLogout }) => {
+  const navigate = useNavigate();
   const [parceiros, setParceiros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
