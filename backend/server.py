@@ -3419,10 +3419,11 @@ async def download_contrato(contrato_id: str, current_user: Dict = Depends(get_c
         c.save()
         buffer.seek(0)
         
-        return FileResponse(
-            path=buffer,
+        from fastapi.responses import StreamingResponse
+        return StreamingResponse(
+            buffer,
             media_type="application/pdf",
-            filename=f"contrato_{contrato_id}.pdf"
+            headers={"Content-Disposition": f"attachment; filename=contrato_{contrato_id}.pdf"}
         )
         
     except Exception as e:
