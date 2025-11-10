@@ -174,6 +174,12 @@ function App() {
               user ? <EditParceiro user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
+          <Route
+            path="/contratos"
+            element={
+              user ? <Contratos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
