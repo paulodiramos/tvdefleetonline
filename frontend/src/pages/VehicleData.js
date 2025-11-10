@@ -409,16 +409,32 @@ const VehicleData = ({ user, onLogout }) => {
                         />
                       </div>
                     </div>
-                    <div>
-                      <Label htmlFor="seguro_valor">Valor Anual (€) *</Label>
-                      <Input
-                        id="seguro_valor"
-                        type="number"
-                        step="0.01"
-                        value={formData.seguro_valor}
-                        onChange={(e) => setFormData({...formData, seguro_valor: e.target.value})}
-                        required
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="seguro_valor">Valor (€) *</Label>
+                        <Input
+                          id="seguro_valor"
+                          type="number"
+                          step="0.01"
+                          value={formData.seguro_valor}
+                          onChange={(e) => setFormData({...formData, seguro_valor: e.target.value})}
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="seguro_periodicidade">Periodicidade *</Label>
+                        <select
+                          id="seguro_periodicidade"
+                          value={formData.seguro_periodicidade}
+                          onChange={(e) => setFormData({...formData, seguro_periodicidade: e.target.value})}
+                          className="w-full p-2 border rounded-md"
+                        >
+                          <option value="anual">Anual</option>
+                          <option value="semestral">Semestral</option>
+                          <option value="trimestral">Trimestral</option>
+                          <option value="mensal">Mensal</option>
+                        </select>
+                      </div>
                     </div>
                     <Button type="submit">Guardar Seguro</Button>
                   </form>
