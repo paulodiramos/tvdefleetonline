@@ -1199,6 +1199,13 @@ startxref
         self.test_vehicle_part_time_contract()
         self.test_file_serving_vehicles_folder()
         
+        # NEW FEATURES: CSV TEMPLATES & INSPECTION VALUE
+        print("\n📊 NEW FEATURES: CSV TEMPLATES & INSPECTION VALUE (HIGH PRIORITY)")
+        print("-" * 70)
+        self.test_csv_template_downloads()
+        self.test_vehicle_inspection_value_update()
+        self.test_vehicle_inspection_value_types()
+        
         # Summary
         print("\n" + "=" * 80)
         print("TEST SUMMARY")
