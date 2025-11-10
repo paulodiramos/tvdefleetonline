@@ -469,3 +469,153 @@ agent_communication:
         
         🎯 TODAS AS NOVAS FUNCIONALIDADES TESTADAS E FUNCIONANDO PERFEITAMENTE!
         Sistema TVDEFleet expandido está completamente operacional e pronto para produção!
+
+
+backend:
+  - task: "Valor da Inspeção - Campo adicionado"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Adicionado campo 'valor' no formulário de inspeção em VehicleData.js. Campo conectado ao backend via update_vehicle endpoint que aceita Dict[str, Any]."
+
+  - task: "CSV Templates - Download de exemplos"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Criados templates CSV para Uber, Bolt, Prio, Via Verde, GPS em /app/backend/templates/csv_examples/. Adicionado endpoint GET /api/templates/csv/{template_name} para download. Importado FileResponse do FastAPI."
+
+frontend:
+  - task: "VehicleData.js - Campo Valor da Inspeção"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/VehicleData.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Adicionado input field 'Valor da Inspeção (€)' no formulário de inspeção. Campo tipo number com step='0.01', required. Conectado ao formData state e incluído na chamada API PUT /vehicles/{id} com parseFloat(). Form reset atualizado."
+
+  - task: "UploadCSV.js - Botões de download de templates"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/UploadCSV.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Adicionados botões 'Exemplo' para download de templates CSV em cada card (Uber, Bolt, Prio). Implementada função handleDownloadTemplate() que faz chamada GET /api/templates/csv/{name} com responseType blob e trigger de download. Adicionados cards informativos para Via Verde e GPS (em breve)."
+
+  - task: "VehiclePhotos.js - Upload de fotos (verificar)"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/VehiclePhotos.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Página já implementada com funcionalidade de upload de até 3 fotos por veículo. Precisa ser testada para confirmar funcionamento."
+
+  - task: "EditParceiro.js - Edição de parceiros por Admin"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/EditParceiro.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Página já implementada com formulário completo para edição de dados do parceiro (empresa, NIF, morada, manager, contatos, certidão). Inclui listagem de veículos e motoristas associados. Precisa ser testada."
+
+  - task: "Planos.js - Gestão de planos de assinatura"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Planos.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Página já implementada com criação/edição de planos, definição de preços, features em formato texto separado por vírgula. Precisa ser testada."
+
+  - task: "Configuracoes.js - Configurações do sistema"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Configuracoes.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Página já implementada com tabs para Planos de Assinatura e Outras Configurações. Inclui sistema de features disponíveis por tipo de usuário (parceiro/operacional) com checkboxes para seleção. Precisa ser testada."
+
+metadata:
+  created_by: "main_agent"
+  version: "2.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Valor da Inspeção - Campo adicionado"
+    - "CSV Templates - Download de exemplos"
+    - "VehicleData.js - Campo Valor da Inspeção"
+    - "UploadCSV.js - Botões de download de templates"
+    - "VehiclePhotos.js - Upload de fotos (verificar)"
+    - "EditParceiro.js - Edição de parceiros por Admin"
+    - "Planos.js - Gestão de planos de assinatura"
+    - "Configuracoes.js - Configurações do sistema"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: |
+        NOVAS IMPLEMENTAÇÕES - Phases 1-6:
+        
+        PHASE 1 - VALOR DA INSPEÇÃO: ✅ IMPLEMENTADO
+        - Adicionado campo "Valor da Inspeção (€)" no formulário de inspeção em VehicleData.js
+        - Campo tipo number com validação decimal (step="0.01") e required
+        - Integrado com backend via PUT /vehicles/{vehicle_id} endpoint
+        - Form state management completo (formData, reset)
+        
+        PHASE 6 - CSV TEMPLATES: ✅ IMPLEMENTADO
+        - Criados 5 arquivos de template CSV/Excel:
+          * uber_example.csv - Dados de viagens Uber
+          * bolt_example.csv - Dados de viagens Bolt
+          * prio_example.xlsx - Dados de combustível Prio
+          * viaverde_example.csv - Dados de portagens Via Verde
+          * gps_example.csv - Dados de rastreamento GPS/KM
+        - Backend: Adicionado endpoint GET /api/templates/csv/{template_name}
+        - Frontend: Botões de download "Exemplo" em cada card de upload CSV
+        - Cards informativos para Via Verde e GPS (funcionalidade de upload "em breve")
+        
+        PHASES 2-5 - PÁGINAS JÁ EXISTENTES (PRECISAM TESTE):
+        - VehiclePhotos.js: Upload de até 3 fotos por veículo
+        - EditParceiro.js: Edição completa de dados de parceiros por Admin
+        - Planos.js: Gestão de planos de assinatura com preços e features
+        - Configuracoes.js: Configurações centralizadas com tabs
+        
+        Backend reiniciado com sucesso. Pronto para testes.
+        PRÓXIMO PASSO: Testar todas as funcionalidades implementadas antes de prosseguir para Phase 7 (API integrations).
