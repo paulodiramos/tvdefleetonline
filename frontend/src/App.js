@@ -20,6 +20,8 @@ import UploadCSV from "@/pages/UploadCSV";
 import Planos from "@/pages/Planos";
 import Configuracoes from "@/pages/Configuracoes";
 import VehicleData from "@/pages/VehicleData";
+import VehiclePhotos from "@/pages/VehiclePhotos";
+import EditParceiro from "@/pages/EditParceiro";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
