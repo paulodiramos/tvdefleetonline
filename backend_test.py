@@ -864,6 +864,200 @@ startxref
         except Exception as e:
             self.log_result("File-Serving-Vehicles", False, f"Request error: {str(e)}")
 
+    # ==================== NEW FEATURES TESTS (CSV TEMPLATES & INSPECTION VALUE) ====================
+    
+    def test_csv_template_downloads(self):
+        """Test CSV template download endpoints"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("CSV-Template-Downloads", False, "No auth token for admin")
+            return
+        
+        # Test all template types
+        templates = {
+            "uber": {"filename": "uber_example.csv", "content_type": "text/csv"},
+            "bolt": {"filename": "bolt_example.csv", "content_type": "text/csv"},
+            "prio": {"filename": "prio_example.xlsx", "content_type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"},
+            "viaverde": {"filename": "viaverde_example.csv", "content_type": "text/csv"},
+            "gps": {"filename": "gps_example.csv", "content_type": "text/csv"}
+        }
+        
+        successful_downloads = 0
+        
+        for template_name, expected in templates.items():
+            try:
+                response = requests.get(f"{BACKEND_URL}/templates/csv/{template_name}", headers=headers)
+                
+                if response.status_code == 200:
+                    # Check Content-Type header
+                    content_type = response.headers.get('content-type', '')
+                    
+                    # For CSV files, accept both text/csv and text/plain
+                    if template_name == "prio":
+                        content_type_ok = "spreadsheetml" in content_type or "excel" in content_type
+                    else:
+                        content_type_ok = "text/csv" in content_type or "text/plain" in content_type
+                    
+                    # Check if response has content
+                    has_content = len(response.content) > 0
+                    
+                    if content_type_ok and has_content:
+                        successful_downloads += 1
+                        self.log_result(f"CSV-Template-{template_name.upper()}", True, f"Template {template_name} downloaded successfully")
+                    else:
+                        self.log_result(f"CSV-Template-{template_name.upper()}", False, f"Wrong content type or empty: {content_type}")
+                else:
+                    self.log_result(f"CSV-Template-{template_name.upper()}", False, f"Download failed: {response.status_code}")
+            except Exception as e:
+                self.log_result(f"CSV-Template-{template_name.upper()}", False, f"Request error: {str(e)}")
+        
+        # Test invalid template name (should return 404)
+        try:
+            response = requests.get(f"{BACKEND_URL}/templates/csv/invalid_template", headers=headers)
+            if response.status_code == 404:
+                self.log_result("CSV-Template-Invalid", True, "Invalid template correctly returns 404")
+            else:
+                self.log_result("CSV-Template-Invalid", False, f"Expected 404 for invalid template, got {response.status_code}")
+        except Exception as e:
+            self.log_result("CSV-Template-Invalid", False, f"Invalid template test error: {str(e)}")
+        
+        # Overall result
+        if successful_downloads == len(templates):
+            self.log_result("CSV-Template-Downloads", True, f"All {len(templates)} CSV templates downloaded successfully")
+        else:
+            self.log_result("CSV-Template-Downloads", False, f"Only {successful_downloads}/{len(templates)} templates downloaded successfully")
+    
+    def test_vehicle_inspection_value_update(self):
+        """Test vehicle inspection value field update"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Vehicle-Inspection-Value", False, "No auth token for admin")
+            return
+        
+        # Get or create a vehicle
+        vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+        if vehicles_response.status_code != 200:
+            self.log_result("Vehicle-Inspection-Value", False, "Could not get vehicles list")
+            return
+        
+        vehicles = vehicles_response.json()
+        if not vehicles:
+            self.log_result("Vehicle-Inspection-Value", False, "No vehicles available for test")
+            return
+        
+        vehicle_id = vehicles[0]["id"]
+        
+        # Test updating vehicle with inspection data including valor field
+        inspection_data = {
+            "inspection": {
+                "ultima_inspecao": "2025-01-15",
+                "proxima_inspecao": "2026-01-15", 
+                "resultado": "aprovado",
+                "valor": 45.50
+            }
+        }
+        
+        try:
+            # Update vehicle with inspection data
+            update_response = requests.put(
+                f"{BACKEND_URL}/vehicles/{vehicle_id}",
+                json=inspection_data,
+                headers=headers
+            )
+            
+            if update_response.status_code == 200:
+                # Retrieve the vehicle to verify the valor field was saved
+                get_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}", headers=headers)
+                
+                if get_response.status_code == 200:
+                    vehicle = get_response.json()
+                    inspection = vehicle.get("inspection", {})
+                    
+                    # Check if all inspection fields are present and correct
+                    if (inspection.get("ultima_inspecao") == "2025-01-15" and
+                        inspection.get("proxima_inspecao") == "2026-01-15" and
+                        inspection.get("resultado") == "aprovado" and
+                        inspection.get("valor") == 45.50):
+                        
+                        self.log_result("Vehicle-Inspection-Value", True, "Vehicle inspection with valor field updated and retrieved successfully")
+                    else:
+                        self.log_result("Vehicle-Inspection-Value", False, f"Inspection data not saved correctly: {inspection}")
+                else:
+                    self.log_result("Vehicle-Inspection-Value", False, f"Could not retrieve updated vehicle: {get_response.status_code}")
+            else:
+                self.log_result("Vehicle-Inspection-Value", False, f"Vehicle update failed: {update_response.status_code}", update_response.text)
+        except Exception as e:
+            self.log_result("Vehicle-Inspection-Value", False, f"Inspection value test error: {str(e)}")
+    
+    def test_vehicle_inspection_value_types(self):
+        """Test vehicle inspection value field with different data types"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Vehicle-Inspection-Value-Types", False, "No auth token for admin")
+            return
+        
+        # Get a vehicle
+        vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+        if vehicles_response.status_code != 200 or not vehicles_response.json():
+            self.log_result("Vehicle-Inspection-Value-Types", False, "No vehicles available for test")
+            return
+        
+        vehicle_id = vehicles_response.json()[0]["id"]
+        
+        # Test different value formats
+        test_values = [
+            {"valor": 123.45, "description": "decimal"},
+            {"valor": 100, "description": "integer"},
+            {"valor": 0.99, "description": "small decimal"}
+        ]
+        
+        successful_updates = 0
+        
+        for test_case in test_values:
+            try:
+                inspection_data = {
+                    "inspection": {
+                        "ultima_inspecao": "2025-01-15",
+                        "proxima_inspecao": "2026-01-15",
+                        "resultado": "aprovado",
+                        "valor": test_case["valor"]
+                    }
+                }
+                
+                update_response = requests.put(
+                    f"{BACKEND_URL}/vehicles/{vehicle_id}",
+                    json=inspection_data,
+                    headers=headers
+                )
+                
+                if update_response.status_code == 200:
+                    # Verify the value was saved correctly
+                    get_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}", headers=headers)
+                    
+                    if get_response.status_code == 200:
+                        vehicle = get_response.json()
+                        saved_valor = vehicle.get("inspection", {}).get("valor")
+                        
+                        if saved_valor == test_case["valor"]:
+                            successful_updates += 1
+                        else:
+                            self.log_result("Vehicle-Inspection-Value-Types", False, f"Value type {test_case['description']} not saved correctly: expected {test_case['valor']}, got {saved_valor}")
+                            return
+                    else:
+                        self.log_result("Vehicle-Inspection-Value-Types", False, f"Could not retrieve vehicle for {test_case['description']} test")
+                        return
+                else:
+                    self.log_result("Vehicle-Inspection-Value-Types", False, f"Update failed for {test_case['description']}: {update_response.status_code}")
+                    return
+            except Exception as e:
+                self.log_result("Vehicle-Inspection-Value-Types", False, f"Error testing {test_case['description']}: {str(e)}")
+                return
+        
+        if successful_updates == len(test_values):
+            self.log_result("Vehicle-Inspection-Value-Types", True, f"All {len(test_values)} value types handled correctly")
+        else:
+            self.log_result("Vehicle-Inspection-Value-Types", False, f"Only {successful_updates}/{len(test_values)} value types worked")
+
     # ==================== INTEGRATION TESTS ====================
     
     def test_different_image_formats(self):
