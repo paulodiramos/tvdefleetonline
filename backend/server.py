@@ -412,14 +412,22 @@ class Parceiro(BaseModel):
     codigo_postal: str
     localidade: str
     nome_manager: str
+    email_manager: str
+    email_empresa: str
     telefone: str
     telemovel: str
     email: str
+    certidao_permanente: str
     codigo_certidao_comercial: str
     validade_certidao_comercial: str
+    seguro_responsabilidade_civil: Optional[str] = None
+    seguro_acidentes_trabalho: Optional[str] = None
+    licenca_tvde: Optional[str] = None
+    plano_id: Optional[str] = None
+    plano_status: str = "pendente"  # "pendente", "ativo", "suspenso"
     gestor_associado_id: Optional[str] = None
     total_vehicles: int = 0
-    campos_customizados: Dict[str, Any] = {}  # Campos adicionais customizáveis
+    campos_customizados: Dict[str, Any] = {}
     created_at: datetime
     # Campos antigos mantidos como opcionais para compatibilidade
     name: Optional[str] = None
