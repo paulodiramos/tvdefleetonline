@@ -452,6 +452,17 @@ const VehicleData = ({ user, onLogout }) => {
                         <option value="condicional">Condicional</option>
                       </select>
                     </div>
+                    <div>
+                      <Label htmlFor="inspecao_valor">Valor da Inspeção (€) *</Label>
+                      <Input
+                        id="inspecao_valor"
+                        type="number"
+                        step="0.01"
+                        value={formData.inspecao_valor}
+                        onChange={(e) => setFormData({...formData, inspecao_valor: e.target.value})}
+                        required
+                      />
+                    </div>
                     <Button type="submit">Guardar Inspeção</Button>
                   </form>
                 </CardContent>
