@@ -181,6 +181,12 @@ function App() {
               user ? <Contratos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
+          <Route
+            path="/recibos-pagamentos"
+            element={
+              user ? <RecibosPagamentos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
