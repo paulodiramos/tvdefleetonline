@@ -24,6 +24,7 @@ const VehicleData = ({ user, onLogout }) => {
     seguro_data_inicio: '',
     seguro_data_fim: '',
     seguro_valor: '',
+    seguro_periodicidade: 'anual',
     
     // Inspeção
     inspecao_data: '',
