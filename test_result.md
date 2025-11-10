@@ -474,27 +474,33 @@ agent_communication:
 backend:
   - task: "Valor da Inspeção - Campo adicionado"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Adicionado campo 'valor' no formulário de inspeção em VehicleData.js. Campo conectado ao backend via update_vehicle endpoint que aceita Dict[str, Any]."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Campo valor da inspeção funcionando perfeitamente. VehicleInspection model atualizado com campos ultima_inspecao, resultado e valor. Vehicle model atualizado com campo inspection (singular). Testado PUT /api/vehicles/{id} com dados de inspeção incluindo valor=45.50. Dados salvos e recuperados corretamente. Testado com diferentes tipos de valores (decimal, integer, small decimal)."
 
   - task: "CSV Templates - Download de exemplos"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Criados templates CSV para Uber, Bolt, Prio, Via Verde, GPS em /app/backend/templates/csv_examples/. Adicionado endpoint GET /api/templates/csv/{template_name} para download. Importado FileResponse do FastAPI."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Todos os 5 templates CSV funcionando perfeitamente. CORRIGIDO: Endpoint estava definido após app.include_router - movido para posição correta. Testados: GET /api/templates/csv/uber (CSV), /bolt (CSV), /prio (XLSX), /viaverde (CSV), /gps (CSV). Content-Type headers corretos. Template inválido retorna 404 corretamente. Todos os arquivos existem em /app/backend/templates/csv_examples/."
 
 frontend:
   - task: "VehicleData.js - Campo Valor da Inspeção"
