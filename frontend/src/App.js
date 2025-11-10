@@ -161,6 +161,18 @@ function App() {
               user ? <VehicleData user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
+          <Route
+            path="/vehicle-photos"
+            element={
+              user ? <VehiclePhotos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/edit-parceiro"
+            element={
+              user ? <EditParceiro user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
