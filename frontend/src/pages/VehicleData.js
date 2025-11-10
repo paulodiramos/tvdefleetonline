@@ -165,7 +165,9 @@ const VehicleData = ({ user, onLogout }) => {
         descricao: formData.manutencao_descricao,
         data: formData.manutencao_data,
         valor: parseFloat(formData.manutencao_valor),
-        km_realizada: parseInt(formData.manutencao_km)
+        km_realizada: parseInt(formData.manutencao_km),
+        proxima_revisao_km: formData.manutencao_proxima_revisao_km ? parseInt(formData.manutencao_proxima_revisao_km) : null,
+        tempo_proxima_revisao: formData.manutencao_tempo_proxima_revisao || null
       };
       
       await axios.put(`${API}/vehicles/${selectedVehicle}`, {
