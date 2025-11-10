@@ -384,16 +384,23 @@ class ChangePasswordRequest(BaseModel):
 # Parceiro Model - EXPANDED
 class ParceiroCreate(BaseModel):
     nome_empresa: str
-    contribuinte_empresa: str  # NIF da empresa
+    contribuinte_empresa: str  # NIF da empresa (9 dígitos)
     morada_completa: str
     codigo_postal: str  # Formato: xxxx-xxx
     localidade: str
     nome_manager: str
+    email_manager: EmailStr
+    email_empresa: EmailStr
     telefone: str
     telemovel: str
-    email: EmailStr
+    email: EmailStr  # Mantido para compatibilidade
+    certidao_permanente: str  # Formato: xxxx-xxxx-xxxx (só dígitos)
     codigo_certidao_comercial: str
     validade_certidao_comercial: str  # Data validade
+    seguro_responsabilidade_civil: Optional[str] = None
+    seguro_acidentes_trabalho: Optional[str] = None
+    licenca_tvde: Optional[str] = None
+    plano_id: Optional[str] = None  # ID do plano de assinatura
     gestor_associado_id: Optional[str] = None
 
 class Parceiro(BaseModel):
