@@ -1,0 +1,4 @@
+Data,Hora,Viagem ID,Tipo,Origem,Destino,Distância (km),Duração (min),Valor Total,Taxa Bolt,Valor Líquido,Gorjeta
+2025-01-15,10:15,BOLT-ABC123,Bolt,Rossio,Alfama,3.2,12,8.50,1.70,6.80,1.00
+2025-01-15,12:30,BOLT-DEF456,Bolt XL,Campo Grande,Cascais,25.4,45,35.20,7.04,28.16,5.00
+2025-01-15,14:45,BOLT-GHI789,Bolt,Benfica,Campo Pequeno,5.8,15,11.30,2.26,9.04,2.00

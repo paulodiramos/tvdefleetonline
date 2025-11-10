@@ -1,0 +1,4 @@
+Data,Hora,Viagem ID,Tipo de Viagem,Origem,Destino,Distância (km),Duração (min),Valor Bruto,Valor Líquido,Taxa Uber,Gorjeta
+2025-01-15,08:30,abc123def456,UberX,Lisboa Aeroporto,Marquês de Pombal,12.5,25,18.50,15.20,3.30,2.00
+2025-01-15,09:45,def789ghi012,UberPool,Saldanha,Belém,8.3,18,12.40,10.50,1.90,1.50
+2025-01-15,11:20,ghi345jkl678,UberX,Cais do Sodré,Parque das Nações,15.7,32,22.80,18.95,3.85,3.00
