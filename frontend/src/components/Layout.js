@@ -44,6 +44,11 @@ const Layout = ({ user, onLogout, children }) => {
       items.push({ path: '/vehicle-data', icon: Database, label: 'Dados Veículos' });
     }
 
+    // Add Recibos e Pagamentos for admin, gestor, operacional, parceiro
+    if (user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional' || user.role === 'parceiro') {
+      items.push({ path: '/recibos-pagamentos', icon: CreditCard, label: 'Recibos/Pagamentos' });
+    }
+
     // Add Contratos for admin and parceiros
     if (user.role === 'admin' || user.role === 'parceiro') {
       items.push({ path: '/contratos', icon: FileText, label: 'Contratos' });
