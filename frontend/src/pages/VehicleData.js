@@ -572,6 +572,27 @@ const VehicleData = ({ user, onLogout }) => {
                         />
                       </div>
                     </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="manutencao_proxima_revisao_km">Próxima Revisão (KM)</Label>
+                        <Input
+                          id="manutencao_proxima_revisao_km"
+                          type="number"
+                          value={formData.manutencao_proxima_revisao_km}
+                          onChange={(e) => setFormData({...formData, manutencao_proxima_revisao_km: e.target.value})}
+                          placeholder="Ex: 150000"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="manutencao_tempo_proxima_revisao">Tempo Próxima Revisão</Label>
+                        <Input
+                          id="manutencao_tempo_proxima_revisao"
+                          type="date"
+                          value={formData.manutencao_tempo_proxima_revisao}
+                          onChange={(e) => setFormData({...formData, manutencao_tempo_proxima_revisao: e.target.value})}
+                        />
+                      </div>
+                    </div>
                     <Button type="submit">Guardar Manutenção</Button>
                   </form>
                 </CardContent>
