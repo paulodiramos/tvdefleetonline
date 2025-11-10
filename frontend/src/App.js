@@ -22,6 +22,7 @@ import Configuracoes from "@/pages/Configuracoes";
 import VehicleData from "@/pages/VehicleData";
 import VehiclePhotos from "@/pages/VehiclePhotos";
 import EditParceiro from "@/pages/EditParceiro";
+import Contratos from "@/pages/Contratos";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
