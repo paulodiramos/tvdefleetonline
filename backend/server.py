@@ -673,6 +673,7 @@ class Vehicle(BaseModel):
     manutencoes: List[VehicleMaintenance] = []
     extintor: Optional[VehicleExtinguisher] = None
     inspecoes: List[VehicleInspection] = []
+    inspection: Optional[VehicleInspection] = None  # Single inspection field with valor
     disponibilidade: VehicleAvailability
     km_atual: int = 0
     km_aviso_manutencao: int = 5000
