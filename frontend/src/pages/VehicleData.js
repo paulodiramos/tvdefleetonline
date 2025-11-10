@@ -671,6 +671,30 @@ const VehicleData = ({ user, onLogout }) => {
                         </select>
                       </div>
                     </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="dano_data_previsao_reparacao">Data Previsão Reparação</Label>
+                        <Input
+                          id="dano_data_previsao_reparacao"
+                          type="date"
+                          value={formData.dano_data_previsao_reparacao}
+                          onChange={(e) => setFormData({...formData, dano_data_previsao_reparacao: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="dano_responsavel">Responsável *</Label>
+                        <select
+                          id="dano_responsavel"
+                          value={formData.dano_responsavel}
+                          onChange={(e) => setFormData({...formData, dano_responsavel: e.target.value})}
+                          className="w-full p-2 border rounded-md"
+                        >
+                          <option value="fleet">Fleet</option>
+                          <option value="motorista">Motorista</option>
+                          <option value="seguro">Seguro</option>
+                        </select>
+                      </div>
+                    </div>
                     <Button type="submit">Guardar Dano</Button>
                   </form>
                 </CardContent>
