@@ -281,9 +281,20 @@ const UploadCSV = ({ user, onLogout }) => {
         {/* Upload Bolt */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <FileText className="w-5 h-5" />
-              <span>Upload CSV Bolt</span>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <FileText className="w-5 h-5" />
+                <span>Upload CSV Bolt</span>
+              </div>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => handleDownloadTemplate('bolt')}
+                type="button"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Exemplo
+              </Button>
             </CardTitle>
           </CardHeader>
           <CardContent>
