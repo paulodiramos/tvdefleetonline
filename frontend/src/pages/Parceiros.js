@@ -172,6 +172,16 @@ const Parceiros = ({ user, onLogout }) => {
                       </div>
                     </div>
                   </div>
+                  {user.role === 'admin' && (
+                    <Button
+                      onClick={() => navigate('/edit-parceiro')}
+                      variant="outline"
+                      className="w-full mt-4"
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar Parceiro
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             ))}
