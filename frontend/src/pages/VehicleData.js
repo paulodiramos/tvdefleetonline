@@ -225,6 +225,7 @@ const VehicleData = ({ user, onLogout }) => {
       seguro_data_inicio: '',
       seguro_data_fim: '',
       seguro_valor: '',
+      seguro_periodicidade: 'anual',
       inspecao_data: '',
       inspecao_proxima: '',
       inspecao_resultado: 'aprovado',
@@ -234,11 +235,15 @@ const VehicleData = ({ user, onLogout }) => {
       manutencao_data: '',
       manutencao_valor: '',
       manutencao_km: '',
+      manutencao_proxima_revisao_km: '',
+      manutencao_tempo_proxima_revisao: '',
       dano_tipo: '',
       dano_descricao: '',
       dano_data: '',
       dano_valor_reparacao: '',
-      dano_estado: 'pendente'
+      dano_estado: 'pendente',
+      dano_data_previsao_reparacao: '',
+      dano_responsavel: 'fleet'
     });
   };
 
