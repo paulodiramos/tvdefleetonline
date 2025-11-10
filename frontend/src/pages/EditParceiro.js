@@ -211,7 +211,30 @@ const EditParceiro = ({ user, onLogout }) => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="email_manager">Email do Manager *</Label>
+                      <Input
+                        id="email_manager"
+                        type="email"
+                        value={parceiroData.email_manager || ''}
+                        onChange={(e) => setParceiroData({...parceiroData, email_manager: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email_empresa">Email da Empresa *</Label>
+                      <Input
+                        id="email_empresa"
+                        type="email"
+                        value={parceiroData.email_empresa || ''}
+                        onChange={(e) => setParceiroData({...parceiroData, email_empresa: e.target.value})}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="telefone">Telefone *</Label>
                       <Input
@@ -230,19 +253,20 @@ const EditParceiro = ({ user, onLogout }) => {
                         required
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="email">Email *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={parceiroData.email || ''}
-                        onChange={(e) => setParceiroData({...parceiroData, email: e.target.value})}
-                        required
-                      />
-                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="certidao_permanente">Certidão Permanente *</Label>
+                      <Input
+                        id="certidao_permanente"
+                        value={parceiroData.certidao_permanente || ''}
+                        onChange={(e) => setParceiroData({...parceiroData, certidao_permanente: e.target.value})}
+                        placeholder="xxxx-xxxx-xxxx"
+                        maxLength="14"
+                        required
+                      />
+                    </div>
                     <div>
                       <Label htmlFor="codigo_certidao_comercial">Código Certidão Comercial *</Label>
                       <Input
@@ -252,14 +276,45 @@ const EditParceiro = ({ user, onLogout }) => {
                         required
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="validade_certidao_comercial">Validade Certidão *</Label>
+                    <Input
+                      id="validade_certidao_comercial"
+                      type="date"
+                      value={parceiroData.validade_certidao_comercial || ''}
+                      onChange={(e) => setParceiroData({...parceiroData, validade_certidao_comercial: e.target.value})}
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
                     <div>
-                      <Label htmlFor="validade_certidao_comercial">Validade Certidão *</Label>
+                      <Label htmlFor="seguro_responsabilidade_civil">Seguro Resp. Civil</Label>
                       <Input
-                        id="validade_certidao_comercial"
-                        type="date"
-                        value={parceiroData.validade_certidao_comercial || ''}
-                        onChange={(e) => setParceiroData({...parceiroData, validade_certidao_comercial: e.target.value})}
-                        required
+                        id="seguro_responsabilidade_civil"
+                        value={parceiroData.seguro_responsabilidade_civil || ''}
+                        onChange={(e) => setParceiroData({...parceiroData, seguro_responsabilidade_civil: e.target.value})}
+                        placeholder="Número da apólice"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="seguro_acidentes_trabalho">Seguro Acid. Trabalho</Label>
+                      <Input
+                        id="seguro_acidentes_trabalho"
+                        value={parceiroData.seguro_acidentes_trabalho || ''}
+                        onChange={(e) => setParceiroData({...parceiroData, seguro_acidentes_trabalho: e.target.value})}
+                        placeholder="Número da apólice"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="licenca_tvde">Licença TVDE</Label>
+                      <Input
+                        id="licenca_tvde"
+                        value={parceiroData.licenca_tvde || ''}
+                        onChange={(e) => setParceiroData({...parceiroData, licenca_tvde: e.target.value})}
+                        placeholder="Número da licença"
                       />
                     </div>
                   </div>
