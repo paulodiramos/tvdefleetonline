@@ -583,8 +583,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Valor da Inspeção - Campo adicionado"
-    - "CSV Templates - Download de exemplos"
     - "VehicleData.js - Campo Valor da Inspeção"
     - "UploadCSV.js - Botões de download de templates"
     - "VehiclePhotos.js - Upload de fotos (verificar)"
@@ -594,6 +592,8 @@ test_plan:
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+  backend_csv_templates_tested: true
+  backend_inspection_value_tested: true
 
 agent_communication:
     - agent: "main"
