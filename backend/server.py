@@ -412,12 +412,12 @@ class Parceiro(BaseModel):
     codigo_postal: str
     localidade: str
     nome_manager: str
-    email_manager: str
-    email_empresa: str
+    email_manager: Optional[str] = None  # Opcional para retrocompatibilidade
+    email_empresa: Optional[str] = None  # Opcional para retrocompatibilidade
     telefone: str
     telemovel: str
     email: str
-    certidao_permanente: str
+    certidao_permanente: Optional[str] = None  # Opcional para retrocompatibilidade
     codigo_certidao_comercial: str
     validade_certidao_comercial: str
     seguro_responsabilidade_civil: Optional[str] = None
