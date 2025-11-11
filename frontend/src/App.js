@@ -175,12 +175,6 @@ function App() {
             }
           />
           <Route
-            path="/contratos"
-            element={
-              user ? <Contratos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-            }
-          />
-          <Route
             path="/recibos-pagamentos"
             element={
               user ? <RecibosPagamentos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
