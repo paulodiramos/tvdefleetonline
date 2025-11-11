@@ -653,3 +653,44 @@ agent_communication:
         
         🎯 TODAS AS NOVAS FUNCIONALIDADES TESTADAS E FUNCIONANDO PERFEITAMENTE!
         Sistema TVDEFleet com CSV templates e valor de inspeção está completamente operacional!
+
+backend:
+  - task: "GET /api/parceiros - Listagem de parceiros"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Endpoint GET /api/parceiros funcionando perfeitamente. Retorna 200 OK com lista de 18 parceiros. Campos opcionais (email_manager, email_empresa, certidao_permanente) podem ser None sem causar erros de validação Pydantic. Compatibilidade com parceiros antigos mantida - campos antigos e novos coexistem sem problemas. Estrutura de resposta válida e completa."
+
+agent_communication:
+    - agent: "testing"
+      message: |
+        🎉 TESTE ESPECÍFICO CONCLUÍDO - ENDPOINT PARCEIROS FUNCIONANDO PERFEITAMENTE!
+        
+        ✅ GET /api/parceiros - LISTAGEM DE PARCEIROS: 100% FUNCIONANDO
+        - Status Code: ✅ 200 OK (conforme esperado)
+        - Response Type: ✅ Lista JSON válida
+        - Número de parceiros: ✅ 18 parceiros retornados
+        - Campos opcionais: ✅ email_manager, email_empresa, certidao_permanente podem ser None
+        - Validação Pydantic: ✅ Sem erros de validação para campos opcionais
+        - Compatibilidade: ✅ Parceiros antigos (sem novos campos) funcionam perfeitamente
+        - Estrutura mista: ✅ Campos antigos e novos coexistem (name/nome_empresa, phone/telefone, etc.)
+        
+        🔧 DETALHES TÉCNICOS VERIFICADOS:
+        - Content-Type: application/json ✅
+        - Campos obrigatórios presentes: id, nome_empresa, contribuinte_empresa ✅
+        - Campos opcionais tratados corretamente: None quando não definidos ✅
+        - Backward compatibility: Campos antigos mantidos para compatibilidade ✅
+        - Sem erros de serialização JSON ✅
+        - Autenticação funcionando corretamente ✅
+        
+        📊 RESULTADO: O endpoint estava com erro anteriormente, mas agora está 100% funcional.
+        Não há problemas de validação Pydantic com campos opcionais.
+        Parceiros antigos e novos são retornados sem erros.
+        
+        ✅ TESTE CONCLUÍDO COM SUCESSO - ENDPOINT TOTALMENTE OPERACIONAL!
