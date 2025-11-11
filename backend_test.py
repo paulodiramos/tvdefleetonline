@@ -1265,6 +1265,11 @@ startxref
         self.test_vehicle_inspection_value_update()
         self.test_vehicle_inspection_value_types()
         
+        # PARCEIROS LISTING TEST (SPECIFIC REQUEST)
+        print("\n👥 PARCEIROS LISTING TEST (SPECIFIC REQUEST)")
+        print("-" * 50)
+        self.test_parceiros_listing_endpoint()
+        
         # Summary
         print("\n" + "=" * 80)
         print("TEST SUMMARY")
