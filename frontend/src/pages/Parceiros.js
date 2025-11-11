@@ -47,7 +47,10 @@ const Parceiros = ({ user, onLogout }) => {
   const handleAddParceiro = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API}/parceiros`, newParceiro);
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/parceiros`, newParceiro, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       toast.success('Parceiro adicionado com sucesso! Password padrão: parceiro123');
       setShowAddDialog(false);
       fetchParceiros();
@@ -60,6 +63,7 @@ const Parceiros = ({ user, onLogout }) => {
         morada: ''
       });
     } catch (error) {
+      console.error('Error adding parceiro:', error);
       toast.error('Erro ao adicionar parceiro');
     }
   };
