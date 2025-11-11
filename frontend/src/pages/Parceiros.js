@@ -8,14 +8,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Building, Mail, Phone, Car, Edit } from 'lucide-react';
+import { Plus, Building, Mail, Phone, Car, Edit, FileText, Users, CheckCircle, Clock, Download, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Parceiros = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const [parceiros, setParceiros] = useState([]);
+  const [selectedParceiro, setSelectedParceiro] = useState(null);
+  const [motoristas, setMotoristas] = useState([]);
+  const [vehicles, setVehicles] = useState([]);
+  const [contratos, setContratos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showContractDialog, setShowContractDialog] = useState(false);
   const [newParceiro, setNewParceiro] = useState({
     name: '',
     email: '',
@@ -23,6 +28,10 @@ const Parceiros = ({ user, onLogout }) => {
     empresa: '',
     nif: '',
     morada: ''
+  });
+  const [contractForm, setContractForm] = useState({
+    motorista_id: '',
+    vehicle_id: ''
   });
 
   useEffect(() => {
@@ -68,6 +77,107 @@ const Parceiros = ({ user, onLogout }) => {
     }
   };
 
+  const handleSelectParceiro = async (parceiro) => {
+    setSelectedParceiro(parceiro);
+    
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Fetch motoristas do parceiro
+      const motoristasRes = await axios.get(`${API}/motoristas`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const parceiroMotoristas = motoristasRes.data.filter(m => m.parceiro_atribuido === parceiro.id);
+      setMotoristas(parceiroMotoristas);
+
+      // Fetch vehicles do parceiro
+      const vehiclesRes = await axios.get(`${API}/vehicles`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const parceiroVehicles = vehiclesRes.data.filter(v => v.parceiro_id === parceiro.id);
+      setVehicles(parceiroVehicles);
+
+      // Fetch contratos do parceiro
+      const contratosRes = await axios.get(`${API}/contratos`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const parceiroContratos = contratosRes.data.filter(c => c.parceiro_id === parceiro.id);
+      setContratos(parceiroContratos);
+      
+    } catch (error) {
+      console.error('Error fetching parceiro data:', error);
+      toast.error('Erro ao carregar dados do parceiro');
+    }
+  };
+
+  const handleCreateContract = async (e) => {
+    e.preventDefault();
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/contratos/gerar`,
+        {
+          parceiro_id: selectedParceiro.id,
+          motorista_id: contractForm.motorista_id,
+          vehicle_id: contractForm.vehicle_id
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success('Contrato gerado com sucesso!');
+      setShowContractDialog(false);
+      setContractForm({ motorista_id: '', vehicle_id: '' });
+      
+      // Refresh contratos
+      handleSelectParceiro(selectedParceiro);
+    } catch (error) {
+      console.error('Error creating contract:', error);
+      toast.error('Erro ao gerar contrato');
+    }
+  };
+
+  const handleDownloadContract = async (contratoId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/contratos/${contratoId}/download`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `contrato_${contratoId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading contract', error);
+      toast.error('Erro ao baixar contrato');
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      'pendente': { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pendente' },
+      'parceiro_assinado': { color: 'bg-blue-100 text-blue-800', icon: CheckCircle, label: 'Parceiro Assinou' },
+      'motorista_assinado': { color: 'bg-purple-100 text-purple-800', icon: CheckCircle, label: 'Motorista Assinou' },
+      'completo': { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Completo' }
+    };
+
+    const config = statusConfig[status] || statusConfig['pendente'];
+    const Icon = config.icon;
+
+    return (
+      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+        <Icon className="w-3 h-3 mr-1" />
+        {config.label}
+      </span>
+    );
+  };
+
   if (loading) {
     return (
       <Layout user={user} onLogout={onLogout}>
@@ -78,13 +188,165 @@ const Parceiros = ({ user, onLogout }) => {
     );
   }
 
+  // Vista Detalhada do Parceiro
+  if (selectedParceiro) {
+    return (
+      <Layout user={user} onLogout={onLogout}>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <Button variant="outline" onClick={() => setSelectedParceiro(null)} className="mb-2">
+                ← Voltar aos Parceiros
+              </Button>
+              <h1 className="text-3xl font-bold">{selectedParceiro.nome_empresa || selectedParceiro.name || selectedParceiro.email}</h1>
+              <p className="text-slate-600">Gerir contratos e motoristas</p>
+            </div>
+            <Dialog open={showContractDialog} onOpenChange={setShowContractDialog}>
+              <DialogTrigger asChild>
+                <Button className="bg-emerald-600 hover:bg-emerald-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Criar Contrato
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Criar Novo Contrato</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleCreateContract} className="space-y-4">
+                  <div>
+                    <Label htmlFor="motorista">Motorista *</Label>
+                    <select
+                      id="motorista"
+                      value={contractForm.motorista_id}
+                      onChange={(e) => setContractForm({...contractForm, motorista_id: e.target.value})}
+                      className="w-full p-2 border rounded-md"
+                      required
+                    >
+                      <option value="">Selecione um motorista</option>
+                      {motoristas.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="vehicle">Veículo *</Label>
+                    <select
+                      id="vehicle"
+                      value={contractForm.vehicle_id}
+                      onChange={(e) => setContractForm({...contractForm, vehicle_id: e.target.value})}
+                      className="w-full p-2 border rounded-md"
+                      required
+                    >
+                      <option value="">Selecione um veículo</option>
+                      {vehicles.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.matricula} - {v.marca} {v.modelo}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <Button type="submit" className="w-full">
+                    Gerar Contrato
+                  </Button>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {/* Estatísticas */}
+          <div className="grid grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-600">Motoristas</p>
+                    <p className="text-2xl font-bold text-emerald-600">{motoristas.length}</p>
+                  </div>
+                  <Users className="w-8 h-8 text-emerald-600" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-600">Veículos</p>
+                    <p className="text-2xl font-bold text-blue-600">{vehicles.length}</p>
+                  </div>
+                  <Car className="w-8 h-8 text-blue-600" />
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-600">Contratos</p>
+                    <p className="text-2xl font-bold text-purple-600">{contratos.length}</p>
+                  </div>
+                  <FileText className="w-8 h-8 text-purple-600" />
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Lista de Contratos */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Contratos</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {contratos.length > 0 ? (
+                <div className="space-y-4">
+                  {contratos.map((contrato) => (
+                    <div key={contrato.id} className="border rounded-lg p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="font-semibold">{contrato.motorista_nome}</p>
+                          <p className="text-sm text-slate-600">{contrato.vehicle_matricula}</p>
+                        </div>
+                        {getStatusBadge(contrato.status)}
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDownloadContract(contrato.id)}
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Download PDF
+                        </Button>
+                        
+                        <p className="text-xs text-slate-500">
+                          Criado em: {new Date(contrato.created_at).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-slate-500 py-8">Nenhum contrato criado ainda</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Lista de Parceiros
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="space-y-6" data-testid="parceiros-page">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-4xl font-bold text-slate-800 mb-2">Parceiros</h1>
-            <p className="text-slate-600">Gerir parceiros associados</p>
+            <p className="text-slate-600">Gerir parceiros e contratos</p>
           </div>
           {(user.role === 'admin' || user.role === 'gestor_associado') && (
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
@@ -144,11 +406,16 @@ const Parceiros = ({ user, onLogout }) => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {parceiros.map((parceiro) => (
-              <Card key={parceiro.id} className="card-hover" data-testid={`parceiro-card-${parceiro.id}`}>
+              <Card 
+                key={parceiro.id} 
+                className="card-hover cursor-pointer" 
+                data-testid={`parceiro-card-${parceiro.id}`}
+                onClick={() => handleSelectParceiro(parceiro)}
+              >
                 <CardHeader>
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-lg">{parceiro.name}</CardTitle>
+                      <CardTitle className="text-lg">{parceiro.nome_empresa || parceiro.name || parceiro.email}</CardTitle>
                       {parceiro.empresa && (
                         <p className="text-sm text-slate-500 mt-1">{parceiro.empresa}</p>
                       )}
@@ -164,32 +431,33 @@ const Parceiros = ({ user, onLogout }) => {
                     </div>
                     <div className="flex items-center space-x-2 text-slate-600">
                       <Phone className="w-4 h-4" />
-                      <span>{parceiro.phone}</span>
+                      <span>{parceiro.phone || parceiro.telefone || 'N/A'}</span>
                     </div>
-                    {parceiro.nif && (
+                    {(parceiro.nif || parceiro.contribuinte_empresa) && (
                       <div className="flex justify-between pt-2 border-t border-slate-200">
                         <span className="text-slate-600">NIF:</span>
-                        <span className="font-medium">{parceiro.nif}</span>
+                        <span className="font-medium">{parceiro.nif || parceiro.contribuinte_empresa}</span>
                       </div>
                     )}
                     <div className="flex items-center justify-between pt-2 border-t border-slate-200">
                       <span className="text-slate-600">Veículos:</span>
                       <div className="flex items-center space-x-1">
                         <Car className="w-4 h-4 text-emerald-600" />
-                        <span className="font-bold text-emerald-600">{parceiro.total_vehicles}</span>
+                        <span className="font-bold text-emerald-600">{parceiro.total_vehicles || 0}</span>
                       </div>
                     </div>
                   </div>
-                  {user.role === 'admin' && (
-                    <Button
-                      onClick={() => navigate('/edit-parceiro')}
-                      variant="outline"
-                      className="w-full mt-4"
-                    >
-                      <Edit className="w-4 h-4 mr-2" />
-                      Editar Parceiro
-                    </Button>
-                  )}
+                  <Button
+                    variant="outline"
+                    className="w-full mt-4"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSelectParceiro(parceiro);
+                    }}
+                  >
+                    <FileText className="w-4 h-4 mr-2" />
+                    Ver Contratos
+                  </Button>
                 </CardContent>
               </Card>
             ))}
