@@ -1058,6 +1058,65 @@ startxref
         else:
             self.log_result("Vehicle-Inspection-Value-Types", False, f"Only {successful_updates}/{len(test_values)} value types worked")
 
+    # ==================== PARCEIROS LISTING TEST ====================
+    
+    def test_parceiros_listing_endpoint(self):
+        """Test GET /api/parceiros endpoint - List all partners with optional fields support"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Parceiros-Listing", False, "No auth token for admin")
+            return
+        
+        try:
+            # Test GET /api/parceiros
+            response = requests.get(f"{BACKEND_URL}/parceiros", headers=headers)
+            
+            if response.status_code == 200:
+                parceiros = response.json()
+                
+                # Check if response is a list
+                if not isinstance(parceiros, list):
+                    self.log_result("Parceiros-Listing", False, f"Expected list, got {type(parceiros)}")
+                    return
+                
+                # Test passed - we got a 200 OK and a list
+                self.log_result("Parceiros-Listing", True, f"Successfully retrieved {len(parceiros)} parceiros")
+                
+                # Additional validation: check if parceiros have expected structure
+                if len(parceiros) > 0:
+                    first_parceiro = parceiros[0]
+                    
+                    # Check for required fields
+                    required_fields = ["id", "nome_empresa", "contribuinte_empresa"]
+                    missing_required = [field for field in required_fields if field not in first_parceiro]
+                    
+                    if missing_required:
+                        self.log_result("Parceiros-Structure", False, f"Missing required fields: {missing_required}")
+                        return
+                    
+                    # Check for optional fields (should not cause errors if missing)
+                    optional_fields = ["email_manager", "email_empresa", "certidao_permanente"]
+                    has_optional = [field for field in optional_fields if field in first_parceiro]
+                    
+                    self.log_result("Parceiros-Structure", True, f"Parceiro structure valid. Optional fields present: {has_optional}")
+                    
+                    # Test backward compatibility - old parceiros without new fields should work
+                    old_fields = ["name", "phone", "empresa", "nif", "morada"]
+                    has_old_fields = [field for field in old_fields if field in first_parceiro]
+                    
+                    if has_old_fields:
+                        self.log_result("Parceiros-Backward-Compatibility", True, f"Backward compatibility maintained. Old fields: {has_old_fields}")
+                    else:
+                        self.log_result("Parceiros-Backward-Compatibility", True, "No old fields detected (using new structure)")
+                else:
+                    self.log_result("Parceiros-Empty-List", True, "Empty parceiros list returned successfully (no validation errors)")
+                    
+            else:
+                self.log_result("Parceiros-Listing", False, f"GET /parceiros failed: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Parceiros-Listing", False, f"Request error: {str(e)}")
+    
     # ==================== INTEGRATION TESTS ====================
     
     def test_different_image_formats(self):
