@@ -31,9 +31,13 @@ const Parceiros = ({ user, onLogout }) => {
 
   const fetchParceiros = async () => {
     try {
-      const response = await axios.get(`${API}/parceiros`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/parceiros`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setParceiros(response.data);
     } catch (error) {
+      console.error('Error fetching parceiros:', error);
       toast.error('Erro ao carregar parceiros');
     } finally {
       setLoading(false);
