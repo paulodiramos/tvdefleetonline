@@ -160,12 +160,43 @@ const FichaVeiculo = ({ user, onLogout }) => {
   };
 
   // Save all changes with confirmation
+  const handleSaveInfo = async (silent = false) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/vehicles/${vehicleId}`, {
+        tipo_contrato: {
+          regime: infoForm.regime,
+          horario_turno_1: infoForm.horario_turno_1,
+          horario_turno_2: infoForm.horario_turno_2,
+          horario_turno_3: infoForm.horario_turno_3,
+          horario_turno_4: infoForm.horario_turno_4,
+          comissao_parceiro: parseFloat(infoForm.comissao_parceiro) || 0,
+          comissao_motorista: parseFloat(infoForm.comissao_motorista) || 0
+        },
+        categorias_uber: infoForm.categorias_uber,
+        categorias_bolt: infoForm.categorias_bolt
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!silent) {
+        toast.success('Informações atualizadas com sucesso!');
+        fetchVehicleData();
+      }
+    } catch (error) {
+      console.error('Error saving info:', error);
+      if (!silent) toast.error('Erro ao salvar informações');
+      throw error;
+    }
+  };
+
   const handleSaveAllChanges = async () => {
     const confirmed = window.confirm('Tem certeza que deseja guardar todas as alterações?');
     if (!confirmed) return;
 
     try {
       // Save all forms silently (no individual toasts)
+      await handleSaveInfo(true);
       await handleSaveSeguro(true);
       await handleSaveInspecao(true);
       await handleSaveRevisao(true);
