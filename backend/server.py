@@ -2367,13 +2367,16 @@ async def upload_carta_verde(
     file_id = f"carta_verde_{vehicle_id}_{uuid.uuid4()}"
     file_info = await process_uploaded_file(file, VEHICLE_DOCS_UPLOAD_DIR, file_id)
     
+    # Use pdf_path (converted file) or original_path if not converted
+    document_path = file_info.get("pdf_path") or file_info.get("original_path")
+    
     # Update vehicle with document path
     await db.vehicles.update_one(
         {"id": vehicle_id},
-        {"$set": {"documento_carta_verde": file_info["saved_path"]}}
+        {"$set": {"documento_carta_verde": document_path}}
     )
     
-    return {"message": "Carta verde uploaded successfully", "url": file_info["saved_path"]}
+    return {"message": "Carta verde uploaded successfully", "url": document_path}
 
 @api_router.post("/vehicles/{vehicle_id}/upload-condicoes")
 async def upload_condicoes(
@@ -2393,13 +2396,16 @@ async def upload_condicoes(
     file_id = f"condicoes_{vehicle_id}_{uuid.uuid4()}"
     file_info = await process_uploaded_file(file, VEHICLE_DOCS_UPLOAD_DIR, file_id)
     
+    # Use pdf_path (converted file) or original_path if not converted
+    document_path = file_info.get("pdf_path") or file_info.get("original_path")
+    
     # Update vehicle with document path
     await db.vehicles.update_one(
         {"id": vehicle_id},
-        {"$set": {"documento_condicoes": file_info["saved_path"]}}
+        {"$set": {"documento_condicoes": document_path}}
     )
     
-    return {"message": "Condições document uploaded successfully", "url": file_info["saved_path"]}
+    return {"message": "Condições document uploaded successfully", "url": document_path}
 
 @api_router.post("/vehicles/{vehicle_id}/upload-recibo-seguro")
 async def upload_recibo_seguro(
@@ -2419,13 +2425,16 @@ async def upload_recibo_seguro(
     file_id = f"recibo_seguro_{vehicle_id}_{uuid.uuid4()}"
     file_info = await process_uploaded_file(file, VEHICLE_DOCS_UPLOAD_DIR, file_id)
     
+    # Use pdf_path (converted file) or original_path if not converted
+    document_path = file_info.get("pdf_path") or file_info.get("original_path")
+    
     # Update vehicle with document path
     await db.vehicles.update_one(
         {"id": vehicle_id},
-        {"$set": {"documento_recibo_seguro": file_info["saved_path"]}}
+        {"$set": {"documento_recibo_seguro": document_path}}
     )
     
-    return {"message": "Recibo de seguro uploaded successfully", "url": file_info["saved_path"]}
+    return {"message": "Recibo de seguro uploaded successfully", "url": document_path}
 
 @api_router.post("/vehicles/{vehicle_id}/upload-documento-inspecao")
 async def upload_documento_inspecao(
@@ -2445,13 +2454,16 @@ async def upload_documento_inspecao(
     file_id = f"doc_inspecao_{vehicle_id}_{uuid.uuid4()}"
     file_info = await process_uploaded_file(file, VEHICLE_DOCS_UPLOAD_DIR, file_id)
     
+    # Use pdf_path (converted file) or original_path if not converted
+    document_path = file_info.get("pdf_path") or file_info.get("original_path")
+    
     # Update vehicle with document path
     await db.vehicles.update_one(
         {"id": vehicle_id},
-        {"$set": {"documento_inspecao": file_info["saved_path"]}}
+        {"$set": {"documento_inspecao": document_path}}
     )
     
-    return {"message": "Documento de inspeção uploaded successfully", "url": file_info["saved_path"]}
+    return {"message": "Documento de inspeção uploaded successfully", "url": document_path}
 
 @api_router.put("/vehicles/{vehicle_id}/update-km")
 async def update_vehicle_km(
