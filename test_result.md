@@ -577,11 +577,11 @@ frontend:
 
   - task: "FichaVeiculo.js - Fix Edit/Save/Cancel Logic"
     implemented: true
-    working: false
+    working: "NA"
     file: "frontend/src/pages/FichaVeiculo.js"
     stuck_count: 1
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
         - working: "NA"
           agent: "main"
@@ -589,6 +589,9 @@ frontend:
         - working: false
           agent: "testing"
           comment: "TESTADO COMPLETAMENTE: ✅ Initial state correct - only 'Editar' button visible, fields disabled. ✅ Edit mode correct - 'Guardar' (green) and 'Cancelar' (red) buttons appear, fields enabled. ✅ No individual save buttons in tabs. ✅ Toast message 'Alterações descartadas' appears on cancel. ❌ CRITICAL ISSUE: Cancel functionality NOT working for Seguro tab - changes are not being restored to original values. Seguradora and Apólice fields retain changed values instead of reverting. Inspeção tab cancel works correctly. Save functionality not fully tested due to cancel issue."
+        - working: "NA"
+          agent: "main"
+          comment: "CORREÇÃO APLICADA: Identificado problema com shallow copy no backup/restore de estado. Implementado deep copy usando JSON.parse(JSON.stringify()) em handleEnterEditMode() e handleCancelEdit() para garantir que React detecte mudanças de estado e force re-render. Frontend reiniciado. Precisa re-teste."
 
 metadata:
   created_by: "main_agent"
