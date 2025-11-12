@@ -3345,10 +3345,13 @@ async def gerar_contrato(contrato_data: ContratoCreate, current_user: Dict = Dep
         if not motorista:
             raise HTTPException(status_code=404, detail="Motorista not found")
         
-        # Get vehicle data
-        vehicle = await db.vehicles.find_one({"id": contrato_data.vehicle_id}, {"_id": 0})
-        if not vehicle:
-            raise HTTPException(status_code=404, detail="Vehicle not found")
+        # Get vehicle data (optional for carro_proprio)
+        vehicle = None
+        vehicle_matricula = None
+        if contrato_data.vehicle_id:
+            vehicle = await db.vehicles.find_one({"id": contrato_data.vehicle_id}, {"_id": 0})
+            if vehicle:
+                vehicle_matricula = vehicle.get("matricula")
         
         # Create contract
         contrato_id = str(uuid.uuid4())
@@ -3359,7 +3362,12 @@ async def gerar_contrato(contrato_data: ContratoCreate, current_user: Dict = Dep
             "vehicle_id": contrato_data.vehicle_id,
             "parceiro_nome": parceiro.get("nome_empresa") or parceiro.get("name") or parceiro.get("email"),
             "motorista_nome": motorista.get("name"),
-            "vehicle_matricula": vehicle.get("matricula"),
+            "vehicle_matricula": vehicle_matricula,
+            "tipo_contrato": contrato_data.tipo_contrato,
+            "valor_semanal": contrato_data.valor_semanal,
+            "valor_slot": contrato_data.valor_slot,
+            "percentagem_comissao": contrato_data.percentagem_comissao,
+            "horarios_disponibilidade": contrato_data.horarios_disponibilidade or [],
             "status": "pendente",
             "parceiro_assinado": False,
             "motorista_assinado": False,
