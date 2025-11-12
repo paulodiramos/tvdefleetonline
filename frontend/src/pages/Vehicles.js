@@ -97,11 +97,15 @@ const Vehicles = ({ user, onLogout }) => {
   const handleAddVehicle = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API}/vehicles`, newVehicle);
+      const response = await axios.post(`${API}/vehicles`, newVehicle);
+      const vehicleId = response.data.id;
+      
       toast.success('Veículo adicionado com sucesso!');
       setShowAddDialog(false);
-      fetchVehicles();
       resetForm();
+      
+      // Redirect to vehicle ficha for further editing
+      navigate(`/ficha-veiculo/${vehicleId}`);
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Erro ao adicionar veículo');
     }
