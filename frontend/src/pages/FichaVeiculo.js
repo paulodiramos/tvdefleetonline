@@ -66,13 +66,23 @@ const FichaVeiculo = ({ user, onLogout }) => {
   });
 
   const [infoForm, setInfoForm] = useState({
+    tipo: 'aluguer',
     regime: 'full_time',
     horario_turno_1: '',
     horario_turno_2: '',
     horario_turno_3: '',
     horario_turno_4: '',
+    // Aluguer
+    valor_aluguer: '',
+    // Comissão
     comissao_parceiro: '',
     comissao_motorista: '',
+    // Compra do Veículo
+    valor_semanal_compra: '',
+    periodo_compra: '',
+    valor_acumulado: '',
+    valor_falta_cobrar: '',
+    custo_slot: '',
     categorias_uber: {
       green: false,
       comfort: false,
