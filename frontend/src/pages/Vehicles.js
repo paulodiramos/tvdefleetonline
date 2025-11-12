@@ -491,17 +491,27 @@ const Vehicles = ({ user, onLogout }) => {
                       </div>
                     </div>
                   </div>
-                  {(user.role === 'admin' || user.role === 'gestao') && (
-                    <div className="flex space-x-2 pt-3 border-t border-slate-200">
-                      <Button variant="outline" size="sm" className="flex-1" data-testid={`edit-vehicle-${vehicle.id}`}>
-                        <Edit className="w-4 h-4 mr-1" />
-                        Editar
-                      </Button>
-                      <Button variant="outline" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => handleDeleteVehicle(vehicle.id)} data-testid={`delete-vehicle-${vehicle.id}`}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  )}
+                  <div className="flex space-x-2 pt-3 border-t border-slate-200">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1"
+                      onClick={() => navigate(`/ficha-veiculo/${vehicle.id}`)}
+                    >
+                      <FileText className="w-4 h-4 mr-1" />
+                      Ver Ficha
+                    </Button>
+                    {(user.role === 'admin' || user.role === 'gestao') && (
+                      <>
+                        <Button variant="outline" size="sm" data-testid={`edit-vehicle-${vehicle.id}`}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button variant="outline" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => handleDeleteVehicle(vehicle.id)} data-testid={`delete-vehicle-${vehicle.id}`}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             ))}
