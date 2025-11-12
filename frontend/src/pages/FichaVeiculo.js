@@ -752,101 +752,358 @@ const FichaVeiculo = ({ user, onLogout }) => {
             <TabsTrigger value="relatorio">Relatório</TabsTrigger>
           </TabsList>
 
-          {/* Informações Básicas */}
+          {/* Informações Completas */}
           <TabsContent value="info">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Car className="w-5 h-5" />
-                  <span>Informações do Veículo</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                {/* Informações Básicas */}
-                <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-slate-600">Marca</Label>
-                  <p className="font-medium">{vehicle.marca}</p>
-                </div>
-                <div>
-                  <Label className="text-slate-600">Modelo</Label>
-                  <p className="font-medium">{vehicle.modelo}</p>
-                </div>
-                {vehicle.versao && (
-                  <div>
-                    <Label className="text-slate-600">Versão</Label>
-                    <p className="font-medium">{vehicle.versao}</p>
+            <div className="space-y-4">
+              {/* Informações Básicas */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Car className="w-5 h-5" />
+                    <span>Dados Básicos</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-slate-600">Marca</Label>
+                      <p className="font-medium">{vehicle.marca}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-600">Modelo</Label>
+                      <p className="font-medium">{vehicle.modelo}</p>
+                    </div>
+                    {vehicle.versao && (
+                      <div>
+                        <Label className="text-slate-600">Versão</Label>
+                        <p className="font-medium">{vehicle.versao}</p>
+                      </div>
+                    )}
+                    {vehicle.ano && (
+                      <div>
+                        <Label className="text-slate-600">Ano</Label>
+                        <p className="font-medium">{vehicle.ano}</p>
+                      </div>
+                    )}
+                    <div>
+                      <Label className="text-slate-600">Matrícula</Label>
+                      <p className="font-medium">{vehicle.matricula}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-600">Cor</Label>
+                      <p className="font-medium">{vehicle.cor}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-600">Combustível</Label>
+                      <p className="font-medium">{vehicle.combustivel}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-600">Caixa</Label>
+                      <p className="font-medium">{vehicle.caixa}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-600">Lugares</Label>
+                      <p className="font-medium">{vehicle.lugares}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-600">KM Atual</Label>
+                      <p className="font-medium">{vehicle.km_atual || 0} km</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-600">Status</Label>
+                      {canEdit && editMode ? (
+                        <select
+                          value={vehicle.status || 'disponivel'}
+                          onChange={async (e) => {
+                            try {
+                              const token = localStorage.getItem('token');
+                              await axios.put(`${API}/vehicles/${vehicleId}/status`, 
+                                { status: e.target.value },
+                                { headers: { Authorization: `Bearer ${token}` }}
+                              );
+                              toast.success('Status atualizado!');
+                              fetchVehicleData();
+                            } catch (error) {
+                              toast.error('Erro ao atualizar status');
+                            }
+                          }}
+                          className="w-full p-2 border rounded-md"
+                        >
+                          <option value="disponivel">Disponível</option>
+                          <option value="atribuido">Atribuído</option>
+                          <option value="manutencao">Manutenção</option>
+                          <option value="venda">Venda</option>
+                          <option value="condicoes">Condições</option>
+                        </select>
+                      ) : (
+                        <p className="font-medium capitalize">
+                          {vehicle.status === 'disponivel' ? 'Disponível' :
+                           vehicle.status === 'atribuido' ? 'Atribuído' :
+                           vehicle.status === 'manutencao' ? 'Manutenção' :
+                           vehicle.status === 'venda' ? 'Venda' :
+                           vehicle.status === 'condicoes' ? 'Condições' :
+                           'Disponível'}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                )}
-                {vehicle.ano && (
-                  <div>
-                    <Label className="text-slate-600">Ano</Label>
-                    <p className="font-medium">{vehicle.ano}</p>
+                </CardContent>
+              </Card>
+
+              {/* Tipo de Contrato */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Tipo de Contrato</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="regime">Regime</Label>
+                      {canEdit && editMode ? (
+                        <select
+                          id="regime"
+                          value={infoForm.regime}
+                          onChange={(e) => setInfoForm({...infoForm, regime: e.target.value})}
+                          className="w-full p-2 border rounded-md"
+                        >
+                          <option value="full_time">Full Time</option>
+                          <option value="part_time">Part Time</option>
+                        </select>
+                      ) : (
+                        <p className="font-medium">{vehicle.tipo_contrato?.regime === 'full_time' ? 'Full Time' : 'Part Time'}</p>
+                      )}
+                    </div>
+                    
+                    {(editMode ? infoForm.regime : vehicle.tipo_contrato?.regime) === 'part_time' && (
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label htmlFor="horario_turno_1">Turno 1</Label>
+                          {canEdit && editMode ? (
+                            <Input
+                              id="horario_turno_1"
+                              value={infoForm.horario_turno_1}
+                              onChange={(e) => setInfoForm({...infoForm, horario_turno_1: e.target.value})}
+                              placeholder="Ex: 08:00-12:00"
+                            />
+                          ) : (
+                            <p className="font-medium">{vehicle.tipo_contrato?.horario_turno_1 || 'N/A'}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label htmlFor="horario_turno_2">Turno 2</Label>
+                          {canEdit && editMode ? (
+                            <Input
+                              id="horario_turno_2"
+                              value={infoForm.horario_turno_2}
+                              onChange={(e) => setInfoForm({...infoForm, horario_turno_2: e.target.value})}
+                              placeholder="Ex: 12:00-16:00"
+                            />
+                          ) : (
+                            <p className="font-medium">{vehicle.tipo_contrato?.horario_turno_2 || 'N/A'}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label htmlFor="horario_turno_3">Turno 3</Label>
+                          {canEdit && editMode ? (
+                            <Input
+                              id="horario_turno_3"
+                              value={infoForm.horario_turno_3}
+                              onChange={(e) => setInfoForm({...infoForm, horario_turno_3: e.target.value})}
+                              placeholder="Ex: 16:00-20:00"
+                            />
+                          ) : (
+                            <p className="font-medium">{vehicle.tipo_contrato?.horario_turno_3 || 'N/A'}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label htmlFor="horario_turno_4">Turno 4</Label>
+                          {canEdit && editMode ? (
+                            <Input
+                              id="horario_turno_4"
+                              value={infoForm.horario_turno_4}
+                              onChange={(e) => setInfoForm({...infoForm, horario_turno_4: e.target.value})}
+                              placeholder="Ex: 20:00-00:00"
+                            />
+                          ) : (
+                            <p className="font-medium">{vehicle.tipo_contrato?.horario_turno_4 || 'N/A'}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="comissao_parceiro">Comissão Parceiro (%)</Label>
+                        {canEdit && editMode ? (
+                          <Input
+                            id="comissao_parceiro"
+                            type="number"
+                            value={infoForm.comissao_parceiro}
+                            onChange={(e) => setInfoForm({...infoForm, comissao_parceiro: e.target.value})}
+                            placeholder="Ex: 60"
+                          />
+                        ) : (
+                          <p className="font-medium">{vehicle.tipo_contrato?.comissao_parceiro || 0}%</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label htmlFor="comissao_motorista">Comissão Motorista (%)</Label>
+                        {canEdit && editMode ? (
+                          <Input
+                            id="comissao_motorista"
+                            type="number"
+                            value={infoForm.comissao_motorista}
+                            onChange={(e) => setInfoForm({...infoForm, comissao_motorista: e.target.value})}
+                            placeholder="Ex: 40"
+                          />
+                        ) : (
+                          <p className="font-medium">{vehicle.tipo_contrato?.comissao_motorista || 0}%</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                )}
-                <div>
-                  <Label className="text-slate-600">Matrícula</Label>
-                  <p className="font-medium">{vehicle.matricula}</p>
-                </div>
-                <div>
-                  <Label className="text-slate-600">Cor</Label>
-                  <p className="font-medium">{vehicle.cor}</p>
-                </div>
-                <div>
-                  <Label className="text-slate-600">Combustível</Label>
-                  <p className="font-medium">{vehicle.combustivel}</p>
-                </div>
-                <div>
-                  <Label className="text-slate-600">Caixa</Label>
-                  <p className="font-medium">{vehicle.caixa}</p>
-                </div>
-                <div>
-                  <Label className="text-slate-600">Lugares</Label>
-                  <p className="font-medium">{vehicle.lugares}</p>
-                </div>
-                <div>
-                  <Label className="text-slate-600">KM Atual</Label>
-                  <p className="font-medium">{vehicle.km_atual || 0} km</p>
-                </div>
-                <div>
-                  <Label className="text-slate-600">Status</Label>
-                  {canEdit && editMode ? (
-                    <select
-                      value={vehicle.status || 'disponivel'}
-                      onChange={async (e) => {
-                        try {
-                          const token = localStorage.getItem('token');
-                          await axios.put(`${API}/vehicles/${vehicleId}/status`, 
-                            { status: e.target.value },
-                            { headers: { Authorization: `Bearer ${token}` }}
-                          );
-                          toast.success('Status atualizado!');
-                          fetchVehicleData();
-                        } catch (error) {
-                          toast.error('Erro ao atualizar status');
-                        }
-                      }}
-                      className="w-full p-2 border rounded-md"
-                    >
-                      <option value="disponivel">Disponível</option>
-                      <option value="atribuido">Atribuído</option>
-                      <option value="manutencao">Manutenção</option>
-                      <option value="venda">Venda</option>
-                      <option value="condicoes">Condições</option>
-                    </select>
-                  ) : (
-                    <p className="font-medium capitalize">
-                      {vehicle.status === 'disponivel' ? 'Disponível' :
-                       vehicle.status === 'atribuido' ? 'Atribuído' :
-                       vehicle.status === 'manutencao' ? 'Manutenção' :
-                       vehicle.status === 'venda' ? 'Venda' :
-                       vehicle.status === 'condicoes' ? 'Condições' :
-                       'Disponível'}
+                </CardContent>
+              </Card>
+
+              {/* Categorias Uber */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Categorias Uber</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-3">
+                    {['green', 'comfort', 'exec', 'pet', 'xl'].map((cat) => (
+                      <div key={cat} className="flex items-center space-x-2">
+                        {canEdit && editMode ? (
+                          <input
+                            type="checkbox"
+                            id={`uber_${cat}`}
+                            checked={infoForm.categorias_uber[cat] || false}
+                            onChange={(e) => setInfoForm({
+                              ...infoForm,
+                              categorias_uber: {...infoForm.categorias_uber, [cat]: e.target.checked}
+                            })}
+                            className="w-4 h-4"
+                          />
+                        ) : (
+                          <input
+                            type="checkbox"
+                            checked={vehicle.categorias_uber?.[cat] || false}
+                            disabled
+                            className="w-4 h-4"
+                          />
+                        )}
+                        <Label htmlFor={`uber_${cat}`} className="capitalize">{cat === 'exec' ? 'Exec' : cat === 'xl' ? 'XL' : cat.charAt(0).toUpperCase() + cat.slice(1)}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Categorias Bolt */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Categorias Bolt</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-3 gap-3">
+                    {['economy', 'comfort', 'exec', 'pet', 'xl'].map((cat) => (
+                      <div key={cat} className="flex items-center space-x-2">
+                        {canEdit && editMode ? (
+                          <input
+                            type="checkbox"
+                            id={`bolt_${cat}`}
+                            checked={infoForm.categorias_bolt[cat] || false}
+                            onChange={(e) => setInfoForm({
+                              ...infoForm,
+                              categorias_bolt: {...infoForm.categorias_bolt, [cat]: e.target.checked}
+                            })}
+                            className="w-4 h-4"
+                          />
+                        ) : (
+                          <input
+                            type="checkbox"
+                            checked={vehicle.categorias_bolt?.[cat] || false}
+                            disabled
+                            className="w-4 h-4"
+                          />
+                        )}
+                        <Label htmlFor={`bolt_${cat}`} className="capitalize">{cat === 'exec' ? 'Exec' : cat === 'xl' ? 'XL' : cat.charAt(0).toUpperCase() + cat.slice(1)}</Label>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Fotos do Veículo */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Fotos do Veículo</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <p className="text-sm text-slate-600">
+                      Máximo de 3 fotos. Imagens são convertidas automaticamente para PDF formato A4.
                     </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+
+                    {/* Upload de nova foto */}
+                    {canEdit && editMode && (
+                      <div className="border-2 border-dashed border-slate-300 rounded-lg p-4 text-center">
+                        <Upload className="w-8 h-8 mx-auto mb-2 text-slate-400" />
+                        <Input
+                          type="file"
+                          accept=".jpg,.jpeg,.png"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) handleUploadPhoto(file);
+                          }}
+                          disabled={uploadingDoc || (vehicle.fotos_veiculo && vehicle.fotos_veiculo.length >= 3)}
+                          className="mt-2"
+                        />
+                        <p className="text-xs text-slate-500 mt-2">
+                          {vehicle.fotos_veiculo && vehicle.fotos_veiculo.length >= 3 
+                            ? 'Máximo de fotos atingido (3/3)' 
+                            : `${vehicle.fotos_veiculo?.length || 0}/3 fotos`}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Lista de fotos */}
+                    {vehicle.fotos_veiculo && vehicle.fotos_veiculo.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        {vehicle.fotos_veiculo.map((foto, index) => (
+                          <div key={index} className="border rounded-lg p-3 bg-slate-50">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-sm font-medium">Foto {index + 1}</span>
+                              <div className="flex space-x-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleViewPhoto(foto)}
+                                >
+                                  <Download className="w-4 h-4" />
+                                </Button>
+                                {canEdit && editMode && (
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleDeletePhoto(index)}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-slate-500 text-sm text-center py-4">Nenhuma foto adicionada</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Fotos do Veículo */}
