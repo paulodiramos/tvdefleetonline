@@ -55,7 +55,22 @@ const FichaVeiculo = ({ user, onLogout }) => {
     descricao: ''
   });
 
+  const [extintorForm, setExtintorForm] = useState({
+    fornecedor: '',
+    preco: '',
+    data_entrega: '',
+    data_validade: ''
+  });
+
+  const [historicoForm, setHistoricoForm] = useState({
+    data: '',
+    titulo: '',
+    descricao: '',
+    tipo: 'observacao'
+  });
+
   const [historico, setHistorico] = useState([]);
+  const [historicoEditavel, setHistoricoEditavel] = useState([]);
   const [agenda, setAgenda] = useState([]);
   const [relatorioGanhos, setRelatorioGanhos] = useState({
     ganhos_total: 0,
