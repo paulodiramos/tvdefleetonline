@@ -531,9 +531,19 @@ const FichaVeiculo = ({ user, onLogout }) => {
         responseType: 'blob'
       });
 
-      // Open in new tab
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      window.open(url, '_blank');
+      // Create blob with correct content type
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Create download link
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      link.setAttribute('target', '_blank');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
       setTimeout(() => window.URL.revokeObjectURL(url), 100);
     } catch (error) {
       console.error('Error viewing photo:', error);
