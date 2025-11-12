@@ -65,6 +65,30 @@ const FichaVeiculo = ({ user, onLogout }) => {
     data_validade: ''
   });
 
+  const [infoForm, setInfoForm] = useState({
+    regime: 'full_time',
+    horario_turno_1: '',
+    horario_turno_2: '',
+    horario_turno_3: '',
+    horario_turno_4: '',
+    comissao_parceiro: '',
+    comissao_motorista: '',
+    categorias_uber: {
+      green: false,
+      comfort: false,
+      exec: false,
+      pet: false,
+      xl: false
+    },
+    categorias_bolt: {
+      economy: false,
+      comfort: false,
+      exec: false,
+      pet: false,
+      xl: false
+    }
+  });
+
   const [historicoForm, setHistoricoForm] = useState({
     data: '',
     titulo: '',
