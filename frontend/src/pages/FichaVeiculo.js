@@ -126,11 +126,23 @@ const FichaVeiculo = ({ user, onLogout }) => {
         });
       }
 
+      if (vehicleRes.data.extintor) {
+        setExtintorForm({
+          fornecedor: vehicleRes.data.extintor.fornecedor || '',
+          preco: vehicleRes.data.extintor.preco || '',
+          data_entrega: vehicleRes.data.extintor.data_entrega || '',
+          data_validade: vehicleRes.data.extintor.data_validade || ''
+        });
+      }
+
       // Fetch historico
       const historicoRes = await axios.get(`${API}/vehicles/${vehicleId}/historico`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setHistorico(historicoRes.data);
+
+      // Load historico editavel
+      setHistoricoEditavel(vehicleRes.data.historico_editavel || []);
 
       // Fetch agenda
       const agendaRes = await axios.get(`${API}/vehicles/${vehicleId}/agenda`, {
