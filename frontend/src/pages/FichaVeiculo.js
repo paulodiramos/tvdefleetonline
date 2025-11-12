@@ -1495,16 +1495,18 @@ const FichaVeiculo = ({ user, onLogout }) => {
             </Card>
           </TabsContent>
 
-          {/* Próxima Revisão */}
+          {/* Revisão e Intervenções */}
           <TabsContent value="revisao">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Wrench className="w-5 h-5" />
-                  <span>Próxima Revisão</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
+            <div className="space-y-4">
+              {/* Próxima Revisão */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Wrench className="w-5 h-5" />
+                    <span>Próxima Revisão</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="proxima_revisao_km">Próxima Revisão (KM)</Label>
