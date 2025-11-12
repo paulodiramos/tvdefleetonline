@@ -575,6 +575,18 @@ frontend:
           agent: "main"
           comment: "Página já implementada com tabs para Planos de Assinatura e Outras Configurações. Inclui sistema de features disponíveis por tipo de usuário (parceiro/operacional) com checkboxes para seleção. Precisa ser testada."
 
+  - task: "FichaVeiculo.js - Fix Edit/Save/Cancel Logic"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/FichaVeiculo.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Corrigido fluxo de edição conforme solicitado pelo usuário. Implementado sistema de backup de dados originais ao entrar em modo de edição. Botão 'Editar' ativa modo de edição. Dois novos botões aparecem: 'Guardar' (verde, com confirmação) salva todas as alterações, e 'Cancelar' (vermelho) descarta alterações e restaura dados originais. Removidos botões individuais de save de cada tab."
+
 metadata:
   created_by: "main_agent"
   version: "2.0"
