@@ -673,6 +673,8 @@ class Vehicle(BaseModel):
     id: str
     marca: str
     modelo: str
+    versao: Optional[str] = None
+    ano: Optional[int] = None
     matricula: str
     data_matricula: str
     validade_matricula: str
