@@ -598,18 +598,19 @@ metadata:
 
 test_plan:
   current_focus:
-    - "FichaVeiculo.js - Fix Edit/Save/Cancel Logic"
     - "VehicleData.js - Campo Valor da Inspeção"
     - "UploadCSV.js - Botões de download de templates"
     - "VehiclePhotos.js - Upload de fotos (verificar)"
     - "EditParceiro.js - Edição de parceiros por Admin"
     - "Planos.js - Gestão de planos de assinatura"
     - "Configuracoes.js - Configurações do sistema"
-  stuck_tasks: []
+  stuck_tasks:
+    - "FichaVeiculo.js - Fix Edit/Save/Cancel Logic"
   test_all: false
   test_priority: "high_first"
   backend_csv_templates_tested: true
   backend_inspection_value_tested: true
+  ficha_veiculo_cancel_issue_found: true
 
 agent_communication:
     - agent: "main"
