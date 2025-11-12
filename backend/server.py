@@ -1799,6 +1799,31 @@ async def update_vehicle(vehicle_id: str, updates: Dict[str, Any], current_user:
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
+    # Auto-add to agenda when dates are filled
+    if updates.get("insurance") and updates["insurance"].get("data_validade"):
+        await auto_add_to_agenda(
+            vehicle_id, 
+            "seguro", 
+            updates["insurance"]["data_validade"],
+            "Renovação de Seguro"
+        )
+    
+    if updates.get("inspection") and updates["inspection"].get("proxima_inspecao"):
+        await auto_add_to_agenda(
+            vehicle_id,
+            "inspecao",
+            updates["inspection"]["proxima_inspecao"],
+            "Inspeção do Veículo"
+        )
+    
+    if updates.get("extintor") and updates["extintor"].get("data_validade"):
+        await auto_add_to_agenda(
+            vehicle_id,
+            "extintor",
+            updates["extintor"]["data_validade"],
+            "Renovação de Extintor"
+        )
+    
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
     await db.vehicles.update_one({"id": vehicle_id}, {"$set": updates})
     return {"message": "Vehicle updated"}
