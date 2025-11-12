@@ -118,10 +118,14 @@ const FichaVeiculo = ({ user, onLogout }) => {
     if (!confirmed) return;
 
     try {
-      await handleSaveSeguro();
-      await handleSaveInspecao();
-      await handleSaveRevisao();
-      await handleSaveExtintor();
+      // Save all forms silently (no individual toasts)
+      await handleSaveSeguro(true);
+      await handleSaveInspecao(true);
+      await handleSaveRevisao(true);
+      await handleSaveExtintor(true);
+      
+      // Refresh data and exit edit mode
+      await fetchVehicleData();
       setEditMode(false);
       toast.success('Todas as alterações foram guardadas com sucesso!');
     } catch (error) {
