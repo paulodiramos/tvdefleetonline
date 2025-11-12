@@ -95,19 +95,33 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
   // Enter edit mode and store original data
   const handleEnterEditMode = () => {
-    setOriginalSeguroForm({...seguroForm});
-    setOriginalInspecaoForm({...inspecaoForm});
-    setOriginalRevisaoForm({...revisaoForm});
-    setOriginalExtintorForm({...extintorForm});
+    // Create deep copies of current form states
+    setOriginalSeguroForm(JSON.parse(JSON.stringify(seguroForm)));
+    setOriginalInspecaoForm(JSON.parse(JSON.stringify(inspecaoForm)));
+    setOriginalRevisaoForm(JSON.parse(JSON.stringify(revisaoForm)));
+    setOriginalExtintorForm(JSON.parse(JSON.stringify(extintorForm)));
     setEditMode(true);
   };
 
   // Cancel editing and restore original data
   const handleCancelEdit = () => {
-    if (originalSeguroForm) setSeguroForm({...originalSeguroForm});
-    if (originalInspecaoForm) setInspecaoForm({...originalInspecaoForm});
-    if (originalRevisaoForm) setRevisaoForm({...originalRevisaoForm});
-    if (originalExtintorForm) setExtintorForm({...originalExtintorForm});
+    // Restore original states with deep copies to force React re-render
+    if (originalSeguroForm) {
+      const restored = JSON.parse(JSON.stringify(originalSeguroForm));
+      setSeguroForm(restored);
+    }
+    if (originalInspecaoForm) {
+      const restored = JSON.parse(JSON.stringify(originalInspecaoForm));
+      setInspecaoForm(restored);
+    }
+    if (originalRevisaoForm) {
+      const restored = JSON.parse(JSON.stringify(originalRevisaoForm));
+      setRevisaoForm(restored);
+    }
+    if (originalExtintorForm) {
+      const restored = JSON.parse(JSON.stringify(originalExtintorForm));
+      setExtintorForm(restored);
+    }
     setEditMode(false);
     toast.info('Alterações descartadas');
   };
