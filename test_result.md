@@ -785,6 +785,16 @@ agent_communication:
         - Todos os saves agora são feitos pelo botão global "Guardar" no header
         
         PRÓXIMO PASSO: Testar funcionamento completo do novo fluxo Edit/Save/Cancel
+        
+        🔧 FIX #2 - CORRIGIDO PROBLEMA COM CANCEL NO SEGURO TAB:
+        - Issue identificado pelo testing agent: Cancel não restaurava valores no Seguro tab
+        - Causa: Shallow copy com spread operator não estava forçando re-render do React
+        - Solução: Implementado deep copy usando JSON.parse(JSON.stringify())
+        - handleEnterEditMode() agora cria deep copies dos estados originais
+        - handleCancelEdit() agora restaura com deep copies para forçar re-render
+        - Frontend reiniciado com sucesso
+        
+        PRÓXIMO PASSO: Re-testar cancel functionality para verificar correção
     
     - agent: "testing"
       message: |
