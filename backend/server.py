@@ -637,10 +637,19 @@ class CaucaoVeiculo(BaseModel):
 
 # Vehicle Models - COMPLETE EXPANDED
 class TipoContrato(BaseModel):
-    tipo: str  # aluguer, comissao, motorista_privado
+    tipo: str  # aluguer, comissao, motorista_privado, compra_veiculo
+    # Para Aluguer
     valor_aluguer: Optional[float] = None
+    # Para Comissão
     comissao_parceiro: Optional[float] = None  # % da comissão para o parceiro
     comissao_motorista: Optional[float] = None  # % da comissão para o motorista (soma deve ser 100%)
+    # Para Compra do Veículo
+    valor_semanal_compra: Optional[float] = None
+    periodo_compra: Optional[int] = None  # Número de semanas
+    valor_acumulado: Optional[float] = None
+    valor_falta_cobrar: Optional[float] = None
+    custo_slot: Optional[float] = None
+    # Geral
     inclui_combustivel: bool = False
     inclui_via_verde: bool = False
     regime: Optional[str] = None  # full_time, part_time
