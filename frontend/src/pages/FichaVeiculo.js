@@ -439,18 +439,34 @@ const FichaVeiculo = ({ user, onLogout }) => {
     }
   };
 
-  const handleDownloadDocument = (documentPath, documentName) => {
+  const handleDownloadDocument = async (documentPath, documentName) => {
     if (!documentPath) {
       toast.error('Documento não disponível');
       return;
     }
 
-    const token = localStorage.getItem('token');
-    const filename = documentPath.split('/').pop();
-    const downloadUrl = `${API}/files/vehicle_documents/${filename}?token=${token}`;
-    
-    // Open in new tab for download
-    window.open(downloadUrl, '_blank');
+    try {
+      const token = localStorage.getItem('token');
+      const filename = documentPath.split('/').pop();
+      
+      const response = await axios.get(`${API}/files/vehicle_documents/${filename}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      toast.error('Erro ao carregar documento');
+    }
   };
 
 
