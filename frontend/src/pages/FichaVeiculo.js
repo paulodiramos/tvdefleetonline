@@ -693,12 +693,10 @@ const FichaVeiculo = ({ user, onLogout }) => {
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-7 w-full">
             <TabsTrigger value="info">Informações</TabsTrigger>
-            <TabsTrigger value="fotos">Fotos</TabsTrigger>
             <TabsTrigger value="seguro">Seguro</TabsTrigger>
             <TabsTrigger value="inspecao">Inspeção</TabsTrigger>
             <TabsTrigger value="extintor">Extintor</TabsTrigger>
-            <TabsTrigger value="revisao">Revisão</TabsTrigger>
-            <TabsTrigger value="intervencoes">Intervenções</TabsTrigger>
+            <TabsTrigger value="revisao">Revisão/Intervenções</TabsTrigger>
             <TabsTrigger value="agenda">Agenda</TabsTrigger>
             <TabsTrigger value="relatorio">Relatório</TabsTrigger>
           </TabsList>
