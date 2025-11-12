@@ -603,11 +603,17 @@ class CategoriasBolt(BaseModel):
     pet: bool = False
 
 class VehicleInsurance(BaseModel):
-    seguradora: str
-    apolice: str
-    data_inicio: str
-    data_validade: str
-    preco: float
+    seguradora: Optional[str] = None  # Renomeado de companhia
+    companhia: Optional[str] = None  # Mantido para retrocompatibilidade
+    numero_apolice: Optional[str] = None
+    apolice: Optional[str] = None  # Mantido para retrocompatibilidade
+    agente_seguros: Optional[str] = None
+    data_inicio: Optional[str] = None
+    data_validade: Optional[str] = None
+    valor: Optional[float] = None
+    valor_anual: Optional[float] = None  # Mantido para retrocompatibilidade
+    preco: Optional[float] = None  # Mantido para retrocompatibilidade
+    periodicidade: Optional[str] = "anual"
     carta_verde_url: Optional[str] = None
     condicoes: Optional[str] = None
     notas: Optional[str] = None
