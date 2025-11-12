@@ -31,8 +31,14 @@ const Parceiros = ({ user, onLogout }) => {
   });
   const [contractForm, setContractForm] = useState({
     motorista_id: '',
-    vehicle_id: ''
+    vehicle_id: '',
+    tipo_contrato: 'aluguer',
+    valor_semanal: '',
+    valor_slot: '',
+    percentagem_comissao: '',
+    horarios: []
   });
+  const [horarioTemp, setHorarioTemp] = useState({ inicio: '', fim: '' });
 
   useEffect(() => {
     fetchParceiros();
