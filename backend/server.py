@@ -709,6 +709,7 @@ class Vehicle(BaseModel):
     caucao: Optional[CaucaoVeiculo] = None  # Caução do veículo
     danos: List[Dict[str, Any]] = []  # Histórico de danos
     agenda: List[Dict[str, Any]] = []  # Agenda do veículo
+    historico_editavel: List[Dict[str, Any]] = []  # Histórico editável/observações
     proxima_revisao_km: Optional[int] = None
     proxima_revisao_data: Optional[str] = None
     motorista_atribuido: Optional[str] = None  # ID do motorista
