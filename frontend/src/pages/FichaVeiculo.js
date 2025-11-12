@@ -224,7 +224,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
     }
   };
 
-  const handleSaveSeguro = async () => {
+  const handleSaveSeguro = async (silent = false) => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(`${API}/vehicles/${vehicleId}`, {
@@ -241,15 +241,18 @@ const FichaVeiculo = ({ user, onLogout }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast.success('Seguro atualizado com sucesso!');
-      fetchVehicleData();
+      if (!silent) {
+        toast.success('Seguro atualizado com sucesso!');
+        fetchVehicleData();
+      }
     } catch (error) {
       console.error('Error saving insurance:', error);
-      toast.error('Erro ao salvar seguro');
+      if (!silent) toast.error('Erro ao salvar seguro');
+      throw error;
     }
   };
 
-  const handleSaveInspecao = async () => {
+  const handleSaveInspecao = async (silent = false) => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(`${API}/vehicles/${vehicleId}`, {
@@ -264,15 +267,18 @@ const FichaVeiculo = ({ user, onLogout }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast.success('Inspeção atualizada com sucesso!');
-      fetchVehicleData();
+      if (!silent) {
+        toast.success('Inspeção atualizada com sucesso!');
+        fetchVehicleData();
+      }
     } catch (error) {
       console.error('Error saving inspection:', error);
-      toast.error('Erro ao salvar inspeção');
+      if (!silent) toast.error('Erro ao salvar inspeção');
+      throw error;
     }
   };
 
-  const handleSaveRevisao = async () => {
+  const handleSaveRevisao = async (silent = false) => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(`${API}/vehicles/${vehicleId}`, {
@@ -284,11 +290,14 @@ const FichaVeiculo = ({ user, onLogout }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast.success('Próxima revisão atualizada!');
-      fetchVehicleData();
+      if (!silent) {
+        toast.success('Próxima revisão atualizada!');
+        fetchVehicleData();
+      }
     } catch (error) {
       console.error('Error saving revision:', error);
-      toast.error('Erro ao salvar próxima revisão');
+      if (!silent) toast.error('Erro ao salvar próxima revisão');
+      throw error;
     }
   };
 
