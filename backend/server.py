@@ -779,6 +779,8 @@ class Vehicle(BaseModel):
     historico_editavel: List[Dict[str, Any]] = []  # Histórico editável/observações
     proxima_revisao_km: Optional[int] = None
     proxima_revisao_data: Optional[str] = None
+    proxima_revisao_notas: Optional[str] = None
+    proxima_revisao_valor_previsto: Optional[float] = None
     motorista_atribuido: Optional[str] = None  # ID do motorista
     motorista_atribuido_nome: Optional[str] = None  # Nome do motorista
     status: str = "disponivel"  # disponivel, atribuido, manutencao, venda, condicoes
