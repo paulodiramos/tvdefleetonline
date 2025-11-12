@@ -234,7 +234,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       await axios.put(`${API}/vehicles/${vehicleId}`, {
         proxima_revisao_km: revisaoForm.proxima_revisao_km ? parseInt(revisaoForm.proxima_revisao_km) : null,
-        proxima_revisao_data: revisaoForm.proxima_revisao_data || null
+        proxima_revisao_data: revisaoForm.proxima_revisao_data || null,
+        proxima_revisao_notas: revisaoForm.proxima_revisao_notas || null,
+        proxima_revisao_valor_previsto: revisaoForm.proxima_revisao_valor_previsto ? parseFloat(revisaoForm.proxima_revisao_valor_previsto) : null
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
