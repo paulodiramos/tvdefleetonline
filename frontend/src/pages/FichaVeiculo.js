@@ -130,6 +130,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
   // Enter edit mode and store original data
   const handleEnterEditMode = () => {
     // Create deep copies of current form states
+    setOriginalInfoForm(JSON.parse(JSON.stringify(infoForm)));
     setOriginalSeguroForm(JSON.parse(JSON.stringify(seguroForm)));
     setOriginalInspecaoForm(JSON.parse(JSON.stringify(inspecaoForm)));
     setOriginalRevisaoForm(JSON.parse(JSON.stringify(revisaoForm)));
@@ -140,6 +141,10 @@ const FichaVeiculo = ({ user, onLogout }) => {
   // Cancel editing and restore original data
   const handleCancelEdit = () => {
     // Restore original states with deep copies to force React re-render
+    if (originalInfoForm) {
+      const restored = JSON.parse(JSON.stringify(originalInfoForm));
+      setInfoForm(restored);
+    }
     if (originalSeguroForm) {
       const restored = JSON.parse(JSON.stringify(originalSeguroForm));
       setSeguroForm(restored);
