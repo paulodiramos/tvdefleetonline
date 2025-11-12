@@ -637,7 +637,7 @@ class CaucaoVeiculo(BaseModel):
 
 # Vehicle Models - COMPLETE EXPANDED
 class TipoContrato(BaseModel):
-    tipo: str  # aluguer, comissao, motorista_privado, compra_veiculo
+    tipo: Optional[str] = "aluguer"  # aluguer, comissao, motorista_privado, compra_veiculo
     # Para Aluguer
     valor_aluguer: Optional[float] = None
     # Para Comissão
