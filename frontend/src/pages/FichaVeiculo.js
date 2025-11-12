@@ -736,12 +736,6 @@ const FichaVeiculo = ({ user, onLogout }) => {
                     />
                   </div>
                 </div>
-                {canEdit && editMode && (
-                  <Button onClick={handleSaveInspecao}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Guardar Inspeção
-                  </Button>
-                )}
               </CardContent>
             </Card>
           </TabsContent>
