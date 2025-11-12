@@ -595,6 +595,7 @@ metadata:
 
 test_plan:
   current_focus:
+    - "FichaVeiculo.js - Fix Edit/Save/Cancel Logic"
     - "VehicleData.js - Campo Valor da Inspeção"
     - "UploadCSV.js - Botões de download de templates"
     - "VehiclePhotos.js - Upload de fotos (verificar)"
