@@ -2311,13 +2311,16 @@ async def upload_vehicle_photo(
     file_id = f"photo_{vehicle_id}_{uuid.uuid4()}"
     file_info = await process_uploaded_file(file, photos_dir, file_id)
     
+    # Use pdf_path (converted file) or original_path if not converted
+    photo_path = file_info.get("pdf_path") or file_info.get("original_path")
+    
     # Add to vehicle
     await db.vehicles.update_one(
         {"id": vehicle_id},
-        {"$push": {"fotos_veiculo": file_info["saved_path"]}}
+        {"$push": {"fotos_veiculo": photo_path}}
     )
     
-    return {"message": "Photo uploaded successfully", "url": file_info["saved_path"]}
+    return {"message": "Photo uploaded successfully", "url": photo_path}
 
 @api_router.delete("/vehicles/{vehicle_id}/fotos/{foto_index}")
 async def delete_vehicle_photo(
