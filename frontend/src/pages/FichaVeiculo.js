@@ -253,6 +253,69 @@ const FichaVeiculo = ({ user, onLogout }) => {
     }
   };
 
+
+  const handleSaveExtintor = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/vehicles/${vehicleId}`, {
+        extintor: {
+          fornecedor: extintorForm.fornecedor,
+          preco: parseFloat(extintorForm.preco),
+          data_entrega: extintorForm.data_entrega,
+          data_validade: extintorForm.data_validade
+        }
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Extintor atualizado! Alerta adicionado automaticamente à agenda.');
+      fetchVehicleData();
+    } catch (error) {
+      console.error('Error saving extintor:', error);
+      toast.error('Erro ao salvar extintor');
+    }
+  };
+
+  const handleAddHistorico = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/vehicles/${vehicleId}/historico`, historicoForm, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Entrada adicionada ao histórico!');
+      setHistoricoForm({
+        data: '',
+        titulo: '',
+        descricao: '',
+        tipo: 'observacao'
+      });
+      fetchVehicleData();
+    } catch (error) {
+      console.error('Error adding historico:', error);
+      toast.error('Erro ao adicionar ao histórico');
+    }
+  };
+
+  const handleDeleteHistorico = async (entryId) => {
+    if (!window.confirm('Tem certeza que deseja deletar esta entrada?')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/vehicles/${vehicleId}/historico/${entryId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Entrada removida do histórico!');
+      fetchVehicleData();
+    } catch (error) {
+      console.error('Error deleting historico:', error);
+      toast.error('Erro ao remover entrada');
+    }
+  };
+
+
   if (loading) {
     return (
       <Layout user={user} onLogout={onLogout}>
