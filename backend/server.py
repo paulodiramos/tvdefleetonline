@@ -2364,16 +2364,6 @@ async def update_vehicle_km(
     
     return {"message": "KM updated successfully", "km_atual": km_atual}
 
-
-                "motorista_atribuido": None,
-                "motorista_atribuido_nome": None,
-                "status": "disponivel",
-                "updated_at": datetime.now(timezone.utc).isoformat()
-            }}
-        )
-        
-        return {"message": "Motorista removido com sucesso"}
-
 @api_router.put("/vehicles/{vehicle_id}/status")
 async def update_vehicle_status(
     vehicle_id: str,
