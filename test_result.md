@@ -577,11 +577,11 @@ frontend:
 
   - task: "FichaVeiculo.js - Fix Edit/Save/Cancel Logic"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/pages/FichaVeiculo.js"
     stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
@@ -592,6 +592,9 @@ frontend:
         - working: "NA"
           agent: "main"
           comment: "CORREÇÃO APLICADA: Identificado problema com shallow copy no backup/restore de estado. Implementado deep copy usando JSON.parse(JSON.stringify()) em handleEnterEditMode() e handleCancelEdit() para garantir que React detecte mudanças de estado e force re-render. Frontend reiniciado. Precisa re-teste."
+        - working: true
+          agent: "testing"
+          comment: "✅ RE-TESTADO APÓS CORREÇÃO: CRITICAL ISSUE RESOLVED! Deep copy fix using JSON.parse(JSON.stringify()) successfully fixed the cancel functionality. SEGURO TAB CANCEL TEST: ✅ PASSED - All fields (seguradora, numero_apolice, valor) correctly restored to original values after cancel. INSPEÇÃO TAB CANCEL TEST: ✅ PASSED - Fields correctly restored. UI/UX: ✅ Initial state correct (only 'Editar' button visible), ✅ Edit mode correct ('Guardar' and 'Cancelar' buttons appear), ✅ Returns to non-edit mode after cancel. Minor: Save functionality needs confirmation dialog handling improvement, but core cancel issue is RESOLVED."
 
 metadata:
   created_by: "main_agent"
