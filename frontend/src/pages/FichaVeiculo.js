@@ -1151,37 +1151,6 @@ const FichaVeiculo = ({ user, onLogout }) => {
                         </div>
                       </div>
                     )}
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <Label htmlFor="comissao_parceiro">Comissão Parceiro (%)</Label>
-                        {canEdit && editMode ? (
-                          <Input
-                            id="comissao_parceiro"
-                            type="number"
-                            value={infoForm.comissao_parceiro}
-                            onChange={(e) => setInfoForm({...infoForm, comissao_parceiro: e.target.value})}
-                            placeholder="Ex: 60"
-                          />
-                        ) : (
-                          <p className="font-medium">{vehicle.tipo_contrato?.comissao_parceiro || 0}%</p>
-                        )}
-                      </div>
-                      <div>
-                        <Label htmlFor="comissao_motorista">Comissão Motorista (%)</Label>
-                        {canEdit && editMode ? (
-                          <Input
-                            id="comissao_motorista"
-                            type="number"
-                            value={infoForm.comissao_motorista}
-                            onChange={(e) => setInfoForm({...infoForm, comissao_motorista: e.target.value})}
-                            placeholder="Ex: 40"
-                          />
-                        ) : (
-                          <p className="font-medium">{vehicle.tipo_contrato?.comissao_motorista || 0}%</p>
-                        )}
-                      </div>
-                    </div>
                   </div>
                 </CardContent>
               </Card>
