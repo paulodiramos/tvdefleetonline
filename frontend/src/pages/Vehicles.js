@@ -447,10 +447,25 @@ const Vehicles = ({ user, onLogout }) => {
                     <div className="flex-1">
                       <CardTitle className="text-lg">{vehicle.marca} {vehicle.modelo}</CardTitle>
                       <p className="text-sm text-slate-500 mt-1 font-mono">{vehicle.matricula}</p>
-                      <div className="flex items-center space-x-2 mt-2">
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
                         <Badge className="bg-blue-100 text-blue-700">
                           {getContratoLabel(vehicle.tipo_contrato.tipo)}
                         </Badge>
+                        {vehicle.status && (
+                          <Badge className={
+                            vehicle.status === 'disponivel' ? 'bg-green-100 text-green-700' :
+                            vehicle.status === 'atribuido' ? 'bg-purple-100 text-purple-700' :
+                            vehicle.status === 'manutencao' ? 'bg-orange-100 text-orange-700' :
+                            vehicle.status === 'venda' ? 'bg-red-100 text-red-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          }>
+                            {vehicle.status === 'disponivel' ? 'Disponível' :
+                             vehicle.status === 'atribuido' ? 'Atribuído' :
+                             vehicle.status === 'manutencao' ? 'Manutenção' :
+                             vehicle.status === 'venda' ? 'Venda' :
+                             'Condições'}
+                          </Badge>
+                        )}
                         {vehicle.alerta_validade && (
                           <Badge className="bg-amber-100 text-amber-700">
                             <AlertCircle className="w-3 h-3 mr-1" />
@@ -458,6 +473,12 @@ const Vehicles = ({ user, onLogout }) => {
                           </Badge>
                         )}
                       </div>
+                      {vehicle.motorista_atribuido_nome && (
+                        <p className="text-xs text-slate-600 mt-2">
+                          <User className="w-3 h-3 inline mr-1" />
+                          Motorista: <span className="font-medium">{vehicle.motorista_atribuido_nome}</span>
+                        </p>
+                      )}
                     </div>
                     <Car className="w-8 h-8 text-emerald-600" />
                   </div>
