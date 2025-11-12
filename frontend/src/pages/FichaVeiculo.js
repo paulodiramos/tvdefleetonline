@@ -181,13 +181,20 @@ const FichaVeiculo = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       await axios.put(`${API}/vehicles/${vehicleId}`, {
         tipo_contrato: {
+          tipo: infoForm.tipo,
           regime: infoForm.regime,
           horario_turno_1: infoForm.horario_turno_1,
           horario_turno_2: infoForm.horario_turno_2,
           horario_turno_3: infoForm.horario_turno_3,
           horario_turno_4: infoForm.horario_turno_4,
-          comissao_parceiro: parseFloat(infoForm.comissao_parceiro) || 0,
-          comissao_motorista: parseFloat(infoForm.comissao_motorista) || 0
+          valor_aluguer: parseFloat(infoForm.valor_aluguer) || null,
+          comissao_parceiro: parseFloat(infoForm.comissao_parceiro) || null,
+          comissao_motorista: parseFloat(infoForm.comissao_motorista) || null,
+          valor_semanal_compra: parseFloat(infoForm.valor_semanal_compra) || null,
+          periodo_compra: parseInt(infoForm.periodo_compra) || null,
+          valor_acumulado: parseFloat(infoForm.valor_acumulado) || null,
+          valor_falta_cobrar: parseFloat(infoForm.valor_falta_cobrar) || null,
+          custo_slot: parseFloat(infoForm.custo_slot) || null
         },
         categorias_uber: infoForm.categorias_uber,
         categorias_bolt: infoForm.categorias_bolt
