@@ -1012,3 +1012,50 @@ agent_communication:
         
         🎯 RECOMENDAÇÃO: Investigar e corrigir o restore do seguroForm no handleCancelEdit().
         Possivelmente adicionar forceUpdate ou verificar se o estado está sendo aplicado corretamente.
+
+    - agent: "testing"
+      message: |
+        🎉 TESTE COMPLETO - SISTEMA DE EXTINTOR E RELATÓRIO DE INTERVENÇÕES 100% FUNCIONANDO!
+        
+        ✅ SISTEMA DE EXTINTOR - CAMPOS EXPANDIDOS: 100% FUNCIONANDO
+        - PUT /api/vehicles/{vehicle_id}: ✅ Aceita e salva todos os campos expandidos
+          * data_instalacao: ✅ Salvo corretamente (2025-01-15)
+          * data_validade: ✅ Salvo corretamente (2026-01-15)
+          * fornecedor: ✅ Salvo corretamente ("Extintores Premium Lda")
+          * empresa_certificacao: ✅ Salvo corretamente ("Certificadora Nacional SA")
+          * preco: ✅ Salvo corretamente (89.50)
+        - Modelo Vehicle: ✅ Campo "extintor" já existente e funcionando
+        - Retrocompatibilidade: ✅ Mantida com campo "data_entrega"
+        
+        ✅ UPLOAD CERTIFICADO EXTINTOR: 100% FUNCIONANDO
+        - POST /api/vehicles/{vehicle_id}/upload-extintor-doc: ✅ Funcionando
+        - Arquivos salvos em extintor_docs/: ✅ Verificado
+        - extintor.certificado_url atualizado: ✅ Funcionando
+        - Conversão automática para PDF: ✅ Funcionando (se imagem)
+        - 🔧 CORREÇÃO APLICADA: Endpoint estava usando 'saved_path' incorreto - alterado para usar 'pdf_path' ou 'original_path'
+        
+        ✅ SERVIR ARQUIVO EXTINTOR: 100% FUNCIONANDO
+        - GET /api/files/extintor_docs/{filename}: ✅ Acessível
+        - 'extintor_docs' nos allowed_folders: ✅ Verificado
+        - Retorna 404 para arquivos inexistentes: ✅ Comportamento correto
+        - Sem problemas de autenticação: ✅ Verificado
+        
+        ✅ RELATÓRIO DE INTERVENÇÕES - ENDPOINT: 100% FUNCIONANDO
+        - GET /api/vehicles/{vehicle_id}/relatorio-intervencoes: ✅ Funcionando
+        - Estrutura JSON correta: ✅ {vehicle_id, interventions[], total}
+        - Campos de intervenção completos: ✅ tipo, descricao, data, categoria, status
+        - Status válidos: ✅ "pending" e "completed" baseados na data
+        - Consolida todas as intervenções: ✅ Seguro, Inspeção, Extintor, Revisões
+        - Testado com dados reais: ✅ 4 intervenções encontradas
+        - Tipos encontrados: ✅ ['Extintor', 'Seguro', 'Inspeção', 'Extintor']
+        
+        🔧 CREDENCIAIS TESTADAS:
+        - Email: admin@tvdefleet.com ✅
+        - Password: admin123 ✅
+        - Autenticação JWT: ✅ Funcionando
+        
+        📊 RESULTADO FINAL: 6/6 testes passaram (100% sucesso)
+        
+        🎯 TODOS OS REQUISITOS DO REVIEW REQUEST ATENDIDOS COM SUCESSO!
+        Backend já foi testado manualmente via curl pelo main agent e agora confirmado com testes automatizados completos.
+        Sistema de extintor e relatório de intervenções está completamente operacional e pronto para uso!
