@@ -181,6 +181,12 @@ function App() {
               user ? <RecibosPagamentos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
+          <Route
+            path="/ficha-veiculo/:vehicleId"
+            element={
+              user ? <FichaVeiculo user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
