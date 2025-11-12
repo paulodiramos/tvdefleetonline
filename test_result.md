@@ -736,3 +736,35 @@ agent_communication:
         JWT tokens funcionando perfeitamente para autorização.
         
         ✅ LOGIN ENDPOINT TOTALMENTE OPERACIONAL E SEGURO!
+
+    - agent: "main"
+      message: |
+        🔧 NOVA IMPLEMENTAÇÃO - FIX DO EDIT/SAVE/CANCEL EM FICHAVEICULO.JS
+        
+        PROBLEMA REPORTADO PELO USUÁRIO:
+        - Botão "Cancelar" estava salvando alterações ao invés de descartar
+        - UI confusa com apenas um botão toggle (Editar/Cancelar)
+        
+        SOLUÇÃO IMPLEMENTADA:
+        ✅ Nova gestão de estado para edição:
+        - Adicionados estados originalSeguroForm, originalInspecaoForm, originalRevisaoForm, originalExtintorForm
+        - Estado original capturado ao entrar em modo de edição
+        
+        ✅ Nova lógica de botões:
+        - handleEnterEditMode(): Armazena dados originais e ativa modo de edição
+        - handleCancelEdit(): Restaura dados originais e desativa modo de edição
+        - handleSaveAllChanges(): Salva todas as alterações com confirmação
+        
+        ✅ UI melhorada:
+        - Estado inicial: Botão "Editar" (sozinho)
+        - Modo de edição: Dois botões separados
+          * "Guardar" (verde) - com confirmação obrigatória antes de salvar
+          * "Cancelar" (vermelho) - descarta todas as alterações
+        
+        ✅ Funcionalidades atualizadas:
+        - handleSaveSeguro(), handleSaveInspecao(), handleSaveRevisao(), handleSaveExtintor()
+          agora aceitam parâmetro 'silent' para não mostrar toasts individuais
+        - Botões individuais "Guardar" removidos de cada tab (Seguro, Inspeção, Revisão)
+        - Todos os saves agora são feitos pelo botão global "Guardar" no header
+        
+        PRÓXIMO PASSO: Testar funcionamento completo do novo fluxo Edit/Save/Cancel
