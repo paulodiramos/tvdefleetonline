@@ -782,6 +782,7 @@ class Vehicle(BaseModel):
     danos: List[Dict[str, Any]] = []  # Histórico de danos
     agenda: List[Dict[str, Any]] = []  # Agenda do veículo
     historico_editavel: List[Dict[str, Any]] = []  # Histórico editável/observações
+    fotos_veiculo: List[str] = []  # URLs das fotos do veículo (max 3)
     proxima_revisao_km: Optional[int] = None
     proxima_revisao_data: Optional[str] = None
     proxima_revisao_notas: Optional[str] = None
@@ -789,6 +790,7 @@ class Vehicle(BaseModel):
     motorista_atribuido: Optional[str] = None  # ID do motorista
     motorista_atribuido_nome: Optional[str] = None  # Nome do motorista
     status: str = "disponivel"  # disponivel, atribuido, manutencao, venda, condicoes
+    km_atual: Optional[int] = None  # KM atual do veículo
     campos_customizados: Dict[str, Any] = {}  # Campos adicionais customizáveis
     created_at: datetime
     updated_at: datetime
