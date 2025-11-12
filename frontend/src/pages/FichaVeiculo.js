@@ -747,7 +747,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                         </Button>
                       )}
                     </div>
-                    {canEdit && (
+                    {canEdit && editMode && (
                       <Input
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png"
@@ -777,7 +777,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                         </Button>
                       )}
                     </div>
-                    {canEdit && (
+                    {canEdit && editMode && (
                       <Input
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png"
@@ -807,7 +807,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                         </Button>
                       )}
                     </div>
-                    {canEdit && (
+                    {canEdit && editMode && (
                       <Input
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png"
