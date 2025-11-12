@@ -710,7 +710,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
                   <span>Informações do Veículo</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-4">
+              <CardContent className="space-y-6">
+                {/* Informações Básicas */}
+                <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-slate-600">Marca</Label>
                   <p className="font-medium">{vehicle.marca}</p>
