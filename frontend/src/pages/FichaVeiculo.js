@@ -200,8 +200,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
       if (vehicleRes.data.extintor) {
         setExtintorForm({
           fornecedor: vehicleRes.data.extintor.fornecedor || '',
+          empresa_certificacao: vehicleRes.data.extintor.empresa_certificacao || '',
           preco: vehicleRes.data.extintor.preco || '',
-          data_entrega: vehicleRes.data.extintor.data_entrega || '',
+          data_instalacao: vehicleRes.data.extintor.data_instalacao || vehicleRes.data.extintor.data_entrega || '',
           data_validade: vehicleRes.data.extintor.data_validade || ''
         });
       }
