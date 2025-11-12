@@ -373,8 +373,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
       await axios.put(`${API}/vehicles/${vehicleId}`, {
         extintor: {
           fornecedor: extintorForm.fornecedor,
-          preco: parseFloat(extintorForm.preco),
-          data_entrega: extintorForm.data_entrega,
+          empresa_certificacao: extintorForm.empresa_certificacao,
+          preco: parseFloat(extintorForm.preco) || 0,
+          data_instalacao: extintorForm.data_instalacao,
           data_validade: extintorForm.data_validade
         }
       }, {
