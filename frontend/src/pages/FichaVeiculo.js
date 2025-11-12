@@ -242,6 +242,20 @@ const FichaVeiculo = ({ user, onLogout }) => {
         });
       }
 
+      // Fetch relatorio intervencoes (optional - don't fail if error)
+      try {
+        const intervencoesRes = await axios.get(`${API}/vehicles/${vehicleId}/relatorio-intervencoes`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setRelatorioIntervencoes(intervencoesRes.data);
+      } catch (err) {
+        console.log('No interventions report found, using defaults');
+        setRelatorioIntervencoes({
+          interventions: [],
+          total: 0
+        });
+      }
+
     } catch (error) {
       console.error('Error fetching vehicle data:', error);
       toast.error('Erro ao carregar dados do veículo');
