@@ -780,6 +780,8 @@ class Vehicle(BaseModel):
     proxima_revisao_km: Optional[int] = None
     proxima_revisao_data: Optional[str] = None
     motorista_atribuido: Optional[str] = None  # ID do motorista
+    motorista_atribuido_nome: Optional[str] = None  # Nome do motorista
+    status: str = "disponivel"  # disponivel, atribuido, manutencao, venda, condicoes
     campos_customizados: Dict[str, Any] = {}  # Campos adicionais customizáveis
     created_at: datetime
     updated_at: datetime
