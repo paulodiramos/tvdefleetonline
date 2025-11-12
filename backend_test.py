@@ -1756,11 +1756,13 @@ startxref
 
 if __name__ == "__main__":
     tester = TVDEFleetTester()
-    success = tester.run_all_tests()
+    
+    # Run specific extintor and intervenções tests as requested
+    success = tester.run_extintor_intervencoes_tests()
     
     if success:
-        print("🎉 All tests passed!")
+        print("🎉 All extintor and intervenções tests passed!")
         exit(0)
     else:
-        print("💥 Some tests failed!")
+        print("💥 Some extintor and intervenções tests failed!")
         exit(1)
