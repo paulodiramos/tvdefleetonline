@@ -87,6 +87,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
   const [originalRevisaoForm, setOriginalRevisaoForm] = useState(null);
   const [originalExtintorForm, setOriginalExtintorForm] = useState(null);
 
+  // Document upload states
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+
   const canEdit = user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional';
 
   useEffect(() => {
