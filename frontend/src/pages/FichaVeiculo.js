@@ -776,12 +776,6 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 <p className="text-sm text-slate-500">
                   Defina a próxima revisão por KM ou Data (ou ambos)
                 </p>
-                {canEdit && editMode && (
-                  <Button onClick={handleSaveRevisao}>
-                    <Save className="w-4 h-4 mr-2" />
-                    Guardar Revisão
-                  </Button>
-                )}
 
                 {/* Histórico de Manutenções */}
                 <div className="mt-6">
