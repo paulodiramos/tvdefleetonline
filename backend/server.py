@@ -702,10 +702,12 @@ class VehicleMaintenance(BaseModel):
     o_que_fazer: Optional[str] = None
 
 class VehicleExtinguisher(BaseModel):
-    fornecedor: str
-    preco: float
-    data_entrega: str
-    data_validade: str
+    fornecedor: Optional[str] = None
+    empresa_certificacao: Optional[str] = None
+    preco: Optional[float] = None
+    data_entrega: Optional[str] = None
+    data_validade: Optional[str] = None
+    proxima_intervencao: Optional[str] = None
     certificado_url: Optional[str] = None
 
 class VehicleInspection(BaseModel):
