@@ -2152,7 +2152,14 @@ async def atribuir_motorista_vehicle(
         await db.vehicles.update_one(
             {"id": vehicle_id},
             {"$set": {
-
+                "motorista_atribuido": None,
+                "motorista_atribuido_nome": None,
+                "status": "disponivel",
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {"message": "Motorista removido com sucesso"}
 
 # ==================== VEHICLE DOCUMENT UPLOADS ====================
 
