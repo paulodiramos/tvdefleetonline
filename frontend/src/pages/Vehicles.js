@@ -501,9 +501,14 @@ const Vehicles = ({ user, onLogout }) => {
                       <FileText className="w-4 h-4 mr-1" />
                       Ver Ficha
                     </Button>
-                    {(user.role === 'admin' || user.role === 'gestao') && (
+                    {(user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional') && (
                       <>
-                        <Button variant="outline" size="sm" data-testid={`edit-vehicle-${vehicle.id}`}>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => navigate(`/ficha-veiculo/${vehicle.id}`)}
+                          data-testid={`edit-vehicle-${vehicle.id}`}
+                        >
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button variant="outline" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => handleDeleteVehicle(vehicle.id)} data-testid={`delete-vehicle-${vehicle.id}`}>
