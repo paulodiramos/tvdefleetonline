@@ -577,15 +577,18 @@ frontend:
 
   - task: "FichaVeiculo.js - Fix Edit/Save/Cancel Logic"
     implemented: true
-    working: "NA"
+    working: false
     file: "frontend/src/pages/FichaVeiculo.js"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Corrigido fluxo de edição conforme solicitado pelo usuário. Implementado sistema de backup de dados originais ao entrar em modo de edição. Botão 'Editar' ativa modo de edição. Dois novos botões aparecem: 'Guardar' (verde, com confirmação) salva todas as alterações, e 'Cancelar' (vermelho) descarta alterações e restaura dados originais. Removidos botões individuais de save de cada tab."
+        - working: false
+          agent: "testing"
+          comment: "TESTADO COMPLETAMENTE: ✅ Initial state correct - only 'Editar' button visible, fields disabled. ✅ Edit mode correct - 'Guardar' (green) and 'Cancelar' (red) buttons appear, fields enabled. ✅ No individual save buttons in tabs. ✅ Toast message 'Alterações descartadas' appears on cancel. ❌ CRITICAL ISSUE: Cancel functionality NOT working for Seguro tab - changes are not being restored to original values. Seguradora and Apólice fields retain changed values instead of reverting. Inspeção tab cancel works correctly. Save functionality not fully tested due to cancel issue."
 
 metadata:
   created_by: "main_agent"
