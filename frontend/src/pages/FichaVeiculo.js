@@ -891,6 +891,40 @@ const FichaVeiculo = ({ user, onLogout }) => {
                     />
                   </div>
                 </div>
+
+                {/* Documento da Inspeção */}
+                <div className="pt-4 border-t mt-4">
+                  <h3 className="font-semibold text-lg mb-4">Documento da Inspeção</h3>
+                  
+                  <div className="border rounded-lg p-4 bg-slate-50">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-base font-medium">Certificado/Comprovante de Inspeção</Label>
+                      {vehicle.documento_inspecao && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDownloadDocument(vehicle.documento_inspecao, 'Inspeção')}
+                        >
+                          <Download className="w-4 h-4 mr-1" />
+                          Ver/Download
+                        </Button>
+                      )}
+                    </div>
+                    {canEdit && (
+                      <Input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) handleUploadDocument(file, 'documento-inspecao');
+                        }}
+                        disabled={uploadingDoc}
+                        className="mt-2"
+                      />
+                    )}
+                    <p className="text-xs text-slate-500 mt-1">Formatos: PDF, JPG, PNG (imagens serão convertidas para PDF A4)</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
