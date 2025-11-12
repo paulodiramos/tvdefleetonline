@@ -1323,6 +1323,99 @@ const FichaVeiculo = ({ user, onLogout }) => {
             </Card>
           </TabsContent>
 
+          {/* Relatório de Intervenções */}
+          <TabsContent value="intervencoes">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <History className="w-5 h-5" />
+                  <span>Relatório de Intervenções</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-slate-600 mb-4">
+                  Histórico completo de todas as intervenções no veículo: seguros, inspeções, extintor e revisões.
+                </p>
+
+                {relatorioIntervencoes.interventions && relatorioIntervencoes.interventions.length > 0 ? (
+                  <div className="space-y-3">
+                    {relatorioIntervencoes.interventions.map((intervention, index) => {
+                      const isPending = intervention.status === 'pending';
+                      const today = new Date();
+                      const interventionDate = new Date(intervention.data);
+                      const isOverdue = isPending && interventionDate < today;
+                      
+                      return (
+                        <div 
+                          key={index} 
+                          className={`border-l-4 rounded-lg p-4 ${
+                            isPending 
+                              ? isOverdue 
+                                ? 'bg-red-50 border-red-500' 
+                                : 'bg-orange-50 border-orange-500'
+                              : 'bg-green-50 border-green-500'
+                          }`}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                                  intervention.categoria === 'seguro' ? 'bg-blue-100 text-blue-800' :
+                                  intervention.categoria === 'inspecao' ? 'bg-purple-100 text-purple-800' :
+                                  intervention.categoria === 'extintor' ? 'bg-red-100 text-red-800' :
+                                  'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {intervention.tipo}
+                                </span>
+                                <span className={`text-xs font-medium ${
+                                  isPending
+                                    ? isOverdue
+                                      ? 'text-red-600'
+                                      : 'text-orange-600'
+                                    : 'text-green-600'
+                                }`}>
+                                  {isPending ? (isOverdue ? 'VENCIDO' : 'PENDENTE') : 'CONCLUÍDO'}
+                                </span>
+                              </div>
+                              <p className="font-medium text-slate-800">{intervention.descricao}</p>
+                              <div className="flex gap-4 mt-2 text-sm text-slate-600">
+                                <span>📅 {new Date(intervention.data).toLocaleDateString('pt-PT')}</span>
+                                {intervention.km && <span>🚗 {intervention.km.toLocaleString()} km</span>}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-slate-500">
+                    <p>Nenhuma intervenção registrada ainda.</p>
+                    <p className="text-sm mt-2">Comece adicionando informações de seguro, inspeção, extintor ou revisões.</p>
+                  </div>
+                )}
+
+                <div className="mt-6 p-4 bg-slate-100 rounded-lg">
+                  <h4 className="font-semibold mb-2">Legenda</h4>
+                  <div className="space-y-1 text-sm">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 bg-green-500 rounded"></div>
+                      <span>Concluído - Intervenção realizada</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 bg-orange-500 rounded"></div>
+                      <span>Pendente - Intervenção futura agendada</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 bg-red-500 rounded"></div>
+                      <span>Vencido - Intervenção atrasada</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Agenda */}
           <TabsContent value="agenda">
             <Card>
