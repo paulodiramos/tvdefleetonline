@@ -652,6 +652,8 @@ class VehicleAvailability(BaseModel):
 class VehicleCreate(BaseModel):
     marca: str
     modelo: str
+    versao: Optional[str] = None  # Ex: "Sport", "Exclusive", "Comfort"
+    ano: Optional[int] = None
     matricula: str
     data_matricula: str
     validade_matricula: str
