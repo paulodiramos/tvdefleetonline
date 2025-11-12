@@ -144,17 +144,32 @@ const FichaVeiculo = ({ user, onLogout }) => {
       // Load historico editavel
       setHistoricoEditavel(vehicleRes.data.historico_editavel || []);
 
-      // Fetch agenda
-      const agendaRes = await axios.get(`${API}/vehicles/${vehicleId}/agenda`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setAgenda(agendaRes.data);
+      // Fetch agenda (optional - don't fail if error)
+      try {
+        const agendaRes = await axios.get(`${API}/vehicles/${vehicleId}/agenda`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setAgenda(agendaRes.data || []);
+      } catch (err) {
+        console.log('No agenda found, using empty array');
+        setAgenda([]);
+      }
 
-      // Fetch relatorio ganhos
-      const relatorioRes = await axios.get(`${API}/vehicles/${vehicleId}/relatorio-ganhos`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setRelatorioGanhos(relatorioRes.data);
+      // Fetch relatorio ganhos (optional - don't fail if error)
+      try {
+        const relatorioRes = await axios.get(`${API}/vehicles/${vehicleId}/relatorio-ganhos`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setRelatorioGanhos(relatorioRes.data);
+      } catch (err) {
+        console.log('No financial report found, using defaults');
+        setRelatorioGanhos({
+          ganhos_total: 0,
+          despesas_total: 0,
+          lucro: 0,
+          detalhes: []
+        });
+      }
 
     } catch (error) {
       console.error('Error fetching vehicle data:', error);
