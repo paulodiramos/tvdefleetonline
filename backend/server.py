@@ -2277,14 +2277,16 @@ async def upload_extintor_document(
         raise HTTPException(status_code=404, detail="Vehicle not found")
     
     extintor = vehicle.get("extintor", {})
-    extintor["certificado_url"] = file_info["saved_path"]
+    # Use pdf_path if available (converted file), otherwise use original_path
+    file_url = file_info.get("pdf_path") or file_info.get("original_path")
+    extintor["certificado_url"] = file_url
     
     await db.vehicles.update_one(
         {"id": vehicle_id},
         {"$set": {"extintor": extintor}}
     )
     
-    return {"message": "Document uploaded successfully", "url": file_info["saved_path"]}
+    return {"message": "Document uploaded successfully", "certificado_url": file_url, "file_info": file_info}
 
 @api_router.post("/vehicles/{vehicle_id}/upload-foto")
 async def upload_vehicle_photo(
