@@ -727,6 +727,101 @@ const FichaVeiculo = ({ user, onLogout }) => {
                     </select>
                   </div>
                 </div>
+
+                {/* Documentos do Seguro */}
+                <div className="pt-4 border-t mt-4 space-y-4">
+                  <h3 className="font-semibold text-lg">Documentos do Seguro</h3>
+                  
+                  {/* Carta Verde */}
+                  <div className="border rounded-lg p-4 bg-slate-50">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-base font-medium">Carta Verde</Label>
+                      {vehicle.documento_carta_verde && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDownloadDocument(vehicle.documento_carta_verde, 'Carta Verde')}
+                        >
+                          <Download className="w-4 h-4 mr-1" />
+                          Ver/Download
+                        </Button>
+                      )}
+                    </div>
+                    {canEdit && (
+                      <Input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) handleUploadDocument(file, 'carta-verde');
+                        }}
+                        disabled={uploadingDoc}
+                        className="mt-2"
+                      />
+                    )}
+                    <p className="text-xs text-slate-500 mt-1">Formatos: PDF, JPG, PNG (imagens serão convertidas para PDF A4)</p>
+                  </div>
+
+                  {/* Condições */}
+                  <div className="border rounded-lg p-4 bg-slate-50">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-base font-medium">Condições</Label>
+                      {vehicle.documento_condicoes && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDownloadDocument(vehicle.documento_condicoes, 'Condições')}
+                        >
+                          <Download className="w-4 h-4 mr-1" />
+                          Ver/Download
+                        </Button>
+                      )}
+                    </div>
+                    {canEdit && (
+                      <Input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) handleUploadDocument(file, 'condicoes');
+                        }}
+                        disabled={uploadingDoc}
+                        className="mt-2"
+                      />
+                    )}
+                    <p className="text-xs text-slate-500 mt-1">Formatos: PDF, JPG, PNG (imagens serão convertidas para PDF A4)</p>
+                  </div>
+
+                  {/* Recibo de Pagamento */}
+                  <div className="border rounded-lg p-4 bg-slate-50">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-base font-medium">Recibo de Pagamento</Label>
+                      {vehicle.documento_recibo_seguro && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDownloadDocument(vehicle.documento_recibo_seguro, 'Recibo')}
+                        >
+                          <Download className="w-4 h-4 mr-1" />
+                          Ver/Download
+                        </Button>
+                      )}
+                    </div>
+                    {canEdit && (
+                      <Input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) handleUploadDocument(file, 'recibo-seguro');
+                        }}
+                        disabled={uploadingDoc}
+                        className="mt-2"
+                      />
+                    )}
+                    <p className="text-xs text-slate-500 mt-1">Formatos: PDF, JPG, PNG (imagens serão convertidas para PDF A4)</p>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
