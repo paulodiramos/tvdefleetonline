@@ -121,19 +121,33 @@ const Parceiros = ({ user, onLogout }) => {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.post(
-        `${API}/contratos/gerar`,
-        {
-          parceiro_id: selectedParceiro.id,
-          motorista_id: contractForm.motorista_id,
-          vehicle_id: contractForm.vehicle_id
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      
+      const payload = {
+        parceiro_id: selectedParceiro.id,
+        motorista_id: contractForm.motorista_id,
+        vehicle_id: contractForm.tipo_contrato === 'carro_proprio' ? null : contractForm.vehicle_id,
+        tipo_contrato: contractForm.tipo_contrato,
+        valor_semanal: contractForm.valor_semanal ? parseFloat(contractForm.valor_semanal) : null,
+        valor_slot: contractForm.valor_slot ? parseFloat(contractForm.valor_slot) : null,
+        percentagem_comissao: contractForm.percentagem_comissao ? parseFloat(contractForm.percentagem_comissao) : null,
+        horarios_disponibilidade: contractForm.horarios
+      };
+      
+      await axios.post(`${API}/contratos/gerar`, payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
       toast.success('Contrato gerado com sucesso!');
       setShowContractDialog(false);
-      setContractForm({ motorista_id: '', vehicle_id: '' });
+      setContractForm({ 
+        motorista_id: '', 
+        vehicle_id: '', 
+        tipo_contrato: 'aluguer',
+        valor_semanal: '',
+        valor_slot: '',
+        percentagem_comissao: '',
+        horarios: []
+      });
       
       // Refresh contratos
       handleSelectParceiro(selectedParceiro);
@@ -141,6 +155,22 @@ const Parceiros = ({ user, onLogout }) => {
       console.error('Error creating contract:', error);
       toast.error('Erro ao gerar contrato');
     }
+  };
+
+  const handleAddHorario = () => {
+    if (horarioTemp.inicio && horarioTemp.fim) {
+      const horarioStr = `${horarioTemp.inicio}-${horarioTemp.fim}`;
+      setContractForm({
+        ...contractForm,
+        horarios: [...contractForm.horarios, horarioStr]
+      });
+      setHorarioTemp({ inicio: '', fim: '' });
+    }
+  };
+
+  const handleRemoveHorario = (index) => {
+    const newHorarios = contractForm.horarios.filter((_, i) => i !== index);
+    setContractForm({ ...contractForm, horarios: newHorarios });
   };
 
   const handleDownloadContract = async (contratoId) => {
