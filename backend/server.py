@@ -1771,6 +1771,156 @@ async def upload_vehicle_photo(
     
     return {
         "message": "Photo uploaded successfully",
+
+
+@api_router.post("/vehicles/{vehicle_id}/agenda")
+async def add_vehicle_agenda(
+    vehicle_id: str,
+    agenda_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Add event to vehicle agenda"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Check if vehicle exists
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    evento_id = str(uuid.uuid4())
+    evento = {
+        "id": evento_id,
+        "tipo": agenda_data.get("tipo"),
+        "titulo": agenda_data.get("titulo"),
+        "data": agenda_data.get("data"),
+        "hora": agenda_data.get("hora"),
+        "descricao": agenda_data.get("descricao"),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$push": {"agenda": evento}}
+    )
+    
+    return {"message": "Event added to agenda", "evento_id": evento_id}
+
+@api_router.get("/vehicles/{vehicle_id}/agenda")
+async def get_vehicle_agenda(vehicle_id: str, current_user: Dict = Depends(get_current_user)):
+    """Get vehicle agenda"""
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0, "agenda": 1})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    return vehicle.get("agenda", [])
+
+@api_router.get("/vehicles/{vehicle_id}/historico")
+async def get_vehicle_historico(vehicle_id: str, current_user: Dict = Depends(get_current_user)):
+    """Get vehicle history (maintenance, inspections, etc)"""
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Compile history from different sources
+    historico = []
+    
+    # Add maintenance history
+    if vehicle.get("manutencoes"):
+        for man in vehicle["manutencoes"]:
+            historico.append({
+                "tipo": "manutencao",
+                "data": man.get("data"),
+                "descricao": f"{man.get('tipo_manutencao')}: {man.get('descricao')}",
+                "valor": man.get("valor"),
+                "km": man.get("km_realizada")
+            })
+    
+    # Add inspection history
+    if vehicle.get("inspecoes"):
+        for insp in vehicle["inspecoes"]:
+            historico.append({
+                "tipo": "inspecao",
+                "data": insp.get("ultima_inspecao"),
+                "descricao": f"Inspeção - {insp.get('resultado', 'N/A')}",
+                "valor": insp.get("valor"),
+                "observacoes": insp.get("observacoes")
+            })
+    
+    # Add damages history
+    if vehicle.get("danos"):
+        for dano in vehicle["danos"]:
+            historico.append({
+                "tipo": "dano",
+                "data": dano.get("data"),
+                "descricao": f"{dano.get('tipo')}: {dano.get('descricao')}",
+                "valor": dano.get("valor_reparacao"),
+                "responsavel": dano.get("responsavel")
+            })
+    
+    # Sort by date (most recent first)
+    historico.sort(key=lambda x: x.get("data", ""), reverse=True)
+    
+    return historico
+
+@api_router.get("/vehicles/{vehicle_id}/relatorio-ganhos")
+async def get_vehicle_relatorio_ganhos(vehicle_id: str, current_user: Dict = Depends(get_current_user)):
+    """Get vehicle financial report (earnings vs expenses)"""
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Calculate ganhos (earnings) - would come from trips data
+    # For now, return placeholder structure
+    ganhos_total = 0.0
+    despesas_total = 0.0
+    detalhes = []
+    
+    # Calculate despesas from maintenance, insurance, etc
+    if vehicle.get("manutencoes"):
+        for man in vehicle["manutencoes"]:
+            valor = man.get("valor", 0)
+            despesas_total += valor
+            detalhes.append({
+                "tipo": "despesa",
+                "descricao": f"Manutenção: {man.get('tipo_manutencao')}",
+                "data": man.get("data"),
+                "valor": valor
+            })
+    
+    if vehicle.get("insurance"):
+        valor = vehicle["insurance"].get("valor", 0)
+        despesas_total += valor
+        detalhes.append({
+            "tipo": "despesa",
+            "descricao": "Seguro",
+            "data": vehicle["insurance"].get("data_inicio"),
+            "valor": valor
+        })
+    
+    if vehicle.get("inspection"):
+        valor = vehicle["inspection"].get("valor", 0)
+        if valor:
+            despesas_total += valor
+            detalhes.append({
+                "tipo": "despesa",
+                "descricao": "Inspeção",
+                "data": vehicle["inspection"].get("ultima_inspecao"),
+                "valor": valor
+            })
+    
+    # TODO: Add earnings from trips/relatorios when implemented
+    
+    lucro = ganhos_total - despesas_total
+    
+    return {
+        "ganhos_total": ganhos_total,
+        "despesas_total": despesas_total,
+        "lucro": lucro,
+        "detalhes": sorted(detalhes, key=lambda x: x.get("data", ""), reverse=True)
+    }
+
+
         "photo_url": photo_url,
         "converted_to_pdf": file_info["pdf_path"] is not None,
         "total_photos": len(current_photos) + 1
