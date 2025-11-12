@@ -636,6 +636,8 @@ metadata:
 
 test_plan:
   current_focus:
+    - "Sistema de Upload de Documentos - Veículos"
+    - "Vehicles.js - Remover botão Editar duplicado"
     - "VehicleData.js - Campo Valor da Inspeção"
     - "UploadCSV.js - Botões de download de templates"
     - "VehiclePhotos.js - Upload de fotos (verificar)"
@@ -648,6 +650,7 @@ test_plan:
   backend_csv_templates_tested: true
   backend_inspection_value_tested: true
   ficha_veiculo_cancel_issue_resolved: true
+  document_upload_system_implemented: true
 
 agent_communication:
     - agent: "main"
