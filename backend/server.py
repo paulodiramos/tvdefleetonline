@@ -682,6 +682,8 @@ class VehicleInsurance(BaseModel):
     preco: Optional[float] = None  # Mantido para retrocompatibilidade
     periodicidade: Optional[str] = "anual"
     carta_verde_url: Optional[str] = None
+    condicoes_url: Optional[str] = None
+    fatura_url: Optional[str] = None
     condicoes: Optional[str] = None
     notas: Optional[str] = None
 
