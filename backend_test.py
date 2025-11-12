@@ -1207,6 +1207,166 @@ startxref
         except Exception as e:
             self.log_result("PDF-Preservation", False, f"PDF test error: {str(e)}")
 
+    # ==================== LOGIN SPECIFIC TESTS ====================
+    
+    def test_login_endpoint_detailed(self):
+        """Detailed test of login endpoint functionality"""
+        print("\n🔐 TESTING LOGIN ENDPOINT SPECIFICALLY")
+        print("-" * 50)
+        
+        # Test 1: Try to login with admin credentials
+        admin_creds = TEST_CREDENTIALS["admin"]
+        
+        try:
+            response = requests.post(f"{BACKEND_URL}/auth/login", json=admin_creds)
+            
+            print(f"Login attempt with admin credentials:")
+            print(f"  Email: {admin_creds['email']}")
+            print(f"  Status Code: {response.status_code}")
+            
+            if response.status_code == 200:
+                data = response.json()
+                print(f"  Response keys: {list(data.keys())}")
+                
+                # Check required fields
+                required_fields = ["access_token", "token_type", "user"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_result("Login-Response-Structure", False, f"Missing fields: {missing_fields}")
+                    return False
+                
+                # Check user data
+                user_data = data.get("user", {})
+                user_required = ["id", "email", "role"]
+                user_missing = [field for field in user_required if field not in user_data]
+                
+                if user_missing:
+                    self.log_result("Login-User-Data", False, f"Missing user fields: {user_missing}")
+                    return False
+                
+                print(f"  User ID: {user_data.get('id')}")
+                print(f"  User Email: {user_data.get('email')}")
+                print(f"  User Role: {user_data.get('role')}")
+                print(f"  Token Type: {data.get('token_type')}")
+                print(f"  Token Length: {len(data.get('access_token', ''))}")
+                
+                self.log_result("Login-Endpoint-Detailed", True, "Login endpoint working perfectly - all required data returned")
+                return True
+                
+            elif response.status_code == 401:
+                print(f"  Response: {response.text}")
+                self.log_result("Login-Endpoint-Detailed", False, "Invalid credentials - admin user may not exist or password incorrect")
+                
+                # Try to create admin user
+                print("\n  Attempting to create admin user...")
+                return self.create_admin_user_and_test()
+                
+            else:
+                print(f"  Response: {response.text}")
+                self.log_result("Login-Endpoint-Detailed", False, f"Unexpected status code: {response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_result("Login-Endpoint-Detailed", False, f"Request error: {str(e)}")
+            return False
+    
+    def create_admin_user_and_test(self):
+        """Create admin user and test login"""
+        print("  Creating admin user for testing...")
+        
+        admin_user_data = {
+            "email": "admin@tvdefleet.com",
+            "password": "admin123",
+            "name": "Admin User",
+            "role": "admin"
+        }
+        
+        try:
+            # Try to register admin user
+            register_response = requests.post(f"{BACKEND_URL}/auth/register", json=admin_user_data)
+            
+            print(f"  Registration Status: {register_response.status_code}")
+            
+            if register_response.status_code == 200:
+                print("  Admin user created successfully")
+                
+                # Now try to login again
+                login_creds = {
+                    "email": admin_user_data["email"],
+                    "password": admin_user_data["password"]
+                }
+                
+                login_response = requests.post(f"{BACKEND_URL}/auth/login", json=login_creds)
+                
+                if login_response.status_code == 200:
+                    data = login_response.json()
+                    user_data = data.get("user", {})
+                    
+                    print(f"  Login successful after user creation")
+                    print(f"  User ID: {user_data.get('id')}")
+                    print(f"  User Email: {user_data.get('email')}")
+                    print(f"  User Role: {user_data.get('role')}")
+                    
+                    self.log_result("Login-After-User-Creation", True, "Admin user created and login working")
+                    return True
+                else:
+                    print(f"  Login failed after creation: {login_response.status_code}")
+                    print(f"  Response: {login_response.text}")
+                    self.log_result("Login-After-User-Creation", False, f"Login failed after user creation: {login_response.status_code}")
+                    return False
+                    
+            elif register_response.status_code == 400:
+                # User might already exist
+                print("  Admin user might already exist, trying login again...")
+                
+                login_response = requests.post(f"{BACKEND_URL}/auth/login", json={
+                    "email": "admin@tvdefleet.com",
+                    "password": "admin123"
+                })
+                
+                if login_response.status_code == 200:
+                    self.log_result("Login-Existing-User", True, "Login working with existing admin user")
+                    return True
+                else:
+                    print(f"  Login still failing: {login_response.status_code}")
+                    print(f"  Response: {login_response.text}")
+                    self.log_result("Login-Existing-User", False, "Login still failing even with existing user")
+                    return False
+            else:
+                print(f"  Registration failed: {register_response.status_code}")
+                print(f"  Response: {register_response.text}")
+                self.log_result("Admin-User-Creation", False, f"Could not create admin user: {register_response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_result("Admin-User-Creation", False, f"Error creating admin user: {str(e)}")
+            return False
+    
+    def run_login_test_only(self):
+        """Run only the login test as requested"""
+        print("=" * 80)
+        print("TVDEFleet Login Endpoint Test")
+        print("=" * 80)
+        
+        success = self.test_login_endpoint_detailed()
+        
+        print("\n" + "=" * 80)
+        print("LOGIN TEST SUMMARY")
+        print("=" * 80)
+        
+        if success:
+            print("✅ Login endpoint is working correctly!")
+            print("   - Returns 200 OK with valid credentials")
+            print("   - Provides JWT token")
+            print("   - Returns complete user data (id, email, role)")
+        else:
+            print("❌ Login endpoint has issues!")
+            print("   - Check the detailed output above for specific problems")
+        
+        print("=" * 80)
+        return success
+
     # ==================== MAIN TEST RUNNER ====================
     
     def run_all_tests(self):
