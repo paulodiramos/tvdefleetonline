@@ -2152,6 +2152,212 @@ async def atribuir_motorista_vehicle(
         await db.vehicles.update_one(
             {"id": vehicle_id},
             {"$set": {
+
+
+# ==================== VEHICLE DOCUMENT UPLOADS ====================
+
+@api_router.post("/vehicles/{vehicle_id}/upload-seguro-doc")
+async def upload_seguro_document(
+    vehicle_id: str,
+    doc_type: str = Form(...),  # carta_verde, condicoes, fatura
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload insurance documents (carta verde, condições, fatura)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Create directory
+    insurance_docs_dir = UPLOAD_DIR / "insurance_docs"
+    insurance_docs_dir.mkdir(exist_ok=True)
+    
+    # Process file
+    file_id = f"insurance_{doc_type}_{vehicle_id}_{uuid.uuid4()}"
+    file_info = await process_uploaded_file(file, insurance_docs_dir, file_id)
+    
+    # Update vehicle
+    field_map = {
+        "carta_verde": "insurance.carta_verde_url",
+        "condicoes": "insurance.condicoes_url",
+        "fatura": "insurance.fatura_url"
+    }
+    
+    if doc_type not in field_map:
+        raise HTTPException(status_code=400, detail="Invalid doc_type")
+    
+    # Get current insurance data
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    insurance = vehicle.get("insurance", {})
+    if doc_type == "carta_verde":
+        insurance["carta_verde_url"] = file_info["saved_path"]
+    elif doc_type == "condicoes":
+        insurance["condicoes_url"] = file_info["saved_path"]
+    elif doc_type == "fatura":
+        insurance["fatura_url"] = file_info["saved_path"]
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"insurance": insurance}}
+    )
+    
+    return {"message": "Document uploaded successfully", "url": file_info["saved_path"]}
+
+@api_router.post("/vehicles/{vehicle_id}/upload-inspecao-doc")
+async def upload_inspecao_document(
+    vehicle_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload inspection document"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Create directory
+    inspection_docs_dir = UPLOAD_DIR / "inspection_docs"
+    inspection_docs_dir.mkdir(exist_ok=True)
+    
+    # Process file
+    file_id = f"inspection_{vehicle_id}_{uuid.uuid4()}"
+    file_info = await process_uploaded_file(file, inspection_docs_dir, file_id)
+    
+    # Update vehicle
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    inspection = vehicle.get("inspection", {})
+    inspection["ficha_inspecao_url"] = file_info["saved_path"]
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"inspection": inspection}}
+    )
+    
+    return {"message": "Document uploaded successfully", "url": file_info["saved_path"]}
+
+@api_router.post("/vehicles/{vehicle_id}/upload-extintor-doc")
+async def upload_extintor_document(
+    vehicle_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload fire extinguisher certificate"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Create directory
+    extintor_docs_dir = UPLOAD_DIR / "extintor_docs"
+    extintor_docs_dir.mkdir(exist_ok=True)
+    
+    # Process file
+    file_id = f"extintor_{vehicle_id}_{uuid.uuid4()}"
+    file_info = await process_uploaded_file(file, extintor_docs_dir, file_id)
+    
+    # Update vehicle
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    extintor = vehicle.get("extintor", {})
+    extintor["certificado_url"] = file_info["saved_path"]
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"extintor": extintor}}
+    )
+    
+    return {"message": "Document uploaded successfully", "url": file_info["saved_path"]}
+
+@api_router.post("/vehicles/{vehicle_id}/upload-foto")
+async def upload_vehicle_photo(
+    vehicle_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload vehicle photo (max 3)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    current_photos = vehicle.get("fotos_veiculo", [])
+    if len(current_photos) >= 3:
+        raise HTTPException(status_code=400, detail="Maximum 3 photos allowed")
+    
+    # Create directory
+    photos_dir = UPLOAD_DIR / "vehicle_photos_info"
+    photos_dir.mkdir(exist_ok=True)
+    
+    # Process file
+    file_id = f"photo_{vehicle_id}_{uuid.uuid4()}"
+    file_info = await process_uploaded_file(file, photos_dir, file_id)
+    
+    # Add to vehicle
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$push": {"fotos_veiculo": file_info["saved_path"]}}
+    )
+    
+    return {"message": "Photo uploaded successfully", "url": file_info["saved_path"]}
+
+@api_router.delete("/vehicles/{vehicle_id}/fotos/{foto_index}")
+async def delete_vehicle_photo(
+    vehicle_id: str,
+    foto_index: int,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Delete vehicle photo by index"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    fotos = vehicle.get("fotos_veiculo", [])
+    if foto_index < 0 or foto_index >= len(fotos):
+        raise HTTPException(status_code=400, detail="Invalid photo index")
+    
+    # Remove photo
+    fotos.pop(foto_index)
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"fotos_veiculo": fotos}}
+    )
+    
+    return {"message": "Photo deleted successfully"}
+
+@api_router.put("/vehicles/{vehicle_id}/update-km")
+async def update_vehicle_km(
+    vehicle_id: str,
+    data: Dict[str, int],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Update vehicle KM (can be automatic from GPS)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    km_atual = data.get("km_atual")
+    if not km_atual or km_atual < 0:
+        raise HTTPException(status_code=400, detail="Invalid KM value")
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {
+            "km_atual": km_atual,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "KM updated successfully", "km_atual": km_atual}
+
+
                 "motorista_atribuido": None,
                 "motorista_atribuido_nome": None,
                 "status": "disponivel",
