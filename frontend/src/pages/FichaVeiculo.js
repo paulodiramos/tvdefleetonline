@@ -1153,7 +1153,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="seguradora">Seguradora *</Label>
                     <Input
@@ -1337,7 +1337,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="data_inspecao">Data da Inspeção *</Label>
                     <Input
@@ -1440,7 +1440,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="fornecedor_extintor">Fornecedor</Label>
                     <Input
@@ -1544,7 +1544,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
                     <Label htmlFor="proxima_revisao_km">Próxima Revisão (KM)</Label>
                     <Input
@@ -1702,7 +1702,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 {canEdit && (
                   <form onSubmit={handleAddAgenda} className="space-y-4 border-b pb-4">
                     <h3 className="font-semibold">Adicionar Evento</h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-3">
                       <div>
                         <Label htmlFor="tipo">Tipo *</Label>
                         <select
@@ -1807,7 +1807,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Cards de Resumo */}
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-3 gap-3">
                   <Card className="bg-green-50">
                     <CardContent className="pt-6">
                       <p className="text-sm text-slate-600">Ganhos Total</p>
