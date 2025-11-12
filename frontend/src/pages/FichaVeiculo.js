@@ -447,6 +447,43 @@ const FichaVeiculo = ({ user, onLogout }) => {
                   <Label className="text-slate-600">KM Atual</Label>
                   <p className="font-medium">{vehicle.km_atual || 0} km</p>
                 </div>
+                <div>
+                  <Label className="text-slate-600">Status</Label>
+                  {canEdit && editMode ? (
+                    <select
+                      value={vehicle.status || 'disponivel'}
+                      onChange={async (e) => {
+                        try {
+                          const token = localStorage.getItem('token');
+                          await axios.put(`${API}/vehicles/${vehicleId}/status`, 
+                            { status: e.target.value },
+                            { headers: { Authorization: `Bearer ${token}` }}
+                          );
+                          toast.success('Status atualizado!');
+                          fetchVehicleData();
+                        } catch (error) {
+                          toast.error('Erro ao atualizar status');
+                        }
+                      }}
+                      className="w-full p-2 border rounded-md"
+                    >
+                      <option value="disponivel">Disponível</option>
+                      <option value="atribuido">Atribuído</option>
+                      <option value="manutencao">Manutenção</option>
+                      <option value="venda">Venda</option>
+                      <option value="condicoes">Condições</option>
+                    </select>
+                  ) : (
+                    <p className="font-medium capitalize">
+                      {vehicle.status === 'disponivel' ? 'Disponível' :
+                       vehicle.status === 'atribuido' ? 'Atribuído' :
+                       vehicle.status === 'manutencao' ? 'Manutenção' :
+                       vehicle.status === 'venda' ? 'Venda' :
+                       vehicle.status === 'condicoes' ? 'Condições' :
+                       'Disponível'}
+                    </p>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
