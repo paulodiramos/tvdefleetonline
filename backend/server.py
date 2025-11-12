@@ -4160,7 +4160,7 @@ from fastapi.responses import FileResponse
 @api_router.get("/files/{folder}/{filename}")
 async def serve_file(folder: str, filename: str, current_user: Dict = Depends(get_current_user)):
     """Serve uploaded files"""
-    allowed_folders = ["motoristas", "pagamentos", "vehicles", "vehicle_documents", "vehicle_photos_info"]
+    allowed_folders = ["motoristas", "pagamentos", "vehicles", "vehicle_documents", "vehicle_photos_info", "extintor_docs"]
     
     if folder not in allowed_folders:
         raise HTTPException(status_code=400, detail="Invalid folder")
