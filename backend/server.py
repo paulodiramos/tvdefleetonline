@@ -258,6 +258,39 @@ async def check_and_create_alerts():
                 logger.error(f"Error creating alert: {e}")
                 pass
         
+        # Check fire extinguisher expiry
+        if vehicle.get("extintor"):
+            try:
+                validade_date = datetime.strptime(vehicle["extintor"]["data_validade"], "%Y-%m-%d").date()
+                days_until_expiry = (validade_date - today).days
+                
+                if 0 <= days_until_expiry <= 30:
+                    existing_alert = await db.alertas.find_one({
+                        "tipo": "extintor",
+                        "entidade_id": vehicle_id,
+                        "status": "ativo"
+                    })
+                    
+                    if not existing_alert:
+                        alert = {
+                            "id": str(uuid.uuid4()),
+                            "tipo": "extintor",
+                            "entidade_id": vehicle_id,
+                            "entidade_tipo": "veiculo",
+                            "titulo": f"Extintor expira em breve - {vehicle['matricula']}",
+                            "descricao": f"O extintor do veículo {vehicle['marca']} {vehicle['modelo']} ({vehicle['matricula']}) expira em {days_until_expiry} dias.",
+                            "data_vencimento": vehicle["extintor"]["data_validade"],
+                            "prioridade": "alta",
+                            "dias_antecedencia": 30,
+                            "status": "ativo",
+                            "criado_em": datetime.now(timezone.utc).isoformat()
+                        }
+                        await db.alertas.insert_one(alert)
+            except Exception as e:
+                logger.error(f"Error creating extintor alert: {e}")
+                pass
+
+        
         # Check maintenance (based on km)
         if vehicle.get("maintenance_history"):
             for maintenance in vehicle["maintenance_history"]:
