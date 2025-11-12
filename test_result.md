@@ -636,14 +636,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Sistema de Upload de Documentos - Veículos"
-    - "Vehicles.js - Remover botão Editar duplicado"
-    - "VehicleData.js - Campo Valor da Inspeção"
-    - "UploadCSV.js - Botões de download de templates"
-    - "VehiclePhotos.js - Upload de fotos (verificar)"
-    - "EditParceiro.js - Edição de parceiros por Admin"
-    - "Planos.js - Gestão de planos de assinatura"
-    - "Configuracoes.js - Configurações do sistema"
+    - "FichaVeiculo.js - Nova Tab Extintor"
+    - "FichaVeiculo.js - Nova Tab Intervenções"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -651,6 +645,7 @@ test_plan:
   backend_inspection_value_tested: true
   ficha_veiculo_cancel_issue_resolved: true
   document_upload_system_implemented: true
+  extintor_and_intervencoes_implemented: true
 
 backend:
   - task: "Sistema de Extintor - Campos expandidos"
