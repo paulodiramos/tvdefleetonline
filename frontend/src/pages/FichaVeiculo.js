@@ -410,6 +410,49 @@ const FichaVeiculo = ({ user, onLogout }) => {
     }
   };
 
+  // Document upload handlers
+  const handleUploadDocument = async (file, documentType) => {
+    if (!file) return;
+
+    setUploadingDoc(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const token = localStorage.getItem('token');
+      const endpoint = `${API}/vehicles/${vehicleId}/upload-${documentType}`;
+      
+      await axios.post(endpoint, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      toast.success('Documento enviado com sucesso!');
+      fetchVehicleData();
+    } catch (error) {
+      console.error('Error uploading document:', error);
+      toast.error('Erro ao enviar documento');
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  const handleDownloadDocument = (documentPath, documentName) => {
+    if (!documentPath) {
+      toast.error('Documento não disponível');
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    const filename = documentPath.split('/').pop();
+    const downloadUrl = `${API}/files/vehicle_documents/${filename}?token=${token}`;
+    
+    // Open in new tab for download
+    window.open(downloadUrl, '_blank');
+  };
+
 
   if (loading) {
     return (
