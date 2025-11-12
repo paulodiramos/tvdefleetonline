@@ -641,7 +641,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
             <TabsTrigger value="fotos">Fotos</TabsTrigger>
             <TabsTrigger value="seguro">Seguro</TabsTrigger>
             <TabsTrigger value="inspecao">Inspeção</TabsTrigger>
+            <TabsTrigger value="extintor">Extintor</TabsTrigger>
             <TabsTrigger value="revisao">Revisão</TabsTrigger>
+            <TabsTrigger value="intervencoes">Intervenções</TabsTrigger>
             <TabsTrigger value="agenda">Agenda</TabsTrigger>
             <TabsTrigger value="relatorio">Relatório</TabsTrigger>
           </TabsList>
