@@ -1677,6 +1677,14 @@ startxref
         print("-" * 50)
         self.test_parceiros_listing_endpoint()
         
+        # EXTINTOR AND INTERVENÇÕES SYSTEM (NEW REQUEST)
+        print("\n🧯 EXTINTOR AND INTERVENÇÕES SYSTEM (HIGH PRIORITY)")
+        print("-" * 60)
+        self.test_extintor_system_fields()
+        self.test_extintor_certificate_upload()
+        self.test_extintor_file_serving()
+        self.test_relatorio_intervencoes_endpoint()
+        
         # Summary
         print("\n" + "=" * 80)
         print("TEST SUMMARY")
