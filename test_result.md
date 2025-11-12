@@ -652,7 +652,117 @@ test_plan:
   ficha_veiculo_cancel_issue_resolved: true
   document_upload_system_implemented: true
 
+backend:
+  - task: "Sistema de Extintor - Campos expandidos"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Adicionado campo data_instalacao ao modelo VehicleExtinguisher. Endpoint de upload de certificado já existente (upload-extintor-doc). Adicionado 'extintor_docs' aos folders permitidos no endpoint de servir arquivos."
+
+  - task: "Relatório de Intervenções - Endpoint"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Criado endpoint GET /api/vehicles/{vehicle_id}/relatorio-intervencoes que retorna todas as intervenções (seguro, inspeção, extintor, revisões) com status (pending/completed) baseado na data. Testado via curl e funcionando corretamente."
+
+frontend:
+  - task: "FichaVeiculo.js - Nova Tab Extintor"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/FichaVeiculo.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Adicionada nova tab 'Extintor' com formulário completo: fornecedor, empresa_certificacao, data_instalacao, data_validade, preco. Inclui upload de certificado com função handleUploadExtintorDoc. Estado extintorForm expandido com novos campos. Função handleSaveExtintor atualizada."
+
+  - task: "FichaVeiculo.js - Nova Tab Intervenções"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/FichaVeiculo.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Adicionada nova tab 'Intervenções' que mostra relatório visual de todas as intervenções do veículo. Utiliza endpoint /relatorio-intervencoes. Exibe intervenções passadas (verde), futuras (laranja) e vencidas (vermelho). Inclui legenda e badges por categoria (seguro, inspeção, extintor, revisão). Estado relatorioIntervencoes adicionado e carregado em fetchVehicleData."
+
 agent_communication:
+    - agent: "main"
+      message: |
+        🚀 NOVA IMPLEMENTAÇÃO - SISTEMA DE EXTINTOR E RELATÓRIO DE INTERVENÇÕES
+        
+        REQUISITOS DO USUÁRIO:
+        - Sistema completo de extintor com data de instalação, validade e certificado
+        - Relatório de intervenções mostrando todas as datas (seguro, inspeção, extintor, revisões)
+        - Diferenciação visual entre intervenções passadas e futuras
+        
+        IMPLEMENTAÇÕES BACKEND:
+        ✅ VehicleExtinguisher Model:
+        - Adicionado campo 'data_instalacao' (além dos existentes)
+        - Mantido retrocompatibilidade com 'data_entrega'
+        - Endpoint upload-extintor-doc já existente e funcionando
+        
+        ✅ Novo Endpoint GET /api/vehicles/{vehicle_id}/relatorio-intervencoes:
+        - Consolida TODAS as intervenções de um veículo
+        - Categorias: seguro, inspeção, extintor, revisão
+        - Status automático: 'pending' (futuro) ou 'completed' (passado)
+        - Inclui descrição, data, km (quando aplicável)
+        - Ordenado por data (mais recente primeiro)
+        - TESTADO via curl: funcionando corretamente
+        
+        ✅ File Serving:
+        - Adicionado 'extintor_docs' aos allowed_folders
+        - Download de certificados de extintor funcionando
+        
+        IMPLEMENTAÇÕES FRONTEND:
+        ✅ Nova Tab "Extintor":
+        - Formulário completo com 5 campos:
+          * Fornecedor
+          * Empresa de Certificação
+          * Data de Instalação (obrigatório)
+          * Data de Validade (obrigatório)
+          * Preço
+        - Upload de certificado (PDF, JPG, PNG)
+        - Download de certificado existente
+        - Integrado com modo de edição (editMode)
+        
+        ✅ Nova Tab "Intervenções" (Relatório):
+        - Visualização completa de todas as intervenções
+        - Cores visuais por status:
+          * Verde: Intervenções concluídas
+          * Laranja: Intervenções futuras pendentes
+          * Vermelho: Intervenções vencidas (passadas e ainda pendentes)
+        - Badges coloridos por categoria
+        - Mostra data e km (quando aplicável)
+        - Legenda explicativa no final
+        - Busca dados do endpoint /relatorio-intervencoes
+        
+        ✅ Melhorias Gerais:
+        - Estado relatorioIntervencoes adicionado
+        - handleDownloadDocument atualizado para suportar múltiplos folders
+        - extintorForm expandido com novos campos
+        - handleSaveExtintor atualizado com novos campos
+        - Ícone AlertCircle importado para tab Extintor
+        
+        PRÓXIMO PASSO: Testar frontend completo - tabs Extintor e Intervenções
+        Backend já testado e funcionando corretamente via curl.
+    
     - agent: "main"
       message: |
         NOVAS IMPLEMENTAÇÕES - Phases 1-6:
