@@ -707,7 +707,8 @@ class VehicleExtinguisher(BaseModel):
     fornecedor: Optional[str] = None
     empresa_certificacao: Optional[str] = None
     preco: Optional[float] = None
-    data_entrega: Optional[str] = None
+    data_instalacao: Optional[str] = None  # Data de instalação do extintor
+    data_entrega: Optional[str] = None  # Mantido para retrocompatibilidade
     data_validade: Optional[str] = None
     proxima_intervencao: Optional[str] = None
     certificado_url: Optional[str] = None
