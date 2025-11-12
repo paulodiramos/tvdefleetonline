@@ -136,6 +136,40 @@ async def process_uploaded_file(file: UploadFile, destination_dir: Path, file_id
 
 # ==================== ALERT CHECKING UTILITIES ====================
 
+
+async def auto_add_to_agenda(vehicle_id: str, tipo: str, data_vencimento: str, titulo: str):
+    """Automatically add event to vehicle agenda when date is filled"""
+    from datetime import datetime, timedelta
+    
+    try:
+        # Parse date
+        vencimento_date = datetime.strptime(data_vencimento, "%Y-%m-%d")
+        # Set reminder for 30 days before
+        reminder_date = (vencimento_date - timedelta(days=30)).strftime("%Y-%m-%d")
+        
+        evento = {
+            "id": str(uuid.uuid4()),
+            "tipo": tipo,
+            "titulo": titulo,
+            "data": reminder_date,
+            "hora": "09:00",
+            "descricao": f"Lembrete: {titulo} vence em {data_vencimento}",
+            "auto_gerado": True,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Add to vehicle agenda
+        await db.vehicles.update_one(
+            {"id": vehicle_id},
+            {"$push": {"agenda": evento}}
+        )
+        
+        logger.info(f"Auto-added to agenda: {titulo} for vehicle {vehicle_id}")
+    except Exception as e:
+        logger.error(f"Error auto-adding to agenda: {e}")
+
+
+
 async def check_and_create_alerts():
     """
     Check all vehicles and drivers for expiring documents/maintenance
