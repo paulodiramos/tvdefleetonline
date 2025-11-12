@@ -1558,10 +1558,8 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
 
-          {/* Relatório de Intervenções */}
-          <TabsContent value="intervencoes">
+            {/* Relatório de Intervenções */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
