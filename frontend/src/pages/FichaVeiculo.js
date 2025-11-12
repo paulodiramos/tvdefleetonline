@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { 
   Car, User, Shield, ClipboardCheck, Wrench, Calendar, 
-  TrendingUp, History, Edit, Save, X, Plus, FileText 
+  TrendingUp, History, Edit, Save, X, Plus, FileText, Upload, Download, Trash2 
 } from 'lucide-react';
 
 const FichaVeiculo = ({ user, onLogout }) => {
