@@ -1933,12 +1933,6 @@ async def get_vehicle_relatorio_ganhos(vehicle_id: str, current_user: Dict = Dep
         "detalhes": sorted(detalhes, key=lambda x: x.get("data", ""), reverse=True)
     }
 
-
-        "photo_url": photo_url,
-        "converted_to_pdf": file_info["pdf_path"] is not None,
-        "total_photos": len(current_photos) + 1
-    }
-
 @api_router.delete("/vehicles/{vehicle_id}/photos/{photo_index}")
 async def delete_vehicle_photo(
     vehicle_id: str,
