@@ -112,6 +112,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
   });
 
   // Store original form data to restore on cancel
+  const [originalInfoForm, setOriginalInfoForm] = useState(null);
   const [originalSeguroForm, setOriginalSeguroForm] = useState(null);
   const [originalInspecaoForm, setOriginalInspecaoForm] = useState(null);
   const [originalRevisaoForm, setOriginalRevisaoForm] = useState(null);
