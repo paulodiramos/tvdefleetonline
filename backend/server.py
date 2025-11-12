@@ -2347,6 +2347,112 @@ async def delete_vehicle_photo(
     
     return {"message": "Photo deleted successfully"}
 
+# ==================== VEHICLE DOCUMENTS UPLOAD ENDPOINTS ====================
+
+@api_router.post("/vehicles/{vehicle_id}/upload-carta-verde")
+async def upload_carta_verde(
+    vehicle_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload carta verde document"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Process and save file
+    file_id = f"carta_verde_{vehicle_id}_{uuid.uuid4()}"
+    file_info = await process_uploaded_file(file, VEHICLE_DOCS_UPLOAD_DIR, file_id)
+    
+    # Update vehicle with document path
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"documento_carta_verde": file_info["saved_path"]}}
+    )
+    
+    return {"message": "Carta verde uploaded successfully", "url": file_info["saved_path"]}
+
+@api_router.post("/vehicles/{vehicle_id}/upload-condicoes")
+async def upload_condicoes(
+    vehicle_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload condições document"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Process and save file
+    file_id = f"condicoes_{vehicle_id}_{uuid.uuid4()}"
+    file_info = await process_uploaded_file(file, VEHICLE_DOCS_UPLOAD_DIR, file_id)
+    
+    # Update vehicle with document path
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"documento_condicoes": file_info["saved_path"]}}
+    )
+    
+    return {"message": "Condições document uploaded successfully", "url": file_info["saved_path"]}
+
+@api_router.post("/vehicles/{vehicle_id}/upload-recibo-seguro")
+async def upload_recibo_seguro(
+    vehicle_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload recibo de pagamento do seguro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Process and save file
+    file_id = f"recibo_seguro_{vehicle_id}_{uuid.uuid4()}"
+    file_info = await process_uploaded_file(file, VEHICLE_DOCS_UPLOAD_DIR, file_id)
+    
+    # Update vehicle with document path
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"documento_recibo_seguro": file_info["saved_path"]}}
+    )
+    
+    return {"message": "Recibo de seguro uploaded successfully", "url": file_info["saved_path"]}
+
+@api_router.post("/vehicles/{vehicle_id}/upload-documento-inspecao")
+async def upload_documento_inspecao(
+    vehicle_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload documento/certificado da inspeção"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Process and save file
+    file_id = f"doc_inspecao_{vehicle_id}_{uuid.uuid4()}"
+    file_info = await process_uploaded_file(file, VEHICLE_DOCS_UPLOAD_DIR, file_id)
+    
+    # Update vehicle with document path
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"documento_inspecao": file_info["saved_path"]}}
+    )
+    
+    return {"message": "Documento de inspeção uploaded successfully", "url": file_info["saved_path"]}
+
 @api_router.put("/vehicles/{vehicle_id}/update-km")
 async def update_vehicle_km(
     vehicle_id: str,
