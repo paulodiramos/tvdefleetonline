@@ -232,6 +232,33 @@ const FichaVeiculo = ({ user, onLogout }) => {
         });
       }
 
+      // Load vehicle info form
+      if (vehicleRes.data.tipo_contrato) {
+        setInfoForm({
+          regime: vehicleRes.data.tipo_contrato.regime || 'full_time',
+          horario_turno_1: vehicleRes.data.tipo_contrato.horario_turno_1 || '',
+          horario_turno_2: vehicleRes.data.tipo_contrato.horario_turno_2 || '',
+          horario_turno_3: vehicleRes.data.tipo_contrato.horario_turno_3 || '',
+          horario_turno_4: vehicleRes.data.tipo_contrato.horario_turno_4 || '',
+          comissao_parceiro: vehicleRes.data.tipo_contrato.comissao_parceiro || '',
+          comissao_motorista: vehicleRes.data.tipo_contrato.comissao_motorista || '',
+          categorias_uber: vehicleRes.data.categorias_uber || {
+            green: false,
+            comfort: false,
+            exec: false,
+            pet: false,
+            xl: false
+          },
+          categorias_bolt: vehicleRes.data.categorias_bolt || {
+            economy: false,
+            comfort: false,
+            exec: false,
+            pet: false,
+            xl: false
+          }
+        });
+      }
+
       // Fetch historico
       const historicoRes = await axios.get(`${API}/vehicles/${vehicleId}/historico`, {
         headers: { Authorization: `Bearer ${token}` }
