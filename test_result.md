@@ -103,7 +103,7 @@
 #====================================================================================================
 
 user_problem_statement: |
-  TVDEFleet.com - Sistema de gestão de frota com 3 fases de implementação:
+  TVDEFleet.com - Sistema de gestão de frota com múltiplas fases de implementação:
   
   FASE 1: Restrições de Permissão para Parceiros
   - Parceiros não podem criar receitas ou despesas
@@ -121,6 +121,14 @@ user_problem_statement: |
   - Alertas para vencimento de licenças TVDE
   - Alertas para manutenção baseada em KM
   - Verificação automática a cada 6 horas
+  
+  NOVA FASE: Melhorias na Ficha do Veículo
+  - Remover botão "Editar" duplicado da lista de veículos
+  - Sistema de upload de documentos na Ficha do Veículo:
+    * Tab Seguro: Carta Verde, Condições, Recibo de pagamento
+    * Tab Inspeção: Documento/certificado da inspeção
+  - Imagens convertidas automaticamente para PDF formato A4
+  - Download disponível para impressão
 
 backend:
   - task: "Restrição de permissões - Parceiros não podem criar receitas"
