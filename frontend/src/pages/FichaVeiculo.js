@@ -81,6 +81,12 @@ const FichaVeiculo = ({ user, onLogout }) => {
     detalhes: []
   });
 
+  // Store original form data to restore on cancel
+  const [originalSeguroForm, setOriginalSeguroForm] = useState(null);
+  const [originalInspecaoForm, setOriginalInspecaoForm] = useState(null);
+  const [originalRevisaoForm, setOriginalRevisaoForm] = useState(null);
+  const [originalExtintorForm, setOriginalExtintorForm] = useState(null);
+
   const canEdit = user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional';
 
   useEffect(() => {
