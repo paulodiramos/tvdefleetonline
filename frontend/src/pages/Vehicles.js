@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { Plus, Car, Edit, Trash2, AlertCircle, Calendar, Fuel } from 'lucide-react';
 
 const Vehicles = ({ user, onLogout }) => {
+  const navigate = useNavigate();
   const [vehicles, setVehicles] = useState([]);
   const [parceiros, setParceiros] = useState([]);
   const [loading, setLoading] = useState(true);
