@@ -3169,6 +3169,110 @@ async def get_maintenance_detail(
     
     raise HTTPException(status_code=404, detail="Maintenance not found")
 
+@api_router.get("/vehicles/{vehicle_id}/relatorio-intervencoes")
+async def get_vehicle_interventions_report(
+    vehicle_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Get comprehensive interventions report for a vehicle including:
+    - Insurance (Seguro)
+    - Inspection (Inspeção)
+    - Fire Extinguisher (Extintor)
+    - Maintenance/Revisions (Revisões)
+    All with dates for past and future interventions
+    """
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    interventions = []
+    today = datetime.now(timezone.utc).date()
+    
+    # Add insurance interventions
+    seguro = vehicle.get("seguro", {})
+    if seguro:
+        if seguro.get("data_validade"):
+            interventions.append({
+                "tipo": "Seguro",
+                "descricao": f"Renovação de Seguro - {seguro.get('seguradora', 'N/A')}",
+                "data": seguro.get("data_validade"),
+                "categoria": "seguro",
+                "status": "pending" if datetime.fromisoformat(seguro.get("data_validade")).date() >= today else "completed"
+            })
+    
+    # Add inspection interventions
+    inspection = vehicle.get("inspection", {})
+    if inspection:
+        if inspection.get("data_inspecao"):
+            interventions.append({
+                "tipo": "Inspeção",
+                "descricao": "Inspeção realizada",
+                "data": inspection.get("data_inspecao"),
+                "categoria": "inspecao",
+                "status": "completed"
+            })
+        if inspection.get("proxima_inspecao"):
+            interventions.append({
+                "tipo": "Inspeção",
+                "descricao": "Próxima Inspeção",
+                "data": inspection.get("proxima_inspecao"),
+                "categoria": "inspecao",
+                "status": "pending" if datetime.fromisoformat(inspection.get("proxima_inspecao")).date() >= today else "completed"
+            })
+    
+    # Add fire extinguisher interventions
+    extintor = vehicle.get("extintor", {})
+    if extintor:
+        if extintor.get("data_instalacao") or extintor.get("data_entrega"):
+            data_inst = extintor.get("data_instalacao") or extintor.get("data_entrega")
+            interventions.append({
+                "tipo": "Extintor",
+                "descricao": "Instalação do Extintor",
+                "data": data_inst,
+                "categoria": "extintor",
+                "status": "completed"
+            })
+        if extintor.get("data_validade"):
+            interventions.append({
+                "tipo": "Extintor",
+                "descricao": "Validade do Extintor",
+                "data": extintor.get("data_validade"),
+                "categoria": "extintor",
+                "status": "pending" if datetime.fromisoformat(extintor.get("data_validade")).date() >= today else "completed"
+            })
+    
+    # Add maintenance/revision interventions
+    manutencoes = vehicle.get("manutencoes", [])
+    for manutencao in manutencoes:
+        if manutencao.get("data_intervencao"):
+            interventions.append({
+                "tipo": "Revisão",
+                "descricao": f"{manutencao.get('tipo_manutencao', 'Manutenção')} - {manutencao.get('descricao', '')}",
+                "data": manutencao.get("data_intervencao"),
+                "km": manutencao.get("km_intervencao"),
+                "categoria": "revisao",
+                "status": "completed"
+            })
+        if manutencao.get("data_proxima"):
+            interventions.append({
+                "tipo": "Revisão",
+                "descricao": f"Próxima {manutencao.get('tipo_manutencao', 'Manutenção')} - {manutencao.get('o_que_fazer', '')}",
+                "data": manutencao.get("data_proxima"),
+                "km": manutencao.get("km_proxima"),
+                "categoria": "revisao",
+                "status": "pending" if datetime.fromisoformat(manutencao.get("data_proxima")).date() >= today else "completed"
+            })
+    
+    # Sort interventions by date (most recent first)
+    interventions.sort(key=lambda x: x.get("data", ""), reverse=True)
+    
+    return {
+        "vehicle_id": vehicle_id,
+        "interventions": interventions,
+        "total": len(interventions)
+    }
+
 # ==================== ADMIN SETTINGS ====================
 
 @api_router.get("/admin/settings")
