@@ -785,3 +785,32 @@ agent_communication:
         - Todos os saves agora são feitos pelo botão global "Guardar" no header
         
         PRÓXIMO PASSO: Testar funcionamento completo do novo fluxo Edit/Save/Cancel
+    
+    - agent: "testing"
+      message: |
+        🔍 TESTE COMPLETO DO FICHAVEICULO EDIT/SAVE/CANCEL - ISSUE CRÍTICO ENCONTRADO!
+        
+        ✅ FUNCIONALIDADES QUE FUNCIONAM CORRETAMENTE:
+        - Initial State: ✅ Apenas botão "Editar" visível, campos desabilitados
+        - Enter Edit Mode: ✅ "Guardar" (verde) e "Cancelar" (vermelho) aparecem, campos habilitados
+        - UI/UX: ✅ Botões com cores corretas, transições funcionando
+        - Individual Save Buttons: ✅ Removidos corretamente de todas as tabs
+        - Toast Messages: ✅ "Alterações descartadas" aparece ao cancelar
+        - State Management: ✅ Volta ao estado inicial após cancelar
+        
+        ❌ ISSUE CRÍTICO ENCONTRADO - CANCEL NÃO FUNCIONA COMPLETAMENTE:
+        - Seguro Tab: ❌ Campos 'seguradora' e 'numero_apolice' NÃO são restaurados aos valores originais
+        - Inspeção Tab: ✅ Campos 'centro_inspecao' e 'observacoes' são restaurados corretamente
+        - Problema: handleCancelEdit() não está restaurando corretamente o seguroForm
+        
+        🔧 DIAGNÓSTICO TÉCNICO:
+        - originalSeguroForm backup está sendo criado corretamente
+        - setSeguroForm({...originalSeguroForm}) está sendo chamado
+        - Mas os valores não estão sendo aplicados aos inputs do Seguro tab
+        - Possível problema com timing ou referência de estado
+        
+        ⚠️ IMPACTO: Funcionalidade de cancelar não funciona como esperado pelo usuário.
+        Alterações no seguro ficam persistentes mesmo após cancelar.
+        
+        🎯 RECOMENDAÇÃO: Investigar e corrigir o restore do seguroForm no handleCancelEdit().
+        Possivelmente adicionar forceUpdate ou verificar se o estado está sendo aplicado corretamente.
