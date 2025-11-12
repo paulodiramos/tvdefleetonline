@@ -587,7 +587,7 @@ frontend:
     implemented: true
     working: true
     file: "frontend/src/pages/FichaVeiculo.js"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
@@ -603,6 +603,30 @@ frontend:
         - working: true
           agent: "testing"
           comment: "✅ RE-TESTADO APÓS CORREÇÃO: CRITICAL ISSUE RESOLVED! Deep copy fix using JSON.parse(JSON.stringify()) successfully fixed the cancel functionality. SEGURO TAB CANCEL TEST: ✅ PASSED - All fields (seguradora, numero_apolice, valor) correctly restored to original values after cancel. INSPEÇÃO TAB CANCEL TEST: ✅ PASSED - Fields correctly restored. UI/UX: ✅ Initial state correct (only 'Editar' button visible), ✅ Edit mode correct ('Guardar' and 'Cancelar' buttons appear), ✅ Returns to non-edit mode after cancel. Minor: Save functionality needs confirmation dialog handling improvement, but core cancel issue is RESOLVED."
+
+  - task: "Vehicles.js - Remover botão Editar duplicado"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Vehicles.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Removido botão 'Editar' da lista de veículos conforme solicitado pelo usuário. Botão era duplicado pois 'Ver Ficha' já permite acesso à edição. Mantido apenas botões 'Ver Ficha' e 'Deletar'."
+
+  - task: "Sistema de Upload de Documentos - Veículos"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py, frontend/src/pages/FichaVeiculo.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implementado sistema completo de upload de documentos na Ficha do Veículo. Backend: Adicionados 4 endpoints (upload-carta-verde, upload-condicoes, upload-recibo-seguro, upload-documento-inspecao) e 4 campos no modelo Vehicle (documento_carta_verde, documento_condicoes, documento_recibo_seguro, documento_inspecao). Criado diretório VEHICLE_DOCS_UPLOAD_DIR. Frontend: Adicionadas seções de upload nas tabs Seguro (3 documentos) e Inspeção (1 documento) com botões de download. Imagens são convertidas automaticamente para PDF formato A4. Documentos disponíveis para download e impressão."
 
 metadata:
   created_by: "main_agent"
