@@ -1686,7 +1686,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 </div>
               </CardContent>
             </Card>
-            </div>
+          </div>
           </TabsContent>
 
           {/* Agenda */}
