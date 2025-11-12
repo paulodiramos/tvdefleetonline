@@ -93,6 +93,43 @@ const FichaVeiculo = ({ user, onLogout }) => {
     fetchVehicleData();
   }, [vehicleId]);
 
+  // Enter edit mode and store original data
+  const handleEnterEditMode = () => {
+    setOriginalSeguroForm({...seguroForm});
+    setOriginalInspecaoForm({...inspecaoForm});
+    setOriginalRevisaoForm({...revisaoForm});
+    setOriginalExtintorForm({...extintorForm});
+    setEditMode(true);
+  };
+
+  // Cancel editing and restore original data
+  const handleCancelEdit = () => {
+    if (originalSeguroForm) setSeguroForm({...originalSeguroForm});
+    if (originalInspecaoForm) setInspecaoForm({...originalInspecaoForm});
+    if (originalRevisaoForm) setRevisaoForm({...originalRevisaoForm});
+    if (originalExtintorForm) setExtintorForm({...originalExtintorForm});
+    setEditMode(false);
+    toast.info('Alterações descartadas');
+  };
+
+  // Save all changes with confirmation
+  const handleSaveAllChanges = async () => {
+    const confirmed = window.confirm('Tem certeza que deseja guardar todas as alterações?');
+    if (!confirmed) return;
+
+    try {
+      await handleSaveSeguro();
+      await handleSaveInspecao();
+      await handleSaveRevisao();
+      await handleSaveExtintor();
+      setEditMode(false);
+      toast.success('Todas as alterações foram guardadas com sucesso!');
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      toast.error('Erro ao guardar algumas alterações');
+    }
+  };
+
   const fetchVehicleData = async () => {
     try {
       const token = localStorage.getItem('token');
