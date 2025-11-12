@@ -461,6 +461,33 @@ const FichaVeiculo = ({ user, onLogout }) => {
     }
   };
 
+  const handleUploadExtintorDoc = async (file) => {
+    if (!file) return;
+
+    setUploadingDoc(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      await axios.post(`${API}/vehicles/${vehicleId}/upload-extintor-doc`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      toast.success('Certificado do extintor enviado com sucesso!');
+      fetchVehicleData();
+    } catch (error) {
+      console.error('Error uploading extintor document:', error);
+      toast.error('Erro ao enviar certificado do extintor');
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
   const handleDownloadDocument = async (documentPath, documentName) => {
     if (!documentPath) {
       toast.error('Documento não disponível');
