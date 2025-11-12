@@ -659,6 +659,9 @@ backend:
         - working: true
           agent: "main"
           comment: "Adicionado campo data_instalacao ao modelo VehicleExtinguisher. Endpoint de upload de certificado já existente (upload-extintor-doc). Adicionado 'extintor_docs' aos folders permitidos no endpoint de servir arquivos."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Sistema de extintor funcionando perfeitamente. PUT /api/vehicles/{vehicle_id} aceita e salva todos os campos expandidos (data_instalacao, data_validade, fornecedor, empresa_certificacao, preco). POST /api/vehicles/{vehicle_id}/upload-extintor-doc funciona corretamente - salva arquivos em extintor_docs/ e atualiza extintor.certificado_url. GET /api/files/extintor_docs/{filename} acessível (extintor_docs está nos allowed_folders). CORRIGIDO: Endpoint de upload estava usando 'saved_path' incorreto - alterado para usar 'pdf_path' ou 'original_path' do process_uploaded_file."
 
   - task: "Relatório de Intervenções - Endpoint"
     implemented: true
@@ -671,6 +674,9 @@ backend:
         - working: true
           agent: "main"
           comment: "Criado endpoint GET /api/vehicles/{vehicle_id}/relatorio-intervencoes que retorna todas as intervenções (seguro, inspeção, extintor, revisões) com status (pending/completed) baseado na data. Testado via curl e funcionando corretamente."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Endpoint GET /api/vehicles/{vehicle_id}/relatorio-intervencoes funcionando perfeitamente. Retorna estrutura JSON correta: {vehicle_id, interventions[], total}. Cada intervenção contém todos os campos obrigatórios: tipo, descricao, data, categoria, status. Status corretamente definido como 'pending' ou 'completed' baseado na data. Consolida todas as intervenções do veículo (seguro, inspeção, extintor, revisões). Testado com veículo contendo seguro, inspeção e extintor - encontradas 4 intervenções com tipos: ['Extintor', 'Seguro', 'Inspeção', 'Extintor']."
 
 frontend:
   - task: "FichaVeiculo.js - Nova Tab Extintor"
