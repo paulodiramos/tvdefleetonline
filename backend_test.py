@@ -1367,6 +1367,253 @@ startxref
         print("=" * 80)
         return success
 
+    # ==================== EXTINTOR AND INTERVENCOES TESTS ====================
+    
+    def test_extintor_system_fields(self):
+        """Test extintor system with expanded fields"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Extintor-System-Fields", False, "No auth token for admin")
+            return
+        
+        # Get a vehicle ID
+        vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+        if vehicles_response.status_code != 200 or not vehicles_response.json():
+            self.log_result("Extintor-System-Fields", False, "No vehicles available for test")
+            return
+        
+        vehicle_id = vehicles_response.json()[0]["id"]
+        
+        # Test updating vehicle with extintor data
+        extintor_data = {
+            "extintor": {
+                "data_instalacao": "2025-01-10",
+                "data_validade": "2026-01-10",
+                "fornecedor": "Extintores Portugal Lda",
+                "empresa_certificacao": "Certificadora ABC",
+                "preco": 45.99
+            }
+        }
+        
+        try:
+            # Update vehicle with extintor data
+            update_response = requests.put(
+                f"{BACKEND_URL}/vehicles/{vehicle_id}",
+                json=extintor_data,
+                headers=headers
+            )
+            
+            if update_response.status_code == 200:
+                # Retrieve the vehicle to verify extintor fields were saved
+                get_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}", headers=headers)
+                
+                if get_response.status_code == 200:
+                    vehicle = get_response.json()
+                    extintor = vehicle.get("extintor", {})
+                    
+                    # Check if all extintor fields are present and correct
+                    expected_fields = {
+                        "data_instalacao": "2025-01-10",
+                        "data_validade": "2026-01-10", 
+                        "fornecedor": "Extintores Portugal Lda",
+                        "empresa_certificacao": "Certificadora ABC",
+                        "preco": 45.99
+                    }
+                    
+                    all_correct = True
+                    for field, expected_value in expected_fields.items():
+                        if extintor.get(field) != expected_value:
+                            self.log_result("Extintor-System-Fields", False, f"Field {field}: expected {expected_value}, got {extintor.get(field)}")
+                            all_correct = False
+                            break
+                    
+                    if all_correct:
+                        self.log_result("Extintor-System-Fields", True, "Extintor system with all expanded fields working correctly")
+                    
+                else:
+                    self.log_result("Extintor-System-Fields", False, f"Could not retrieve updated vehicle: {get_response.status_code}")
+            else:
+                self.log_result("Extintor-System-Fields", False, f"Vehicle extintor update failed: {update_response.status_code}", update_response.text)
+        except Exception as e:
+            self.log_result("Extintor-System-Fields", False, f"Extintor system test error: {str(e)}")
+    
+    def test_extintor_certificate_upload(self):
+        """Test extintor certificate upload"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Extintor-Certificate-Upload", False, "No auth token for admin")
+            return
+        
+        # Get a vehicle ID
+        vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+        if vehicles_response.status_code != 200 or not vehicles_response.json():
+            self.log_result("Extintor-Certificate-Upload", False, "No vehicles available for test")
+            return
+        
+        vehicle_id = vehicles_response.json()[0]["id"]
+        
+        try:
+            # Create test certificate file (PDF)
+            test_pdf = self.create_test_pdf()
+            
+            files = {
+                'file': ('certificado_extintor.pdf', test_pdf, 'application/pdf')
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/vehicles/{vehicle_id}/upload-extintor-doc",
+                files=files,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Check if certificado_url was updated
+                if "certificado_url" in result or "file_path" in result:
+                    self.log_result("Extintor-Certificate-Upload", True, "Extintor certificate uploaded successfully")
+                    
+                    # Verify the vehicle extintor was updated with certificate URL
+                    get_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}", headers=headers)
+                    if get_response.status_code == 200:
+                        vehicle = get_response.json()
+                        extintor = vehicle.get("extintor", {})
+                        
+                        if extintor.get("certificado_url"):
+                            self.log_result("Extintor-Certificate-URL-Update", True, "Vehicle extintor.certificado_url updated correctly")
+                        else:
+                            self.log_result("Extintor-Certificate-URL-Update", False, "Vehicle extintor.certificado_url not updated")
+                    
+                else:
+                    self.log_result("Extintor-Certificate-Upload", False, "Upload response missing file path information")
+            else:
+                self.log_result("Extintor-Certificate-Upload", False, f"Certificate upload failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Extintor-Certificate-Upload", False, f"Certificate upload error: {str(e)}")
+    
+    def test_extintor_file_serving(self):
+        """Test serving extintor certificate files"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Extintor-File-Serving", False, "No auth token for admin")
+            return
+        
+        try:
+            # Test accessing extintor_docs folder (should return 404 for non-existent file, not auth error)
+            response = requests.get(f"{BACKEND_URL}/files/extintor_docs/test_certificate.pdf", headers=headers)
+            
+            # We expect either 200 (file found) or 404 (file not found), but not 401/403 (auth issues)
+            if response.status_code in [200, 404]:
+                self.log_result("Extintor-File-Serving", True, f"Extintor docs file endpoint accessible (status: {response.status_code})")
+            elif response.status_code in [401, 403]:
+                self.log_result("Extintor-File-Serving", False, f"Authentication issue for extintor_docs folder: {response.status_code}")
+            else:
+                self.log_result("Extintor-File-Serving", False, f"Unexpected status for extintor_docs folder: {response.status_code}")
+        except Exception as e:
+            self.log_result("Extintor-File-Serving", False, f"File serving test error: {str(e)}")
+    
+    def test_relatorio_intervencoes_endpoint(self):
+        """Test GET /api/vehicles/{vehicle_id}/relatorio-intervencoes endpoint"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Relatorio-Intervencoes-Endpoint", False, "No auth token for admin")
+            return
+        
+        # Get a vehicle ID that has some data (seguro, inspeção)
+        vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+        if vehicles_response.status_code != 200 or not vehicles_response.json():
+            self.log_result("Relatorio-Intervencoes-Endpoint", False, "No vehicles available for test")
+            return
+        
+        vehicle_id = vehicles_response.json()[0]["id"]
+        
+        # First, ensure the vehicle has some intervention data
+        vehicle_data = {
+            "seguro": {
+                "seguradora": "Seguradora Teste",
+                "numero_apolice": "POL123456",
+                "data_validade": "2025-12-31",
+                "valor": 500.0
+            },
+            "inspection": {
+                "ultima_inspecao": "2024-06-15",
+                "proxima_inspecao": "2025-06-15",
+                "resultado": "aprovado",
+                "valor": 45.0
+            },
+            "extintor": {
+                "data_instalacao": "2024-01-15",
+                "data_validade": "2025-01-15",
+                "fornecedor": "Extintores SA",
+                "empresa_certificacao": "Cert SA",
+                "preco": 35.0
+            }
+        }
+        
+        try:
+            # Update vehicle with intervention data
+            update_response = requests.put(
+                f"{BACKEND_URL}/vehicles/{vehicle_id}",
+                json=vehicle_data,
+                headers=headers
+            )
+            
+            if update_response.status_code != 200:
+                self.log_result("Relatorio-Intervencoes-Endpoint", False, f"Could not update vehicle with test data: {update_response.status_code}")
+                return
+            
+            # Now test the relatorio-intervencoes endpoint
+            response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}/relatorio-intervencoes", headers=headers)
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Check required structure: {vehicle_id, interventions[], total}
+                required_fields = ["vehicle_id", "interventions", "total"]
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if missing_fields:
+                    self.log_result("Relatorio-Intervencoes-Endpoint", False, f"Missing required fields: {missing_fields}")
+                    return
+                
+                # Check if interventions is a list
+                interventions = result.get("interventions", [])
+                if not isinstance(interventions, list):
+                    self.log_result("Relatorio-Intervencoes-Endpoint", False, f"Interventions should be a list, got {type(interventions)}")
+                    return
+                
+                # Check intervention structure
+                if len(interventions) > 0:
+                    first_intervention = interventions[0]
+                    required_intervention_fields = ["tipo", "descricao", "data", "categoria", "status"]
+                    missing_intervention_fields = [field for field in required_intervention_fields if field not in first_intervention]
+                    
+                    if missing_intervention_fields:
+                        self.log_result("Relatorio-Intervencoes-Endpoint", False, f"Missing intervention fields: {missing_intervention_fields}")
+                        return
+                    
+                    # Check status values
+                    valid_statuses = ["pending", "completed"]
+                    status = first_intervention.get("status")
+                    if status not in valid_statuses:
+                        self.log_result("Relatorio-Intervencoes-Endpoint", False, f"Invalid status '{status}', should be one of {valid_statuses}")
+                        return
+                
+                # Check if we have expected intervention types
+                intervention_types = [i.get("tipo") for i in interventions]
+                expected_types = ["seguro", "inspeção", "extintor"]
+                found_types = [t for t in expected_types if t in intervention_types]
+                
+                if len(found_types) >= 2:  # At least 2 of the expected types
+                    self.log_result("Relatorio-Intervencoes-Endpoint", True, f"Relatório de intervenções working correctly. Found {len(interventions)} interventions with types: {intervention_types}")
+                else:
+                    self.log_result("Relatorio-Intervencoes-Endpoint", False, f"Expected intervention types not found. Got: {intervention_types}")
+                
+            else:
+                self.log_result("Relatorio-Intervencoes-Endpoint", False, f"Relatorio endpoint failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Relatorio-Intervencoes-Endpoint", False, f"Relatorio test error: {str(e)}")
+
     # ==================== MAIN TEST RUNNER ====================
     
     def run_all_tests(self):
