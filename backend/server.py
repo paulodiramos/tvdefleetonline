@@ -642,6 +642,8 @@ class VehicleInspection(BaseModel):
     ultima_inspecao: Optional[str] = None
     resultado: Optional[str] = None
     valor: Optional[float] = None
+    centro_inspecao: Optional[str] = None
+    observacoes: Optional[str] = None
 
 class VehicleAvailability(BaseModel):
     status: str  # disponivel, atribuido, manutencao, seguro, sinistro, venda
