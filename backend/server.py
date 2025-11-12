@@ -32,11 +32,13 @@ load_dotenv(ROOT_DIR / '.env')
 UPLOAD_DIR = ROOT_DIR / "uploads"
 MOTORISTAS_UPLOAD_DIR = UPLOAD_DIR / "motoristas"
 PAGAMENTOS_UPLOAD_DIR = UPLOAD_DIR / "pagamentos"
+VEHICLE_DOCS_UPLOAD_DIR = UPLOAD_DIR / "vehicle_documents"
 
 # Ensure directories exist
 UPLOAD_DIR.mkdir(exist_ok=True)
 MOTORISTAS_UPLOAD_DIR.mkdir(exist_ok=True)
 PAGAMENTOS_UPLOAD_DIR.mkdir(exist_ok=True)
+VEHICLE_DOCS_UPLOAD_DIR.mkdir(exist_ok=True)
 
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
