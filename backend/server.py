@@ -1783,7 +1783,8 @@ async def upload_vehicle_photo(
     
     return {
         "message": "Photo uploaded successfully",
-
+        "photo_url": photo_url
+    }
 
 @api_router.post("/vehicles/{vehicle_id}/agenda")
 async def add_vehicle_agenda(
