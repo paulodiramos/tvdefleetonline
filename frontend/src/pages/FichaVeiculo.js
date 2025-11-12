@@ -325,7 +325,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
   };
 
 
-  const handleSaveExtintor = async () => {
+  const handleSaveExtintor = async (silent = false) => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(`${API}/vehicles/${vehicleId}`, {
@@ -339,11 +339,14 @@ const FichaVeiculo = ({ user, onLogout }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast.success('Extintor atualizado! Alerta adicionado automaticamente à agenda.');
-      fetchVehicleData();
+      if (!silent) {
+        toast.success('Extintor atualizado! Alerta adicionado automaticamente à agenda.');
+        fetchVehicleData();
+      }
     } catch (error) {
       console.error('Error saving extintor:', error);
-      toast.error('Erro ao salvar extintor');
+      if (!silent) toast.error('Erro ao salvar extintor');
+      throw error;
     }
   };
 
