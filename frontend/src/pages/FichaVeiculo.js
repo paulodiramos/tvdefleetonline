@@ -59,8 +59,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
   const [extintorForm, setExtintorForm] = useState({
     fornecedor: '',
+    empresa_certificacao: '',
     preco: '',
-    data_entrega: '',
+    data_instalacao: '',
     data_validade: ''
   });
 
