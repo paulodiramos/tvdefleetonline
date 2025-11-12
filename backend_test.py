@@ -1367,6 +1367,54 @@ startxref
         print("=" * 80)
         return success
 
+    
+    def run_extintor_intervencoes_tests(self):
+        """Run only extintor and intervenções tests as requested"""
+        print("=" * 80)
+        print("TVDEFleet Backend - EXTINTOR E RELATÓRIO DE INTERVENÇÕES")
+        print("=" * 80)
+        
+        # Authenticate admin user
+        print("\n🔐 AUTHENTICATION")
+        print("-" * 40)
+        if not self.authenticate_user("admin"):
+            print("❌ Could not authenticate admin user - stopping tests")
+            return False
+        
+        # Run extintor and intervenções tests
+        print("\n🧯 SISTEMA DE EXTINTOR E RELATÓRIO DE INTERVENÇÕES")
+        print("-" * 60)
+        
+        self.test_extintor_system_fields()
+        self.test_extintor_certificate_upload()
+        self.test_extintor_file_serving()
+        self.test_relatorio_intervencoes_endpoint()
+        
+        # Summary
+        print("\n" + "=" * 80)
+        print("TEST SUMMARY - EXTINTOR E INTERVENÇÕES")
+        print("=" * 80)
+        
+        passed_tests = [result for result in self.test_results if result["success"]]
+        failed_tests = [result for result in self.test_results if not result["success"]]
+        
+        print(f"✅ PASSED: {len(passed_tests)} tests")
+        print(f"❌ FAILED: {len(failed_tests)} tests")
+        print(f"📊 TOTAL: {len(self.test_results)} tests")
+        
+        if failed_tests:
+            print("\n❌ FAILED TESTS:")
+            for test in failed_tests:
+                print(f"   - {test['test']}: {test['message']}")
+        
+        if passed_tests:
+            print("\n✅ PASSED TESTS:")
+            for test in passed_tests:
+                print(f"   - {test['test']}: {test['message']}")
+        
+        print("=" * 80)
+        
+        return len(failed_tests) == 0
     # ==================== EXTINTOR AND INTERVENCOES TESTS ====================
     
     def test_extintor_system_fields(self):
