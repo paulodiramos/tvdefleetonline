@@ -13,7 +13,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Plus, Car, Edit, Trash2, AlertCircle, Calendar, Fuel } from 'lucide-react';
+import { Plus, Car, Edit, Trash2, AlertCircle, Calendar, Fuel, FileText } from 'lucide-react';
 
 const Vehicles = ({ user, onLogout }) => {
   const navigate = useNavigate();
