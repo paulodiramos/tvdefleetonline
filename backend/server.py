@@ -792,6 +792,11 @@ class Vehicle(BaseModel):
     status: str = "disponivel"  # disponivel, atribuido, manutencao, venda, condicoes
     km_atual: Optional[int] = None  # KM atual do veículo
     campos_customizados: Dict[str, Any] = {}  # Campos adicionais customizáveis
+    # Documentos do veículo
+    documento_carta_verde: Optional[str] = None  # Carta verde do seguro
+    documento_condicoes: Optional[str] = None  # Documento de condições
+    documento_recibo_seguro: Optional[str] = None  # Recibo de pagamento do seguro
+    documento_inspecao: Optional[str] = None  # Documento/certificado da inspeção
     created_at: datetime
     updated_at: datetime
     parceiro_id: str
