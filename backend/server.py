@@ -2178,49 +2178,6 @@ async def update_vehicle_status(
     
     return {"message": "Status atualizado com sucesso", "status": status}
 
-
-        for man in vehicle["manutencoes"]:
-            valor = man.get("valor", 0)
-            despesas_total += valor
-            detalhes.append({
-                "tipo": "despesa",
-                "descricao": f"Manutenção: {man.get('tipo_manutencao')}",
-                "data": man.get("data"),
-                "valor": valor
-            })
-    
-    if vehicle.get("insurance"):
-        valor = vehicle["insurance"].get("valor", 0)
-        despesas_total += valor
-        detalhes.append({
-            "tipo": "despesa",
-            "descricao": "Seguro",
-            "data": vehicle["insurance"].get("data_inicio"),
-            "valor": valor
-        })
-    
-    if vehicle.get("inspection"):
-        valor = vehicle["inspection"].get("valor", 0)
-        if valor:
-            despesas_total += valor
-            detalhes.append({
-                "tipo": "despesa",
-                "descricao": "Inspeção",
-                "data": vehicle["inspection"].get("ultima_inspecao"),
-                "valor": valor
-            })
-    
-    # TODO: Add earnings from trips/relatorios when implemented
-    
-    lucro = ganhos_total - despesas_total
-    
-    return {
-        "ganhos_total": ganhos_total,
-        "despesas_total": despesas_total,
-        "lucro": lucro,
-        "detalhes": sorted(detalhes, key=lambda x: x.get("data", ""), reverse=True)
-    }
-
 @api_router.delete("/vehicles/{vehicle_id}/photos/{photo_index}")
 async def delete_vehicle_photo(
     vehicle_id: str,
