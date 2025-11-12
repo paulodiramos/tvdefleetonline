@@ -498,7 +498,13 @@ const FichaVeiculo = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       const filename = documentPath.split('/').pop();
       
-      const response = await axios.get(`${API}/files/vehicle_documents/${filename}`, {
+      // Determine folder based on document path
+      let folder = 'vehicle_documents';
+      if (documentPath.includes('extintor_docs')) {
+        folder = 'extintor_docs';
+      }
+      
+      const response = await axios.get(`${API}/files/${folder}/${filename}`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
       });
