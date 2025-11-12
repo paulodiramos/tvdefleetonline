@@ -610,13 +610,12 @@ test_plan:
     - "EditParceiro.js - Edição de parceiros por Admin"
     - "Planos.js - Gestão de planos de assinatura"
     - "Configuracoes.js - Configurações do sistema"
-  stuck_tasks:
-    - "FichaVeiculo.js - Fix Edit/Save/Cancel Logic"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
   backend_csv_templates_tested: true
   backend_inspection_value_tested: true
-  ficha_veiculo_cancel_issue_found: true
+  ficha_veiculo_cancel_issue_resolved: true
 
 agent_communication:
     - agent: "main"
