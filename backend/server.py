@@ -2068,6 +2068,79 @@ async def get_vehicle_relatorio_ganhos(vehicle_id: str, current_user: Dict = Dep
     
     # Calculate despesas from maintenance, insurance, etc
     if vehicle.get("manutencoes"):
+
+
+@api_router.post("/vehicles/{vehicle_id}/atribuir-motorista")
+async def atribuir_motorista_vehicle(
+    vehicle_id: str,
+    data: Dict[str, str],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atribuir motorista a um veículo"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista_id = data.get("motorista_id")
+    
+    if motorista_id:
+        # Get motorista data
+        motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+        if not motorista:
+            raise HTTPException(status_code=404, detail="Motorista not found")
+        
+        # Update vehicle
+        await db.vehicles.update_one(
+            {"id": vehicle_id},
+            {"$set": {
+                "motorista_atribuido": motorista_id,
+                "motorista_atribuido_nome": motorista.get("name"),
+                "status": "atribuido",
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {"message": "Motorista atribuído com sucesso"}
+    else:
+        # Remove assignment
+        await db.vehicles.update_one(
+            {"id": vehicle_id},
+            {"$set": {
+                "motorista_atribuido": None,
+                "motorista_atribuido_nome": None,
+                "status": "disponivel",
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {"message": "Motorista removido com sucesso"}
+
+@api_router.put("/vehicles/{vehicle_id}/status")
+async def update_vehicle_status(
+    vehicle_id: str,
+    data: Dict[str, str],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar status do veículo"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    status = data.get("status")
+    valid_statuses = ["disponivel", "atribuido", "manutencao", "venda", "condicoes"]
+    
+    if status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Status inválido. Use: {', '.join(valid_statuses)}")
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {
+            "status": status,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "Status atualizado com sucesso", "status": status}
+
+
         for man in vehicle["manutencoes"]:
             valor = man.get("valor", 0)
             despesas_total += valor
