@@ -81,6 +81,11 @@ const FichaVeiculo = ({ user, onLogout }) => {
     detalhes: []
   });
 
+  const [relatorioIntervencoes, setRelatorioIntervencoes] = useState({
+    interventions: [],
+    total: 0
+  });
+
   // Store original form data to restore on cancel
   const [originalSeguroForm, setOriginalSeguroForm] = useState(null);
   const [originalInspecaoForm, setOriginalInspecaoForm] = useState(null);
