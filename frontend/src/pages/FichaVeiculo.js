@@ -282,13 +282,20 @@ const FichaVeiculo = ({ user, onLogout }) => {
       // Load vehicle info form
       if (vehicleRes.data.tipo_contrato) {
         setInfoForm({
+          tipo: vehicleRes.data.tipo_contrato.tipo || 'aluguer',
           regime: vehicleRes.data.tipo_contrato.regime || 'full_time',
           horario_turno_1: vehicleRes.data.tipo_contrato.horario_turno_1 || '',
           horario_turno_2: vehicleRes.data.tipo_contrato.horario_turno_2 || '',
           horario_turno_3: vehicleRes.data.tipo_contrato.horario_turno_3 || '',
           horario_turno_4: vehicleRes.data.tipo_contrato.horario_turno_4 || '',
+          valor_aluguer: vehicleRes.data.tipo_contrato.valor_aluguer || '',
           comissao_parceiro: vehicleRes.data.tipo_contrato.comissao_parceiro || '',
           comissao_motorista: vehicleRes.data.tipo_contrato.comissao_motorista || '',
+          valor_semanal_compra: vehicleRes.data.tipo_contrato.valor_semanal_compra || '',
+          periodo_compra: vehicleRes.data.tipo_contrato.periodo_compra || '',
+          valor_acumulado: vehicleRes.data.tipo_contrato.valor_acumulado || '',
+          valor_falta_cobrar: vehicleRes.data.tipo_contrato.valor_falta_cobrar || '',
+          custo_slot: vehicleRes.data.tipo_contrato.custo_slot || '',
           categorias_uber: vehicleRes.data.categorias_uber || {
             green: false,
             comfort: false,
