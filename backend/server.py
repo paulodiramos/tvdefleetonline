@@ -1705,7 +1705,7 @@ async def get_vehicle(vehicle_id: str, current_user: Dict = Depends(get_current_
 
 @api_router.put("/vehicles/{vehicle_id}")
 async def update_vehicle(vehicle_id: str, updates: Dict[str, Any], current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
