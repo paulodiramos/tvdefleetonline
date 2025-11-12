@@ -1647,15 +1647,16 @@ startxref
                         self.log_result("Relatorio-Intervencoes-Endpoint", False, f"Invalid status '{status}', should be one of {valid_statuses}")
                         return
                 
-                # Check if we have expected intervention types
+                # Check if we have expected intervention types (case insensitive)
                 intervention_types = [i.get("tipo") for i in interventions]
+                intervention_types_lower = [t.lower() if t else "" for t in intervention_types]
                 expected_types = ["seguro", "inspeção", "extintor"]
-                found_types = [t for t in expected_types if t in intervention_types]
+                found_types = [t for t in expected_types if t in intervention_types_lower]
                 
                 if len(found_types) >= 2:  # At least 2 of the expected types
                     self.log_result("Relatorio-Intervencoes-Endpoint", True, f"Relatório de intervenções working correctly. Found {len(interventions)} interventions with types: {intervention_types}")
                 else:
-                    self.log_result("Relatorio-Intervencoes-Endpoint", False, f"Expected intervention types not found. Got: {intervention_types}")
+                    self.log_result("Relatorio-Intervencoes-Endpoint", False, f"Expected intervention types not found. Got: {intervention_types}, Expected: {expected_types}")
                 
             else:
                 self.log_result("Relatorio-Intervencoes-Endpoint", False, f"Relatorio endpoint failed: {response.status_code}", response.text)
