@@ -708,6 +708,10 @@ class Vehicle(BaseModel):
     fotos: List[str] = []  # URLs das fotos (máximo 3, convertidas para PDF)
     caucao: Optional[CaucaoVeiculo] = None  # Caução do veículo
     danos: List[Dict[str, Any]] = []  # Histórico de danos
+    agenda: List[Dict[str, Any]] = []  # Agenda do veículo
+    proxima_revisao_km: Optional[int] = None
+    proxima_revisao_data: Optional[str] = None
+    motorista_atribuido: Optional[str] = None  # ID do motorista
     campos_customizados: Dict[str, Any] = {}  # Campos adicionais customizáveis
     created_at: datetime
     updated_at: datetime
