@@ -667,6 +667,18 @@ backend:
           agent: "testing"
           comment: "✅ TESTADO: Endpoint GET /api/parceiros funcionando perfeitamente. Retorna 200 OK com lista de 18 parceiros. Campos opcionais (email_manager, email_empresa, certidao_permanente) podem ser None sem causar erros de validação Pydantic. Compatibilidade com parceiros antigos mantida - campos antigos e novos coexistem sem problemas. Estrutura de resposta válida e completa."
 
+  - task: "POST /api/auth/login - Endpoint de autenticação"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Endpoint POST /api/auth/login funcionando perfeitamente. Retorna 200 OK com token JWT válido. Dados do usuário completos (id, email, role) retornados corretamente. Testado com múltiplos tipos de usuário (admin, gestor, parceiro). Validação de segurança funcionando: rejeita credenciais inválidas (401), campos obrigatórios ausentes (422), e tokens inválidos (401). Sistema de autenticação JWT totalmente operacional."
+
 agent_communication:
     - agent: "testing"
       message: |
