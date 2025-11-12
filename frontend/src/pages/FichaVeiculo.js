@@ -44,7 +44,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
   const [revisaoForm, setRevisaoForm] = useState({
     proxima_revisao_km: '',
-    proxima_revisao_data: ''
+    proxima_revisao_data: '',
+    proxima_revisao_notas: '',
+    proxima_revisao_valor_previsto: ''
   });
 
   const [agendaForm, setAgendaForm] = useState({
