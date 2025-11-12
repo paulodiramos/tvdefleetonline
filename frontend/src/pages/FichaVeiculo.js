@@ -469,6 +469,78 @@ const FichaVeiculo = ({ user, onLogout }) => {
     }
   };
 
+  // Vehicle photos handlers
+  const handleUploadPhoto = async (file) => {
+    if (!file) return;
+
+    if (vehicle.fotos_veiculo && vehicle.fotos_veiculo.length >= 3) {
+      toast.error('Máximo de 3 fotos permitido');
+      return;
+    }
+
+    setUploadingDoc(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/vehicles/${vehicleId}/upload-foto`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      toast.success('Foto enviada com sucesso!');
+      fetchVehicleData();
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao enviar foto');
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  const handleDeletePhoto = async (photoIndex) => {
+    if (!window.confirm('Tem certeza que deseja remover esta foto?')) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/vehicles/${vehicleId}/fotos/${photoIndex}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Foto removida com sucesso!');
+      fetchVehicleData();
+    } catch (error) {
+      console.error('Error deleting photo:', error);
+      toast.error('Erro ao remover foto');
+    }
+  };
+
+  const handleViewPhoto = async (photoPath) => {
+    if (!photoPath) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      const filename = photoPath.split('/').pop();
+      const folder = photoPath.includes('vehicle_photos_info') ? 'vehicle_photos_info' : 'vehicles';
+      
+      const response = await axios.get(`${API}/files/${folder}/${filename}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+
+      // Open in new tab
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      window.open(url, '_blank');
+      setTimeout(() => window.URL.revokeObjectURL(url), 100);
+    } catch (error) {
+      console.error('Error viewing photo:', error);
+      toast.error('Erro ao carregar foto');
+    }
+  };
+
 
   if (loading) {
     return (
