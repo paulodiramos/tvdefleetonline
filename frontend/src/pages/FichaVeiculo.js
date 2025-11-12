@@ -430,9 +430,25 @@ const FichaVeiculo = ({ user, onLogout }) => {
             <p className="text-slate-600">{vehicle.marca} {vehicle.modelo} - {vehicle.matricula}</p>
           </div>
           {canEdit && (
-            <Button onClick={() => setEditMode(!editMode)} variant={editMode ? 'destructive' : 'default'}>
-              {editMode ? <><X className="w-4 h-4 mr-2" />Cancelar</> : <><Edit className="w-4 h-4 mr-2" />Editar</>}
-            </Button>
+            <div className="flex items-center gap-2">
+              {!editMode ? (
+                <Button onClick={handleEnterEditMode} variant="default">
+                  <Edit className="w-4 h-4 mr-2" />
+                  Editar
+                </Button>
+              ) : (
+                <>
+                  <Button onClick={handleSaveAllChanges} variant="default" className="bg-emerald-600 hover:bg-emerald-700">
+                    <Save className="w-4 h-4 mr-2" />
+                    Guardar
+                  </Button>
+                  <Button onClick={handleCancelEdit} variant="destructive">
+                    <X className="w-4 h-4 mr-2" />
+                    Cancelar
+                  </Button>
+                </>
+              )}
+            </div>
           )}
         </div>
 
