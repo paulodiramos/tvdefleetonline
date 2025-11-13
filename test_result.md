@@ -1063,39 +1063,72 @@ agent_communication:
 backend:
   - task: "User Management - Get all users endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Adicionado endpoint GET /api/users/all para listar todos os utilizadores. Retorna pending_users e registered_users separados. Admin only."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: GET /api/users/all funcionando perfeitamente. Retorna estrutura correta com pending_users[], registered_users[], pending_count e registered_count. Testado com credenciais admin (admin@tvdefleet.com). Encontrados 0 utilizadores pendentes e 19 registados. Validação de tipos de dados e estrutura de resposta aprovada."
 
   - task: "User Management - Approve user endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Adicionado endpoint PUT /api/users/{user_id}/approve para aprovar utilizadores pendentes. Admin only. Permite definir role durante aprovação."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: PUT /api/users/{user_id}/approve funcionando perfeitamente. Testado com payload {\"role\": \"motorista\"}. Utilizador criado como pendente foi aprovado com sucesso e movido para registered_users. Campo approved=true definido corretamente. Validação de role funciona adequadamente."
 
-  - task: "User Management - Delete user endpoint"
+  - task: "User Management - Set role endpoint"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: PUT /api/users/{user_id}/set-role funcionando perfeitamente. Testado com payload {\"role\": \"operacional\"}. Role do utilizador alterada com sucesso de 'motorista' para 'operacional'. Validação de roles válidos funciona corretamente. Endpoint restrito a Admin apenas."
+
+  - task: "User Management - Delete user endpoint"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Adicionado endpoint DELETE /api/users/{user_id} para eliminar/rejeitar utilizadores. Admin only. Não permite eliminar própria conta."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: DELETE /api/users/{user_id} funcionando perfeitamente. PROTEÇÃO CONTRA AUTO-ELIMINAÇÃO: Retorna 400 quando admin tenta eliminar própria conta (comportamento correto). ELIMINAÇÃO BEM-SUCEDIDA: Utilizador teste eliminado com sucesso e removido de todas as listas. Validação de segurança funcionando adequadamente."
+
+  - task: "Files endpoint - Motoristas folder access"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: GET /api/files/motoristas/{filename} funcionando perfeitamente. Endpoint acessível com autenticação válida. Retorna 404 para ficheiros inexistentes (comportamento correto). Sem problemas de autenticação (401/403). Pasta 'motoristas' está nos allowed_folders e funciona adequadamente."
 
 frontend:
   - task: "User Management - Usuarios page"
