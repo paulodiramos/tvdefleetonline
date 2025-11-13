@@ -138,6 +138,27 @@ const Usuarios = ({ user, onLogout }) => {
     }
   };
 
+  const handleBlockUser = async (userId, currentStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+      const newStatus = currentStatus === 'blocked' ? 'active' : 'blocked';
+      
+      await axios.put(
+        `${API}/users/${userId}/status`,
+        { status: newStatus },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      toast.success(newStatus === 'blocked' ? 'Utilizador bloqueado!' : 'Utilizador desbloqueado!');
+      fetchUsers();
+    } catch (error) {
+      console.error('Error blocking/unblocking user:', error);
+      toast.error('Erro ao alterar estado do utilizador');
+    }
+  };
+
   const openApproveDialog = (userToApprove) => {
     setSelectedUser(userToApprove);
     setSelectedRole(userToApprove.role || 'motorista');
