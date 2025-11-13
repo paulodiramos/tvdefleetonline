@@ -4,6 +4,8 @@ import { API } from '@/App';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { TrendingUp, TrendingDown, Car, Users, DollarSign, AlertCircle, AlertTriangle, CheckCircle, X, Calendar, Shield, ClipboardCheck, Wrench } from 'lucide-react';
 
