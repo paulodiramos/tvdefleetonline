@@ -40,21 +40,6 @@ const Layout = ({ user, onLogout, children }) => {
       items.splice(2, 0, { path: '/parceiros', icon: Building, label: 'Parceiros' });
     }
 
-    // Add Dados de Veículos for admin, gestao, operacional
-    if (user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional') {
-      items.push({ path: '/vehicle-data', icon: Database, label: 'Dados Veículos' });
-    }
-
-    // Add Usuarios (only admin)
-    if (user.role === 'admin') {
-      items.push({ path: '/usuarios', icon: Shield, label: 'Utilizadores' });
-    }
-
-    // Add Configurações (only admin) - replaces Planos
-    if (user.role === 'admin') {
-      items.push({ path: '/configuracoes', icon: Settings, label: 'Configurações' });
-    }
-
     return items;
   };
 
