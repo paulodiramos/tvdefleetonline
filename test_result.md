@@ -1228,6 +1228,19 @@ frontend:
           agent: "main"
           comment: "Sistema de edição de intervenções já estava implementado! Backend endpoint PUT /api/vehicles/{vehicle_id}/intervencao/{intervencao_id} já existe e rastreia editado_por e editado_em. Frontend já tem modal de edição completo com display de audit trail (criado_por, editado_por). Botões de edit visíveis no relatório de intervenções. Apenas verificado e confirmado funcionamento."
 
+backend:
+  - task: "Driver Assignment Backend - PUT /api/motoristas/{motorista_id}"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Driver assignment backend funcionando perfeitamente. PUT /api/motoristas/{motorista_id} aceita e processa corretamente os campos parceiro_atribuido, veiculo_atribuido e tipo_motorista. CENÁRIOS TESTADOS: ✅ Atribuição de motorista a parceiro (parceiro_atribuido + tipo_motorista='tempo_integral'), ✅ Atribuição de motorista a veículo (veiculo_atribuido), ✅ Remoção de atribuições (campos definidos como null), ✅ Motorista ID inválido retorna 404 corretamente, ✅ Parceiro ID inválido tratado adequadamente, ✅ Autorização funciona (Admin, Gestão, Parceiro permitidos), ✅ Todos os valores de tipo_motorista funcionam (independente, tempo_integral, meio_periodo, parceiro). Endpoint completamente operacional para frontend."
+
 frontend:
   - task: "Driver Assignment - Atribuir Motorista a Parceiro"
     implemented: true
