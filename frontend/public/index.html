@@ -20,6 +20,18 @@
     -->
         <title>Emergent | Fullstack App</title>
         <script src="https://assets.emergent.sh/scripts/emergent-main.js"></script>
+        <script>
+            // Suppress ResizeObserver errors (benign browser behavior)
+            window.addEventListener('error', (e) => {
+                if (e.message === 'ResizeObserver loop completed with undelivered notifications.' || 
+                    e.message === 'ResizeObserver loop limit exceeded') {
+                    const resizeObserverErr = e;
+                    e.stopImmediatePropagation();
+                    e.stopPropagation();
+                    e.preventDefault();
+                }
+            });
+        </script>
         <!--
         These two scripts have been added for the testing, please do not edit or remove them
         -->
