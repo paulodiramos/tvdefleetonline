@@ -4491,15 +4491,25 @@ async def get_alertas_stats(current_user: Dict = Depends(get_current_user)):
 # ==================== FILE SERVING ENDPOINT ====================
 from fastapi.responses import FileResponse
 
-@api_router.get("/files/{folder}/{filename}")
+@api_router.get("/files/{folder}/{filename:path}")
 async def serve_file(folder: str, filename: str, current_user: Dict = Depends(get_current_user)):
-    """Serve uploaded files"""
+    """Serve uploaded files (supports subfolders)"""
     allowed_folders = ["motoristas", "pagamentos", "vehicles", "vehicle_documents", "vehicle_photos_info", "extintor_docs"]
     
     if folder not in allowed_folders:
         raise HTTPException(status_code=400, detail="Invalid folder")
     
+    # Build file path (filename can include subfolders like "motorista-001/file.pdf")
     file_path = UPLOAD_DIR / folder / filename
+    
+    # Security check: ensure path is within allowed folder
+    try:
+        file_path = file_path.resolve()
+        allowed_base = (UPLOAD_DIR / folder).resolve()
+        if not str(file_path).startswith(str(allowed_base)):
+            raise HTTPException(status_code=403, detail="Access denied")
+    except:
+        raise HTTPException(status_code=400, detail="Invalid file path")
     
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="File not found")
