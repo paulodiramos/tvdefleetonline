@@ -3339,6 +3339,55 @@ async def get_vehicle_interventions_report(
         "total": len(interventions)
     }
 
+@api_router.put("/vehicles/{vehicle_id}/intervencao/{intervencao_id}")
+async def update_vehicle_intervention(
+    vehicle_id: str,
+    intervencao_id: str,
+    update_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Update intervention status"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    new_status = update_data.get("status")
+    user_name = current_user.get("name", current_user.get("email"))
+    
+    # Update based on intervention type
+    if intervencao_id.startswith("seguro_"):
+        await db.vehicles.update_one(
+            {"id": vehicle_id},
+            {"$set": {
+                "seguro.status": new_status,
+                "seguro.editado_por": user_name,
+                "seguro.editado_em": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+    elif intervencao_id.startswith("inspecao_"):
+        await db.vehicles.update_one(
+            {"id": vehicle_id},
+            {"$set": {
+                "inspection.status": new_status,
+                "inspection.editado_por": user_name,
+                "inspection.editado_em": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+    elif intervencao_id.startswith("extintor_"):
+        await db.vehicles.update_one(
+            {"id": vehicle_id},
+            {"$set": {
+                "extintor.status": new_status,
+                "extintor.editado_por": user_name,
+                "extintor.editado_em": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+    
+    return {"message": "Intervention updated successfully"}
+
 # ==================== ADMIN SETTINGS ====================
 
 @api_router.get("/admin/settings")
