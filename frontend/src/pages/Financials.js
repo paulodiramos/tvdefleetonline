@@ -291,9 +291,10 @@ const Financials = ({ user, onLogout }) => {
         <Card>
           <Tabs defaultValue="revenues" className="w-full">
             <CardHeader>
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="revenues" data-testid="revenues-tab">Receitas</TabsTrigger>
                 <TabsTrigger value="expenses" data-testid="expenses-tab">Despesas</TabsTrigger>
+                <TabsTrigger value="recibos" data-testid="recibos-tab">Recibos/Pagamentos</TabsTrigger>
               </TabsList>
             </CardHeader>
             <CardContent>
