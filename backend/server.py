@@ -4760,6 +4760,53 @@ async def save_email_config(
     
     return {"message": "Configuration saved successfully"}
 
+
+# ==================== PUBLIC ENDPOINTS (NO AUTH) ====================
+@app.get("/api/public/veiculos")
+async def get_public_veiculos():
+    """Get public vehicles available for sale or rent"""
+    veiculos = await db.vehicles.find({
+        "$or": [
+            {"disponivel_venda": True},
+            {"disponivel_aluguer": True}
+        ]
+    }, {"_id": 0}).to_list(length=None)
+    
+    # Convert datetime fields
+    for v in veiculos:
+        if isinstance(v.get("created_at"), str):
+            v["created_at"] = datetime.fromisoformat(v["created_at"])
+        if isinstance(v.get("updated_at"), str):
+            v["updated_at"] = datetime.fromisoformat(v["updated_at"])
+    
+    return veiculos
+
+@app.post("/api/public/contacto")
+async def public_contacto(contacto_data: Dict[str, Any]):
+    """Receive public contact form (sends email to configured address)"""
+    # Get email config
+    config = await db.configuracoes.find_one({"tipo": "email"}, {"_id": 0})
+    email_destino = config.get("email_contacto", "info@tvdefleet.com") if config else "info@tvdefleet.com"
+    
+    # Save contact to database
+    contacto_id = f"contacto-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    contacto_data["id"] = contacto_id
+    contacto_data["created_at"] = datetime.now(timezone.utc).isoformat()
+    contacto_data["status"] = "pendente"
+    
+    await db.contactos.insert_one(contacto_data)
+    
+    # TODO: Send email (requires email service configuration)
+    # For now, just save to database
+    
+    return {"message": "Contact received successfully", "id": contacto_id}
+
+@app.get("/api/public/parceiros")
+async def get_public_parceiros():
+    """Get public list of partners"""
+    parceiros = await db.parceiros.find({}, {"_id": 0}).to_list(length=None)
+    return parceiros
+
 # ==================== CONTRACT ENDPOINTS ====================
 
 @api_router.post("/contratos/gerar")
