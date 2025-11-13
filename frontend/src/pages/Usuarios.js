@@ -52,6 +52,8 @@ const Usuarios = ({ user, onLogout }) => {
   const [selectedRole, setSelectedRole] = useState('');
   const [actionType, setActionType] = useState(''); // 'approve', 'delete', 'changeRole'
   const [showDialog, setShowDialog] = useState(false);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [viewingUser, setViewingUser] = useState(null);
 
   useEffect(() => {
     fetchUsers();
