@@ -274,23 +274,25 @@ const PublicHome = () => {
             <p className="text-xl text-slate-600">Estamos aqui para ajudar</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            <Card className="text-center">
+            <Card className="text-center hover:shadow-lg transition cursor-pointer" onClick={() => window.open('https://wa.me/351912345678', '_blank')}>
               <CardHeader>
                 <Phone className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
-                <CardTitle>Telefone</CardTitle>
+                <CardTitle>Telefone / WhatsApp</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600">+351 xxx xxx xxx</p>
+                <p className="text-emerald-600 font-semibold hover:underline">+351 912 345 678</p>
+                <p className="text-xs text-slate-500 mt-2">Clique para abrir WhatsApp</p>
               </CardContent>
             </Card>
 
-            <Card className="text-center">
+            <Card className="text-center hover:shadow-lg transition cursor-pointer" onClick={() => window.location.href = 'mailto:info@tvdefleet.com'}>
               <CardHeader>
                 <Mail className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
                 <CardTitle>Email</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600">info@tvdefleet.com</p>
+                <p className="text-emerald-600 font-semibold hover:underline">info@tvdefleet.com</p>
+                <p className="text-xs text-slate-500 mt-2">Clique para enviar email</p>
               </CardContent>
             </Card>
 
