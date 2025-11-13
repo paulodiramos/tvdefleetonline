@@ -16,8 +16,6 @@ const RegistoMotorista = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: '',
-    confirmPassword: '',
     phone: '',
     whatsapp: '',
     data_nascimento: '',
