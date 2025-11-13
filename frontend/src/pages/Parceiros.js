@@ -838,6 +838,19 @@ const Parceiros = ({ user, onLogout }) => {
                 >
                   Fechar
                 </Button>
+                {(user.role === 'admin' || user.role === 'gestao') && (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setEditingParceiro({...profileParceiro});
+                      setShowProfileDialog(false);
+                      setShowEditDialog(true);
+                    }}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Editar Perfil
+                  </Button>
+                )}
                 <Button
                   onClick={() => {
                     setShowProfileDialog(false);
