@@ -1335,12 +1335,16 @@ const Motoristas = ({ user, onLogout }) => {
                     value={atribuicaoData.parceiro_id || 'none'} 
                     onValueChange={(value) => {
                       const parceiroId = value === 'none' ? '' : value;
-                      setAtribuicaoData({...atribuicaoData, parceiro_id: parceiroId, veiculo_id: ''});
-                      if (parceiroId) {
-                        fetchVeiculosByParceiro(parceiroId);
-                      } else {
-                        setVeiculos([]);
-                      }
+                      setAtribuicaoData(prev => ({...prev, parceiro_id: parceiroId, veiculo_id: ''}));
+                      
+                      // Use setTimeout to avoid rapid re-renders
+                      setTimeout(() => {
+                        if (parceiroId) {
+                          fetchVeiculosByParceiro(parceiroId);
+                        } else {
+                          setVeiculos([]);
+                        }
+                      }, 0);
                     }}
                   >
                     <SelectTrigger>
