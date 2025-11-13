@@ -2038,12 +2038,12 @@ startxref
 if __name__ == "__main__":
     tester = TVDEFleetTester()
     
-    # Run specific extintor and intervenções tests as requested
-    success = tester.run_extintor_intervencoes_tests()
+    # Run specific user management tests as requested in review
+    success = tester.run_user_management_tests_only()
     
     if success:
-        print("🎉 All extintor and intervenções tests passed!")
+        print("🎉 All user management tests passed!")
         exit(0)
     else:
-        print("💥 Some extintor and intervenções tests failed!")
+        print("💥 Some user management tests failed!")
         exit(1)
