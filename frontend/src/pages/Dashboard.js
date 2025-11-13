@@ -458,6 +458,204 @@ const Dashboard = ({ user, onLogout }) => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal de Seguros */}
+      <Dialog open={segurosModalOpen} onOpenChange={setSegurosModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Shield className="w-5 h-5 text-green-600" />
+              <span>Próximos Seguros a Vencer</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {proximasDatas
+              .filter(v => v.datas.some(d => d.tipo === 'Seguro'))
+              .map((vehicle, idx) => {
+                const seguroData = vehicle.datas.find(d => d.tipo === 'Seguro');
+                return (
+                  <div key={idx} className="border rounded-lg p-4 bg-green-50">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold text-slate-800">{vehicle.marca} {vehicle.modelo}</p>
+                        <p className="text-sm text-slate-600">Matrícula: <span className="font-medium">{vehicle.matricula}</span></p>
+                        <p className="text-sm text-slate-600">Parceiro: <span className="font-medium">{vehicle.parceiro_nome}</span></p>
+                        {seguroData && seguroData.seguradora && (
+                          <p className="text-sm text-slate-600">Seguradora: <span className="font-medium">{seguroData.seguradora}</span></p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-green-700">
+                          {seguroData && new Date(seguroData.data).toLocaleDateString('pt-PT')}
+                        </p>
+                        {seguroData && (
+                          <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                            seguroData.dias_restantes < 0 ? 'bg-red-200 text-red-800' :
+                            seguroData.urgente ? 'bg-orange-200 text-orange-800' : 
+                            'bg-green-200 text-green-800'
+                          }`}>
+                            {seguroData.dias_restantes < 0 ? `${Math.abs(seguroData.dias_restantes)}d atraso` : 
+                             `${seguroData.dias_restantes} dias`}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Seguro')).length === 0 && (
+              <p className="text-center text-slate-500 py-8">Nenhum seguro a vencer</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Inspeções */}
+      <Dialog open={inspecoesModalOpen} onOpenChange={setInspecoesModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <ClipboardCheck className="w-5 h-5 text-purple-600" />
+              <span>Próximas Inspeções</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {proximasDatas
+              .filter(v => v.datas.some(d => d.tipo === 'Inspeção'))
+              .map((vehicle, idx) => {
+                const inspecaoData = vehicle.datas.find(d => d.tipo === 'Inspeção');
+                return (
+                  <div key={idx} className="border rounded-lg p-4 bg-purple-50">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold text-slate-800">{vehicle.marca} {vehicle.modelo}</p>
+                        <p className="text-sm text-slate-600">Matrícula: <span className="font-medium">{vehicle.matricula}</span></p>
+                        <p className="text-sm text-slate-600">Parceiro: <span className="font-medium">{vehicle.parceiro_nome}</span></p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-purple-700">
+                          {inspecaoData && new Date(inspecaoData.data).toLocaleDateString('pt-PT')}
+                        </p>
+                        {inspecaoData && (
+                          <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                            inspecaoData.dias_restantes < 0 ? 'bg-red-200 text-red-800' :
+                            inspecaoData.urgente ? 'bg-orange-200 text-orange-800' : 
+                            'bg-purple-200 text-purple-800'
+                          }`}>
+                            {inspecaoData.dias_restantes < 0 ? `${Math.abs(inspecaoData.dias_restantes)}d atraso` : 
+                             `${inspecaoData.dias_restantes} dias`}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Inspeção')).length === 0 && (
+              <p className="text-center text-slate-500 py-8">Nenhuma inspeção pendente</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Revisões */}
+      <Dialog open={revisoesModalOpen} onOpenChange={setRevisoesModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Wrench className="w-5 h-5 text-blue-600" />
+              <span>Próximas Revisões</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {proximasDatas
+              .filter(v => v.datas.some(d => d.tipo === 'Revisão'))
+              .map((vehicle, idx) => {
+                const revisaoData = vehicle.datas.find(d => d.tipo === 'Revisão');
+                return (
+                  <div key={idx} className="border rounded-lg p-4 bg-blue-50">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold text-slate-800">{vehicle.marca} {vehicle.modelo}</p>
+                        <p className="text-sm text-slate-600">Matrícula: <span className="font-medium">{vehicle.matricula}</span></p>
+                        <p className="text-sm text-slate-600">Parceiro: <span className="font-medium">{vehicle.parceiro_nome}</span></p>
+                        {revisaoData && revisaoData.km && (
+                          <p className="text-sm text-slate-600">KM: <span className="font-medium">{revisaoData.km.toLocaleString()} km</span></p>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-blue-700">
+                          {revisaoData && new Date(revisaoData.data).toLocaleDateString('pt-PT')}
+                        </p>
+                        {revisaoData && (
+                          <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                            revisaoData.dias_restantes < 0 ? 'bg-red-200 text-red-800' :
+                            revisaoData.urgente ? 'bg-orange-200 text-orange-800' : 
+                            'bg-blue-200 text-blue-800'
+                          }`}>
+                            {revisaoData.dias_restantes < 0 ? `${Math.abs(revisaoData.dias_restantes)}d atraso` : 
+                             `${revisaoData.dias_restantes} dias`}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Revisão')).length === 0 && (
+              <p className="text-center text-slate-500 py-8">Nenhuma revisão pendente</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Extintores */}
+      <Dialog open={extintoresModalOpen} onOpenChange={setExtintoresModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <AlertCircle className="w-5 h-5 text-red-600" />
+              <span>Validade de Extintores</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {proximasDatas
+              .filter(v => v.datas.some(d => d.tipo === 'Extintor'))
+              .map((vehicle, idx) => {
+                const extintorData = vehicle.datas.find(d => d.tipo === 'Extintor');
+                return (
+                  <div key={idx} className="border rounded-lg p-4 bg-red-50">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold text-slate-800">{vehicle.marca} {vehicle.modelo}</p>
+                        <p className="text-sm text-slate-600">Matrícula: <span className="font-medium">{vehicle.matricula}</span></p>
+                        <p className="text-sm text-slate-600">Parceiro: <span className="font-medium">{vehicle.parceiro_nome}</span></p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-red-700">
+                          {extintorData && new Date(extintorData.data).toLocaleDateString('pt-PT')}
+                        </p>
+                        {extintorData && (
+                          <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                            extintorData.dias_restantes < 0 ? 'bg-red-200 text-red-800' :
+                            extintorData.urgente ? 'bg-orange-200 text-orange-800' : 
+                            'bg-red-200 text-red-800'
+                          }`}>
+                            {extintorData.dias_restantes < 0 ? `${Math.abs(extintorData.dias_restantes)}d atraso` : 
+                             `${extintorData.dias_restantes} dias`}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Extintor')).length === 0 && (
+              <p className="text-center text-slate-500 py-8">Nenhum extintor a vencer</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
