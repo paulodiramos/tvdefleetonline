@@ -480,6 +480,69 @@ const FichaVeiculo = ({ user, onLogout }) => {
     }
   };
 
+  const handleEditAgenda = (evento) => {
+    setEditingAgendaId(evento.id);
+    setAgendaForm({
+      tipo: evento.tipo,
+      titulo: evento.titulo,
+      data: evento.data,
+      hora: evento.hora || '',
+      descricao: evento.descricao || ''
+    });
+  };
+
+  const handleUpdateAgenda = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/vehicles/${vehicleId}/agenda/${editingAgendaId}`, agendaForm, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Evento atualizado!');
+      setEditingAgendaId(null);
+      setAgendaForm({
+        tipo: 'manutencao',
+        titulo: '',
+        data: '',
+        hora: '',
+        descricao: ''
+      });
+      fetchVehicleData();
+    } catch (error) {
+      console.error('Error updating agenda:', error);
+      toast.error('Erro ao atualizar evento');
+    }
+  };
+
+  const handleDeleteAgenda = async (eventoId) => {
+    if (!window.confirm('Tem certeza que deseja excluir este evento?')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/vehicles/${vehicleId}/agenda/${eventoId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Evento excluído!');
+      fetchVehicleData();
+    } catch (error) {
+      console.error('Error deleting agenda:', error);
+      toast.error('Erro ao excluir evento');
+    }
+  };
+
+  const handleCancelEditAgenda = () => {
+    setEditingAgendaId(null);
+    setAgendaForm({
+      tipo: 'manutencao',
+      titulo: '',
+      data: '',
+      hora: '',
+      descricao: ''
+    });
+  };
+
 
   const handleSaveExtintor = async (silent = false) => {
     try {
