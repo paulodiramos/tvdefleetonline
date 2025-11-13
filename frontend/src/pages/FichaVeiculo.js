@@ -2128,6 +2128,136 @@ const FichaVeiculo = ({ user, onLogout }) => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modal de Edição de Agenda */}
+      <Dialog open={isAgendaModalOpen} onOpenChange={setIsAgendaModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Evento da Agenda</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleUpdateAgenda} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="modal_tipo">Tipo *</Label>
+                <select
+                  id="modal_tipo"
+                  value={agendaForm.tipo}
+                  onChange={(e) => setAgendaForm({...agendaForm, tipo: e.target.value})}
+                  className="w-full p-2 border rounded-md"
+                  required
+                >
+                  <option value="manutencao">Manutenção</option>
+                  <option value="inspecao">Inspeção</option>
+                  <option value="revisao">Revisão</option>
+                  <option value="seguro">Seguro</option>
+                  <option value="outro">Outro</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="modal_titulo">Título *</Label>
+                <Input
+                  id="modal_titulo"
+                  value={agendaForm.titulo}
+                  onChange={(e) => setAgendaForm({...agendaForm, titulo: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="modal_data">Data *</Label>
+                <Input
+                  id="modal_data"
+                  type="date"
+                  value={agendaForm.data}
+                  onChange={(e) => setAgendaForm({...agendaForm, data: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <Label htmlFor="modal_hora">Hora</Label>
+                <Input
+                  id="modal_hora"
+                  type="time"
+                  value={agendaForm.hora}
+                  onChange={(e) => setAgendaForm({...agendaForm, hora: e.target.value})}
+                />
+              </div>
+              <div className="col-span-2">
+                <Label htmlFor="modal_descricao">Descrição</Label>
+                <textarea
+                  id="modal_descricao"
+                  value={agendaForm.descricao}
+                  onChange={(e) => setAgendaForm({...agendaForm, descricao: e.target.value})}
+                  className="w-full p-2 border rounded-md"
+                  rows="3"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCancelEditAgenda}>
+                Cancelar
+              </Button>
+              <Button type="submit">
+                <Save className="w-4 h-4 mr-2" />
+                Salvar Alterações
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Edição de Intervenção */}
+      <Dialog open={isIntervencaoModalOpen} onOpenChange={setIsIntervencaoModalOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Intervenção</DialogTitle>
+          </DialogHeader>
+          {editingIntervencao && (
+            <div className="space-y-4">
+              <div>
+                <Label>Tipo</Label>
+                <p className="font-medium">{editingIntervencao.tipo}</p>
+              </div>
+              <div>
+                <Label>Descrição</Label>
+                <p className="text-sm">{editingIntervencao.descricao}</p>
+              </div>
+              <div>
+                <Label>Data</Label>
+                <p className="text-sm">{new Date(editingIntervencao.data).toLocaleDateString('pt-PT')}</p>
+              </div>
+              <div>
+                <Label htmlFor="intervencao_status">Estado *</Label>
+                <select
+                  id="intervencao_status"
+                  value={editingIntervencao.status}
+                  onChange={(e) => setEditingIntervencao({...editingIntervencao, status: e.target.value})}
+                  className="w-full p-2 border rounded-md"
+                >
+                  <option value="pending">Pendente</option>
+                  <option value="completed">Concluído</option>
+                </select>
+              </div>
+              {editingIntervencao.criado_por && (
+                <div className="text-sm text-slate-600 border-t pt-3">
+                  <p><strong>Criado por:</strong> {editingIntervencao.criado_por}</p>
+                  {editingIntervencao.editado_por && (
+                    <p><strong>Última edição por:</strong> {editingIntervencao.editado_por}</p>
+                  )}
+                </div>
+              )}
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsIntervencaoModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveIntervencao}>
+                  <Save className="w-4 h-4 mr-2" />
+                  Salvar
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
