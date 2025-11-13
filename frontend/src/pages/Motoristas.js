@@ -784,33 +784,55 @@ const Motoristas = ({ user, onLogout }) => {
                           )}
                         </div>
                         {isEditing && (
-                          <div className="mt-2 space-y-2">
-                            <Label className="text-xs">Frente:</Label>
-                            <Input
-                              type="file"
-                              accept=".jpg,.jpeg,.png"
-                              id="cc_frente"
-                              disabled={uploadingDoc}
-                            />
-                            <Label className="text-xs">Verso:</Label>
-                            <Input
-                              type="file"
-                              accept=".jpg,.jpeg,.png"
-                              id="cc_verso"
-                              disabled={uploadingDoc}
-                            />
-                            <Button 
-                              size="sm" 
-                              onClick={() => {
-                                const frente = document.getElementById('cc_frente').files[0];
-                                const verso = document.getElementById('cc_verso').files[0];
-                                if (frente && verso) handleUploadDocument('cc_frente_verso', frente, verso);
-                                else toast.error('Selecione frente e verso');
-                              }}
-                              disabled={uploadingDoc}
-                            >
-                              Enviar CC
-                            </Button>
+                          <div className="mt-2 space-y-3">
+                            {/* Opção 1: Upload PDF completo */}
+                            <div className="border-b pb-3">
+                              <Label className="text-sm font-medium mb-2 block">Opção 1: PDF Completo</Label>
+                              <Input
+                                type="file"
+                                accept=".pdf"
+                                onChange={(e) => e.target.files[0] && handleUploadDocument('cc_frente_verso', e.target.files[0])}
+                                disabled={uploadingDoc}
+                              />
+                              <p className="text-xs text-slate-500 mt-1">Envie um PDF com frente e verso</p>
+                            </div>
+                            
+                            {/* Opção 2: Upload 2 fotos (frente/verso) */}
+                            <div>
+                              <Label className="text-sm font-medium mb-2 block">Opção 2: Fotos Frente e Verso</Label>
+                              <div className="space-y-2">
+                                <div>
+                                  <Label className="text-xs">Frente:</Label>
+                                  <Input
+                                    type="file"
+                                    accept=".jpg,.jpeg,.png"
+                                    id="cc_frente"
+                                    disabled={uploadingDoc}
+                                  />
+                                </div>
+                                <div>
+                                  <Label className="text-xs">Verso:</Label>
+                                  <Input
+                                    type="file"
+                                    accept=".jpg,.jpeg,.png"
+                                    id="cc_verso"
+                                    disabled={uploadingDoc}
+                                  />
+                                </div>
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => {
+                                    const frente = document.getElementById('cc_frente').files[0];
+                                    const verso = document.getElementById('cc_verso').files[0];
+                                    if (frente && verso) handleUploadDocument('cc_frente_verso', frente, verso);
+                                    else toast.error('Selecione frente e verso');
+                                  }}
+                                  disabled={uploadingDoc}
+                                >
+                                  Enviar CC (Fotos)
+                                </Button>
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
