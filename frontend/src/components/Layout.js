@@ -102,6 +102,17 @@ const Layout = ({ user, onLogout, children }) => {
                 <p className="text-sm font-medium text-slate-800">{user.name}</p>
                 <p className="text-xs text-slate-500 capitalize">{user.role.replace('_', ' ')}</p>
               </div>
+              <Link to="/">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hidden md:flex items-center space-x-2 text-blue-600 hover:text-blue-700"
+                  title="Voltar ao site público"
+                >
+                  <Truck className="w-4 h-4" />
+                  <span>Site</span>
+                </Button>
+              </Link>
               <Link to="/profile">
                 <Button
                   variant="ghost"
