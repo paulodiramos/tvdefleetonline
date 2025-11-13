@@ -371,25 +371,29 @@ const PublicHome = () => {
                       <Building className="w-10 h-10 text-purple-600" />
                     </div>
                     <CardTitle>Sou Empresa/Parceiro</CardTitle>
-                    <CardDescription>Tenho uma frota ou empresa TVDE</CardDescription>
+                    <CardDescription>Gestão completa de frota TVDE</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2 text-sm text-slate-600">
                       <li className="flex items-center space-x-2">
                         <CheckCircle className="w-4 h-4 text-purple-600" />
-                        <span>Gestão de frota</span>
+                        <span><strong>Gestão de veículos</strong> e motoristas</span>
                       </li>
                       <li className="flex items-center space-x-2">
                         <CheckCircle className="w-4 h-4 text-purple-600" />
-                        <span>Múltiplos motoristas</span>
+                        <span><strong>Controlo financeiro</strong> completo</span>
                       </li>
                       <li className="flex items-center space-x-2">
                         <CheckCircle className="w-4 h-4 text-purple-600" />
-                        <span>Plataforma completa</span>
+                        <span><strong>Relatórios</strong> e estatísticas</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle className="w-4 h-4 text-purple-600" />
+                        <span><strong>Serviços parceiros</strong> (seguros, mecânica)</span>
                       </li>
                     </ul>
                     <Button className="w-full mt-4 bg-purple-600 hover:bg-purple-700">
-                      Registar como Parceiro
+                      Ver Mais + Registar
                     </Button>
                   </CardContent>
                 </Card>
