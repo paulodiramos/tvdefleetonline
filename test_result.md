@@ -1187,13 +1187,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "User Management - Backend endpoints"
     - "User Management - Frontend Usuarios page"
     - "Driver Documents - Download functionality"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
-  user_management_implemented: true
+  user_management_backend_tested: true
+  user_management_endpoints_working: true
   driver_document_download_implemented: true
   interventions_already_working: true
 
