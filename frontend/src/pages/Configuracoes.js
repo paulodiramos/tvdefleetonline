@@ -427,7 +427,7 @@ const Configuracoes = ({ user, onLogout }) => {
           <Button
             onClick={handleSaveEmailConfig}
             disabled={savingEmail}
-            className="bg-emerald-600 hover:bg-emerald-700"
+            className="bg-blue-600 hover:bg-blue-700"
           >
             {savingEmail ? 'A guardar...' : 'Guardar Configurações'}
           </Button>

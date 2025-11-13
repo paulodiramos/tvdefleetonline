@@ -198,7 +198,7 @@ const Usuarios = ({ user, onLogout }) => {
     return (
       <Layout user={user} onLogout={onLogout}>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
       </Layout>
     );
@@ -210,8 +210,8 @@ const Usuarios = ({ user, onLogout }) => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-2">
-            <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
-              <Shield className="w-6 h-6 text-emerald-600" />
+            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+              <Shield className="w-6 h-6 text-blue-600" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-slate-800">Gestão de Utilizadores</h1>
@@ -236,10 +236,10 @@ const Usuarios = ({ user, onLogout }) => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Utilizadores Registados</CardTitle>
-              <Users className="h-4 w-4 text-emerald-600" />
+              <Users className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-emerald-600">{registeredUsers.length}</div>
+              <div className="text-2xl font-bold text-blue-600">{registeredUsers.length}</div>
               <p className="text-xs text-slate-500 mt-1">Ativos no sistema</p>
             </CardContent>
           </Card>
@@ -291,7 +291,7 @@ const Usuarios = ({ user, onLogout }) => {
                             <Button
                               size="sm"
                               variant="default"
-                              className="bg-emerald-600 hover:bg-emerald-700"
+                              className="bg-blue-600 hover:bg-blue-700"
                               onClick={() => openApproveDialog(pendingUser)}
                             >
                               <UserCheck className="w-4 h-4 mr-1" />
@@ -320,7 +320,7 @@ const Usuarios = ({ user, onLogout }) => {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <Users className="w-5 h-5 text-emerald-600" />
+              <Users className="w-5 h-5 text-blue-600" />
               <span>Utilizadores Registados</span>
             </CardTitle>
             <CardDescription>

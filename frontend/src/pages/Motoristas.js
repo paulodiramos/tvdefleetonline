@@ -267,7 +267,7 @@ const Motoristas = ({ user, onLogout }) => {
     return (
       <Layout user={user} onLogout={onLogout}>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
       </Layout>
     );
@@ -284,7 +284,7 @@ const Motoristas = ({ user, onLogout }) => {
           {(user.role === 'admin' || user.role === 'gestor_associado' || user.role === 'parceiro_associado') && (
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
               <DialogTrigger asChild>
-                <Button className="bg-emerald-600 hover:bg-emerald-700" data-testid="add-motorista-button">
+                <Button className="bg-blue-600 hover:bg-blue-700" data-testid="add-motorista-button">
                   <Plus className="w-4 h-4 mr-2" />
                   Adicionar Motorista
                 </Button>
@@ -419,7 +419,7 @@ const Motoristas = ({ user, onLogout }) => {
                       </div>
                     </TabsContent>
                   </Tabs>
-                  <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700">
+                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">
                     Adicionar Motorista
                   </Button>
                 </form>
@@ -442,7 +442,7 @@ const Motoristas = ({ user, onLogout }) => {
                 <CardHeader>
                   <div className="flex items-start space-x-4">
                     <Avatar className="w-16 h-16">
-                      <AvatarFallback className="bg-emerald-100 text-emerald-700 text-lg font-semibold">
+                      <AvatarFallback className="bg-blue-100 text-blue-700 text-lg font-semibold">
                         {getInitials(motorista.name)}
                       </AvatarFallback>
                     </Avatar>
@@ -451,7 +451,7 @@ const Motoristas = ({ user, onLogout }) => {
                       <p className="text-sm text-slate-500 mt-1">{motorista.email}</p>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {motorista.approved ? (
-                          <Badge className="bg-emerald-100 text-emerald-700">
+                          <Badge className="bg-blue-100 text-blue-700">
                             <CheckCircle className="w-3 h-3 mr-1" />
                             Aprovado
                           </Badge>
@@ -544,7 +544,7 @@ const Motoristas = ({ user, onLogout }) => {
                     {!motorista.approved && (user.role === 'admin' || user.role === 'gestor_associado' || user.role === 'parceiro_associado') && (
                       <Button 
                         size="sm" 
-                        className="bg-emerald-600 hover:bg-emerald-700"
+                        className="bg-blue-600 hover:bg-blue-700"
                         onClick={() => handleApprove(motorista.id)}
                         data-testid={`approve-motorista-${motorista.id}`}
                       >
@@ -605,7 +605,7 @@ const Motoristas = ({ user, onLogout }) => {
               <div className="space-y-6">
                 <div className="flex items-center space-x-4">
                   <Avatar className="w-20 h-20">
-                    <AvatarFallback className="bg-emerald-100 text-emerald-700 text-2xl font-bold">
+                    <AvatarFallback className="bg-blue-100 text-blue-700 text-2xl font-bold">
                       {getInitials(isEditing ? editForm.name : selectedMotorista.name)}
                     </AvatarFallback>
                   </Avatar>

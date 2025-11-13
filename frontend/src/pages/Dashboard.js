@@ -108,7 +108,7 @@ const Dashboard = ({ user, onLogout }) => {
       <CardContent>
         <div className="text-3xl font-bold text-slate-800">{value}</div>
         {trend && (
-          <div className={`flex items-center mt-2 text-sm ${trend === 'up' ? 'text-emerald-600' : 'text-red-600'}`}>
+          <div className={`flex items-center mt-2 text-sm ${trend === 'up' ? 'text-blue-600' : 'text-red-600'}`}>
             {trend === 'up' ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
             <span>{trendValue}</span>
           </div>
@@ -121,7 +121,7 @@ const Dashboard = ({ user, onLogout }) => {
     return (
       <Layout user={user} onLogout={onLogout}>
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
       </Layout>
     );
@@ -196,7 +196,7 @@ const Dashboard = ({ user, onLogout }) => {
             title="Total Veículos"
             value={stats?.total_vehicles || 0}
             icon={Car}
-            color="bg-emerald-600"
+            color="bg-blue-600"
           />
           <StatCard
             title="Veículos Disponíveis"
@@ -362,12 +362,12 @@ const Dashboard = ({ user, onLogout }) => {
           <Card className="card-hover" data-testid="revenue-card">
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <DollarSign className="w-5 h-5 text-emerald-600" />
+                <DollarSign className="w-5 h-5 text-blue-600" />
                 <span>Receitas Totais</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-emerald-600">
+              <div className="text-3xl font-bold text-blue-600">
                 €{stats?.total_receitas?.toFixed(2) || '0.00'}
               </div>
             </CardContent>
@@ -490,7 +490,7 @@ const Dashboard = ({ user, onLogout }) => {
                         size="sm"
                         variant="outline"
                         onClick={() => handleResolverAlerta(alerta.id)}
-                        className="text-emerald-600 hover:bg-emerald-50"
+                        className="text-blue-600 hover:bg-blue-50"
                       >
                         <CheckCircle className="w-4 h-4" />
                       </Button>
