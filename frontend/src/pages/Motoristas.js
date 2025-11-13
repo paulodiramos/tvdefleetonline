@@ -143,6 +143,11 @@ const Motoristas = ({ user, onLogout }) => {
       email_bolt: selectedMotorista.email_bolt || selectedMotorista.email
     });
     setIsEditing(true);
+    
+    // Load vehicles if parceiro is already assigned
+    if (selectedMotorista.parceiro_atribuido) {
+      fetchVeiculosByParceiro(selectedMotorista.parceiro_atribuido);
+    }
   };
 
   const handleCancelEdit = () => {
