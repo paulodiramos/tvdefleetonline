@@ -516,11 +516,12 @@ const Motoristas = ({ user, onLogout }) => {
         )}
 
         {/* Detail Dialog */}
-        <Dialog open={showDetailDialog} onOpenChange={(open) => {
+        <Dialog open={showDetailDialog && selectedMotorista !== null} onOpenChange={(open) => {
           setShowDetailDialog(open);
           if (!open) {
             setIsEditing(false);
             setEditForm({});
+            setSelectedMotorista(null);
           }
         }}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
