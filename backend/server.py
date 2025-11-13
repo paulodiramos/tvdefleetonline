@@ -614,9 +614,10 @@ class Motorista(BaseModel):
     carta_conducao_validade: Optional[str] = None
     licenca_tvde_numero: Optional[str] = None
     licenca_tvde_validade: Optional[str] = None
-    codigo_registo_criminal: Optional[str] = None
-    parceiro_atribuido: Optional[str] = None
-    veiculo_atribuido: Optional[str] = None
+    codigo_registo_criminal: Optional[str] = None  # Formato: xxxx-xxxx-xxxx
+    parceiro_atribuido: Optional[str] = None  # ID do parceiro
+    veiculo_atribuido: Optional[str] = None  # ID do veículo
+    status_motorista: Optional[str] = "pendente_documentos"  # aguarda_carro, ferias, ativo, pendente_documentos, desativo
     regime: Optional[str] = None
     iban: Optional[str] = None
     email_uber: Optional[str] = None
