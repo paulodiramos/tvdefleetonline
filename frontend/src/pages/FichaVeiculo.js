@@ -1911,7 +1911,23 @@ const FichaVeiculo = ({ user, onLogout }) => {
                                 <span>📅 {new Date(intervention.data).toLocaleDateString('pt-PT')}</span>
                                 {intervention.km && <span>🚗 {intervention.km.toLocaleString()} km</span>}
                               </div>
+                              {intervention.criado_por && (
+                                <p className="text-xs text-slate-500 mt-2">
+                                  Criado por: {intervention.criado_por}
+                                  {intervention.editado_por && ` • Editado por: ${intervention.editado_por}`}
+                                </p>
+                              )}
                             </div>
+                            {canEdit && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEditIntervencao(intervention)}
+                                className="ml-2"
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                       );
