@@ -1776,6 +1776,21 @@ async def get_motoristas(current_user: Dict = Depends(get_current_user)):
             m["approved_at"] = datetime.fromisoformat(m["approved_at"])
     return motoristas
 
+@api_router.get("/motoristas/{motorista_id}", response_model=Motorista)
+async def get_motorista_by_id(motorista_id: str, current_user: Dict = Depends(get_current_user)):
+    """Get a specific motorista by ID"""
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista not found")
+    
+    # Convert datetime strings
+    if isinstance(motorista.get("created_at"), str):
+        motorista["created_at"] = datetime.fromisoformat(motorista["created_at"])
+    if motorista.get("approved_at") and isinstance(motorista["approved_at"], str):
+        motorista["approved_at"] = datetime.fromisoformat(motorista["approved_at"])
+    
+    return Motorista(**motorista)
+
 @api_router.put("/motoristas/{motorista_id}/approve")
 async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_current_user)):
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
