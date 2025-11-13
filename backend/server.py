@@ -1561,11 +1561,69 @@ async def register(user_data: UserCreate):
     
     await db.users.insert_one(user_dict)
     
+    # Send welcome email
+    await enviar_email_boas_vindas(user_dict)
+    
     user_dict.pop("password")
     if isinstance(user_dict["created_at"], str):
         user_dict["created_at"] = datetime.fromisoformat(user_dict["created_at"])
     
     return User(**user_dict)
+
+async def enviar_email_boas_vindas(user: Dict[str, Any]):
+    """Send welcome email to new user"""
+    role_labels = {
+        "motorista": "Motorista",
+        "parceiro": "Parceiro",
+        "operacional": "Operacional",
+        "gestao": "Gestor",
+        "admin": "Administrador"
+    }
+    
+    role_label = role_labels.get(user.get("role"), "Utilizador")
+    
+    # Get email config
+    config = await db.configuracoes.find_one({"tipo": "email"}, {"_id": 0})
+    email_from = config.get("email_contacto", "info@tvdefleet.com") if config else "info@tvdefleet.com"
+    
+    print(f"📧 ENVIAR EMAIL DE BOAS-VINDAS:")
+    print(f"   Para: {user.get('email')}")
+    print(f"   Nome: {user.get('name')}")
+    print(f"   Role: {role_label}")
+    
+    # Queue email for sending
+    await db.email_queue.insert_one({
+        "to": user.get("email"),
+        "from": email_from,
+        "subject": f"Bem-vindo à TVDEFleet - Registo de {role_label}",
+        "body": f"""
+        Olá {user.get('name')},
+        
+        Bem-vindo à TVDEFleet!
+        
+        O seu registo como {role_label} foi recebido com sucesso.
+        
+        A nossa equipa irá analisar os seus dados e entrará em contacto em breve.
+        Após aprovação, receberá as suas credenciais de acesso definitivas.
+        
+        Dados do registo:
+        - Email: {user.get('email')}
+        - Telefone: {user.get('phone', 'N/A')}
+        - Data de registo: {user.get('created_at')}
+        
+        Se tiver alguma dúvida, entre em contacto connosco:
+        Email: {email_from}
+        Telefone: +351 912 345 678
+        WhatsApp: https://wa.me/351912345678
+        
+        Obrigado,
+        Equipa TVDEFleet
+        """,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "status": "pending",
+        "tipo": "boas_vindas",
+        "user_id": user.get("id")
+    })
 
 @api_router.post("/auth/login", response_model=TokenResponse)
 async def login(credentials: UserLogin):
