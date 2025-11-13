@@ -90,8 +90,8 @@ const Login = ({ onLogin }) => {
                 <p className="mb-3">Novo motorista?</p>
                 <Button
                   variant="outline"
-                  className="w-full border-emerald-600 text-emerald-600 hover:bg-emerald-50"
-                  onClick={() => navigate('/motorista/register')}
+                  className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
+                  onClick={() => navigate('/registo-motorista')}
                   data-testid="register-motorista-button"
                 >
                   Registar como Motorista
