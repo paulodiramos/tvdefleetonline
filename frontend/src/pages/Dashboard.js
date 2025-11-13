@@ -4,7 +4,7 @@ import { API } from '@/App';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, TrendingDown, Car, Users, DollarSign, AlertCircle, AlertTriangle, CheckCircle, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, Car, Users, DollarSign, AlertCircle, AlertTriangle, CheckCircle, X, Calendar, Shield, ClipboardCheck, Wrench } from 'lucide-react';
 
 const Dashboard = ({ user, onLogout }) => {
   const [stats, setStats] = useState(null);
