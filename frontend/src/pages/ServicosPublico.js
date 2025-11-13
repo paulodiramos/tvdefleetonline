@@ -165,7 +165,7 @@ const ServicosPublico = () => {
 
                 <Button
                   size="lg"
-                  className="w-full bg-blue-600 hover:bg-emerald-700"
+                  className="w-full bg-blue-600 hover:bg-blue-700"
                   onClick={() => setShowContactForm(true)}
                 >
                   Solicitar Contacto
@@ -271,7 +271,7 @@ const ServicosPublico = () => {
                   </Button>
                   <Button
                     type="submit"
-                    className="flex-1 bg-blue-600 hover:bg-emerald-700"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700"
                     disabled={sending}
                   >
                     {sending ? 'A enviar...' : 'Enviar'}

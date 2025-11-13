@@ -220,7 +220,7 @@ const VeiculosPublico = () => {
                   </div>
 
                   <Button
-                    className="w-full bg-blue-600 hover:bg-emerald-700"
+                    className="w-full bg-blue-600 hover:bg-blue-700"
                     onClick={() => handleInteresse(veiculo)}
                   >
                     Tenho Interesse
@@ -294,7 +294,7 @@ const VeiculosPublico = () => {
                   </Button>
                   <Button
                     type="submit"
-                    className="flex-1 bg-blue-600 hover:bg-emerald-700"
+                    className="flex-1 bg-blue-600 hover:bg-blue-700"
                     disabled={sending}
                   >
                     {sending ? 'A enviar...' : 'Enviar'}

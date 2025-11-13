@@ -77,7 +77,7 @@ const RegistoMotorista = () => {
               Receberá um email em <strong>{formData.email}</strong> quando a sua conta for aprovada.
             </p>
             <Button 
-              className="w-full bg-blue-600 hover:bg-emerald-700"
+              className="w-full bg-blue-600 hover:bg-blue-700"
               onClick={() => navigate('/')}
             >
               Voltar à Página Inicial
@@ -256,7 +256,7 @@ const RegistoMotorista = () => {
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1 bg-blue-600 hover:bg-emerald-700"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
                   disabled={loading}
                 >
                   {loading ? 'A enviar...' : 'Enviar Candidatura'}

@@ -31,7 +31,7 @@ const PublicHome = () => {
               <Button variant="outline" onClick={() => navigate('/login')}>
                 Entrar
               </Button>
-              <Button className="bg-blue-600 hover:bg-emerald-700" onClick={() => navigate('/registo-motorista')}>
+              <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate('/registo-motorista')}>
                 Registar
               </Button>
             </div>
@@ -259,7 +259,7 @@ const PublicHome = () => {
             </Card>
           </div>
           <div className="text-center">
-            <Button size="lg" className="bg-blue-600 hover:bg-emerald-700" onClick={() => navigate('/veiculos')}>
+            <Button size="lg" className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate('/veiculos')}>
               Ver Veículos Disponíveis
             </Button>
           </div>
