@@ -582,6 +582,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       await axios.put(`${API}/vehicles/${vehicleId}`, {
         extintor: {
+          numeracao: extintorForm.numeracao,
           fornecedor: extintorForm.fornecedor,
           empresa_certificacao: extintorForm.empresa_certificacao,
           preco: parseFloat(extintorForm.preco) || 0,
