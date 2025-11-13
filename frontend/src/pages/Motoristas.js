@@ -201,6 +201,32 @@ const Motoristas = ({ user, onLogout }) => {
     }
   };
 
+  const handleDownloadDocument = async (documentPath) => {
+    try {
+      // Extract filename from path (e.g., "uploads/motoristas/filename.pdf" -> "filename.pdf")
+      const filename = documentPath.split('/').pop();
+      
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/files/motoristas/${filename}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+
+      // Create a blob URL and trigger download
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', filename);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      toast.error('Erro ao fazer download do documento');
+    }
+  };
+
   const handleDeleteMotorista = async () => {
     if (!window.confirm(`Tem certeza que deseja excluir o motorista ${selectedMotorista.name}? Esta ação não pode ser desfeita.`)) {
       return;
