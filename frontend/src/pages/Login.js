@@ -92,10 +92,10 @@ const Login = ({ onLogin }) => {
                 <Button
                   variant="outline"
                   className="w-full border-blue-600 text-blue-600 hover:bg-blue-50"
-                  onClick={() => navigate('/registo-motorista')}
+                  onClick={() => setShowRegistroModal(true)}
                   data-testid="register-motorista-button"
                 >
-                  Registar como Motorista
+                  Criar Nova Conta
                 </Button>
               </div>
             </div>
