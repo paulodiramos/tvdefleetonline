@@ -94,7 +94,7 @@ const RegistoParceiro = () => {
         finalidade: formData.finalidade
       };
 
-      await axios.post(`${API}/parceiros`, parceiroData);
+      await axios.post(`${API}/parceiros/register-public`, parceiroData);
       
       setSuccess(true);
       toast.success('Registo enviado com sucesso!');
