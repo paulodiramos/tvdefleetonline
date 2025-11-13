@@ -298,6 +298,17 @@ const Usuarios = ({ user, onLogout }) => {
                           <div className="flex justify-end space-x-2">
                             <Button
                               size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setViewingUser(pendingUser);
+                                setShowDetailsDialog(true);
+                              }}
+                            >
+                              <Eye className="w-4 h-4 mr-1" />
+                              Ver
+                            </Button>
+                            <Button
+                              size="sm"
                               variant="default"
                               className="bg-blue-600 hover:bg-blue-700"
                               onClick={() => openApproveDialog(pendingUser)}
