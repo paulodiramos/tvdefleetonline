@@ -62,7 +62,7 @@ const RegistoMotorista = () => {
         <Card className="max-w-md w-full">
           <CardHeader className="text-center">
             <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-12 h-12 text-emerald-600" />
+              <CheckCircle className="w-12 h-12 text-blue-600" />
             </div>
             <CardTitle className="text-2xl">Registo Enviado!</CardTitle>
             <CardDescription className="text-base">
@@ -77,7 +77,7 @@ const RegistoMotorista = () => {
               Receberá um email em <strong>{formData.email}</strong> quando a sua conta for aprovada.
             </p>
             <Button 
-              className="w-full bg-emerald-600 hover:bg-emerald-700"
+              className="w-full bg-blue-600 hover:bg-emerald-700"
               onClick={() => navigate('/')}
             >
               Voltar à Página Inicial
@@ -102,7 +102,7 @@ const RegistoMotorista = () => {
             Voltar
           </Button>
           <div className="flex items-center space-x-3 mb-4">
-            <Car className="w-10 h-10 text-emerald-600" />
+            <Car className="w-10 h-10 text-blue-600" />
             <h1 className="text-3xl font-bold text-slate-900">Registo de Motorista</h1>
           </div>
           <p className="text-slate-600">
@@ -256,7 +256,7 @@ const RegistoMotorista = () => {
                 </Button>
                 <Button
                   type="submit"
-                  className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                  className="flex-1 bg-blue-600 hover:bg-emerald-700"
                   disabled={loading}
                 >
                   {loading ? 'A enviar...' : 'Enviar Candidatura'}

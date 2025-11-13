@@ -108,7 +108,7 @@ const ServicosPublico = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
-              <Car className="w-8 h-8 text-emerald-600" />
+              <Car className="w-8 h-8 text-blue-600" />
               <span className="text-2xl font-bold text-slate-800">TVDEFleet</span>
             </div>
             <div className="flex space-x-3">
@@ -165,7 +165,7 @@ const ServicosPublico = () => {
 
                 <Button
                   size="lg"
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
+                  className="w-full bg-blue-600 hover:bg-emerald-700"
                   onClick={() => setShowContactForm(true)}
                 >
                   Solicitar Contacto
@@ -271,7 +271,7 @@ const ServicosPublico = () => {
                   </Button>
                   <Button
                     type="submit"
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                    className="flex-1 bg-blue-600 hover:bg-emerald-700"
                     disabled={sending}
                   >
                     {sending ? 'A enviar...' : 'Enviar'}

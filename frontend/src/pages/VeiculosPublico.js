@@ -91,7 +91,7 @@ const VeiculosPublico = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-2">
-              <Car className="w-8 h-8 text-emerald-600" />
+              <Car className="w-8 h-8 text-blue-600" />
               <span className="text-2xl font-bold text-slate-800">TVDEFleet</span>
             </div>
             <div className="flex space-x-3">
@@ -158,7 +158,7 @@ const VeiculosPublico = () => {
         {/* Listagem */}
         {loading ? (
           <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           </div>
         ) : veiculosFiltrados.length === 0 ? (
           <div className="text-center py-12">
@@ -204,7 +204,7 @@ const VeiculosPublico = () => {
                     {veiculo.disponivel_venda && veiculo.preco_venda && (
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-slate-600">Venda:</span>
-                        <span className="text-xl font-bold text-emerald-600">
+                        <span className="text-xl font-bold text-blue-600">
                           {veiculo.preco_venda.toLocaleString('pt-PT')}€
                         </span>
                       </div>
@@ -220,7 +220,7 @@ const VeiculosPublico = () => {
                   </div>
 
                   <Button
-                    className="w-full bg-emerald-600 hover:bg-emerald-700"
+                    className="w-full bg-blue-600 hover:bg-emerald-700"
                     onClick={() => handleInteresse(veiculo)}
                   >
                     Tenho Interesse
@@ -294,7 +294,7 @@ const VeiculosPublico = () => {
                   </Button>
                   <Button
                     type="submit"
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                    className="flex-1 bg-blue-600 hover:bg-emerald-700"
                     disabled={sending}
                   >
                     {sending ? 'A enviar...' : 'Enviar'}

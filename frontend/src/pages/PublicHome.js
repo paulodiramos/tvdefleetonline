@@ -22,16 +22,16 @@ const PublicHome = () => {
               <span className="text-2xl font-bold text-slate-800">TVDEFleet</span>
             </div>
             <div className="hidden md:flex space-x-8">
-              <a href="#servicos" className="text-slate-600 hover:text-emerald-600 transition">Serviços</a>
-              <a href="#veiculos" className="text-slate-600 hover:text-emerald-600 transition">Veículos</a>
-              <a href="#parceiros" className="text-slate-600 hover:text-emerald-600 transition">Parceiros</a>
-              <a href="#contacto" className="text-slate-600 hover:text-emerald-600 transition">Contacto</a>
+              <a href="#servicos" className="text-slate-600 hover:text-blue-600 transition">Serviços</a>
+              <a href="#veiculos" className="text-slate-600 hover:text-blue-600 transition">Veículos</a>
+              <a href="#parceiros" className="text-slate-600 hover:text-blue-600 transition">Parceiros</a>
+              <a href="#contacto" className="text-slate-600 hover:text-blue-600 transition">Contacto</a>
             </div>
             <div className="flex space-x-3">
               <Button variant="outline" onClick={() => navigate('/login')}>
                 Entrar
               </Button>
-              <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => navigate('/registo-motorista')}>
+              <Button className="bg-blue-600 hover:bg-emerald-700" onClick={() => navigate('/registo-motorista')}>
                 Registar
               </Button>
             </div>
@@ -45,7 +45,7 @@ const PublicHome = () => {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <h1 className="text-5xl font-bold text-slate-900 leading-tight">
-                A Sua Plataforma Completa para <span className="text-emerald-600">TVDE</span>
+                A Sua Plataforma Completa para <span className="text-blue-600">TVDE</span>
               </h1>
               <p className="text-xl text-slate-600">
                 Gestão profissional de frota, veículos disponíveis e serviços especializados para motoristas TVDE em Portugal.
@@ -101,7 +101,7 @@ const PublicHome = () => {
             <Card className="text-center hover:shadow-lg transition">
               <CardHeader>
                 <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="w-8 h-8 text-emerald-600" />
+                  <Users className="w-8 h-8 text-blue-600" />
                 </div>
                 <CardTitle>1. Registe-se</CardTitle>
               </CardHeader>
@@ -157,13 +157,13 @@ const PublicHome = () => {
                 <div className="w-full h-48 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center mb-4">
                   <Shield className="w-20 h-20 text-blue-600" />
                 </div>
-                <CardTitle className="text-emerald-600">Seguros Mais Baratos</CardTitle>
+                <CardTitle className="text-blue-600">Seguros Mais Baratos</CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-base mb-4">
                   Seguros específicos para TVDE com as melhores condições do mercado.
                 </CardDescription>
-                <Button variant="link" className="text-emerald-600 p-0">
+                <Button variant="link" className="text-blue-600 p-0">
                   Saber mais <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </CardContent>
@@ -177,13 +177,13 @@ const PublicHome = () => {
                   alt="Mecânica"
                   className="w-full h-48 object-cover rounded-lg mb-4"
                 />
-                <CardTitle className="text-emerald-600">Mecânicos & Bate-Chapas</CardTitle>
+                <CardTitle className="text-blue-600">Mecânicos & Bate-Chapas</CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-base mb-4">
                   Oficinas especializadas com preços especiais para motoristas TVDE.
                 </CardDescription>
-                <Button variant="link" className="text-emerald-600 p-0">
+                <Button variant="link" className="text-blue-600 p-0">
                   Saber mais <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </CardContent>
@@ -197,13 +197,13 @@ const PublicHome = () => {
                   alt="Contabilidade"
                   className="w-full h-48 object-cover rounded-lg mb-4"
                 />
-                <CardTitle className="text-emerald-600">Contabilistas & Advogados</CardTitle>
+                <CardTitle className="text-blue-600">Contabilistas & Advogados</CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-base mb-4">
                   Apoio fiscal e jurídico especializado em atividade TVDE.
                 </CardDescription>
-                <Button variant="link" className="text-emerald-600 p-0">
+                <Button variant="link" className="text-blue-600 p-0">
                   Saber mais <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </CardContent>
@@ -259,7 +259,7 @@ const PublicHome = () => {
             </Card>
           </div>
           <div className="text-center">
-            <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => navigate('/veiculos')}>
+            <Button size="lg" className="bg-blue-600 hover:bg-emerald-700" onClick={() => navigate('/veiculos')}>
               Ver Veículos Disponíveis
             </Button>
           </div>
@@ -276,29 +276,29 @@ const PublicHome = () => {
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="text-center hover:shadow-lg transition cursor-pointer" onClick={() => window.open('https://wa.me/351912345678', '_blank')}>
               <CardHeader>
-                <Phone className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
+                <Phone className="w-12 h-12 text-blue-600 mx-auto mb-4" />
                 <CardTitle>Telefone / WhatsApp</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-emerald-600 font-semibold hover:underline">+351 912 345 678</p>
+                <p className="text-blue-600 font-semibold hover:underline">+351 912 345 678</p>
                 <p className="text-xs text-slate-500 mt-2">Clique para abrir WhatsApp</p>
               </CardContent>
             </Card>
 
             <Card className="text-center hover:shadow-lg transition cursor-pointer" onClick={() => window.location.href = 'mailto:info@tvdefleet.com'}>
               <CardHeader>
-                <Mail className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
+                <Mail className="w-12 h-12 text-blue-600 mx-auto mb-4" />
                 <CardTitle>Email</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-emerald-600 font-semibold hover:underline">info@tvdefleet.com</p>
+                <p className="text-blue-600 font-semibold hover:underline">info@tvdefleet.com</p>
                 <p className="text-xs text-slate-500 mt-2">Clique para enviar email</p>
               </CardContent>
             </Card>
 
             <Card className="text-center">
               <CardHeader>
-                <MapPin className="w-12 h-12 text-emerald-600 mx-auto mb-4" />
+                <MapPin className="w-12 h-12 text-blue-600 mx-auto mb-4" />
                 <CardTitle>Localização</CardTitle>
               </CardHeader>
               <CardContent>
