@@ -28,6 +28,8 @@ import Usuarios from "@/pages/Usuarios";
 import PublicHome from "@/pages/PublicHome";
 import RegistoMotorista from "@/pages/RegistoMotorista";
 import RegistoParceiro from "@/pages/RegistoParceiro";
+import VeiculosPublico from "@/pages/VeiculosPublico";
+import ServicosPublico from "@/pages/ServicosPublico";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
