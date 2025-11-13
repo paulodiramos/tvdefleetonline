@@ -1059,3 +1059,146 @@ agent_communication:
         🎯 TODOS OS REQUISITOS DO REVIEW REQUEST ATENDIDOS COM SUCESSO!
         Backend já foi testado manualmente via curl pelo main agent e agora confirmado com testes automatizados completos.
         Sistema de extintor e relatório de intervenções está completamente operacional e pronto para uso!
+
+backend:
+  - task: "User Management - Get all users endpoint"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Adicionado endpoint GET /api/users/all para listar todos os utilizadores. Retorna pending_users e registered_users separados. Admin only."
+
+  - task: "User Management - Approve user endpoint"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Adicionado endpoint PUT /api/users/{user_id}/approve para aprovar utilizadores pendentes. Admin only. Permite definir role durante aprovação."
+
+  - task: "User Management - Delete user endpoint"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Adicionado endpoint DELETE /api/users/{user_id} para eliminar/rejeitar utilizadores. Admin only. Não permite eliminar própria conta."
+
+frontend:
+  - task: "User Management - Usuarios page"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Usuarios.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Criada página completa de gestão de utilizadores (/usuarios). Mostra duas tabelas: utilizadores pendentes e registados. Funcionalidades: aprovar com seleção de role, alterar role, eliminar utilizador. Stats cards com contadores. Dialogs de confirmação para todas as ações. Admin only (rota e navegação)."
+
+  - task: "User Management - Navigation and routing"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/App.js, frontend/src/components/Layout.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Adicionada rota /usuarios em App.js. Adicionado link de navegação 'Utilizadores' (ícone Shield) em Layout.js apenas para Admin. Importados componentes necessários."
+
+  - task: "Driver Documents - Download functionality"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Motoristas.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implementada função handleDownloadDocument que usa endpoint GET /api/files/motoristas/{filename} com responseType blob para download correto de PDFs. Atualizado todos os botões de download (Comprovativo Morada, CC, Carta, Licença TVDE, Registo Criminal, IBAN) para usar nova função ao invés de window.open. Download funciona via trigger de link com blob URL."
+
+  - task: "Interventions - Editable with audit trail"
+    implemented: true
+    working: true
+    file: "backend/server.py, frontend/src/pages/FichaVeiculo.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "main"
+          comment: "Sistema de edição de intervenções já estava implementado! Backend endpoint PUT /api/vehicles/{vehicle_id}/intervencao/{intervencao_id} já existe e rastreia editado_por e editado_em. Frontend já tem modal de edição completo com display de audit trail (criado_por, editado_por). Botões de edit visíveis no relatório de intervenções. Apenas verificado e confirmado funcionamento."
+
+metadata:
+  created_by: "main_agent"
+  version: "3.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "User Management - Backend endpoints"
+    - "User Management - Frontend Usuarios page"
+    - "Driver Documents - Download functionality"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+  user_management_implemented: true
+  driver_document_download_implemented: true
+  interventions_already_working: true
+
+agent_communication:
+    - agent: "main"
+      message: |
+        🚀 NOVA IMPLEMENTAÇÃO - TAREFAS PENDENTES CONCLUÍDAS
+        
+        TASK 1: USER MANAGEMENT & APPROVAL SYSTEM ✅
+        Backend Endpoints Adicionados:
+        - GET /api/users/all: Lista todos os utilizadores separados por pending/registered
+        - PUT /api/users/{user_id}/approve: Aprova utilizador pendente com seleção de role
+        - DELETE /api/users/{user_id}: Elimina/rejeita utilizador (com proteção contra auto-eliminação)
+        
+        Frontend Implementado:
+        - Nova página /usuarios (Usuarios.js) com interface completa de gestão
+        - Duas tabelas: Utilizadores Pendentes e Registados
+        - Stats cards com contadores visuais
+        - Funcionalidades: Aprovar (com dropdown de role), Alterar Role, Eliminar
+        - Dialogs de confirmação para todas as ações
+        - Navegação adicionada em Layout.js (Admin only) com ícone Shield
+        - Rota adicionada em App.js
+        
+        TASK 2: DRIVER DOCUMENT DOWNLOAD ✅
+        - Implementada função handleDownloadDocument em Motoristas.js
+        - Usa endpoint correto GET /api/files/motoristas/{filename} com blob download
+        - Atualizados todos os 6 botões de download (Comprovativo Morada, CC frente/verso, Carta frente/verso, Licença TVDE, Registo Criminal, IBAN)
+        - Download funciona corretamente via blob URL e trigger de link
+        - Endpoint backend já existia e já suporta pasta 'motoristas'
+        
+        TASK 3: EDITABLE INTERVENTIONS WITH AUDIT TRAIL ✅
+        - JÁ ESTAVA IMPLEMENTADO E FUNCIONANDO!
+        - Backend endpoint PUT /api/vehicles/{vehicle_id}/intervencao/{intervencao_id} já existe
+        - Rastreia automaticamente editado_por (nome do usuário) e editado_em (timestamp)
+        - Frontend FichaVeiculo.js já tem modal completo de edição
+        - Modal mostra audit trail: criado_por e editado_por
+        - Botões de editar visíveis no relatório de intervenções (canEdit permission)
+        - Sistema completo e operacional
+        
+        PRÓXIMO PASSO: Testar todas as 3 funcionalidades
+        Backend e frontend reiniciados com sucesso.
