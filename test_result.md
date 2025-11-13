@@ -1444,3 +1444,53 @@ agent_communication:
         - UI is fully responsive and functional: ✅ Working
         
         🎯 RESULT: Driver assignment feature is 100% operational and ready for production use!
+
+frontend:
+  - task: "Contract Generation - Contratos page full flow"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Contratos.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "User reported 'erro ao gerar contrato de motorista'. Main agent fixed API endpoints by importing from App.js instead of hardcoding. Need to test complete contract generation flow: login as admin, navigate to Contratos, open modal, fill form (Parceiro/Motorista/Veículo dropdowns), submit contract, verify success."
+
+test_plan:
+  current_focus:
+    - "Contract Generation - Contratos page full flow"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "testing"
+      message: |
+        🎯 NEW TEST REQUEST - CONTRACT GENERATION FEATURE
+        
+        USER REPORTED ISSUE: "erro ao gerar contrato de motorista"
+        MAIN AGENT FIX: Fixed API endpoints by importing from App.js instead of hardcoding
+        
+        TESTING REQUIRED:
+        1. Login as Admin (admin@tvdefleet.com / admin123)
+        2. Navigate to Contratos page - verify no 404 errors
+        3. Click "Novo Contrato" button - verify modal opens
+        4. Verify modal title "Criar Novo Contrato"
+        5. Verify all dropdowns populated (Parceiro, Motorista, Veículo)
+        6. Fill form with valid data
+        7. Submit contract - verify success toast and modal closes
+        8. Verify contract appears in list
+        9. Check console for API call errors (should be NONE)
+        
+        EXPECTED API CALLS:
+        - GET /api/contratos
+        - GET /api/parceiros  
+        - GET /api/motoristas
+        - GET /api/vehicles
+        - POST /api/contratos/gerar
+        
+        URL: https://fleetdocs-1.preview.emergentagent.com
+        
+        Starting comprehensive test of contract generation flow...
