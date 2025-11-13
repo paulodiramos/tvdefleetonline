@@ -346,6 +346,104 @@ const Financials = ({ user, onLogout }) => {
                   </div>
                 )}
               </TabsContent>
+              <TabsContent value="recibos" className="space-y-4">
+                <div className="space-y-4">
+                  {relatorios.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500">
+                      <FileText className="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                      <p>Nenhum relatório de ganhos encontrado</p>
+                    </div>
+                  ) : (
+                    relatorios.map((relatorio) => {
+                      const motorista = motoristas.find(m => m.id === relatorio.motorista_id);
+                      const isPending = relatorio.pagamento_status === 'pendente';
+                      const isPaid = relatorio.pagamento_status === 'pago';
+                      
+                      return (
+                        <Card key={relatorio.id} className="hover:shadow-md transition">
+                          <CardContent className="p-6">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center space-x-3 mb-3">
+                                  <h3 className="text-lg font-semibold text-slate-800">
+                                    {motorista?.name || 'Motorista Desconhecido'}
+                                  </h3>
+                                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                    isPaid ? 'bg-green-100 text-green-700' :
+                                    isPending ? 'bg-yellow-100 text-yellow-700' :
+                                    'bg-gray-100 text-gray-700'
+                                  }`}>
+                                    {isPaid ? 'Pago' : isPending ? 'Pendente' : relatorio.pagamento_status}
+                                  </span>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+                                  <div>
+                                    <p className="text-slate-500">Período</p>
+                                    <p className="font-medium text-slate-700">
+                                      {new Date(relatorio.periodo_inicio).toLocaleDateString('pt-PT')} - {new Date(relatorio.periodo_fim).toLocaleDateString('pt-PT')}
+                                    </p>
+                                  </div>
+                                  <div>
+                                    <p className="text-slate-500">Valor Total</p>
+                                    <p className="font-bold text-blue-600 text-lg">
+                                      €{relatorio.valor_total.toFixed(2)}
+                                    </p>
+                                  </div>
+                                </div>
+                                
+                                {relatorio.detalhes && (
+                                  <div className="flex space-x-4 text-sm">
+                                    {relatorio.detalhes.uber > 0 && (
+                                      <div className="flex items-center space-x-1">
+                                        <span className="text-slate-500">Uber:</span>
+                                        <span className="font-medium">€{relatorio.detalhes.uber.toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                    {relatorio.detalhes.bolt > 0 && (
+                                      <div className="flex items-center space-x-1">
+                                        <span className="text-slate-500">Bolt:</span>
+                                        <span className="font-medium">€{relatorio.detalhes.bolt.toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                    {relatorio.detalhes.outros > 0 && (
+                                      <div className="flex items-center space-x-1">
+                                        <span className="text-slate-500">Outros:</span>
+                                        <span className="font-medium">€{relatorio.detalhes.outros.toFixed(2)}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                                
+                                {relatorio.notas && (
+                                  <div className="mt-3 p-3 bg-slate-50 rounded-lg">
+                                    <p className="text-sm text-slate-600">
+                                      <span className="font-medium">Notas:</span> {relatorio.notas}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="flex flex-col space-y-2 ml-4">
+                                {relatorio.documento_url && (
+                                  <Button 
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => window.open(relatorio.documento_url, '_blank')}
+                                  >
+                                    <Download className="w-4 h-4 mr-1" />
+                                    Recibo
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  )}
+                </div>
+              </TabsContent>
             </CardContent>
           </Tabs>
         </Card>
