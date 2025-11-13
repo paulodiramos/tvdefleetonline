@@ -493,6 +493,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
       hora: evento.hora || '',
       descricao: evento.descricao || ''
     });
+    setIsAgendaModalOpen(true);
   };
 
   const handleUpdateAgenda = async (e) => {
