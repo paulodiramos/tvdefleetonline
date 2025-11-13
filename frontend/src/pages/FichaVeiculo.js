@@ -1926,8 +1926,8 @@ const FichaVeiculo = ({ user, onLogout }) => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {canEdit && (
-                  <form onSubmit={handleAddAgenda} className="space-y-4 border-b pb-4">
-                    <h3 className="font-semibold">Adicionar Evento</h3>
+                  <form onSubmit={editingAgendaId ? handleUpdateAgenda : handleAddAgenda} className="space-y-4 border-b pb-4">
+                    <h3 className="font-semibold">{editingAgendaId ? 'Editar Evento' : 'Adicionar Evento'}</h3>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
                         <Label htmlFor="tipo">Tipo *</Label>
