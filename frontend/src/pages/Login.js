@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Truck, Shield, Users } from 'lucide-react';
+import { Truck, Shield, Users, Building, CheckCircle } from 'lucide-react';
 
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showRegistroModal, setShowRegistroModal] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
