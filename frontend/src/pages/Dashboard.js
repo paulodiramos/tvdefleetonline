@@ -197,7 +197,7 @@ const Dashboard = ({ user, onLogout }) => {
               </div>
 
               {/* Próximas Inspeções */}
-              <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4">
+              <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setInspecoesModalOpen(true)}>
                 <div className="flex items-center justify-between mb-2">
                   <ClipboardCheck className="w-6 h-6 text-purple-600" />
                   <span className="text-xs font-semibold bg-purple-200 text-purple-800 px-2 py-1 rounded">
