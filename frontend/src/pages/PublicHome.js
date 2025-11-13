@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { 
   Car, Users, Shield, TrendingUp, Phone, Mail, MapPin, 
   ArrowRight, CheckCircle, Clock, Award, Wrench, FileText,
-  Scale, Calculator, MessageCircle
+  Scale, Calculator, MessageCircle, Building
 } from 'lucide-react';
 
 const PublicHome = () => {
