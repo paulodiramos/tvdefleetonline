@@ -1262,7 +1262,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Driver Assignment - Atribuir Motorista a Parceiro"
     - "Contract System - Contratos.js implementation"
     - "User Profile View - Ver Perfil for registered users"
   stuck_tasks: []
@@ -1272,6 +1271,7 @@ test_plan:
   user_management_endpoints_working: true
   driver_document_download_implemented: true
   interventions_already_working: true
+  driver_assignment_backend_tested: true
   driver_assignment_implemented: true
 
 agent_communication:
