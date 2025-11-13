@@ -3328,6 +3328,14 @@ async def create_parceiro_public(parceiro_data: Dict[str, Any]):
     """Create parceiro from public registration (no auth required)"""
     parceiro_id = f"parceiro-{datetime.now().strftime('%Y%m%d%H%M%S')}"
     
+    # Validate codigo_certidao_comercial format
+    codigo_certidao = parceiro_data.get("codigo_certidao_comercial", "")
+    if not codigo_certidao or not re.match(r'^\d{4}-\d{4}-\d{4}$', codigo_certidao):
+        raise HTTPException(
+            status_code=400, 
+            detail="Código de Certidão Comercial é obrigatório e deve estar no formato xxxx-xxxx-xxxx"
+        )
+    
     new_parceiro = {
         "id": parceiro_id,
         "nome": parceiro_data.get("nome"),
@@ -3336,6 +3344,7 @@ async def create_parceiro_public(parceiro_data: Dict[str, Any]):
         "nif": parceiro_data.get("nif"),
         "morada": parceiro_data.get("morada"),
         "codigo_postal": parceiro_data.get("codigo_postal"),
+        "codigo_certidao_comercial": codigo_certidao,
         "responsavel_nome": parceiro_data.get("responsavel_nome"),
         "responsavel_contacto": parceiro_data.get("responsavel_contacto"),
         "created_at": datetime.now(timezone.utc).isoformat(),
