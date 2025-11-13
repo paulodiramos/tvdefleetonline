@@ -398,22 +398,67 @@ const Motoristas = ({ user, onLogout }) => {
         )}
 
         {/* Detail Dialog */}
-        <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
+        <Dialog open={showDetailDialog} onOpenChange={(open) => {
+          setShowDetailDialog(open);
+          if (!open) {
+            setIsEditing(false);
+            setEditForm({});
+          }
+        }}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Detalhes do Motorista</DialogTitle>
+              <div className="flex justify-between items-center">
+                <DialogTitle>Detalhes do Motorista</DialogTitle>
+                <div className="flex gap-2">
+                  {!isEditing ? (
+                    <Button onClick={handleEditMotorista} size="sm">
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar
+                    </Button>
+                  ) : (
+                    <>
+                      <Button onClick={handleCancelEdit} variant="outline" size="sm">
+                        <X className="w-4 h-4 mr-2" />
+                        Cancelar
+                      </Button>
+                      <Button onClick={handleSaveMotorista} size="sm">
+                        <Save className="w-4 h-4 mr-2" />
+                        Salvar
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
             </DialogHeader>
             {selectedMotorista && (
               <div className="space-y-6">
                 <div className="flex items-center space-x-4">
                   <Avatar className="w-20 h-20">
                     <AvatarFallback className="bg-emerald-100 text-emerald-700 text-2xl font-bold">
-                      {getInitials(selectedMotorista.name)}
+                      {getInitials(isEditing ? editForm.name : selectedMotorista.name)}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <h3 className="text-2xl font-bold">{selectedMotorista.name}</h3>
-                    <p className="text-slate-600">{selectedMotorista.email}</p>
+                  <div className="flex-1">
+                    {isEditing ? (
+                      <div className="space-y-2">
+                        <Input
+                          value={editForm.name}
+                          onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                          placeholder="Nome"
+                          className="text-xl font-bold"
+                        />
+                        <Input
+                          value={editForm.email}
+                          onChange={(e) => setEditForm({...editForm, email: e.target.value})}
+                          placeholder="Email"
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <h3 className="text-2xl font-bold">{selectedMotorista.name}</h3>
+                        <p className="text-slate-600">{selectedMotorista.email}</p>
+                      </>
+                    )}
                   </div>
                 </div>
 
