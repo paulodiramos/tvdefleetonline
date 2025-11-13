@@ -45,10 +45,12 @@ const Financials = ({ user, onLogout }) => {
 
   const fetchData = async () => {
     try {
-      const [vehiclesRes, expensesRes, revenuesRes] = await Promise.all([
+      const [vehiclesRes, expensesRes, revenuesRes, motoristasRes, relatoriosRes] = await Promise.all([
         axios.get(`${API}/vehicles`),
         axios.get(`${API}/expenses`),
-        axios.get(`${API}/revenues`)
+        axios.get(`${API}/revenues`),
+        axios.get(`${API}/motoristas`),
+        axios.get(`${API}/relatorios-ganhos`)
       ]);
       setVehicles(vehiclesRes.data);
       setExpenses(expensesRes.data);
