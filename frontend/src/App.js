@@ -138,6 +138,12 @@ function App() {
             }
           />
           <Route
+            path="/contratos"
+            element={
+              user ? <Contratos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/profile"
             element={
               user ? <Profile user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
