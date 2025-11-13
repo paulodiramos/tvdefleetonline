@@ -428,7 +428,7 @@ const PublicHome = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-3 gap-6">
                 {/* Motorista */}
                 <Card 
                   className="cursor-pointer hover:shadow-xl hover:border-blue-500 transition"
@@ -441,66 +441,109 @@ const PublicHome = () => {
                     <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Users className="w-10 h-10 text-blue-600" />
                     </div>
-                    <CardTitle>Sou Motorista</CardTitle>
-                    <CardDescription>Quero trabalhar como motorista TVDE</CardDescription>
+                    <CardTitle className="text-lg">Sou Motorista</CardTitle>
+                    <CardDescription>Trabalho individual</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ul className="space-y-2 text-sm text-slate-600">
+                    <ul className="space-y-2 text-xs text-slate-600">
                       <li className="flex items-center space-x-2">
-                        <CheckCircle className="w-4 h-4 text-blue-600" />
+                        <CheckCircle className="w-3 h-3 text-blue-600" />
                         <span>Registo individual</span>
                       </li>
                       <li className="flex items-center space-x-2">
-                        <CheckCircle className="w-4 h-4 text-blue-600" />
+                        <CheckCircle className="w-3 h-3 text-blue-600" />
                         <span>Acesso a veículos</span>
                       </li>
                       <li className="flex items-center space-x-2">
-                        <CheckCircle className="w-4 h-4 text-blue-600" />
+                        <CheckCircle className="w-3 h-3 text-blue-600" />
                         <span>Suporte especializado</span>
                       </li>
                     </ul>
-                    <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700">
-                      Registar como Motorista
+                    <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-sm">
+                      Registar
                     </Button>
                   </CardContent>
                 </Card>
 
-                {/* Parceiro/Empresa */}
+                {/* Gestão de Frota */}
                 <Card 
-                  className="cursor-pointer hover:shadow-xl hover:border-purple-500 transition"
+                  className="cursor-pointer hover:shadow-xl hover:border-purple-500 transition border-2 border-purple-200"
                   onClick={() => {
                     setShowRegistroModal(false);
-                    navigate('/registo-parceiro');
+                    navigate('/registo-parceiro?tipo=gestao_frota');
                   }}
                 >
                   <CardHeader className="text-center">
-                    <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Building className="w-10 h-10 text-purple-600" />
+                    <div className="absolute top-2 right-2">
+                      <span className="text-xs bg-purple-600 text-white px-2 py-1 rounded-full">Popular</span>
                     </div>
-                    <CardTitle>Sou Empresa/Parceiro</CardTitle>
-                    <CardDescription>Gestão completa de frota TVDE</CardDescription>
+                    <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Car className="w-10 h-10 text-purple-600" />
+                    </div>
+                    <CardTitle className="text-lg">Gerir Frota</CardTitle>
+                    <CardDescription>Tenho veículos e motoristas</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ul className="space-y-2 text-sm text-slate-600">
+                    <ul className="space-y-2 text-xs text-slate-600">
                       <li className="flex items-center space-x-2">
-                        <CheckCircle className="w-4 h-4 text-purple-600" />
-                        <span><strong>Gestão de veículos</strong> e motoristas</span>
+                        <CheckCircle className="w-3 h-3 text-purple-600" />
+                        <span><strong>Gestão completa</strong></span>
                       </li>
                       <li className="flex items-center space-x-2">
-                        <CheckCircle className="w-4 h-4 text-purple-600" />
-                        <span><strong>Controlo financeiro</strong> completo</span>
+                        <CheckCircle className="w-3 h-3 text-purple-600" />
+                        <span><strong>Múltiplos veículos</strong></span>
                       </li>
                       <li className="flex items-center space-x-2">
-                        <CheckCircle className="w-4 h-4 text-purple-600" />
-                        <span><strong>Relatórios</strong> e estatísticas</span>
+                        <CheckCircle className="w-3 h-3 text-purple-600" />
+                        <span><strong>Controlo financeiro</strong></span>
                       </li>
                       <li className="flex items-center space-x-2">
-                        <CheckCircle className="w-4 h-4 text-purple-600" />
-                        <span><strong>Serviços parceiros</strong> (seguros, mecânica)</span>
+                        <CheckCircle className="w-3 h-3 text-purple-600" />
+                        <span><strong>Serviços incluídos</strong></span>
                       </li>
                     </ul>
-                    <Button className="w-full mt-4 bg-purple-600 hover:bg-purple-700">
-                      Ver Mais + Registar
+                    <Button className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-sm">
+                      Começar Agora
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Usar Plataforma */}
+                <Card 
+                  className="cursor-pointer hover:shadow-xl hover:border-green-500 transition"
+                  onClick={() => {
+                    setShowRegistroModal(false);
+                    navigate('/registo-parceiro?tipo=usar_plataforma');
+                  }}
+                >
+                  <CardHeader className="text-center">
+                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Building className="w-10 h-10 text-green-600" />
+                    </div>
+                    <CardTitle className="text-lg">Usar Plataforma</CardTitle>
+                    <CardDescription>Outros serviços</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2 text-xs text-slate-600">
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle className="w-3 h-3 text-green-600" />
+                        <span>Acesso à plataforma</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle className="w-3 h-3 text-green-600" />
+                        <span>Serviços parceiros</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle className="w-3 h-3 text-green-600" />
+                        <span>Rede TVDE</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle className="w-3 h-3 text-green-600" />
+                        <span>Consultoria</span>
+                      </li>
+                    </ul>
+                    <Button className="w-full mt-4 bg-green-600 hover:bg-green-700 text-sm">
+                      Registar
                     </Button>
                   </CardContent>
                 </Card>
