@@ -3411,8 +3411,9 @@ async def get_parceiros(current_user: Dict = Depends(get_current_user)):
         if "validade_certidao_comercial" not in p:
             p["validade_certidao_comercial"] = "2099-12-31"  # Default future date
         
-        # Count vehicles
+        # Count vehicles and motoristas
         p["total_vehicles"] = await db.vehicles.count_documents({"parceiro_id": p["id"]})
+        p["total_motoristas"] = await db.motoristas.count_documents({"parceiro_id": p["id"]})
     
     return parceiros
 
