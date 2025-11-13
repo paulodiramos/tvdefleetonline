@@ -3257,11 +3257,14 @@ async def get_vehicle_interventions_report(
     if seguro:
         if seguro.get("data_validade"):
             interventions.append({
+                "id": f"seguro_{vehicle_id}",
                 "tipo": "Seguro",
                 "descricao": f"Renovação de Seguro - {seguro.get('seguradora', 'N/A')}",
                 "data": seguro.get("data_validade"),
                 "categoria": "seguro",
-                "status": "pending" if datetime.fromisoformat(seguro.get("data_validade")).date() >= today else "completed"
+                "status": "pending" if datetime.fromisoformat(seguro.get("data_validade")).date() >= today else "completed",
+                "criado_por": seguro.get("criado_por"),
+                "editado_por": seguro.get("editado_por")
             })
     
     # Add inspection interventions
