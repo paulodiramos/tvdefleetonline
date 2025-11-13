@@ -4806,6 +4806,33 @@ async def set_user_role(
     
     return {"message": "Role updated successfully"}
 
+@api_router.put("/users/{user_id}/status")
+async def update_user_status(
+    user_id: str,
+    status_data: Dict[str, str],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Update user status - block/unblock (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    new_status = status_data.get("status")
+    valid_statuses = ["active", "blocked", "pendente"]
+    
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail="Invalid status")
+    
+    # Update in users collection
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"status": new_status}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": f"User status updated to {new_status}"}
+
 @api_router.delete("/users/{user_id}")
 async def delete_user(
     user_id: str,
