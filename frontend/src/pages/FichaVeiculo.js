@@ -2016,17 +2016,37 @@ const FichaVeiculo = ({ user, onLogout }) => {
                       {agenda.map((evento) => (
                         <div key={evento.id} className="border rounded p-3">
                           <div className="flex justify-between items-start">
-                            <div>
+                            <div className="flex-1">
                               <p className="font-medium">{evento.titulo}</p>
                               <p className="text-sm text-slate-600">{evento.descricao}</p>
                               <p className="text-xs text-slate-500">
-                                {new Date(evento.data).toLocaleDateString('pt-BR')}
+                                {new Date(evento.data).toLocaleDateString('pt-PT')}
                                 {evento.hora && ` às ${evento.hora}`}
                               </p>
                             </div>
-                            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                              {evento.tipo}
-                            </span>
+                            <div className="flex gap-2 items-center">
+                              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                {evento.tipo}
+                              </span>
+                              {canEdit && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => handleEditAgenda(evento)}
+                                  >
+                                    <Edit className="w-3 h-3" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => handleDeleteAgenda(evento.id)}
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                  </Button>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
                       ))}
