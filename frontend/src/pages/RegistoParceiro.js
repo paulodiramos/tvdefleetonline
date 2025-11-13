@@ -126,9 +126,22 @@ const RegistoParceiro = () => {
             <Building className="w-10 h-10 text-blue-600" />
             <h1 className="text-3xl font-bold text-slate-900">Registo de Parceiro</h1>
           </div>
-          <p className="text-slate-600">
+          <p className="text-slate-600 mb-4">
             Registe a sua empresa como parceiro TVDEFleet
           </p>
+          <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+            <CardContent className="p-4">
+              <p className="text-sm font-semibold text-purple-900 mb-2">✨ Benefícios Incluídos:</p>
+              <div className="grid md:grid-cols-2 gap-2 text-xs text-slate-700">
+                <div>✓ Gestão completa de veículos e motoristas</div>
+                <div>✓ Dashboard financeiro em tempo real</div>
+                <div>✓ Seguros com condições especiais</div>
+                <div>✓ Rede de mecânicos parceiros</div>
+                <div>✓ Contabilidade e apoio jurídico TVDE</div>
+                <div>✓ Consultoria especializada dedicada</div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Card>
