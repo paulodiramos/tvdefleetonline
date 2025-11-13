@@ -4491,6 +4491,57 @@ async def serve_file(folder: str, filename: str, current_user: Dict = Depends(ge
     return FileResponse(file_path)
 
 
+@api_router.get("/users/pending")
+async def get_pending_users(current_user: Dict = Depends(get_current_user)):
+    """Get all pending users waiting for approval (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    # Get motoristas with status pending
+    pending_motoristas = await db.motoristas.find(
+        {"status": "pending"},
+        {"_id": 0}
+    ).to_list(length=None)
+    
+    return {
+        "pending_count": len(pending_motoristas),
+        "pending_users": pending_motoristas
+    }
+
+@api_router.put("/users/{user_id}/set-role")
+async def set_user_role(
+    user_id: str,
+    role_data: Dict[str, str],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Set role for a user (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    new_role = role_data.get("role")
+    valid_roles = ["motorista", "operacional", "gestao", "parceiro", "admin"]
+    
+    if new_role not in valid_roles:
+        raise HTTPException(status_code=400, detail="Invalid role")
+    
+    # Update in users collection
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"role": new_role}}
+    )
+    
+    # If user is motorista, also update motoristas collection
+    if new_role == "motorista":
+        await db.motoristas.update_one(
+            {"id": user_id},
+            {"$set": {"role": new_role}}
+        )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": "Role updated successfully"}
+
 # ==================== CONTRACT ENDPOINTS ====================
 
 @api_router.post("/contratos/gerar")
