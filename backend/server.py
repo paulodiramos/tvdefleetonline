@@ -3371,8 +3371,22 @@ async def get_parceiros(current_user: Dict = Depends(get_current_user)):
             p["created_at"] = datetime.fromisoformat(p["created_at"])
         
         # Backward compatibility: map old fields to new fields if new fields are missing
-        if "nome_empresa" not in p and "empresa" in p:
-            p["nome_empresa"] = p["empresa"]
+        if "nome_empresa" not in p:
+            if "empresa" in p:
+                p["nome_empresa"] = p["empresa"]
+            elif "nome" in p:
+                p["nome_empresa"] = p["nome"]
+            else:
+                p["nome_empresa"] = "N/A"
+        
+        if "nome_manager" not in p:
+            if "name" in p:
+                p["nome_manager"] = p["name"]
+            elif "responsavel_nome" in p:
+                p["nome_manager"] = p["responsavel_nome"]
+            else:
+                p["nome_manager"] = "N/A"
+        
         if "contribuinte_empresa" not in p and "nif" in p:
             p["contribuinte_empresa"] = p["nif"]
         if "morada_completa" not in p and "morada" in p:
@@ -3381,12 +3395,15 @@ async def get_parceiros(current_user: Dict = Depends(get_current_user)):
             p["codigo_postal"] = "0000-000"  # Default value
         if "localidade" not in p:
             p["localidade"] = "N/A"  # Default value
-        if "nome_manager" not in p and "name" in p:
-            p["nome_manager"] = p["name"]
         if "telefone" not in p and "phone" in p:
             p["telefone"] = p["phone"]
         if "telemovel" not in p:
-            p["telemovel"] = p.get("phone", "N/A")  # Use phone as fallback
+            if "responsavel_contacto" in p:
+                p["telemovel"] = p["responsavel_contacto"]
+            elif "phone" in p:
+                p["telemovel"] = p["phone"]
+            else:
+                p["telemovel"] = "N/A"
         if "email" not in p:
             p["email"] = "noemail@example.com"  # Default value
         if "codigo_certidao_comercial" not in p:
