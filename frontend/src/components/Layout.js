@@ -17,8 +17,7 @@ const Layout = ({ user, onLogout, children }) => {
         { path: '/relatorios', icon: FileText, label: 'Relatórios' },
         { path: '/vehicles', icon: Car, label: 'Veículos' },
         { path: '/motoristas', icon: Users, label: 'Motoristas' },
-        { path: '/pagamentos', icon: CreditCard, label: 'Pagamentos' },
-        { path: '/upload-csv', icon: Upload, label: 'Upload CSV' }
+        { path: '/pagamentos', icon: CreditCard, label: 'Pagamentos' }
       ];
     }
 
