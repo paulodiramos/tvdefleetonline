@@ -1179,16 +1179,30 @@ frontend:
           agent: "main"
           comment: "Sistema de edição de intervenções já estava implementado! Backend endpoint PUT /api/vehicles/{vehicle_id}/intervencao/{intervencao_id} já existe e rastreia editado_por e editado_em. Frontend já tem modal de edição completo com display de audit trail (criado_por, editado_por). Botões de edit visíveis no relatório de intervenções. Apenas verificado e confirmado funcionamento."
 
+frontend:
+  - task: "Driver Assignment - Atribuir Motorista a Parceiro"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Motoristas.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implementada funcionalidade completa de atribuição de motorista a parceiro. Adicionado botão 'Atribuir Parceiro' visível apenas para admin e gestao em motoristas aprovados. Modal de atribuição com seleção de tipo_motorista, parceiro (opcional) e veículo (opcional se parceiro selecionado). Função handleOpenAtribuirModal popula dados existentes. Função handleAtribuirParceiro atualiza motorista via PUT /motoristas/{id} com campos parceiro_atribuido, veiculo_atribuido e tipo_motorista. Estado atribuicaoData já existia. Frontend reiniciado."
+
 metadata:
   created_by: "main_agent"
-  version: "3.0"
+  version: "3.1"
   test_sequence: 0
   run_ui: false
 
 test_plan:
   current_focus:
-    - "User Management - Frontend Usuarios page"
-    - "Driver Documents - Download functionality"
+    - "Driver Assignment - Atribuir Motorista a Parceiro"
+    - "Contract System - Contratos.js implementation"
+    - "User Profile View - Ver Perfil for registered users"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -1196,6 +1210,7 @@ test_plan:
   user_management_endpoints_working: true
   driver_document_download_implemented: true
   interventions_already_working: true
+  driver_assignment_implemented: true
 
 agent_communication:
     - agent: "main"
