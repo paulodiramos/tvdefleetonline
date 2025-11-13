@@ -53,7 +53,7 @@ const PublicHome = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button 
                   size="lg" 
-                  className="bg-emerald-600 hover:bg-emerald-700 text-lg px-8"
+                  className="bg-blue-600 hover:bg-blue-700 text-lg px-8"
                   onClick={() => navigate('/registo-motorista')}
                 >
                   Tornar-se Motorista
