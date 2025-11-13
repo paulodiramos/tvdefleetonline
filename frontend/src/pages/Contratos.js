@@ -1,16 +1,15 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Layout from '../components/Layout';
+import { API } from '@/App';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import { FileText, Plus, Eye, Download, Check, X, Calendar, User, Car, Building } from 'lucide-react';
-
-const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
 
 const Contratos = ({ user, onLogout }) => {
   const [contratos, setContratos] = useState([]);
