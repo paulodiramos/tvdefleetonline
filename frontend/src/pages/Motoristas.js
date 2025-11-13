@@ -598,44 +598,60 @@ const Motoristas = ({ user, onLogout }) => {
 
                   <TabsContent value="financeiro" className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      {selectedMotorista.iban && (
-                        <div>
-                          <Label className="text-slate-600">IBAN</Label>
-                          <p className="font-medium font-mono text-sm">{selectedMotorista.iban}</p>
-                        </div>
-                      )}
-                      {selectedMotorista.regime && (
-                        <div>
-                          <Label className="text-slate-600">Regime</Label>
-                          <Badge className="capitalize">{selectedMotorista.regime}</Badge>
-                        </div>
-                      )}
-                      {selectedMotorista.tipo_pagamento && (
-                        <div>
-                          <Label className="text-slate-600">Tipo Pagamento</Label>
-                          <p className="font-medium capitalize">{selectedMotorista.tipo_pagamento.replace('_', ' ')}</p>
-                        </div>
-                      )}
+                      <div>
+                        <Label>IBAN</Label>
+                        {isEditing ? (
+                          <Input value={editForm.iban || ''} onChange={(e) => setEditForm({...editForm, iban: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.iban || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Regime</Label>
+                        {isEditing ? (
+                          <select className="w-full p-2 border rounded-md" value={editForm.regime || ''} onChange={(e) => setEditForm({...editForm, regime: e.target.value})}>
+                            <option value="aluguer">Aluguer</option>
+                            <option value="comissao">Comissão</option>
+                            <option value="carro_proprio">Carro Próprio</option>
+                          </select>
+                        ) : (
+                          <p className="font-medium capitalize">{selectedMotorista.regime || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Tipo Pagamento</Label>
+                        {isEditing ? (
+                          <select className="w-full p-2 border rounded-md" value={editForm.tipo_pagamento || ''} onChange={(e) => setEditForm({...editForm, tipo_pagamento: e.target.value})}>
+                            <option value="fatura">Fatura</option>
+                            <option value="recibo_verde">Recibo Verde</option>
+                            <option value="sem_recibo">Sem Recibo</option>
+                          </select>
+                        ) : (
+                          <p className="font-medium capitalize">{selectedMotorista.tipo_pagamento ? selectedMotorista.tipo_pagamento.replace('_', ' ') : 'N/A'}</p>
+                        )}
+                      </div>
                     </div>
-                    {(selectedMotorista.email_uber || selectedMotorista.email_bolt) && (
-                      <div className="pt-4 border-t">
-                        <Label className="text-slate-600 mb-3 block">Plataformas</Label>
-                        <div className="space-y-2">
-                          {selectedMotorista.email_uber && (
-                            <div className="flex items-center justify-between p-2 bg-slate-50 rounded">
-                              <span className="text-sm font-medium">Uber</span>
-                              <span className="text-xs text-slate-600">{selectedMotorista.email_uber}</span>
-                            </div>
+                    <div className="pt-4 border-t">
+                      <Label className="mb-3 block">Plataformas</Label>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label className="text-sm">Email Uber</Label>
+                          {isEditing ? (
+                            <Input value={editForm.email_uber || ''} onChange={(e) => setEditForm({...editForm, email_uber: e.target.value})} />
+                          ) : (
+                            <p className="font-medium">{selectedMotorista.email_uber || 'N/A'}</p>
                           )}
-                          {selectedMotorista.email_bolt && (
-                            <div className="flex items-center justify-between p-2 bg-slate-50 rounded">
-                              <span className="text-sm font-medium">Bolt</span>
-                              <span className="text-xs text-slate-600">{selectedMotorista.email_bolt}</span>
-                            </div>
+                        </div>
+                        <div>
+                          <Label className="text-sm">Email Bolt</Label>
+                          {isEditing ? (
+                            <Input value={editForm.email_bolt || ''} onChange={(e) => setEditForm({...editForm, email_bolt: e.target.value})} />
+                          ) : (
+                            <p className="font-medium">{selectedMotorista.email_bolt || 'N/A'}</p>
                           )}
                         </div>
                       </div>
-                    )}
+                    </div>
                   </TabsContent>
                 </Tabs>
               </div>
