@@ -472,35 +472,54 @@ const Motoristas = ({ user, onLogout }) => {
                   <TabsContent value="pessoal" className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label className="text-slate-600">Telefone</Label>
-                        <p className="font-medium">{selectedMotorista.phone}</p>
+                        <Label>Telefone</Label>
+                        {isEditing ? (
+                          <Input value={editForm.phone || ''} onChange={(e) => setEditForm({...editForm, phone: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.phone}</p>
+                        )}
                       </div>
-                      {selectedMotorista.whatsapp && (
-                        <div>
-                          <Label className="text-slate-600">WhatsApp</Label>
-                          <p className="font-medium">{selectedMotorista.whatsapp}</p>
-                        </div>
-                      )}
-                      {selectedMotorista.data_nascimento && (
-                        <div>
-                          <Label className="text-slate-600">Data Nascimento</Label>
-                          <p className="font-medium">{new Date(selectedMotorista.data_nascimento).toLocaleDateString('pt-PT')}</p>
-                        </div>
-                      )}
-                      {selectedMotorista.nacionalidade && (
-                        <div>
-                          <Label className="text-slate-600">Nacionalidade</Label>
-                          <p className="font-medium">{selectedMotorista.nacionalidade}</p>
-                        </div>
+                      <div>
+                        <Label>WhatsApp</Label>
+                        {isEditing ? (
+                          <Input value={editForm.whatsapp || ''} onChange={(e) => setEditForm({...editForm, whatsapp: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.whatsapp || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Data Nascimento</Label>
+                        {isEditing ? (
+                          <Input type="date" value={editForm.data_nascimento || ''} onChange={(e) => setEditForm({...editForm, data_nascimento: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.data_nascimento ? new Date(selectedMotorista.data_nascimento).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Nacionalidade</Label>
+                        {isEditing ? (
+                          <Input value={editForm.nacionalidade || ''} onChange={(e) => setEditForm({...editForm, nacionalidade: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.nacionalidade || 'N/A'}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Morada Completa</Label>
+                      {isEditing ? (
+                        <Input value={editForm.morada_completa || ''} onChange={(e) => setEditForm({...editForm, morada_completa: e.target.value})} />
+                      ) : (
+                        <p className="font-medium">{selectedMotorista.morada_completa || 'N/A'}</p>
                       )}
                     </div>
-                    {selectedMotorista.morada_completa && (
-                      <div>
-                        <Label className="text-slate-600">Morada</Label>
-                        <p className="font-medium">{selectedMotorista.morada_completa}</p>
-                        {selectedMotorista.codigo_postal && <p className="text-sm text-slate-500">{selectedMotorista.codigo_postal}</p>}
-                      </div>
-                    )}
+                    <div>
+                      <Label>Código Postal</Label>
+                      {isEditing ? (
+                        <Input value={editForm.codigo_postal || ''} onChange={(e) => setEditForm({...editForm, codigo_postal: e.target.value})} />
+                      ) : (
+                        <p className="font-medium">{selectedMotorista.codigo_postal || 'N/A'}</p>
+                      )}
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="docs" className="space-y-4">
