@@ -1369,7 +1369,7 @@ const Motoristas = ({ user, onLogout }) => {
                       value={atribuicaoData.veiculo_id || 'none'} 
                       onValueChange={(value) => {
                         const veiculoId = value === 'none' ? '' : value;
-                        setAtribuicaoData({...atribuicaoData, veiculo_id: veiculoId});
+                        setAtribuicaoData(prev => ({...prev, veiculo_id: veiculoId}));
                       }}
                     >
                       <SelectTrigger>
