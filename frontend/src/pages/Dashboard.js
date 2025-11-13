@@ -4,6 +4,7 @@ import { API } from '@/App';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { TrendingUp, TrendingDown, Car, Users, DollarSign, AlertCircle, AlertTriangle, CheckCircle, X, Calendar, Shield, ClipboardCheck, Wrench } from 'lucide-react';
 
 const Dashboard = ({ user, onLogout }) => {
@@ -11,6 +12,12 @@ const Dashboard = ({ user, onLogout }) => {
   const [alertas, setAlertas] = useState([]);
   const [proximasDatas, setProximasDatas] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Modal states
+  const [segurosModalOpen, setSegurosModalOpen] = useState(false);
+  const [inspecoesModalOpen, setInspecoesModalOpen] = useState(false);
+  const [revisoesModalOpen, setRevisoesModalOpen] = useState(false);
+  const [extintoresModalOpen, setExtintoresModalOpen] = useState(false);
 
   useEffect(() => {
     fetchStats();
