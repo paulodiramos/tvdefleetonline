@@ -56,6 +56,8 @@ const FichaVeiculo = ({ user, onLogout }) => {
     hora: '',
     descricao: ''
   });
+  
+  const [editingAgendaId, setEditingAgendaId] = useState(null);
 
   const [extintorForm, setExtintorForm] = useState({
     fornecedor: '',
