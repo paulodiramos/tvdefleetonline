@@ -50,7 +50,35 @@ const Motoristas = ({ user, onLogout }) => {
 
   useEffect(() => {
     fetchMotoristas();
+    if (user.role === 'admin' || user.role === 'gestao') {
+      fetchParceiros();
+    }
   }, []);
+
+  const fetchParceiros = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/parceiros`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setParceiros(response.data);
+    } catch (error) {
+      console.error('Error fetching parceiros:', error);
+    }
+  };
+
+  const fetchVeiculosByParceiro = async (parceiroId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/vehicles?parceiro_id=${parceiroId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setVeiculos(response.data.filter(v => v.status === 'disponivel' || v.status === 'atribuido'));
+    } catch (error) {
+      console.error('Error fetching vehicles:', error);
+      setVeiculos([]);
+    }
+  };
 
   const fetchMotoristas = async () => {
     try {
