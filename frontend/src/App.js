@@ -99,6 +99,8 @@ function App() {
               user ? <Navigate to="/dashboard" /> : <Login onLogin={handleLogin} />
             }
           />
+          
+          {/* Protected Routes */}
           <Route
             path="/dashboard"
             element={
