@@ -285,6 +285,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
       if (vehicleRes.data.extintor) {
         setExtintorForm({
+          numeracao: vehicleRes.data.extintor.numeracao || '',
           fornecedor: vehicleRes.data.extintor.fornecedor || '',
           empresa_certificacao: vehicleRes.data.extintor.empresa_certificacao || '',
           preco: vehicleRes.data.extintor.preco || '',
