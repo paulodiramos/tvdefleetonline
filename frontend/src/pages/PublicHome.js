@@ -10,6 +10,7 @@ import {
 
 const PublicHome = () => {
   const navigate = useNavigate();
+  const [showRegistroModal, setShowRegistroModal] = useState(false);
 
   return (
     <div className="min-h-screen bg-white">
