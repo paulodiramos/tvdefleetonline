@@ -22,6 +22,9 @@ const Motoristas = ({ user, onLogout }) => {
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [parceiros, setParceiros] = useState([]);
+  const [veiculos, setVeiculos] = useState([]);
   const [newMotorista, setNewMotorista] = useState({
     email: '',
     name: '',
