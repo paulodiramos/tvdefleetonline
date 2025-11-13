@@ -1457,6 +1457,9 @@ frontend:
         - working: "NA"
           agent: "testing"
           comment: "User reported 'erro ao gerar contrato de motorista'. Main agent fixed API endpoints by importing from App.js instead of hardcoding. Need to test complete contract generation flow: login as admin, navigate to Contratos, open modal, fill form (Parceiro/Motorista/Veículo dropdowns), submit contract, verify success."
+        - working: false
+          agent: "testing"
+          comment: "✅ TESTED COMPLETE FLOW: Login successful (admin@tvdefleet.com), navigation to Contratos page works, modal opens correctly with title 'Criar Novo Contrato', all dropdowns populated (Parceiro: 20 options, Motorista: 1 option, Veículo: 10 options), form fields have correct defaults (230€, 300€), NO 404 API errors detected. ❌ CRITICAL ISSUE: Contract submission fails with 422 Unprocessable Entity error on POST /api/contratos/gerar. Main agent's API endpoint fix worked (no more 404s), but backend validation is rejecting the contract data. Error: 'Objects are not valid as a React child' suggests backend is returning validation error object that frontend cannot display properly."
 
 test_plan:
   current_focus:
