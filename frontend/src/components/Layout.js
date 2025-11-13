@@ -40,6 +40,11 @@ const Layout = ({ user, onLogout, children }) => {
       items.splice(2, 0, { path: '/parceiros', icon: Building, label: 'Parceiros' });
     }
 
+    // Add Contratos for admin and gestao
+    if (user.role === 'admin' || user.role === 'gestao') {
+      items.push({ path: '/contratos', icon: FileText, label: 'Contratos' });
+    }
+
     return items;
   };
 
