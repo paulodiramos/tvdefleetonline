@@ -449,7 +449,7 @@ const Motoristas = ({ user, onLogout }) => {
                     <div className="flex-1">
                       <CardTitle className="text-lg">{motorista.name}</CardTitle>
                       <p className="text-sm text-slate-500 mt-1">{motorista.email}</p>
-                      <div className="mt-2">
+                      <div className="mt-2 flex flex-wrap gap-2">
                         {motorista.approved ? (
                           <Badge className="bg-emerald-100 text-emerald-700">
                             <CheckCircle className="w-3 h-3 mr-1" />
@@ -459,6 +459,44 @@ const Motoristas = ({ user, onLogout }) => {
                           <Badge className="bg-amber-100 text-amber-700">
                             <Clock className="w-3 h-3 mr-1" />
                             Pendente
+                          </Badge>
+                        )}
+                        
+                        {/* Status Badge */}
+                        {motorista.status_motorista === 'ativo' && (
+                          <Badge className="bg-green-100 text-green-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                            Ativo
+                          </Badge>
+                        )}
+                        {motorista.status_motorista === 'aguarda_carro' && (
+                          <Badge className="bg-blue-100 text-blue-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 mr-1"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 8h7M9 12h7M9 16h7"/></svg>
+                            Aguarda Carro
+                          </Badge>
+                        )}
+                        {motorista.status_motorista === 'ferias' && (
+                          <Badge className="bg-purple-100 text-purple-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 mr-1"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/></svg>
+                            Férias
+                          </Badge>
+                        )}
+                        {motorista.status_motorista === 'desativo' && (
+                          <Badge className="bg-red-100 text-red-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 mr-1"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+                            Desativo
+                          </Badge>
+                        )}
+                        {motorista.status_motorista === 'pendente_documentos' && (
+                          <Badge className="bg-orange-100 text-orange-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 mr-1"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M12 18v-6M9 15h6"/></svg>
+                            Pendente Docs
+                          </Badge>
+                        )}
+                        {!motorista.status_motorista && motorista.approved && (
+                          <Badge className="bg-gray-100 text-gray-700">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3 h-3 mr-1"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                            Sem Status
                           </Badge>
                         )}
                       </div>
