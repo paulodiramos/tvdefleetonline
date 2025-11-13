@@ -1702,6 +1702,16 @@ const FichaVeiculo = ({ user, onLogout }) => {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
+                    <Label htmlFor="numeracao_extintor">Numeração/Série</Label>
+                    <Input
+                      id="numeracao_extintor"
+                      value={extintorForm.numeracao}
+                      onChange={(e) => setExtintorForm({...extintorForm, numeracao: e.target.value})}
+                      disabled={!canEdit || !editMode}
+                      placeholder="Ex: EXT-2024-001"
+                    />
+                  </div>
+                  <div>
                     <Label htmlFor="fornecedor_extintor">Fornecedor</Label>
                     <Input
                       id="fornecedor_extintor"
