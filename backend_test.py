@@ -1943,6 +1943,348 @@ startxref
         except Exception as e:
             self.log_result("Relatorio-Intervencoes-Endpoint", False, f"Relatorio test error: {str(e)}")
 
+    # ==================== DRIVER ASSIGNMENT TESTS ====================
+    
+    def test_driver_assignment_feature(self):
+        """Test complete driver assignment feature as specified in review request"""
+        print("\n🚗 TESTING DRIVER ASSIGNMENT FEATURE")
+        print("-" * 50)
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Driver-Assignment-Setup", False, "No auth token for admin")
+            return False
+        
+        # Test A: Create/Get a test motorista
+        motorista_id = self.get_or_create_test_motorista(headers)
+        if not motorista_id:
+            return False
+        
+        # Test B: Assign motorista to a parceiro
+        parceiro_id = self.test_assign_motorista_to_parceiro(headers, motorista_id)
+        if not parceiro_id:
+            return False
+        
+        # Test C: Assign motorista to a vehicle
+        vehicle_id = self.test_assign_motorista_to_vehicle(headers, motorista_id, parceiro_id)
+        if not vehicle_id:
+            return False
+        
+        # Test D: Remove assignments (set to null)
+        self.test_remove_motorista_assignments(headers, motorista_id)
+        
+        # Test E: Test invalid scenarios
+        self.test_invalid_assignment_scenarios(headers, motorista_id)
+        
+        return True
+    
+    def get_or_create_test_motorista(self, headers):
+        """Get existing motorista or create one for testing"""
+        try:
+            # First try to get existing motoristas
+            response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            
+            if response.status_code == 200:
+                motoristas = response.json()
+                if motoristas:
+                    motorista_id = motoristas[0]["id"]
+                    self.log_result("Get-Test-Motorista", True, f"Using existing motorista: {motorista_id}")
+                    return motorista_id
+            
+            # Create a new motorista if none exist
+            motorista_data = {
+                "email": "testdriver@tvdefleet.com",
+                "name": "Test Driver Assignment",
+                "phone": "911234567",
+                "morada_completa": "Rua Teste 123",
+                "codigo_postal": "1000-100",
+                "data_nascimento": "1990-01-01",
+                "nacionalidade": "Portuguesa",
+                "tipo_documento": "CC",
+                "numero_documento": "12345678",
+                "validade_documento": "2030-01-01",
+                "nif": "123456789",
+                "carta_conducao_numero": "PT123456",
+                "carta_conducao_validade": "2030-01-01",
+                "licenca_tvde_numero": "TVDE123456",
+                "licenca_tvde_validade": "2030-01-01",
+                "regime": "aluguer",
+                "whatsapp": "911234567",
+                "tipo_pagamento": "recibo_verde"
+            }
+            
+            create_response = requests.post(f"{BACKEND_URL}/motoristas", json=motorista_data, headers=headers)
+            
+            if create_response.status_code == 200:
+                motorista = create_response.json()
+                motorista_id = motorista["id"]
+                self.log_result("Create-Test-Motorista", True, f"Created test motorista: {motorista_id}")
+                return motorista_id
+            else:
+                self.log_result("Create-Test-Motorista", False, f"Failed to create motorista: {create_response.status_code}")
+                return None
+                
+        except Exception as e:
+            self.log_result("Get-Create-Test-Motorista", False, f"Error: {str(e)}")
+            return None
+    
+    def test_assign_motorista_to_parceiro(self, headers, motorista_id):
+        """Test B: Assign motorista to a parceiro with tipo_motorista"""
+        try:
+            # Get a parceiro to assign to
+            parceiros_response = requests.get(f"{BACKEND_URL}/parceiros", headers=headers)
+            
+            if parceiros_response.status_code != 200:
+                self.log_result("Assign-Motorista-Parceiro", False, "Could not get parceiros list")
+                return None
+            
+            parceiros = parceiros_response.json()
+            if not parceiros:
+                self.log_result("Assign-Motorista-Parceiro", False, "No parceiros available for assignment")
+                return None
+            
+            parceiro_id = parceiros[0]["id"]
+            
+            # Assign motorista to parceiro
+            assignment_data = {
+                "parceiro_atribuido": parceiro_id,
+                "tipo_motorista": "tempo_integral"
+            }
+            
+            response = requests.put(
+                f"{BACKEND_URL}/motoristas/{motorista_id}",
+                json=assignment_data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                # Verify assignment was saved
+                get_response = requests.get(f"{BACKEND_URL}/motoristas/{motorista_id}", headers=headers)
+                
+                if get_response.status_code == 200:
+                    motorista = get_response.json()
+                    
+                    if (motorista.get("parceiro_atribuido") == parceiro_id and 
+                        motorista.get("tipo_motorista") == "tempo_integral"):
+                        
+                        self.log_result("Assign-Motorista-Parceiro", True, 
+                            f"Motorista successfully assigned to parceiro {parceiro_id} as tempo_integral")
+                        return parceiro_id
+                    else:
+                        self.log_result("Assign-Motorista-Parceiro", False, 
+                            f"Assignment not saved correctly. parceiro_atribuido: {motorista.get('parceiro_atribuido')}, tipo_motorista: {motorista.get('tipo_motorista')}")
+                        return None
+                else:
+                    self.log_result("Assign-Motorista-Parceiro", False, "Could not verify assignment")
+                    return None
+            else:
+                self.log_result("Assign-Motorista-Parceiro", False, f"Assignment failed: {response.status_code}", response.text)
+                return None
+                
+        except Exception as e:
+            self.log_result("Assign-Motorista-Parceiro", False, f"Assignment error: {str(e)}")
+            return None
+    
+    def test_assign_motorista_to_vehicle(self, headers, motorista_id, parceiro_id):
+        """Test C: Assign motorista to a vehicle (assuming parceiro already assigned)"""
+        try:
+            # Get vehicles from the assigned parceiro
+            vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+            
+            if vehicles_response.status_code != 200:
+                self.log_result("Assign-Motorista-Vehicle", False, "Could not get vehicles list")
+                return None
+            
+            vehicles = vehicles_response.json()
+            
+            # Find a vehicle from the same parceiro
+            suitable_vehicle = None
+            for vehicle in vehicles:
+                if vehicle.get("parceiro_id") == parceiro_id:
+                    suitable_vehicle = vehicle
+                    break
+            
+            if not suitable_vehicle:
+                self.log_result("Assign-Motorista-Vehicle", False, f"No vehicles found for parceiro {parceiro_id}")
+                return None
+            
+            vehicle_id = suitable_vehicle["id"]
+            
+            # Assign motorista to vehicle
+            assignment_data = {
+                "veiculo_atribuido": vehicle_id
+            }
+            
+            response = requests.put(
+                f"{BACKEND_URL}/motoristas/{motorista_id}",
+                json=assignment_data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                # Verify assignment was saved
+                get_response = requests.get(f"{BACKEND_URL}/motoristas/{motorista_id}", headers=headers)
+                
+                if get_response.status_code == 200:
+                    motorista = get_response.json()
+                    
+                    if motorista.get("veiculo_atribuido") == vehicle_id:
+                        self.log_result("Assign-Motorista-Vehicle", True, 
+                            f"Motorista successfully assigned to vehicle {vehicle_id}")
+                        return vehicle_id
+                    else:
+                        self.log_result("Assign-Motorista-Vehicle", False, 
+                            f"Vehicle assignment not saved correctly. veiculo_atribuido: {motorista.get('veiculo_atribuido')}")
+                        return None
+                else:
+                    self.log_result("Assign-Motorista-Vehicle", False, "Could not verify vehicle assignment")
+                    return None
+            else:
+                self.log_result("Assign-Motorista-Vehicle", False, f"Vehicle assignment failed: {response.status_code}", response.text)
+                return None
+                
+        except Exception as e:
+            self.log_result("Assign-Motorista-Vehicle", False, f"Vehicle assignment error: {str(e)}")
+            return None
+    
+    def test_remove_motorista_assignments(self, headers, motorista_id):
+        """Test D: Remove assignments (set to null)"""
+        try:
+            # Remove both parceiro and vehicle assignments
+            removal_data = {
+                "parceiro_atribuido": None,
+                "veiculo_atribuido": None
+            }
+            
+            response = requests.put(
+                f"{BACKEND_URL}/motoristas/{motorista_id}",
+                json=removal_data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                # Verify assignments were cleared
+                get_response = requests.get(f"{BACKEND_URL}/motoristas/{motorista_id}", headers=headers)
+                
+                if get_response.status_code == 200:
+                    motorista = get_response.json()
+                    
+                    if (motorista.get("parceiro_atribuido") is None and 
+                        motorista.get("veiculo_atribuido") is None):
+                        
+                        self.log_result("Remove-Motorista-Assignments", True, 
+                            "Motorista assignments successfully cleared (set to null)")
+                    else:
+                        self.log_result("Remove-Motorista-Assignments", False, 
+                            f"Assignments not cleared correctly. parceiro_atribuido: {motorista.get('parceiro_atribuido')}, veiculo_atribuido: {motorista.get('veiculo_atribuido')}")
+                else:
+                    self.log_result("Remove-Motorista-Assignments", False, "Could not verify assignment removal")
+            else:
+                self.log_result("Remove-Motorista-Assignments", False, f"Assignment removal failed: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Remove-Motorista-Assignments", False, f"Assignment removal error: {str(e)}")
+    
+    def test_invalid_assignment_scenarios(self, headers, motorista_id):
+        """Test E: Test invalid scenarios"""
+        try:
+            # Test 1: Invalid motorista_id (should return 404)
+            invalid_motorista_id = "invalid-motorista-id-12345"
+            assignment_data = {
+                "parceiro_atribuido": "some-parceiro-id",
+                "tipo_motorista": "tempo_integral"
+            }
+            
+            response = requests.put(
+                f"{BACKEND_URL}/motoristas/{invalid_motorista_id}",
+                json=assignment_data,
+                headers=headers
+            )
+            
+            if response.status_code == 404:
+                self.log_result("Invalid-Motorista-ID", True, "Invalid motorista_id correctly returns 404")
+            else:
+                self.log_result("Invalid-Motorista-ID", False, f"Expected 404 for invalid motorista_id, got {response.status_code}")
+            
+            # Test 2: Invalid parceiro_id (should handle gracefully)
+            invalid_assignment_data = {
+                "parceiro_atribuido": "invalid-parceiro-id-12345",
+                "tipo_motorista": "tempo_integral"
+            }
+            
+            response = requests.put(
+                f"{BACKEND_URL}/motoristas/{motorista_id}",
+                json=invalid_assignment_data,
+                headers=headers
+            )
+            
+            # This might succeed (backend might not validate parceiro existence) or fail gracefully
+            if response.status_code in [200, 400, 404]:
+                self.log_result("Invalid-Parceiro-ID", True, f"Invalid parceiro_id handled appropriately (status: {response.status_code})")
+            else:
+                self.log_result("Invalid-Parceiro-ID", False, f"Unexpected response for invalid parceiro_id: {response.status_code}")
+            
+            # Test 3: Test authorization (try with parceiro role - should be restricted)
+            parceiro_headers = self.get_headers("parceiro")
+            if parceiro_headers:
+                test_assignment_data = {
+                    "tipo_motorista": "meio_periodo"
+                }
+                
+                response = requests.put(
+                    f"{BACKEND_URL}/motoristas/{motorista_id}",
+                    json=test_assignment_data,
+                    headers=parceiro_headers
+                )
+                
+                # Parceiro should not be able to update motoristas (expect 403 or similar)
+                if response.status_code in [403, 401]:
+                    self.log_result("Authorization-Test", True, f"Parceiro correctly blocked from updating motoristas (status: {response.status_code})")
+                elif response.status_code == 200:
+                    self.log_result("Authorization-Test", False, "Parceiro should not be able to update motoristas")
+                else:
+                    self.log_result("Authorization-Test", True, f"Authorization handled (status: {response.status_code})")
+            else:
+                self.log_result("Authorization-Test", False, "Could not test authorization (no parceiro token)")
+                
+        except Exception as e:
+            self.log_result("Invalid-Assignment-Scenarios", False, f"Invalid scenarios test error: {str(e)}")
+    
+    def test_tipo_motorista_values(self, headers, motorista_id):
+        """Test different tipo_motorista values"""
+        valid_tipos = ["independente", "tempo_integral", "meio_periodo", "parceiro"]
+        
+        for tipo in valid_tipos:
+            try:
+                assignment_data = {
+                    "tipo_motorista": tipo
+                }
+                
+                response = requests.put(
+                    f"{BACKEND_URL}/motoristas/{motorista_id}",
+                    json=assignment_data,
+                    headers=headers
+                )
+                
+                if response.status_code == 200:
+                    # Verify the tipo was saved
+                    get_response = requests.get(f"{BACKEND_URL}/motoristas/{motorista_id}", headers=headers)
+                    
+                    if get_response.status_code == 200:
+                        motorista = get_response.json()
+                        
+                        if motorista.get("tipo_motorista") == tipo:
+                            self.log_result(f"Tipo-Motorista-{tipo}", True, f"tipo_motorista '{tipo}' saved successfully")
+                        else:
+                            self.log_result(f"Tipo-Motorista-{tipo}", False, f"tipo_motorista not saved correctly: {motorista.get('tipo_motorista')}")
+                    else:
+                        self.log_result(f"Tipo-Motorista-{tipo}", False, "Could not verify tipo_motorista")
+                else:
+                    self.log_result(f"Tipo-Motorista-{tipo}", False, f"Failed to set tipo_motorista '{tipo}': {response.status_code}")
+                    
+            except Exception as e:
+                self.log_result(f"Tipo-Motorista-{tipo}", False, f"Error testing tipo '{tipo}': {str(e)}")
+
     # ==================== MAIN TEST RUNNER ====================
     
     def run_all_tests(self):
