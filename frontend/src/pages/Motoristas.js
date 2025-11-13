@@ -105,7 +105,12 @@ const Motoristas = ({ user, onLogout }) => {
   };
 
   const handleEditMotorista = () => {
-    setEditForm({...selectedMotorista});
+    setEditForm({
+      ...selectedMotorista,
+      // Inicializar emails Uber/Bolt com email do motorista se vazios
+      email_uber: selectedMotorista.email_uber || selectedMotorista.email,
+      email_bolt: selectedMotorista.email_bolt || selectedMotorista.email
+    });
     setIsEditing(true);
   };
 
