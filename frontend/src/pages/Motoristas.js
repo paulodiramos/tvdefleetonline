@@ -743,7 +743,7 @@ const Motoristas = ({ user, onLogout }) => {
                         <div className="mt-2 flex items-center gap-2">
                           {selectedMotorista?.documents?.comprovativo_morada_pdf ? (
                             <>
-                              <Button size="sm" variant="outline" onClick={() => window.open(`${API}/${selectedMotorista.documents.comprovativo_morada_pdf}`, '_blank')}>
+                              <Button size="sm" variant="outline" onClick={() => handleDownloadDocument(selectedMotorista.documents.comprovativo_morada_pdf)}>
                                 <Download className="w-4 h-4 mr-1" />
                                 Download
                               </Button>
