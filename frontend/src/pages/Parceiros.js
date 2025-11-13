@@ -627,17 +627,30 @@ const Parceiros = ({ user, onLogout }) => {
                       </div>
                     </div>
                   </div>
-                  <Button
-                    variant="outline"
-                    className="w-full mt-4"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSelectParceiro(parceiro);
-                    }}
-                  >
-                    <FileText className="w-4 h-4 mr-2" />
-                    Ver Contratos
-                  </Button>
+                  <div className="flex space-x-2 mt-4">
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewProfile(parceiro);
+                      }}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Ver Perfil
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSelectParceiro(parceiro);
+                      }}
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Contratos
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}
