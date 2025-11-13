@@ -151,6 +151,23 @@ const Parceiros = ({ user, onLogout }) => {
     }
   };
 
+  const handleEditParceiro = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/parceiros/${editingParceiro.id}`, editingParceiro, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Parceiro atualizado com sucesso!');
+      setShowEditDialog(false);
+      setEditingParceiro(null);
+      fetchParceiros();
+    } catch (error) {
+      console.error('Error updating parceiro:', error);
+      toast.error('Erro ao atualizar parceiro');
+    }
+  };
+
   const handleCreateContract = async (e) => {
     e.preventDefault();
     
