@@ -1332,11 +1332,12 @@ const Motoristas = ({ user, onLogout }) => {
                 <div className="space-y-2">
                   <Label>Parceiro (Opcional)</Label>
                   <Select 
-                    value={atribuicaoData.parceiro_id} 
+                    value={atribuicaoData.parceiro_id || 'none'} 
                     onValueChange={(value) => {
-                      setAtribuicaoData({...atribuicaoData, parceiro_id: value, veiculo_id: ''});
-                      if (value) {
-                        fetchVeiculosByParceiro(value);
+                      const parceiroId = value === 'none' ? '' : value;
+                      setAtribuicaoData({...atribuicaoData, parceiro_id: parceiroId, veiculo_id: ''});
+                      if (parceiroId) {
+                        fetchVeiculosByParceiro(parceiroId);
                       } else {
                         setVeiculos([]);
                       }
@@ -1346,7 +1347,7 @@ const Motoristas = ({ user, onLogout }) => {
                       <SelectValue placeholder="Selecione um parceiro" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nenhum</SelectItem>
+                      <SelectItem value="none">Nenhum</SelectItem>
                       {parceiros.map(p => (
                         <SelectItem key={p.id} value={p.id}>
                           {p.nome_empresa || p.name}
@@ -1361,14 +1362,17 @@ const Motoristas = ({ user, onLogout }) => {
                   <div className="space-y-2">
                     <Label>Veículo (Opcional)</Label>
                     <Select 
-                      value={atribuicaoData.veiculo_id} 
-                      onValueChange={(value) => setAtribuicaoData({...atribuicaoData, veiculo_id: value})}
+                      value={atribuicaoData.veiculo_id || 'none'} 
+                      onValueChange={(value) => {
+                        const veiculoId = value === 'none' ? '' : value;
+                        setAtribuicaoData({...atribuicaoData, veiculo_id: veiculoId});
+                      }}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione um veículo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Nenhum</SelectItem>
+                        <SelectItem value="none">Nenhum</SelectItem>
                         {veiculos.map(v => (
                           <SelectItem key={v.id} value={v.id}>
                             {v.marca} {v.modelo} - {v.matricula}
