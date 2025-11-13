@@ -166,7 +166,7 @@ const Dashboard = ({ user, onLogout }) => {
           <CardContent>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Próximos Seguros */}
-              <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+              <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSegurosModalOpen(true)}>
                 <div className="flex items-center justify-between mb-2">
                   <Shield className="w-6 h-6 text-green-600" />
                   <span className="text-xs font-semibold bg-green-200 text-green-800 px-2 py-1 rounded">
