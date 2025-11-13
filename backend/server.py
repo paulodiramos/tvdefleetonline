@@ -629,6 +629,7 @@ class MotoristaCreate(BaseModel):
     codigo_registo_criminal: Optional[str] = None
     parceiro_atribuido: Optional[str] = None
     veiculo_atribuido: Optional[str] = None
+    tipo_motorista: Optional[str] = "independente"  # tempo_integral, meio_periodo, independente, parceiro
     regime: str  # aluguer, comissao, carro_proprio
     iban: Optional[str] = None
     email_uber: Optional[str] = None
