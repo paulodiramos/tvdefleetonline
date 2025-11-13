@@ -1853,12 +1853,97 @@ const FichaVeiculo = ({ user, onLogout }) => {
               </CardContent>
             </Card>
 
+            {/* Próximas Intervenções - Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              {/* Próxima Revisão */}
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="pt-4">
+                  <div className="text-center">
+                    <Wrench className="w-6 h-6 mx-auto mb-2 text-blue-600" />
+                    <p className="text-xs font-medium text-slate-600 mb-1">Próxima Revisão</p>
+                    {vehicle.proxima_revisao_data ? (
+                      <>
+                        <p className="text-sm font-bold text-blue-700">
+                          {new Date(vehicle.proxima_revisao_data).toLocaleDateString('pt-PT')}
+                        </p>
+                        {vehicle.proxima_revisao_km && (
+                          <p className="text-xs text-slate-600 mt-1">
+                            {vehicle.proxima_revisao_km.toLocaleString()} km
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-xs text-slate-500">Não definida</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Próximo Seguro */}
+              <Card className="bg-green-50 border-green-200">
+                <CardContent className="pt-4">
+                  <div className="text-center">
+                    <Shield className="w-6 h-6 mx-auto mb-2 text-green-600" />
+                    <p className="text-xs font-medium text-slate-600 mb-1">Renovação Seguro</p>
+                    {vehicle.seguro?.data_validade ? (
+                      <>
+                        <p className="text-sm font-bold text-green-700">
+                          {new Date(vehicle.seguro.data_validade).toLocaleDateString('pt-PT')}
+                        </p>
+                        {vehicle.seguro.seguradora && (
+                          <p className="text-xs text-slate-600 mt-1">
+                            {vehicle.seguro.seguradora}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-xs text-slate-500">Não definida</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Próxima Inspeção */}
+              <Card className="bg-purple-50 border-purple-200">
+                <CardContent className="pt-4">
+                  <div className="text-center">
+                    <ClipboardCheck className="w-6 h-6 mx-auto mb-2 text-purple-600" />
+                    <p className="text-xs font-medium text-slate-600 mb-1">Próxima Inspeção</p>
+                    {vehicle.inspection?.proxima_inspecao ? (
+                      <p className="text-sm font-bold text-purple-700">
+                        {new Date(vehicle.inspection.proxima_inspecao).toLocaleDateString('pt-PT')}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-slate-500">Não definida</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Próximo Extintor */}
+              <Card className="bg-red-50 border-red-200">
+                <CardContent className="pt-4">
+                  <div className="text-center">
+                    <AlertCircle className="w-6 h-6 mx-auto mb-2 text-red-600" />
+                    <p className="text-xs font-medium text-slate-600 mb-1">Validade Extintor</p>
+                    {vehicle.extintor?.data_validade ? (
+                      <p className="text-sm font-bold text-red-700">
+                        {new Date(vehicle.extintor.data_validade).toLocaleDateString('pt-PT')}
+                      </p>
+                    ) : (
+                      <p className="text-xs text-slate-500">Não definida</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Relatório de Intervenções */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <History className="w-5 h-5" />
-                  <span>Relatório de Intervenções</span>
+                  <span>Histórico de Intervenções</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
