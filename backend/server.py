@@ -989,18 +989,45 @@ class ContratoCreate(BaseModel):
 class Contrato(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
+    referencia: str  # Ex: "001/2024"
     parceiro_id: str
     motorista_id: str
     vehicle_id: Optional[str] = None
+    
+    # Dados Parceiro
     parceiro_nome: str
+    parceiro_nif: str
+    parceiro_morada: str
+    parceiro_email: str
+    
+    # Dados Motorista
     motorista_nome: str
+    motorista_cc: str
+    motorista_cc_validade: Optional[str] = None
+    motorista_nif: str
+    motorista_morada: str
+    motorista_carta_conducao: Optional[str] = None
+    motorista_carta_validade: Optional[str] = None
+    motorista_email: str
+    
+    # Dados Veículo
+    vehicle_marca: Optional[str] = None
+    vehicle_modelo: Optional[str] = None
     vehicle_matricula: Optional[str] = None
+    
+    # Termos Financeiros
     tipo_contrato: str
-    valor_semanal: Optional[float] = None
-    valor_slot: Optional[float] = None
-    percentagem_comissao: Optional[float] = None
-    horarios_disponibilidade: Optional[List[str]] = None
-    status: str  # "pendente", "parceiro_assinado", "motorista_assinado", "completo"
+    valor_semanal: float = 230.0  # Valor padrão do template
+    caucao_total: float = 300.0
+    caucao_lavagem: float = 90.0
+    
+    # Datas
+    data_inicio: str
+    data_assinatura: str
+    local_assinatura: str = "Lisboa"
+    
+    # Status e Assinaturas
+    status: str  # "rascunho", "ativo", "terminado"
     parceiro_assinado: bool = False
     motorista_assinado: bool = False
     parceiro_assinatura_data: Optional[str] = None
