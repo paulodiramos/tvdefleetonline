@@ -70,11 +70,11 @@ const PublicHome = () => {
               </div>
               <div className="flex items-center space-x-6 pt-4">
                 <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
+                  <CheckCircle className="w-5 h-5 text-blue-600" />
                   <span className="text-slate-700">+500 Motoristas</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
+                  <CheckCircle className="w-5 h-5 text-blue-600" />
                   <span className="text-slate-700">+200 Veículos</span>
                 </div>
               </div>
