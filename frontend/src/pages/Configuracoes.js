@@ -43,6 +43,13 @@ const Configuracoes = ({ user, onLogout }) => {
     descricao: '',
     features: []
   });
+  const [emailConfig, setEmailConfig] = useState({
+    email_contacto: 'info@tvdefleet.com',
+    telefone_contacto: '',
+    morada_empresa: 'Lisboa, Portugal',
+    nome_empresa: 'TVDEFleet'
+  });
+  const [savingEmail, setSavingEmail] = useState(false);
 
   useEffect(() => {
     if (activeTab === 'planos') {
