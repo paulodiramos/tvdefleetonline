@@ -71,7 +71,7 @@ const Layout = ({ user, onLogout, children }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
                 <Truck className="w-6 h-6 text-white" />
               </div>
               <Link to="/dashboard" className="text-xl font-bold text-slate-800">TVDEFleet</Link>
@@ -85,7 +85,7 @@ const Layout = ({ user, onLogout, children }) => {
                   to={item.path}
                   className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
                     isActive(item.path)
-                      ? 'bg-emerald-100 text-emerald-700'
+                      ? 'bg-blue-100 text-blue-700'
                       : 'text-slate-600 hover:bg-slate-100'
                   }`}
                   data-testid={`nav-${item.label.toLowerCase()}`}
@@ -145,7 +145,7 @@ const Layout = ({ user, onLogout, children }) => {
                   to={item.path}
                   className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition ${
                     isActive(item.path)
-                      ? 'bg-emerald-100 text-emerald-700'
+                      ? 'bg-blue-100 text-blue-700'
                       : 'text-slate-600 hover:bg-slate-100'
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
