@@ -117,6 +117,105 @@ const Login = ({ onLogin }) => {
           </div>
         </div>
       </div>
+
+      {/* Modal de Seleção de Registo */}
+      {showRegistroModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <Card className="max-w-2xl w-full">
+            <CardHeader>
+              <CardTitle className="text-2xl text-center">Como deseja registar-se?</CardTitle>
+              <CardDescription className="text-center">
+                Escolha o tipo de registo adequado ao seu perfil
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Motorista */}
+                <Card 
+                  className="cursor-pointer hover:shadow-xl hover:border-blue-500 transition"
+                  onClick={() => {
+                    setShowRegistroModal(false);
+                    navigate('/registo-motorista');
+                  }}
+                >
+                  <CardHeader className="text-center">
+                    <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Users className="w-10 h-10 text-blue-600" />
+                    </div>
+                    <CardTitle>Sou Motorista</CardTitle>
+                    <CardDescription>Quero trabalhar como motorista TVDE</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2 text-sm text-slate-600">
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle className="w-4 h-4 text-blue-600" />
+                        <span>Registo individual</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle className="w-4 h-4 text-blue-600" />
+                        <span>Acesso a veículos</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle className="w-4 h-4 text-blue-600" />
+                        <span>Suporte especializado</span>
+                      </li>
+                    </ul>
+                    <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700">
+                      Registar como Motorista
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                {/* Parceiro/Empresa */}
+                <Card 
+                  className="cursor-pointer hover:shadow-xl hover:border-purple-500 transition"
+                  onClick={() => {
+                    setShowRegistroModal(false);
+                    navigate('/registo-parceiro');
+                  }}
+                >
+                  <CardHeader className="text-center">
+                    <div className="w-20 h-20 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Building className="w-10 h-10 text-purple-600" />
+                    </div>
+                    <CardTitle>Sou Empresa/Parceiro</CardTitle>
+                    <CardDescription>Tenho uma frota ou empresa TVDE</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2 text-sm text-slate-600">
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle className="w-4 h-4 text-purple-600" />
+                        <span>Gestão de frota</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle className="w-4 h-4 text-purple-600" />
+                        <span>Múltiplos motoristas</span>
+                      </li>
+                      <li className="flex items-center space-x-2">
+                        <CheckCircle className="w-4 h-4 text-purple-600" />
+                        <span>Plataforma completa</span>
+                      </li>
+                    </ul>
+                    <Button className="w-full mt-4 bg-purple-600 hover:bg-purple-700">
+                      Registar como Parceiro
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="text-center mt-6">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowRegistroModal(false)}
+                  className="px-8"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
