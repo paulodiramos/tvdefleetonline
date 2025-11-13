@@ -693,6 +693,300 @@ const Motoristas = ({ user, onLogout }) => {
                           <p className="font-medium">{selectedMotorista.licenca_tvde_validade ? new Date(selectedMotorista.licenca_tvde_validade).toLocaleDateString('pt-PT') : 'N/A'}</p>
                         )}
                       </div>
+                      <div className="col-span-2">
+                        <Label>Código Registo Criminal (xxxx-xxxx-xxxx)</Label>
+                        {isEditing ? (
+                          <Input 
+                            value={editForm.codigo_registo_criminal || ''} 
+                            onChange={(e) => setEditForm({...editForm, codigo_registo_criminal: e.target.value})}
+                            placeholder="xxxx-xxxx-xxxx"
+                          />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.codigo_registo_criminal || 'N/A'}</p>
+                        )}
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Tab de Uploads de Documentos */}
+                  <TabsContent value="uploads" className="space-y-4">
+                    <div className="space-y-4">
+                      {/* Comprovativo de Morada */}
+                      <div className="border rounded-lg p-4">
+                        <Label className="font-semibold">Comprovativo de Morada</Label>
+                        <div className="mt-2 flex items-center gap-2">
+                          {selectedMotorista.documents?.comprovativo_morada_pdf ? (
+                            <>
+                              <Button size="sm" variant="outline" onClick={() => window.open(`${API}/${selectedMotorista.documents.comprovativo_morada_pdf}`, '_blank')}>
+                                <Download className="w-4 h-4 mr-1" />
+                                Download
+                              </Button>
+                              <span className="text-xs text-green-600">✓ Documento enviado</span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-slate-500">Nenhum documento</span>
+                          )}
+                        </div>
+                        {isEditing && (
+                          <Input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) => e.target.files[0] && handleUploadDocument('comprovativo_morada', e.target.files[0])}
+                            disabled={uploadingDoc}
+                            className="mt-2"
+                          />
+                        )}
+                      </div>
+
+                      {/* CC Frente e Verso */}
+                      <div className="border rounded-lg p-4">
+                        <Label className="font-semibold">CC Frente e Verso</Label>
+                        <div className="mt-2 flex items-center gap-2">
+                          {selectedMotorista.documents?.cc_frente_verso_pdf ? (
+                            <>
+                              <Button size="sm" variant="outline" onClick={() => window.open(`${API}/${selectedMotorista.documents.cc_frente_verso_pdf}`, '_blank')}>
+                                <Download className="w-4 h-4 mr-1" />
+                                Download PDF
+                              </Button>
+                              <span className="text-xs text-green-600">✓ Documento enviado</span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-slate-500">Nenhum documento</span>
+                          )}
+                        </div>
+                        {isEditing && (
+                          <div className="mt-2 space-y-2">
+                            <Label className="text-xs">Frente:</Label>
+                            <Input
+                              type="file"
+                              accept=".jpg,.jpeg,.png"
+                              id="cc_frente"
+                              disabled={uploadingDoc}
+                            />
+                            <Label className="text-xs">Verso:</Label>
+                            <Input
+                              type="file"
+                              accept=".jpg,.jpeg,.png"
+                              id="cc_verso"
+                              disabled={uploadingDoc}
+                            />
+                            <Button 
+                              size="sm" 
+                              onClick={() => {
+                                const frente = document.getElementById('cc_frente').files[0];
+                                const verso = document.getElementById('cc_verso').files[0];
+                                if (frente && verso) handleUploadDocument('cc_frente_verso', frente, verso);
+                                else toast.error('Selecione frente e verso');
+                              }}
+                              disabled={uploadingDoc}
+                            >
+                              Enviar CC
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Carta Frente e Verso */}
+                      <div className="border rounded-lg p-4">
+                        <Label className="font-semibold">Carta de Condução Frente e Verso</Label>
+                        <div className="mt-2 flex items-center gap-2">
+                          {selectedMotorista.documents?.carta_frente_verso_pdf ? (
+                            <>
+                              <Button size="sm" variant="outline" onClick={() => window.open(`${API}/${selectedMotorista.documents.carta_frente_verso_pdf}`, '_blank')}>
+                                <Download className="w-4 h-4 mr-1" />
+                                Download PDF
+                              </Button>
+                              <span className="text-xs text-green-600">✓ Documento enviado</span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-slate-500">Nenhum documento</span>
+                          )}
+                        </div>
+                        {isEditing && (
+                          <div className="mt-2 space-y-2">
+                            <Label className="text-xs">Frente:</Label>
+                            <Input type="file" accept=".jpg,.jpeg,.png" id="carta_frente" disabled={uploadingDoc} />
+                            <Label className="text-xs">Verso:</Label>
+                            <Input type="file" accept=".jpg,.jpeg,.png" id="carta_verso" disabled={uploadingDoc} />
+                            <Button 
+                              size="sm" 
+                              onClick={() => {
+                                const frente = document.getElementById('carta_frente').files[0];
+                                const verso = document.getElementById('carta_verso').files[0];
+                                if (frente && verso) handleUploadDocument('carta_frente_verso', frente, verso);
+                                else toast.error('Selecione frente e verso');
+                              }}
+                              disabled={uploadingDoc}
+                            >
+                              Enviar Carta
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Licença TVDE */}
+                      <div className="border rounded-lg p-4">
+                        <Label className="font-semibold">Licença TVDE</Label>
+                        <div className="mt-2 flex items-center gap-2">
+                          {selectedMotorista.documents?.licenca_tvde_pdf ? (
+                            <>
+                              <Button size="sm" variant="outline" onClick={() => window.open(`${API}/${selectedMotorista.documents.licenca_tvde_pdf}`, '_blank')}>
+                                <Download className="w-4 h-4 mr-1" />
+                                Download
+                              </Button>
+                              <span className="text-xs text-green-600">✓ Documento enviado</span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-slate-500">Nenhum documento</span>
+                          )}
+                        </div>
+                        {isEditing && (
+                          <Input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) => e.target.files[0] && handleUploadDocument('licenca_tvde', e.target.files[0])}
+                            disabled={uploadingDoc}
+                            className="mt-2"
+                          />
+                        )}
+                      </div>
+
+                      {/* Registo Criminal */}
+                      <div className="border rounded-lg p-4">
+                        <Label className="font-semibold">Registo Criminal</Label>
+                        <div className="mt-2 flex items-center gap-2">
+                          {selectedMotorista.documents?.registo_criminal_pdf ? (
+                            <>
+                              <Button size="sm" variant="outline" onClick={() => window.open(`${API}/${selectedMotorista.documents.registo_criminal_pdf}`, '_blank')}>
+                                <Download className="w-4 h-4 mr-1" />
+                                Download
+                              </Button>
+                              <span className="text-xs text-green-600">✓ Documento enviado</span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-slate-500">Nenhum documento</span>
+                          )}
+                        </div>
+                        {isEditing && (
+                          <Input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) => e.target.files[0] && handleUploadDocument('registo_criminal', e.target.files[0])}
+                            disabled={uploadingDoc}
+                            className="mt-2"
+                          />
+                        )}
+                      </div>
+
+                      {/* Comprovativo IBAN */}
+                      <div className="border rounded-lg p-4">
+                        <Label className="font-semibold">Comprovativo de IBAN</Label>
+                        <div className="mt-2 flex items-center gap-2">
+                          {selectedMotorista.documents?.iban_comprovativo_pdf ? (
+                            <>
+                              <Button size="sm" variant="outline" onClick={() => window.open(`${API}/${selectedMotorista.documents.iban_comprovativo_pdf}`, '_blank')}>
+                                <Download className="w-4 h-4 mr-1" />
+                                Download
+                              </Button>
+                              <span className="text-xs text-green-600">✓ Documento enviado</span>
+                            </>
+                          ) : (
+                            <span className="text-xs text-slate-500">Nenhum documento</span>
+                          )}
+                        </div>
+                        {isEditing && (
+                          <Input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) => e.target.files[0] && handleUploadDocument('iban', e.target.files[0])}
+                            disabled={uploadingDoc}
+                            className="mt-2"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </TabsContent>
+
+                  {/* Tab de Atribuições */}
+                  <TabsContent value="atribuicoes" className="space-y-4">
+                    <div className="space-y-4">
+                      {/* Status do Motorista */}
+                      <div>
+                        <Label>Status do Motorista</Label>
+                        {isEditing ? (
+                          <select 
+                            className="w-full p-2 border rounded-md" 
+                            value={editForm.status_motorista || 'pendente_documentos'} 
+                            onChange={(e) => setEditForm({...editForm, status_motorista: e.target.value})}
+                          >
+                            <option value="pendente_documentos">Pendente de Documentos</option>
+                            <option value="aguarda_carro">Aguarda Carro</option>
+                            <option value="ativo">Ativo</option>
+                            <option value="ferias">Férias</option>
+                            <option value="desativo">Desativo</option>
+                          </select>
+                        ) : (
+                          <p className="font-medium capitalize">{selectedMotorista.status_motorista?.replace('_', ' ') || 'Pendente de Documentos'}</p>
+                        )}
+                      </div>
+
+                      {/* Atribuição de Parceiro (Admin e Gestor) */}
+                      {(user.role === 'admin' || user.role === 'gestao') && (
+                        <div>
+                          <Label>Parceiro Atribuído</Label>
+                          {isEditing ? (
+                            <select 
+                              className="w-full p-2 border rounded-md" 
+                              value={editForm.parceiro_atribuido || ''} 
+                              onChange={(e) => {
+                                setEditForm({...editForm, parceiro_atribuido: e.target.value, veiculo_atribuido: ''});
+                                if (e.target.value) fetchVeiculosByParceiro(e.target.value);
+                                else setVeiculos([]);
+                              }}
+                            >
+                              <option value="">Nenhum</option>
+                              {parceiros.map(p => (
+                                <option key={p.id} value={p.id}>{p.nome}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <p className="font-medium">
+                              {selectedMotorista.parceiro_atribuido 
+                                ? parceiros.find(p => p.id === selectedMotorista.parceiro_atribuido)?.nome || 'N/A'
+                                : 'Nenhum'}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Atribuição de Veículo */}
+                      {(user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional') && (
+                        <div>
+                          <Label>Veículo Atribuído</Label>
+                          {isEditing ? (
+                            <select 
+                              className="w-full p-2 border rounded-md" 
+                              value={editForm.veiculo_atribuido || ''} 
+                              onChange={(e) => setEditForm({...editForm, veiculo_atribuido: e.target.value})}
+                              disabled={!editForm.parceiro_atribuido}
+                            >
+                              <option value="">Nenhum</option>
+                              {veiculos.map(v => (
+                                <option key={v.id} value={v.id}>{v.marca} {v.modelo} - {v.matricula}</option>
+                              ))}
+                            </select>
+                          ) : (
+                            <p className="font-medium">
+                              {selectedMotorista.veiculo_atribuido 
+                                ? veiculos.find(v => v.id === selectedMotorista.veiculo_atribuido)?.matricula || 'N/A'
+                                : 'Nenhum'}
+                            </p>
+                          )}
+                          {isEditing && !editForm.parceiro_atribuido && (
+                            <p className="text-xs text-slate-500 mt-1">Selecione um parceiro primeiro</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </TabsContent>
 
