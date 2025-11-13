@@ -386,13 +386,21 @@ const Usuarios = ({ user, onLogout }) => {
                       <TableCell className="font-medium">{regUser.name}</TableCell>
                       <TableCell>{regUser.email}</TableCell>
                       <TableCell>
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(
-                            regUser.role
-                          )}`}
-                        >
-                          {getRoleLabel(regUser.role)}
-                        </span>
+                        <div className="flex items-center space-x-2">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(
+                              regUser.role
+                            )}`}
+                          >
+                            {getRoleLabel(regUser.role)}
+                          </span>
+                          {regUser.status === 'blocked' && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                              <Lock className="w-3 h-3 mr-1" />
+                              Bloqueado
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>{formatDate(regUser.created_at)}</TableCell>
                       <TableCell>{regUser.phone || 'N/A'}</TableCell>
