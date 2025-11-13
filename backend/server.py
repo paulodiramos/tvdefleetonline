@@ -661,6 +661,7 @@ class Motorista(BaseModel):
     parceiro_atribuido: Optional[str] = None  # ID do parceiro
     veiculo_atribuido: Optional[str] = None  # ID do veículo
     status_motorista: Optional[str] = "pendente_documentos"  # aguarda_carro, ferias, ativo, pendente_documentos, desativo
+    tipo_motorista: Optional[str] = None  # tempo_integral, meio_periodo, independente, parceiro
     regime: Optional[str] = None
     iban: Optional[str] = None
     email_uber: Optional[str] = None
