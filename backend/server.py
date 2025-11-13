@@ -1839,7 +1839,8 @@ async def upload_motorista_documento(
             doc_url = str(pdf_path.relative_to(ROOT_DIR))
         else:
             # Single file (convert to PDF if image)
-            result = await process_uploaded_file(file, motoristas_docs_dir)
+            file_id = f"{tipo_documento}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            result = await process_uploaded_file(file, motoristas_docs_dir, file_id)
             doc_url = result.get("pdf_path") or result.get("original_path")
         
         # Update motorista documents
