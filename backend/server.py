@@ -3990,13 +3990,81 @@ async def seed_planos(current_user: Dict = Depends(get_current_user)):
 
 
 
+@api_router.post("/parceiros/{parceiro_id}/solicitar-plano")
+async def solicitar_plano_parceiro(
+    parceiro_id: str,
+    plano_data: Dict[str, str],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Parceiro: Request a subscription plan (pending admin approval)"""
+    # Check if user is the parceiro or admin
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    plano_id = plano_data.get("plano_id")
+    if not plano_id:
+        raise HTTPException(status_code=400, detail="plano_id required")
+    
+    # Check if plano exists
+    plano = await db.planos.find_one({"id": plano_id}, {"_id": 0})
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    
+    # Update parceiro with pending plan
+    result = await db.parceiros.update_one(
+        {"id": parceiro_id},
+        {
+            "$set": {
+                "plano_id": plano_id,
+                "plano_status": "pendente",
+                "plano_solicitado_em": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Parceiro not found")
+    
+    return {"message": "Plano solicitado com sucesso. Aguardando aprovação do admin.", "plano_status": "pendente"}
+
+@api_router.post("/admin/parceiros/{parceiro_id}/aprovar-plano")
+async def aprovar_plano_parceiro(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Admin: Approve parceiro's plan request"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get parceiro
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro not found")
+    
+    if not parceiro.get("plano_id"):
+        raise HTTPException(status_code=400, detail="Parceiro has no plan request")
+    
+    # Approve plan
+    result = await db.parceiros.update_one(
+        {"id": parceiro_id},
+        {
+            "$set": {
+                "plano_status": "ativo",
+                "plano_aprovado_em": datetime.now(timezone.utc).isoformat(),
+                "plano_aprovado_por": current_user["id"]
+            }
+        }
+    )
+    
+    return {"message": "Plano aprovado com sucesso!", "plano_status": "ativo"}
+
 @api_router.post("/admin/parceiros/{parceiro_id}/atribuir-plano")
 async def atribuir_plano_parceiro(
     parceiro_id: str,
     plano_data: Dict[str, str],
     current_user: Dict = Depends(get_current_user)
 ):
-    """Admin: Assign subscription plan to parceiro"""
+    """Admin: Assign subscription plan to parceiro (direct assignment, auto-approved)"""
     if current_user["role"] != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Not authorized")
     
