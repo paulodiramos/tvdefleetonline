@@ -4817,13 +4817,50 @@ async def public_contacto(contacto_data: Dict[str, Any]):
     contacto_data["id"] = contacto_id
     contacto_data["created_at"] = datetime.now(timezone.utc).isoformat()
     contacto_data["status"] = "pendente"
+    contacto_data["email_destino"] = email_destino
     
     await db.contactos.insert_one(contacto_data)
     
-    # TODO: Send email (requires email service configuration)
-    # For now, just save to database
+    # Send notification email to admin
+    await enviar_notificacao_contacto(contacto_data, email_destino)
     
     return {"message": "Contact received successfully", "id": contacto_id}
+
+async def enviar_notificacao_contacto(contacto: Dict[str, Any], email_destino: str):
+    """Send email notification about new contact (placeholder for email service)"""
+    # This is a placeholder. In production, integrate with email service like SendGrid, AWS SES, etc.
+    # For now, we just log it
+    print(f"📧 NOVO CONTACTO RECEBIDO:")
+    print(f"   Para: {email_destino}")
+    print(f"   De: {contacto.get('nome')} ({contacto.get('email')})")
+    print(f"   Assunto: {contacto.get('assunto', 'Contacto do Website')}")
+    print(f"   Mensagem: {contacto.get('mensagem')}")
+    print(f"   Telefone: {contacto.get('telefone')}")
+    
+    # Save to email queue for manual sending or integration later
+    await db.email_queue.insert_one({
+        "to": email_destino,
+        "from": "noreply@tvdefleet.com",
+        "subject": f"Novo Contacto: {contacto.get('assunto', 'Website')}",
+        "body": f"""
+        Novo contacto recebido através do website:
+        
+        Nome: {contacto.get('nome')}
+        Email: {contacto.get('email')}
+        Telefone: {contacto.get('telefone')}
+        Assunto: {contacto.get('assunto', 'N/A')}
+        
+        Mensagem:
+        {contacto.get('mensagem')}
+        
+        ---
+        ID: {contacto.get('id')}
+        Data: {contacto.get('created_at')}
+        """,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "status": "pending",
+        "tipo": "notificacao_contacto"
+    })
 
 @app.get("/api/public/parceiros")
 async def get_public_parceiros():
