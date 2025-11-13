@@ -45,6 +45,18 @@ const Dashboard = ({ user, onLogout }) => {
     }
   };
 
+  const fetchProximasDatas = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/vehicles/proximas-datas/dashboard`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setProximasDatas(response.data.dashboard || []);
+    } catch (error) {
+      console.error('Error fetching proximas datas', error);
+    }
+  };
+
   const handleResolverAlerta = async (alertaId) => {
     try {
       const token = localStorage.getItem('token');
