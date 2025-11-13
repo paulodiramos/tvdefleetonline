@@ -4508,6 +4508,77 @@ async def get_pending_users(current_user: Dict = Depends(get_current_user)):
         "pending_users": pending_motoristas
     }
 
+@api_router.get("/users/all")
+async def get_all_users(current_user: Dict = Depends(get_current_user)):
+    """Get all users (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    # Get all users from users collection
+    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(length=None)
+    
+    # Separate pending and approved users
+    pending_users = []
+    registered_users = []
+    
+    for user in users:
+        # Convert created_at to datetime if string
+        if isinstance(user.get("created_at"), str):
+            user["created_at"] = datetime.fromisoformat(user["created_at"])
+        
+        if user.get("approved", False):
+            registered_users.append(user)
+        else:
+            pending_users.append(user)
+    
+    return {
+        "pending_users": pending_users,
+        "registered_users": registered_users,
+        "pending_count": len(pending_users),
+        "registered_count": len(registered_users)
+    }
+
+@api_router.put("/users/{user_id}/approve")
+async def approve_user(
+    user_id: str,
+    approval_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Approve a pending user and optionally set role (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    new_role = approval_data.get("role")
+    valid_roles = ["motorista", "operacional", "gestao", "parceiro", "admin"]
+    
+    if new_role and new_role not in valid_roles:
+        raise HTTPException(status_code=400, detail="Invalid role")
+    
+    # Build update document
+    update_doc = {"approved": True, "approved_at": datetime.now(timezone.utc).isoformat()}
+    
+    if new_role:
+        update_doc["role"] = new_role
+    
+    # Update in users collection
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": update_doc}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # If user has motorista role, also update motoristas collection
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if user and user.get("role") == "motorista":
+        await db.motoristas.update_one(
+            {"id": user_id},
+            {"$set": {"status": "approved", "approved": True}}
+        )
+    
+    return {"message": "User approved successfully"}
+
 @api_router.put("/users/{user_id}/set-role")
 async def set_user_role(
     user_id: str,
@@ -4541,6 +4612,30 @@ async def set_user_role(
         raise HTTPException(status_code=404, detail="User not found")
     
     return {"message": "Role updated successfully"}
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(
+    user_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Delete/reject a user (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    # Check if trying to delete self
+    if user_id == current_user["id"]:
+        raise HTTPException(status_code=400, detail="Cannot delete your own account")
+    
+    # Delete from users collection
+    result = await db.users.delete_one({"id": user_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Also delete from motoristas collection if exists
+    await db.motoristas.delete_one({"id": user_id})
+    
+    return {"message": "User deleted successfully"}
 
 # ==================== CONTRACT ENDPOINTS ====================
 
