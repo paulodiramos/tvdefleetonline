@@ -59,6 +59,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
   });
   
   const [editingAgendaId, setEditingAgendaId] = useState(null);
+  const [isAgendaModalOpen, setIsAgendaModalOpen] = useState(false);
+  const [isIntervencaoModalOpen, setIsIntervencaoModalOpen] = useState(false);
+  const [editingIntervencao, setEditingIntervencao] = useState(null);
 
   const [extintorForm, setExtintorForm] = useState({
     fornecedor: '',
