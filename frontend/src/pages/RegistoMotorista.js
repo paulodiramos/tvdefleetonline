@@ -173,34 +173,6 @@ const RegistoMotorista = () => {
                 </div>
               </div>
 
-              {/* Passwords */}
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="password">Password *</Label>
-                  <Input
-                    id="password"
-                    name="password"
-                    type="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    required
-                    placeholder="Mínimo 6 caracteres"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="confirmPassword">Confirmar Password *</Label>
-                  <Input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    required
-                    placeholder="Repita a password"
-                  />
-                </div>
-              </div>
-
               {/* Dados Pessoais */}
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
