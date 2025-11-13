@@ -359,8 +359,9 @@ const Contratos = ({ user, onLogout }) => {
                         veiculos.map((v) => (
                           <SelectItem key={v.id} value={v.id}>
                             {v.matricula} - {v.marca} {v.modelo}
-                        </SelectItem>
-                      ))}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
