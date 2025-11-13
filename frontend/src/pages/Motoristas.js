@@ -261,6 +261,49 @@ const Motoristas = ({ user, onLogout }) => {
     }
   };
 
+  const handleOpenAtribuirModal = (motorista) => {
+    setSelectedMotorista(motorista);
+    setAtribuicaoData({
+      motorista_id: motorista.id,
+      parceiro_id: motorista.parceiro_atribuido || '',
+      veiculo_id: motorista.veiculo_atribuido || '',
+      tipo_motorista: motorista.tipo_motorista || 'independente'
+    });
+    setShowAtribuirDialog(true);
+    
+    // Load vehicles if parceiro is already selected
+    if (motorista.parceiro_atribuido) {
+      fetchVeiculosByParceiro(motorista.parceiro_atribuido);
+    }
+  };
+
+  const handleAtribuirParceiro = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const updateData = {
+        parceiro_atribuido: atribuicaoData.parceiro_id || null,
+        veiculo_atribuido: atribuicaoData.veiculo_id || null,
+        tipo_motorista: atribuicaoData.tipo_motorista
+      };
+
+      await axios.put(`${API}/motoristas/${atribuicaoData.motorista_id}`, updateData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Motorista atribuído com sucesso!');
+      setShowAtribuirDialog(false);
+      setAtribuicaoData({
+        motorista_id: '',
+        parceiro_id: '',
+        veiculo_id: '',
+        tipo_motorista: 'independente'
+      });
+      fetchMotoristas();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao atribuir motorista');
+    }
+  };
+
   const getInitials = (name) => {
     return name
       .split(' ')
