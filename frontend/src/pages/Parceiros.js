@@ -657,6 +657,173 @@ const Parceiros = ({ user, onLogout }) => {
           </div>
         )}
       </div>
+
+      {/* Profile Dialog */}
+      <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Building className="w-5 h-5" />
+              <span>Perfil Completo do Parceiro</span>
+            </DialogTitle>
+          </DialogHeader>
+          {profileParceiro && (
+            <div className="space-y-6">
+              {/* Parceiro Info */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Informação do Parceiro</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm text-slate-500">Nome da Empresa</label>
+                      <p className="font-medium">{profileParceiro.nome_empresa || profileParceiro.name || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-slate-500">Nome do Gestor</label>
+                      <p className="font-medium">{profileParceiro.nome_manager || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-slate-500 flex items-center space-x-1">
+                        <Mail className="w-3 h-3" />
+                        <span>Email</span>
+                      </label>
+                      <p className="font-medium">{profileParceiro.email || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-slate-500 flex items-center space-x-1">
+                        <Phone className="w-3 h-3" />
+                        <span>Telefone</span>
+                      </label>
+                      <p className="font-medium">{profileParceiro.telefone || profileParceiro.phone || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-slate-500">NIF</label>
+                      <p className="font-medium">{profileParceiro.contribuinte_empresa || profileParceiro.nif || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-slate-500">Telemóvel</label>
+                      <p className="font-medium">{profileParceiro.telemovel || 'N/A'}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-sm text-slate-500">Morada Completa</label>
+                      <p className="font-medium">{profileParceiro.morada_completa || profileParceiro.morada || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-slate-500">Código Postal</label>
+                      <p className="font-medium">{profileParceiro.codigo_postal || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <label className="text-sm text-slate-500">Localidade</label>
+                      <p className="font-medium">{profileParceiro.localidade || 'N/A'}</p>
+                    </div>
+                    {profileParceiro.codigo_certidao_comercial && (
+                      <div className="col-span-2">
+                        <label className="text-sm text-slate-500">Código Certidão Comercial</label>
+                        <p className="font-medium font-mono">{profileParceiro.codigo_certidao_comercial}</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Motoristas */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center space-x-2">
+                    <Users className="w-5 h-5" />
+                    <span>Motoristas Associados ({profileMotoristas.length})</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {profileMotoristas.length === 0 ? (
+                    <p className="text-slate-500 text-center py-4">Nenhum motorista associado</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {profileMotoristas.map((motorista) => (
+                        <div key={motorista.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                              <Users className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium">{motorista.name}</p>
+                              <p className="text-sm text-slate-500">{motorista.email}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm text-slate-600">{motorista.phone || 'N/A'}</p>
+                            <p className="text-xs text-slate-500">NIF: {motorista.nif || 'N/A'}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Veículos */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center space-x-2">
+                    <Car className="w-5 h-5" />
+                    <span>Veículos Associados ({profileVeiculos.length})</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {profileVeiculos.length === 0 ? (
+                    <p className="text-slate-500 text-center py-4">Nenhum veículo associado</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {profileVeiculos.map((veiculo) => (
+                        <div key={veiculo.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                              <Car className="w-5 h-5 text-green-600" />
+                            </div>
+                            <div>
+                              <p className="font-medium">{veiculo.marca} {veiculo.modelo}</p>
+                              <p className="text-sm text-slate-500">Matrícula: {veiculo.matricula}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm text-slate-600">{veiculo.ano || 'N/A'}</p>
+                            <p className="text-xs text-slate-500">
+                              {veiculo.status === 'disponivel' ? '✓ Disponível' : 
+                               veiculo.status === 'em_uso' ? '● Em Uso' : 
+                               veiculo.status}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Action Button */}
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowProfileDialog(false)}
+                >
+                  Fechar
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowProfileDialog(false);
+                    handleSelectParceiro(profileParceiro);
+                  }}
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Ver Contratos
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
