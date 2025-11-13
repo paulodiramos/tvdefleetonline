@@ -9,11 +9,13 @@ import { TrendingUp, TrendingDown, Car, Users, DollarSign, AlertCircle, AlertTri
 const Dashboard = ({ user, onLogout }) => {
   const [stats, setStats] = useState(null);
   const [alertas, setAlertas] = useState([]);
+  const [proximasDatas, setProximasDatas] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchStats();
     fetchAlertas();
+    fetchProximasDatas();
   }, []);
 
   const fetchStats = async () => {
