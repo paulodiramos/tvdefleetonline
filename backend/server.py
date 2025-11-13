@@ -3265,6 +3265,30 @@ async def create_parceiro(parceiro_data: ParceiroCreate, current_user: Dict = De
     
     return Parceiro(**parceiro_dict)
 
+@api_router.post("/parceiros")
+async def create_parceiro_public(parceiro_data: Dict[str, Any]):
+    """Create parceiro from public registration (no auth required)"""
+    parceiro_id = f"parceiro-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    
+    new_parceiro = {
+        "id": parceiro_id,
+        "nome": parceiro_data.get("nome"),
+        "email": parceiro_data.get("email"),
+        "telefone": parceiro_data.get("telefone"),
+        "nif": parceiro_data.get("nif"),
+        "morada": parceiro_data.get("morada"),
+        "codigo_postal": parceiro_data.get("codigo_postal"),
+        "responsavel_nome": parceiro_data.get("responsavel_nome"),
+        "responsavel_contacto": parceiro_data.get("responsavel_contacto"),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "approved": False,
+        "status": "pendente"
+    }
+    
+    await db.parceiros.insert_one(new_parceiro)
+    
+    return {"message": "Parceiro registered successfully", "id": parceiro_id}
+
 @api_router.get("/parceiros", response_model=List[Parceiro])
 async def get_parceiros(current_user: Dict = Depends(get_current_user)):
     query = {}
