@@ -30,6 +30,7 @@ import RegistoMotorista from "@/pages/RegistoMotorista";
 import RegistoParceiro from "@/pages/RegistoParceiro";
 import VeiculosPublico from "@/pages/VeiculosPublico";
 import ServicosPublico from "@/pages/ServicosPublico";
+import Contratos from "@/pages/Contratos";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
