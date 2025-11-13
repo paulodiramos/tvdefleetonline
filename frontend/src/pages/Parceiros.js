@@ -638,11 +638,20 @@ const Parceiros = ({ user, onLogout }) => {
                         <span className="font-medium">{parceiro.nif || parceiro.contribuinte_empresa}</span>
                       </div>
                     )}
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-                      <span className="text-slate-600">Veículos:</span>
-                      <div className="flex items-center space-x-1">
-                        <Car className="w-4 h-4 text-emerald-600" />
-                        <span className="font-bold text-emerald-600">{parceiro.total_vehicles || 0}</span>
+                    <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-600 text-sm">Veículos:</span>
+                        <div className="flex items-center space-x-1">
+                          <Car className="w-4 h-4 text-emerald-600" />
+                          <span className="font-bold text-emerald-600">{parceiro.total_vehicles || 0}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-600 text-sm">Motoristas:</span>
+                        <div className="flex items-center space-x-1">
+                          <Users className="w-4 h-4 text-blue-600" />
+                          <span className="font-bold text-blue-600">{parceiro.total_motoristas || 0}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
