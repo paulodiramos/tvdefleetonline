@@ -638,22 +638,67 @@ const Motoristas = ({ user, onLogout }) => {
                     </div>
                     <div className="pt-4 border-t">
                       <Label className="mb-3 block">Plataformas</Label>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label className="text-sm">Email Uber</Label>
-                          {isEditing ? (
-                            <Input value={editForm.email_uber || ''} onChange={(e) => setEditForm({...editForm, email_uber: e.target.value})} />
-                          ) : (
-                            <p className="font-medium">{selectedMotorista.email_uber || 'N/A'}</p>
-                          )}
+                      <div className="space-y-4">
+                        {/* Uber */}
+                        <div className="p-3 bg-slate-50 rounded-lg">
+                          <p className="text-sm font-semibold mb-2">🚗 Uber</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-xs">Email Uber</Label>
+                              {isEditing ? (
+                                <Input 
+                                  value={editForm.email_uber || ''} 
+                                  onChange={(e) => setEditForm({...editForm, email_uber: e.target.value})} 
+                                  placeholder={selectedMotorista.email}
+                                />
+                              ) : (
+                                <p className="font-medium text-sm">{selectedMotorista.email_uber || selectedMotorista.email}</p>
+                              )}
+                            </div>
+                            <div>
+                              <Label className="text-xs">Telefone Uber</Label>
+                              {isEditing ? (
+                                <Input 
+                                  value={editForm.telefone_uber || ''} 
+                                  onChange={(e) => setEditForm({...editForm, telefone_uber: e.target.value})}
+                                  placeholder={selectedMotorista.phone}
+                                />
+                              ) : (
+                                <p className="font-medium text-sm">{selectedMotorista.telefone_uber || selectedMotorista.phone}</p>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <Label className="text-sm">Email Bolt</Label>
-                          {isEditing ? (
-                            <Input value={editForm.email_bolt || ''} onChange={(e) => setEditForm({...editForm, email_bolt: e.target.value})} />
-                          ) : (
-                            <p className="font-medium">{selectedMotorista.email_bolt || 'N/A'}</p>
-                          )}
+
+                        {/* Bolt */}
+                        <div className="p-3 bg-slate-50 rounded-lg">
+                          <p className="text-sm font-semibold mb-2">⚡ Bolt</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <Label className="text-xs">Email Bolt</Label>
+                              {isEditing ? (
+                                <Input 
+                                  value={editForm.email_bolt || ''} 
+                                  onChange={(e) => setEditForm({...editForm, email_bolt: e.target.value})}
+                                  placeholder={selectedMotorista.email}
+                                />
+                              ) : (
+                                <p className="font-medium text-sm">{selectedMotorista.email_bolt || selectedMotorista.email}</p>
+                              )}
+                            </div>
+                            <div>
+                              <Label className="text-xs">Telefone Bolt</Label>
+                              {isEditing ? (
+                                <Input 
+                                  value={editForm.telefone_bolt || ''} 
+                                  onChange={(e) => setEditForm({...editForm, telefone_bolt: e.target.value})}
+                                  placeholder={selectedMotorista.phone}
+                                />
+                              ) : (
+                                <p className="font-medium text-sm">{selectedMotorista.telefone_bolt || selectedMotorista.phone}</p>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
