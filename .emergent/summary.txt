@@ -1,85 +1,100 @@
 <analysis>
-The trajectory documents an intensely iterative and user-driven development process. The initial task was to fix a bug related to viewing uploaded photos. However, this was immediately superseded by a cascade of feature requests from the user, primarily in Portuguese. The engineer's work pivoted to a major expansion of the vehicle and driver management systems.
+The trajectory documents a rapid and highly iterative development cycle, evolving a basic fleet management MVP into a comprehensive public-facing platform, TVDEFleet.com. The work began with a series of bug fixes related to document uploads and downloads in the driver management section. The engineer diagnosed and resolved issues ranging from incorrect backend endpoint definitions (missing , ), flawed frontend API calls (manual  header breaking multipart uploads), and incorrect file path handling for downloads.
 
-The core of the work involved:
-1.  **Intervention Management:** Building a comprehensive system on the vehicle details page () to track and report on insurance, inspections, fire extinguishers, and maintenance. This required significant backend changes in  to add new data models and API endpoints, and extensive frontend work to create new UI tabs, forms, and reports.
-2.  **UI/UX Overhaul:** The user repeatedly requested reorganizations of the UI. Tabs were frequently reordered, merged (e.g., 'Revisão' and 'Intervenções'), and had their content moved. Spacing and layout were adjusted based on direct feedback.
-3.  **Advanced Driver Profile:** The driver management page () was transformed from a simple list to a feature-rich hub. A static details modal became a fully editable interface with multiple tabs, allowing admins to manage personal, financial, and assignment (partner/vehicle) details.
-4.  **Complex File Upload System:** A sophisticated document upload feature was implemented for drivers, including handling front/verso images for documents like ID cards and driver's licenses, which are automatically merged into a single A4 PDF on the backend.
+This bug-fixing phase quickly transitioned into a massive feature expansion driven by user requests. A complete public website was built from scratch, including a homepage (), registration pages for drivers () and partners (), and marketplace pages for vehicles and services. This required significant backend work, including new models, public API endpoints, and automatic email notification systems upon registration.
 
-Throughout this process, the engineer demonstrated adaptability, adding new database fields, creating corresponding API endpoints, and building complex, stateful React components, while also addressing emergent bugs like JSX errors, missing icon imports, and backend validation issues. The final user request before this summary was to address an error in loading driver documents and to create a new user approval system for admins.
+A major focus was on UI/UX refinement. The engineer implemented a registration selection modal to differentiate between drivers and partners, and later added a third option for fleet management. The entire site's color scheme was changed from green to blue to build trust. Numerous small enhancements, like making logos and emails clickable, were also implemented. The final task was to add the third Gerir Frota option to the registration modal.
 </analysis>
 
 <product_requirements>
-The application, TVDEFleet.com, is a fleet management system for tracking vehicles, drivers, and finances. The recent development cycle focused on massively expanding the Ficha do Veículo (Vehicle Details) and Motoristas (Drivers) sections based on a series of user requests.
+The application, TVDEFleet.com, is a dual-purpose platform. It serves as an internal fleet management system and a public-facing website for attracting new drivers and partners.
 
-**Newly Implemented Features:**
-1.  **Comprehensive Intervention System:** A new system was added to track vehicle-related deadlines. This includes dedicated UI tabs and backend models for fire extinguishers (installation/expiry dates, certificate upload), maintenance, inspections, and insurance. An Interventions report tab was created to list all historical and future events.
-2.  **Enhanced Driver Profiles:** The driver details view was converted into a fully editable modal. It now includes tabs for personal info, financial details (with new fields for Uber/Bolt contact info), assignments (linking drivers to partners and vehicles), and a comprehensive document upload system.
-3.  **Driver Document Management:** Users can now upload multiple documents for each driver, including: Proof of Address, ID Card (front/back), Driver's License (front/back), Criminal Record, and IBAN proof. The system automatically combines front/back images into a single A4 PDF file.
-4.  **Interactive Dashboard:** The main dashboard was updated with cards that summarize upcoming deadlines for all vehicles (insurance, inspections, etc.). These cards are clickable, opening a modal that lists the specific vehicles requiring attention.
-5.  **UI Reorganization:** The UI of the vehicle details page was significantly refactored according to user specifications, merging and reordering tabs for a more streamlined workflow.
+**Internal Backoffice:**
+-   **Core Management:** Admins can manage vehicles, drivers, and partners.
+-   **Driver Profiles:** Detailed, editable driver profiles with tabs for personal info, financial details, assignments (vehicle/partner), and document management.
+-   **Document Handling:** A system for uploading, downloading, and managing driver documents (ID, License, etc.). It supports both PDF and image uploads, with automatic merging of front/back images into a single PDF.
+-   **User Approval System:** Admins can view and approve pending user registrations (drivers, partners) and assign roles.
+-   **Intervention Tracking:** A system to track vehicle deadlines for insurance, inspections, and maintenance.
+
+**Public Website:**
+-   **Homepage:** A marketing landing page showcasing services for drivers and fleet managers.
+-   **Registration Funnel:** A registration modal that directs users to specific forms for Motorista, Parceiro, or Gestão de Frota.
+-   **Public Marketplaces:** Pages to display available vehicles for rent/sale and to advertise associated services (mechanics, insurance).
+-   **Automated Communication:** The system automatically sends welcome emails upon successful registration.
 </product_requirements>
 
 <key_technical_concepts>
-- **Backend:** FastAPI (Python), with Pydantic for data modeling and validation.
-- **Frontend:** React.js, using functional components with Hooks (, ).
+- **Backend:** FastAPI (Python) with Pydantic for data modeling.
+- **Frontend:** React.js with functional components, Hooks (, ), and  for API calls.
 - **Database:** MongoDB.
-- **File Handling:** The backend uses  to process images and  to combine multiple images into a single A4 PDF document upon upload.
-- **API Architecture:** A RESTful API with JWT-based authentication and role-based access control. The frontend interacts with this API via .
-</key_technical_concepts>
+- **File Handling:** The backend uses  and  to merge images into A4 PDFs.
+- **API Architecture:** RESTful API with JWT authentication.
+- **UI/UX:** Use of a component library (shadcn/ui inferred from class names like , , ) and Tailwind CSS for styling.
+</gkey_technical_concepts>
 
 <code_architecture>
-The application follows a standard monolithic backend and SPA frontend architecture.
+The application uses a monolithic backend () and a Single Page Application frontend ().
 
 **Directory Structure:**
 
 
 -   ****
-    -   **Importance**: This is the application's central nervous system, containing all API logic, database models (Pydantic), and business rules.
-    -   **Summary of Changes**: This file was extensively modified. Key changes include:
-        -   **Model Expansion**: The  and  models were significantly expanded with new fields like ,  (for drivers), , , and a detailed  sub-model for driver file paths (, , etc.). The  model was also updated with a  field.
-        -   **New Endpoints**: Numerous endpoints were added to support new features, including:
-            -   CRUD endpoints for agenda events ().
-            -   A complex document upload system for drivers with endpoints for each document type (e.g., ), which utilize a new helper function  to merge front/back images.
-            -   An endpoint for a dashboard summary of upcoming dates ().
-            -   Endpoints to update interventions.
-        -   **Bug Fixes**: A  was fixed by making the  field in the  model optional to support legacy data.
+    -   **Importance:** The single source of truth for all business logic, database models, and API endpoints.
+    -   **Summary of Changes:** Extensively modified to support the expanding feature set. Key additions include:
+        -   New endpoints for user management (, , ).
+        -   A  endpoint to fetch single driver details.
+        -   An enhanced file serving endpoint () to support subdirectories.
+        -   Public-facing endpoints for the marketplace ().
+        -   Endpoints for public registration ( was updated to handle public sign-ups and send emails).
+        -   The  model was updated with  and  fields for the marketplace.
 
 -   ****
-    -   **Importance**: This component renders the detailed view for a single vehicle and was the focus of many UI-related feature requests.
-    -   **Summary of Changes**:
-        -   **UI Refactoring**: The tab structure was completely reorganized based on user feedback. The Revisão (Maintenance) and Intervenções (Interventions) tabs were merged, and the Fotos (Photos) tab was integrated into the main Info tab. Spacing was adjusted () for a more compact view.
-        -   **New Features**: An Extintor (Fire Extinguisher) tab was added with fields for number, dates, and certificate upload. The Info tab was enhanced to allow editing of core vehicle details like contract type and categories. The Relatório (Report) tab was updated to show summary cards for upcoming deadlines.
+    -   **Importance:** The main interface for managing drivers. It was the subject of numerous bug fixes and feature enhancements.
+    -   **Summary of Changes:**
+        -   Fixed a critical bug by removing the manual  header from  requests, allowing the browser to set the correct boundary.
+        -   Implemented a  function that correctly constructs file paths, accounting for new sub-directory storage.
+        -   Added UI flexibility to upload either a single PDF or separate front/back images for ID and Driver's License.
+        -   Added a Status badge to the driver detail modal for better visibility.
 
 -   ****
-    -   **Importance**: Manages the listing and details of drivers. This file received the most significant functional upgrades.
-    -   **Summary of Changes**:
-        -   **Editable Modal**: The driver detail view was transformed from a static display into a fully editable, multi-tab modal with Edit, Save, and Cancel controls.
-        -   **New Tabs**: New Atribuições (Assignments) and Documentos (Documents) tabs were added.
-        -   **Full CRUD and Document Management**: Implemented state and functions to handle creating, reading, updating, and deleting drivers. A comprehensive file upload UI was built in the Documentos tab for various document types, including a delete () functionality for uploaded files.
-        -   **Conditional Logic**: Logic was added to show/hide fields based on user role (e.g., assigning a partner/vehicle) and to fetch a partner's vehicles when a partner is selected.
+    -   **Importance:** The main landing page for the public website. Created from scratch.
+    -   **Summary of Changes:**
+        -   Built with React components to showcase services and provide registration entry points.
+        -   A registration selection modal was implemented to guide users to the correct registration form (Motorista, Parceiro, or Gestão de Frota).
+        -   All brand colors were globally changed from emerald (green) to blue for a more corporate feel.
+        -   A new Gestão de Frotas Profissional section was added to better market services to partners.
 
 -   ****
-    -   **Importance**: The main landing page after login.
-    -   **Summary of Changes**:
-        -   **Interactive Cards**: Added a section with summary cards for upcoming deadlines (Insurance, Inspection, Maintenance, Extinguishers).
-        -   **Modal Integration**: Made the summary cards clickable, triggering modals that display a detailed list of the vehicles or drivers associated with that deadline category.
-        -   **Date Filtering**: Added UI for filtering dashboard data by date range (weekly, monthly, quarterly, etc.).
+    -   **Importance:** The root component that defines application routing.
+    -   **Summary of Changes:** Updated to include routes for all new public pages (, , ) and new private admin pages (, ).
+
+-   ****
+    -   **Importance:** The application's entry point for authenticated users.
+    -   **Summary of Changes:**
+        -   The color scheme was updated to match the new blue theme.
+        -   The main logo was made clickable, redirecting users back to the public homepage.
+        -   The registration selection modal from  was also implemented here to provide a consistent registration experience.
 </code_architecture>
 
 <pending_tasks>
-- **User Management Page**: Create a new page accessible to Admins for managing users. This page should show pending and registered users, allowing an admin to approve them and assign roles (Motorista, Gestor, Parceiro, Operacional).
-- **Driver Document Download**: Implement the functionality to download the PDF documents that have been uploaded for a driver.
-- **Editable Interventions**: Allow editing the status of an intervention in the report and record which user made the change.
+- **Finalize Gerir Frota Option:** The last request was to add a third option for Gerir Frota to the registration modal. The work was started but needs to be completed for the  component and fully tested.
 </pending_tasks>
 
 <current_work>
-The engineer was in the middle of addressing a multi-part user request from message . The immediate preceding actions were to fix a runtime error in  where the code was attempting to access properties of  without first checking if the  object existed. The engineer correctly identified this as the cause of the erro a carregar documentos no motorista and applied a fix by adding optional chaining () and null checks to the document-related rendering logic in .
+The most recent work was in direct response to the user request: . This translates to make another option for fleet management.
 
-The user's request also included the ability to download these documents and to create a new user management page for admins. The engineer's very last action before this summary was to acknowledge the document loading error and begin investigating. The immediate next logical step was to create the backend endpoint to serve these files, which was done by confirming the  endpoint in  already allowed serving from the  directory. The next part of the user's request, the user management page, was about to be started.
+The engineer correctly interpreted this as needing a third option in the registration selection modal. The actions taken were:
+1.  **Modified **:
+    -   The modal's grid layout was changed from  to  to accommodate a third card.
+    -   A new  component was added for the Sou Gestor de Frota option, styled with a  theme.
+    -   The button for the Parceiro option was updated to Ver Mais + Registar.
+
+2.  **Modified **:
+    -   The same logic and new  for Gestor de Frota were added to the modal within the login page to ensure a consistent user experience.
+
+The work involved adding the new card, adjusting the grid styling, and updating the text and actions on the other cards to better differentiate the offerings. The work on  was completed, and the engineer was starting the same changes on  just before this summary.
 </current_work>
 
 <optional_next_step>
-I will begin implementing the user management and approval system for Admins, as requested by the user. This involves creating new backend endpoints and a new frontend page.
+Complete the implementation of the third Gerir Frota option in the  component's modal and then verify that the new three-option registration modal functions correctly on both the homepage and the login page.
 </optional_next_step>
