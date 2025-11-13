@@ -104,6 +104,32 @@ const Motoristas = ({ user, onLogout }) => {
     }
   };
 
+  const handleEditMotorista = () => {
+    setEditForm({...selectedMotorista});
+    setIsEditing(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditForm({});
+  };
+
+  const handleSaveMotorista = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/motoristas/${selectedMotorista.id}`, editForm, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success('Motorista atualizado com sucesso!');
+      setIsEditing(false);
+      setShowDetailDialog(false);
+      fetchMotoristas();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao atualizar motorista');
+    }
+  };
+
   const getInitials = (name) => {
     return name
       .split(' ')
