@@ -3388,6 +3388,89 @@ async def update_vehicle_intervention(
     
     return {"message": "Intervention updated successfully"}
 
+@api_router.get("/vehicles/proximas-datas/dashboard")
+async def get_proximas_datas_dashboard(current_user: Dict = Depends(get_current_user)):
+    """
+    Get dashboard with upcoming dates for all vehicles:
+    - Next inspection date
+    - Next revision date/km
+    - Insurance renewal date
+    - Fire extinguisher revision date
+    """
+    vehicles = await db.vehicles.find({}, {"_id": 0}).to_list(length=None)
+    
+    dashboard_data = []
+    today = datetime.now(timezone.utc).date()
+    
+    for vehicle in vehicles:
+        proximas_datas = {
+            "vehicle_id": vehicle.get("id"),
+            "matricula": vehicle.get("matricula"),
+            "marca": vehicle.get("marca"),
+            "modelo": vehicle.get("modelo"),
+            "datas": []
+        }
+        
+        # Próxima inspeção
+        inspection = vehicle.get("inspection", {})
+        if inspection.get("proxima_inspecao"):
+            data_inspecao = datetime.fromisoformat(inspection.get("proxima_inspecao")).date()
+            dias_restantes = (data_inspecao - today).days
+            proximas_datas["datas"].append({
+                "tipo": "Inspeção",
+                "data": inspection.get("proxima_inspecao"),
+                "dias_restantes": dias_restantes,
+                "urgente": dias_restantes <= 30
+            })
+        
+        # Renovação de seguro
+        seguro = vehicle.get("seguro", {})
+        if seguro.get("data_validade"):
+            data_seguro = datetime.fromisoformat(seguro.get("data_validade")).date()
+            dias_restantes = (data_seguro - today).days
+            proximas_datas["datas"].append({
+                "tipo": "Seguro",
+                "data": seguro.get("data_validade"),
+                "seguradora": seguro.get("seguradora"),
+                "dias_restantes": dias_restantes,
+                "urgente": dias_restantes <= 30
+            })
+        
+        # Revisão do extintor
+        extintor = vehicle.get("extintor", {})
+        if extintor.get("data_validade"):
+            data_extintor = datetime.fromisoformat(extintor.get("data_validade")).date()
+            dias_restantes = (data_extintor - today).days
+            proximas_datas["datas"].append({
+                "tipo": "Extintor",
+                "data": extintor.get("data_validade"),
+                "dias_restantes": dias_restantes,
+                "urgente": dias_restantes <= 30
+            })
+        
+        # Próxima revisão
+        if vehicle.get("proxima_revisao_data"):
+            data_revisao = datetime.fromisoformat(vehicle.get("proxima_revisao_data")).date()
+            dias_restantes = (data_revisao - today).days
+            proximas_datas["datas"].append({
+                "tipo": "Revisão",
+                "data": vehicle.get("proxima_revisao_data"),
+                "km": vehicle.get("proxima_revisao_km"),
+                "dias_restantes": dias_restantes,
+                "urgente": dias_restantes <= 15
+            })
+        
+        if proximas_datas["datas"]:
+            dashboard_data.append(proximas_datas)
+    
+    # Sort by most urgent first
+    dashboard_data.sort(key=lambda x: min([d["dias_restantes"] for d in x["datas"]]) if x["datas"] else 9999)
+    
+    return {
+        "total_vehicles": len(dashboard_data),
+        "dashboard": dashboard_data
+    }
+
 # ==================== ADMIN SETTINGS ====================
 
 @api_router.get("/admin/settings")
