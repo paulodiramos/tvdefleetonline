@@ -182,8 +182,8 @@ const Motoristas = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       await axios.post(`${API}/motoristas/${selectedMotorista.id}/upload-documento`, formData, {
         headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
+          Authorization: `Bearer ${token}`
+          // Don't set Content-Type - let axios set it with boundary
         }
       });
       
@@ -195,6 +195,7 @@ const Motoristas = ({ user, onLogout }) => {
       });
       setSelectedMotorista(response.data);
     } catch (error) {
+      console.error('Upload error:', error);
       toast.error('Erro ao enviar documento');
     } finally {
       setUploadingDoc(false);
