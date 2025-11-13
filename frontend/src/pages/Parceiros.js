@@ -696,84 +696,160 @@ const Parceiros = ({ user, onLogout }) => {
             </DialogTitle>
           </DialogHeader>
           {editingParceiro && (
-            <form onSubmit={handleEditParceiro} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="edit_nome_empresa">Nome da Empresa *</Label>
-                  <Input
-                    id="edit_nome_empresa"
-                    value={editingParceiro.nome_empresa || ''}
-                    onChange={(e) => setEditingParceiro({...editingParceiro, nome_empresa: e.target.value})}
-                    required
-                  />
+            <form onSubmit={handleEditParceiro} className="space-y-6">
+              {/* Dados da Empresa */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Dados da Empresa</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit_nome_empresa">Nome da Empresa *</Label>
+                    <Input
+                      id="edit_nome_empresa"
+                      value={editingParceiro.nome_empresa || ''}
+                      onChange={(e) => setEditingParceiro({...editingParceiro, nome_empresa: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_nif">NIF *</Label>
+                    <Input
+                      id="edit_nif"
+                      value={editingParceiro.contribuinte_empresa || ''}
+                      onChange={(e) => setEditingParceiro({...editingParceiro, contribuinte_empresa: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_email_empresa">Email da Empresa</Label>
+                    <Input
+                      id="edit_email_empresa"
+                      type="email"
+                      value={editingParceiro.email_empresa || ''}
+                      onChange={(e) => setEditingParceiro({...editingParceiro, email_empresa: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_telefone">Telefone da Empresa</Label>
+                    <Input
+                      id="edit_telefone"
+                      value={editingParceiro.telefone || ''}
+                      onChange={(e) => setEditingParceiro({...editingParceiro, telefone: e.target.value})}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="edit_nome_manager">Nome do Gestor *</Label>
-                  <Input
-                    id="edit_nome_manager"
-                    value={editingParceiro.nome_manager || ''}
-                    onChange={(e) => setEditingParceiro({...editingParceiro, nome_manager: e.target.value})}
-                    required
-                  />
+              </div>
+
+              {/* Dados do Gestor */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Dados do Gestor</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit_nome_manager">Nome do Gestor *</Label>
+                    <Input
+                      id="edit_nome_manager"
+                      value={editingParceiro.nome_manager || ''}
+                      onChange={(e) => setEditingParceiro({...editingParceiro, nome_manager: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_email_manager">Email do Gestor</Label>
+                    <Input
+                      id="edit_email_manager"
+                      type="email"
+                      value={editingParceiro.email_manager || ''}
+                      onChange={(e) => setEditingParceiro({...editingParceiro, email_manager: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_telemovel">Telemóvel do Gestor</Label>
+                    <Input
+                      id="edit_telemovel"
+                      value={editingParceiro.telemovel || ''}
+                      onChange={(e) => setEditingParceiro({...editingParceiro, telemovel: e.target.value})}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="edit_email">Email *</Label>
-                  <Input
-                    id="edit_email"
-                    type="email"
-                    value={editingParceiro.email || ''}
-                    onChange={(e) => setEditingParceiro({...editingParceiro, email: e.target.value})}
-                    required
-                  />
+              </div>
+
+              {/* Dados do Gerente (Responsável Adicional) */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Dados do Gerente / Responsável</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit_nome_gerente">Nome do Gerente</Label>
+                    <Input
+                      id="edit_nome_gerente"
+                      value={editingParceiro.nome_gerente || ''}
+                      onChange={(e) => setEditingParceiro({...editingParceiro, nome_gerente: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_email_gerente">Email do Gerente</Label>
+                    <Input
+                      id="edit_email_gerente"
+                      type="email"
+                      value={editingParceiro.email_gerente || ''}
+                      onChange={(e) => setEditingParceiro({...editingParceiro, email_gerente: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_telemovel_gerente">Telemóvel do Gerente</Label>
+                    <Input
+                      id="edit_telemovel_gerente"
+                      value={editingParceiro.telemovel_gerente || ''}
+                      onChange={(e) => setEditingParceiro({...editingParceiro, telemovel_gerente: e.target.value})}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="edit_telefone">Telefone</Label>
-                  <Input
-                    id="edit_telefone"
-                    value={editingParceiro.telefone || ''}
-                    onChange={(e) => setEditingParceiro({...editingParceiro, telefone: e.target.value})}
-                  />
+              </div>
+
+              {/* Email de Conta */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Email de Acesso ao Sistema</h3>
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Label htmlFor="edit_email">Email de Conta (Login) *</Label>
+                    <Input
+                      id="edit_email"
+                      type="email"
+                      value={editingParceiro.email || ''}
+                      onChange={(e) => setEditingParceiro({...editingParceiro, email: e.target.value})}
+                      required
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Este é o email usado para login no sistema</p>
+                  </div>
                 </div>
-                <div>
-                  <Label htmlFor="edit_telemovel">Telemóvel</Label>
-                  <Input
-                    id="edit_telemovel"
-                    value={editingParceiro.telemovel || ''}
-                    onChange={(e) => setEditingParceiro({...editingParceiro, telemovel: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit_nif">NIF *</Label>
-                  <Input
-                    id="edit_nif"
-                    value={editingParceiro.contribuinte_empresa || ''}
-                    onChange={(e) => setEditingParceiro({...editingParceiro, contribuinte_empresa: e.target.value})}
-                    required
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="edit_morada">Morada Completa</Label>
-                  <Input
-                    id="edit_morada"
-                    value={editingParceiro.morada_completa || ''}
-                    onChange={(e) => setEditingParceiro({...editingParceiro, morada_completa: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit_codigo_postal">Código Postal</Label>
-                  <Input
-                    id="edit_codigo_postal"
-                    value={editingParceiro.codigo_postal || ''}
-                    onChange={(e) => setEditingParceiro({...editingParceiro, codigo_postal: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit_localidade">Localidade</Label>
-                  <Input
-                    id="edit_localidade"
-                    value={editingParceiro.localidade || ''}
-                    onChange={(e) => setEditingParceiro({...editingParceiro, localidade: e.target.value})}
-                  />
+              </div>
+
+              {/* Morada */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Morada</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2">
+                    <Label htmlFor="edit_morada">Morada Completa</Label>
+                    <Input
+                      id="edit_morada"
+                      value={editingParceiro.morada_completa || ''}
+                      onChange={(e) => setEditingParceiro({...editingParceiro, morada_completa: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_codigo_postal">Código Postal</Label>
+                    <Input
+                      id="edit_codigo_postal"
+                      value={editingParceiro.codigo_postal || ''}
+                      onChange={(e) => setEditingParceiro({...editingParceiro, codigo_postal: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit_localidade">Localidade</Label>
+                    <Input
+                      id="edit_localidade"
+                      value={editingParceiro.localidade || ''}
+                      onChange={(e) => setEditingParceiro({...editingParceiro, localidade: e.target.value})}
+                    />
+                  </div>
                 </div>
               </div>
               <div className="flex justify-end space-x-3 pt-4">
