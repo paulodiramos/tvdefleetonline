@@ -315,7 +315,7 @@ const PublicHome = () => {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <Car className="w-6 h-6 text-emerald-400" />
+                <Car className="w-6 h-6 text-blue-400" />
                 <span className="text-xl font-bold">TVDEFleet</span>
               </div>
               <p className="text-slate-400">
@@ -325,24 +325,24 @@ const PublicHome = () => {
             <div>
               <h3 className="font-semibold mb-4">Links Rápidos</h3>
               <ul className="space-y-2 text-slate-400">
-                <li><a href="#servicos" className="hover:text-emerald-400 transition">Serviços</a></li>
-                <li><a href="#veiculos" className="hover:text-emerald-400 transition">Veículos</a></li>
-                <li><a href="/login" className="hover:text-emerald-400 transition">Login</a></li>
+                <li><a href="#servicos" className="hover:text-blue-400 transition">Serviços</a></li>
+                <li><a href="#veiculos" className="hover:text-blue-400 transition">Veículos</a></li>
+                <li><a href="/login" className="hover:text-blue-400 transition">Login</a></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Para Motoristas</h3>
               <ul className="space-y-2 text-slate-400">
-                <li><a href="/registo-motorista" className="hover:text-emerald-400 transition">Registar</a></li>
-                <li><a href="/veiculos" className="hover:text-emerald-400 transition">Ver Veículos</a></li>
-                <li><a href="/servicos" className="hover:text-emerald-400 transition">Serviços</a></li>
+                <li><a href="/registo-motorista" className="hover:text-blue-400 transition">Registar</a></li>
+                <li><a href="/veiculos" className="hover:text-blue-400 transition">Ver Veículos</a></li>
+                <li><a href="/servicos" className="hover:text-blue-400 transition">Serviços</a></li>
               </ul>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Para Empresas</h3>
               <ul className="space-y-2 text-slate-400">
-                <li><a href="/registo-parceiro" className="hover:text-emerald-400 transition">Registar Empresa</a></li>
-                <li><a href="#contacto" className="hover:text-emerald-400 transition">Contacto</a></li>
+                <li><a href="/registo-parceiro" className="hover:text-blue-400 transition">Registar Empresa</a></li>
+                <li><a href="#contacto" className="hover:text-blue-400 transition">Contacto</a></li>
               </ul>
             </div>
           </div>
