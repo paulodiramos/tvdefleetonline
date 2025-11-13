@@ -120,6 +120,35 @@ const Parceiros = ({ user, onLogout }) => {
     }
   };
 
+  const handleViewProfile = async (parceiro) => {
+    try {
+      setProfileParceiro(parceiro);
+      setShowProfileDialog(true);
+      
+      const token = localStorage.getItem('token');
+      
+      // Fetch motoristas and vehicles for this parceiro
+      const [motoristasRes, vehiclesRes] = await Promise.all([
+        axios.get(`${API}/motoristas`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/vehicles`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+      
+      // Filter by parceiro_id
+      const parceiroMotoristas = motoristasRes.data.filter(m => m.parceiro_id === parceiro.id);
+      const parceiroVeiculos = vehiclesRes.data.filter(v => v.parceiro_id === parceiro.id);
+      
+      setProfileMotoristas(parceiroMotoristas);
+      setProfileVeiculos(parceiroVeiculos);
+    } catch (error) {
+      console.error('Error loading profile:', error);
+      toast.error('Erro ao carregar perfil do parceiro');
+    }
+  };
+
   const handleCreateContract = async (e) => {
     e.preventDefault();
     
