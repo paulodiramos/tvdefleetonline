@@ -3323,7 +3323,7 @@ async def create_parceiro(parceiro_data: ParceiroCreate, current_user: Dict = De
     
     return Parceiro(**parceiro_dict)
 
-@api_router.post("/parceiros")
+@app.post("/api/parceiros/register-public")
 async def create_parceiro_public(parceiro_data: Dict[str, Any]):
     """Create parceiro from public registration (no auth required)"""
     parceiro_id = f"parceiro-{datetime.now().strftime('%Y%m%d%H%M%S')}"
