@@ -2382,15 +2382,56 @@ startxref
         print("\n" + "=" * 80)
         return failed == 0
 
+    def run_driver_assignment_tests_only(self):
+        """Run only driver assignment tests as requested in review"""
+        print("=" * 80)
+        print("TVDEFleet Backend Testing Suite - Driver Assignment Feature")
+        print("=" * 80)
+        
+        # Authenticate admin user
+        print("\n🔐 AUTHENTICATION PHASE")
+        print("-" * 40)
+        if not self.authenticate_user("admin"):
+            return False
+        
+        # Also authenticate parceiro for authorization tests
+        self.authenticate_user("parceiro")
+        
+        # Run driver assignment tests
+        print("\n🚗 DRIVER ASSIGNMENT FEATURE TESTS")
+        print("-" * 50)
+        success = self.test_driver_assignment_feature()
+        
+        # Summary
+        print("\n" + "=" * 80)
+        print("DRIVER ASSIGNMENT TEST SUMMARY")
+        print("=" * 80)
+        
+        passed = sum(1 for r in self.test_results if r["success"])
+        failed = sum(1 for r in self.test_results if not r["success"])
+        
+        print(f"Total Tests: {len(self.test_results)}")
+        print(f"✅ Passed: {passed}")
+        print(f"❌ Failed: {failed}")
+        
+        if failed > 0:
+            print("\n🔍 FAILED TESTS:")
+            for result in self.test_results:
+                if not result["success"]:
+                    print(f"   ❌ {result['test']}: {result['message']}")
+        
+        print("\n" + "=" * 80)
+        return failed == 0
+
 if __name__ == "__main__":
     tester = TVDEFleetTester()
     
-    # Run specific user management tests as requested in review
-    success = tester.run_user_management_tests_only()
+    # Run specific driver assignment tests as requested in review
+    success = tester.run_driver_assignment_tests_only()
     
     if success:
-        print("🎉 All user management tests passed!")
+        print("🎉 All driver assignment tests passed!")
         exit(0)
     else:
-        print("💥 Some user management tests failed!")
+        print("💥 Some driver assignment tests failed!")
         exit(1)
