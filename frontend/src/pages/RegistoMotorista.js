@@ -34,27 +34,15 @@ const RegistoMotorista = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Validações
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('As passwords não coincidem');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      toast.error('Password deve ter pelo menos 6 caracteres');
-      return;
-    }
-
     setLoading(true);
 
     try {
       const registoData = {
         ...formData,
         role: 'motorista',
-        approved: false
+        approved: false,
+        password: 'temporary123' // Temporary password, admin will set real one
       };
-      delete registoData.confirmPassword;
 
       await axios.post(`${API}/auth/register`, registoData);
       
