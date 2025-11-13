@@ -32,7 +32,7 @@ const PublicHome = () => {
               <Button variant="outline" onClick={() => navigate('/login')}>
                 Entrar
               </Button>
-              <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate('/registo-motorista')}>
+              <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setShowRegistroModal(true)}>
                 Registar
               </Button>
             </div>
