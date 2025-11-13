@@ -5051,8 +5051,9 @@ async def gerar_contrato(contrato_data: ContratoCreate, current_user: Dict = Dep
     
     try:
         # Get parceiro data
-        parceiro = await db.users.find_one({"id": contrato_data.parceiro_id}, {"_id": 0})
-        if not parceiro:
+        parceiro_user = await db.users.find_one({"id": contrato_data.parceiro_id}, {"_id": 0})
+        parceiro = await db.parceiros.find_one({"id": contrato_data.parceiro_id}, {"_id": 0})
+        if not parceiro and not parceiro_user:
             raise HTTPException(status_code=404, detail="Parceiro not found")
         
         # Get motorista data
@@ -5060,30 +5061,63 @@ async def gerar_contrato(contrato_data: ContratoCreate, current_user: Dict = Dep
         if not motorista:
             raise HTTPException(status_code=404, detail="Motorista not found")
         
-        # Get vehicle data (optional for carro_proprio)
-        vehicle = None
-        vehicle_matricula = None
-        if contrato_data.vehicle_id:
-            vehicle = await db.vehicles.find_one({"id": contrato_data.vehicle_id}, {"_id": 0})
-            if vehicle:
-                vehicle_matricula = vehicle.get("matricula")
+        # Get vehicle data
+        vehicle = await db.vehicles.find_one({"id": contrato_data.vehicle_id}, {"_id": 0})
+        if not vehicle:
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+        
+        # Generate referencia (count existing contracts + 1)
+        contract_count = await db.contratos.count_documents({})
+        ano = datetime.now().year
+        referencia = f"{str(contract_count + 1).zfill(3)}/{ano}"
         
         # Create contract
         contrato_id = str(uuid.uuid4())
+        
+        # Use parceiro data (prefer parceiros collection, fallback to users)
+        parceiro_data = parceiro if parceiro else parceiro_user
+        
         contrato = {
             "id": contrato_id,
+            "referencia": referencia,
             "parceiro_id": contrato_data.parceiro_id,
             "motorista_id": contrato_data.motorista_id,
             "vehicle_id": contrato_data.vehicle_id,
-            "parceiro_nome": parceiro.get("nome_empresa") or parceiro.get("name") or parceiro.get("email"),
+            
+            # Dados Parceiro
+            "parceiro_nome": parceiro_data.get("nome_empresa") or parceiro_data.get("nome") or parceiro_data.get("name"),
+            "parceiro_nif": parceiro_data.get("contribuinte_empresa") or parceiro_data.get("nif"),
+            "parceiro_morada": parceiro_data.get("morada_completa") or parceiro_data.get("morada") or "",
+            "parceiro_email": parceiro_data.get("email_empresa") or parceiro_data.get("email"),
+            
+            # Dados Motorista
             "motorista_nome": motorista.get("name"),
-            "vehicle_matricula": vehicle_matricula,
-            "tipo_contrato": contrato_data.tipo_contrato,
+            "motorista_cc": motorista.get("cc_numero") or motorista.get("numero_cc") or "",
+            "motorista_cc_validade": motorista.get("cc_validade") or "",
+            "motorista_nif": motorista.get("nif") or "",
+            "motorista_morada": motorista.get("morada") or "",
+            "motorista_carta_conducao": motorista.get("carta_conducao") or "",
+            "motorista_carta_validade": motorista.get("carta_validade") or "",
+            "motorista_email": motorista.get("email") or "",
+            
+            # Dados Veículo
+            "vehicle_marca": vehicle.get("marca"),
+            "vehicle_modelo": vehicle.get("modelo"),
+            "vehicle_matricula": vehicle.get("matricula"),
+            
+            # Termos Financeiros
+            "tipo_contrato": "prestacao_servicos",
             "valor_semanal": contrato_data.valor_semanal,
-            "valor_slot": contrato_data.valor_slot,
-            "percentagem_comissao": contrato_data.percentagem_comissao,
-            "horarios_disponibilidade": contrato_data.horarios_disponibilidade or [],
-            "status": "pendente",
+            "caucao_total": contrato_data.caucao_total,
+            "caucao_lavagem": contrato_data.caucao_lavagem,
+            
+            # Datas
+            "data_inicio": contrato_data.data_inicio,
+            "data_assinatura": datetime.now().strftime("%d/%m/%Y"),
+            "local_assinatura": "Lisboa",
+            
+            # Status
+            "status": "rascunho",
             "parceiro_assinado": False,
             "motorista_assinado": False,
             "parceiro_assinatura_data": None,
@@ -5097,7 +5131,8 @@ async def gerar_contrato(contrato_data: ContratoCreate, current_user: Dict = Dep
         
         return {
             "message": "Contract generated successfully",
-            "contrato_id": contrato_id
+            "contrato_id": contrato_id,
+            "referencia": referencia
         }
         
     except HTTPException:
