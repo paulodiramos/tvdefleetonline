@@ -13,6 +13,11 @@ const Dashboard = ({ user, onLogout }) => {
   const [proximasDatas, setProximasDatas] = useState([]);
   const [loading, setLoading] = useState(true);
   
+  // Filtros de data
+  const [periodoTipo, setPeriodoTipo] = useState('mes_atual'); // mes_atual, semanal, trimestral, semestral, anual, personalizado
+  const [dataInicio, setDataInicio] = useState('');
+  const [dataFim, setDataFim] = useState('');
+  
   // Modal states
   const [segurosModalOpen, setSegurosModalOpen] = useState(false);
   const [inspecoesModalOpen, setInspecoesModalOpen] = useState(false);
@@ -23,7 +28,7 @@ const Dashboard = ({ user, onLogout }) => {
     fetchStats();
     fetchAlertas();
     fetchProximasDatas();
-  }, []);
+  }, [periodoTipo, dataInicio, dataFim]);
 
   const fetchStats = async () => {
     try {
