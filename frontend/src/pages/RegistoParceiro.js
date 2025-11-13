@@ -16,14 +16,15 @@ const RegistoParceiro = () => {
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
-    password: '',
-    confirmPassword: '',
     telefone: '',
     nif: '',
     morada: '',
     codigo_postal: '',
     responsavel_nome: '',
-    responsavel_contacto: ''
+    responsavel_contacto: '',
+    numero_veiculos: '',
+    numero_motoristas: '',
+    finalidade: 'gestao_frota' // gestao_frota ou usar_plataforma
   });
 
   const handleChange = (e) => {
