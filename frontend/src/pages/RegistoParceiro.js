@@ -258,6 +258,22 @@ const RegistoParceiro = () => {
                 </div>
               </div>
 
+              <div>
+                <Label htmlFor="codigo_certidao_comercial">Código de Certidão Comercial *</Label>
+                <Input
+                  id="codigo_certidao_comercial"
+                  name="codigo_certidao_comercial"
+                  value={formData.codigo_certidao_comercial}
+                  onChange={handleChange}
+                  required
+                  placeholder="xxxx-xxxx-xxxx"
+                  maxLength={14}
+                  pattern="\d{4}-\d{4}-\d{4}"
+                  title="Formato: xxxx-xxxx-xxxx"
+                />
+                <p className="text-xs text-slate-500 mt-1">Formato: xxxx-xxxx-xxxx (12 dígitos)</p>
+              </div>
+
               <div className="border-t pt-6">
                 <h3 className="text-lg font-semibold mb-4">Informações da Frota</h3>
                 <div className="grid md:grid-cols-3 gap-4">
