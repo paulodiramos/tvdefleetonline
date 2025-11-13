@@ -18,6 +18,8 @@ const Financials = ({ user, onLogout }) => {
   const [vehicles, setVehicles] = useState([]);
   const [expenses, setExpenses] = useState([]);
   const [revenues, setRevenues] = useState([]);
+  const [motoristas, setMotoristas] = useState([]);
+  const [relatorios, setRelatorios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showExpenseDialog, setShowExpenseDialog] = useState(false);
   const [showRevenueDialog, setShowRevenueDialog] = useState(false);
