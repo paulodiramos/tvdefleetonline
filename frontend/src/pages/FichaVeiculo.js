@@ -64,6 +64,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
   const [editingIntervencao, setEditingIntervencao] = useState(null);
 
   const [extintorForm, setExtintorForm] = useState({
+    numeracao: '',
     fornecedor: '',
     empresa_certificacao: '',
     preco: '',
