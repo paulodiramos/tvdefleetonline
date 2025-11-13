@@ -166,6 +166,55 @@ const Motoristas = ({ user, onLogout }) => {
     }
   };
 
+  const handleUploadDocument = async (tipoDocumento, file, file2 = null) => {
+    setUploadingDoc(true);
+    const formData = new FormData();
+    formData.append('tipo_documento', tipoDocumento);
+    formData.append('file', file);
+    if (file2) formData.append('file2', file2);
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/motoristas/${selectedMotorista.id}/upload-documento`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      toast.success('Documento enviado com sucesso!');
+      fetchMotoristas();
+      // Refresh selected motorista
+      const response = await axios.get(`${API}/motoristas/${selectedMotorista.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSelectedMotorista(response.data);
+    } catch (error) {
+      toast.error('Erro ao enviar documento');
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  const handleDeleteMotorista = async () => {
+    if (!window.confirm(`Tem certeza que deseja excluir o motorista ${selectedMotorista.name}? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/motoristas/${selectedMotorista.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success('Motorista excluído com sucesso!');
+      setShowDetailDialog(false);
+      fetchMotoristas();
+    } catch (error) {
+      toast.error('Erro ao excluir motorista');
+    }
+  };
+
   const getInitials = (name) => {
     return name
       .split(' ')
