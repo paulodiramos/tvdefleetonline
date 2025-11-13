@@ -103,15 +103,15 @@ const Login = ({ onLogin }) => {
 
         <div className="mt-8 grid grid-cols-3 gap-4 text-center">
           <div className="p-3 bg-white rounded-lg shadow-sm">
-            <Truck className="w-6 h-6 text-emerald-600 mx-auto mb-1" />
+            <Truck className="w-6 h-6 text-blue-600 mx-auto mb-1" />
             <p className="text-xs text-slate-600">Gestão de Frotas</p>
           </div>
           <div className="p-3 bg-white rounded-lg shadow-sm">
-            <Shield className="w-6 h-6 text-emerald-600 mx-auto mb-1" />
+            <Shield className="w-6 h-6 text-blue-600 mx-auto mb-1" />
             <p className="text-xs text-slate-600">Seguros</p>
           </div>
           <div className="p-3 bg-white rounded-lg shadow-sm">
-            <Users className="w-6 h-6 text-emerald-600 mx-auto mb-1" />
+            <Users className="w-6 h-6 text-blue-600 mx-auto mb-1" />
             <p className="text-xs text-slate-600">Motoristas</p>
           </div>
         </div>
