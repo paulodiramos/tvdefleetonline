@@ -481,6 +481,137 @@ const Usuarios = ({ user, onLogout }) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* User Details Dialog */}
+      <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Eye className="w-5 h-5" />
+              <span>Detalhes do Utilizador</span>
+            </DialogTitle>
+          </DialogHeader>
+          {viewingUser && (
+            <div className="space-y-6">
+              {/* Personal Info */}
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800 mb-4">Informação Pessoal</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-slate-500">Nome</label>
+                    <p className="font-medium text-slate-800">{viewingUser.name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-slate-500 flex items-center space-x-1">
+                      <Mail className="w-3 h-3" />
+                      <span>Email</span>
+                    </label>
+                    <p className="font-medium text-slate-800">{viewingUser.email || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-slate-500 flex items-center space-x-1">
+                      <Phone className="w-3 h-3" />
+                      <span>Telefone</span>
+                    </label>
+                    <p className="font-medium text-slate-800">{viewingUser.phone || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm text-slate-500 flex items-center space-x-1">
+                      <Calendar className="w-3 h-3" />
+                      <span>Data de Registo</span>
+                    </label>
+                    <p className="font-medium text-slate-800">{formatDate(viewingUser.created_at)}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Role Info */}
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800 mb-4">Informação de Acesso</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm text-slate-500">Role Solicitada</label>
+                    <div className="mt-1">
+                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getRoleBadgeColor(viewingUser.role)}`}>
+                        {getRoleLabel(viewingUser.role)}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm text-slate-500">Status</label>
+                    <div className="mt-1">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
+                        <Clock className="w-3 h-3 mr-1" />
+                        Pendente
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Info (if motorista or parceiro) */}
+              {(viewingUser.role === 'motorista' || viewingUser.role === 'parceiro') && (
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Informação Adicional</h3>
+                  <div className="bg-slate-50 p-4 rounded-lg space-y-2">
+                    {viewingUser.nif && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-slate-600">NIF:</span>
+                        <span className="text-sm font-medium text-slate-800">{viewingUser.nif}</span>
+                      </div>
+                    )}
+                    {viewingUser.morada && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-slate-600">Morada:</span>
+                        <span className="text-sm font-medium text-slate-800">{viewingUser.morada}</span>
+                      </div>
+                    )}
+                    {viewingUser.empresa && (
+                      <div className="flex justify-between">
+                        <span className="text-sm text-slate-600 flex items-center space-x-1">
+                          <Building className="w-3 h-3" />
+                          <span>Empresa:</span>
+                        </span>
+                        <span className="text-sm font-medium text-slate-800">{viewingUser.empresa}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDetailsDialog(false)}
+                >
+                  Fechar
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    setShowDetailsDialog(false);
+                    openDeleteDialog(viewingUser);
+                  }}
+                >
+                  <UserX className="w-4 h-4 mr-1" />
+                  Rejeitar
+                </Button>
+                <Button
+                  className="bg-blue-600 hover:bg-blue-700"
+                  onClick={() => {
+                    setShowDetailsDialog(false);
+                    openApproveDialog(viewingUser);
+                  }}
+                >
+                  <UserCheck className="w-4 h-4 mr-1" />
+                  Aprovar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
