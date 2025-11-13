@@ -148,6 +148,146 @@ const Dashboard = ({ user, onLogout }) => {
           />
         </div>
 
+        {/* Próximas Intervenções - Summary Cards */}
+        <Card className="card-hover">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Calendar className="w-5 h-5 text-blue-600" />
+              <span>Próximas Intervenções - Visão Geral</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Próximos Seguros */}
+              <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Shield className="w-6 h-6 text-green-600" />
+                  <span className="text-xs font-semibold bg-green-200 text-green-800 px-2 py-1 rounded">
+                    {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Seguro')).length}
+                  </span>
+                </div>
+                <p className="text-sm font-semibold text-slate-700 mb-1">Próximos Seguros</p>
+                {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Seguro')).slice(0, 1).map((vehicle, idx) => {
+                  const seguroData = vehicle.datas.find(d => d.tipo === 'Seguro');
+                  return (
+                    <div key={idx} className="text-xs text-slate-600">
+                      <p className="font-medium truncate">{vehicle.matricula}</p>
+                      <p className="text-green-700 font-semibold">
+                        {seguroData && new Date(seguroData.data).toLocaleDateString('pt-PT')}
+                      </p>
+                      {seguroData && (
+                        <p className={`text-xs ${seguroData.urgente ? 'text-red-600' : 'text-slate-500'}`}>
+                          {seguroData.dias_restantes < 0 ? `${Math.abs(seguroData.dias_restantes)}d atraso` : 
+                           `em ${seguroData.dias_restantes} dias`}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+                {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Seguro')).length === 0 && (
+                  <p className="text-xs text-slate-500">Nenhum pendente</p>
+                )}
+              </div>
+
+              {/* Próximas Inspeções */}
+              <div className="bg-purple-50 border-2 border-purple-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <ClipboardCheck className="w-6 h-6 text-purple-600" />
+                  <span className="text-xs font-semibold bg-purple-200 text-purple-800 px-2 py-1 rounded">
+                    {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Inspeção')).length}
+                  </span>
+                </div>
+                <p className="text-sm font-semibold text-slate-700 mb-1">Próximas Inspeções</p>
+                {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Inspeção')).slice(0, 1).map((vehicle, idx) => {
+                  const inspecaoData = vehicle.datas.find(d => d.tipo === 'Inspeção');
+                  return (
+                    <div key={idx} className="text-xs text-slate-600">
+                      <p className="font-medium truncate">{vehicle.matricula}</p>
+                      <p className="text-purple-700 font-semibold">
+                        {inspecaoData && new Date(inspecaoData.data).toLocaleDateString('pt-PT')}
+                      </p>
+                      {inspecaoData && (
+                        <p className={`text-xs ${inspecaoData.urgente ? 'text-red-600' : 'text-slate-500'}`}>
+                          {inspecaoData.dias_restantes < 0 ? `${Math.abs(inspecaoData.dias_restantes)}d atraso` : 
+                           `em ${inspecaoData.dias_restantes} dias`}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+                {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Inspeção')).length === 0 && (
+                  <p className="text-xs text-slate-500">Nenhuma pendente</p>
+                )}
+              </div>
+
+              {/* Próximas Revisões */}
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <Wrench className="w-6 h-6 text-blue-600" />
+                  <span className="text-xs font-semibold bg-blue-200 text-blue-800 px-2 py-1 rounded">
+                    {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Revisão')).length}
+                  </span>
+                </div>
+                <p className="text-sm font-semibold text-slate-700 mb-1">Próximas Revisões</p>
+                {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Revisão')).slice(0, 1).map((vehicle, idx) => {
+                  const revisaoData = vehicle.datas.find(d => d.tipo === 'Revisão');
+                  return (
+                    <div key={idx} className="text-xs text-slate-600">
+                      <p className="font-medium truncate">{vehicle.matricula}</p>
+                      <p className="text-blue-700 font-semibold">
+                        {revisaoData && new Date(revisaoData.data).toLocaleDateString('pt-PT')}
+                      </p>
+                      {revisaoData && revisaoData.km && (
+                        <p className="text-xs text-slate-600">{revisaoData.km.toLocaleString()} km</p>
+                      )}
+                      {revisaoData && (
+                        <p className={`text-xs ${revisaoData.urgente ? 'text-red-600' : 'text-slate-500'}`}>
+                          {revisaoData.dias_restantes < 0 ? `${Math.abs(revisaoData.dias_restantes)}d atraso` : 
+                           `em ${revisaoData.dias_restantes} dias`}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+                {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Revisão')).length === 0 && (
+                  <p className="text-xs text-slate-500">Nenhuma pendente</p>
+                )}
+              </div>
+
+              {/* Próximos Extintores */}
+              <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <AlertCircle className="w-6 h-6 text-red-600" />
+                  <span className="text-xs font-semibold bg-red-200 text-red-800 px-2 py-1 rounded">
+                    {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Extintor')).length}
+                  </span>
+                </div>
+                <p className="text-sm font-semibold text-slate-700 mb-1">Validade Extintores</p>
+                {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Extintor')).slice(0, 1).map((vehicle, idx) => {
+                  const extintorData = vehicle.datas.find(d => d.tipo === 'Extintor');
+                  return (
+                    <div key={idx} className="text-xs text-slate-600">
+                      <p className="font-medium truncate">{vehicle.matricula}</p>
+                      <p className="text-red-700 font-semibold">
+                        {extintorData && new Date(extintorData.data).toLocaleDateString('pt-PT')}
+                      </p>
+                      {extintorData && (
+                        <p className={`text-xs ${extintorData.urgente ? 'text-red-600' : 'text-slate-500'}`}>
+                          {extintorData.dias_restantes < 0 ? `${Math.abs(extintorData.dias_restantes)}d atraso` : 
+                           `em ${extintorData.dias_restantes} dias`}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+                {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Extintor')).length === 0 && (
+                  <p className="text-xs text-slate-500">Nenhuma pendente</p>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card className="card-hover" data-testid="revenue-card">
             <CardHeader>
