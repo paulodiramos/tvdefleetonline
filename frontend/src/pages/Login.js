@@ -77,7 +77,7 @@ const Login = ({ onLogin }) => {
               </div>
               <Button
                 type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                className="w-full bg-blue-600 hover:bg-blue-700"
                 disabled={loading}
                 data-testid="login-submit-button"
               >
