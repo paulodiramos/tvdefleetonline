@@ -129,7 +129,7 @@ const Login = ({ onLogin }) => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-3 gap-6">
                 {/* Motorista */}
                 <Card 
                   className="cursor-pointer hover:shadow-xl hover:border-blue-500 transition"
