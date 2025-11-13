@@ -294,7 +294,7 @@ const RegistoParceiro = () => {
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
-                  <strong>Próximos passos:</strong> Após o registo, a nossa equipa entrará em contacto para finalizar o processo de parceria e fornecer acesso completo à plataforma.
+                  <strong>Próximos passos:</strong> Após o registo, receberá um email com as suas credenciais de acesso. A nossa equipa entrará em contacto para finalizar o processo de parceria.
                 </p>
               </div>
 
