@@ -561,9 +561,11 @@ const Motoristas = ({ user, onLogout }) => {
                 </div>
 
                 <Tabs defaultValue="pessoal" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
+                  <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="pessoal">Pessoal</TabsTrigger>
                     <TabsTrigger value="docs">Documentação</TabsTrigger>
+                    <TabsTrigger value="uploads">Uploads</TabsTrigger>
+                    <TabsTrigger value="atribuicoes">Atribuições</TabsTrigger>
                     <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
                   </TabsList>
                   
