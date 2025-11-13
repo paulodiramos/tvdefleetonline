@@ -205,15 +205,20 @@ const Motoristas = ({ user, onLogout }) => {
 
   const handleDownloadDocument = async (documentPath) => {
     try {
-      // Extract filename from path (e.g., "uploads/motoristas/filename.pdf" -> "filename.pdf")
-      const filename = documentPath.split('/').pop();
+      // Extract path after "uploads/motoristas/"
+      // e.g., "uploads/motoristas/motorista-001/file.pdf" -> "motorista-001/file.pdf"
+      const pathParts = documentPath.split('motoristas/');
+      const relativePath = pathParts.length > 1 ? pathParts[1] : documentPath.split('/').pop();
       
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/files/motoristas/${filename}`, {
+      const response = await axios.get(`${API}/files/motoristas/${relativePath}`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
       });
 
+      // Extract just the filename for download
+      const filename = documentPath.split('/').pop();
+      
       // Create a blob URL and trigger download
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
@@ -225,7 +230,8 @@ const Motoristas = ({ user, onLogout }) => {
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading document:', error);
-      toast.error('Erro ao fazer download do documento');
+      const errorMessage = error.response?.data?.detail || 'Erro ao fazer download do documento';
+      toast.error(errorMessage);
     }
   };
 
