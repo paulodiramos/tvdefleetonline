@@ -1808,6 +1808,57 @@ async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_
     
     return {"message": "Motorista approved"}
 
+@api_router.put("/motoristas/{motorista_id}")
+async def update_motorista(
+    motorista_id: str, 
+    update_data: Dict[str, Any], 
+    current_user: Dict = Depends(get_current_user)
+):
+    """Update motorista data (partial updates allowed)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Check if motorista exists
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista not found")
+    
+    # Remove fields that shouldn't be updated directly
+    update_data.pop("id", None)
+    update_data.pop("created_at", None)
+    update_data.pop("_id", None)
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No data to update")
+    
+    # Update motorista
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Motorista updated successfully"}
+
+@api_router.delete("/motoristas/{motorista_id}")
+async def delete_motorista(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Delete a motorista (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    # Delete from motoristas collection
+    result = await db.motoristas.delete_one({"id": motorista_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Motorista not found")
+    
+    # Also delete from users collection if exists
+    await db.users.delete_one({"id": motorista_id})
+    
+    return {"message": "Motorista deleted successfully"}
+
 @api_router.post("/motoristas/{motorista_id}/upload-documento")
 async def upload_motorista_documento(
     motorista_id: str,
