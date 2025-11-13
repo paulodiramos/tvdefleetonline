@@ -856,7 +856,7 @@ const Motoristas = ({ user, onLogout }) => {
                         <div className="mt-2 flex items-center gap-2">
                           {selectedMotorista.documents?.licenca_tvde_pdf ? (
                             <>
-                              <Button size="sm" variant="outline" onClick={() => window.open(`${API}/${selectedMotorista.documents.licenca_tvde_pdf}`, '_blank')}>
+                              <Button size="sm" variant="outline" onClick={() => handleDownloadDocument(selectedMotorista.documents.licenca_tvde_pdf)}>
                                 <Download className="w-4 h-4 mr-1" />
                                 Download
                               </Button>
