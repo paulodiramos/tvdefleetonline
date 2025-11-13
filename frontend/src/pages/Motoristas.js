@@ -1293,6 +1293,124 @@ const Motoristas = ({ user, onLogout }) => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Assignment Dialog */}
+        <Dialog open={showAtribuirDialog} onOpenChange={setShowAtribuirDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Atribuir Motorista a Parceiro</DialogTitle>
+            </DialogHeader>
+            
+            {selectedMotorista && (
+              <div className="space-y-4">
+                {/* Motorista Info */}
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm font-semibold text-blue-900">{selectedMotorista.name}</p>
+                  <p className="text-xs text-blue-700">{selectedMotorista.email}</p>
+                </div>
+
+                {/* Tipo Motorista */}
+                <div className="space-y-2">
+                  <Label>Tipo de Motorista</Label>
+                  <Select 
+                    value={atribuicaoData.tipo_motorista} 
+                    onValueChange={(value) => setAtribuicaoData({...atribuicaoData, tipo_motorista: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="independente">Independente</SelectItem>
+                      <SelectItem value="tempo_integral">Tempo Integral</SelectItem>
+                      <SelectItem value="meio_periodo">Meio Período</SelectItem>
+                      <SelectItem value="parceiro">Parceiro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Parceiro Selection */}
+                <div className="space-y-2">
+                  <Label>Parceiro (Opcional)</Label>
+                  <Select 
+                    value={atribuicaoData.parceiro_id} 
+                    onValueChange={(value) => {
+                      setAtribuicaoData({...atribuicaoData, parceiro_id: value, veiculo_id: ''});
+                      if (value) {
+                        fetchVeiculosByParceiro(value);
+                      } else {
+                        setVeiculos([]);
+                      }
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um parceiro" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Nenhum</SelectItem>
+                      {parceiros.map(p => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.nome_empresa || p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Vehicle Selection - Only if partner selected */}
+                {atribuicaoData.parceiro_id && (
+                  <div className="space-y-2">
+                    <Label>Veículo (Opcional)</Label>
+                    <Select 
+                      value={atribuicaoData.veiculo_id} 
+                      onValueChange={(value) => setAtribuicaoData({...atribuicaoData, veiculo_id: value})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um veículo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Nenhum</SelectItem>
+                        {veiculos.map(v => (
+                          <SelectItem key={v.id} value={v.id}>
+                            {v.marca} {v.modelo} - {v.matricula}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {veiculos.length === 0 && atribuicaoData.parceiro_id && (
+                      <p className="text-xs text-amber-600">Nenhum veículo disponível para este parceiro</p>
+                    )}
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex space-x-2 pt-2">
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => {
+                      setShowAtribuirDialog(false);
+                      setAtribuicaoData({
+                        motorista_id: '',
+                        parceiro_id: '',
+                        veiculo_id: '',
+                        tipo_motorista: 'independente'
+                      });
+                      setVeiculos([]);
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    className="flex-1 bg-blue-600 hover:bg-blue-700"
+                    onClick={handleAtribuirParceiro}
+                  >
+                    Atribuir
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
