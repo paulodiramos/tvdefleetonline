@@ -1,350 +1,479 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API } from '@/App';
-import Layout from '@/components/Layout';
+import Layout from '../components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { FileText, Download, CheckCircle, Clock, Users, Car } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'react-hot-toast';
+import { FileText, Plus, Eye, Download, Check, X, Calendar, User, Car, Building } from 'lucide-react';
+
+const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001/api';
 
 const Contratos = ({ user, onLogout }) => {
+  const [contratos, setContratos] = useState([]);
   const [parceiros, setParceiros] = useState([]);
   const [motoristas, setMotoristas] = useState([]);
-  const [vehicles, setVehicles] = useState([]);
-  const [selectedParceiro, setSelectedParceiro] = useState('');
-  const [selectedMotorista, setSelectedMotorista] = useState('');
-  const [selectedVehicle, setSelectedVehicle] = useState('');
-  const [contratos, setContratos] = useState([]);
+  const [veiculos, setVeiculos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState({ type: '', text: '' });
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showViewDialog, setShowViewDialog] = useState(false);
+  const [selectedContrato, setSelectedContrato] = useState(null);
+
+  const [formData, setFormData] = useState({
+    parceiro_id: '',
+    motorista_id: '',
+    vehicle_id: '',
+    data_inicio: new Date().toISOString().split('T')[0],
+    valor_semanal: 230,
+    caucao_total: 300,
+    caucao_lavagem: 90
+  });
 
   useEffect(() => {
-    fetchData();
+    fetchContratos();
+    fetchParceiros();
+    fetchMotoristas();
+    fetchVeiculos();
   }, []);
 
-  useEffect(() => {
-    if (selectedParceiro) {
-      fetchParceiroResources(selectedParceiro);
-    }
-  }, [selectedParceiro]);
-
-  const fetchData = async () => {
+  const fetchContratos = async () => {
     try {
       const token = localStorage.getItem('token');
-      
-      // Fetch parceiros
-      if (user.role === 'admin' || user.role === 'gestao') {
-        const parceirosRes = await axios.get(`${API}/parceiros`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setParceiros(parceirosRes.data);
-      }
-
-      // Fetch existing contracts
-      const contratosRes = await axios.get(`${API}/contratos`, {
+      const response = await axios.get(`${API}/contratos`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setContratos(contratosRes.data);
-      
+      setContratos(response.data);
+      setLoading(false);
     } catch (error) {
-      console.error('Error fetching data', error);
-    } finally {
+      console.error('Error fetching contratos:', error);
+      toast.error('Erro ao carregar contratos');
       setLoading(false);
     }
   };
 
-  const fetchParceiroResources = async (parceiroId) => {
+  const fetchParceiros = async () => {
     try {
       const token = localStorage.getItem('token');
-      
-      // Fetch motoristas do parceiro
-      const motoristasRes = await axios.get(`${API}/motoristas`, {
+      const response = await axios.get(`${API}/parceiros`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const parceiroMotoristas = motoristasRes.data.filter(m => m.parceiro_atribuido === parceiroId);
-      setMotoristas(parceiroMotoristas);
+      setParceiros(response.data);
+    } catch (error) {
+      console.error('Error fetching parceiros:', error);
+    }
+  };
 
-      // Fetch vehicles do parceiro
-      const vehiclesRes = await axios.get(`${API}/vehicles`, {
+  const fetchMotoristas = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/motoristas`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const parceiroVehicles = vehiclesRes.data.filter(v => v.parceiro_id === parceiroId);
-      setVehicles(parceiroVehicles);
-      
+      setMotoristas(response.data);
     } catch (error) {
-      console.error('Error fetching parceiro resources', error);
+      console.error('Error fetching motoristas:', error);
     }
   };
 
-  const handleGenerateContract = async () => {
-    if (!selectedParceiro || !selectedMotorista || !selectedVehicle) {
-      setMessage({ type: 'error', text: 'Selecione Parceiro, Motorista e Veículo' });
-      return;
-    }
-
+  const fetchVeiculos = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API}/contratos/gerar`,
-        {
-          parceiro_id: selectedParceiro,
-          motorista_id: selectedMotorista,
-          vehicle_id: selectedVehicle
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setMessage({ 
-        type: 'success', 
-        text: 'Contrato gerado com sucesso! ID: ' + response.data.contrato_id 
+      const response = await axios.get(`${API}/vehicles`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      fetchData();
-      
-      // Reset selections
-      setSelectedMotorista('');
-      setSelectedVehicle('');
+      setVeiculos(response.data);
     } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.detail || 'Erro ao gerar contrato' 
-      });
+      console.error('Error fetching veiculos:', error);
     }
   };
 
-  const handleDownloadContract = async (contratoId) => {
+  const handleCreateContrato = async (e) => {
+    e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/contratos/${contratoId}/download`, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob'
+      await axios.post(`${API}/contratos/gerar`, formData, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `contrato_${contratoId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error downloading contract', error);
-      setMessage({ type: 'error', text: 'Erro ao baixar contrato' });
-    }
-  };
-
-  const handleSignContract = async (contratoId, signerType) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${API}/contratos/${contratoId}/assinar`,
-        { signer_type: signerType },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setMessage({ type: 'success', text: 'Contrato assinado com sucesso!' });
-      fetchData();
-    } catch (error) {
-      setMessage({ 
-        type: 'error', 
-        text: error.response?.data?.detail || 'Erro ao assinar contrato' 
+      toast.success('Contrato criado com sucesso!');
+      setShowCreateDialog(false);
+      setFormData({
+        parceiro_id: '',
+        motorista_id: '',
+        vehicle_id: '',
+        data_inicio: new Date().toISOString().split('T')[0],
+        valor_semanal: 230,
+        caucao_total: 300,
+        caucao_lavagem: 90
       });
+      fetchContratos();
+    } catch (error) {
+      console.error('Error creating contrato:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao criar contrato');
     }
   };
 
   const getStatusBadge = (status) => {
-    const statusConfig = {
-      'pendente': { color: 'bg-yellow-100 text-yellow-800', icon: Clock, label: 'Pendente' },
-      'parceiro_assinado': { color: 'bg-blue-100 text-blue-800', icon: CheckCircle, label: 'Parceiro Assinou' },
-      'motorista_assinado': { color: 'bg-purple-100 text-purple-800', icon: CheckCircle, label: 'Motorista Assinou' },
-      'completo': { color: 'bg-green-100 text-green-800', icon: CheckCircle, label: 'Completo' }
+    const styles = {
+      'rascunho': 'bg-gray-100 text-gray-700',
+      'ativo': 'bg-green-100 text-green-700',
+      'terminado': 'bg-red-100 text-red-700'
     };
-
-    const config = statusConfig[status] || statusConfig['pendente'];
-    const Icon = config.icon;
-
-    return (
-      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
-        <Icon className="w-3 h-3 mr-1" />
-        {config.label}
-      </span>
-    );
+    return styles[status] || 'bg-gray-100 text-gray-700';
   };
 
-  if (loading) return <Layout user={user} onLogout={onLogout}><div>Carregando...</div></Layout>;
+  const getStatusLabel = (status) => {
+    const labels = {
+      'rascunho': 'Rascunho',
+      'ativo': 'Ativo',
+      'terminado': 'Terminado'
+    };
+    return labels[status] || status;
+  };
+
+  if (loading) {
+    return (
+      <Layout user={user} onLogout={onLogout}>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-slate-500">Carregando contratos...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Gestão de Contratos</h1>
-
-        {message.text && (
-          <div className={`p-4 rounded-lg ${
-            message.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 
-            'bg-red-50 text-red-800 border border-red-200'
-          }`}>
-            {message.text}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800">Gestão de Contratos</h1>
+            <p className="text-slate-600">Contratos TVDE entre Parceiros, Motoristas e Veículos</p>
           </div>
-        )}
+          <Button
+            onClick={() => setShowCreateDialog(true)}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Contrato
+          </Button>
+        </div>
 
-        {/* Geração de Novo Contrato */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-500">Total</p>
+                  <p className="text-3xl font-bold text-slate-800">{contratos.length}</p>
+                </div>
+                <FileText className="w-10 h-10 text-blue-600" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-500">Ativos</p>
+                  <p className="text-3xl font-bold text-green-600">
+                    {contratos.filter(c => c.status === 'ativo').length}
+                  </p>
+                </div>
+                <Check className="w-10 h-10 text-green-600" />
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-slate-500">Rascunhos</p>
+                  <p className="text-3xl font-bold text-gray-600">
+                    {contratos.filter(c => c.status === 'rascunho').length}
+                  </p>
+                </div>
+                <X className="w-10 h-10 text-gray-600" />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <FileText className="w-5 h-5" />
-              <span>Gerar Novo Contrato</span>
-            </CardTitle>
+            <CardTitle>Lista de Contratos</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label htmlFor="parceiro">Parceiro *</Label>
-              <select
-                id="parceiro"
-                value={selectedParceiro}
-                onChange={(e) => {
-                  setSelectedParceiro(e.target.value);
-                  setSelectedMotorista('');
-                  setSelectedVehicle('');
-                }}
-                className="w-full p-2 border rounded-md"
-              >
-                <option value="">Selecione um parceiro</option>
-                {parceiros.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nome_empresa || p.name || p.email}
-                  </option>
+          <CardContent>
+            {contratos.length === 0 ? (
+              <div className="text-center py-12">
+                <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <p className="text-slate-500">Nenhum contrato encontrado</p>
+                <Button
+                  className="mt-4"
+                  variant="outline"
+                  onClick={() => setShowCreateDialog(true)}
+                >
+                  Criar Primeiro Contrato
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {contratos.map((contrato) => (
+                  <Card key={contrato.id} className="hover:shadow-md transition">
+                    <CardContent className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-3">
+                            <FileText className="w-5 h-5 text-blue-600" />
+                            <h3 className="text-lg font-semibold">
+                              Contrato {contrato.referencia}
+                            </h3>
+                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadge(contrato.status)}`}>
+                              {getStatusLabel(contrato.status)}
+                            </span>
+                          </div>
+                          
+                          <div className="grid grid-cols-3 gap-4 text-sm mb-4">
+                            <div className="flex items-center space-x-2">
+                              <Building className="w-4 h-4 text-slate-500" />
+                              <div>
+                                <p className="text-slate-500">Parceiro</p>
+                                <p className="font-medium">{contrato.parceiro_nome}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <User className="w-4 h-4 text-slate-500" />
+                              <div>
+                                <p className="text-slate-500">Motorista</p>
+                                <p className="font-medium">{contrato.motorista_nome}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Car className="w-4 h-4 text-slate-500" />
+                              <div>
+                                <p className="text-slate-500">Veículo</p>
+                                <p className="font-medium">{contrato.vehicle_matricula}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center space-x-4 text-sm text-slate-600">
+                            <div className="flex items-center space-x-1">
+                              <Calendar className="w-4 h-4" />
+                              <span>Início: {new Date(contrato.data_inicio).toLocaleDateString('pt-PT')}</span>
+                            </div>
+                            <div>
+                              <span className="font-medium">€{contrato.valor_semanal}</span> /semana
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex space-x-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedContrato(contrato);
+                              setShowViewDialog(true);
+                            }}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            Ver
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))}
-              </select>
-            </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
-            {selectedParceiro && (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="motorista">Motorista *</Label>
-                    <select
-                      id="motorista"
-                      value={selectedMotorista}
-                      onChange={(e) => setSelectedMotorista(e.target.value)}
-                      className="w-full p-2 border rounded-md"
-                    >
-                      <option value="">Selecione um motorista</option>
+        <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Criar Novo Contrato</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleCreateContrato} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Parceiro *</Label>
+                  <Select
+                    value={formData.parceiro_id}
+                    onValueChange={(value) => setFormData({...formData, parceiro_id: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {parceiros.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.nome_empresa || p.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Motorista *</Label>
+                  <Select
+                    value={formData.motorista_id}
+                    onValueChange={(value) => setFormData({...formData, motorista_id: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
                       {motoristas.map((m) => (
-                        <option key={m.id} value={m.id}>
+                        <SelectItem key={m.id} value={m.id}>
                           {m.name}
-                        </option>
+                        </SelectItem>
                       ))}
-                    </select>
-                  </div>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                  <div>
-                    <Label htmlFor="vehicle">Veículo *</Label>
-                    <select
-                      id="vehicle"
-                      value={selectedVehicle}
-                      onChange={(e) => setSelectedVehicle(e.target.value)}
-                      className="w-full p-2 border rounded-md"
-                    >
-                      <option value="">Selecione um veículo</option>
-                      {vehicles.map((v) => (
-                        <option key={v.id} value={v.id}>
+                <div>
+                  <Label>Veículo *</Label>
+                  <Select
+                    value={formData.vehicle_id}
+                    onValueChange={(value) => setFormData({...formData, vehicle_id: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {veiculos.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>
                           {v.matricula} - {v.marca} {v.modelo}
-                        </option>
+                        </SelectItem>
                       ))}
-                    </select>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Data de Início *</Label>
+                  <Input
+                    type="date"
+                    value={formData.data_inicio}
+                    onChange={(e) => setFormData({...formData, data_inicio: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label>Valor Semanal (€)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={formData.valor_semanal}
+                    onChange={(e) => setFormData({...formData, valor_semanal: parseFloat(e.target.value)})}
+                  />
+                </div>
+
+                <div>
+                  <Label>Caução Total (€)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={formData.caucao_total}
+                    onChange={(e) => setFormData({...formData, caucao_total: parseFloat(e.target.value)})}
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCreateDialog(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                  Criar Contrato
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {selectedContrato && (
+          <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Contrato {selectedContrato.referencia}</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="bg-slate-50 p-4 rounded-lg grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-slate-500">Status</p>
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium mt-1 ${getStatusBadge(selectedContrato.status)}`}>
+                      {getStatusLabel(selectedContrato.status)}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Data Assinatura</p>
+                    <p className="font-medium">{selectedContrato.data_assinatura}</p>
                   </div>
                 </div>
 
-                <Button onClick={handleGenerateContract}>
-                  <FileText className="w-4 h-4 mr-2" />
-                  Gerar Contrato
-                </Button>
-              </>
-            )}
-          </CardContent>
-        </Card>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Parceiro</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm space-y-2">
+                    <p><strong>Nome:</strong> {selectedContrato.parceiro_nome}</p>
+                    <p><strong>NIF:</strong> {selectedContrato.parceiro_nif}</p>
+                    <p><strong>Morada:</strong> {selectedContrato.parceiro_morada}</p>
+                  </CardContent>
+                </Card>
 
-        {/* Lista de Contratos */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Contratos Existentes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {contratos.length > 0 ? (
-              <div className="space-y-4">
-                {contratos.map((contrato) => (
-                  <div key={contrato.id} className="border rounded-lg p-4 space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div>
-                          <p className="font-semibold text-sm text-slate-500">Contrato ID</p>
-                          <p className="font-mono text-sm">{contrato.id.slice(0, 8)}</p>
-                        </div>
-                        <div>
-                          <p className="font-semibold text-sm text-slate-500">Data Criação</p>
-                          <p className="text-sm">{new Date(contrato.created_at).toLocaleDateString('pt-BR')}</p>
-                        </div>
-                      </div>
-                      {getStatusBadge(contrato.status)}
-                    </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Motorista</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm space-y-2">
+                    <p><strong>Nome:</strong> {selectedContrato.motorista_nome}</p>
+                    <p><strong>NIF:</strong> {selectedContrato.motorista_nif}</p>
+                    <p><strong>CC:</strong> {selectedContrato.motorista_cc}</p>
+                  </CardContent>
+                </Card>
 
-                    <div className="grid grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <p className="text-slate-500 flex items-center">
-                          <Users className="w-4 h-4 mr-1" />
-                          Parceiro
-                        </p>
-                        <p className="font-medium">{contrato.parceiro_nome}</p>
-                      </div>
-                      <div>
-                        <p className="text-slate-500">Motorista</p>
-                        <p className="font-medium">{contrato.motorista_nome}</p>
-                      </div>
-                      <div>
-                        <p className="text-slate-500 flex items-center">
-                          <Car className="w-4 h-4 mr-1" />
-                          Veículo
-                        </p>
-                        <p className="font-medium">{contrato.vehicle_matricula}</p>
-                      </div>
-                    </div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Veículo</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm space-y-2">
+                    <p><strong>Matrícula:</strong> {selectedContrato.vehicle_matricula}</p>
+                    <p><strong>Marca/Modelo:</strong> {selectedContrato.vehicle_marca} {selectedContrato.vehicle_modelo}</p>
+                  </CardContent>
+                </Card>
 
-                    <div className="flex items-center space-x-2">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDownloadContract(contrato.id)}
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Download PDF
-                      </Button>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Termos</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-sm space-y-2">
+                    <p><strong>Valor Semanal:</strong> €{selectedContrato.valor_semanal}</p>
+                    <p><strong>Caução Total:</strong> €{selectedContrato.caucao_total}</p>
+                    <p><strong>Caução Lavagem:</strong> €{selectedContrato.caucao_lavagem}</p>
+                  </CardContent>
+                </Card>
 
-                      {contrato.status !== 'completo' && user.role === 'parceiro' && !contrato.parceiro_assinado && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleSignContract(contrato.id, 'parceiro')}
-                        >
-                          Assinar como Parceiro
-                        </Button>
-                      )}
-
-                      {contrato.status !== 'completo' && user.role === 'motorista' && !contrato.motorista_assinado && (
-                        <Button
-                          size="sm"
-                          onClick={() => handleSignContract(contrato.id, 'motorista')}
-                        >
-                          Assinar como Motorista
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                <div className="flex justify-end pt-4 border-t">
+                  <Button variant="outline" onClick={() => setShowViewDialog(false)}>
+                    Fechar
+                  </Button>
+                </div>
               </div>
-            ) : (
-              <p className="text-center text-slate-500 py-8">Nenhum contrato gerado ainda</p>
-            )}
-          </CardContent>
-        </Card>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </Layout>
   );
