@@ -87,8 +87,12 @@ function App() {
     <div className="App">
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<PublicSite />} />
-          <Route path="/motorista/register" element={<MotoristaRegister />} />
+          {/* Public Routes */}
+          <Route path="/" element={<PublicHome />} />
+          <Route path="/registo-motorista" element={<RegistoMotorista />} />
+          <Route path="/registo-parceiro" element={<RegistoParceiro />} />
+          
+          {/* Auth Routes */}
           <Route
             path="/login"
             element={
