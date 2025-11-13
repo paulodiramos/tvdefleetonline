@@ -71,6 +71,13 @@ const RegistoParceiro = () => {
 
       await axios.post(`${API}/auth/register`, userData);
 
+      // Validate codigo_certidao_comercial format
+      if (!/^\d{4}-\d{4}-\d{4}$/.test(formData.codigo_certidao_comercial)) {
+        toast.error('Código de Certidão Comercial deve estar no formato xxxx-xxxx-xxxx');
+        setLoading(false);
+        return;
+      }
+
       // Create parceiro entry
       const parceiroData = {
         nome: formData.nome,
@@ -79,6 +86,7 @@ const RegistoParceiro = () => {
         nif: formData.nif,
         morada: formData.morada,
         codigo_postal: formData.codigo_postal,
+        codigo_certidao_comercial: formData.codigo_certidao_comercial,
         responsavel_nome: formData.responsavel_nome,
         responsavel_contacto: formData.responsavel_contacto,
         numero_veiculos: parseInt(formData.numero_veiculos) || 0,
