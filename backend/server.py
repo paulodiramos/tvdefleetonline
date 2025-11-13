@@ -3403,11 +3403,20 @@ async def get_proximas_datas_dashboard(current_user: Dict = Depends(get_current_
     today = datetime.now(timezone.utc).date()
     
     for vehicle in vehicles:
+        # Get parceiro info
+        parceiro_id = vehicle.get("parceiro_id")
+        parceiro_nome = "N/A"
+        if parceiro_id:
+            parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0, "nome": 1})
+            if parceiro:
+                parceiro_nome = parceiro.get("nome", "N/A")
+        
         proximas_datas = {
             "vehicle_id": vehicle.get("id"),
             "matricula": vehicle.get("matricula"),
             "marca": vehicle.get("marca"),
             "modelo": vehicle.get("modelo"),
+            "parceiro_nome": parceiro_nome,
             "datas": []
         }
         
