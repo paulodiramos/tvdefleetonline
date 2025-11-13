@@ -477,6 +477,17 @@ const Configuracoes = ({ user, onLogout }) => {
             Planos de Assinatura
           </button>
           <button
+            onClick={() => setActiveTab('email')}
+            className={`px-4 py-2 font-semibold ${
+              activeTab === 'email'
+                ? 'border-b-2 border-blue-600 text-blue-600'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            <Settings className="w-4 h-4 inline mr-2" />
+            Email & Contactos
+          </button>
+          <button
             onClick={() => setActiveTab('outras')}
             className={`px-4 py-2 font-semibold ${
               activeTab === 'outras'
@@ -492,6 +503,7 @@ const Configuracoes = ({ user, onLogout }) => {
         {/* Content */}
         <div>
           {activeTab === 'planos' && renderPlanos()}
+          {activeTab === 'email' && renderEmailConfig()}
           {activeTab === 'outras' && renderOutrasConfiguracoes()}
         </div>
       </div>
