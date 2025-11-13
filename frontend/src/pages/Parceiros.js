@@ -171,6 +171,52 @@ const Parceiros = ({ user, onLogout }) => {
     }
   };
 
+  const fetchPlanos = async () => {
+    try {
+      const response = await axios.get(`${API}/planos/public?tipo_usuario=parceiro`);
+      setPlanos(response.data);
+    } catch (error) {
+      console.error('Error fetching planos:', error);
+      toast.error('Erro ao carregar planos');
+    }
+  };
+
+  const handleSolicitarPlano = async (parceiroId, planoId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/parceiros/${parceiroId}/solicitar-plano`,
+        { plano_id: planoId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Plano solicitado! Aguardando aprovação do admin.');
+      setShowPlanosDialog(false);
+      fetchParceiros();
+    } catch (error) {
+      console.error('Error requesting plan:', error);
+      toast.error('Erro ao solicitar plano');
+    }
+  };
+
+  const handleAprovarPlano = async (parceiroId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/admin/parceiros/${parceiroId}/aprovar-plano`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Plano aprovado com sucesso!');
+      fetchParceiros();
+      if (profileParceiro && profileParceiro.id === parceiroId) {
+        setProfileParceiro({...profileParceiro, plano_status: 'ativo'});
+      }
+    } catch (error) {
+      console.error('Error approving plan:', error);
+      toast.error('Erro ao aprovar plano');
+    }
+  };
+
   const handleCreateContract = async (e) => {
     e.preventDefault();
     
