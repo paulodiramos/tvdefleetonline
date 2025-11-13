@@ -161,7 +161,7 @@ const PublicHome = () => {
             <CardContent className="p-8">
               <div className="flex flex-col md:flex-row items-center justify-between">
                 <div className="mb-6 md:mb-0 md:mr-8">
-                  <h3 className="text-2xl font-bold mb-2">🎯 Serviços Incluídos para Parceiros</h3>
+                  <h3 className="text-2xl font-bold mb-2">🎯 Serviços Especiais para Parceiros</h3>
                   <p className="text-purple-100 mb-4">
                     Acesso exclusivo a serviços especializados com condições preferenciais
                   </p>
