@@ -93,26 +93,74 @@ const Layout = ({ user, onLogout, children }) => {
                   <span>Site</span>
                 </Button>
               </Link>
-              <Link to="/profile">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hidden md:flex items-center space-x-2"
-                  data-testid="profile-button"
-                >
-                  <UserCircle className="w-4 h-4" />
-                </Button>
-              </Link>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onLogout}
-                className="hidden md:flex items-center space-x-2"
-                data-testid="logout-button"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Sair</span>
-              </Button>
+              {/* Admin Dropdown Menu */}
+              <DropdownMenu open={profileMenuOpen} onOpenChange={setProfileMenuOpen}>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="hidden md:flex items-center space-x-2"
+                    data-testid="profile-dropdown"
+                  >
+                    <span className="text-sm font-medium text-slate-800">Admin</span>
+                    <ChevronDown className="w-4 h-4 text-slate-600" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {user.role === 'admin' && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/usuarios" className="flex items-center space-x-2 cursor-pointer">
+                          <Shield className="w-4 h-4" />
+                          <span>Utilizadores</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/vehicle-data" className="flex items-center space-x-2 cursor-pointer">
+                          <Database className="w-4 h-4" />
+                          <span>Dados de Veículos</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/configuracoes" className="flex items-center space-x-2 cursor-pointer">
+                          <Settings className="w-4 h-4" />
+                          <span>Configurações</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/profile" className="flex items-center space-x-2 cursor-pointer">
+                          <UserCircle className="w-4 h-4" />
+                          <span>Perfil</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={onLogout}
+                        className="flex items-center space-x-2 cursor-pointer text-red-600"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sair</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  {user.role !== 'admin' && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/profile" className="flex items-center space-x-2 cursor-pointer">
+                          <UserCircle className="w-4 h-4" />
+                          <span>Perfil</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={onLogout}
+                        className="flex items-center space-x-2 cursor-pointer text-red-600"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sair</span>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               {/* Mobile menu button */}
               <button
