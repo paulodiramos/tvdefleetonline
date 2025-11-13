@@ -715,7 +715,7 @@ const Motoristas = ({ user, onLogout }) => {
                       <div className="border rounded-lg p-4">
                         <Label className="font-semibold">Comprovativo de Morada</Label>
                         <div className="mt-2 flex items-center gap-2">
-                          {selectedMotorista.documents?.comprovativo_morada_pdf ? (
+                          {selectedMotorista?.documents?.comprovativo_morada_pdf ? (
                             <>
                               <Button size="sm" variant="outline" onClick={() => window.open(`${API}/${selectedMotorista.documents.comprovativo_morada_pdf}`, '_blank')}>
                                 <Download className="w-4 h-4 mr-1" />
