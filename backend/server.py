@@ -713,6 +713,7 @@ class VehicleMaintenance(BaseModel):
     o_que_fazer: Optional[str] = None
 
 class VehicleExtinguisher(BaseModel):
+    numeracao: Optional[str] = None  # Número de série/identificação do extintor
     fornecedor: Optional[str] = None
     empresa_certificacao: Optional[str] = None
     preco: Optional[float] = None
