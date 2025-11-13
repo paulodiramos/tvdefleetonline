@@ -977,7 +977,7 @@ const Motoristas = ({ user, onLogout }) => {
                           <Input
                             type="file"
                             accept=".pdf,.jpg,.jpeg,.png"
-                            onChange={(e) => e.target.files[0] && handleUploadDocument('iban', e.target.files[0])}
+                            onChange={(e) => e.target.files[0] && handleUploadDocument('iban_comprovativo', e.target.files[0])}
                             disabled={uploadingDoc}
                             className="mt-2"
                           />
