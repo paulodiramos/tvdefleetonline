@@ -544,13 +544,19 @@ class TokenResponse(BaseModel):
 
 # Motorista Models - EXPANDED
 class MotoristaDocuments(BaseModel):
-    # Documentos principais com foto (convertidos para PDF)
-    cartao_cidadao_foto: Optional[str] = None  # Cartão de Cidadão (foto)
-    carta_conducao_foto: Optional[str] = None  # Carta de Condução (foto)
-    licenca_tvde_foto: Optional[str] = None    # Licença TVDE (foto)
-    comprovativo_morada: Optional[str] = None  # Comprovativo de morada
-    iban_comprovativo: Optional[str] = None    # Comprovativo de IBAN
+    # Documentos principais com foto (convertidos para PDF A4)
+    comprovativo_morada_pdf: Optional[str] = None  # Comprovativo de morada (PDF)
+    cc_frente_verso_pdf: Optional[str] = None  # CC frente e verso juntos em PDF A4
+    carta_frente_verso_pdf: Optional[str] = None  # Carta frente e verso juntos em PDF A4
+    licenca_tvde_pdf: Optional[str] = None  # Licença TVDE (PDF)
+    registo_criminal_pdf: Optional[str] = None  # Registo criminal (PDF)
+    iban_comprovativo_pdf: Optional[str] = None  # Comprovativo de IBAN (PDF)
     # Documentos antigos (mantidos para compatibilidade)
+    cartao_cidadao_foto: Optional[str] = None
+    carta_conducao_foto: Optional[str] = None
+    licenca_tvde_foto: Optional[str] = None
+    comprovativo_morada: Optional[str] = None
+    iban_comprovativo: Optional[str] = None
     license_photo: Optional[str] = None
     cv_file: Optional[str] = None
     profile_photo: Optional[str] = None
