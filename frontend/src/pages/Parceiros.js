@@ -673,6 +673,25 @@ const Parceiros = ({ user, onLogout }) => {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="space-y-2 text-sm">
+                    {/* Plano Badge */}
+                    {parceiro.plano_id && (
+                      <div className="flex items-center space-x-2 mb-2">
+                        <Award className={`w-4 h-4 ${
+                          parceiro.plano_status === 'ativo' ? 'text-green-600' :
+                          parceiro.plano_status === 'pendente' ? 'text-yellow-600' :
+                          'text-gray-600'
+                        }`} />
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                          parceiro.plano_status === 'ativo' ? 'bg-green-100 text-green-700' :
+                          parceiro.plano_status === 'pendente' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-gray-100 text-gray-700'
+                        }`}>
+                          Plano {parceiro.plano_status === 'ativo' ? 'Ativo' :
+                                 parceiro.plano_status === 'pendente' ? 'Pendente' :
+                                 parceiro.plano_status}
+                        </span>
+                      </div>
+                    )}
                     <div className="flex items-center space-x-2 text-slate-600">
                       <Mail className="w-4 h-4" />
                       <span className="truncate">{parceiro.email}</span>
