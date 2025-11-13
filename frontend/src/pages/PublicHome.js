@@ -91,6 +91,113 @@ const PublicHome = () => {
         </div>
       </section>
 
+      {/* Gestão de Frotas - Destaque */}
+      <section className="py-20 bg-gradient-to-br from-purple-50 to-blue-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-600 mb-4">
+              <Building className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-4xl font-bold text-slate-900 mb-4">Gestão de Frotas Profissional</h2>
+            <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+              Plataforma completa para empresas TVDE gerenciarem toda a operação: veículos, motoristas, finanças e mais
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
+            <Card className="hover:shadow-xl transition">
+              <CardHeader>
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+                  <Car className="w-6 h-6 text-blue-600" />
+                </div>
+                <CardTitle>Gestão de Veículos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li>• Controlo de manutenção e revisões</li>
+                  <li>• Gestão de seguros e inspeções</li>
+                  <li>• Histórico completo de cada veículo</li>
+                  <li>• Alertas automáticos de vencimentos</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-xl transition">
+              <CardHeader>
+                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3">
+                  <Users className="w-6 h-6 text-green-600" />
+                </div>
+                <CardTitle>Gestão de Motoristas</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li>• Cadastro completo com documentos</li>
+                  <li>• Atribuição de veículos</li>
+                  <li>• Controlo de pagamentos e rendimentos</li>
+                  <li>• Histórico de atividade</li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-xl transition">
+              <CardHeader>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3">
+                  <TrendingUp className="w-6 h-6 text-purple-600" />
+                </div>
+                <CardTitle>Controlo Financeiro</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm text-slate-600">
+                  <li>• Dashboard com estatísticas em tempo real</li>
+                  <li>• Gestão de pagamentos e recibos</li>
+                  <li>• Relatórios detalhados</li>
+                  <li>• Integração com parceiros</li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+            <CardContent className="p-8">
+              <div className="flex flex-col md:flex-row items-center justify-between">
+                <div className="mb-6 md:mb-0 md:mr-8">
+                  <h3 className="text-2xl font-bold mb-2">🎯 Serviços Incluídos para Parceiros</h3>
+                  <p className="text-purple-100 mb-4">
+                    Acesso exclusivo a serviços especializados com condições preferenciais
+                  </p>
+                  <div className="grid md:grid-cols-2 gap-3">
+                    <div className="flex items-center space-x-2">
+                      <Shield className="w-5 h-5" />
+                      <span>Seguros com descontos</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Wrench className="w-5 h-5" />
+                      <span>Mecânica especializada</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Calculator className="w-5 h-5" />
+                      <span>Contabilidade TVDE</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <MessageCircle className="w-5 h-5" />
+                      <span>Consultoria dedicada</span>
+                    </div>
+                  </div>
+                </div>
+                <Button 
+                  size="lg" 
+                  className="bg-white text-purple-600 hover:bg-purple-50"
+                  onClick={() => setShowRegistroModal(true)}
+                >
+                  Começar Agora
+                  <ArrowRight className="ml-2 w-5 h-5" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
       {/* Como Funciona */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
