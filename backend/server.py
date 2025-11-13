@@ -1796,7 +1796,7 @@ async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_
 @api_router.post("/motoristas/{motorista_id}/upload-documento")
 async def upload_motorista_documento(
     motorista_id: str,
-    tipo_documento: str,  # comprovativo_morada, cc_frente_verso, carta_frente_verso, licenca_tvde, registo_criminal, iban
+    tipo_documento: str = Form(...),  # comprovativo_morada, cc_frente_verso, carta_frente_verso, licenca_tvde, registo_criminal, iban
     file: UploadFile = File(...),
     file2: Optional[UploadFile] = File(None),  # Para frente e verso
     current_user: Dict = Depends(get_current_user)
