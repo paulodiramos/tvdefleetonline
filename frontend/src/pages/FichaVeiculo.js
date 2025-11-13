@@ -550,6 +550,30 @@ const FichaVeiculo = ({ user, onLogout }) => {
     });
   };
 
+  const handleEditIntervencao = (intervencao) => {
+    setEditingIntervencao(intervencao);
+    setIsIntervencaoModalOpen(true);
+  };
+
+  const handleSaveIntervencao = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/vehicles/${vehicleId}/intervencao/${editingIntervencao.id}`, {
+        status: editingIntervencao.status
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Intervenção atualizada!');
+      setIsIntervencaoModalOpen(false);
+      setEditingIntervencao(null);
+      fetchVehicleData();
+    } catch (error) {
+      console.error('Error updating intervencao:', error);
+      toast.error('Erro ao atualizar intervenção');
+    }
+  };
+
 
   const handleSaveExtintor = async (silent = false) => {
     try {
