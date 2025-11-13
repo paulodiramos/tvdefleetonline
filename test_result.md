@@ -477,6 +477,55 @@ agent_communication:
         
         🎯 TODAS AS NOVAS FUNCIONALIDADES TESTADAS E FUNCIONANDO PERFEITAMENTE!
         Sistema TVDEFleet expandido está completamente operacional e pronto para produção!
+    
+    - agent: "main"
+      message: |
+        🚀 NOVA IMPLEMENTAÇÃO - ATRIBUIÇÃO DE MOTORISTA A PARCEIRO
+        
+        REQUISITO DO USUÁRIO:
+        - Admin e gestor podem atribuir motorista a parceiro
+        
+        IMPLEMENTAÇÃO COMPLETA:
+        ✅ Frontend - Motoristas.js:
+        - Botão "Atribuir Parceiro" adicionado em cada card de motorista aprovado
+        - Visibilidade: Apenas para Admin e Gestão (user.role === 'admin' || user.role === 'gestao')
+        - Posicionado abaixo dos botões principais do card
+        
+        ✅ Modal de Atribuição:
+        - Mostra informações do motorista selecionado (nome, email)
+        - Campo: Tipo de Motorista (independente, tempo_integral, meio_periodo, parceiro)
+        - Campo: Parceiro (opcional) - dropdown com lista de parceiros
+        - Campo: Veículo (opcional, condicional) - aparece apenas se parceiro selecionado
+        - Carrega veículos disponíveis do parceiro selecionado automaticamente
+        - Mostra mensagem se nenhum veículo disponível
+        
+        ✅ Funções Implementadas:
+        - handleOpenAtribuirModal(motorista):
+          * Popula modal com dados existentes do motorista
+          * Pre-preenche parceiro_atribuido e veiculo_atribuido se já existirem
+          * Carrega lista de veículos se parceiro já estiver atribuído
+        
+        - handleAtribuirParceiro():
+          * Atualiza motorista via PUT /api/motoristas/{motorista_id}
+          * Envia: parceiro_atribuido, veiculo_atribuido, tipo_motorista
+          * Permite remover atribuição (setando null)
+          * Toast de sucesso/erro
+          * Recarrega lista de motoristas
+          * Limpa estado do modal
+        
+        ✅ Integração com Backend:
+        - Usa endpoint existente: PUT /api/motoristas/{motorista_id}
+        - Backend já suporta campos: parceiro_atribuido, veiculo_atribuido, tipo_motorista
+        - Endpoint aceita partial updates (Dict[str, Any])
+        
+        ✅ Estado Gerenciado:
+        - atribuicaoData: {motorista_id, parceiro_id, veiculo_id, tipo_motorista}
+        - parceiros: lista de parceiros carregada no useEffect
+        - veiculos: lista dinâmica baseada no parceiro selecionado
+        - showAtribuirDialog: controle de visibilidade do modal
+        
+        Frontend reiniciado com sucesso.
+        PRÓXIMO PASSO: Testar funcionalidade de atribuição completamente
 
 
 backend:
