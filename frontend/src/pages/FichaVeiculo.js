@@ -506,6 +506,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
       toast.success('Evento atualizado!');
       setEditingAgendaId(null);
+      setIsAgendaModalOpen(false);
       setAgendaForm({
         tipo: 'manutencao',
         titulo: '',
