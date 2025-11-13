@@ -540,6 +540,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
   const handleCancelEditAgenda = () => {
     setEditingAgendaId(null);
+    setIsAgendaModalOpen(false);
     setAgendaForm({
       tipo: 'manutencao',
       titulo: '',
