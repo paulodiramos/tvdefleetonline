@@ -1949,6 +1949,58 @@ async def get_vehicle_agenda(vehicle_id: str, current_user: Dict = Depends(get_c
     
     return vehicle.get("agenda", [])
 
+@api_router.put("/vehicles/{vehicle_id}/agenda/{evento_id}")
+async def update_vehicle_agenda(
+    vehicle_id: str,
+    evento_id: str,
+    agenda_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Update event in vehicle agenda"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Update the specific event in agenda array
+    await db.vehicles.update_one(
+        {"id": vehicle_id, "agenda.id": evento_id},
+        {"$set": {
+            "agenda.$.tipo": agenda_data.get("tipo"),
+            "agenda.$.titulo": agenda_data.get("titulo"),
+            "agenda.$.data": agenda_data.get("data"),
+            "agenda.$.hora": agenda_data.get("hora"),
+            "agenda.$.descricao": agenda_data.get("descricao"),
+            "agenda.$.updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "Event updated successfully"}
+
+@api_router.delete("/vehicles/{vehicle_id}/agenda/{evento_id}")
+async def delete_vehicle_agenda(
+    vehicle_id: str,
+    evento_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Delete event from vehicle agenda"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Remove the event from agenda array
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$pull": {"agenda": {"id": evento_id}}}
+    )
+    
+    return {"message": "Event deleted successfully"}
+
 @api_router.get("/vehicles/{vehicle_id}/historico")
 async def get_vehicle_historico(vehicle_id: str, current_user: Dict = Depends(get_current_user)):
     """Get vehicle history (maintenance, inspections, etc)"""
