@@ -979,12 +979,11 @@ class UserSubscription(BaseModel):
 class ContratoCreate(BaseModel):
     parceiro_id: str
     motorista_id: str
-    vehicle_id: Optional[str] = None  # Pode ser None se carro próprio
-    tipo_contrato: str  # "aluguer", "compra_veiculo", "carro_proprio", "comissao_part_time", "comissao_full_time"
-    valor_semanal: Optional[float] = None  # Para aluguer e compra
-    valor_slot: Optional[float] = None  # Para carro próprio
-    percentagem_comissao: Optional[float] = None  # Para comissão
-    horarios_disponibilidade: Optional[List[str]] = None  # Para part-time, ex: ["08:00-12:00", "14:00-18:00"]
+    vehicle_id: str
+    data_inicio: str
+    valor_semanal: float = 230.0
+    caucao_total: float = 300.0
+    caucao_lavagem: float = 90.0
 
 class Contrato(BaseModel):
     model_config = ConfigDict(extra="ignore")
