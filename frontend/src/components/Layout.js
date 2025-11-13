@@ -169,6 +169,14 @@ const Layout = ({ user, onLogout, children }) => {
                 <p className="text-sm font-medium text-slate-800 px-4">{user.name}</p>
                 <p className="text-xs text-slate-500 px-4 mb-3 capitalize">{user.role.replace('_', ' ')}</p>
                 <Link
+                  to="/"
+                  className="flex items-center space-x-2 px-4 py-3 rounded-lg text-blue-600 hover:bg-blue-50 mb-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Truck className="w-5 h-5" />
+                  <span>Site Público</span>
+                </Link>
+                <Link
                   to="/profile"
                   className="flex items-center space-x-2 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 mb-2"
                   onClick={() => setMobileMenuOpen(false)}
