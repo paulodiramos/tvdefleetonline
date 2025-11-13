@@ -854,6 +854,12 @@ class Vehicle(BaseModel):
     status: str = "disponivel"  # disponivel, atribuido, manutencao, venda, condicoes
     km_atual: Optional[int] = None  # KM atual do veículo
     campos_customizados: Dict[str, Any] = {}  # Campos adicionais customizáveis
+    # Marketplace fields
+    disponivel_venda: bool = False  # Se está disponível para venda no marketplace
+    disponivel_aluguer: bool = False  # Se está disponível para aluguer no marketplace
+    preco_venda: Optional[float] = None  # Preço de venda
+    preco_aluguer_mensal: Optional[float] = None  # Preço de aluguer mensal
+    descricao_marketplace: Optional[str] = None  # Descrição para marketplace
     # Documentos do veículo
     documento_carta_verde: Optional[str] = None  # Carta verde do seguro
     documento_condicoes: Optional[str] = None  # Documento de condições
