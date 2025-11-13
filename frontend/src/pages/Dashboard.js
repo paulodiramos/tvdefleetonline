@@ -228,7 +228,7 @@ const Dashboard = ({ user, onLogout }) => {
               </div>
 
               {/* Próximas Revisões */}
-              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setRevisoesModalOpen(true)}>
                 <div className="flex items-center justify-between mb-2">
                   <Wrench className="w-6 h-6 text-blue-600" />
                   <span className="text-xs font-semibold bg-blue-200 text-blue-800 px-2 py-1 rounded">
