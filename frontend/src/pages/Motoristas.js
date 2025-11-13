@@ -501,10 +501,18 @@ const Motoristas = ({ user, onLogout }) => {
                 <DialogTitle>Detalhes do Motorista</DialogTitle>
                 <div className="flex gap-2">
                   {!isEditing ? (
-                    <Button onClick={handleEditMotorista} size="sm">
-                      <Edit className="w-4 h-4 mr-2" />
-                      Editar
-                    </Button>
+                    <>
+                      <Button onClick={handleEditMotorista} size="sm">
+                        <Edit className="w-4 h-4 mr-2" />
+                        Editar
+                      </Button>
+                      {user.role === 'admin' && (
+                        <Button onClick={handleDeleteMotorista} variant="destructive" size="sm">
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Excluir
+                        </Button>
+                      )}
+                    </>
                   ) : (
                     <>
                       <Button onClick={handleCancelEdit} variant="outline" size="sm">
