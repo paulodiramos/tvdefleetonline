@@ -686,6 +686,116 @@ const Parceiros = ({ user, onLogout }) => {
         )}
       </div>
 
+      {/* Edit Parceiro Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Edit className="w-5 h-5" />
+              <span>Editar Perfil do Parceiro</span>
+            </DialogTitle>
+          </DialogHeader>
+          {editingParceiro && (
+            <form onSubmit={handleEditParceiro} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit_nome_empresa">Nome da Empresa *</Label>
+                  <Input
+                    id="edit_nome_empresa"
+                    value={editingParceiro.nome_empresa || ''}
+                    onChange={(e) => setEditingParceiro({...editingParceiro, nome_empresa: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_nome_manager">Nome do Gestor *</Label>
+                  <Input
+                    id="edit_nome_manager"
+                    value={editingParceiro.nome_manager || ''}
+                    onChange={(e) => setEditingParceiro({...editingParceiro, nome_manager: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_email">Email *</Label>
+                  <Input
+                    id="edit_email"
+                    type="email"
+                    value={editingParceiro.email || ''}
+                    onChange={(e) => setEditingParceiro({...editingParceiro, email: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_telefone">Telefone</Label>
+                  <Input
+                    id="edit_telefone"
+                    value={editingParceiro.telefone || ''}
+                    onChange={(e) => setEditingParceiro({...editingParceiro, telefone: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_telemovel">Telemóvel</Label>
+                  <Input
+                    id="edit_telemovel"
+                    value={editingParceiro.telemovel || ''}
+                    onChange={(e) => setEditingParceiro({...editingParceiro, telemovel: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_nif">NIF *</Label>
+                  <Input
+                    id="edit_nif"
+                    value={editingParceiro.contribuinte_empresa || ''}
+                    onChange={(e) => setEditingParceiro({...editingParceiro, contribuinte_empresa: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Label htmlFor="edit_morada">Morada Completa</Label>
+                  <Input
+                    id="edit_morada"
+                    value={editingParceiro.morada_completa || ''}
+                    onChange={(e) => setEditingParceiro({...editingParceiro, morada_completa: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_codigo_postal">Código Postal</Label>
+                  <Input
+                    id="edit_codigo_postal"
+                    value={editingParceiro.codigo_postal || ''}
+                    onChange={(e) => setEditingParceiro({...editingParceiro, codigo_postal: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_localidade">Localidade</Label>
+                  <Input
+                    id="edit_localidade"
+                    value={editingParceiro.localidade || ''}
+                    onChange={(e) => setEditingParceiro({...editingParceiro, localidade: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowEditDialog(false);
+                    setEditingParceiro(null);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                  Guardar Alterações
+                </Button>
+              </div>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Profile Dialog */}
       <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
