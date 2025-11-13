@@ -36,17 +36,6 @@ const RegistoParceiro = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (formData.password !== formData.confirmPassword) {
-      toast.error('As passwords não coincidem');
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      toast.error('Password deve ter pelo menos 6 caracteres');
-      return;
-    }
-
     setLoading(true);
 
     try {
@@ -54,7 +43,7 @@ const RegistoParceiro = () => {
       const userData = {
         name: formData.nome,
         email: formData.email,
-        password: formData.password,
+        password: 'temporary123', // Temporary password
         phone: formData.telefone,
         role: 'parceiro',
         approved: false
@@ -71,7 +60,10 @@ const RegistoParceiro = () => {
         morada: formData.morada,
         codigo_postal: formData.codigo_postal,
         responsavel_nome: formData.responsavel_nome,
-        responsavel_contacto: formData.responsavel_contacto
+        responsavel_contacto: formData.responsavel_contacto,
+        numero_veiculos: parseInt(formData.numero_veiculos) || 0,
+        numero_motoristas: parseInt(formData.numero_motoristas) || 0,
+        finalidade: formData.finalidade
       };
 
       await axios.post(`${API}/parceiros`, parceiroData);
