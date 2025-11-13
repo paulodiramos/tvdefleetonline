@@ -262,7 +262,7 @@ const Dashboard = ({ user, onLogout }) => {
               </div>
 
               {/* Próximos Extintores */}
-              <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+              <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setExtintoresModalOpen(true)}>
                 <div className="flex items-center justify-between mb-2">
                   <AlertCircle className="w-6 h-6 text-red-600" />
                   <span className="text-xs font-semibold bg-red-200 text-red-800 px-2 py-1 rounded">
