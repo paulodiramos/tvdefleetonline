@@ -370,6 +370,72 @@ const Configuracoes = ({ user, onLogout }) => {
     </div>
   );
 
+  const renderEmailConfig = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold">Configurações de Contacto</h2>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Email e Contactos Públicos</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label htmlFor="email_contacto">Email de Contacto *</Label>
+            <Input
+              id="email_contacto"
+              type="email"
+              value={emailConfig.email_contacto}
+              onChange={(e) => setEmailConfig({ ...emailConfig, email_contacto: e.target.value })}
+              placeholder="info@tvdefleet.com"
+            />
+            <p className="text-xs text-slate-500 mt-1">
+              Formulários do website serão enviados para este email
+            </p>
+          </div>
+
+          <div>
+            <Label htmlFor="telefone_contacto">Telefone de Contacto</Label>
+            <Input
+              id="telefone_contacto"
+              type="tel"
+              value={emailConfig.telefone_contacto}
+              onChange={(e) => setEmailConfig({ ...emailConfig, telefone_contacto: e.target.value })}
+              placeholder="+351 XXX XXX XXX"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="nome_empresa">Nome da Empresa</Label>
+            <Input
+              id="nome_empresa"
+              value={emailConfig.nome_empresa}
+              onChange={(e) => setEmailConfig({ ...emailConfig, nome_empresa: e.target.value })}
+              placeholder="TVDEFleet"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="morada_empresa">Morada da Empresa</Label>
+            <Input
+              id="morada_empresa"
+              value={emailConfig.morada_empresa}
+              onChange={(e) => setEmailConfig({ ...emailConfig, morada_empresa: e.target.value })}
+              placeholder="Lisboa, Portugal"
+            />
+          </div>
+
+          <Button
+            onClick={handleSaveEmailConfig}
+            disabled={savingEmail}
+            className="bg-emerald-600 hover:bg-emerald-700"
+          >
+            {savingEmail ? 'A guardar...' : 'Guardar Configurações'}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   const renderOutrasConfiguracoes = () => (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold">Outras Configurações</h2>
