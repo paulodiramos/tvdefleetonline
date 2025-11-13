@@ -192,6 +192,63 @@ const Dashboard = ({ user, onLogout }) => {
           </Card>
         </div>
 
+        {/* Próximas Datas de Intervenções */}
+        {proximasDatas.length > 0 && (
+          <Card className="border-blue-200 bg-blue-50" data-testid="proximas-datas-card">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-blue-700">
+                <AlertCircle className="w-5 h-5" />
+                <span>Próximas Intervenções ({proximasDatas.length} veículos)</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {proximasDatas.slice(0, 10).map((vehicleData, index) => (
+                  <div key={index} className="bg-white p-4 rounded-lg border border-blue-200">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h4 className="font-semibold text-slate-800">{vehicleData.marca} {vehicleData.modelo}</h4>
+                        <p className="text-sm text-slate-600">Matrícula: {vehicleData.matricula}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {vehicleData.datas.map((data, idx) => (
+                        <div 
+                          key={idx}
+                          className={`p-3 rounded ${data.urgente ? 'bg-red-50 border-l-4 border-red-500' : 'bg-slate-50 border-l-4 border-blue-500'}`}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <p className={`font-medium ${data.urgente ? 'text-red-700' : 'text-slate-800'}`}>
+                                {data.tipo}
+                              </p>
+                              <p className="text-sm text-slate-600">
+                                📅 {new Date(data.data).toLocaleDateString('pt-PT')}
+                              </p>
+                              {data.km && <p className="text-xs text-slate-500">🚗 {data.km.toLocaleString()} km</p>}
+                              {data.seguradora && <p className="text-xs text-slate-500">📋 {data.seguradora}</p>}
+                            </div>
+                            <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                              data.dias_restantes < 0 ? 'bg-red-200 text-red-800' :
+                              data.urgente ? 'bg-orange-200 text-orange-800' : 
+                              'bg-green-200 text-green-800'
+                            }`}>
+                              {data.dias_restantes < 0 ? `${Math.abs(data.dias_restantes)}d atraso` : 
+                               data.dias_restantes === 0 ? 'Hoje' :
+                               data.dias_restantes === 1 ? 'Amanhã' :
+                               `${data.dias_restantes} dias`}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Alertas Section - Only for Admin, Gestor, Operacional */}
         {(user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional') && alertas.length > 0 && (
           <Card className="border-red-200 bg-red-50" data-testid="alertas-card">
