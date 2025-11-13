@@ -4720,6 +4720,46 @@ async def delete_user(
     
     return {"message": "User deleted successfully"}
 
+
+# ==================== CONFIGURAÇÕES ====================
+@api_router.get("/configuracoes/email")
+async def get_email_config(current_user: Dict = Depends(get_current_user)):
+    """Get email configuration (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    config = await db.configuracoes.find_one({"tipo": "email"}, {"_id": 0})
+    if not config:
+        # Return default config
+        return {
+            "email_contacto": "info@tvdefleet.com",
+            "telefone_contacto": "",
+            "morada_empresa": "Lisboa, Portugal",
+            "nome_empresa": "TVDEFleet"
+        }
+    return config
+
+@api_router.post("/configuracoes/email")
+async def save_email_config(
+    config_data: Dict[str, str],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Save email configuration (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    config_data["tipo"] = "email"
+    config_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    config_data["updated_by"] = current_user["id"]
+    
+    await db.configuracoes.update_one(
+        {"tipo": "email"},
+        {"$set": config_data},
+        upsert=True
+    )
+    
+    return {"message": "Configuration saved successfully"}
+
 # ==================== CONTRACT ENDPOINTS ====================
 
 @api_router.post("/contratos/gerar")
