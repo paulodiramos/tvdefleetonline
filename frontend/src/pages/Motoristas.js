@@ -524,32 +524,75 @@ const Motoristas = ({ user, onLogout }) => {
 
                   <TabsContent value="docs" className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                      {selectedMotorista.tipo_documento && (
-                        <div>
-                          <Label className="text-slate-600">Documento</Label>
-                          <p className="font-medium">{selectedMotorista.tipo_documento} - {selectedMotorista.numero_documento}</p>
-                        </div>
-                      )}
-                      {selectedMotorista.nif && (
-                        <div>
-                          <Label className="text-slate-600">NIF</Label>
-                          <p className="font-medium">{selectedMotorista.nif}</p>
-                        </div>
-                      )}
-                      {selectedMotorista.carta_conducao_numero && (
-                        <div>
-                          <Label className="text-slate-600">Carta Condução</Label>
-                          <p className="font-medium">{selectedMotorista.carta_conducao_numero}</p>
-                          <p className="text-xs text-slate-500">Val: {new Date(selectedMotorista.carta_conducao_validade).toLocaleDateString('pt-PT')}</p>
-                        </div>
-                      )}
-                      {selectedMotorista.licenca_tvde_numero && (
-                        <div>
-                          <Label className="text-slate-600">Licença TVDE</Label>
-                          <p className="font-medium">{selectedMotorista.licenca_tvde_numero}</p>
-                          <p className="text-xs text-slate-500">Val: {new Date(selectedMotorista.licenca_tvde_validade).toLocaleDateString('pt-PT')}</p>
-                        </div>
-                      )}
+                      <div>
+                        <Label>Tipo Documento</Label>
+                        {isEditing ? (
+                          <select className="w-full p-2 border rounded-md" value={editForm.tipo_documento || ''} onChange={(e) => setEditForm({...editForm, tipo_documento: e.target.value})}>
+                            <option value="">Selecione</option>
+                            <option value="CC">Cartão de Cidadão</option>
+                            <option value="passaporte">Passaporte</option>
+                            <option value="outro">Outro</option>
+                          </select>
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.tipo_documento || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Nº Documento</Label>
+                        {isEditing ? (
+                          <Input value={editForm.numero_documento || ''} onChange={(e) => setEditForm({...editForm, numero_documento: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.numero_documento || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Validade Documento</Label>
+                        {isEditing ? (
+                          <Input type="date" value={editForm.validade_documento || ''} onChange={(e) => setEditForm({...editForm, validade_documento: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.validade_documento ? new Date(selectedMotorista.validade_documento).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>NIF</Label>
+                        {isEditing ? (
+                          <Input value={editForm.nif || ''} onChange={(e) => setEditForm({...editForm, nif: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.nif || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Nº Carta Condução</Label>
+                        {isEditing ? (
+                          <Input value={editForm.carta_conducao_numero || ''} onChange={(e) => setEditForm({...editForm, carta_conducao_numero: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.carta_conducao_numero || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Validade Carta</Label>
+                        {isEditing ? (
+                          <Input type="date" value={editForm.carta_conducao_validade || ''} onChange={(e) => setEditForm({...editForm, carta_conducao_validade: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.carta_conducao_validade ? new Date(selectedMotorista.carta_conducao_validade).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Nº Licença TVDE</Label>
+                        {isEditing ? (
+                          <Input value={editForm.licenca_tvde_numero || ''} onChange={(e) => setEditForm({...editForm, licenca_tvde_numero: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.licenca_tvde_numero || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Validade TVDE</Label>
+                        {isEditing ? (
+                          <Input type="date" value={editForm.licenca_tvde_validade || ''} onChange={(e) => setEditForm({...editForm, licenca_tvde_validade: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.licenca_tvde_validade ? new Date(selectedMotorista.licenca_tvde_validade).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                        )}
+                      </div>
                     </div>
                   </TabsContent>
 
