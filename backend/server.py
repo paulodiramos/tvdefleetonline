@@ -136,6 +136,48 @@ async def process_uploaded_file(file: UploadFile, destination_dir: Path, file_id
     
     return result
 
+async def merge_images_to_pdf_a4(image1_path: Path, image2_path: Path, output_pdf_path: Path):
+    """Merge two images (frente e verso) into a single A4 PDF"""
+    from PIL import Image
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+    
+    # A4 size in points (72 DPI)
+    a4_width, a4_height = A4
+    
+    # Create PDF
+    c = canvas.Canvas(str(output_pdf_path), pagesize=A4)
+    
+    # Process first image (frente) - Page 1
+    img1 = Image.open(image1_path)
+    img1_width, img1_height = img1.size
+    
+    # Calculate scaling to fit A4 while maintaining aspect ratio
+    scale1 = min(a4_width / img1_width, a4_height / img1_height) * 0.9  # 90% to leave margins
+    new_width1 = img1_width * scale1
+    new_height1 = img1_height * scale1
+    
+    # Center on page
+    x1 = (a4_width - new_width1) / 2
+    y1 = (a4_height - new_height1) / 2
+    
+    c.drawImage(str(image1_path), x1, y1, new_width1, new_height1)
+    c.showPage()
+    
+    # Process second image (verso) - Page 2
+    img2 = Image.open(image2_path)
+    img2_width, img2_height = img2.size
+    
+    scale2 = min(a4_width / img2_width, a4_height / img2_height) * 0.9
+    new_width2 = img2_width * scale2
+    new_height2 = img2_height * scale2
+    
+    x2 = (a4_width - new_width2) / 2
+    y2 = (a4_height - new_height2) / 2
+    
+    c.drawImage(str(image2_path), x2, y2, new_width2, new_height2)
+    c.save()
+
 # ==================== ALERT CHECKING UTILITIES ====================
 
 
