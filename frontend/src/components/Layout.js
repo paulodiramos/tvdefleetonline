@@ -90,7 +90,6 @@ const Layout = ({ user, onLogout, children }) => {
                   className="hidden md:flex items-center space-x-2 text-blue-600 hover:text-blue-700"
                   title="Voltar ao site público"
                 >
-                  <Truck className="w-4 h-4" />
                   <span>Site</span>
                 </Button>
               </Link>
