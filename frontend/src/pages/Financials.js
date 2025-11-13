@@ -55,6 +55,8 @@ const Financials = ({ user, onLogout }) => {
       setVehicles(vehiclesRes.data);
       setExpenses(expensesRes.data);
       setRevenues(revenuesRes.data);
+      setMotoristas(motoristasRes.data);
+      setRelatorios(relatoriosRes.data);
     } catch (error) {
       toast.error('Erro ao carregar dados financeiros');
     } finally {
