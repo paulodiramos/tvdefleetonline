@@ -406,13 +406,33 @@ const Usuarios = ({ user, onLogout }) => {
                             Alterar Role
                           </Button>
                           {regUser.id !== user.id && (
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => openDeleteDialog(regUser)}
-                            >
-                              <UserX className="w-4 h-4" />
-                            </Button>
+                            <>
+                              <Button
+                                size="sm"
+                                variant={regUser.status === 'blocked' ? 'default' : 'outline'}
+                                onClick={() => handleBlockUser(regUser.id, regUser.status)}
+                                className={regUser.status === 'blocked' ? 'bg-green-600 hover:bg-green-700' : ''}
+                              >
+                                {regUser.status === 'blocked' ? (
+                                  <>
+                                    <Unlock className="w-4 h-4 mr-1" />
+                                    Desbloquear
+                                  </>
+                                ) : (
+                                  <>
+                                    <Lock className="w-4 h-4 mr-1" />
+                                    Bloquear
+                                  </>
+                                )}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => openDeleteDialog(regUser)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </>
                           )}
                         </div>
                       </TableCell>
