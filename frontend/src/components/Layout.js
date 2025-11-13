@@ -34,11 +34,6 @@ const Layout = ({ user, onLogout, children }) => {
       items.splice(2, 0, { path: '/parceiros', icon: Building, label: 'Parceiros' });
     }
 
-    // Add Upload CSV for admin and gestao
-    if (user.role === 'admin' || user.role === 'gestao') {
-      items.push({ path: '/upload-csv', icon: Upload, label: 'Upload CSV' });
-    }
-
     // Add Dados de Veículos for admin, gestao, operacional
     if (user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional') {
       items.push({ path: '/vehicle-data', icon: Database, label: 'Dados Veículos' });
