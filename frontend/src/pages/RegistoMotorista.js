@@ -238,9 +238,8 @@ const RegistoMotorista = () => {
               {/* Info */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
-                  <strong>Próximos passos:</strong> Após o registo, receberá um email de confirmação. 
-                  A nossa equipa irá analisar os seus dados e entrará em contacto em 24-48 horas. 
-                  Será necessário enviar documentação adicional após aprovação.
+                  <strong>Próximos passos:</strong> Após o registo, receberá um email de confirmação com as suas credenciais de acesso. 
+                  A nossa equipa irá analisar os seus dados e entrará em contacto em 24-48 horas.
                 </p>
               </div>
 
