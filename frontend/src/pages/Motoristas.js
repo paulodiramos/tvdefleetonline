@@ -497,7 +497,7 @@ const Motoristas = ({ user, onLogout }) => {
         }}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center pr-8">
                 <DialogTitle>Detalhes do Motorista</DialogTitle>
                 <div className="flex gap-2">
                   {!isEditing ? (
