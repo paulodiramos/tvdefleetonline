@@ -304,14 +304,18 @@ const Contratos = ({ user, onLogout }) => {
                     onValueChange={(value) => setFormData({...formData, parceiro_id: value})}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
+                      <SelectValue placeholder={parceiros.length === 0 ? "Carregando..." : "Selecione"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {parceiros.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.nome_empresa || p.name}
-                        </SelectItem>
-                      ))}
+                      {parceiros.length === 0 ? (
+                        <div className="p-2 text-sm text-slate-500">Nenhum parceiro disponível</div>
+                      ) : (
+                        parceiros.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.nome_empresa || p.name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -323,14 +327,18 @@ const Contratos = ({ user, onLogout }) => {
                     onValueChange={(value) => setFormData({...formData, motorista_id: value})}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
+                      <SelectValue placeholder={motoristas.length === 0 ? "Carregando..." : "Selecione"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {motoristas.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>
-                          {m.name}
-                        </SelectItem>
-                      ))}
+                      {motoristas.length === 0 ? (
+                        <div className="p-2 text-sm text-slate-500">Nenhum motorista disponível</div>
+                      ) : (
+                        motoristas.map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            {m.name}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -342,12 +350,15 @@ const Contratos = ({ user, onLogout }) => {
                     onValueChange={(value) => setFormData({...formData, vehicle_id: value})}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
+                      <SelectValue placeholder={veiculos.length === 0 ? "Carregando..." : "Selecione"} />
                     </SelectTrigger>
                     <SelectContent>
-                      {veiculos.map((v) => (
-                        <SelectItem key={v.id} value={v.id}>
-                          {v.matricula} - {v.marca} {v.modelo}
+                      {veiculos.length === 0 ? (
+                        <div className="p-2 text-sm text-slate-500">Nenhum veículo disponível</div>
+                      ) : (
+                        veiculos.map((v) => (
+                          <SelectItem key={v.id} value={v.id}>
+                            {v.matricula} - {v.marca} {v.modelo}
                         </SelectItem>
                       ))}
                     </SelectContent>
