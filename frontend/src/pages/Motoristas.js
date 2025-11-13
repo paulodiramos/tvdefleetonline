@@ -20,6 +20,8 @@ const Motoristas = ({ user, onLogout }) => {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [selectedMotorista, setSelectedMotorista] = useState(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({});
   const [newMotorista, setNewMotorista] = useState({
     email: '',
     name: '',
