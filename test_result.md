@@ -1497,3 +1497,38 @@ agent_communication:
         URL: https://fleetdocs-1.preview.emergentagent.com
         
         Starting comprehensive test of contract generation flow...
+    
+    - agent: "testing"
+      message: |
+        🎯 CONTRACT GENERATION TEST COMPLETED - CRITICAL ISSUE IDENTIFIED
+        
+        ✅ SUCCESSFUL COMPONENTS:
+        - Login: ✅ admin@tvdefleet.com / admin123 works perfectly
+        - Navigation: ✅ Contratos page loads without 404 errors
+        - Modal: ✅ "Novo Contrato" button opens modal with correct title
+        - API Endpoints: ✅ NO 404 errors detected (main agent's fix worked!)
+        - Dropdowns: ✅ All populated with data:
+          * Parceiro: 20 options available
+          * Motorista: 1 option available  
+          * Veículo: 10 options available
+        - Form Fields: ✅ Default values correct (230€, 300€)
+        - Data de Início: ✅ Pre-filled with current date
+        
+        ❌ CRITICAL ISSUE FOUND:
+        - Contract Submission: FAILS with 422 Unprocessable Entity
+        - API Call: POST /api/contratos/gerar returns validation error
+        - Frontend Error: "Objects are not valid as a React child" 
+        - Root Cause: Backend validation rejecting contract data
+        
+        🔍 TECHNICAL DETAILS:
+        - Main agent's API endpoint fix (importing from App.js) successfully resolved 404 errors
+        - All GET endpoints working: /api/contratos, /api/parceiros, /api/motoristas, /api/vehicles
+        - Issue is specifically with POST /api/contratos/gerar endpoint validation
+        - Backend returning error object that frontend cannot properly display
+        
+        📊 TEST RESULTS: 6/7 components working (85% success)
+        
+        🎯 RECOMMENDATION FOR MAIN AGENT:
+        The user's "erro ao gerar contrato de motorista" is caused by backend validation 
+        errors on the contract creation endpoint, NOT 404 API errors. Main agent should 
+        investigate the POST /api/contratos/gerar endpoint validation logic and error handling.
