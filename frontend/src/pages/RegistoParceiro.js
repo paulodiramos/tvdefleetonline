@@ -29,9 +29,28 @@ const RegistoParceiro = () => {
   });
 
   const handleChange = (e) => {
+    let value = e.target.value;
+    
+    // Format codigo_certidao_comercial with mask xxxx-xxxx-xxxx
+    if (e.target.name === 'codigo_certidao_comercial') {
+      // Remove all non-digits
+      value = value.replace(/\D/g, '');
+      
+      // Apply mask
+      if (value.length > 0) {
+        if (value.length <= 4) {
+          value = value;
+        } else if (value.length <= 8) {
+          value = value.slice(0, 4) + '-' + value.slice(4);
+        } else {
+          value = value.slice(0, 4) + '-' + value.slice(4, 8) + '-' + value.slice(8, 12);
+        }
+      }
+    }
+    
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: value
     });
   };
 
