@@ -932,6 +932,46 @@ const Parceiros = ({ user, onLogout }) => {
           </DialogHeader>
           {profileParceiro && (
             <div className="space-y-6">
+              {/* Plano Section */}
+              {profileParceiro.plano_id && (
+                <Card className="border-2 border-blue-200">
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      <span className="flex items-center space-x-2">
+                        <Award className="w-5 h-5 text-blue-600" />
+                        <span>Plano de Assinatura</span>
+                      </span>
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                        profileParceiro.plano_status === 'ativo' ? 'bg-green-100 text-green-700' :
+                        profileParceiro.plano_status === 'pendente' ? 'bg-yellow-100 text-yellow-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>
+                        {profileParceiro.plano_status === 'ativo' ? 'Ativo' :
+                         profileParceiro.plano_status === 'pendente' ? 'Pendente Aprovação' :
+                         profileParceiro.plano_status}
+                      </span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-slate-500">Plano ID</p>
+                        <p className="font-medium font-mono">{profileParceiro.plano_id}</p>
+                      </div>
+                      {user.role === 'admin' && profileParceiro.plano_status === 'pendente' && (
+                        <Button
+                          className="bg-green-600 hover:bg-green-700"
+                          onClick={() => handleAprovarPlano(profileParceiro.id)}
+                        >
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Aprovar Plano
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Parceiro Info */}
               <Card>
                 <CardHeader>
