@@ -1984,10 +1984,27 @@ const FichaVeiculo = ({ user, onLogout }) => {
                         />
                       </div>
                     </div>
-                    <Button type="submit">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Adicionar à Agenda
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button type="submit">
+                        {editingAgendaId ? (
+                          <>
+                            <Save className="w-4 h-4 mr-2" />
+                            Salvar Alterações
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4 mr-2" />
+                            Adicionar à Agenda
+                          </>
+                        )}
+                      </Button>
+                      {editingAgendaId && (
+                        <Button type="button" variant="outline" onClick={handleCancelEditAgenda}>
+                          <X className="w-4 h-4 mr-2" />
+                          Cancelar
+                        </Button>
+                      )}
+                    </div>
                   </form>
                 )}
 
