@@ -54,8 +54,39 @@ const Configuracoes = ({ user, onLogout }) => {
   useEffect(() => {
     if (activeTab === 'planos') {
       fetchPlanos();
+    } else if (activeTab === 'email') {
+      fetchEmailConfig();
     }
   }, [activeTab]);
+
+  const fetchEmailConfig = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/configuracoes/email`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data) {
+        setEmailConfig(response.data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configurações de email:', error);
+    }
+  };
+
+  const handleSaveEmailConfig = async () => {
+    try {
+      setSavingEmail(true);
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/configuracoes/email`, emailConfig, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Configurações guardadas com sucesso!');
+    } catch (error) {
+      alert('Erro ao guardar configurações');
+    } finally {
+      setSavingEmail(false);
+    }
+  };
 
   const fetchPlanos = async () => {
     try {
