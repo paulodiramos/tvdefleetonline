@@ -12,6 +12,7 @@ import {
 const Layout = ({ user, onLogout, children }) => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   const isActive = (path) => location.pathname === path;
 
