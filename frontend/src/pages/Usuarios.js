@@ -409,6 +409,17 @@ const Usuarios = ({ user, onLogout }) => {
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => {
+                              setViewingUser(regUser);
+                              setShowDetailsDialog(true);
+                            }}
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            Ver
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => openChangeRoleDialog(regUser)}
                           >
                             Alterar Role
