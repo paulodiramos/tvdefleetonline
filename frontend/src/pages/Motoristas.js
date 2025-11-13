@@ -603,6 +603,21 @@ const Motoristas = ({ user, onLogout }) => {
                       </Button>
                     )}
                   </div>
+                  
+                  {/* Assign Partner Button - Only for Admin and Gestor */}
+                  {motorista.approved && (user.role === 'admin' || user.role === 'gestao') && (
+                    <div className="pt-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full border-blue-200 hover:bg-blue-50 text-blue-700"
+                        onClick={() => handleOpenAtribuirModal(motorista)}
+                      >
+                        <Users className="w-4 h-4 mr-1" />
+                        Atribuir Parceiro
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}
