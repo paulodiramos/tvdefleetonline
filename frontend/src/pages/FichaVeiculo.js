@@ -851,6 +851,14 @@ const FichaVeiculo = ({ user, onLogout }) => {
                       <p className="font-medium">{vehicle.matricula}</p>
                     </div>
                     <div>
+                      <Label className="text-slate-600">Data de Matrícula</Label>
+                      <p className="font-medium">{vehicle.data_matricula ? new Date(vehicle.data_matricula).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                    </div>
+                    <div>
+                      <Label className="text-slate-600">Validade da Matrícula</Label>
+                      <p className="font-medium">{vehicle.validade_matricula ? new Date(vehicle.validade_matricula).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                    </div>
+                    <div>
                       <Label className="text-slate-600">Cor</Label>
                       <p className="font-medium">{vehicle.cor}</p>
                     </div>
