@@ -196,7 +196,8 @@ const Motoristas = ({ user, onLogout }) => {
       setSelectedMotorista(response.data);
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error('Erro ao enviar documento');
+      const errorMessage = error.response?.data?.detail || error.message || 'Erro ao enviar documento';
+      toast.error(errorMessage);
     } finally {
       setUploadingDoc(false);
     }
