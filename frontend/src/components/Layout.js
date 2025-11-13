@@ -79,10 +79,6 @@ const Layout = ({ user, onLogout, children }) => {
 
             {/* User Menu */}
             <div className="flex items-center space-x-4">
-              <div className="hidden md:block text-right">
-                <p className="text-sm font-medium text-slate-800">{user.name}</p>
-                <p className="text-xs text-slate-500 capitalize">{user.role.replace('_', ' ')}</p>
-              </div>
               <Link to="/">
                 <Button
                   variant="ghost"
