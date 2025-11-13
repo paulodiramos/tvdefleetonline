@@ -218,6 +218,52 @@ const RegistoParceiro = () => {
               </div>
 
               <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-4">Informações da Frota</h3>
+                <div className="grid md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="numero_veiculos">Número de Veículos *</Label>
+                    <Input
+                      id="numero_veiculos"
+                      name="numero_veiculos"
+                      type="number"
+                      min="0"
+                      value={formData.numero_veiculos}
+                      onChange={handleChange}
+                      required
+                      placeholder="Ex: 5"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="numero_motoristas">Número de Motoristas *</Label>
+                    <Input
+                      id="numero_motoristas"
+                      name="numero_motoristas"
+                      type="number"
+                      min="0"
+                      value={formData.numero_motoristas}
+                      onChange={handleChange}
+                      required
+                      placeholder="Ex: 10"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="finalidade">Finalidade *</Label>
+                    <select
+                      id="finalidade"
+                      name="finalidade"
+                      value={formData.finalidade}
+                      onChange={handleChange}
+                      className="w-full p-2 border rounded-md"
+                      required
+                    >
+                      <option value="gestao_frota">Gestão de Frota</option>
+                      <option value="usar_plataforma">Usar Plataforma</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-6">
                 <h3 className="text-lg font-semibold mb-4">Responsável de Contacto</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
