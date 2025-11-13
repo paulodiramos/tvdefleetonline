@@ -23,6 +23,13 @@ const Motoristas = ({ user, onLogout }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [showAtribuirDialog, setShowAtribuirDialog] = useState(false);
+  const [atribuicaoData, setAtribuicaoData] = useState({
+    motorista_id: '',
+    parceiro_id: '',
+    veiculo_id: '',
+    tipo_motorista: 'independente'
+  });
   const [parceiros, setParceiros] = useState([]);
   const [veiculos, setVeiculos] = useState([]);
   const [newMotorista, setNewMotorista] = useState({
