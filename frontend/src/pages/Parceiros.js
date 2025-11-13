@@ -735,6 +735,90 @@ const Parceiros = ({ user, onLogout }) => {
         )}
       </div>
 
+      {/* Planos Dialog */}
+      <Dialog open={showPlanosDialog} onOpenChange={setShowPlanosDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Award className="w-5 h-5" />
+              <span>Escolher Plano de Assinatura</span>
+            </DialogTitle>
+          </DialogHeader>
+          {selectedParceiroForPlano && (
+            <div className="space-y-6">
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <p className="text-sm text-slate-700">
+                  <strong>Parceiro:</strong> {selectedParceiroForPlano.nome_empresa || selectedParceiroForPlano.name}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Escolha um plano abaixo. Após a solicitação, o admin precisará aprovar.
+                </p>
+              </div>
+
+              <div className="grid gap-6">
+                {planos.length === 0 ? (
+                  <p className="text-center text-slate-500 py-8">Nenhum plano disponível no momento</p>
+                ) : (
+                  planos.map((plano) => (
+                    <Card key={plano.id} className="hover:shadow-lg transition border-2 hover:border-blue-300">
+                      <CardContent className="p-6">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-3">
+                              <Award className="w-6 h-6 text-blue-600" />
+                              <h3 className="text-xl font-bold text-slate-800">{plano.nome}</h3>
+                            </div>
+                            <p className="text-slate-600 mb-4">{plano.descricao}</p>
+                            
+                            <div className="mb-4">
+                              <span className="text-3xl font-bold text-blue-600">
+                                €{plano.preco_por_unidade.toFixed(2)}
+                              </span>
+                              <span className="text-slate-500 ml-2">/ veículo / mês</span>
+                            </div>
+
+                            <div className="space-y-2">
+                              <p className="font-semibold text-sm text-slate-700">Funcionalidades incluídas:</p>
+                              <ul className="space-y-1">
+                                {plano.features.map((feature, index) => (
+                                  <li key={index} className="flex items-center space-x-2 text-sm text-slate-600">
+                                    <Check className="w-4 h-4 text-green-600" />
+                                    <span>{feature}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </div>
+                          
+                          <Button
+                            className="ml-4 bg-blue-600 hover:bg-blue-700"
+                            onClick={() => handleSolicitarPlano(selectedParceiroForPlano.id, plano.id)}
+                          >
+                            Solicitar este Plano
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+
+              <div className="flex justify-end pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowPlanosDialog(false);
+                    setSelectedParceiroForPlano(null);
+                  }}
+                >
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
       {/* Edit Parceiro Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
