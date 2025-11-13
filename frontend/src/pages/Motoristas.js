@@ -593,6 +593,20 @@ const Motoristas = ({ user, onLogout }) => {
                       </>
                     )}
                   </div>
+                  {/* Status Badge */}
+                  <div>
+                    <Badge 
+                      variant={
+                        selectedMotorista.status_motorista === 'ativo' ? 'default' :
+                        selectedMotorista.status_motorista === 'aguarda_carro' ? 'secondary' :
+                        selectedMotorista.status_motorista === 'ferias' ? 'outline' :
+                        'destructive'
+                      }
+                      className="text-sm"
+                    >
+                      {selectedMotorista.status_motorista?.replace('_', ' ').toUpperCase() || 'PENDENTE DOCUMENTOS'}
+                    </Badge>
+                  </div>
                 </div>
 
                 <Tabs defaultValue="pessoal" className="w-full">
