@@ -79,16 +79,6 @@ const Layout = ({ user, onLogout, children }) => {
 
             {/* User Menu */}
             <div className="flex items-center space-x-4">
-              <Link to="/">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="hidden md:flex items-center space-x-2 text-blue-600 hover:text-blue-700"
-                  title="Voltar ao site público"
-                >
-                  <span>Site</span>
-                </Button>
-              </Link>
               {/* Admin Dropdown Menu */}
               <DropdownMenu open={profileMenuOpen} onOpenChange={setProfileMenuOpen}>
                 <DropdownMenuTrigger asChild>
