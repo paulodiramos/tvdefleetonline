@@ -2356,6 +2356,11 @@ startxref
         self.test_extintor_file_serving()
         self.test_relatorio_intervencoes_endpoint()
         
+        # DRIVER ASSIGNMENT FEATURE (CURRENT REQUEST)
+        print("\n🚗 DRIVER ASSIGNMENT FEATURE (HIGH PRIORITY)")
+        print("-" * 50)
+        self.test_driver_assignment_feature()
+        
         # Summary
         print("\n" + "=" * 80)
         print("TEST SUMMARY")
