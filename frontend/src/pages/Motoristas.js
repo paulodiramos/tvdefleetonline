@@ -818,7 +818,7 @@ const Motoristas = ({ user, onLogout }) => {
                         <div className="mt-2 flex items-center gap-2">
                           {selectedMotorista.documents?.carta_frente_verso_pdf ? (
                             <>
-                              <Button size="sm" variant="outline" onClick={() => window.open(`${API}/${selectedMotorista.documents.carta_frente_verso_pdf}`, '_blank')}>
+                              <Button size="sm" variant="outline" onClick={() => handleDownloadDocument(selectedMotorista.documents.carta_frente_verso_pdf)}>
                                 <Download className="w-4 h-4 mr-1" />
                                 Download PDF
                               </Button>
