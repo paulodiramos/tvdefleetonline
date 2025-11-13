@@ -1207,6 +1207,286 @@ startxref
         except Exception as e:
             self.log_result("PDF-Preservation", False, f"PDF test error: {str(e)}")
 
+    # ==================== USER MANAGEMENT ENDPOINTS TESTS ====================
+    
+    def test_user_management_endpoints(self):
+        """Test all user management endpoints as specified in review request"""
+        print("\n👥 TESTING USER MANAGEMENT ENDPOINTS")
+        print("-" * 50)
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("User-Management-Setup", False, "No auth token for admin")
+            return False
+        
+        # Test 1: GET /api/users/all
+        self.test_get_all_users(headers)
+        
+        # Test 2: Create a test user to work with
+        test_user_id = self.create_test_user_for_management(headers)
+        if not test_user_id:
+            return False
+        
+        # Test 3: PUT /api/users/{user_id}/approve
+        self.test_approve_user(headers, test_user_id)
+        
+        # Test 4: PUT /api/users/{user_id}/set-role
+        self.test_set_user_role(headers, test_user_id)
+        
+        # Test 5: DELETE /api/users/{user_id} - self-deletion protection
+        self.test_delete_user_self_protection(headers)
+        
+        # Test 6: DELETE /api/users/{user_id} - successful deletion
+        self.test_delete_user_success(headers, test_user_id)
+        
+        # Test 7: GET /api/files/motoristas/{filename}
+        self.test_files_motoristas_endpoint(headers)
+        
+        return True
+    
+    def test_get_all_users(self, headers):
+        """Test GET /api/users/all endpoint"""
+        try:
+            response = requests.get(f"{BACKEND_URL}/users/all", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify required structure
+                required_fields = ["pending_users", "registered_users", "pending_count", "registered_count"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if missing_fields:
+                    self.log_result("GET-users-all", False, f"Missing fields: {missing_fields}")
+                    return
+                
+                # Verify data types
+                if (isinstance(data["pending_users"], list) and 
+                    isinstance(data["registered_users"], list) and
+                    isinstance(data["pending_count"], int) and
+                    isinstance(data["registered_count"], int)):
+                    
+                    self.log_result("GET-users-all", True, 
+                        f"Retrieved {data['pending_count']} pending and {data['registered_count']} registered users")
+                else:
+                    self.log_result("GET-users-all", False, "Invalid data types in response")
+            else:
+                self.log_result("GET-users-all", False, f"Failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("GET-users-all", False, f"Request error: {str(e)}")
+    
+    def create_test_user_for_management(self, headers):
+        """Create a test user for management operations"""
+        test_user_data = {
+            "email": "testuser@tvdefleet.com",
+            "password": "testpass123",
+            "name": "Test User for Management",
+            "role": "motorista"
+        }
+        
+        try:
+            # First try to delete if exists
+            users_response = requests.get(f"{BACKEND_URL}/users/all", headers=headers)
+            if users_response.status_code == 200:
+                all_users = users_response.json()
+                for user_list in [all_users["pending_users"], all_users["registered_users"]]:
+                    for user in user_list:
+                        if user["email"] == test_user_data["email"]:
+                            # Delete existing test user
+                            requests.delete(f"{BACKEND_URL}/users/{user['id']}", headers=headers)
+                            break
+            
+            # Create new test user
+            register_response = requests.post(f"{BACKEND_URL}/auth/register", json=test_user_data)
+            
+            if register_response.status_code == 200:
+                user_data = register_response.json()
+                user_id = user_data["id"]
+                self.log_result("Create-Test-User", True, f"Test user created with ID: {user_id}")
+                return user_id
+            else:
+                self.log_result("Create-Test-User", False, f"Failed to create test user: {register_response.status_code}")
+                return None
+        except Exception as e:
+            self.log_result("Create-Test-User", False, f"Error creating test user: {str(e)}")
+            return None
+    
+    def test_approve_user(self, headers, user_id):
+        """Test PUT /api/users/{user_id}/approve endpoint"""
+        try:
+            approval_data = {"role": "motorista"}
+            
+            response = requests.put(f"{BACKEND_URL}/users/{user_id}/approve", 
+                                  json=approval_data, headers=headers)
+            
+            if response.status_code == 200:
+                # Verify user is now approved
+                users_response = requests.get(f"{BACKEND_URL}/users/all", headers=headers)
+                if users_response.status_code == 200:
+                    data = users_response.json()
+                    
+                    # Find the user in registered_users (should be moved from pending)
+                    approved_user = None
+                    for user in data["registered_users"]:
+                        if user["id"] == user_id:
+                            approved_user = user
+                            break
+                    
+                    if approved_user and approved_user.get("approved", False):
+                        self.log_result("PUT-users-approve", True, "User successfully approved and moved to registered")
+                    else:
+                        self.log_result("PUT-users-approve", False, "User not found in registered users or not approved")
+                else:
+                    self.log_result("PUT-users-approve", False, "Could not verify approval status")
+            else:
+                self.log_result("PUT-users-approve", False, f"Approval failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("PUT-users-approve", False, f"Request error: {str(e)}")
+    
+    def test_set_user_role(self, headers, user_id):
+        """Test PUT /api/users/{user_id}/set-role endpoint"""
+        try:
+            role_data = {"role": "operacional"}
+            
+            response = requests.put(f"{BACKEND_URL}/users/{user_id}/set-role", 
+                                  json=role_data, headers=headers)
+            
+            if response.status_code == 200:
+                # Verify role was changed
+                users_response = requests.get(f"{BACKEND_URL}/users/all", headers=headers)
+                if users_response.status_code == 200:
+                    data = users_response.json()
+                    
+                    # Find the user and check role
+                    user_found = None
+                    for user in data["registered_users"]:
+                        if user["id"] == user_id:
+                            user_found = user
+                            break
+                    
+                    if user_found and user_found.get("role") == "operacional":
+                        self.log_result("PUT-users-set-role", True, "User role successfully changed to operacional")
+                    else:
+                        self.log_result("PUT-users-set-role", False, f"Role not changed correctly. Current role: {user_found.get('role') if user_found else 'user not found'}")
+                else:
+                    self.log_result("PUT-users-set-role", False, "Could not verify role change")
+            else:
+                self.log_result("PUT-users-set-role", False, f"Role change failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("PUT-users-set-role", False, f"Request error: {str(e)}")
+    
+    def test_delete_user_self_protection(self, headers):
+        """Test DELETE /api/users/{user_id} - should prevent self-deletion"""
+        try:
+            # Get current user ID
+            me_response = requests.get(f"{BACKEND_URL}/auth/me", headers=headers)
+            if me_response.status_code != 200:
+                self.log_result("DELETE-users-self-protection", False, "Could not get current user info")
+                return
+            
+            current_user = me_response.json()
+            current_user_id = current_user["id"]
+            
+            # Try to delete self
+            response = requests.delete(f"{BACKEND_URL}/users/{current_user_id}", headers=headers)
+            
+            if response.status_code == 400:
+                self.log_result("DELETE-users-self-protection", True, "Self-deletion correctly prevented (400 error)")
+            else:
+                self.log_result("DELETE-users-self-protection", False, f"Expected 400, got {response.status_code}")
+        except Exception as e:
+            self.log_result("DELETE-users-self-protection", False, f"Request error: {str(e)}")
+    
+    def test_delete_user_success(self, headers, user_id):
+        """Test DELETE /api/users/{user_id} - successful deletion"""
+        try:
+            response = requests.delete(f"{BACKEND_URL}/users/{user_id}", headers=headers)
+            
+            if response.status_code == 200:
+                # Verify user is deleted
+                users_response = requests.get(f"{BACKEND_URL}/users/all", headers=headers)
+                if users_response.status_code == 200:
+                    data = users_response.json()
+                    
+                    # Check user is not in any list
+                    user_found = False
+                    for user_list in [data["pending_users"], data["registered_users"]]:
+                        for user in user_list:
+                            if user["id"] == user_id:
+                                user_found = True
+                                break
+                    
+                    if not user_found:
+                        self.log_result("DELETE-users-success", True, "User successfully deleted")
+                    else:
+                        self.log_result("DELETE-users-success", False, "User still exists after deletion")
+                else:
+                    self.log_result("DELETE-users-success", False, "Could not verify deletion")
+            else:
+                self.log_result("DELETE-users-success", False, f"Deletion failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("DELETE-users-success", False, f"Request error: {str(e)}")
+    
+    def test_files_motoristas_endpoint(self, headers):
+        """Test GET /api/files/motoristas/{filename} endpoint"""
+        try:
+            # Test with fictional filename (should return 404, not auth error)
+            response = requests.get(f"{BACKEND_URL}/files/motoristas/fictional_document.pdf", headers=headers)
+            
+            # We expect 404 (file not found) but NOT 401/403 (auth errors)
+            if response.status_code == 404:
+                self.log_result("GET-files-motoristas", True, "Motoristas files endpoint accessible (404 for non-existent file)")
+            elif response.status_code in [401, 403]:
+                self.log_result("GET-files-motoristas", False, f"Authentication issue: {response.status_code}")
+            elif response.status_code == 200:
+                self.log_result("GET-files-motoristas", True, "Motoristas files endpoint accessible (file found)")
+            else:
+                self.log_result("GET-files-motoristas", False, f"Unexpected status: {response.status_code}")
+        except Exception as e:
+            self.log_result("GET-files-motoristas", False, f"Request error: {str(e)}")
+    
+    def run_user_management_tests_only(self):
+        """Run only the user management tests as requested in review"""
+        print("=" * 80)
+        print("TVDEFleet Backend - USER MANAGEMENT ENDPOINTS TEST")
+        print("=" * 80)
+        
+        # Authenticate admin user
+        print("\n🔐 AUTHENTICATION")
+        print("-" * 40)
+        if not self.authenticate_user("admin"):
+            print("❌ Could not authenticate admin user - stopping tests")
+            return False
+        
+        # Run user management tests
+        success = self.test_user_management_endpoints()
+        
+        # Summary
+        print("\n" + "=" * 80)
+        print("USER MANAGEMENT TEST SUMMARY")
+        print("=" * 80)
+        
+        passed_tests = [result for result in self.test_results if result["success"]]
+        failed_tests = [result for result in self.test_results if not result["success"]]
+        
+        print(f"✅ PASSED: {len(passed_tests)} tests")
+        print(f"❌ FAILED: {len(failed_tests)} tests")
+        print(f"📊 TOTAL: {len(self.test_results)} tests")
+        
+        if failed_tests:
+            print("\n❌ FAILED TESTS:")
+            for test in failed_tests:
+                print(f"   - {test['test']}: {test['message']}")
+        
+        if passed_tests:
+            print("\n✅ PASSED TESTS:")
+            for test in passed_tests:
+                print(f"   - {test['test']}: {test['message']}")
+        
+        print("=" * 80)
+        
+        return len(failed_tests) == 0
+
     # ==================== LOGIN SPECIFIC TESTS ====================
     
     def test_login_endpoint_detailed(self):
