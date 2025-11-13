@@ -64,7 +64,7 @@ const PublicHome = () => {
                   size="lg" 
                   variant="outline"
                   className="text-lg px-8"
-                  onClick={() => navigate('/registo-parceiro')}
+                  onClick={() => setShowRegistroModal(true)}
                 >
                   Registar Empresa
                 </Button>
