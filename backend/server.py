@@ -5401,8 +5401,10 @@ async def gerar_contrato(contrato_data: ContratoCreate, current_user: Dict = Dep
             # Campos de Época
             "tem_epoca": contrato_data.tem_epoca,
             "data_inicio_epoca_alta": contrato_data.data_inicio_epoca_alta,
-            "data_inicio_epoca_baixa": contrato_data.data_inicio_epoca_baixa,
+            "data_fim_epoca_alta": contrato_data.data_fim_epoca_alta,
             "valor_epoca_alta": contrato_data.valor_epoca_alta,
+            "data_inicio_epoca_baixa": contrato_data.data_inicio_epoca_baixa,
+            "data_fim_epoca_baixa": contrato_data.data_fim_epoca_baixa,
             "valor_epoca_baixa": contrato_data.valor_epoca_baixa,
             
             # Condições do veículo
