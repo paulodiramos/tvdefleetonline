@@ -445,10 +445,14 @@ const Parceiros = ({ user, onLogout }) => {
                       <div><code>{'{'}PARCEIRO_NIF{'}'}</code></div>
                       <div><code>{'{'}PARCEIRO_MORADA{'}'}</code></div>
                       <div><code>{'{'}PARCEIRO_CP{'}'}</code></div>
+                      <div><code>{'{'}PARCEIRO_LOCALIDADE{'}'}</code></div>
                       <div><code>{'{'}PARCEIRO_TELEFONE{'}'}</code></div>
                       <div><code>{'{'}PARCEIRO_EMAIL{'}'}</code></div>
                       <div><code>{'{'}REP_LEGAL_NOME{'}'}</code></div>
                       <div><code>{'{'}REP_LEGAL_CC{'}'}</code></div>
+                      <div><code>{'{'}REP_LEGAL_CC_VALIDADE{'}'}</code></div>
+                      <div><code>{'{'}REP_LEGAL_TELEFONE{'}'}</code></div>
+                      <div><code>{'{'}REP_LEGAL_EMAIL{'}'}</code></div>
                       <div><code>{'{'}MOTORISTA_NOME{'}'}</code></div>
                       <div><code>{'{'}MOTORISTA_CC{'}'}</code></div>
                       <div><code>{'{'}MOTORISTA_NIF{'}'}</code></div>
