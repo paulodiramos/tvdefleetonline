@@ -5127,10 +5127,20 @@ async def gerar_contrato(contrato_data: ContratoCreate, current_user: Dict = Dep
             "vehicle_matricula": vehicle.get("matricula"),
             
             # Termos Financeiros
-            "tipo_contrato": "prestacao_servicos",
+            "tipo_contrato": contrato_data.tipo_contrato,
             "valor_semanal": contrato_data.valor_semanal,
             "caucao_total": contrato_data.caucao_total,
             "caucao_lavagem": contrato_data.caucao_lavagem,
+            
+            # Campos de Época
+            "tem_epoca": contrato_data.tem_epoca,
+            "data_inicio_epoca_alta": contrato_data.data_inicio_epoca_alta,
+            "data_inicio_epoca_baixa": contrato_data.data_inicio_epoca_baixa,
+            "valor_epoca_alta": contrato_data.valor_epoca_alta,
+            "valor_epoca_baixa": contrato_data.valor_epoca_baixa,
+            
+            # Template do contrato
+            "template_texto": contrato_data.template_texto,
             
             # Datas
             "data_inicio": contrato_data.data_inicio,
