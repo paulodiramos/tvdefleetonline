@@ -1754,3 +1754,180 @@ agent_communication:
         5. Verificar se variáveis de template são substituídas corretamente
         
         Aguardando testes para validação completa.
+
+frontend:
+  - task: "Example Text Templates - Parceiros.js"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Parceiros.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: |
+            Adicionadas 4 funções para carregar textos de exemplo:
+            - loadExampleContractText(): Carrega exemplo completo de contrato TVDE com todas as cláusulas
+            - loadExampleCaucaoText(): Carrega exemplo de cláusula de caução
+            - loadExampleEpocaAltaText(): Carrega exemplo de cláusula de época alta
+            - loadExampleEpocaBaixaText(): Carrega exemplo de cláusula de época baixa
+            
+            Adicionados botões "Inserir Exemplo" ao lado de cada campo de texto:
+            - Botão no template de contrato padrão
+            - Botão em cada uma das 3 cláusulas opcionais
+            - Botões com ícone FileText e estilo outline
+            - Toast de confirmação ao carregar cada exemplo
+
+  - task: "Example Text Templates - Contratos.js"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Contratos.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: |
+            Adicionadas 4 funções para carregar textos de exemplo:
+            - loadExampleContractTemplate(): Carrega exemplo completo de contrato TVDE
+            - loadExampleCaucaoClause(): Carrega exemplo curto de cláusula de caução
+            - loadExampleEpocaAltaClause(): Carrega exemplo curto de época alta
+            - loadExampleEpocaBaixaClause(): Carrega exemplo curto de época baixa
+            
+            Adicionados botões "Inserir Exemplo" estrategicamente posicionados:
+            - Botão "Inserir Exemplo Completo" no template de contrato principal
+            - Botão "Inserir Exemplo" no campo de texto de caução
+            - Botão "Inserir Exemplo" no campo de observações época alta
+            - Botão "Inserir Exemplo" no campo de observações época baixa
+            - Todos os botões com size="sm" para não ocupar muito espaço
+
+agent_communication:
+    - agent: "main"
+      message: |
+        ✅ NOVA FUNCIONALIDADE - TEXTOS DE EXEMPLO/TEMPLATES
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        SOLICITAÇÃO DO USUÁRIO
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        "texto de contrato dentro da ficha parceiros e contratos, com texto de 
+        opçoes tambem disponiveis"
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        IMPLEMENTAÇÃO - PARCEIROS.JS (FICHA DO PARCEIRO)
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        ✅ 4 Funções de Exemplo Implementadas:
+        
+        1️⃣ loadExampleContractText()
+           - Contrato TVDE completo e profissional
+           - Inclui todas as cláusulas principais
+           - 7 cláusulas detalhadas
+           - Espaço para assinaturas
+           - Todas as variáveis incluídas
+        
+        2️⃣ loadExampleCaucaoText()
+           - Cláusula completa de caução
+           - Explica valor, parcelas e devolução
+           - Condições de devolução detalhadas
+           - Uso em caso de danos
+        
+        3️⃣ loadExampleEpocaAltaText()
+           - Cláusula de época alta (verão)
+           - Período e datas
+           - Justificação do ajuste de valor
+           - Referência a eventos turísticos
+        
+        4️⃣ loadExampleEpocaBaixaText()
+           - Cláusula de época baixa (inverno)
+           - Período e datas
+           - Justificação do ajuste de valor
+           - Suporte ao motorista
+        
+        ✅ Botões "Inserir Exemplo" Adicionados:
+        - Posicionados ao lado direito de cada label
+        - Estilo outline para não dominar visualmente
+        - Ícone FileText
+        - Toast de confirmação após inserção
+        - 4 botões no total (1 principal + 3 cláusulas)
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        IMPLEMENTAÇÃO - CONTRATOS.JS (PÁGINA DE CONTRATOS)
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        ✅ 4 Funções de Exemplo Implementadas:
+        
+        1️⃣ loadExampleContractTemplate()
+           - Mesmo template completo do Parceiros.js
+           - Contrato TVDE profissional
+           - Pronto para usar e personalizar
+        
+        2️⃣ loadExampleCaucaoClause()
+           - Versão CURTA da cláusula de caução
+           - Foco no essencial
+           - Ideal para personalização rápida
+        
+        3️⃣ loadExampleEpocaAltaClause()
+           - Versão CURTA da cláusula de época alta
+           - Texto conciso e direto
+           - Fácil de editar
+        
+        4️⃣ loadExampleEpocaBaixaClause()
+           - Versão CURTA da cláusula de época baixa
+           - Texto conciso e direto
+           - Fácil de personalizar
+        
+        ✅ Botões "Inserir Exemplo" Adicionados:
+        - Botão principal: "Inserir Exemplo Completo" no template
+        - Botão no texto de caução personalizado
+        - Botão nas observações época alta
+        - Botão nas observações época baixa
+        - Todos com size="sm" para economia de espaço
+        - 4 botões estrategicamente posicionados
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        BENEFÍCIOS PARA O USUÁRIO
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        ✅ Facilita preenchimento inicial
+        ✅ Templates profissionais e completos
+        ✅ Reduz tempo de configuração
+        ✅ Garante consistência nos contratos
+        ✅ Exemplos em português de Portugal
+        ✅ Adaptados à legislação TVDE portuguesa
+        ✅ Fácil personalização após inserção
+        ✅ UI limpa com botões discretos
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        EXEMPLO DE TEXTO DE CONTRATO INCLUÍDO
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        O exemplo inclui:
+        - Identificação completa das partes (Parceiro e Motorista)
+        - Representante legal do parceiro
+        - 7 Cláusulas principais:
+          * Objeto do contrato
+          * Vigência
+          * Valor
+          * Condições do veículo
+          * Obrigações do motorista
+          * Obrigações do parceiro
+          * Espaço para assinaturas
+        - Todas as variáveis de substituição
+        - Formatação profissional
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        STATUS
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        Frontend reiniciado com sucesso.
+        Pronto para teste das novas funcionalidades.
+        
+        PRÓXIMOS TESTES:
+        1. Abrir ficha de parceiro → Editar → Verificar botões "Inserir Exemplo"
+        2. Clicar em cada botão e verificar se texto é inserido corretamente
+        3. Abrir página Contratos → Criar Contrato → Verificar botões
+        4. Testar inserção de exemplos em cada campo
+        5. Verificar toast messages de confirmação
