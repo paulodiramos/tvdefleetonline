@@ -474,6 +474,7 @@ const Parceiros = ({ user, onLogout }) => {
                       <div><code>{'{'}VEICULO_MODELO{'}'}</code></div>
                       <div><code>{'{'}VEICULO_MATRICULA{'}'}</code></div>
                       <div><code>{'{'}DATA_INICIO{'}'}</code></div>
+                      <div><code>{'{'}DATA_EMISSAO{'}'}</code></div>
                       <div><code>{'{'}TIPO_CONTRATO{'}'}</code></div>
                       <div><code>{'{'}VALOR_SEMANAL{'}'}</code></div>
                       <div><code>{'{'}COMISSAO{'}'}</code></div>
