@@ -425,6 +425,7 @@ const Contratos = ({ user, onLogout }) => {
                     <SelectContent>
                       <SelectItem value="comissao">Comissão</SelectItem>
                       <SelectItem value="aluguer_sem_caucao">Aluguer Sem Caução</SelectItem>
+                      <SelectItem value="aluguer_epocas_sem_caucao">Aluguer com Épocas Sem Caução</SelectItem>
                       <SelectItem value="aluguer_com_caucao">Aluguer Com Caução</SelectItem>
                       <SelectItem value="aluguer_caucao_epocas">Aluguer Com Caução e Épocas</SelectItem>
                       <SelectItem value="compra">Compra</SelectItem>
