@@ -322,7 +322,7 @@ const Contratos = ({ user, onLogout }) => {
         </Card>
 
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Criar Novo Contrato</DialogTitle>
             </DialogHeader>
