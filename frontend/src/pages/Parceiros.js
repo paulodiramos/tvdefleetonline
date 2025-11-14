@@ -154,6 +154,126 @@ const Parceiros = ({ user, onLogout }) => {
     }
   };
 
+  const loadExampleContractText = () => {
+    const exampleText = `CONTRATO DE PRESTAÇÃO DE SERVIÇOS TVDE
+
+Entre:
+
+PRIMEIRO OUTORGANTE (Parceiro):
+Nome: {PARCEIRO_NOME}
+NIF: {PARCEIRO_NIF}
+Morada: {PARCEIRO_MORADA}
+Código Postal: {PARCEIRO_CP}
+Telefone: {PARCEIRO_TELEFONE}
+Email: {PARCEIRO_EMAIL}
+
+Representado por:
+Nome: {REP_LEGAL_NOME}
+CC: {REP_LEGAL_CC}
+
+E:
+
+SEGUNDO OUTORGANTE (Motorista):
+Nome: {MOTORISTA_NOME}
+CC: {MOTORISTA_CC}
+NIF: {MOTORISTA_NIF}
+Morada: {MOTORISTA_MORADA}
+Licença TVDE: {MOTORISTA_LICENCA_TVDE}
+Nº Segurança Social: {MOTORISTA_SS}
+
+É celebrado o presente contrato de {TIPO_CONTRATO} que se regerá pelas seguintes cláusulas:
+
+CLÁUSULA PRIMEIRA - Objeto
+O Primeiro Outorgante coloca à disposição do Segundo Outorgante o veículo {VEICULO_MARCA} {VEICULO_MODELO}, com a matrícula {VEICULO_MATRICULA}, para exercício da atividade TVDE.
+
+CLÁUSULA SEGUNDA - Vigência
+O presente contrato tem início em {DATA_INICIO} e vigora por tempo indeterminado.
+
+CLÁUSULA TERCEIRA - Valor
+O valor acordado é de {VALOR_SEMANAL}€ por semana.
+
+CLÁUSULA QUARTA - Condições do Veículo
+{CONDICOES_VEICULO}
+
+CLÁUSULA QUINTA - Obrigações do Motorista
+O Segundo Outorgante obriga-se a:
+a) Manter o veículo em bom estado de conservação
+b) Cumprir todas as normas de trânsito
+c) Efetuar os pagamentos semanais pontualmente
+d) Comunicar qualquer dano ou avaria imediatamente
+
+CLÁUSULA SEXTA - Obrigações do Parceiro
+O Primeiro Outorgante obriga-se a:
+a) Entregar o veículo em perfeitas condições
+b) Manter o seguro e documentação em dia
+c) Realizar manutenções preventivas
+
+Data de Emissão: {DATA_EMISSAO}
+
+________________________________
+{PARCEIRO_NOME}
+(Primeiro Outorgante)
+
+________________________________
+{MOTORISTA_NOME}
+(Segundo Outorgante)`;
+    
+    setEditingParceiro({...editingParceiro, template_contrato_padrao: exampleText});
+    toast.success('Exemplo de contrato carregado!');
+  };
+
+  const loadExampleCaucaoText = () => {
+    const exampleText = `CLÁUSULA DE CAUÇÃO
+
+O Segundo Outorgante compromete-se a pagar uma caução no valor total de {CAUCAO_TOTAL}€, que será utilizada como garantia de cumprimento das obrigações contratuais.
+
+A caução será paga em {CAUCAO_PARCELAS} prestações semanais, sendo cada prestação no valor de {CAUCAO_TOTAL}/{CAUCAO_PARCELAS}€.
+
+A caução será devolvida ao Segundo Outorgante no prazo de 30 dias após o término do contrato, desde que:
+- O veículo seja devolvido nas mesmas condições em que foi entregue
+- Não existam dívidas pendentes
+- Não existam danos ou avarias não comunicadas
+
+Em caso de danos ao veículo, o valor da caução poderá ser utilizado para cobrir os custos de reparação.`;
+    
+    setEditingParceiro({...editingParceiro, template_caucao: exampleText});
+    toast.success('Exemplo de cláusula de caução carregado!');
+  };
+
+  const loadExampleEpocaAltaText = () => {
+    const exampleText = `CLÁUSULA DE ÉPOCA ALTA (VERÃO)
+
+Durante o período compreendido entre {DATA_INICIO_EPOCA_ALTA} e {DATA_FIM_EPOCA_ALTA}, considerado época alta, o valor semanal será ajustado para {EPOCA_ALTA_VALOR}€.
+
+Este período corresponde aos meses de maior atividade turística e eventos em Portugal, nomeadamente:
+- Festival de Verão
+- Época balnear
+- Eventos culturais e desportivos
+- Aumento de turismo
+
+O ajuste de valor reflete o aumento esperado de procura de serviços TVDE durante este período.`;
+    
+    setEditingParceiro({...editingParceiro, template_epoca_alta: exampleText});
+    toast.success('Exemplo de cláusula de época alta carregado!');
+  };
+
+  const loadExampleEpocaBaixaText = () => {
+    const exampleText = `CLÁUSULA DE ÉPOCA BAIXA (INVERNO)
+
+Durante o período compreendido entre {DATA_INICIO_EPOCA_BAIXA} e {DATA_FIM_EPOCA_BAIXA}, considerado época baixa, o valor semanal será ajustado para {EPOCA_BAIXA_VALOR}€.
+
+Este período corresponde aos meses de menor atividade turística, caracterizado por:
+- Redução do turismo
+- Condições climatéricas menos favoráveis
+- Menor procura de serviços TVDE
+- Período de baixa atividade comercial
+
+O ajuste de valor visa apoiar o motorista durante o período de menor rendimento.`;
+    
+    setEditingParceiro({...editingParceiro, template_epoca_baixa: exampleText});
+    toast.success('Exemplo de cláusula de época baixa carregado!');
+  };
+
   const handleEditParceiro = async (e) => {
     e.preventDefault();
     try {
