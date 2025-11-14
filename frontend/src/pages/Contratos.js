@@ -452,11 +452,35 @@ const Contratos = ({ user, onLogout }) => {
 
               {/* Campos de Caução - Mostrar apenas para tipos com caução */}
               {(formData.tipo_contrato === 'aluguer_com_caucao' || formData.tipo_contrato === 'aluguer_caucao_epocas') && (
-              <div className="space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                <h3 className="font-semibold">Configuração de Caução</h3>
+              <div className="space-y-4 p-4 bg-amber-50 rounded-lg border-2 border-amber-300">
+                <h3 className="font-semibold text-amber-900 flex items-center space-x-2">
+                  <span>💰</span>
+                  <span>Configuração de Caução</span>
+                </h3>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Caução Total (€) *</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={formData.caucao_total}
+                      onChange={(e) => setFormData({...formData, caucao_total: parseFloat(e.target.value)})}
+                    />
+                  </div>
+                  <div>
+                    <Label>Caução Lavagem (€)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={formData.caucao_lavagem}
+                      onChange={(e) => setFormData({...formData, caucao_lavagem: parseFloat(e.target.value)})}
+                    />
+                  </div>
+                </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
+                <div className="border-t border-amber-200 pt-3">
+                  <div className="flex items-center space-x-2 mb-3">
                     <input
                       type="checkbox"
                       id="caucao_parcelada"
@@ -464,25 +488,32 @@ const Contratos = ({ user, onLogout }) => {
                       onChange={(e) => setFormData({...formData, caucao_parcelada: e.target.checked})}
                       className="w-4 h-4"
                     />
-                    <Label htmlFor="caucao_parcelada">
-                      Caução Parcelada
+                    <Label htmlFor="caucao_parcelada" className="font-semibold text-amber-900">
+                      Parcelar Caução em X Vezes (Semanas)
                     </Label>
                   </div>
 
                   {formData.caucao_parcelada && (
-                    <div>
-                      <Label>Número de Semanas para Parcelar</Label>
+                    <div className="bg-white p-3 rounded border border-amber-200">
+                      <Label>Número de Parcelas (Semanas) *</Label>
                       <Input
                         type="number"
-                        min="1"
+                        min="2"
                         max="52"
                         value={formData.caucao_parcelas}
                         onChange={(e) => setFormData({...formData, caucao_parcelas: parseInt(e.target.value)})}
                         placeholder="Ex: 4 semanas"
+                        className="mt-1"
                       />
-                      <p className="text-xs text-slate-500 mt-1">
-                        Valor por semana: €{(formData.caucao_total / (formData.caucao_parcelas || 1)).toFixed(2)}
-                      </p>
+                      <div className="mt-2 p-2 bg-amber-50 rounded text-sm">
+                        <p className="font-semibold text-amber-900">Resumo do Parcelamento:</p>
+                        <p className="text-amber-800">
+                          • {formData.caucao_parcelas || 0} parcelas de <span className="font-bold">€{(formData.caucao_total / (formData.caucao_parcelas || 1)).toFixed(2)}</span> por semana
+                        </p>
+                        <p className="text-amber-800">
+                          • Total: <span className="font-bold">€{formData.caucao_total.toFixed(2)}</span>
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
