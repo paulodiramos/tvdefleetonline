@@ -718,18 +718,6 @@ const Contratos = ({ user, onLogout }) => {
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Valor Semanal Base (€)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.valor_semanal}
-                    onChange={(e) => setFormData({...formData, valor_semanal: parseFloat(e.target.value)})}
-                  />
-                </div>
-              </div>
-
               {/* Condições do Veículo */}
               <div className="space-y-2">
                 <Label>Condições do Veículo</Label>
