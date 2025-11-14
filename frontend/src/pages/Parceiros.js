@@ -428,8 +428,9 @@ const Parceiros = ({ user, onLogout }) => {
                       required
                     >
                       <option value="aluguer_sem_caucao">Aluguer Sem Caução</option>
-                      <option value="aluguer_com_caucao">Aluguer Com Caução</option>
-                      <option value="aluguer_caucao_epocas">Aluguer Com Caução e Épocas</option>
+                      <option value="aluguer_epocas_sem_caucao">Aluguer com Épocas Sem Caução</option>
+                      <option value="aluguer_com_caucao">Aluguer Com Caução (com opção parcelamento)</option>
+                      <option value="aluguer_caucao_epocas">Aluguer Com Caução e Épocas (com opção parcelamento)</option>
                       <option value="compra_veiculo">Compra de Veículo</option>
                       <option value="carro_proprio">Carro Próprio (Slot)</option>
                       <option value="comissao_part_time">Comissão Part-Time</option>
