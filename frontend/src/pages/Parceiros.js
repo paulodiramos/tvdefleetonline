@@ -30,6 +30,11 @@ const Parceiros = ({ user, onLogout }) => {
   const [showPlanosDialog, setShowPlanosDialog] = useState(false);
   const [planos, setPlanos] = useState([]);
   const [selectedParceiroForPlano, setSelectedParceiroForPlano] = useState(null);
+  const [showMinutasDialog, setShowMinutasDialog] = useState(false);
+  const [minutas, setMinutas] = useState([]);
+  const [selectedMinuta, setSelectedMinuta] = useState(null);
+  const [showEditMinutaDialog, setShowEditMinutaDialog] = useState(false);
+  const [editingMinuta, setEditingMinuta] = useState(null);
   const [newParceiro, setNewParceiro] = useState({
     name: '',
     email: '',
