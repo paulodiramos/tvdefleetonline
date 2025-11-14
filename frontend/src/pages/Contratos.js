@@ -600,16 +600,28 @@ const Contratos = ({ user, onLogout }) => {
                   <div><code>{'{'}PARCEIRO_NIF{'}'}</code></div>
                   <div><code>{'{'}PARCEIRO_MORADA{'}'}</code></div>
                   <div><code>{'{'}PARCEIRO_CP{'}'}</code></div>
+                  <div><code>{'{'}PARCEIRO_LOCALIDADE{'}'}</code></div>
                   <div><code>{'{'}PARCEIRO_TELEFONE{'}'}</code></div>
                   <div><code>{'{'}PARCEIRO_EMAIL{'}'}</code></div>
                   <div><code>{'{'}REP_LEGAL_NOME{'}'}</code></div>
                   <div><code>{'{'}REP_LEGAL_CC{'}'}</code></div>
+                  <div><code>{'{'}REP_LEGAL_CC_VALIDADE{'}'}</code></div>
+                  <div><code>{'{'}REP_LEGAL_TELEFONE{'}'}</code></div>
+                  <div><code>{'{'}REP_LEGAL_EMAIL{'}'}</code></div>
                   <div><code>{'{'}MOTORISTA_NOME{'}'}</code></div>
                   <div><code>{'{'}MOTORISTA_CC{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_CC_VALIDADE{'}'}</code></div>
                   <div><code>{'{'}MOTORISTA_NIF{'}'}</code></div>
                   <div><code>{'{'}MOTORISTA_MORADA{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_CP{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_LOCALIDADE{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_TELEFONE{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_CARTA_CONDUCAO{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_CARTA_CONDUCAO_VALIDADE{'}'}</code></div>
                   <div><code>{'{'}MOTORISTA_LICENCA_TVDE{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_LICENCA_TVDE_VALIDADE{'}'}</code></div>
                   <div><code>{'{'}MOTORISTA_SS{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_EMAIL{'}'}</code></div>
                   <div><code>{'{'}VEICULO_MARCA{'}'}</code></div>
                   <div><code>{'{'}VEICULO_MODELO{'}'}</code></div>
                   <div><code>{'{'}VEICULO_MATRICULA{'}'}</code></div>
