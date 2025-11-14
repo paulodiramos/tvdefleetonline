@@ -145,6 +145,12 @@ function App() {
             }
           />
           <Route
+            path="/configuracoes-admin"
+            element={
+              user ? <ConfiguracoesAdmin user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/profile"
             element={
               user ? <Profile user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
