@@ -1056,6 +1056,68 @@ const Parceiros = ({ user, onLogout }) => {
                 />
               </div>
 
+              {/* Cláusulas Opcionais - Textos Padrão */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-3 flex items-center space-x-2">
+                  <FileText className="w-5 h-5 text-green-600" />
+                  <span>Cláusulas Opcionais - Textos Padrão</span>
+                </h3>
+                <p className="text-sm text-slate-600 mb-4">
+                  Defina textos padrão para cláusulas específicas que serão incluídas automaticamente nos contratos quando estas opções forem selecionadas.
+                </p>
+
+                {/* Template Caução */}
+                <div className="mb-4">
+                  <Label htmlFor="edit_template_caucao" className="text-base font-semibold">
+                    Texto Padrão - Cláusula de Caução
+                  </Label>
+                  <p className="text-xs text-slate-500 mb-2">
+                    Este texto será adicionado aos contratos que incluírem caução.
+                  </p>
+                  <textarea
+                    id="edit_template_caucao"
+                    className="w-full p-3 border rounded-md min-h-[120px] text-sm"
+                    placeholder="Ex: O motorista deverá pagar uma caução de {CAUCAO_TOTAL} euros, dividida em {CAUCAO_PARCELAS} prestações..."
+                    value={editingParceiro.template_caucao || ''}
+                    onChange={(e) => setEditingParceiro({...editingParceiro, template_caucao: e.target.value})}
+                  />
+                </div>
+
+                {/* Template Época Alta */}
+                <div className="mb-4">
+                  <Label htmlFor="edit_template_epoca_alta" className="text-base font-semibold">
+                    Texto Padrão - Cláusula de Época Alta
+                  </Label>
+                  <p className="text-xs text-slate-500 mb-2">
+                    Este texto será adicionado aos contratos que incluírem sazonalidade (época alta).
+                  </p>
+                  <textarea
+                    id="edit_template_epoca_alta"
+                    className="w-full p-3 border rounded-md min-h-[120px] text-sm"
+                    placeholder="Ex: Durante o período de época alta (verão), o valor semanal será acrescido conforme definido..."
+                    value={editingParceiro.template_epoca_alta || ''}
+                    onChange={(e) => setEditingParceiro({...editingParceiro, template_epoca_alta: e.target.value})}
+                  />
+                </div>
+
+                {/* Template Época Baixa */}
+                <div className="mb-4">
+                  <Label htmlFor="edit_template_epoca_baixa" className="text-base font-semibold">
+                    Texto Padrão - Cláusula de Época Baixa
+                  </Label>
+                  <p className="text-xs text-slate-500 mb-2">
+                    Este texto será adicionado aos contratos que incluírem sazonalidade (época baixa).
+                  </p>
+                  <textarea
+                    id="edit_template_epoca_baixa"
+                    className="w-full p-3 border rounded-md min-h-[120px] text-sm"
+                    placeholder="Ex: Durante o período de época baixa, o valor semanal será reduzido conforme definido..."
+                    value={editingParceiro.template_epoca_baixa || ''}
+                    onChange={(e) => setEditingParceiro({...editingParceiro, template_epoca_baixa: e.target.value})}
+                  />
+                </div>
+              </div>
+
               <div className="flex justify-end space-x-3 pt-4">
                 <Button
                   type="button"
