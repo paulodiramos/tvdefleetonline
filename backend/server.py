@@ -5416,7 +5416,8 @@ async def gerar_contrato(contrato_data: ContratoCreate, current_user: Dict = Dep
             
             # Datas
             "data_inicio": contrato_data.data_inicio,
-            "data_assinatura": datetime.now().strftime("%d/%m/%Y"),
+            "data_emissao": datetime.now(timezone.utc).strftime("%d/%m/%Y"),
+            "data_assinatura": datetime.now(timezone.utc).strftime("%d/%m/%Y"),
             "local_assinatura": "Lisboa",
             
             # Status
