@@ -110,9 +110,16 @@ const Contratos = ({ user, onLogout }) => {
         motorista_id: '',
         vehicle_id: '',
         data_inicio: new Date().toISOString().split('T')[0],
+        tipo_contrato: 'comissao',
         valor_semanal: 230,
         caucao_total: 300,
-        caucao_lavagem: 90
+        caucao_lavagem: 90,
+        tem_epoca: false,
+        data_inicio_epoca_alta: '',
+        data_inicio_epoca_baixa: '',
+        valor_epoca_alta: 300,
+        valor_epoca_baixa: 200,
+        template_texto: ''
       });
       fetchContratos();
     } catch (error) {
