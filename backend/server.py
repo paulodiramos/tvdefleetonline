@@ -5234,6 +5234,7 @@ async def gerar_contrato(contrato_data: ContratoCreate, current_user: Dict = Dep
             # Termos Financeiros
             "tipo_contrato": contrato_data.tipo_contrato,
             "valor_semanal": contrato_data.valor_semanal,
+            "comissao_percentual": contrato_data.comissao_percentual,
             "caucao_total": contrato_data.caucao_total,
             "caucao_lavagem": contrato_data.caucao_lavagem,
             
@@ -5249,8 +5250,11 @@ async def gerar_contrato(contrato_data: ContratoCreate, current_user: Dict = Dep
             "valor_epoca_alta": contrato_data.valor_epoca_alta,
             "valor_epoca_baixa": contrato_data.valor_epoca_baixa,
             
-            # Template do contrato
-            "template_texto": contrato_data.template_texto,
+            # Condições do veículo
+            "condicoes_veiculo": contrato_data.condicoes_veiculo or vehicle.get("observacoes") or "",
+            
+            # Template do contrato (usar do parceiro se não enviado)
+            "template_texto": contrato_data.template_texto or parceiro_data.get("template_contrato_padrao") or "",
             
             # Datas
             "data_inicio": contrato_data.data_inicio,
