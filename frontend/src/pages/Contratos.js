@@ -783,6 +783,10 @@ const Contratos = ({ user, onLogout }) => {
                   <div><code>{'{'}EPOCA_BAIXA_VALOR{'}'}</code></div>
                   <div><code>{'{'}TEXTO_EPOCA_BAIXA{'}'}</code></div>
                   <div><code>{'{'}CONDICOES_VEICULO{'}'}</code></div>
+                  <div><code>{'{'}NUMERO_SEMANADAS{'}'}</code></div>
+                  <div><code>{'{'}VALOR_SEMANADA{'}'}</code></div>
+                  <div><code>{'{'}VALOR_TOTAL_COMPRA{'}'}</code></div>
+                  <div><code>{'{'}SLOT_NUMERO{'}'}</code></div>
                 </div>
                 <textarea
                   className="w-full p-3 border rounded-md min-h-[200px] text-sm font-mono"
