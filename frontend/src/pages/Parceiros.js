@@ -1200,9 +1200,21 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
 
                 {/* Template Caução */}
                 <div className="mb-4">
-                  <Label htmlFor="edit_template_caucao" className="text-base font-semibold">
-                    Texto Padrão - Cláusula de Caução
-                  </Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="edit_template_caucao" className="text-base font-semibold">
+                      Texto Padrão - Cláusula de Caução
+                    </Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={loadExampleCaucaoText}
+                      className="flex items-center space-x-1"
+                    >
+                      <FileText className="w-3 h-3" />
+                      <span>Inserir Exemplo</span>
+                    </Button>
+                  </div>
                   <p className="text-xs text-slate-500 mb-2">
                     Este texto será adicionado aos contratos que incluírem caução.
                   </p>
