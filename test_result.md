@@ -1536,3 +1536,221 @@ agent_communication:
         The user's "erro ao gerar contrato de motorista" is caused by backend validation 
         errors on the contract creation endpoint, NOT 404 API errors. Main agent should 
         investigate the POST /api/contratos/gerar endpoint validation logic and error handling.
+backend:
+  - task: "Partner Template Fields - Backend Models"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Adicionados 3 novos campos opcionais ao modelo Parceiro: template_caucao, template_epoca_alta, template_epoca_baixa. Campos são texto opcional para cláusulas específicas que serão incluídas automaticamente nos contratos quando selecionadas."
+
+frontend:
+  - task: "Partner Template Fields - UI in Parceiros.js"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Parceiros.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Adicionada nova seção 'Cláusulas Opcionais - Textos Padrão' no modal de edição do parceiro. Inclui 3 text areas: Texto Padrão - Cláusula de Caução, Texto Padrão - Cláusula de Época Alta, Texto Padrão - Cláusula de Época Baixa. Campos conectados ao estado editingParceiro e salvos via endpoint PUT /api/parceiros/{id}."
+
+  - task: "Contract Creation Popup After Driver Assignment"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Motoristas.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implementado popup de confirmação após atribuição de veículo a motorista. Apenas aparece quando um veículo é atribuído (não apenas parceiro). Novo estado showContractConfirmDialog e assignedDriverData. Popup pergunta 'Deseja criar um contrato para este motorista agora?' com opções 'Não, mais tarde' e 'Sim, criar contrato'. Se usuário aceitar, navega para /contratos com state prefilled (motorista_id, parceiro_id, veiculo_id)."
+
+  - task: "Admin Settings Page - Terms and Privacy"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/ConfiguracoesAdmin.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Criada página completa ConfiguracoesAdmin.js com tabs para Termos e Condições e Política de Privacidade. Usa endpoints existentes GET /api/config/textos-legais e PUT /api/admin/config/textos-legais. Inclui textareas grandes, botões Save/Cancel individuais por tab. Restrito a Admin apenas. Rota /configuracoes-admin adicionada em App.js. Link 'Termos & Privacidade' adicionado ao menu Admin em Layout.js."
+
+  - task: "Enhanced Contract System - Conditional Fields"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Contratos.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: |
+            Sistema de contratos completamente reformulado conforme solicitado pelo usuário:
+            
+            TIPOS DE CONTRATO SIMPLIFICADOS:
+            - Aluguer (Regime de Aluguer) - com campo Valor Semanal
+            - Comissão - com campo Comissão %
+            - Compra (Com Semanadas) - com campos Número de Semanadas, Valor por Semanada, Slot/Número
+            - Motorista Privado
+            
+            FUNCIONALIDADES CONDICIONAIS:
+            - Checkboxes para ativar Caução e Sazonalidade (para Aluguer, Comissão, Motorista Privado)
+            - Seção de Caução aparece apenas quando checkbox ativado
+            - Caução inclui: valores, parcelas, texto adicional
+            - Seção de Épocas aparece apenas quando checkbox ativado
+            - Épocas incluem: datas alta/baixa, valores, textos descritivos
+            
+            NOVOS CAMPOS:
+            - numero_semanadas (para Compra)
+            - valor_semanada (para Compra)
+            - slot_numero (para Compra)
+            - enviar_email (checkbox para envio automático por email)
+            
+            VARIÁVEIS DE TEMPLATE ADICIONADAS:
+            - {NUMERO_SEMANADAS}
+            - {VALOR_SEMANADA}
+            - {VALOR_TOTAL_COMPRA}
+            - {SLOT_NUMERO}
+            
+            MELHORIAS UI:
+            - Botão "Criar Contrato" com ícone FileText e cor verde (emerald-600)
+            - Checkbox com emoji ✉️ para envio por email
+            - Seções organizadas com cores distintas (amber para caução, blue para épocas)
+            - Todos os campos aparecem dinamicamente baseado no tipo de contrato
+
+agent_communication:
+    - agent: "main"
+      message: |
+        ✅ IMPLEMENTAÇÃO COMPLETA DAS 3 TAREFAS PENDENTES + SISTEMA DE CONTRATOS APRIMORADO
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        TASK 1 - PARTNER TEMPLATE FIELDS (BACKEND + FRONTEND)
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        ✅ Backend (server.py):
+        - Adicionados 3 campos opcionais ao modelo Parceiro:
+          * template_caucao: Optional[str] = None
+          * template_epoca_alta: Optional[str] = None
+          * template_epoca_baixa: Optional[str] = None
+        - Campos são textos padrão para cláusulas específicas
+        - Serão incluídos automaticamente nos contratos quando opções selecionadas
+        
+        ✅ Frontend (Parceiros.js):
+        - Nova seção "Cláusulas Opcionais - Textos Padrão" no modal de edição
+        - 3 text areas com labels descritivos e placeholders
+        - Campos conectados ao estado editingParceiro
+        - Salvos via endpoint PUT /api/parceiros/{parceiro_id}
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        TASK 2 - CONTRACT CREATION POPUP AFTER DRIVER ASSIGNMENT
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        ✅ Implementado em Motoristas.js:
+        - Novos estados: showContractConfirmDialog, assignedDriverData
+        - Popup aparece APENAS quando veículo é atribuído (não só parceiro)
+        - Modal de confirmação elegante com:
+          * Título: "Criar Contrato?"
+          * Mensagem personalizada com nome do motorista e matrícula do veículo
+          * Dois botões: "Não, mais tarde" (outline) e "Sim, criar contrato" (verde)
+        - Ao confirmar: navega para /contratos com state.prefilledData
+        - PrefilledData inclui: motorista_id, parceiro_id, veiculo_id
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        TASK 3 - ADMIN SETTINGS PAGE (TERMS & PRIVACY POLICY)
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        ✅ Nova Página: ConfiguracoesAdmin.js
+        - Tabs: "Termos e Condições" e "Política de Privacidade"
+        - Text areas grandes (min-h-[400px]) para conteúdo extenso
+        - Botões Save/Cancel individuais por tab
+        - Botões desabilitados quando sem alterações
+        - Toast messages de sucesso/erro
+        - Proteção: Apenas Admin pode acessar
+        
+        ✅ Integração:
+        - Rota /configuracoes-admin adicionada em App.js
+        - Link "Termos & Privacidade" no menu Admin (Layout.js)
+        - Usa endpoints backend existentes:
+          * GET /api/config/textos-legais (público)
+          * PUT /api/admin/config/textos-legais (admin only)
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        BONUS - SISTEMA DE CONTRATOS APRIMORADO (CONTRATOS.JS)
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        Conforme solicitação adicional do usuário, sistema completamente reformulado:
+        
+        🔹 TIPOS DE CONTRATO SIMPLIFICADOS:
+        1️⃣ Aluguer (Regime de Aluguer)
+           - Campo: Valor Semanal (€)
+        
+        2️⃣ Comissão
+           - Campo: Comissão (%)
+        
+        3️⃣ Compra (Com Semanadas)
+           - Campos: Número de Semanadas, Valor por Semanada, Slot/Número
+        
+        4️⃣ Motorista Privado
+           - Sem campos específicos adicionais
+        
+        🔹 OPÇÕES CONDICIONAIS (Checkboxes):
+        Para tipos: Aluguer, Comissão, Motorista Privado
+        
+        ☑️ Incluir Caução
+           - Ativa seção completa de caução:
+             * Caução Total (€)
+             * Caução Lavagem (€)
+             * Checkbox: Caução Parcelada
+             * Se parcelada: Número de Parcelas
+             * Texto Personalizado da Caução
+        
+        ☑️ Incluir Sazonalidade (Épocas)
+           - Ativa seção completa de épocas:
+             * Época Alta: Datas (início/fim), Valor Semanal, Observações
+             * Época Baixa: Datas (início/fim), Valor Semanal, Observações
+        
+        🔹 NOVOS CAMPOS:
+        - numero_semanadas: int (para Compra)
+        - valor_semanada: float (para Compra)
+        - slot_numero: str (para Compra - identificação)
+        - enviar_email: bool (checkbox com emoji ✉️)
+        
+        🔹 NOVAS VARIÁVEIS DE TEMPLATE:
+        - {NUMERO_SEMANADAS}
+        - {VALOR_SEMANADA}
+        - {VALOR_TOTAL_COMPRA} (calculado)
+        - {SLOT_NUMERO}
+        
+        🔹 MELHORIAS DE UI/UX:
+        - Botão "Criar Contrato" com cor verde emerald-600
+        - Seções com cores distintas e headers descritivos
+        - Campos aparecem/desaparecem dinamicamente
+        - Labels claros e informativos
+        - Placeholders úteis em todos os campos
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        PRÓXIMOS PASSOS
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        Backend e Frontend reiniciados com sucesso.
+        
+        TESTES NECESSÁRIOS:
+        1. Testar edição de parceiro com novos campos de template
+        2. Testar fluxo completo de atribuição de motorista → popup → criação de contrato
+        3. Testar página de Configurações Admin (acesso, edição, save)
+        4. Testar sistema de contratos com todos os tipos e opções condicionais
+        5. Verificar se variáveis de template são substituídas corretamente
+        
+        Aguardando testes para validação completa.
