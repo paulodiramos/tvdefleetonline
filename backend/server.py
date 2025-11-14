@@ -1047,8 +1047,10 @@ class Contrato(BaseModel):
     motorista_nif: str
     motorista_morada: str
     motorista_codigo_postal: Optional[str] = None
+    motorista_localidade: Optional[str] = None
+    motorista_telefone: Optional[str] = None
     motorista_carta_conducao: Optional[str] = None
-    motorista_carta_validade: Optional[str] = None
+    motorista_carta_conducao_validade: Optional[str] = None
     motorista_licenca_tvde: Optional[str] = None
     motorista_licenca_tvde_validade: Optional[str] = None
     motorista_seguranca_social: Optional[str] = None
