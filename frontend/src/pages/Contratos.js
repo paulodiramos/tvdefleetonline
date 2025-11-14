@@ -419,7 +419,8 @@ const Contratos = ({ user, onLogout }) => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="comissao">Comissão</SelectItem>
-                      <SelectItem value="aluguer">Aluguer</SelectItem>
+                      <SelectItem value="aluguer_normal">Aluguer Normal (Sem Épocas)</SelectItem>
+                      <SelectItem value="aluguer_epocas">Aluguer com Épocas (Alta/Baixa)</SelectItem>
                       <SelectItem value="compra">Compra</SelectItem>
                       <SelectItem value="motorista_privado">Motorista Privado</SelectItem>
                     </SelectContent>
