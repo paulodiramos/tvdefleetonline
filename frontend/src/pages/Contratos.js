@@ -486,6 +486,22 @@ const Contratos = ({ user, onLogout }) => {
                 </div>
               </div>
 
+              {/* Template do Contrato */}
+              <div className="space-y-2">
+                <Label>Texto do Contrato (Opcional)</Label>
+                <p className="text-xs text-slate-500">
+                  Os seguintes campos serão automaticamente preenchidos: {'{'}PARCEIRO_NOME{'}'}, {'{'}MOTORISTA_NOME{'}'}, 
+                  {'{'}VEICULO_MARCA{'}'}, {'{'}VEICULO_MODELO{'}'}, {'{'}VEICULO_MATRICULA{'}'}, {'{'}DATA_INICIO{'}'}, 
+                  {'{'}TIPO_CONTRATO{'}'}, {'{'}VALOR_SEMANAL{'}'}, {'{'}EPOCA_ALTA_VALOR{'}'}, {'{'}EPOCA_BAIXA_VALOR{'}'}
+                </p>
+                <textarea
+                  className="w-full p-3 border rounded-md min-h-[150px] text-sm"
+                  placeholder="Cole ou escreva o texto do contrato aqui. Use as variáveis acima para preenchimento automático."
+                  value={formData.template_texto}
+                  onChange={(e) => setFormData({...formData, template_texto: e.target.value})}
+                />
+              </div>
+
               <div className="flex justify-end space-x-3 pt-4">
                 <Button
                   type="button"
