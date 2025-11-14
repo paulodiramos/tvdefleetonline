@@ -5392,6 +5392,7 @@ async def gerar_contrato(contrato_data: ContratoCreate, current_user: Dict = Dep
             "tem_caucao": contrato_data.tem_caucao,
             "caucao_parcelada": contrato_data.caucao_parcelada,
             "caucao_parcelas": contrato_data.caucao_parcelas,
+            "caucao_texto": contrato_data.caucao_texto,
             
             # Campos de Época
             "tem_epoca": contrato_data.tem_epoca,
