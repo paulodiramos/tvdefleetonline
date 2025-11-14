@@ -296,6 +296,24 @@ const Motoristas = ({ user, onLogout }) => {
 
       toast.success('Motorista atribuído com sucesso!');
       setShowAtribuirDialog(false);
+
+      // If a vehicle was assigned, ask if user wants to create a contract
+      if (atribuicaoData.veiculo_id) {
+        const motorista = motoristas.find(m => m.id === atribuicaoData.motorista_id);
+        const parceiro = parceiros.find(p => p.id === atribuicaoData.parceiro_id);
+        const veiculo = veiculos.find(v => v.id === atribuicaoData.veiculo_id);
+        
+        setAssignedDriverData({
+          motorista,
+          parceiro,
+          veiculo,
+          motorista_id: atribuicaoData.motorista_id,
+          parceiro_id: atribuicaoData.parceiro_id,
+          veiculo_id: atribuicaoData.veiculo_id
+        });
+        setShowContractConfirmDialog(true);
+      }
+
       setAtribuicaoData({
         motorista_id: '',
         parceiro_id: '',
@@ -306,6 +324,25 @@ const Motoristas = ({ user, onLogout }) => {
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Erro ao atribuir motorista');
     }
+  };
+
+  const handleCreateContract = () => {
+    setShowContractConfirmDialog(false);
+    // Navigate to contracts page with pre-filled data
+    navigate('/contratos', { 
+      state: { 
+        prefilledData: {
+          motorista_id: assignedDriverData.motorista_id,
+          parceiro_id: assignedDriverData.parceiro_id,
+          veiculo_id: assignedDriverData.veiculo_id
+        }
+      } 
+    });
+  };
+
+  const handleSkipContract = () => {
+    setShowContractConfirmDialog(false);
+    setAssignedDriverData(null);
   };
 
   const getInitials = (name) => {
