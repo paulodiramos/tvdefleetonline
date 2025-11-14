@@ -1095,6 +1095,26 @@ class Contrato(BaseModel):
 
 
 
+# ==================== MINUTAS DE CONTRATO ====================
+
+class MinutaContrato(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    parceiro_id: str
+    nome: str  # Ex: "Contrato Aluguer Padrão", "Contrato Comissão"
+    tipo_contrato: str  # "comissao", "aluguer", "compra", "motorista_privado"
+    texto_minuta: str  # Texto com variáveis
+    ativa: bool = True
+    created_at: datetime
+    updated_at: datetime
+    created_by: str
+
+class MinutaContratoCreate(BaseModel):
+    parceiro_id: str
+    nome: str
+    tipo_contrato: str
+    texto_minuta: str
+
 # ==================== CONFIGURAÇÕES DO SISTEMA ====================
 
 class ConfiguracaoSistema(BaseModel):
