@@ -544,6 +544,9 @@ class Parceiro(BaseModel):
     template_contrato_padrao: Optional[str] = None  # Template de contrato com variáveis
     texto_caucao_padrao: Optional[str] = None  # Texto padrão sobre caução
     texto_epoca_padrao: Optional[str] = None  # Texto padrão sobre épocas
+    template_caucao: Optional[str] = None  # Texto padrão para cláusula de caução
+    template_epoca_alta: Optional[str] = None  # Texto padrão para cláusula de época alta
+    template_epoca_baixa: Optional[str] = None  # Texto padrão para cláusula de época baixa
     representante_legal_nome: Optional[str] = None
     representante_legal_contribuinte: Optional[str] = None
     representante_legal_cc: Optional[str] = None
