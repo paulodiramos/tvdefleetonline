@@ -521,9 +521,12 @@ const Contratos = ({ user, onLogout }) => {
               )}
 
               {/* Campos de Aluguer com Épocas */}
-              {formData.tipo_contrato === 'aluguer_caucao_epocas' && (
-                <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                  <h3 className="font-semibold text-blue-900">Configuração de Épocas</h3>
+              {(formData.tipo_contrato === 'aluguer_caucao_epocas' || formData.tipo_contrato === 'aluguer_epocas_sem_caucao') && (
+                <div className="space-y-4 p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
+                  <h3 className="font-semibold text-blue-900 flex items-center space-x-2">
+                    <span>📅</span>
+                    <span>Configuração de Épocas (Alta e Baixa)</span>
+                  </h3>
                   <div className="grid grid-cols-2 gap-4">
                       <div className="col-span-2">
                         <h4 className="text-sm font-semibold text-blue-900 mb-2">Época Alta</h4>
