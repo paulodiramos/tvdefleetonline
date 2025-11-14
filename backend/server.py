@@ -1067,6 +1067,20 @@ class Contrato(BaseModel):
 
 
 
+# ==================== CONFIGURAÇÕES DO SISTEMA ====================
+
+class ConfiguracaoSistema(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = "config_sistema"
+    condicoes_gerais: str = ""
+    politica_privacidade: str = ""
+    updated_at: datetime
+    updated_by: str
+
+class ConfiguracaoUpdate(BaseModel):
+    condicoes_gerais: Optional[str] = None
+    politica_privacidade: Optional[str] = None
+
 # ==================== RECIBOS E PAGAMENTOS MODELS ====================
 
 class RelatorioGanhosCreate(BaseModel):
