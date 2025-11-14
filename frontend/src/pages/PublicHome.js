@@ -428,43 +428,7 @@ const PublicHome = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-3 gap-6">
-                {/* Motorista */}
-                <Card 
-                  className="cursor-pointer hover:shadow-xl hover:border-blue-500 transition"
-                  onClick={() => {
-                    setShowRegistroModal(false);
-                    navigate('/registo-motorista');
-                  }}
-                >
-                  <CardHeader className="text-center">
-                    <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Users className="w-10 h-10 text-blue-600" />
-                    </div>
-                    <CardTitle className="text-lg">Sou Motorista</CardTitle>
-                    <CardDescription>Trabalho individual</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2 text-xs text-slate-600">
-                      <li className="flex items-center space-x-2">
-                        <CheckCircle className="w-3 h-3 text-blue-600" />
-                        <span>Registo individual</span>
-                      </li>
-                      <li className="flex items-center space-x-2">
-                        <CheckCircle className="w-3 h-3 text-blue-600" />
-                        <span>Acesso a veículos</span>
-                      </li>
-                      <li className="flex items-center space-x-2">
-                        <CheckCircle className="w-3 h-3 text-blue-600" />
-                        <span>Suporte especializado</span>
-                      </li>
-                    </ul>
-                    <Button className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-sm">
-                      Registar
-                    </Button>
-                  </CardContent>
-                </Card>
-
+              <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
                 {/* Gestão de Frota */}
                 <Card 
                   className="cursor-pointer hover:shadow-xl hover:border-purple-500 transition border-2 border-purple-200"
