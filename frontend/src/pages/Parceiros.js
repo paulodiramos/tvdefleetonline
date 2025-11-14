@@ -1004,6 +1004,53 @@ const Parceiros = ({ user, onLogout }) => {
                   </div>
                 </div>
               </div>
+
+              {/* Minuta de Contrato Padrão */}
+              <div className="border-t pt-6">
+                <h3 className="text-lg font-semibold mb-3 flex items-center space-x-2">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                  <span>Minuta de Contrato Padrão</span>
+                </h3>
+                <p className="text-sm text-slate-600 mb-3">
+                  Esta minuta será usada automaticamente ao criar novos contratos para este parceiro.
+                </p>
+                <p className="text-xs text-slate-500 mb-2">
+                  <strong>Variáveis Disponíveis:</strong>
+                </p>
+                <div className="grid grid-cols-4 gap-2 text-xs text-slate-600 mb-3 p-3 bg-slate-50 rounded max-h-32 overflow-y-auto">
+                  <div><code>{'{'}PARCEIRO_NOME{'}'}</code></div>
+                  <div><code>{'{'}PARCEIRO_NIF{'}'}</code></div>
+                  <div><code>{'{'}PARCEIRO_MORADA{'}'}</code></div>
+                  <div><code>{'{'}PARCEIRO_CP{'}'}</code></div>
+                  <div><code>{'{'}PARCEIRO_TELEFONE{'}'}</code></div>
+                  <div><code>{'{'}PARCEIRO_EMAIL{'}'}</code></div>
+                  <div><code>{'{'}REP_LEGAL_NOME{'}'}</code></div>
+                  <div><code>{'{'}REP_LEGAL_CC{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_NOME{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_CC{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_NIF{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_MORADA{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_LICENCA_TVDE{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_SS{'}'}</code></div>
+                  <div><code>{'{'}VEICULO_MARCA{'}'}</code></div>
+                  <div><code>{'{'}VEICULO_MODELO{'}'}</code></div>
+                  <div><code>{'{'}VEICULO_MATRICULA{'}'}</code></div>
+                  <div><code>{'{'}DATA_INICIO{'}'}</code></div>
+                  <div><code>{'{'}TIPO_CONTRATO{'}'}</code></div>
+                  <div><code>{'{'}VALOR_SEMANAL{'}'}</code></div>
+                  <div><code>{'{'}COMISSAO{'}'}</code></div>
+                  <div><code>{'{'}CAUCAO_TOTAL{'}'}</code></div>
+                  <div><code>{'{'}CAUCAO_PARCELAS{'}'}</code></div>
+                  <div><code>{'{'}CONDICOES_VEICULO{'}'}</code></div>
+                </div>
+                <textarea
+                  className="w-full p-3 border rounded-md min-h-[250px] text-sm font-mono"
+                  placeholder="Cole ou escreva a minuta do contrato aqui. Esta será usada como padrão para todos os contratos deste parceiro. Use as variáveis acima para preenchimento automático."
+                  value={editingParceiro.template_contrato_padrao || ''}
+                  onChange={(e) => setEditingParceiro({...editingParceiro, template_contrato_padrao: e.target.value})}
+                />
+              </div>
+
               <div className="flex justify-end space-x-3 pt-4">
                 <Button
                   type="button"
