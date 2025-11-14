@@ -5200,20 +5200,30 @@ async def gerar_contrato(contrato_data: ContratoCreate, current_user: Dict = Dep
             "motorista_id": contrato_data.motorista_id,
             "vehicle_id": contrato_data.vehicle_id,
             
-            # Dados Parceiro
+            # Dados Parceiro Completos
             "parceiro_nome": parceiro_data.get("nome_empresa") or parceiro_data.get("nome") or parceiro_data.get("name"),
             "parceiro_nif": parceiro_data.get("contribuinte_empresa") or parceiro_data.get("nif"),
             "parceiro_morada": parceiro_data.get("morada_completa") or parceiro_data.get("morada") or "",
+            "parceiro_codigo_postal": parceiro_data.get("codigo_postal") or "",
+            "parceiro_telefone": parceiro_data.get("telefone") or parceiro_data.get("telemovel") or "",
             "parceiro_email": parceiro_data.get("email_empresa") or parceiro_data.get("email"),
+            "parceiro_representante_legal_nome": parceiro_data.get("representante_legal_nome") or parceiro_data.get("nome_manager") or "",
+            "parceiro_representante_legal_contribuinte": parceiro_data.get("representante_legal_contribuinte") or "",
+            "parceiro_representante_legal_cc": parceiro_data.get("representante_legal_cc") or "",
+            "parceiro_representante_legal_cc_validade": parceiro_data.get("representante_legal_cc_validade") or "",
             
-            # Dados Motorista
+            # Dados Motorista Completos
             "motorista_nome": motorista.get("name"),
             "motorista_cc": motorista.get("cc_numero") or motorista.get("numero_cc") or "",
             "motorista_cc_validade": motorista.get("cc_validade") or "",
             "motorista_nif": motorista.get("nif") or "",
             "motorista_morada": motorista.get("morada") or "",
-            "motorista_carta_conducao": motorista.get("carta_conducao") or "",
+            "motorista_codigo_postal": motorista.get("codigo_postal") or "",
+            "motorista_carta_conducao": motorista.get("carta_conducao") or motorista.get("numero_carta") or "",
             "motorista_carta_validade": motorista.get("carta_validade") or "",
+            "motorista_licenca_tvde": motorista.get("licenca_tvde") or motorista.get("numero_tvde") or "",
+            "motorista_licenca_tvde_validade": motorista.get("licenca_tvde_validade") or motorista.get("tvde_validade") or "",
+            "motorista_seguranca_social": motorista.get("seguranca_social") or motorista.get("numero_ss") or "",
             "motorista_email": motorista.get("email") or "",
             
             # Dados Veículo
