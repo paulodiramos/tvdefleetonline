@@ -454,39 +454,37 @@ const Contratos = ({ user, onLogout }) => {
               <div className="space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
                 <h3 className="font-semibold">Configuração de Caução</h3>
 
-                {formData.tem_caucao && (
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="checkbox"
-                        id="caucao_parcelada"
-                        checked={formData.caucao_parcelada}
-                        onChange={(e) => setFormData({...formData, caucao_parcelada: e.target.checked})}
-                        className="w-4 h-4"
-                      />
-                      <Label htmlFor="caucao_parcelada">
-                        Caução Parcelada
-                      </Label>
-                    </div>
-
-                    {formData.caucao_parcelada && (
-                      <div>
-                        <Label>Número de Semanas para Parcelar</Label>
-                        <Input
-                          type="number"
-                          min="1"
-                          max="52"
-                          value={formData.caucao_parcelas}
-                          onChange={(e) => setFormData({...formData, caucao_parcelas: parseInt(e.target.value)})}
-                          placeholder="Ex: 4 semanas"
-                        />
-                        <p className="text-xs text-slate-500 mt-1">
-                          Valor por semana: €{formData.tem_caucao ? (formData.caucao_total / (formData.caucao_parcelas || 1)).toFixed(2) : '0'}
-                        </p>
-                      </div>
-                    )}
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="caucao_parcelada"
+                      checked={formData.caucao_parcelada}
+                      onChange={(e) => setFormData({...formData, caucao_parcelada: e.target.checked})}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="caucao_parcelada">
+                      Caução Parcelada
+                    </Label>
                   </div>
-                )}
+
+                  {formData.caucao_parcelada && (
+                    <div>
+                      <Label>Número de Semanas para Parcelar</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        max="52"
+                        value={formData.caucao_parcelas}
+                        onChange={(e) => setFormData({...formData, caucao_parcelas: parseInt(e.target.value)})}
+                        placeholder="Ex: 4 semanas"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">
+                        Valor por semana: €{(formData.caucao_total / (formData.caucao_parcelas || 1)).toFixed(2)}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Campos de Aluguer com Épocas */}
