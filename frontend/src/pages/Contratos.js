@@ -737,7 +737,18 @@ ________________________________
                       </div>
                       
                       <div className="col-span-2">
-                        <Label>Observações/Descrição Época Alta</Label>
+                        <div className="flex items-center justify-between mb-1">
+                          <Label>Observações/Descrição Época Alta</Label>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={loadExampleEpocaAltaClause}
+                            className="text-xs"
+                          >
+                            Inserir Exemplo
+                          </Button>
+                        </div>
                         <textarea
                           className="w-full p-2 border rounded-md min-h-[60px] text-sm"
                           placeholder="Ex: Verão - Maior demanda turística, festivais, eventos..."
