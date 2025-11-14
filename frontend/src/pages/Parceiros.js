@@ -458,117 +458,66 @@ const Parceiros = ({ user, onLogout }) => {
                     </select>
                   </div>
 
-                  {contractForm.tipo_contrato !== 'carro_proprio' && (
-                    <div>
-                      <Label htmlFor="vehicle">Veículo {contractForm.tipo_contrato === 'carro_proprio' ? '' : '*'}</Label>
-                      <select
-                        id="vehicle"
-                        value={contractForm.vehicle_id}
-                        onChange={(e) => setContractForm({...contractForm, vehicle_id: e.target.value})}
-                        className="w-full p-2 border rounded-md"
-                        required={contractForm.tipo_contrato !== 'carro_proprio'}
-                      >
-                        <option value="">Selecione um veículo</option>
-                        {vehicles.map((v) => (
-                          <option key={v.id} value={v.id}>
-                            {v.matricula} - {v.marca} {v.modelo}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
+                  <div>
+                    <Label htmlFor="vehicle">Veículo *</Label>
+                    <select
+                      id="vehicle"
+                      value={contractForm.vehicle_id}
+                      onChange={(e) => setContractForm({...contractForm, vehicle_id: e.target.value})}
+                      className="w-full p-2 border rounded-md"
+                      required
+                    >
+                      <option value="">Selecione um veículo</option>
+                      {vehicles.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.matricula} - {v.marca} {v.modelo}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                  {(contractForm.tipo_contrato === 'aluguer' || contractForm.tipo_contrato === 'compra_veiculo') && (
-                    <div>
-                      <Label htmlFor="valor_semanal">
-                        {contractForm.tipo_contrato === 'aluguer' ? 'Valor Aluguer Semanal (€) *' : 'Valor Semanal Compra (€) *'}
-                      </Label>
-                      <Input
-                        id="valor_semanal"
-                        type="number"
-                        step="0.01"
-                        value={contractForm.valor_semanal}
-                        onChange={(e) => setContractForm({...contractForm, valor_semanal: e.target.value})}
-                        placeholder="Ex: 150.00"
-                        required
-                      />
+                  <div className="space-y-2">
+                    <Label htmlFor="texto_contrato">Texto do Contrato *</Label>
+                    <p className="text-xs text-slate-500 mb-2">
+                      <strong>Variáveis Disponíveis:</strong>
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 text-xs text-slate-600 mb-2 p-3 bg-slate-50 rounded max-h-32 overflow-y-auto">
+                      <div><code>{'{'}PARCEIRO_NOME{'}'}</code></div>
+                      <div><code>{'{'}PARCEIRO_NIF{'}'}</code></div>
+                      <div><code>{'{'}PARCEIRO_MORADA{'}'}</code></div>
+                      <div><code>{'{'}PARCEIRO_CP{'}'}</code></div>
+                      <div><code>{'{'}PARCEIRO_TELEFONE{'}'}</code></div>
+                      <div><code>{'{'}PARCEIRO_EMAIL{'}'}</code></div>
+                      <div><code>{'{'}REP_LEGAL_NOME{'}'}</code></div>
+                      <div><code>{'{'}REP_LEGAL_CC{'}'}</code></div>
+                      <div><code>{'{'}MOTORISTA_NOME{'}'}</code></div>
+                      <div><code>{'{'}MOTORISTA_CC{'}'}</code></div>
+                      <div><code>{'{'}MOTORISTA_NIF{'}'}</code></div>
+                      <div><code>{'{'}MOTORISTA_MORADA{'}'}</code></div>
+                      <div><code>{'{'}MOTORISTA_LICENCA_TVDE{'}'}</code></div>
+                      <div><code>{'{'}MOTORISTA_SS{'}'}</code></div>
+                      <div><code>{'{'}VEICULO_MARCA{'}'}</code></div>
+                      <div><code>{'{'}VEICULO_MODELO{'}'}</code></div>
+                      <div><code>{'{'}VEICULO_MATRICULA{'}'}</code></div>
+                      <div><code>{'{'}DATA_INICIO{'}'}</code></div>
+                      <div><code>{'{'}TIPO_CONTRATO{'}'}</code></div>
+                      <div><code>{'{'}VALOR_SEMANAL{'}'}</code></div>
+                      <div><code>{'{'}COMISSAO{'}'}</code></div>
+                      <div><code>{'{'}CAUCAO_TOTAL{'}'}</code></div>
+                      <div><code>{'{'}CAUCAO_PARCELAS{'}'}</code></div>
+                      <div><code>{'{'}EPOCA_ALTA_VALOR{'}'}</code></div>
+                      <div><code>{'{'}EPOCA_BAIXA_VALOR{'}'}</code></div>
+                      <div><code>{'{'}CONDICOES_VEICULO{'}'}</code></div>
                     </div>
-                  )}
-
-                  {contractForm.tipo_contrato === 'carro_proprio' && (
-                    <div>
-                      <Label htmlFor="valor_slot">Valor Slot Semanal (€) *</Label>
-                      <Input
-                        id="valor_slot"
-                        type="number"
-                        step="0.01"
-                        value={contractForm.valor_slot}
-                        onChange={(e) => setContractForm({...contractForm, valor_slot: e.target.value})}
-                        placeholder="Ex: 50.00"
-                        required
-                      />
-                      <p className="text-xs text-slate-500 mt-1">Valor que o motorista paga para ter acesso ao slot na plataforma</p>
-                    </div>
-                  )}
-
-                  {(contractForm.tipo_contrato === 'comissao_part_time' || contractForm.tipo_contrato === 'comissao_full_time') && (
-                    <div>
-                      <Label htmlFor="percentagem_comissao">Percentagem Comissão (%) *</Label>
-                      <Input
-                        id="percentagem_comissao"
-                        type="number"
-                        step="0.01"
-                        max="100"
-                        value={contractForm.percentagem_comissao}
-                        onChange={(e) => setContractForm({...contractForm, percentagem_comissao: e.target.value})}
-                        placeholder="Ex: 20.00"
-                        required
-                      />
-                    </div>
-                  )}
-
-                  {contractForm.tipo_contrato === 'comissao_part_time' && (
-                    <div className="space-y-2">
-                      <Label>Horários de Disponibilidade</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          type="time"
-                          value={horarioTemp.inicio}
-                          onChange={(e) => setHorarioTemp({...horarioTemp, inicio: e.target.value})}
-                          placeholder="Início"
-                          className="flex-1"
-                        />
-                        <span className="self-center">-</span>
-                        <Input
-                          type="time"
-                          value={horarioTemp.fim}
-                          onChange={(e) => setHorarioTemp({...horarioTemp, fim: e.target.value})}
-                          placeholder="Fim"
-                          className="flex-1"
-                        />
-                        <Button type="button" size="sm" onClick={handleAddHorario}>
-                          +
-                        </Button>
-                      </div>
-                      {contractForm.horarios.length > 0 && (
-                        <div className="space-y-1">
-                          {contractForm.horarios.map((horario, index) => (
-                            <div key={index} className="flex items-center justify-between bg-slate-50 p-2 rounded">
-                              <span className="text-sm">{horario}</span>
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => handleRemoveHorario(index)}
-                              >
-                                ✕
-                              </Button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    <textarea
+                      id="texto_contrato"
+                      value={contractForm.texto_contrato || ''}
+                      onChange={(e) => setContractForm({...contractForm, texto_contrato: e.target.value})}
+                      className="w-full p-3 border rounded-md min-h-[200px] text-sm font-mono"
+                      placeholder="Cole ou escreva o texto do contrato aqui. Use as variáveis acima para preenchimento automático."
+                      required
+                    />
+                  </div>
 
                   <Button type="submit" className="w-full">
                     Gerar Contrato
