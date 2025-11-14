@@ -514,6 +514,14 @@ const Contratos = ({ user, onLogout }) => {
                         />
                       </div>
                       <div>
+                        <Label>Data Fim Época Alta *</Label>
+                        <Input
+                          type="date"
+                          value={formData.data_fim_epoca_alta}
+                          onChange={(e) => setFormData({...formData, data_fim_epoca_alta: e.target.value})}
+                        />
+                      </div>
+                      <div className="col-span-2">
                         <Label>Valor Semanal Época Alta (€) *</Label>
                         <Input
                           type="number"
@@ -535,6 +543,14 @@ const Contratos = ({ user, onLogout }) => {
                         />
                       </div>
                       <div>
+                        <Label>Data Fim Época Baixa *</Label>
+                        <Input
+                          type="date"
+                          value={formData.data_fim_epoca_baixa}
+                          onChange={(e) => setFormData({...formData, data_fim_epoca_baixa: e.target.value})}
+                        />
+                      </div>
+                      <div className="col-span-2">
                         <Label>Valor Semanal Época Baixa (€) *</Label>
                         <Input
                           type="number"
