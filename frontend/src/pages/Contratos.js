@@ -124,6 +124,7 @@ const Contratos = ({ user, onLogout }) => {
         tem_caucao: true,
         caucao_parcelada: false,
         caucao_parcelas: 4,
+        caucao_texto: '',
         tem_epoca: false,
         data_inicio_epoca_alta: '',
         data_inicio_epoca_baixa: '',
