@@ -427,11 +427,13 @@ const Parceiros = ({ user, onLogout }) => {
                       className="w-full p-2 border rounded-md"
                       required
                     >
-                      <option value="aluguer">Aluguer (Renting)</option>
+                      <option value="aluguer_normal">Aluguer Normal (Sem Épocas)</option>
+                      <option value="aluguer_epocas">Aluguer com Épocas (Alta/Baixa)</option>
                       <option value="compra_veiculo">Compra de Veículo</option>
                       <option value="carro_proprio">Carro Próprio (Slot)</option>
                       <option value="comissao_part_time">Comissão Part-Time</option>
                       <option value="comissao_full_time">Comissão Full-Time</option>
+                      <option value="motorista_privado">Motorista Privado</option>
                     </select>
                   </div>
 
