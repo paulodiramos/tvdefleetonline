@@ -991,7 +991,7 @@ class ContratoCreate(BaseModel):
     motorista_id: str
     vehicle_id: str
     data_inicio: str
-    tipo_contrato: str = "comissao"  # "comissao", "aluguer", "compra", "motorista_privado"
+    tipo_contrato: str = "comissao"  # "comissao", "aluguer_normal", "aluguer_epocas", "compra", "motorista_privado"
     
     # Valores financeiros
     valor_semanal: float = 230.0
@@ -1003,6 +1003,7 @@ class ContratoCreate(BaseModel):
     tem_caucao: bool = True
     caucao_parcelada: bool = False
     caucao_parcelas: Optional[int] = None
+    caucao_texto: Optional[str] = None  # Texto personalizado sobre caução
     
     # Campos para época (apenas para tipo "aluguer")
     tem_epoca: bool = False
