@@ -478,6 +478,7 @@ const Parceiros = ({ user, onLogout }) => {
                       <div><code>{'{'}COMISSAO{'}'}</code></div>
                       <div><code>{'{'}CAUCAO_TOTAL{'}'}</code></div>
                       <div><code>{'{'}CAUCAO_PARCELAS{'}'}</code></div>
+                      <div><code>{'{'}CAUCAO_TEXTO{'}'}</code></div>
                       <div><code>{'{'}DATA_INICIO_EPOCA_ALTA{'}'}</code></div>
                       <div><code>{'{'}EPOCA_ALTA_VALOR{'}'}</code></div>
                       <div><code>{'{'}DATA_INICIO_EPOCA_BAIXA{'}'}</code></div>
