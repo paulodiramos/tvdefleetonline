@@ -32,6 +32,8 @@ const Motoristas = ({ user, onLogout }) => {
   });
   const [parceiros, setParceiros] = useState([]);
   const [veiculos, setVeiculos] = useState([]);
+  const [showContractConfirmDialog, setShowContractConfirmDialog] = useState(false);
+  const [assignedDriverData, setAssignedDriverData] = useState(null);
   const [newMotorista, setNewMotorista] = useState({
     email: '',
     name: '',
