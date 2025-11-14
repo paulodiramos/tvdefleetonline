@@ -987,6 +987,10 @@ class ContratoCreate(BaseModel):
     valor_semanal: float = 230.0
     caucao_total: float = 300.0
     caucao_lavagem: float = 90.0
+    # Campos de caução
+    tem_caucao: bool = True
+    caucao_parcelada: bool = False
+    caucao_parcelas: Optional[int] = None  # Número de semanas para parcelar
     # Campos para época (apenas para tipo "aluguer")
     tem_epoca: bool = False
     data_inicio_epoca_alta: Optional[str] = None
