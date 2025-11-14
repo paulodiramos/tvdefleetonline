@@ -1079,14 +1079,16 @@ class Contrato(BaseModel):
     caucao_parcelas: Optional[int] = None
     caucao_texto: Optional[str] = None  # Texto personalizado sobre caução
     
-    # Campos de Época
+    # Campos de Época (opcional)
     tem_epoca: bool = False
     data_inicio_epoca_alta: Optional[str] = None
     data_fim_epoca_alta: Optional[str] = None
     valor_epoca_alta: Optional[float] = None
+    texto_epoca_alta: Optional[str] = None
     data_inicio_epoca_baixa: Optional[str] = None
     data_fim_epoca_baixa: Optional[str] = None
     valor_epoca_baixa: Optional[float] = None
+    texto_epoca_baixa: Optional[str] = None
     
     # Condições do veículo
     condicoes_veiculo: Optional[str] = None
