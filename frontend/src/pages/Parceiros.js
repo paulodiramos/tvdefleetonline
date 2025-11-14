@@ -485,9 +485,11 @@ const Parceiros = ({ user, onLogout }) => {
                       <div><code>{'{'}DATA_INICIO_EPOCA_ALTA{'}'}</code></div>
                       <div><code>{'{'}DATA_FIM_EPOCA_ALTA{'}'}</code></div>
                       <div><code>{'{'}EPOCA_ALTA_VALOR{'}'}</code></div>
+                      <div><code>{'{'}TEXTO_EPOCA_ALTA{'}'}</code></div>
                       <div><code>{'{'}DATA_INICIO_EPOCA_BAIXA{'}'}</code></div>
                       <div><code>{'{'}DATA_FIM_EPOCA_BAIXA{'}'}</code></div>
                       <div><code>{'{'}EPOCA_BAIXA_VALOR{'}'}</code></div>
+                      <div><code>{'{'}TEXTO_EPOCA_BAIXA{'}'}</code></div>
                       <div><code>{'{'}CONDICOES_VEICULO{'}'}</code></div>
                     </div>
                     <textarea
