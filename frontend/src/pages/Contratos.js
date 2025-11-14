@@ -607,9 +607,19 @@ const Contratos = ({ user, onLogout }) => {
                           onChange={(e) => setFormData({...formData, valor_epoca_baixa: parseFloat(e.target.value)})}
                         />
                       </div>
+                      
+                      <div className="col-span-2">
+                        <Label>Observações/Descrição Época Baixa</Label>
+                        <textarea
+                          className="w-full p-2 border rounded-md min-h-[60px] text-sm"
+                          placeholder="Ex: Inverno - Menor movimento, clima desfavorável..."
+                          value={formData.texto_epoca_baixa}
+                          onChange={(e) => setFormData({...formData, texto_epoca_baixa: e.target.value})}
+                        />
+                      </div>
                     </div>
+                  )}
                 </div>
-              )}
 
               {/* Texto de Caução Personalizado */}
               {(formData.tipo_contrato === 'aluguer_com_caucao' || formData.tipo_contrato === 'aluguer_caucao_epocas') && (
