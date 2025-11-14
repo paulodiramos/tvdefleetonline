@@ -449,20 +449,10 @@ const Contratos = ({ user, onLogout }) => {
                 )}
               </div>
 
-              {/* Campos de Caução */}
+              {/* Campos de Caução - Mostrar apenas para tipos com caução */}
+              {(formData.tipo_contrato === 'aluguer_com_caucao' || formData.tipo_contrato === 'aluguer_caucao_epocas') && (
               <div className="space-y-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    id="tem_caucao"
-                    checked={formData.tem_caucao}
-                    onChange={(e) => setFormData({...formData, tem_caucao: e.target.checked})}
-                    className="w-4 h-4"
-                  />
-                  <Label htmlFor="tem_caucao" className="font-semibold">
-                    Contrato com Caução
-                  </Label>
-                </div>
+                <h3 className="font-semibold">Configuração de Caução</h3>
 
                 {formData.tem_caucao && (
                   <div className="space-y-3">
