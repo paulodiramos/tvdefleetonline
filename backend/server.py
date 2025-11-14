@@ -1022,20 +1022,30 @@ class Contrato(BaseModel):
     motorista_id: str
     vehicle_id: Optional[str] = None
     
-    # Dados Parceiro
+    # Dados Parceiro Completos
     parceiro_nome: str
     parceiro_nif: str
     parceiro_morada: str
+    parceiro_codigo_postal: Optional[str] = None
+    parceiro_telefone: Optional[str] = None
     parceiro_email: str
+    parceiro_representante_legal_nome: Optional[str] = None
+    parceiro_representante_legal_contribuinte: Optional[str] = None
+    parceiro_representante_legal_cc: Optional[str] = None
+    parceiro_representante_legal_cc_validade: Optional[str] = None
     
-    # Dados Motorista
+    # Dados Motorista Completos
     motorista_nome: str
     motorista_cc: str
     motorista_cc_validade: Optional[str] = None
     motorista_nif: str
     motorista_morada: str
+    motorista_codigo_postal: Optional[str] = None
     motorista_carta_conducao: Optional[str] = None
     motorista_carta_validade: Optional[str] = None
+    motorista_licenca_tvde: Optional[str] = None
+    motorista_licenca_tvde_validade: Optional[str] = None
+    motorista_seguranca_social: Optional[str] = None
     motorista_email: str
     
     # Dados Veículo
