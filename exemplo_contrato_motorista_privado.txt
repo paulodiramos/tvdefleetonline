@@ -1,0 +1,116 @@
+CONTRATO DE PRESTAÇÃO DE SERVIÇOS - MOTORISTA PRIVADO
+
+ENTRE:
+
+PRIMEIRO OUTORGANTE (CONTRATANTE):
+{PARCEIRO_NOME}, pessoa coletiva de direito privado, com sede em {PARCEIRO_MORADA}, {PARCEIRO_CP}, titular do número de identificação fiscal {PARCEIRO_NIF}, telefone {PARCEIRO_TELEFONE}, email {PARCEIRO_EMAIL}, representada por {REP_LEGAL_NOME}, CC n.º {REP_LEGAL_CC}.
+
+E
+
+SEGUNDO OUTORGANTE (MOTORISTA PRIVADO):
+{MOTORISTA_NOME}, portador do Cartão de Cidadão n.º {MOTORISTA_CC}, válido até {MOTORISTA_CC_VALIDADE}, contribuinte fiscal n.º {MOTORISTA_NIF}, residente em {MOTORISTA_MORADA}, {MOTORISTA_CP}, titular da carta de condução n.º {MOTORISTA_CARTA_CONDUCAO}, válida até {MOTORISTA_CARTA_VALIDADE}, licença TVDE n.º {MOTORISTA_LICENCA_TVDE}, segurança social n.º {MOTORISTA_SS}.
+
+É celebrado o presente contrato de prestação de serviços de motorista privado:
+
+CLÁUSULA PRIMEIRA
+(Objeto)
+
+O CONTRATANTE contrata o MOTORISTA para conduzir veículo próprio da empresa:
+- Marca: {VEICULO_MARCA}
+- Modelo: {VEICULO_MODELO}
+- Matrícula: {VEICULO_MATRICULA}
+- Condições: {CONDICOES_VEICULO}
+
+CLÁUSULA SEGUNDA
+(Tipo e Duração)
+
+1. Contrato: {TIPO_CONTRATO}
+2. Início: {DATA_INICIO}
+3. Duração indeterminada
+4. Regime de trabalho conforme necessidades da empresa
+
+CLÁUSULA TERCEIRA
+(Remuneração)
+
+1. Valor semanal: {VALOR_SEMANAL}€ (euros)
+2. Pagamento semanal, todas as segundas-feiras
+3. Inclui todos os serviços prestados durante a semana
+
+CLÁUSULA QUARTA
+(Caução e Garantias)
+
+1. Caução de responsabilidade: {CAUCAO_TOTAL}€
+{CAUCAO_PARCELAS}
+2. Devolvida no final do contrato, deduzidos eventuais danos
+
+CLÁUSULA QUINTA
+(Deveres do MOTORISTA)
+
+O MOTORISTA obriga-se a:
+a) Conduzir com prudência e respeitar o Código da Estrada;
+b) Manter o veículo limpo e apresentável;
+c) Zelar pela segurança dos passageiros;
+d) Estar disponível nos horários acordados;
+e) Comunicar imediatamente qualquer incidente;
+f) Não usar o veículo para fins pessoais;
+g) Respeitar a confidencialidade dos passageiros.
+
+CLÁUSULA SEXTA
+(Deveres do CONTRATANTE)
+
+O CONTRATANTE obriga-se a:
+a) Disponibilizar veículo em perfeitas condições;
+b) Manter seguro e documentação válidos;
+c) Efetuar pagamento semanal pontualmente;
+d) Custear combustível, manutenção e reparações;
+e) Fornecer equipamentos de proteção necessários.
+
+CLÁUSULA SÉTIMA
+(Custos)
+
+Todos os custos operacionais (combustível, manutenção, seguros, portagens) são da responsabilidade do CONTRATANTE.
+
+CLÁUSULA OITAVA
+(Horário)
+
+Horário de trabalho será definido conforme necessidades da empresa, respeitando limites legais de condução.
+
+CLÁUSULA NONA
+(Acidentes e Sinistros)
+
+1. Em caso de acidente, o MOTORISTA deve comunicar imediatamente ao CONTRATANTE.
+2. Seguros do veículo são da responsabilidade do CONTRATANTE.
+3. Negligência comprovada do MOTORISTA implica responsabilização.
+
+CLÁUSULA DÉCIMA
+(Rescisão)
+
+1. Aviso prévio de 30 dias por qualquer das partes
+2. Rescisão imediata por incumprimento grave
+3. Devolução de caução conforme termos contratuais
+
+CLÁUSULA DÉCIMA PRIMEIRA
+(Confidencialidade)
+
+O MOTORISTA compromete-se a manter confidencialidade sobre assuntos da empresa e dos passageiros.
+
+CLÁUSULA DÉCIMA SEGUNDA
+(Foro)
+
+Para resolução de litígios é competente o Tribunal de Lisboa.
+
+Feito em duplicado.
+
+Lisboa, {DATA_INICIO}
+
+____________________________________
+O CONTRATANTE
+{PARCEIRO_NOME}
+NIF: {PARCEIRO_NIF}
+
+
+____________________________________
+O MOTORISTA
+{MOTORISTA_NOME}
+NIF: {MOTORISTA_NIF}
+CC: {MOTORISTA_CC}
