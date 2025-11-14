@@ -112,6 +112,92 @@ const Contratos = ({ user, onLogout }) => {
     }
   };
 
+  const loadExampleContractTemplate = () => {
+    const exampleText = `CONTRATO DE PRESTAÇÃO DE SERVIÇOS TVDE
+
+Entre:
+
+PRIMEIRO OUTORGANTE (Parceiro):
+Nome: {PARCEIRO_NOME}
+NIF: {PARCEIRO_NIF}
+Morada: {PARCEIRO_MORADA}
+Código Postal: {PARCEIRO_CP}
+Telefone: {PARCEIRO_TELEFONE}
+Email: {PARCEIRO_EMAIL}
+
+Representado por:
+Nome: {REP_LEGAL_NOME}
+CC: {REP_LEGAL_CC}
+
+E:
+
+SEGUNDO OUTORGANTE (Motorista):
+Nome: {MOTORISTA_NOME}
+CC: {MOTORISTA_CC}
+NIF: {MOTORISTA_NIF}
+Morada: {MOTORISTA_MORADA}
+Licença TVDE: {MOTORISTA_LICENCA_TVDE}
+Nº Segurança Social: {MOTORISTA_SS}
+
+É celebrado o presente contrato de {TIPO_CONTRATO} que se regerá pelas seguintes cláusulas:
+
+CLÁUSULA PRIMEIRA - Objeto
+O Primeiro Outorgante coloca à disposição do Segundo Outorgante o veículo {VEICULO_MARCA} {VEICULO_MODELO}, com a matrícula {VEICULO_MATRICULA}, para exercício da atividade TVDE.
+
+CLÁUSULA SEGUNDA - Vigência
+O presente contrato tem início em {DATA_INICIO} e vigora por tempo indeterminado.
+
+CLÁUSULA TERCEIRA - Valor
+O valor acordado é de {VALOR_SEMANAL}€ por semana.
+
+CLÁUSULA QUARTA - Condições do Veículo
+{CONDICOES_VEICULO}
+
+CLÁUSULA QUINTA - Obrigações do Motorista
+O Segundo Outorgante obriga-se a:
+a) Manter o veículo em bom estado de conservação
+b) Cumprir todas as normas de trânsito
+c) Efetuar os pagamentos semanais pontualmente
+d) Comunicar qualquer dano ou avaria imediatamente
+
+CLÁUSULA SEXTA - Obrigações do Parceiro
+O Primeiro Outorgante obriga-se a:
+a) Entregar o veículo em perfeitas condições
+b) Manter o seguro e documentação em dia
+c) Realizar manutenções preventivas
+
+Data de Emissão: {DATA_EMISSAO}
+
+________________________________
+{PARCEIRO_NOME}
+(Primeiro Outorgante)
+
+________________________________
+{MOTORISTA_NOME}
+(Segundo Outorgante)`;
+    
+    setFormData({...formData, template_texto: exampleText});
+    toast.success('Exemplo de contrato carregado!');
+  };
+
+  const loadExampleCaucaoClause = () => {
+    const exampleText = `O Segundo Outorgante compromete-se a pagar uma caução no valor total de {CAUCAO_TOTAL}€, que será utilizada como garantia de cumprimento das obrigações contratuais. A caução será paga em {CAUCAO_PARCELAS} prestações semanais. A caução será devolvida no prazo de 30 dias após o término do contrato, desde que o veículo seja devolvido nas mesmas condições e não existam dívidas pendentes.`;
+    setFormData({...formData, caucao_texto: exampleText});
+    toast.success('Exemplo de cláusula de caução carregado!');
+  };
+
+  const loadExampleEpocaAltaClause = () => {
+    const exampleText = `Durante o período de {DATA_INICIO_EPOCA_ALTA} a {DATA_FIM_EPOCA_ALTA} (época alta), o valor semanal será ajustado para {EPOCA_ALTA_VALOR}€, refletindo o aumento de procura de serviços TVDE durante os meses de verão e eventos turísticos.`;
+    setFormData({...formData, texto_epoca_alta: exampleText});
+    toast.success('Exemplo de época alta carregado!');
+  };
+
+  const loadExampleEpocaBaixaClause = () => {
+    const exampleText = `Durante o período de {DATA_INICIO_EPOCA_BAIXA} a {DATA_FIM_EPOCA_BAIXA} (época baixa), o valor semanal será ajustado para {EPOCA_BAIXA_VALOR}€, considerando a redução de atividade turística durante os meses de inverno.`;
+    setFormData({...formData, texto_epoca_baixa: exampleText});
+    toast.success('Exemplo de época baixa carregado!');
+  };
+
   const handleCreateContrato = async (e) => {
     e.preventDefault();
     try {
