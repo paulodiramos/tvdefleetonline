@@ -119,6 +119,12 @@ const Layout = ({ user, onLogout, children }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link to="/configuracoes-admin" className="flex items-center space-x-2 cursor-pointer">
+                          <FileText className="w-4 h-4" />
+                          <span>Termos & Privacidade</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to="/profile" className="flex items-center space-x-2 cursor-pointer">
                           <UserCircle className="w-4 h-4" />
                           <span>Perfil</span>
