@@ -437,21 +437,33 @@ const Contratos = ({ user, onLogout }) => {
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="aluguer">Aluguer (Regime de Aluguer)</SelectItem>
                       <SelectItem value="comissao">Comissão</SelectItem>
-                      <SelectItem value="aluguer_sem_caucao">Aluguer Sem Caução</SelectItem>
-                      <SelectItem value="aluguer_epocas_sem_caucao">Aluguer com Épocas Sem Caução</SelectItem>
-                      <SelectItem value="aluguer_com_caucao">Aluguer Com Caução</SelectItem>
-                      <SelectItem value="aluguer_caucao_epocas">Aluguer Com Caução e Épocas</SelectItem>
-                      <SelectItem value="compra">Compra</SelectItem>
+                      <SelectItem value="compra">Compra (Com Semanadas)</SelectItem>
                       <SelectItem value="motorista_privado">Motorista Privado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Campo de Comissão (apenas para tipo comissão) */}
+                {/* Campo de Valor Semanal - para Aluguer */}
+                {formData.tipo_contrato === 'aluguer' && (
+                  <div>
+                    <Label>Valor Semanal (€) *</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={formData.valor_semanal}
+                      onChange={(e) => setFormData({...formData, valor_semanal: parseFloat(e.target.value)})}
+                      required
+                    />
+                  </div>
+                )}
+
+                {/* Campo de Comissão - para Comissão */}
                 {formData.tipo_contrato === 'comissao' && (
                   <div>
-                    <Label>Comissão (%)</Label>
+                    <Label>Comissão (%) *</Label>
                     <Input
                       type="number"
                       step="0.1"
@@ -459,10 +471,77 @@ const Contratos = ({ user, onLogout }) => {
                       max="100"
                       value={formData.comissao_percentual}
                       onChange={(e) => setFormData({...formData, comissao_percentual: parseFloat(e.target.value)})}
+                      required
                     />
                   </div>
                 )}
+
+                {/* Campos de Compra - para Compra */}
+                {formData.tipo_contrato === 'compra' && (
+                  <>
+                    <div>
+                      <Label>Número de Semanadas *</Label>
+                      <Input
+                        type="number"
+                        min="1"
+                        value={formData.numero_semanadas}
+                        onChange={(e) => setFormData({...formData, numero_semanadas: parseInt(e.target.value)})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label>Valor por Semanada (€) *</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={formData.valor_semanada}
+                        onChange={(e) => setFormData({...formData, valor_semanada: parseFloat(e.target.value)})}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <Label>Slot / Número de Identificação</Label>
+                      <Input
+                        type="text"
+                        placeholder="Ex: Slot 15, YZ-2024"
+                        value={formData.slot_numero}
+                        onChange={(e) => setFormData({...formData, slot_numero: e.target.value})}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
+
+              {/* Checkboxes para Caução e Época - para Aluguer, Comissão e Motorista Privado */}
+              {(formData.tipo_contrato === 'aluguer' || formData.tipo_contrato === 'comissao' || formData.tipo_contrato === 'motorista_privado') && (
+                <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="tem_caucao"
+                      checked={formData.tem_caucao}
+                      onChange={(e) => setFormData({...formData, tem_caucao: e.target.checked})}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="tem_caucao" className="cursor-pointer">
+                      Incluir Caução
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="tem_epoca"
+                      checked={formData.tem_epoca}
+                      onChange={(e) => setFormData({...formData, tem_epoca: e.target.checked})}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="tem_epoca" className="cursor-pointer">
+                      Incluir Sazonalidade (Épocas)
+                    </Label>
+                  </div>
+                </div>
+              )}
 
               {/* Campos de Caução - Mostrar apenas para tipos com caução */}
               {(formData.tipo_contrato === 'aluguer_com_caucao' || formData.tipo_contrato === 'aluguer_caucao_epocas') && (
