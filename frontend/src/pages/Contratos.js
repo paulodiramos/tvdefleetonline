@@ -37,8 +37,10 @@ const Contratos = ({ user, onLogout }) => {
     caucao_texto: '',
     tem_epoca: false,
     data_inicio_epoca_alta: '',
-    data_inicio_epoca_baixa: '',
+    data_fim_epoca_alta: '',
     valor_epoca_alta: 300,
+    data_inicio_epoca_baixa: '',
+    data_fim_epoca_baixa: '',
     valor_epoca_baixa: 200,
     condicoes_veiculo: '',
     template_texto: ''
