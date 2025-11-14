@@ -47,10 +47,7 @@ const Parceiros = ({ user, onLogout }) => {
     motorista_id: '',
     vehicle_id: '',
     tipo_contrato: 'aluguer',
-    valor_semanal: '',
-    valor_slot: '',
-    percentagem_comissao: '',
-    horarios: []
+    texto_contrato: ''
   });
   const [horarioTemp, setHorarioTemp] = useState({ inicio: '', fim: '' });
 
