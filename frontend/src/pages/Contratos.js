@@ -417,9 +417,26 @@ const Contratos = ({ user, onLogout }) => {
                     <SelectContent>
                       <SelectItem value="comissao">Comissão</SelectItem>
                       <SelectItem value="aluguer">Aluguer</SelectItem>
+                      <SelectItem value="compra">Compra</SelectItem>
+                      <SelectItem value="motorista_privado">Motorista Privado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
+
+                {/* Campo de Comissão (apenas para tipo comissão) */}
+                {formData.tipo_contrato === 'comissao' && (
+                  <div>
+                    <Label>Comissão (%)</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="100"
+                      value={formData.comissao_percentual}
+                      onChange={(e) => setFormData({...formData, comissao_percentual: parseFloat(e.target.value)})}
+                    />
+                  </div>
+                )}
               </div>
 
               {/* Campos de Caução */}
