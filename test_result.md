@@ -362,13 +362,17 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Task 1 - Partner template fields (backend + frontend)"
+    - "Task 2 - Contract creation popup after driver assignment"
+    - "Task 3 - Admin settings page for Terms & Privacy"
+    - "Enhanced contract system with conditional fields"
   stuck_tasks: []
   test_all: false
-  test_priority: "completed"
-  backend_testing_complete: true
-  all_phases_tested: true
-  expanded_features_tested: true
+  test_priority: "high_first"
+  backend_testing_complete: false
+  all_phases_tested: false
+  expanded_features_tested: false
 
 agent_communication:
     - agent: "main"
