@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { Users, CheckCircle, Clock, FileText, Plus, Mail, Phone, MapPin, CreditCard, Edit, X, Save, Trash2, Download } from 'lucide-react';
 
 const Motoristas = ({ user, onLogout }) => {
+  const navigate = useNavigate();
   const [motoristas, setMotoristas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
