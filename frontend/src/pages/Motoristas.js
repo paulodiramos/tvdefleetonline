@@ -1460,6 +1460,43 @@ const Motoristas = ({ user, onLogout }) => {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* Contract Creation Confirmation Dialog */}
+        <Dialog open={showContractConfirmDialog} onOpenChange={setShowContractConfirmDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <FileText className="w-5 h-5 text-green-600" />
+                <span>Criar Contrato?</span>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="py-4">
+              <p className="text-slate-700 mb-4">
+                O motorista <strong>{assignedDriverData?.motorista?.name}</strong> foi atribuído com sucesso ao veículo <strong>{assignedDriverData?.veiculo?.matricula}</strong>.
+              </p>
+              <p className="text-slate-600">
+                Deseja criar um contrato para este motorista agora?
+              </p>
+            </div>
+            <div className="flex space-x-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={handleSkipContract}
+              >
+                Não, mais tarde
+              </Button>
+              <Button
+                type="button"
+                className="flex-1 bg-green-600 hover:bg-green-700"
+                onClick={handleCreateContract}
+              >
+                Sim, criar contrato
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
