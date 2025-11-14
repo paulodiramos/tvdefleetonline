@@ -813,7 +813,17 @@ ________________________________
               {/* Texto de Caução Personalizado - Quando caução ativada */}
               {formData.tem_caucao && (
                 <div className="space-y-2">
-                  <Label>Texto Personalizado da Caução (Opcional)</Label>
+                  <div className="flex items-center justify-between">
+                    <Label>Texto Personalizado da Caução (Opcional)</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={loadExampleCaucaoClause}
+                    >
+                      Inserir Exemplo
+                    </Button>
+                  </div>
                   <p className="text-xs text-slate-500">
                     Texto adicional sobre condições específicas da caução para este contrato
                   </p>
