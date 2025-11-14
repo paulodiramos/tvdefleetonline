@@ -26,12 +26,12 @@ const Contratos = ({ user, onLogout }) => {
     motorista_id: '',
     vehicle_id: '',
     data_inicio: new Date().toISOString().split('T')[0],
-    tipo_contrato: 'comissao',
+    tipo_contrato: 'aluguer',
     valor_semanal: 230,
     comissao_percentual: 20,
     caucao_total: 300,
     caucao_lavagem: 90,
-    tem_caucao: true,
+    tem_caucao: false,
     caucao_parcelada: false,
     caucao_parcelas: 4,
     caucao_texto: '',
@@ -45,7 +45,13 @@ const Contratos = ({ user, onLogout }) => {
     valor_epoca_baixa: 200,
     texto_epoca_baixa: '',
     condicoes_veiculo: '',
-    template_texto: ''
+    template_texto: '',
+    // Novos campos para Compra
+    numero_semanadas: 52,
+    valor_semanada: 200,
+    slot_numero: '',
+    // Campo para envio de email
+    enviar_email: false
   });
 
   useEffect(() => {
