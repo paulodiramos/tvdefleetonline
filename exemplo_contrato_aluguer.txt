@@ -44,6 +44,7 @@ CLÁUSULA QUARTA
 {CAUCAO_PARCELAS}
 2. A caução destina-se a garantir o cumprimento das obrigações contratuais e será devolvida no final do contrato, deduzidos eventuais danos ou valores em dívida.
 3. A caução de lavagem, no valor de {CAUCAO_LAVAGEM}€ (euros), é devolvida mediante entrega do veículo limpo e em condições de uso.
+{CAUCAO_TEXTO}
 
 CLÁUSULA QUINTA
 (Obrigações do LOCATÁRIO)
