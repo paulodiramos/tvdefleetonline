@@ -3939,6 +3939,66 @@ async def update_admin_settings(
     
     return {"message": "Settings updated", "settings": update_data}
 
+# ==================== MINUTAS DE CONTRATO ENDPOINTS ====================
+
+@api_router.get("/parceiros/{parceiro_id}/minutas")
+async def get_minutas_parceiro(parceiro_id: str, current_user: Dict = Depends(get_current_user)):
+    """Get all contract templates for a parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    minutas = await db.minutas_contrato.find({"parceiro_id": parceiro_id}, {"_id": 0}).to_list(length=None)
+    return minutas
+
+@api_router.post("/parceiros/{parceiro_id}/minutas")
+async def create_minuta(parceiro_id: str, minuta_data: MinutaContratoCreate, current_user: Dict = Depends(get_current_user)):
+    """Create new contract template for parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    minuta_dict = minuta_data.model_dump()
+    minuta_dict["id"] = str(uuid.uuid4())
+    minuta_dict["parceiro_id"] = parceiro_id
+    minuta_dict["ativa"] = True
+    minuta_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    minuta_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    minuta_dict["created_by"] = current_user["id"]
+    
+    await db.minutas_contrato.insert_one(minuta_dict)
+    
+    return {"message": "Minuta criada com sucesso", "id": minuta_dict["id"]}
+
+@api_router.put("/minutas/{minuta_id}")
+async def update_minuta(minuta_id: str, updates: Dict[str, Any], current_user: Dict = Depends(get_current_user)):
+    """Update contract template"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    result = await db.minutas_contrato.update_one(
+        {"id": minuta_id},
+        {"$set": updates}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Minuta not found")
+    
+    return {"message": "Minuta atualizada com sucesso"}
+
+@api_router.delete("/minutas/{minuta_id}")
+async def delete_minuta(minuta_id: str, current_user: Dict = Depends(get_current_user)):
+    """Delete contract template"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    result = await db.minutas_contrato.delete_one({"id": minuta_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Minuta not found")
+    
+    return {"message": "Minuta excluída com sucesso"}
+
 # ==================== CONFIGURAÇÕES TEXTOS LEGAIS ====================
 
 @api_router.get("/config/textos-legais")
