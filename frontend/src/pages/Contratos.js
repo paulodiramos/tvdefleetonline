@@ -28,6 +28,7 @@ const Contratos = ({ user, onLogout }) => {
     data_inicio: new Date().toISOString().split('T')[0],
     tipo_contrato: 'comissao',
     valor_semanal: 230,
+    comissao_percentual: 20,
     caucao_total: 300,
     caucao_lavagem: 90,
     tem_caucao: true,
@@ -38,6 +39,7 @@ const Contratos = ({ user, onLogout }) => {
     data_inicio_epoca_baixa: '',
     valor_epoca_alta: 300,
     valor_epoca_baixa: 200,
+    condicoes_veiculo: '',
     template_texto: ''
   });
 
