@@ -699,11 +699,11 @@ const Contratos = ({ user, onLogout }) => {
                         />
                       </div>
                     </div>
-                  )}
                 </div>
+              )}
 
-              {/* Texto de Caução Personalizado */}
-              {(formData.tipo_contrato === 'aluguer_com_caucao' || formData.tipo_contrato === 'aluguer_caucao_epocas') && (
+              {/* Texto de Caução Personalizado - Quando caução ativada */}
+              {formData.tem_caucao && (
                 <div className="space-y-2">
                   <Label>Texto Personalizado da Caução (Opcional)</Label>
                   <p className="text-xs text-slate-500">
