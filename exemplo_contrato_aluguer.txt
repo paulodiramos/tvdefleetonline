@@ -1,0 +1,132 @@
+CONTRATO DE ALUGUER DE VEÍCULO PARA TVDE
+
+ENTRE:
+
+PRIMEIRO OUTORGANTE (LOCADOR):
+{PARCEIRO_NOME}, pessoa coletiva de direito privado, com sede em {PARCEIRO_MORADA}, {PARCEIRO_CP}, titular do número de identificação fiscal {PARCEIRO_NIF}, telefone {PARCEIRO_TELEFONE}, email {PARCEIRO_EMAIL}, aqui representada por {REP_LEGAL_NOME}, portador do Cartão de Cidadão n.º {REP_LEGAL_CC}, na qualidade de representante legal.
+
+E
+
+SEGUNDO OUTORGANTE (LOCATÁRIO):
+{MOTORISTA_NOME}, portador do Cartão de Cidadão n.º {MOTORISTA_CC}, válido até {MOTORISTA_CC_VALIDADE}, contribuinte fiscal n.º {MOTORISTA_NIF}, residente em {MOTORISTA_MORADA}, {MOTORISTA_CP}, titular da carta de condução n.º {MOTORISTA_CARTA_CONDUCAO}, válida até {MOTORISTA_CARTA_VALIDADE}, e da licença TVDE n.º {MOTORISTA_LICENCA_TVDE}, válida até {MOTORISTA_LICENCA_TVDE_VALIDADE}, número de segurança social {MOTORISTA_SS}, email {MOTORISTA_EMAIL}.
+
+É celebrado o presente contrato de aluguer de veículo para atividade TVDE, que se regerá pelas seguintes cláusulas:
+
+CLÁUSULA PRIMEIRA
+(Objeto do Contrato)
+
+O LOCADOR obriga-se a ceder ao LOCATÁRIO, para uso exclusivo em atividade TVDE, o veículo automóvel com as seguintes características:
+- Marca: {VEICULO_MARCA}
+- Modelo: {VEICULO_MODELO}
+- Matrícula: {VEICULO_MATRICULA}
+
+Estado e condições do veículo: {CONDICOES_VEICULO}
+
+CLÁUSULA SEGUNDA
+(Tipo de Contrato e Duração)
+
+1. O presente contrato é do tipo: {TIPO_CONTRATO}
+2. O contrato inicia-se em {DATA_INICIO} e vigora por tempo indeterminado.
+3. Qualquer das partes pode denunciar o contrato com aviso prévio de 30 dias.
+
+CLÁUSULA TERCEIRA
+(Valor do Aluguer)
+
+1. O valor do aluguer semanal é de {VALOR_SEMANAL}€ (euros).
+2. O pagamento deverá ser efetuado todas as segundas-feiras, referente à semana anterior.
+{EPOCA_ALTA_VALOR}
+{EPOCA_BAIXA_VALOR}
+
+CLÁUSULA QUARTA
+(Caução)
+
+1. O LOCATÁRIO obriga-se a pagar uma caução no valor total de {CAUCAO_TOTAL}€ (euros).
+{CAUCAO_PARCELAS}
+2. A caução destina-se a garantir o cumprimento das obrigações contratuais e será devolvida no final do contrato, deduzidos eventuais danos ou valores em dívida.
+3. A caução de lavagem, no valor de {CAUCAO_LAVAGEM}€ (euros), é devolvida mediante entrega do veículo limpo e em condições de uso.
+
+CLÁUSULA QUINTA
+(Obrigações do LOCATÁRIO)
+
+O LOCATÁRIO obriga-se a:
+a) Utilizar o veículo exclusivamente para atividade TVDE autorizada;
+b) Manter o veículo em bom estado de conservação e limpeza;
+c) Efetuar as revisões e manutenções periódicas nos prazos estabelecidos;
+d) Comunicar imediatamente qualquer acidente ou dano no veículo;
+e) Respeitar o Código da Estrada e todas as normas aplicáveis;
+f) Não sublocar ou ceder o veículo a terceiros;
+g) Efetuar o pagamento pontual do aluguer;
+h) Devolver o veículo nas mesmas condições em que o recebeu.
+
+CLÁUSULA SEXTA
+(Obrigações do LOCADOR)
+
+O LOCADOR obriga-se a:
+a) Entregar o veículo em perfeitas condições de funcionamento;
+b) Manter o seguro do veículo ativo e válido;
+c) Garantir a legalidade e regularidade da documentação do veículo;
+d) Providenciar assistência em caso de avaria ou acidente;
+e) Realizar as inspeções periódicas obrigatórias.
+
+CLÁUSULA SÉTIMA
+(Seguros e Responsabilidades)
+
+1. O seguro do veículo é da responsabilidade do LOCADOR.
+2. O LOCATÁRIO é responsável pelo pagamento de franquias em caso de sinistro causado por sua culpa.
+3. O LOCATÁRIO responde por danos causados ao veículo por uso indevido ou negligência.
+
+CLÁUSULA OITAVA
+(Combustível e Portagens)
+
+1. Os custos com combustível são da responsabilidade do LOCATÁRIO.
+2. Os custos com portagens Via Verde são da responsabilidade do LOCATÁRIO.
+
+CLÁUSULA NONA
+(Multas e Coimas)
+
+Todas as multas e coimas resultantes de infrações cometidas pelo LOCATÁRIO são da sua exclusiva responsabilidade.
+
+CLÁUSULA DÉCIMA
+(Rescisão)
+
+O presente contrato pode ser rescindido por qualquer das partes mediante:
+a) Aviso prévio de 30 dias;
+b) Incumprimento grave das obrigações contratuais;
+c) Falta de pagamento superior a 15 dias.
+
+CLÁUSULA DÉCIMA PRIMEIRA
+(Devolução do Veículo)
+
+Na rescisão do contrato, o LOCATÁRIO obriga-se a devolver o veículo:
+a) Limpo e em bom estado de conservação;
+b) Com todos os documentos e acessórios originais;
+c) No prazo máximo de 48 horas após o termo do contrato.
+
+CLÁUSULA DÉCIMA SEGUNDA
+(Lei Aplicável e Foro)
+
+1. O presente contrato é regulado pela lei portuguesa.
+2. Para resolução de litígios, é competente o Tribunal da comarca de Lisboa.
+
+CLÁUSULA DÉCIMA TERCEIRA
+(Disposições Finais)
+
+1. Qualquer alteração ao presente contrato deve ser reduzida a escrito.
+2. A nulidade ou invalidade de qualquer cláusula não afeta a validade das restantes.
+
+O presente contrato é feito em duplicado, ficando cada parte com um exemplar.
+
+Lisboa, {DATA_INICIO}
+
+____________________________________
+O LOCADOR
+{PARCEIRO_NOME}
+NIF: {PARCEIRO_NIF}
+Representado por: {REP_LEGAL_NOME}
+
+
+____________________________________
+O LOCATÁRIO
+{MOTORISTA_NOME}
+NIF: {MOTORISTA_NIF}
+CC: {MOTORISTA_CC}
