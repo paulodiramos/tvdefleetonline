@@ -44,8 +44,6 @@ const Parceiros = ({ user, onLogout }) => {
     morada: ''
   });
   const [contractForm, setContractForm] = useState({
-    motorista_id: '',
-    vehicle_id: '',
     tipo_contrato: 'aluguer',
     texto_contrato: ''
   });
