@@ -545,6 +545,22 @@ const Contratos = ({ user, onLogout }) => {
                 </div>
               )}
 
+              {/* Texto de Caução Personalizado */}
+              {formData.tem_caucao && (
+                <div className="space-y-2">
+                  <Label>Texto Personalizado da Caução (Opcional)</Label>
+                  <p className="text-xs text-slate-500">
+                    Texto adicional sobre condições específicas da caução para este contrato
+                  </p>
+                  <textarea
+                    className="w-full p-3 border rounded-md min-h-[80px] text-sm"
+                    placeholder="Ex: A caução será devolvida em 30 dias após o término do contrato, mediante vistoria do veículo..."
+                    value={formData.caucao_texto}
+                    onChange={(e) => setFormData({...formData, caucao_texto: e.target.value})}
+                  />
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Valor Semanal Base (€)</Label>
