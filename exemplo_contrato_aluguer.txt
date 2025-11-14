@@ -117,6 +117,8 @@ CLÁUSULA DÉCIMA TERCEIRA
 
 O presente contrato é feito em duplicado, ficando cada parte com um exemplar.
 
+Emitido em: {DATA_EMISSAO}
+
 Lisboa, {DATA_INICIO}
 
 ____________________________________
