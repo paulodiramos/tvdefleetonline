@@ -522,14 +522,24 @@ const Contratos = ({ user, onLogout }) => {
               </div>
               )}
 
-              {/* Campos de Aluguer com Épocas */}
-              {(formData.tipo_contrato === 'aluguer_caucao_epocas' || formData.tipo_contrato === 'aluguer_epocas_sem_caucao') && (
-                <div className="space-y-4 p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
-                  <h3 className="font-semibold text-blue-900 flex items-center space-x-2">
+              {/* Campos de Aluguer com Épocas - Opcional */}
+              <div className="space-y-4 p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="tem_epoca"
+                    checked={formData.tem_epoca}
+                    onChange={(e) => setFormData({...formData, tem_epoca: e.target.checked})}
+                    className="w-4 h-4"
+                  />
+                  <Label htmlFor="tem_epoca" className="font-semibold text-blue-900 flex items-center space-x-2 cursor-pointer">
                     <span>📅</span>
-                    <span>Configuração de Épocas (Alta e Baixa)</span>
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
+                    <span>Contrato com Épocas (Alta e Baixa)</span>
+                  </Label>
+                </div>
+
+                {formData.tem_epoca && (
+                  <div className="grid grid-cols-2 gap-4 pt-3 border-t border-blue-200">
                       <div className="col-span-2">
                         <h4 className="text-sm font-semibold text-blue-900 mb-2">Época Alta</h4>
                       </div>
