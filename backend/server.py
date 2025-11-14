@@ -539,6 +539,11 @@ class Parceiro(BaseModel):
     plano_status: str = "pendente"  # "pendente", "ativo", "suspenso"
     gestor_associado_id: Optional[str] = None
     total_vehicles: int = 0
+    template_contrato_padrao: Optional[str] = None  # Template de contrato com variáveis
+    representante_legal_nome: Optional[str] = None
+    representante_legal_contribuinte: Optional[str] = None
+    representante_legal_cc: Optional[str] = None
+    representante_legal_cc_validade: Optional[str] = None
     campos_customizados: Dict[str, Any] = {}
     created_at: datetime
     # Campos antigos mantidos como opcionais para compatibilidade
