@@ -1,0 +1,102 @@
+CONTRATO DE PRESTAÇÃO DE SERVIÇOS - COMISSÃO TVDE
+
+ENTRE:
+
+PRIMEIRO OUTORGANTE (EMPRESA):
+{PARCEIRO_NOME}, pessoa coletiva de direito privado, com sede em {PARCEIRO_MORADA}, {PARCEIRO_CP}, titular do número de identificação fiscal {PARCEIRO_NIF}, telefone {PARCEIRO_TELEFONE}, email {PARCEIRO_EMAIL}, aqui representada por {REP_LEGAL_NOME}, portador do Cartão de Cidadão n.º {REP_LEGAL_CC}.
+
+E
+
+SEGUNDO OUTORGANTE (MOTORISTA):
+{MOTORISTA_NOME}, portador do Cartão de Cidadão n.º {MOTORISTA_CC}, válido até {MOTORISTA_CC_VALIDADE}, contribuinte fiscal n.º {MOTORISTA_NIF}, residente em {MOTORISTA_MORADA}, {MOTORISTA_CP}, titular da licença TVDE n.º {MOTORISTA_LICENCA_TVDE}, válida até {MOTORISTA_LICENCA_TVDE_VALIDADE}, número de segurança social {MOTORISTA_SS}.
+
+É celebrado o presente contrato de prestação de serviços por comissão, que se regerá pelas seguintes cláusulas:
+
+CLÁUSULA PRIMEIRA
+(Objeto)
+
+O presente contrato tem por objeto a prestação de serviços de transporte TVDE pelo MOTORISTA, utilizando veículo disponibilizado pela EMPRESA:
+- Marca: {VEICULO_MARCA}
+- Modelo: {VEICULO_MODELO}
+- Matrícula: {VEICULO_MATRICULA}
+
+CLÁUSULA SEGUNDA
+(Regime de Comissão)
+
+1. Tipo de contrato: {TIPO_CONTRATO}
+2. O MOTORISTA receberá {COMISSAO}% dos valores faturados através das plataformas TVDE.
+3. A EMPRESA fica com os restantes {100-COMISSAO}%.
+4. Data de início: {DATA_INICIO}
+
+CLÁUSULA TERCEIRA
+(Pagamentos)
+
+1. Os pagamentos são efetuados semanalmente, todas as segundas-feiras.
+2. O valor semanal base estimado é de {VALOR_SEMANAL}€ (euros), variando conforme rendimentos.
+3. O MOTORISTA deverá fornecer relatório semanal de ganhos.
+
+CLÁUSULA QUARTA
+(Caução)
+
+1. Caução de garantia: {CAUCAO_TOTAL}€ (euros)
+{CAUCAO_PARCELAS}
+2. A caução será devolvida no final do contrato.
+
+CLÁUSULA QUINTA
+(Responsabilidades do MOTORISTA)
+
+O MOTORISTA obriga-se a:
+a) Prestar serviço de qualidade aos passageiros;
+b) Manter o veículo limpo e em boas condições;
+c) Cumprir horários acordados;
+d) Comunicar imediatamente acidentes ou problemas;
+e) Reportar ganhos semanalmente de forma transparente.
+
+CLÁUSULA SEXTA
+(Responsabilidades da EMPRESA)
+
+A EMPRESA obriga-se a:
+a) Disponibilizar veículo em condições de uso;
+b) Manter seguro e documentação em dia;
+c) Efetuar pagamentos nos prazos estabelecidos;
+d) Fornecer suporte operacional necessário.
+
+CLÁUSULA SÉTIMA
+(Custos Operacionais)
+
+1. Combustível: Da responsabilidade do MOTORISTA
+2. Portagens: Da responsabilidade do MOTORISTA
+3. Manutenção: Da responsabilidade da EMPRESA
+4. Seguros: Da responsabilidade da EMPRESA
+
+CLÁUSULA OITAVA
+(Condições do Veículo)
+
+Estado atual: {CONDICOES_VEICULO}
+
+CLÁUSULA NONA
+(Duração e Rescisão)
+
+1. O contrato tem duração indeterminada.
+2. Rescisão com aviso prévio de 30 dias.
+3. Rescisão imediata por incumprimento grave.
+
+CLÁUSULA DÉCIMA
+(Foro)
+
+Tribunal competente: Lisboa
+
+Feito em duplicado, ficando cada parte com um exemplar.
+
+Lisboa, {DATA_INICIO}
+
+____________________________________
+A EMPRESA
+{PARCEIRO_NOME}
+NIF: {PARCEIRO_NIF}
+
+
+____________________________________
+O MOTORISTA
+{MOTORISTA_NOME}
+NIF: {MOTORISTA_NIF}
