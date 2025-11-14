@@ -1063,7 +1063,7 @@ class Contrato(BaseModel):
     vehicle_matricula: Optional[str] = None
     
     # Termos Financeiros
-    tipo_contrato: str  # "comissao", "aluguer", "compra", "motorista_privado"
+    tipo_contrato: str  # "comissao", "aluguer_normal", "aluguer_epocas", "compra", "motorista_privado"
     valor_semanal: float = 230.0
     comissao_percentual: Optional[float] = None
     caucao_total: float = 300.0
@@ -1073,6 +1073,7 @@ class Contrato(BaseModel):
     tem_caucao: bool = True
     caucao_parcelada: bool = False
     caucao_parcelas: Optional[int] = None
+    caucao_texto: Optional[str] = None  # Texto personalizado sobre caução
     
     # Campos de Época
     tem_epoca: bool = False
