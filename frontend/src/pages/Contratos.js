@@ -568,8 +568,18 @@ const Contratos = ({ user, onLogout }) => {
                           onChange={(e) => setFormData({...formData, valor_epoca_alta: parseFloat(e.target.value)})}
                         />
                       </div>
-
+                      
                       <div className="col-span-2">
+                        <Label>Observações/Descrição Época Alta</Label>
+                        <textarea
+                          className="w-full p-2 border rounded-md min-h-[60px] text-sm"
+                          placeholder="Ex: Verão - Maior demanda turística, festivais, eventos..."
+                          value={formData.texto_epoca_alta}
+                          onChange={(e) => setFormData({...formData, texto_epoca_alta: e.target.value})}
+                        />
+                      </div>
+
+                      <div className="col-span-2 border-t border-blue-200 pt-3">
                         <h4 className="text-sm font-semibold text-blue-900 mb-2">Época Baixa</h4>
                       </div>
                       <div>
