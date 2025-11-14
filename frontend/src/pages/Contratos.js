@@ -575,16 +575,54 @@ const Contratos = ({ user, onLogout }) => {
                 </div>
               </div>
 
+              {/* Condições do Veículo */}
+              <div className="space-y-2">
+                <Label>Condições do Veículo</Label>
+                <p className="text-xs text-slate-500">Condições específicas do veículo para este contrato (editável)</p>
+                <textarea
+                  className="w-full p-3 border rounded-md min-h-[80px] text-sm"
+                  placeholder="Ex: Veículo em bom estado, com manutenção em dia..."
+                  value={formData.condicoes_veiculo}
+                  onChange={(e) => setFormData({...formData, condicoes_veiculo: e.target.value})}
+                />
+              </div>
+
               {/* Template do Contrato */}
               <div className="space-y-2">
                 <Label>Texto do Contrato (Opcional)</Label>
-                <p className="text-xs text-slate-500">
-                  Os seguintes campos serão automaticamente preenchidos: {'{'}PARCEIRO_NOME{'}'}, {'{'}MOTORISTA_NOME{'}'}, 
-                  {'{'}VEICULO_MARCA{'}'}, {'{'}VEICULO_MODELO{'}'}, {'{'}VEICULO_MATRICULA{'}'}, {'{'}DATA_INICIO{'}'}, 
-                  {'{'}TIPO_CONTRATO{'}'}, {'{'}VALOR_SEMANAL{'}'}, {'{'}EPOCA_ALTA_VALOR{'}'}, {'{'}EPOCA_BAIXA_VALOR{'}'}
+                <p className="text-xs text-slate-500 mb-2">
+                  <strong>Variáveis Disponíveis:</strong>
                 </p>
+                <div className="grid grid-cols-3 gap-2 text-xs text-slate-600 mb-2 p-3 bg-slate-50 rounded">
+                  <div><code>{'{'}PARCEIRO_NOME{'}'}</code></div>
+                  <div><code>{'{'}PARCEIRO_NIF{'}'}</code></div>
+                  <div><code>{'{'}PARCEIRO_MORADA{'}'}</code></div>
+                  <div><code>{'{'}PARCEIRO_CP{'}'}</code></div>
+                  <div><code>{'{'}PARCEIRO_TELEFONE{'}'}</code></div>
+                  <div><code>{'{'}PARCEIRO_EMAIL{'}'}</code></div>
+                  <div><code>{'{'}REP_LEGAL_NOME{'}'}</code></div>
+                  <div><code>{'{'}REP_LEGAL_CC{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_NOME{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_CC{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_NIF{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_MORADA{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_LICENCA_TVDE{'}'}</code></div>
+                  <div><code>{'{'}MOTORISTA_SS{'}'}</code></div>
+                  <div><code>{'{'}VEICULO_MARCA{'}'}</code></div>
+                  <div><code>{'{'}VEICULO_MODELO{'}'}</code></div>
+                  <div><code>{'{'}VEICULO_MATRICULA{'}'}</code></div>
+                  <div><code>{'{'}DATA_INICIO{'}'}</code></div>
+                  <div><code>{'{'}TIPO_CONTRATO{'}'}</code></div>
+                  <div><code>{'{'}VALOR_SEMANAL{'}'}</code></div>
+                  <div><code>{'{'}COMISSAO{'}'}</code></div>
+                  <div><code>{'{'}CAUCAO_TOTAL{'}'}</code></div>
+                  <div><code>{'{'}CAUCAO_PARCELAS{'}'}</code></div>
+                  <div><code>{'{'}EPOCA_ALTA_VALOR{'}'}</code></div>
+                  <div><code>{'{'}EPOCA_BAIXA_VALOR{'}'}</code></div>
+                  <div><code>{'{'}CONDICOES_VEICULO{'}'}</code></div>
+                </div>
                 <textarea
-                  className="w-full p-3 border rounded-md min-h-[150px] text-sm"
+                  className="w-full p-3 border rounded-md min-h-[200px] text-sm font-mono"
                   placeholder="Cole ou escreva o texto do contrato aqui. Use as variáveis acima para preenchimento automático."
                   value={formData.template_texto}
                   onChange={(e) => setFormData({...formData, template_texto: e.target.value})}
