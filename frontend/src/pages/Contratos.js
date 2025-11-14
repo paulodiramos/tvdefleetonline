@@ -850,7 +850,19 @@ ________________________________
 
               {/* Template do Contrato */}
               <div className="space-y-2">
-                <Label>Texto do Contrato (Opcional)</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Texto do Contrato (Opcional)</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={loadExampleContractTemplate}
+                    className="flex items-center space-x-1"
+                  >
+                    <FileText className="w-3 h-3" />
+                    <span>Inserir Exemplo Completo</span>
+                  </Button>
+                </div>
                 <p className="text-xs text-slate-500 mb-2">
                   <strong>Variáveis Disponíveis:</strong>
                 </p>
