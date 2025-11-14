@@ -3891,6 +3891,50 @@ async def update_admin_settings(
     
     return {"message": "Settings updated", "settings": update_data}
 
+# ==================== CONFIGURAÇÕES TEXTOS LEGAIS ====================
+
+@api_router.get("/config/textos-legais")
+async def get_textos_legais():
+    """Public: Get legal texts (terms and privacy policy)"""
+    config = await db.configuracoes.find_one({"id": "config_sistema"}, {"_id": 0})
+    if not config:
+        # Create default config
+        default_config = {
+            "id": "config_sistema",
+            "condicoes_gerais": "Condições Gerais a definir...",
+            "politica_privacidade": "Política de Privacidade a definir...",
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_by": "system"
+        }
+        await db.configuracoes.insert_one(default_config)
+        return default_config
+    return config
+
+@api_router.put("/admin/config/textos-legais")
+async def update_textos_legais(config_data: ConfiguracaoUpdate, current_user: Dict = Depends(get_current_user)):
+    """Admin only: Update legal texts"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized - Admin only")
+    
+    update_data = {
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_by": current_user["id"]
+    }
+    
+    if config_data.condicoes_gerais is not None:
+        update_data["condicoes_gerais"] = config_data.condicoes_gerais
+    
+    if config_data.politica_privacidade is not None:
+        update_data["politica_privacidade"] = config_data.politica_privacidade
+    
+    await db.configuracoes.update_one(
+        {"id": "config_sistema"},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    return {"message": "Textos legais atualizados com sucesso", "data": update_data}
+
 # ==================== SUBSCRIPTION/PLANOS ENDPOINTS ====================
 
 @api_router.post("/admin/planos", response_model=PlanoAssinatura)
