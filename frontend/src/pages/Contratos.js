@@ -117,7 +117,14 @@ const Contratos = ({ user, onLogout }) => {
       fetchContratos();
     } catch (error) {
       console.error('Error creating contrato:', error);
-      toast.error(error.response?.data?.detail || 'Erro ao criar contrato');
+      const errorMsg = error.response?.data?.detail;
+      if (Array.isArray(errorMsg)) {
+        toast.error(errorMsg.map(e => e.msg || e).join(', '));
+      } else if (typeof errorMsg === 'string') {
+        toast.error(errorMsg);
+      } else {
+        toast.error('Erro ao criar contrato');
+      }
     }
   };
 
