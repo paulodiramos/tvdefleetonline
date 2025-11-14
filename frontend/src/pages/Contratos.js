@@ -424,8 +424,9 @@ const Contratos = ({ user, onLogout }) => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="comissao">Comissão</SelectItem>
-                      <SelectItem value="aluguer_normal">Aluguer Normal (Sem Épocas)</SelectItem>
-                      <SelectItem value="aluguer_epocas">Aluguer com Épocas (Alta/Baixa)</SelectItem>
+                      <SelectItem value="aluguer_sem_caucao">Aluguer Sem Caução</SelectItem>
+                      <SelectItem value="aluguer_com_caucao">Aluguer Com Caução</SelectItem>
+                      <SelectItem value="aluguer_caucao_epocas">Aluguer Com Caução e Épocas</SelectItem>
                       <SelectItem value="compra">Compra</SelectItem>
                       <SelectItem value="motorista_privado">Motorista Privado</SelectItem>
                     </SelectContent>
