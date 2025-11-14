@@ -983,9 +983,18 @@ class ContratoCreate(BaseModel):
     motorista_id: str
     vehicle_id: str
     data_inicio: str
+    tipo_contrato: str = "comissao"  # "comissao" ou "aluguer"
     valor_semanal: float = 230.0
     caucao_total: float = 300.0
     caucao_lavagem: float = 90.0
+    # Campos para época (apenas para tipo "aluguer")
+    tem_epoca: bool = False
+    data_inicio_epoca_alta: Optional[str] = None
+    data_inicio_epoca_baixa: Optional[str] = None
+    valor_epoca_alta: Optional[float] = None
+    valor_epoca_baixa: Optional[float] = None
+    # Template/texto do contrato
+    template_texto: Optional[str] = None
 
 class Contrato(BaseModel):
     model_config = ConfigDict(extra="ignore")
