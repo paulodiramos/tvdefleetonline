@@ -792,6 +792,21 @@ const Contratos = ({ user, onLogout }) => {
                 />
               </div>
 
+              {/* Opção de Envio por Email */}
+              <div className="flex items-center space-x-2 p-4 bg-green-50 rounded-lg border border-green-200">
+                <input
+                  type="checkbox"
+                  id="enviar_email"
+                  checked={formData.enviar_email}
+                  onChange={(e) => setFormData({...formData, enviar_email: e.target.checked})}
+                  className="w-4 h-4"
+                />
+                <Label htmlFor="enviar_email" className="cursor-pointer flex items-center space-x-2">
+                  <span>✉️</span>
+                  <span>Enviar contrato por email ao motorista após criação</span>
+                </Label>
+              </div>
+
               <div className="flex justify-end space-x-3 pt-4">
                 <Button
                   type="button"
@@ -800,8 +815,9 @@ const Contratos = ({ user, onLogout }) => {
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                  Criar Contrato
+                <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 flex items-center space-x-2">
+                  <FileText className="w-4 h-4" />
+                  <span>Criar Contrato</span>
                 </Button>
               </div>
             </form>
