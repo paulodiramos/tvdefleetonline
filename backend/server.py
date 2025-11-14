@@ -540,7 +540,10 @@ class Parceiro(BaseModel):
     gestor_associado_id: Optional[str] = None
     total_vehicles: int = 0
     localidade: Optional[str] = None
+    tipo_contrato_padrao: Optional[str] = None  # Tipo de contrato predefinido
     template_contrato_padrao: Optional[str] = None  # Template de contrato com variáveis
+    texto_caucao_padrao: Optional[str] = None  # Texto padrão sobre caução
+    texto_epoca_padrao: Optional[str] = None  # Texto padrão sobre épocas
     representante_legal_nome: Optional[str] = None
     representante_legal_contribuinte: Optional[str] = None
     representante_legal_cc: Optional[str] = None
