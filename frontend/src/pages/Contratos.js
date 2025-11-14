@@ -556,7 +556,7 @@ const Contratos = ({ user, onLogout }) => {
               )}
 
               {/* Texto de Caução Personalizado */}
-              {formData.tem_caucao && (
+              {(formData.tipo_contrato === 'aluguer_com_caucao' || formData.tipo_contrato === 'aluguer_caucao_epocas') && (
                 <div className="space-y-2">
                   <Label>Texto Personalizado da Caução (Opcional)</Label>
                   <p className="text-xs text-slate-500">
