@@ -1026,10 +1026,20 @@ class Contrato(BaseModel):
     vehicle_matricula: Optional[str] = None
     
     # Termos Financeiros
-    tipo_contrato: str
+    tipo_contrato: str  # "comissao" ou "aluguer"
     valor_semanal: float = 230.0  # Valor padrão do template
     caucao_total: float = 300.0
     caucao_lavagem: float = 90.0
+    
+    # Campos de Época (para tipo "aluguer")
+    tem_epoca: bool = False
+    data_inicio_epoca_alta: Optional[str] = None
+    data_inicio_epoca_baixa: Optional[str] = None
+    valor_epoca_alta: Optional[float] = None
+    valor_epoca_baixa: Optional[float] = None
+    
+    # Template do contrato
+    template_texto: Optional[str] = None
     
     # Datas
     data_inicio: str
