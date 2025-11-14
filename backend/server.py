@@ -1094,6 +1094,7 @@ class Contrato(BaseModel):
     
     # Datas
     data_inicio: str
+    data_emissao: str  # Data em que o contrato foi gerado/emitido
     data_assinatura: str
     local_assinatura: str = "Lisboa"
     
