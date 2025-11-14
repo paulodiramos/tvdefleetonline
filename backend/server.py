@@ -3939,6 +3939,61 @@ async def update_admin_settings(
     
     return {"message": "Settings updated", "settings": update_data}
 
+# ==================== EXEMPLOS DE CONTRATO ====================
+
+@api_router.get("/contratos/exemplos")
+async def get_exemplos_contratos():
+    """Get list of available contract examples"""
+    exemplos = [
+        {
+            "id": "aluguer",
+            "nome": "Contrato de Aluguer de Veículo TVDE",
+            "tipo": "aluguer",
+            "descricao": "Contrato completo de aluguer de veículo para atividade TVDE com caução e condições",
+            "arquivo": "exemplo_contrato_aluguer.txt"
+        },
+        {
+            "id": "comissao",
+            "nome": "Contrato de Comissão TVDE",
+            "tipo": "comissao",
+            "descricao": "Contrato de prestação de serviços por comissão (percentual sobre ganhos)",
+            "arquivo": "exemplo_contrato_comissao.txt"
+        },
+        {
+            "id": "motorista_privado",
+            "nome": "Contrato de Motorista Privado",
+            "tipo": "motorista_privado",
+            "descricao": "Contrato para motorista que conduz veículo da empresa (regime privado)",
+            "arquivo": "exemplo_contrato_motorista_privado.txt"
+        }
+    ]
+    return exemplos
+
+@api_router.get("/contratos/exemplos/{tipo}/download")
+async def download_exemplo_contrato(tipo: str):
+    """Download contract example file"""
+    import os
+    from fastapi.responses import FileResponse
+    
+    arquivos = {
+        "aluguer": "/app/exemplo_contrato_aluguer.txt",
+        "comissao": "/app/exemplo_contrato_comissao.txt",
+        "motorista_privado": "/app/exemplo_contrato_motorista_privado.txt"
+    }
+    
+    if tipo not in arquivos:
+        raise HTTPException(status_code=404, detail="Exemplo não encontrado")
+    
+    filepath = arquivos[tipo]
+    if not os.path.exists(filepath):
+        raise HTTPException(status_code=404, detail="Arquivo não encontrado")
+    
+    return FileResponse(
+        filepath,
+        media_type="text/plain",
+        filename=f"exemplo_contrato_{tipo}.txt"
+    )
+
 # ==================== MINUTAS DE CONTRATO ENDPOINTS ====================
 
 @api_router.get("/parceiros/{parceiro_id}/minutas")
