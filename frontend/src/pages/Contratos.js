@@ -384,7 +384,89 @@ const Contratos = ({ user, onLogout }) => {
                 </div>
 
                 <div>
-                  <Label>Valor Semanal (€)</Label>
+                  <Label>Tipo de Contrato *</Label>
+                  <Select
+                    value={formData.tipo_contrato}
+                    onValueChange={(value) => setFormData({...formData, tipo_contrato: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="comissao">Comissão</SelectItem>
+                      <SelectItem value="aluguer">Aluguer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Campos de Aluguer/Época */}
+              {formData.tipo_contrato === 'aluguer' && (
+                <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="tem_epoca"
+                      checked={formData.tem_epoca}
+                      onChange={(e) => setFormData({...formData, tem_epoca: e.target.checked})}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="tem_epoca" className="font-semibold text-blue-900">
+                      Contrato com Épocas (Alta/Baixa)
+                    </Label>
+                  </div>
+
+                  {formData.tem_epoca && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2">
+                        <h4 className="text-sm font-semibold text-blue-900 mb-2">Época Alta</h4>
+                      </div>
+                      <div>
+                        <Label>Data Início Época Alta *</Label>
+                        <Input
+                          type="date"
+                          value={formData.data_inicio_epoca_alta}
+                          onChange={(e) => setFormData({...formData, data_inicio_epoca_alta: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label>Valor Semanal Época Alta (€) *</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.valor_epoca_alta}
+                          onChange={(e) => setFormData({...formData, valor_epoca_alta: parseFloat(e.target.value)})}
+                        />
+                      </div>
+
+                      <div className="col-span-2">
+                        <h4 className="text-sm font-semibold text-blue-900 mb-2">Época Baixa</h4>
+                      </div>
+                      <div>
+                        <Label>Data Início Época Baixa *</Label>
+                        <Input
+                          type="date"
+                          value={formData.data_inicio_epoca_baixa}
+                          onChange={(e) => setFormData({...formData, data_inicio_epoca_baixa: e.target.value})}
+                        />
+                      </div>
+                      <div>
+                        <Label>Valor Semanal Época Baixa (€) *</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={formData.valor_epoca_baixa}
+                          onChange={(e) => setFormData({...formData, valor_epoca_baixa: parseFloat(e.target.value)})}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Valor Semanal Base (€)</Label>
                   <Input
                     type="number"
                     step="0.01"
