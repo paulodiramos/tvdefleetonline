@@ -1,88 +1,71 @@
 <analysis>
-The trajectory details a highly iterative and rapid development process, transforming a basic fleet management MVP into a feature-rich, dual-purpose platform named TVDEFleet.com. The work began with fixing fundamental bugs in the driver document management system, addressing issues with API endpoints, file uploads, and file pathing.
+The trajectory documents a highly iterative and feature-driven development process, transforming a fleet management application from a basic state to a complex, multi-functional platform. The work began by implementing and debugging a feature to assign drivers to partners in . This involved adding frontend state, UI elements (buttons, modals), and leveraging existing backend endpoints. The debugging process was meticulous, addressing frontend errors like invalid select-option values and benign  warnings.
 
-This quickly evolved into a massive feature expansion driven by a continuous stream of user requests. A complete public-facing website was built, including a homepage, multi-path registration funnels (driver, partner, fleet manager), and a global UI rebranding from green to blue.
+The core of the work then shifted to a massive, multi-phased expansion of the contract management system ( and ). This was driven by a continuous stream of detailed user requests. Initially, the focus was on fixing broken API calls (missing  prefix). It rapidly evolved into adding numerous fields to backend models and frontend forms, including contract types, seasonal pricing (high/low seasons with start/end dates), deposit options (including installment plans), and a wide array of personal and legal data for both partners and drivers.
 
-The core of the work involved systematically adding layers of administrative functionality. This included a user approval system, detailed profile views with associated data (e.g., a partner's vehicles and drivers), editable partner profiles with expanded fields, user status management (block/delete), and a subscription plan system where partners request plans and admins approve them.
-
-The most recent development cycle focused on implementing a comprehensive contract generation system based on a user-provided template and adding functionality for admins and managers to assign drivers to partners. The process was characterized by a pattern of: receiving a concise user request, implementing frontend UI, adding backend models and endpoints, debugging integration issues (CORS, routing, data validation), and iterating.
+A significant architectural change was the introduction of contract templates (minutas). The logic was refactored so that partners have their own configurable contract templates, which are then used to generate specific contracts for drivers. The public-facing homepage was also simplified by removing one of the registration options. The final cycle of work involved making the contract generation even more modular by adding default text snippets for specific clauses (like deposits and seasons) directly into the partner's profile, a task that was in progress when the trajectory ended.
 </analysis>
 
 <product_requirements>
-The application, TVDEFleet.com, is a comprehensive platform for fleet management with both internal and public-facing functionalities.
+The application, TVDEFleet.com, is a comprehensive fleet management platform designed for internal administration and public recruitment.
 
 **Internal Backoffice (Admin/Manager Portal):**
-- **Core Management:** Admins manage drivers, vehicles, partners, and system users. The UI has been refactored into a compact navigation bar with an Admin dropdown for settings, user management, and vehicle data.
-- **User & Partner Management:** Admins can view pending registrations in detail, approve/reject them, and manage existing users by changing roles, blocking, or deleting them. Partner profiles are editable and display associated drivers and vehicles.
-- **Subscription Plans:** A system allows partners to request a subscription plan (Base or Premium). Admins can then view and approve these requests, which are reflected on the partner's profile.
-- **Financials & Contracts:** A unified Financials page includes tabs for revenues, expenses, and receipts/payments. A dedicated Contracts page has been created to manage agreements between partners, drivers, and vehicles.
+The primary function is to manage all aspects of the fleet. This includes:
+- **User & Partner Management:** Admins can approve new user registrations, manage user roles, and block/delete users. They can view and edit detailed partner profiles, which now include fields for legal representatives and default contract templates.
+- **Driver & Vehicle Management:** Admins and managers can manage driver profiles and assign them to partners.
+- **Contract Generation System:** This is the most complex feature. The system allows partners to define multiple contract templates (minutas) for various agreement types (e.g., Rental, Commission, Private Driver). When generating a contract for a specific driver, the system uses the partner's template and automatically populates it with dozens of variables, including names, legal document numbers, vehicle details, dates, and financial terms. The contract forms are highly dynamic, showing fields conditionally based on the selected contract type (e.g., displaying season and deposit fields only for specific rental agreements).
 
 **Public Website:**
-- **Recruitment:** A public homepage markets the service and features a registration modal that directs potential drivers, partners, and fleet managers to specialized registration forms.
-- **Partner Registration:** The partner registration form includes a mandatory, format-validated Certidão Comercial field.
+The public-facing site has been simplified for recruitment. The main page features a registration modal that now presents two clear paths: Gerir Frota (Manage Fleet) for partners/companies and Usar Plataforma (Use Platform) for fleet managers, streamlining the onboarding process.
 </product_requirements>
 
 <key_technical_concepts>
-- **Backend:** FastAPI (Python) using Pydantic for data modeling and validation.
-- **Frontend:** React.js with functional components, Hooks, and  for API calls.
-- **Styling:** Tailwind CSS with a component library (inferred as shadcn/ui).
-- **Database:** MongoDB.
-- **API Architecture:** RESTful API with JWT for authentication. Public endpoints are created without authentication dependencies.
-- **File Handling:** Backend logic for PDF generation using .
+- **Backend:** Monolithic FastAPI (Python) server using Pydantic for data modeling and validation.
+- **Frontend:** React.js with functional components, extensive use of Hooks (, ), and  for API requests.
+- **Database:** MongoDB, with models managed via Pydantic.
+- **Styling:** Tailwind CSS, likely using shadcn/ui components (inferred from class names and component behaviors like ).
+- **API Architecture:** RESTful API. Critical reliance on the  prefix for all backend routes due to Kubernetes ingress rules.
 </key_technical_concepts>
 
 <code_architecture>
-The application follows a standard modern web architecture with a React frontend communicating with a FastAPI monolithic backend.
+The application uses a standard React (frontend) and FastAPI (backend) architecture.
 
 **Directory Structure:**
 
 
 - ****
-    - **Importance:** This monolithic file contains all API endpoints, database models (Pydantic), and business logic. It's the single source of truth for the application's backend.
-    - **Summary of Changes:** Extensively modified. Key additions include: new models for  and ; new endpoints for user management (), public partner registration (), and plan management (, ); and logic to include  in the  response. A  was fixed by adding .
+    - **Importance:** The single monolithic file containing all backend logic, API endpoints, and Pydantic database models. It's the engine of the entire application.
+    - **Summary of Changes:** This file underwent massive expansion. The , , and  models were repeatedly updated to include dozens of new fields to support the complex contract requirements. Key additions include fields for legal representatives (, , etc.), contract season dates (, ), and deposit details (, ). New endpoints were added to manage contract templates () and to serve example contract files for download. The main contract generation endpoint () was heavily modified to fetch and populate all the new data fields into the contract text.
 
 - ****
-    - **Importance:** Main UI for viewing and managing partners. It has become a central hub for multiple features.
-    - **Summary of Changes:** Major additions include a detailed profile modal showing associated vehicles and drivers, a separate modal for editing partner information (including new fields for manager/company details), and a system for requesting subscription plans. The main partner card was updated to show both vehicle and driver counts and a badge for the subscription plan status.
+    - **Importance:** The main UI for creating and managing contracts. This file became the most complex part of the frontend.
+    - **Summary of Changes:** The form for creating a contract evolved into a highly dynamic and conditional interface. The UI now changes based on the  selected, showing/hiding entire sections for deposits and seasonal pricing. It includes checkboxes to toggle these optional features. A large textarea for the contract text was added, accompanied by a grid displaying all available template variables (e.g., , ). The file was debugged to fix API calls (adding the  prefix) and to handle React rendering errors (, Objects are not valid as a React child). Scroll functionality was added to the creation modal to handle its large size.
 
 - ****
-    - **Importance:** Interface for administrative user management.
-    - **Summary of Changes:** Enhanced to provide deeper admin control. A View button was added for pending users, opening a modal with their full registration data. For registered users, Block and Delete buttons were added, with corresponding API calls and state management. A status badge (/) was added.
+    - **Importance:** The page for managing fleet partners. Its role was expanded to include contract template management.
+    - **Summary of Changes:** The partner profile/edit modal was modified to become the central place for defining contract rules. A new section was added for managing Minutas de Contrato (Contract Templates), allowing admins to create and edit default contract text for different contract types associated with that partner. The work to add fields for default clause text (, ) was started.
 
 - ****
-    - **Importance:** Defines the main authenticated layout, including the primary navigation.
-    - **Summary of Changes:** The navigation bar was significantly refactored for a more compact and organized look. Upload CSV and Recibos/Pagamentos were moved into the  page. Utilizadores, Dados de Veículos, and Configurações were moved into a new Admin dropdown menu. The Site button was also removed entirely.
+    - **Importance:** The page for managing drivers, and the starting point of the work in the trajectory.
+    - **Summary of Changes:** The Atribuir Parceiro (Assign Partner) feature was fully implemented. This involved adding a button to each driver card, creating a modal for the assignment, fetching a list of partners, and handling the PUT request to the backend. A bug where the assignment modal failed to open due to a  having an empty string  was identified and fixed.
 
 - ****
-    - **Importance:** The public form for new partners to register.
-    - **Summary of Changes:** A new required field, Certidão Comercial, was added with an input mask () for format validation. The form's submission logic was updated to call the new public endpoint .
-
-- ****
-    - **Importance:** The page for managing drivers. It is the current focus of development.
-    - **Summary of Changes:** State and functions were added to prepare for a feature allowing admins/managers to assign a driver to a partner. The  and  models in the backend were updated to include a  field.
+    - **Importance:** The public landing page of the application.
+    - **Summary of Changes:** The registration modal was simplified. The Sou Motorista (I'm a Driver) card was completely removed, and the layout was adjusted to a two-column grid to feature only the Gerir Frota and Usar Plataforma options, streamlining the registration flow.
 </code_architecture>
 
 <pending_tasks>
-- **Contract System:** Complete the frontend UI for creating, viewing, and managing contracts based on the new  page and the backend  model. Implement the PDF generation and download functionality.
-- **Driver Assignment:** Finish the UI and logic in  for assigning a driver to a partner and a vehicle.
-- **User Profile View:** Implement the Ver Perfil functionality on the  page for registered users to show their full initial registration form data.
+- **Finish Partner Profile UI:** Complete the UI in  to add and edit the new default text fields for contract clauses (deposit, seasons) in the partner's profile.
+- **Implement Driver Assignment Popup:** After a driver is assigned a vehicle in , implement the popup that asks the user if they want to create a contract.
+- **Admin Settings UI:** Create the frontend pages and forms in the admin section for editing the site's general terms and privacy policy content. The backend endpoints for this are already in place.
 </pending_tasks>
 
 <current_work>
-The most recent task initiated was in response to the user request: admin e gesttor pode atribuir motorista a parceiro (admin and manager can assign a driver to a partner).
+The most recent task was to enhance the contract template system by allowing partners to define default text snippets for specific, optional clauses. The user requested two additional text fields in the partner's profile to hold standard text for a deposit clause and a season clause. When a contract is generated, if these options (deposit or season) are selected, this predefined text from the partner's profile would be added to the main contract body.
 
-The work began by focusing on the  page. The immediate previous actions were to prepare the component for this new functionality by adding the necessary state variables. This is a standard pattern observed in the trajectory, where the developer first sets up the state management before building the UI components that use it.
-
-The following states were added to :
-
-These variables are intended to:
-- : Control the visibility of a dialog/modal for making the assignment.
-- : Store the driver object that is being assigned.
-- : Hold the list of available partners to be shown in a dropdown within the assignment modal.
-
-The associated  hook to fetch the list of partners from the  endpoint was also confirmed to be present from earlier work on the page, ensuring the  state can be populated. No UI elements (like the assignment button or the modal itself) have been created yet; the work stopped immediately after laying this foundational state management groundwork.
+The previous engineer had already started implementing this on the backend. The last actions taken were to modify the Pydantic models in . Specifically, the , , and  models were edited to include new optional string fields: , , and . This backend groundwork was completed, but the corresponding frontend changes—adding the text area inputs to the partner editing form in —have not been started. The work stopped immediately after successfully modifying the backend models to accommodate this new requirement.
 </current_work>
 
 <optional_next_step>
-Add a function to handle opening the assignment modal and then add an Atribuir Parceiro (Assign Partner) button to each driver's entry in the  list, which will trigger this new function.
+I will update the partner editing modal in  to include new text area inputs for the  and  fields, completing the feature requested by the user.
 </optional_next_step>
