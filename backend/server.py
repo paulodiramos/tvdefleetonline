@@ -5348,12 +5348,15 @@ async def gerar_contrato(contrato_data: ContratoCreate, current_user: Dict = Dep
             "parceiro_nif": parceiro_data.get("contribuinte_empresa") or parceiro_data.get("nif"),
             "parceiro_morada": parceiro_data.get("morada_completa") or parceiro_data.get("morada") or "",
             "parceiro_codigo_postal": parceiro_data.get("codigo_postal") or "",
+            "parceiro_localidade": parceiro_data.get("localidade") or "",
             "parceiro_telefone": parceiro_data.get("telefone") or parceiro_data.get("telemovel") or "",
             "parceiro_email": parceiro_data.get("email_empresa") or parceiro_data.get("email"),
             "parceiro_representante_legal_nome": parceiro_data.get("representante_legal_nome") or parceiro_data.get("nome_manager") or "",
             "parceiro_representante_legal_contribuinte": parceiro_data.get("representante_legal_contribuinte") or "",
             "parceiro_representante_legal_cc": parceiro_data.get("representante_legal_cc") or "",
             "parceiro_representante_legal_cc_validade": parceiro_data.get("representante_legal_cc_validade") or "",
+            "parceiro_representante_legal_telefone": parceiro_data.get("representante_legal_telefone") or "",
+            "parceiro_representante_legal_email": parceiro_data.get("representante_legal_email") or "",
             
             # Dados Motorista Completos
             "motorista_nome": motorista.get("name"),
