@@ -551,7 +551,6 @@ const Contratos = ({ user, onLogout }) => {
                         />
                       </div>
                     </div>
-                  )}
                 </div>
               )}
 
