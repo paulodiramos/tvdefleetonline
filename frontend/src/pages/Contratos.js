@@ -615,16 +615,6 @@ const Contratos = ({ user, onLogout }) => {
                     onChange={(e) => setFormData({...formData, valor_semanal: parseFloat(e.target.value)})}
                   />
                 </div>
-
-                <div>
-                  <Label>Caução Total (€)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={formData.caucao_total}
-                    onChange={(e) => setFormData({...formData, caucao_total: parseFloat(e.target.value)})}
-                  />
-                </div>
               </div>
 
               {/* Condições do Veículo */}
