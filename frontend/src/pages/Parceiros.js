@@ -1136,9 +1136,21 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                   <FileText className="w-5 h-5 text-blue-600" />
                   <span>Minuta de Contrato Padrão</span>
                 </h3>
-                <p className="text-sm text-slate-600 mb-3">
-                  Esta minuta será usada automaticamente ao criar novos contratos para este parceiro.
-                </p>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-sm text-slate-600">
+                    Esta minuta será usada automaticamente ao criar novos contratos para este parceiro.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={loadExampleContractText}
+                    className="flex items-center space-x-1"
+                  >
+                    <FileText className="w-3 h-3" />
+                    <span>Inserir Exemplo</span>
+                  </Button>
+                </div>
                 <p className="text-xs text-slate-500 mb-2">
                   <strong>Variáveis Disponíveis:</strong>
                 </p>
