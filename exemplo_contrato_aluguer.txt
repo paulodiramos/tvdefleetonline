@@ -34,8 +34,8 @@ CLÁUSULA TERCEIRA
 
 1. O valor do aluguer semanal é de {VALOR_SEMANAL}€ (euros).
 2. O pagamento deverá ser efetuado todas as segundas-feiras, referente à semana anterior.
-{EPOCA_ALTA_VALOR}
-{EPOCA_BAIXA_VALOR}
+3. Período de Época Alta: A partir de {DATA_INICIO_EPOCA_ALTA}, o valor será de {EPOCA_ALTA_VALOR}€ (euros) por semana.
+4. Período de Época Baixa: A partir de {DATA_INICIO_EPOCA_BAIXA}, o valor será de {EPOCA_BAIXA_VALOR}€ (euros) por semana.
 
 CLÁUSULA QUARTA
 (Caução)
