@@ -8,7 +8,7 @@ PRIMEIRO OUTORGANTE (EMPRESA):
 E
 
 SEGUNDO OUTORGANTE (MOTORISTA):
-{MOTORISTA_NOME}, portador do Cartão de Cidadão n.º {MOTORISTA_CC}, válido até {MOTORISTA_CC_VALIDADE}, contribuinte fiscal n.º {MOTORISTA_NIF}, residente em {MOTORISTA_MORADA}, {MOTORISTA_CP}, titular da licença TVDE n.º {MOTORISTA_LICENCA_TVDE}, válida até {MOTORISTA_LICENCA_TVDE_VALIDADE}, número de segurança social {MOTORISTA_SS}.
+{MOTORISTA_NOME}, portador do Cartão de Cidadão n.º {MOTORISTA_CC}, válido até {MOTORISTA_CC_VALIDADE}, contribuinte fiscal n.º {MOTORISTA_NIF}, residente em {MOTORISTA_MORADA}, {MOTORISTA_CP}, {MOTORISTA_LOCALIDADE}, telefone {MOTORISTA_TELEFONE}, titular da carta de condução n.º {MOTORISTA_CARTA_CONDUCAO}, válida até {MOTORISTA_CARTA_CONDUCAO_VALIDADE}, licença TVDE n.º {MOTORISTA_LICENCA_TVDE}, válida até {MOTORISTA_LICENCA_TVDE_VALIDADE}, número de segurança social {MOTORISTA_SS}, email {MOTORISTA_EMAIL}.
 
 É celebrado o presente contrato de prestação de serviços por comissão, que se regerá pelas seguintes cláusulas:
 
