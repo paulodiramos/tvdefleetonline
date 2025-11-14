@@ -3,7 +3,7 @@ CONTRATO DE ALUGUER DE VEÍCULO PARA TVDE
 ENTRE:
 
 PRIMEIRO OUTORGANTE (LOCADOR):
-{PARCEIRO_NOME}, pessoa coletiva de direito privado, com sede em {PARCEIRO_MORADA}, {PARCEIRO_CP}, titular do número de identificação fiscal {PARCEIRO_NIF}, telefone {PARCEIRO_TELEFONE}, email {PARCEIRO_EMAIL}, aqui representada por {REP_LEGAL_NOME}, portador do Cartão de Cidadão n.º {REP_LEGAL_CC}, na qualidade de representante legal.
+{PARCEIRO_NOME}, pessoa coletiva de direito privado, com sede em {PARCEIRO_MORADA}, {PARCEIRO_CP}, {PARCEIRO_LOCALIDADE}, titular do número de identificação fiscal {PARCEIRO_NIF}, telefone {PARCEIRO_TELEFONE}, email {PARCEIRO_EMAIL}, aqui representada por {REP_LEGAL_NOME}, portador do Cartão de Cidadão n.º {REP_LEGAL_CC}, válido até {REP_LEGAL_CC_VALIDADE}, telefone {REP_LEGAL_TELEFONE}, email {REP_LEGAL_EMAIL}, na qualidade de representante legal.
 
 E
 
