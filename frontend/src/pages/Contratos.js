@@ -543,8 +543,8 @@ const Contratos = ({ user, onLogout }) => {
                 </div>
               )}
 
-              {/* Campos de Caução - Mostrar apenas para tipos com caução */}
-              {(formData.tipo_contrato === 'aluguer_com_caucao' || formData.tipo_contrato === 'aluguer_caucao_epocas') && (
+              {/* Campos de Caução - Mostrar quando checkbox ativado */}
+              {formData.tem_caucao && (
               <div className="space-y-4 p-4 bg-amber-50 rounded-lg border-2 border-amber-300">
                 <h3 className="font-semibold text-amber-900 flex items-center space-x-2">
                   <span>💰</span>
