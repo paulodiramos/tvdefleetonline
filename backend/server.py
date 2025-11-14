@@ -1030,12 +1030,15 @@ class Contrato(BaseModel):
     parceiro_nif: str
     parceiro_morada: str
     parceiro_codigo_postal: Optional[str] = None
+    parceiro_localidade: Optional[str] = None
     parceiro_telefone: Optional[str] = None
     parceiro_email: str
     parceiro_representante_legal_nome: Optional[str] = None
     parceiro_representante_legal_contribuinte: Optional[str] = None
     parceiro_representante_legal_cc: Optional[str] = None
     parceiro_representante_legal_cc_validade: Optional[str] = None
+    parceiro_representante_legal_telefone: Optional[str] = None
+    parceiro_representante_legal_email: Optional[str] = None
     
     # Dados Motorista Completos
     motorista_nome: str
