@@ -488,7 +488,7 @@ const Contratos = ({ user, onLogout }) => {
               </div>
 
               {/* Campos de Aluguer com Épocas */}
-              {formData.tipo_contrato === 'aluguer_epocas' && (
+              {formData.tipo_contrato === 'aluguer_caucao_epocas' && (
                 <div className="space-y-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
                   <h3 className="font-semibold text-blue-900">Configuração de Épocas</h3>
                   {(
