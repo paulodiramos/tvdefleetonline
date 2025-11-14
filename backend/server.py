@@ -1008,8 +1008,10 @@ class ContratoCreate(BaseModel):
     # Campos para época (apenas para tipo "aluguer")
     tem_epoca: bool = False
     data_inicio_epoca_alta: Optional[str] = None
-    data_inicio_epoca_baixa: Optional[str] = None
+    data_fim_epoca_alta: Optional[str] = None
     valor_epoca_alta: Optional[float] = None
+    data_inicio_epoca_baixa: Optional[str] = None
+    data_fim_epoca_baixa: Optional[str] = None
     valor_epoca_baixa: Optional[float] = None
     
     # Condições do veículo (editáveis na emissão)
