@@ -421,24 +421,6 @@ const Parceiros = ({ user, onLogout }) => {
                 </DialogHeader>
                 <form onSubmit={handleCreateContract} className="space-y-4 max-h-[70vh] overflow-y-auto">
                   <div>
-                    <Label htmlFor="motorista">Motorista *</Label>
-                    <select
-                      id="motorista"
-                      value={contractForm.motorista_id}
-                      onChange={(e) => setContractForm({...contractForm, motorista_id: e.target.value})}
-                      className="w-full p-2 border rounded-md"
-                      required
-                    >
-                      <option value="">Selecione um motorista</option>
-                      {motoristas.map((m) => (
-                        <option key={m.id} value={m.id}>
-                          {m.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
                     <Label htmlFor="tipo_contrato">Tipo de Contrato *</Label>
                     <select
                       id="tipo_contrato"
@@ -452,24 +434,6 @@ const Parceiros = ({ user, onLogout }) => {
                       <option value="carro_proprio">Carro Próprio (Slot)</option>
                       <option value="comissao_part_time">Comissão Part-Time</option>
                       <option value="comissao_full_time">Comissão Full-Time</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="vehicle">Veículo *</Label>
-                    <select
-                      id="vehicle"
-                      value={contractForm.vehicle_id}
-                      onChange={(e) => setContractForm({...contractForm, vehicle_id: e.target.value})}
-                      className="w-full p-2 border rounded-md"
-                      required
-                    >
-                      <option value="">Selecione um veículo</option>
-                      {vehicles.map((v) => (
-                        <option key={v.id} value={v.id}>
-                          {v.matricula} - {v.marca} {v.modelo}
-                        </option>
-                      ))}
                     </select>
                   </div>
 
