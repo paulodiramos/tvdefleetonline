@@ -697,6 +697,22 @@ ________________________________
                       </div>
                     </div>
                   )}
+                  
+                  {/* Texto de Parcelamento - Apenas para tipos com caução parcelada */}
+                  {(formData.tipo_contrato === 'aluguer_caucao_parcelada' || formData.tipo_contrato === 'aluguer_epoca_caucao_parcelada') && (
+                    <div className="col-span-2 mt-3">
+                      <Label>Texto de Parcelamento</Label>
+                      <p className="text-xs text-slate-500 mb-1">
+                        Texto adicional sobre condições de parcelamento
+                      </p>
+                      <textarea
+                        className="w-full p-2 border rounded-md min-h-[80px] text-sm"
+                        placeholder="Ex: O valor da caução será parcelado em X prestações semanais..."
+                        value={formData.texto_parcelamento || ''}
+                        onChange={(e) => setFormData({...formData, texto_parcelamento: e.target.value})}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
               )}
