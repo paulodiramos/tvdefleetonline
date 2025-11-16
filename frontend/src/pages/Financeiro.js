@@ -10,9 +10,17 @@ import { Upload, FileText, TrendingUp, DollarSign, Users, Calendar } from 'lucid
 const Financeiro = ({ user, onLogout }) => {
   const [parceiros, setParceiros] = useState([]);
   const [selectedParceiro, setSelectedParceiro] = useState(null);
-  const [ganhos, setGanhos] = useState([]);
+  const [selectedPlatform, setSelectedPlatform] = useState('bolt');
   const [uploading, setUploading] = useState(false);
   const [importResult, setImportResult] = useState(null);
+
+  const platforms = [
+    { id: 'uber', name: 'Uber', icon: '🚕', endpoint: '/import/uber/ganhos' },
+    { id: 'bolt', name: 'Bolt', icon: '⚡', endpoint: '/import/bolt/ganhos' },
+    { id: 'via_verde', name: 'Via Verde', icon: '🛣️', endpoint: '/import/via-verde/dados' },
+    { id: 'combustivel', name: 'Combustível', icon: '⛽', endpoint: '/import/combustivel/dados' },
+    { id: 'gps', name: 'GPS', icon: '📍', endpoint: '/import/gps/dados' }
+  ];
 
   useEffect(() => {
     fetchParceiros();
