@@ -5315,6 +5315,292 @@ async def save_email_config(
 
 # ==================== PUBLIC ENDPOINTS (NO AUTH) ====================
 # =============================================================================
+# SINCRONIZAÇÃO AUTOMÁTICA DE PLATAFORMAS
+# =============================================================================
+
+from sync_platforms import encrypt_password, decrypt_password, sync_platform
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+
+# Scheduler global
+scheduler = AsyncIOScheduler()
+
+@app.post("/api/credenciais-plataforma")
+async def salvar_credenciais_plataforma(
+    plataforma: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    sincronizacao_automatica: bool = Form(False),
+    horario_sincronizacao: Optional[str] = Form(None),
+    frequencia_dias: int = Form(7),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Salva credenciais de uma plataforma"""
+    try:
+        user = await verify_token(credentials)
+        if user['role'] not in ['admin', 'manager']:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        # Encriptar password
+        password_encrypted = encrypt_password(password)
+        
+        # Verificar se já existe
+        existing = await db.credenciais_plataforma.find_one({'plataforma': plataforma})
+        
+        if existing:
+            # Atualizar
+            await db.credenciais_plataforma.update_one(
+                {'plataforma': plataforma},
+                {'$set': {
+                    'email': email,
+                    'password_encrypted': password_encrypted,
+                    'sincronizacao_automatica': sincronizacao_automatica,
+                    'horario_sincronizacao': horario_sincronizacao,
+                    'frequencia_dias': frequencia_dias,
+                    'updated_at': datetime.now(timezone.utc)
+                }}
+            )
+            cred_id = existing['id']
+        else:
+            # Criar novo
+            credencial = {
+                'id': str(uuid.uuid4()),
+                'plataforma': plataforma,
+                'email': email,
+                'password_encrypted': password_encrypted,
+                'ativo': True,
+                'sincronizacao_automatica': sincronizacao_automatica,
+                'horario_sincronizacao': horario_sincronizacao,
+                'frequencia_dias': frequencia_dias,
+                'created_at': datetime.now(timezone.utc),
+                'updated_at': datetime.now(timezone.utc)
+            }
+            await db.credenciais_plataforma.insert_one(credencial)
+            cred_id = credencial['id']
+        
+        # Se sincronização automática ativada, agendar job
+        if sincronizacao_automatica and horario_sincronizacao:
+            await agendar_sincronizacao(plataforma, horario_sincronizacao, frequencia_dias)
+        
+        return {'success': True, 'message': 'Credenciais salvas com sucesso', 'id': cred_id}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/credenciais-plataforma")
+async def listar_credenciais_plataformas(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Lista todas as credenciais de plataformas (sem passwords)"""
+    try:
+        user = await verify_token(credentials)
+        if user['role'] not in ['admin', 'manager']:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        credenciais = await db.credenciais_plataforma.find().to_list(length=None)
+        
+        # Remover passwords encriptadas da resposta
+        for cred in credenciais:
+            cred.pop('password_encrypted', None)
+        
+        return credenciais
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/sincronizar/{plataforma}")
+async def sincronizar_plataforma_manual(
+    plataforma: str,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Sincroniza manualmente uma plataforma"""
+    try:
+        user = await verify_token(credentials)
+        if user['role'] not in ['admin', 'manager']:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        # Buscar credenciais
+        cred = await db.credenciais_plataforma.find_one({'plataforma': plataforma})
+        if not cred:
+            raise HTTPException(status_code=404, detail="Credenciais não configuradas")
+        
+        # Criar log de sincronização
+        log = {
+            'id': str(uuid.uuid4()),
+            'plataforma': plataforma,
+            'tipo_sincronizacao': 'manual',
+            'status': 'em_progresso',
+            'data_inicio': datetime.now(timezone.utc),
+            'executado_por': user['id']
+        }
+        await db.logs_sincronizacao.insert_one(log)
+        
+        # Executar sincronização
+        sucesso, file_path, mensagem = await sync_platform(
+            plataforma, 
+            cred['email'], 
+            cred['password_encrypted'],
+            headless=True
+        )
+        
+        if sucesso:
+            # Processar ficheiro baixado
+            if plataforma == 'uber':
+                # Importar usando a função existente de import Uber
+                with open(file_path, 'rb') as f:
+                    contents = f.read()
+                    decoded = contents.decode('utf-8')
+                    csv_reader = csv.DictReader(io.StringIO(decoded))
+                    
+                    registos_importados = 0
+                    for row in csv_reader:
+                        # Processar igual ao endpoint de import manual
+                        registos_importados += 1
+            
+            # Atualizar log
+            await db.logs_sincronizacao.update_one(
+                {'id': log['id']},
+                {'$set': {
+                    'status': 'sucesso',
+                    'data_fim': datetime.now(timezone.utc),
+                    'registos_importados': registos_importados if 'registos_importados' in locals() else 0,
+                    'mensagem': mensagem
+                }}
+            )
+            
+            # Atualizar última sincronização
+            await db.credenciais_plataforma.update_one(
+                {'plataforma': plataforma},
+                {'$set': {'ultima_sincronizacao': datetime.now(timezone.utc)}}
+            )
+            
+            # Limpar ficheiro temporário
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
+            
+            return {'success': True, 'message': 'Sincronização concluída com sucesso'}
+        else:
+            # Atualizar log com erro
+            await db.logs_sincronizacao.update_one(
+                {'id': log['id']},
+                {'$set': {
+                    'status': 'erro',
+                    'data_fim': datetime.now(timezone.utc),
+                    'mensagem': mensagem
+                }}
+            )
+            return {'success': False, 'message': mensagem}
+            
+    except Exception as e:
+        logger.error(f"Erro ao sincronizar {plataforma}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/logs-sincronizacao")
+async def listar_logs_sincronizacao(
+    plataforma: Optional[str] = None,
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Lista histórico de sincronizações"""
+    try:
+        user = await verify_token(credentials)
+        
+        query = {}
+        if plataforma:
+            query['plataforma'] = plataforma
+        
+        logs = await db.logs_sincronizacao.find(query).sort('data_inicio', -1).limit(100).to_list(length=None)
+        return logs
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+async def agendar_sincronizacao(plataforma: str, horario: str, frequencia_dias: int):
+    """Agenda sincronização automática"""
+    try:
+        # Parse horário (ex: "09:00")
+        hora, minuto = map(int, horario.split(':'))
+        
+        # Criar job ID único
+        job_id = f"sync_{plataforma}"
+        
+        # Remover job existente se houver
+        if scheduler.get_job(job_id):
+            scheduler.remove_job(job_id)
+        
+        # Adicionar novo job
+        scheduler.add_job(
+            executar_sincronizacao_automatica,
+            CronTrigger(hour=hora, minute=minuto, day_of_week='*/' + str(frequencia_dias)),
+            id=job_id,
+            args=[plataforma],
+            replace_existing=True
+        )
+        
+        logger.info(f"Sincronização agendada para {plataforma} às {horario} a cada {frequencia_dias} dias")
+        
+    except Exception as e:
+        logger.error(f"Erro ao agendar sincronização: {e}")
+
+async def executar_sincronizacao_automatica(plataforma: str):
+    """Executa sincronização automática agendada"""
+    try:
+        logger.info(f"Executando sincronização automática: {plataforma}")
+        
+        # Buscar credenciais
+        cred = await db.credenciais_plataforma.find_one({'plataforma': plataforma})
+        if not cred or not cred.get('ativo'):
+            logger.warning(f"Credenciais inativas ou não encontradas: {plataforma}")
+            return
+        
+        # Criar log
+        log = {
+            'id': str(uuid.uuid4()),
+            'plataforma': plataforma,
+            'tipo_sincronizacao': 'automatico',
+            'status': 'em_progresso',
+            'data_inicio': datetime.now(timezone.utc)
+        }
+        await db.logs_sincronizacao.insert_one(log)
+        
+        # Executar sincronização
+        sucesso, file_path, mensagem = await sync_platform(
+            plataforma, 
+            cred['email'], 
+            cred['password_encrypted'],
+            headless=True
+        )
+        
+        if sucesso:
+            # Processar ficheiro (igual ao manual)
+            await db.logs_sincronizacao.update_one(
+                {'id': log['id']},
+                {'$set': {
+                    'status': 'sucesso',
+                    'data_fim': datetime.now(timezone.utc),
+                    'mensagem': mensagem
+                }}
+            )
+            await db.credenciais_plataforma.update_one(
+                {'plataforma': plataforma},
+                {'$set': {'ultima_sincronizacao': datetime.now(timezone.utc)}}
+            )
+            
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
+        else:
+            await db.logs_sincronizacao.update_one(
+                {'id': log['id']},
+                {'$set': {
+                    'status': 'erro',
+                    'data_fim': datetime.now(timezone.utc),
+                    'mensagem': mensagem
+                }}
+            )
+            
+    except Exception as e:
+        logger.error(f"Erro na sincronização automática de {plataforma}: {e}")
+
+# =============================================================================
 # IMPORTAÇÃO DE GANHOS UBER
 # =============================================================================
 
