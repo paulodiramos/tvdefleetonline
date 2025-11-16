@@ -5623,7 +5623,7 @@ async def executar_sincronizacao_automatica(credencial_id: str):
             )
             
     except Exception as e:
-        logger.error(f"Erro na sincronização automática de {plataforma}: {e}")
+        logger.error(f"Erro na sincronização automática de {credencial_id}: {e}")
 
 # =============================================================================
 # IMPORTAÇÃO DE GANHOS UBER
