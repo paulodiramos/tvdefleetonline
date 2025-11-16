@@ -635,6 +635,142 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                     />
                   </div>
 
+                  {/* Seção de Caução - Apenas para tipos com caução */}
+                  {(contractForm.tipo_contrato === 'aluguer_com_caucao' || contractForm.tipo_contrato === 'aluguer_caucao_epocas') && (
+                    <div className="space-y-3 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                      <h3 className="font-semibold text-amber-900 flex items-center space-x-2">
+                        <span>💰</span>
+                        <span>Configuração de Caução</span>
+                      </h3>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-sm">Valor Total da Caução (€)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={contractForm.caucao_total}
+                            onChange={(e) => setContractForm({...contractForm, caucao_total: parseFloat(e.target.value)})}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-sm">Número de Parcelas</Label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={contractForm.caucao_parcelas}
+                            onChange={(e) => setContractForm({...contractForm, caucao_parcelas: parseInt(e.target.value)})}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label className="text-sm">Texto/Cláusula da Caução</Label>
+                        <p className="text-xs text-slate-500 mb-1">
+                          Texto adicional sobre condições da caução
+                        </p>
+                        <textarea
+                          className="w-full p-2 border rounded-md min-h-[80px] text-sm"
+                          placeholder="Ex: A caução será devolvida em 30 dias após o término do contrato..."
+                          value={contractForm.caucao_texto || ''}
+                          onChange={(e) => setContractForm({...contractForm, caucao_texto: e.target.value})}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Seção de Épocas - Apenas para tipos com épocas */}
+                  {(contractForm.tipo_contrato === 'aluguer_epocas_sem_caucao' || contractForm.tipo_contrato === 'aluguer_caucao_epocas') && (
+                    <div className="space-y-3 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <h3 className="font-semibold text-blue-900 flex items-center space-x-2">
+                        <span>📅</span>
+                        <span>Configuração de Sazonalidade (Épocas)</span>
+                      </h3>
+                      
+                      {/* Época Alta */}
+                      <div className="space-y-2 border-t border-blue-200 pt-3">
+                        <h4 className="text-sm font-semibold text-blue-800">Época Alta</h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs">Data Início Época Alta</Label>
+                            <Input
+                              type="date"
+                              value={contractForm.data_inicio_epoca_alta}
+                              onChange={(e) => setContractForm({...contractForm, data_inicio_epoca_alta: e.target.value})}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Data Fim Época Alta</Label>
+                            <Input
+                              type="date"
+                              value={contractForm.data_fim_epoca_alta}
+                              onChange={(e) => setContractForm({...contractForm, data_fim_epoca_alta: e.target.value})}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-xs">Valor Semanal Época Alta (€)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={contractForm.valor_epoca_alta}
+                            onChange={(e) => setContractForm({...contractForm, valor_epoca_alta: parseFloat(e.target.value)})}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Texto/Observações Época Alta</Label>
+                          <textarea
+                            className="w-full p-2 border rounded-md min-h-[60px] text-xs"
+                            placeholder="Ex: Durante verão, maior demanda turística..."
+                            value={contractForm.texto_epoca_alta || ''}
+                            onChange={(e) => setContractForm({...contractForm, texto_epoca_alta: e.target.value})}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Época Baixa */}
+                      <div className="space-y-2 border-t border-blue-200 pt-3">
+                        <h4 className="text-sm font-semibold text-blue-800">Época Baixa</h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs">Data Início Época Baixa</Label>
+                            <Input
+                              type="date"
+                              value={contractForm.data_inicio_epoca_baixa}
+                              onChange={(e) => setContractForm({...contractForm, data_inicio_epoca_baixa: e.target.value})}
+                            />
+                          </div>
+                          <div>
+                            <Label className="text-xs">Data Fim Época Baixa</Label>
+                            <Input
+                              type="date"
+                              value={contractForm.data_fim_epoca_baixa}
+                              onChange={(e) => setContractForm({...contractForm, data_fim_epoca_baixa: e.target.value})}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <Label className="text-xs">Valor Semanal Época Baixa (€)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={contractForm.valor_epoca_baixa}
+                            onChange={(e) => setContractForm({...contractForm, valor_epoca_baixa: parseFloat(e.target.value)})}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Texto/Observações Época Baixa</Label>
+                          <textarea
+                            className="w-full p-2 border rounded-md min-h-[60px] text-xs"
+                            placeholder="Ex: Durante inverno, menor movimento..."
+                            value={contractForm.texto_epoca_baixa || ''}
+                            onChange={(e) => setContractForm({...contractForm, texto_epoca_baixa: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <Button type="submit" className="w-full">
                     Gerar Contrato
                   </Button>
