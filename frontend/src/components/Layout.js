@@ -50,6 +50,11 @@ const Layout = ({ user, onLogout, children }) => {
       items.push({ path: '/sincronizacao-auto', icon: Zap, label: 'Sync Auto' });
     }
 
+    // Add Ganhos Bolt for admin and gestao
+    if (user.role === 'admin' || user.role === 'gestao') {
+      items.push({ path: '/ganhos-bolt', icon: TrendingUp, label: 'Ganhos Bolt' });
+    }
+
     return items;
   };
 
