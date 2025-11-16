@@ -1337,6 +1337,19 @@ const Motoristas = ({ user, onLogout }) => {
                                 <p className="font-medium text-sm">{selectedMotorista.telefone_bolt || selectedMotorista.phone}</p>
                               )}
                             </div>
+                            <div className="col-span-2">
+                              <Label className="text-xs">Identificador do Motorista na Bolt</Label>
+                              <p className="text-xs text-slate-500 mb-1">Identificador individual para rastrear ganhos na Bolt</p>
+                              {isEditing ? (
+                                <Input 
+                                  value={editForm.identificador_motorista_bolt || ''} 
+                                  onChange={(e) => setEditForm({...editForm, identificador_motorista_bolt: e.target.value})}
+                                  placeholder="Ex: BOLT123456"
+                                />
+                              ) : (
+                                <p className="font-medium text-sm">{selectedMotorista.identificador_motorista_bolt || 'Não definido'}</p>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
