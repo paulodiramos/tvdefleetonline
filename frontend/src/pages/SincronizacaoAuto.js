@@ -42,9 +42,30 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
   ];
 
   useEffect(() => {
-    fetchCredenciais();
-    fetchLogs();
+    fetchParceiros();
   }, []);
+
+  useEffect(() => {
+    if (selectedParceiro) {
+      fetchCredenciais();
+      fetchLogs();
+    }
+  }, [selectedParceiro]);
+
+  const fetchParceiros = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/parceiros`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setParceiros(response.data);
+      if (response.data.length > 0) {
+        setSelectedParceiro(response.data[0]);
+      }
+    } catch (error) {
+      console.error('Error fetching parceiros:', error);
+    }
+  };
 
   const fetchCredenciais = async () => {
     try {
