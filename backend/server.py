@@ -5518,6 +5518,7 @@ async def sincronizar_plataforma_manual(
 
 @app.get("/api/logs-sincronizacao")
 async def listar_logs_sincronizacao(
+    parceiro_id: Optional[str] = None,
     plataforma: Optional[str] = None,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
@@ -5526,6 +5527,8 @@ async def listar_logs_sincronizacao(
         user = await verify_token(credentials)
         
         query = {}
+        if parceiro_id:
+            query['parceiro_id'] = parceiro_id
         if plataforma:
             query['plataforma'] = plataforma
         
