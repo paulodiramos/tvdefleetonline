@@ -717,8 +717,10 @@ ________________________________
               </div>
               )}
 
-              {/* Campos de Sazonalidade (Épocas) - Quando checkbox ativado */}
-              {formData.tem_epoca && (
+              {/* SEÇÃO ÉPOCAS - tipos com época */}
+              {(formData.tipo_contrato === 'aluguer_epoca_sem_caucao' ||
+                formData.tipo_contrato === 'aluguer_epoca_com_caucao' ||
+                formData.tipo_contrato === 'aluguer_epoca_caucao_parcelada') && (
               <div className="space-y-4 p-4 bg-blue-50 rounded-lg border-2 border-blue-300">
                 <h3 className="font-semibold text-blue-900 flex items-center space-x-2">
                   <span>📅</span>
