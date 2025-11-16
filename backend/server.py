@@ -5786,6 +5786,168 @@ async def importar_ganhos_uber(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao importar ficheiro: {str(e)}")
 
+# =============================================================================
+# IMPORTAÇÃO DE GANHOS BOLT
+# =============================================================================
+
+@app.post("/api/import/bolt/ganhos")
+async def importar_ganhos_bolt(
+    file: UploadFile = File(...),
+    parceiro_id: Optional[str] = Form(None),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Importa ficheiro CSV de ganhos da Bolt"""
+    try:
+        # Verificar autenticação
+        user = await verify_token(credentials)
+        if user['role'] not in ['admin', 'manager']:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        # Ler conteúdo do ficheiro
+        contents = await file.read()
+        decoded = contents.decode('utf-8')
+        csv_reader = csv.DictReader(io.StringIO(decoded))
+        
+        ganhos_importados = []
+        motoristas_encontrados = 0
+        motoristas_nao_encontrados = 0
+        erros = []
+        total_ganhos = 0.0
+        
+        # Extrair período do nome do ficheiro (ex: 2025W45)
+        periodo_match = re.search(r'(\d{4})W(\d{2})', file.filename)
+        periodo_ano = None
+        periodo_semana = None
+        if periodo_match:
+            periodo_ano = periodo_match.group(1)
+            periodo_semana = periodo_match.group(2)
+        
+        for row_num, row in enumerate(csv_reader, start=2):
+            try:
+                identificador_motorista = row.get('Identificador do motorista', '').strip()
+                identificador_individual = row.get('Identificador individual', '').strip()
+                
+                if not identificador_motorista:
+                    continue
+                
+                # Procurar motorista pelo identificador Bolt
+                motorista = await db.motoristas.find_one({'identificador_motorista_bolt': identificador_individual})
+                motorista_id = motorista['id'] if motorista else None
+                
+                if motorista:
+                    motoristas_encontrados += 1
+                else:
+                    motoristas_nao_encontrados += 1
+                
+                # Função helper para converter valores (vírgula decimal)
+                def parse_float(value):
+                    if not value or value == '':
+                        return 0.0
+                    try:
+                        # Remover espaços e converter
+                        clean_value = value.strip().replace(',', '.')
+                        return float(clean_value)
+                    except:
+                        return 0.0
+                
+                # Extrair valores do CSV
+                ganhos_liquidos = parse_float(row.get('Ganhos líquidos|€', '0'))
+                
+                ganho = {
+                    'id': str(uuid.uuid4()),
+                    'identificador_motorista_bolt': identificador_motorista,
+                    'identificador_individual': identificador_individual,
+                    'motorista_id': motorista_id,
+                    'nome_motorista': row.get('Motorista', ''),
+                    'email_motorista': row.get('Email', ''),
+                    'telemovel_motorista': row.get('Telemóvel', ''),
+                    'periodo_ano': periodo_ano,
+                    'periodo_semana': periodo_semana,
+                    # Ganhos brutos
+                    'ganhos_brutos_total': parse_float(row.get('Ganhos brutos (total)|€', '0')),
+                    'ganhos_brutos_app': parse_float(row.get('Ganhos brutos (pagamentos na app)|€', '0')),
+                    'iva_ganhos_app': parse_float(row.get('IVA sobre os ganhos brutos (pagamentos na app)|€', '0')),
+                    'ganhos_brutos_dinheiro': parse_float(row.get('Ganhos brutos (pagamentos em dinheiro)|€', '0')),
+                    'iva_ganhos_dinheiro': parse_float(row.get('IVA sobre os ganhos brutos (pagamentos em dinheiro)|€', '0')),
+                    'dinheiro_recebido': parse_float(row.get('Dinheiro recebido|€', '0')),
+                    # Extras
+                    'gorjetas': parse_float(row.get('Gorjetas dos passageiros|€', '0')),
+                    'ganhos_campanha': parse_float(row.get('Ganhos da campanha|€', '0')),
+                    'reembolsos_despesas': parse_float(row.get('Reembolsos de despesas|€', '0')),
+                    # Taxas
+                    'taxas_cancelamento': parse_float(row.get('Taxas de cancelamento|€', '0')),
+                    'iva_taxas_cancelamento': parse_float(row.get('IVA das taxas de cancelamento|€', '0')),
+                    'portagens': parse_float(row.get('Portagens|€', '0')),
+                    'taxas_reserva': parse_float(row.get('Taxas de reserva|€', '0')),
+                    'iva_taxas_reserva': parse_float(row.get('IVA das taxas de reserva|€', '0')),
+                    'total_taxas': parse_float(row.get('Total de taxas|€', '0')),
+                    # Comissões
+                    'comissoes': parse_float(row.get('Comissões|€', '0')),
+                    'reembolsos_passageiros': parse_float(row.get('Reembolsos aos passageiros|€', '0')),
+                    'outras_taxas': parse_float(row.get('Outras taxas|€', '0')),
+                    # Ganhos líquidos
+                    'ganhos_liquidos': ganhos_liquidos,
+                    'pagamento_previsto': parse_float(row.get('Pagamento previsto|€', '0')),
+                    # Produtividade
+                    'ganhos_brutos_por_hora': parse_float(row.get('Ganhos brutos por hora|€/h', '0')),
+                    'ganhos_liquidos_por_hora': parse_float(row.get('Ganhos líquidos por hora|€/h', '0')),
+                    # Metadata
+                    'ficheiro_nome': file.filename,
+                    'parceiro_id': parceiro_id,
+                    'data_importacao': datetime.now(timezone.utc),
+                    'importado_por': user['id']
+                }
+                
+                # Salvar no banco
+                await db.ganhos_bolt.insert_one(ganho)
+                ganhos_importados.append(ganho)
+                total_ganhos += ganhos_liquidos
+                
+            except Exception as e:
+                erros.append(f"Linha {row_num}: {str(e)}")
+        
+        return {
+            'success': True,
+            'total_linhas': len(ganhos_importados),
+            'motoristas_encontrados': motoristas_encontrados,
+            'motoristas_nao_encontrados': motoristas_nao_encontrados,
+            'total_ganhos': round(total_ganhos, 2),
+            'periodo': f"{periodo_ano}W{periodo_semana}" if periodo_ano else None,
+            'ganhos_importados': ganhos_importados[:10],  # Primeiros 10 para preview
+            'erros': erros
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao importar ficheiro: {str(e)}")
+
+@app.get("/api/ganhos-bolt")
+async def listar_ganhos_bolt(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    motorista_id: Optional[str] = None,
+    parceiro_id: Optional[str] = None,
+    periodo_ano: Optional[str] = None,
+    periodo_semana: Optional[str] = None
+):
+    """Lista ganhos importados da Bolt"""
+    try:
+        user = await verify_token(credentials)
+        
+        query = {}
+        if motorista_id:
+            query['motorista_id'] = motorista_id
+        if parceiro_id:
+            query['parceiro_id'] = parceiro_id
+        if periodo_ano:
+            query['periodo_ano'] = periodo_ano
+        if periodo_semana:
+            query['periodo_semana'] = periodo_semana
+        
+        ganhos = await db.ganhos_bolt.find(query).sort('data_importacao', -1).to_list(length=None)
+        return ganhos
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/ganhos-uber")
 async def listar_ganhos_uber(
     credentials: HTTPAuthorizationCredentials = Depends(security),
