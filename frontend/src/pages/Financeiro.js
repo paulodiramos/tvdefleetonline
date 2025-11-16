@@ -92,21 +92,6 @@ const Financeiro = ({ user, onLogout }) => {
     }).format(value || 0);
   };
 
-  // Agrupar ganhos por período
-  const ganhosPorPeriodo = ganhos.reduce((acc, ganho) => {
-    const key = `${ganho.periodo_ano}W${ganho.periodo_semana}`;
-    if (!acc[key]) {
-      acc[key] = {
-        periodo: key,
-        ano: ganho.periodo_ano,
-        semana: ganho.periodo_semana,
-        ganhos: []
-      };
-    }
-    acc[key].ganhos.push(ganho);
-    return acc;
-  }, {});
-
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="container mx-auto px-4 py-8">
