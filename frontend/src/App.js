@@ -159,6 +159,12 @@ function App() {
             }
           />
           <Route
+            path="/sincronizacao-auto"
+            element={
+              user ? <SincronizacaoAuto user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/profile"
             element={
               user ? <Profile user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
