@@ -616,6 +616,53 @@ class GanhoUberImportResponse(BaseModel):
     ganhos_importados: List[Dict[str, Any]]
     erros: List[str] = []
 
+# Modelo para ganhos importados da Bolt
+class GanhoBolt(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    identificador_motorista_bolt: str  # Identificador do motorista na Bolt
+    identificador_individual: str  # Identificador individual
+    motorista_id: Optional[str] = None  # ID do motorista no sistema (se encontrado)
+    nome_motorista: str
+    email_motorista: str
+    telemovel_motorista: Optional[str] = None
+    # Período do ficheiro (extraído do nome: 2025W45)
+    periodo_semana: Optional[str] = None
+    periodo_ano: Optional[str] = None
+    # Ganhos brutos
+    ganhos_brutos_total: float
+    ganhos_brutos_app: float
+    iva_ganhos_app: float
+    ganhos_brutos_dinheiro: float
+    iva_ganhos_dinheiro: float
+    dinheiro_recebido: float
+    # Extras
+    gorjetas: float
+    ganhos_campanha: float
+    reembolsos_despesas: float
+    # Taxas
+    taxas_cancelamento: float
+    iva_taxas_cancelamento: float
+    portagens: float
+    taxas_reserva: float
+    iva_taxas_reserva: float
+    total_taxas: float
+    # Comissões e deduções
+    comissoes: float
+    reembolsos_passageiros: float
+    outras_taxas: float
+    # Ganhos líquidos
+    ganhos_liquidos: float
+    pagamento_previsto: float
+    # Produtividade
+    ganhos_brutos_por_hora: float
+    ganhos_liquidos_por_hora: float
+    # Metadata
+    ficheiro_nome: str
+    parceiro_id: Optional[str] = None
+    data_importacao: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    importado_por: str
+
 # Modelos para Sincronização Automática
 class CredenciaisPlataforma(BaseModel):
     model_config = ConfigDict(extra="ignore")
