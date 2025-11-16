@@ -158,7 +158,7 @@ const Financeiro = ({ user, onLogout }) => {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Upload className="w-5 h-5" />
-              <span>Importar Ficheiro CSV da Bolt</span>
+              <span>Import / Upload CSV</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -166,7 +166,7 @@ const Financeiro = ({ user, onLogout }) => {
               <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center">
                 <Upload className="w-12 h-12 mx-auto text-slate-400 mb-3" />
                 <p className="text-slate-600 mb-4">
-                  Selecione o ficheiro CSV de ganhos por motorista da Bolt
+                  Selecione o ficheiro CSV de ganhos da Bolt
                 </p>
                 <label className="inline-block">
                   <input
@@ -182,11 +182,17 @@ const Financeiro = ({ user, onLogout }) => {
                     className="cursor-pointer bg-green-600 hover:bg-green-700"
                     onClick={() => document.querySelector('input[type="file"]').click()}
                   >
-                    {uploading ? 'A carregar...' : 'Selecionar Ficheiro'}
+                    {uploading ? 'A importar...' : 'Upload CSV Bolt'}
                   </Button>
                 </label>
                 <p className="text-xs text-slate-500 mt-2">
-                  Formato: Ganhos por motorista-2025W45-Lisbon Fleet XXX.csv
+                  <strong>Formatos suportados:</strong>
+                </p>
+                <p className="text-xs text-slate-500">
+                  • Bolt: Ganhos por motorista-2025W45-Lisbon Fleet XXX.csv
+                </p>
+                <p className="text-xs text-slate-500">
+                  • Uber: 20251110-20251116-payments_driver-XXX.csv
                 </p>
               </div>
 
