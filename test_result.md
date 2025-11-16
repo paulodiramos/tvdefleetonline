@@ -2315,3 +2315,236 @@ agent_communication:
         7. Verificar aparecimento da seção azul de épocas
         8. Preencher campos de épocas
         9. Gerar contrato e verificar sucesso
+
+frontend:
+  - task: "Contratos.js - Sistema Completo de 11 Tipos de Contrato"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Contratos.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: |
+            Sistema de contratos completamente reorganizado com 11 tipos distintos:
+            
+            TIPOS DE CONTRATO IMPLEMENTADOS:
+            
+            1. ALUGUER SIMPLES (aluguer_simples)
+               - Texto base
+               - Valor semanal
+            
+            2. ALUGUER COM CAUÇÃO (aluguer_com_caucao)
+               - Texto base
+               - Seção de caução (amarela):
+                 * Valor total caução
+                 * Número de parcelas
+                 * Texto de caução
+            
+            3. ALUGUER COM CAUÇÃO PARCELADA (aluguer_caucao_parcelada)
+               - Texto base
+               - Seção de caução (amarela):
+                 * Valor total caução
+                 * Número de parcelas
+                 * Texto de caução
+                 * NOVO: Texto de parcelamento
+            
+            4. ALUGUER ÉPOCA SEM CAUÇÃO (aluguer_epoca_sem_caucao)
+               - Texto base
+               - Seção de épocas (azul):
+                 * Época Alta: datas, valor, texto
+                 * Época Baixa: datas, valor, texto
+                 * Texto geral de época
+            
+            5. ALUGUER ÉPOCA COM CAUÇÃO (aluguer_epoca_com_caucao)
+               - Texto base
+               - Seção de caução (amarela)
+               - Seção de épocas (azul)
+            
+            6. ALUGUER ÉPOCA COM CAUÇÃO PARCELADA (aluguer_epoca_caucao_parcelada)
+               - Texto base
+               - Seção de caução (amarela) com texto de parcelamento
+               - Seção de épocas (azul)
+            
+            7. COMISSÃO (comissao)
+               - Seção roxa:
+                 * Percentagem de comissão (%)
+                 * Checkbox: Via Verde Incluído
+                 * Checkbox: Gasóleo Incluído
+            
+            8. MOTORISTA PRIVADO COM CAUÇÃO (motorista_privado_com_caucao)
+               - Texto base com valor semanal
+               - Seção de caução (amarela)
+            
+            9. MOTORISTA PRIVADO SEM CAUÇÃO (motorista_privado_sem_caucao)
+               - Texto base com valor semanal
+            
+            10. COMPRA DE VEÍCULO (compra_veiculo)
+                - Seção verde:
+                  * Valor do Slot (€)
+                  * Texto de aluguer de slot
+            
+            11. CARRO PRÓPRIO (carro_proprio)
+                - Seção verde:
+                  * Valor do Slot (€)
+                  * Texto de aluguer de slot
+
+agent_communication:
+    - agent: "main"
+      message: |
+        ✅ SISTEMA COMPLETO DE 11 TIPOS DE CONTRATO IMPLEMENTADO
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        SOLICITAÇÃO DO USUÁRIO
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        Sistema completo com 11 tipos distintos de contrato, cada um com campos 
+        específicos e textos adicionais condicionais.
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        IMPLEMENTAÇÃO - 11 TIPOS DE CONTRATO
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        SELECT DE TIPO DE CONTRATO:
+        ✅ 1. Aluguer Simples
+        ✅ 2. Aluguer com Caução
+        ✅ 3. Aluguer com Caução Parcelada
+        ✅ 4. Aluguer Época sem Caução
+        ✅ 5. Aluguer Época com Caução
+        ✅ 6. Aluguer Época com Caução Parcelada
+        ✅ 7. Comissão
+        ✅ 8. Motorista Privado com Caução
+        ✅ 9. Motorista Privado sem Caução
+        ✅ 10. Compra de Veículo (com Slot)
+        ✅ 11. Carro Próprio (com Slot)
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        SEÇÕES CONDICIONAIS IMPLEMENTADAS
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        💰 SEÇÃO DE CAUÇÃO (Background Amarelo):
+        - Aparece em: tipos 2, 3, 5, 6, 8
+        - Campos:
+          * Valor Total da Caução (€)
+          * Número de Parcelas
+          * Texto/Cláusula da Caução
+          * Texto de Parcelamento (apenas tipos 3 e 6)
+        
+        📅 SEÇÃO DE ÉPOCAS (Background Azul):
+        - Aparece em: tipos 4, 5, 6
+        - Campos Época Alta:
+          * Data Início
+          * Data Fim
+          * Valor Semanal (€)
+          * Texto/Observações
+        - Campos Época Baixa:
+          * Data Início
+          * Data Fim
+          * Valor Semanal (€)
+          * Texto/Observações
+        - Texto Geral de Época (para política de sazonalidade)
+        
+        💼 SEÇÃO DE COMISSÃO (Background Roxo):
+        - Aparece em: tipo 7
+        - Campos:
+          * Percentagem de Comissão (%)
+          * Checkbox: Via Verde Incluído
+          * Checkbox: Gasóleo Incluído
+        
+        🏷️ SEÇÃO DE SLOT (Background Verde):
+        - Aparece em: tipos 10 e 11
+        - Campos:
+          * Valor do Slot (€)
+          * Texto de Aluguer de Slot
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        CAMPOS DO FORMDATA
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        Estado completamente reorganizado:
+        ```javascript
+        {
+          // Identificação
+          parceiro_id, motorista_id, vehicle_id, data_inicio,
+          tipo_contrato: 'aluguer_simples',
+          
+          // Valores
+          valor_semanal: 230,
+          
+          // Caução
+          caucao_total: 300,
+          caucao_parcelas: 4,
+          caucao_texto: '',
+          texto_parcelamento: '',
+          
+          // Épocas
+          data_inicio_epoca_alta, data_fim_epoca_alta,
+          valor_epoca_alta: 300, texto_epoca_alta: '',
+          data_inicio_epoca_baixa, data_fim_epoca_baixa,
+          valor_epoca_baixa: 200, texto_epoca_baixa: '',
+          texto_epoca: '',
+          
+          // Comissão
+          comissao_percentual: 20,
+          via_verde_incluido: false,
+          gasoleo_incluido: false,
+          
+          // Slot
+          valor_slot: 0,
+          texto_slot: '',
+          
+          // Template e Email
+          template_texto: '',
+          enviar_email: false
+        }
+        ```
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        LÓGICA CONDICIONAL
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        CAMPOS APARECEM DINAMICAMENTE:
+        - Valor Semanal: tipos com aluguer e motorista privado
+        - Seção Caução: tipos 2, 3, 5, 6, 8
+        - Texto Parcelamento: apenas tipos 3 e 6
+        - Seção Épocas: tipos 4, 5, 6
+        - Seção Comissão: tipo 7
+        - Seção Slot: tipos 10 e 11
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        CORES E DESIGN
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        🟨 Caução: amber-50 / amber-200 (amarelo)
+        🟦 Épocas: blue-50 / blue-200 (azul)
+        🟪 Comissão: purple-50 / purple-200 (roxo)
+        🟩 Slot: green-50 / green-200 (verde)
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        BENEFÍCIOS
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        ✅ 11 tipos de contrato claramente identificados
+        ✅ Interface visual intuitiva com cores
+        ✅ Campos aparecem apenas quando necessários
+        ✅ Reduz confusão e erros
+        ✅ Flexibilidade total para diferentes cenários
+        ✅ Textos adicionais para cada opção
+        ✅ Checkboxes para opções booleanas
+        ✅ Valores pré-preenchidos com defaults sensatos
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        STATUS
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        Frontend reiniciado com sucesso.
+        Sistema de 11 tipos de contrato pronto para uso.
+        
+        PRÓXIMOS TESTES:
+        1. Testar cada um dos 11 tipos individualmente
+        2. Verificar aparecimento correto de seções condicionais
+        3. Preencher todos os campos de cada tipo
+        4. Gerar contratos e verificar sucesso
+        5. Validar textos adicionais nos contratos gerados
