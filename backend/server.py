@@ -636,6 +636,7 @@ class CredenciaisPlataforma(BaseModel):
 class LogSincronizacao(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    parceiro_id: str  # Log associado ao parceiro
     plataforma: str
     tipo_sincronizacao: str  # manual, automatico
     status: str  # sucesso, erro, parcial
