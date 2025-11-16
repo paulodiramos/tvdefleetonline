@@ -68,9 +68,10 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
   };
 
   const fetchCredenciais = async () => {
+    if (!selectedParceiro) return;
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/credenciais-plataforma`, {
+      const response = await axios.get(`${API}/credenciais-plataforma?parceiro_id=${selectedParceiro.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCredenciais(response.data);
@@ -80,9 +81,10 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
   };
 
   const fetchLogs = async () => {
+    if (!selectedParceiro) return;
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/logs-sincronizacao`, {
+      const response = await axios.get(`${API}/logs-sincronizacao?parceiro_id=${selectedParceiro.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setLogs(response.data);
