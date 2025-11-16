@@ -6457,7 +6457,7 @@ async def startup_event():
         for cred in credenciais:
             if cred.get('horario_sincronizacao'):
                 await agendar_sincronizacao(
-                    cred['plataforma'],
+                    cred['id'],
                     cred['horario_sincronizacao'],
                     cred.get('frequencia_dias', 7)
                 )
