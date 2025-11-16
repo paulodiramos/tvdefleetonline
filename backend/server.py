@@ -5589,7 +5589,7 @@ async def executar_sincronizacao_automatica(credencial_id: str):
         
         # Executar sincronização
         sucesso, file_path, mensagem = await sync_platform(
-            plataforma, 
+            cred['plataforma'], 
             cred['email'], 
             cred['password_encrypted'],
             headless=True
@@ -5606,7 +5606,7 @@ async def executar_sincronizacao_automatica(credencial_id: str):
                 }}
             )
             await db.credenciais_plataforma.update_one(
-                {'plataforma': plataforma},
+                {'id': credencial_id},
                 {'$set': {'ultima_sincronizacao': datetime.now(timezone.utc)}}
             )
             
