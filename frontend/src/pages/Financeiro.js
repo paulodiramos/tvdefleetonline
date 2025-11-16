@@ -41,19 +41,6 @@ const Financeiro = ({ user, onLogout }) => {
     }
   };
 
-  const fetchGanhos = async () => {
-    if (!selectedParceiro) return;
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/ganhos-bolt?parceiro_id=${selectedParceiro.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setGanhos(response.data);
-    } catch (error) {
-      console.error('Error fetching ganhos:', error);
-    }
-  };
-
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
