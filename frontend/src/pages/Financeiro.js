@@ -237,7 +237,7 @@ const Financeiro = ({ user, onLogout }) => {
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Calendar className="w-5 h-5" />
-              <span>Histórico de Ganhos</span>
+              <span>Histórico Financeiro - Bolt</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
