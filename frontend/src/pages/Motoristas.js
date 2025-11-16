@@ -1293,6 +1293,19 @@ const Motoristas = ({ user, onLogout }) => {
                                 <p className="font-medium text-sm">{selectedMotorista.telefone_uber || selectedMotorista.phone}</p>
                               )}
                             </div>
+                            <div className="col-span-2">
+                              <Label className="text-xs">UUID do Motorista na Uber</Label>
+                              <p className="text-xs text-slate-500 mb-1">Identificador único para rastrear ganhos na Uber</p>
+                              {isEditing ? (
+                                <Input 
+                                  value={editForm.uuid_motorista_uber || ''} 
+                                  onChange={(e) => setEditForm({...editForm, uuid_motorista_uber: e.target.value})}
+                                  placeholder="Ex: 550e8400-e29b-41d4-a716-446655440000"
+                                />
+                              ) : (
+                                <p className="font-medium text-sm">{selectedMotorista.uuid_motorista_uber || 'Não definido'}</p>
+                              )}
+                            </div>
                           </div>
                         </div>
 
