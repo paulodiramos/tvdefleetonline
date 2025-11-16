@@ -45,6 +45,11 @@ const Layout = ({ user, onLogout, children }) => {
       items.push({ path: '/contratos', icon: FileText, label: 'Contratos' });
     }
 
+    // Add Import Uber for admin and gestao
+    if (user.role === 'admin' || user.role === 'gestao') {
+      items.push({ path: '/import-uber', icon: Upload, label: 'Import Uber' });
+    }
+
     return items;
   };
 
