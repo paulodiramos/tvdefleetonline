@@ -5446,6 +5446,7 @@ async def sincronizar_plataforma_manual(
         # Criar log de sincronização
         log = {
             'id': str(uuid.uuid4()),
+            'parceiro_id': parceiro_id,
             'plataforma': plataforma,
             'tipo_sincronizacao': 'manual',
             'status': 'em_progresso',
