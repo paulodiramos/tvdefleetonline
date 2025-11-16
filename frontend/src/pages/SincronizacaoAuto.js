@@ -123,9 +123,15 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
   const handleSaveConfig = async (e) => {
     e.preventDefault();
     
+    if (!selectedParceiro) {
+      toast.error('Selecione um parceiro primeiro');
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
+      formData.append('parceiro_id', selectedParceiro.id);
       formData.append('plataforma', configForm.plataforma);
       formData.append('email', configForm.email);
       formData.append('password', configForm.password);
