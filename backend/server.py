@@ -5538,14 +5538,14 @@ async def listar_logs_sincronizacao(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-async def agendar_sincronizacao(plataforma: str, horario: str, frequencia_dias: int):
+async def agendar_sincronizacao(credencial_id: str, horario: str, frequencia_dias: int):
     """Agenda sincronização automática"""
     try:
         # Parse horário (ex: "09:00")
         hora, minuto = map(int, horario.split(':'))
         
-        # Criar job ID único
-        job_id = f"sync_{plataforma}"
+        # Criar job ID único baseado no credencial_id
+        job_id = f"sync_{credencial_id}"
         
         # Remover job existente se houver
         if scheduler.get_job(job_id):
@@ -5556,11 +5556,11 @@ async def agendar_sincronizacao(plataforma: str, horario: str, frequencia_dias: 
             executar_sincronizacao_automatica,
             CronTrigger(hour=hora, minute=minuto, day_of_week='*/' + str(frequencia_dias)),
             id=job_id,
-            args=[plataforma],
+            args=[credencial_id],
             replace_existing=True
         )
         
-        logger.info(f"Sincronização agendada para {plataforma} às {horario} a cada {frequencia_dias} dias")
+        logger.info(f"Sincronização agendada para credencial {credencial_id} às {horario} a cada {frequencia_dias} dias")
         
     except Exception as e:
         logger.error(f"Erro ao agendar sincronização: {e}")
