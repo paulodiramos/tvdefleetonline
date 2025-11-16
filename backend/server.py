@@ -6421,6 +6421,24 @@ async def startup_event():
     # Start background task for periodic checks
     asyncio.create_task(check_alerts_periodically())
     logger.info("Background alert checker started")
+    
+    # Start scheduler for automatic sync
+    scheduler.start()
+    logger.info("Scheduler started for automatic platform sync")
+    
+    # Carregar jobs agendados do banco
+    try:
+        credenciais = await db.credenciais_plataforma.find({'sincronizacao_automatica': True, 'ativo': True}).to_list(length=None)
+        for cred in credenciais:
+            if cred.get('horario_sincronizacao'):
+                await agendar_sincronizacao(
+                    cred['plataforma'],
+                    cred['horario_sincronizacao'],
+                    cred.get('frequencia_dias', 7)
+                )
+        logger.info(f"Carregados {len(credenciais)} agendamentos de sincronização")
+    except Exception as e:
+        logger.error(f"Erro ao carregar agendamentos: {e}")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
