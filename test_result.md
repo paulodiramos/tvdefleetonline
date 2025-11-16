@@ -2103,3 +2103,215 @@ agent_communication:
         6. Salvar e verificar persistência
         7. Reabrir ficha e confirmar dados salvos
         8. Testar com motorista novo (criação)
+
+frontend:
+  - task: "Parceiros.js - Modal Criar Contrato com Campos Condicionais"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Parceiros.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: |
+            Expandido modal "Criar Novo Contrato" na ficha do parceiro com campos condicionais:
+            
+            ESTADO CONTRACTFORM EXPANDIDO:
+            - Adicionados campos de caução: caucao_texto, caucao_total, caucao_parcelas
+            - Adicionados campos de épocas: datas, valores e textos para época alta e baixa
+            
+            SEÇÃO DE CAUÇÃO (CONDICIONAL):
+            - Aparece quando tipo_contrato = 'aluguer_com_caucao' ou 'aluguer_caucao_epocas'
+            - Background amber-50 com borda amber
+            - Campos:
+              * Valor Total da Caução (€)
+              * Número de Parcelas
+              * Textarea: Texto/Cláusula da Caução
+            - Grid 2 colunas para valores numéricos
+            - Textarea full width para texto explicativo
+            
+            SEÇÃO DE ÉPOCAS (CONDICIONAL):
+            - Aparece quando tipo_contrato = 'aluguer_epocas_sem_caucao' ou 'aluguer_caucao_epocas'
+            - Background blue-50 com borda blue
+            - Dividido em 2 subsecções com border-top:
+            
+            ÉPOCA ALTA:
+            - Data Início e Data Fim (grid 2 colunas)
+            - Valor Semanal Época Alta (€)
+            - Textarea: Texto/Observações Época Alta
+            
+            ÉPOCA BAIXA:
+            - Data Início e Data Fim (grid 2 colunas)
+            - Valor Semanal Época Baixa (€)
+            - Textarea: Texto/Observações Época Baixa
+            
+            PAYLOAD ATUALIZADO:
+            - handleCreateContract agora envia todos os campos novos no payload
+            - Integrado com endpoint POST /api/contratos/gerar
+            - Reset completo do formulário após sucesso
+
+agent_communication:
+    - agent: "main"
+      message: |
+        ✅ MODAL "CRIAR CONTRATO" EXPANDIDO COM CAMPOS CONDICIONAIS
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        SOLICITAÇÃO DO USUÁRIO
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        Adicionar campos condicionais no modal "Criar Novo Contrato" dentro da 
+        ficha do parceiro:
+        - Campo de texto quando tiver caução
+        - Campos de texto, datas e valores quando tiver épocas (alta/baixa)
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        IMPLEMENTAÇÃO - MODAL CRIAR CONTRATO (PARCEIROS.JS)
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        ✅ CAMPOS CONDICIONAIS IMPLEMENTADOS:
+        
+        📍 Localização: Modal "Criar Novo Contrato" na ficha do parceiro
+        📍 Arquivo: frontend/src/pages/Parceiros.js
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        SEÇÃO DE CAUÇÃO 💰
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        QUANDO APARECE:
+        ✅ tipo_contrato = 'aluguer_com_caucao'
+        ✅ tipo_contrato = 'aluguer_caucao_epocas'
+        
+        DESIGN:
+        - Background: amber-50 (fundo amarelo claro)
+        - Borda: border-amber-200
+        - Ícone: 💰
+        - Título: "Configuração de Caução"
+        
+        CAMPOS:
+        1. Valor Total da Caução (€)
+           - Input numérico, step 0.01
+           - Default: 300€
+        
+        2. Número de Parcelas
+           - Input numérico, min 1
+           - Default: 4 parcelas
+        
+        3. Texto/Cláusula da Caução
+           - Textarea min-h-[80px]
+           - Placeholder útil
+           - Para texto adicional sobre condições
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        SEÇÃO DE ÉPOCAS 📅
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        QUANDO APARECE:
+        ✅ tipo_contrato = 'aluguer_epocas_sem_caucao'
+        ✅ tipo_contrato = 'aluguer_caucao_epocas'
+        
+        DESIGN:
+        - Background: blue-50 (fundo azul claro)
+        - Borda: border-blue-200
+        - Ícone: 📅
+        - Título: "Configuração de Sazonalidade (Épocas)"
+        
+        🔹 ÉPOCA ALTA:
+        - Separada com border-top e heading
+        - Data Início (date picker)
+        - Data Fim (date picker)
+        - Valor Semanal (€) - Default: 300€
+        - Textarea: Observações/Texto (min-h-[60px])
+        
+        🔹 ÉPOCA BAIXA:
+        - Separada com border-top e heading
+        - Data Início (date picker)
+        - Data Fim (date picker)
+        - Valor Semanal (€) - Default: 200€
+        - Textarea: Observações/Texto (min-h-[60px])
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        INTEGRAÇÃO COM BACKEND
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        PAYLOAD EXPANDIDO:
+        ```javascript
+        {
+          // Campos existentes...
+          parceiro_id, motorista_id, vehicle_id, tipo_contrato,
+          
+          // NOVOS CAMPOS:
+          template_texto: contractForm.texto_contrato,
+          
+          // Caução
+          caucao_texto,
+          caucao_total,
+          caucao_parcelas,
+          
+          // Épocas
+          data_inicio_epoca_alta,
+          data_fim_epoca_alta,
+          valor_epoca_alta,
+          texto_epoca_alta,
+          data_inicio_epoca_baixa,
+          data_fim_epoca_baixa,
+          valor_epoca_baixa,
+          texto_epoca_baixa
+        }
+        ```
+        
+        Endpoint: POST /api/contratos/gerar
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        FLUXO DE USO
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        1. Parceiro/Admin abre ficha do parceiro
+        2. Clica em botão "Criar Contrato" (verde)
+        3. Modal abre com formulário
+        4. Seleciona Tipo de Contrato
+        
+        CENÁRIO 1 - Com Caução:
+        5a. Seleciona "Aluguer Com Caução"
+        6a. Seção amarela de caução aparece automaticamente
+        7a. Preenche valor, parcelas e texto de caução
+        
+        CENÁRIO 2 - Com Épocas:
+        5b. Seleciona "Aluguer com Épocas" ou "Aluguer Com Caução e Épocas"
+        6b. Seção azul de épocas aparece automaticamente
+        7b. Preenche datas, valores e textos para época alta e baixa
+        
+        8. Preenche texto do contrato (com variáveis)
+        9. Clica "Gerar Contrato"
+        10. Todos os campos são enviados ao backend
+        11. Contrato criado com sucesso
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        BENEFÍCIOS
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        ✅ Interface visual clara (cores distintas)
+        ✅ Campos aparecem apenas quando necessários
+        ✅ Valores padrão pré-preenchidos
+        ✅ Placeholders úteis
+        ✅ Layout responsivo (grid 2 colunas)
+        ✅ Textareas redimensionáveis
+        ✅ Integração completa com backend
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        STATUS
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        Frontend reiniciado com sucesso.
+        
+        PRÓXIMOS TESTES:
+        1. Abrir ficha de parceiro
+        2. Clicar "Criar Contrato"
+        3. Selecionar tipo "Aluguer Com Caução"
+        4. Verificar aparecimento da seção amarela de caução
+        5. Preencher campos de caução
+        6. Selecionar tipo com épocas
+        7. Verificar aparecimento da seção azul de épocas
+        8. Preencher campos de épocas
+        9. Gerar contrato e verificar sucesso
