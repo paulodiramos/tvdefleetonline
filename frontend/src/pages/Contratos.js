@@ -26,16 +26,15 @@ const Contratos = ({ user, onLogout }) => {
     motorista_id: '',
     vehicle_id: '',
     data_inicio: new Date().toISOString().split('T')[0],
-    tipo_contrato: 'aluguer',
+    tipo_contrato: 'aluguer_simples',
+    // Valores gerais
     valor_semanal: 230,
-    comissao_percentual: 20,
+    // Caução
     caucao_total: 300,
-    caucao_lavagem: 90,
-    tem_caucao: false,
-    caucao_parcelada: false,
     caucao_parcelas: 4,
     caucao_texto: '',
-    tem_epoca: false,
+    texto_parcelamento: '',
+    // Épocas
     data_inicio_epoca_alta: '',
     data_fim_epoca_alta: '',
     valor_epoca_alta: 300,
@@ -44,13 +43,17 @@ const Contratos = ({ user, onLogout }) => {
     data_fim_epoca_baixa: '',
     valor_epoca_baixa: 200,
     texto_epoca_baixa: '',
-    condicoes_veiculo: '',
+    texto_epoca: '',
+    // Comissão
+    comissao_percentual: 20,
+    via_verde_incluido: false,
+    gasoleo_incluido: false,
+    // Slot (Compra/Carro Próprio)
+    valor_slot: 0,
+    texto_slot: '',
+    // Template
     template_texto: '',
-    // Novos campos para Compra
-    numero_semanadas: 52,
-    valor_semanada: 200,
-    slot_numero: '',
-    // Campo para envio de email
+    // Email
     enviar_email: false
   });
 
