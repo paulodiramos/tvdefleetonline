@@ -627,8 +627,12 @@ ________________________________
                 </div>
               )}
 
-              {/* Campos de Caução - Mostrar quando checkbox ativado */}
-              {formData.tem_caucao && (
+              {/* SEÇÃO CAUÇÃO - tipos com caução */}
+              {(formData.tipo_contrato === 'aluguer_com_caucao' || 
+                formData.tipo_contrato === 'aluguer_caucao_parcelada' ||
+                formData.tipo_contrato === 'aluguer_epoca_com_caucao' ||
+                formData.tipo_contrato === 'aluguer_epoca_caucao_parcelada' ||
+                formData.tipo_contrato === 'motorista_privado_com_caucao') && (
               <div className="space-y-4 p-4 bg-amber-50 rounded-lg border-2 border-amber-300">
                 <h3 className="font-semibold text-amber-900 flex items-center space-x-2">
                   <span>💰</span>
