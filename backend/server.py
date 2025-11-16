@@ -5490,7 +5490,7 @@ async def sincronizar_plataforma_manual(
             
             # Atualizar última sincronização
             await db.credenciais_plataforma.update_one(
-                {'plataforma': plataforma},
+                {'parceiro_id': parceiro_id, 'plataforma': plataforma},
                 {'$set': {'ultima_sincronizacao': datetime.now(timezone.utc)}}
             )
             
