@@ -5565,21 +5565,22 @@ async def agendar_sincronizacao(plataforma: str, horario: str, frequencia_dias: 
     except Exception as e:
         logger.error(f"Erro ao agendar sincronização: {e}")
 
-async def executar_sincronizacao_automatica(plataforma: str):
+async def executar_sincronizacao_automatica(credencial_id: str):
     """Executa sincronização automática agendada"""
     try:
-        logger.info(f"Executando sincronização automática: {plataforma}")
-        
-        # Buscar credenciais
-        cred = await db.credenciais_plataforma.find_one({'plataforma': plataforma})
+        # Buscar credenciais por ID
+        cred = await db.credenciais_plataforma.find_one({'id': credencial_id})
         if not cred or not cred.get('ativo'):
-            logger.warning(f"Credenciais inativas ou não encontradas: {plataforma}")
+            logger.warning(f"Credenciais inativas ou não encontradas: {credencial_id}")
             return
+        
+        logger.info(f"Executando sincronização automática: {cred['plataforma']} para parceiro {cred['parceiro_id']}")
         
         # Criar log
         log = {
             'id': str(uuid.uuid4()),
-            'plataforma': plataforma,
+            'parceiro_id': cred['parceiro_id'],
+            'plataforma': cred['plataforma'],
             'tipo_sincronizacao': 'automatico',
             'status': 'em_progresso',
             'data_inicio': datetime.now(timezone.utc)
