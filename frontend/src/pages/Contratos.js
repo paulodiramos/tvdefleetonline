@@ -526,16 +526,23 @@ ________________________________
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="aluguer">Aluguer (Regime de Aluguer)</SelectItem>
-                      <SelectItem value="comissao">Comissão</SelectItem>
-                      <SelectItem value="compra">Compra (Com Semanadas)</SelectItem>
-                      <SelectItem value="motorista_privado">Motorista Privado</SelectItem>
+                      <SelectItem value="aluguer_simples">1. Aluguer Simples</SelectItem>
+                      <SelectItem value="aluguer_com_caucao">2. Aluguer com Caução</SelectItem>
+                      <SelectItem value="aluguer_caucao_parcelada">3. Aluguer com Caução Parcelada</SelectItem>
+                      <SelectItem value="aluguer_epoca_sem_caucao">4. Aluguer Época sem Caução</SelectItem>
+                      <SelectItem value="aluguer_epoca_com_caucao">5. Aluguer Época com Caução</SelectItem>
+                      <SelectItem value="aluguer_epoca_caucao_parcelada">6. Aluguer Época com Caução Parcelada</SelectItem>
+                      <SelectItem value="comissao">7. Comissão</SelectItem>
+                      <SelectItem value="motorista_privado_com_caucao">8. Motorista Privado com Caução</SelectItem>
+                      <SelectItem value="motorista_privado_sem_caucao">9. Motorista Privado sem Caução</SelectItem>
+                      <SelectItem value="compra_veiculo">10. Compra de Veículo (com Slot)</SelectItem>
+                      <SelectItem value="carro_proprio">11. Carro Próprio (com Slot)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* Campo de Valor Semanal - para Aluguer */}
-                {formData.tipo_contrato === 'aluguer' && (
+                {/* Valor Semanal - Todos os tipos de aluguer e motorista privado */}
+                {(formData.tipo_contrato.includes('aluguer') || formData.tipo_contrato.includes('motorista_privado')) && (
                   <div>
                     <Label>Valor Semanal (€) *</Label>
                     <Input
@@ -548,86 +555,74 @@ ________________________________
                     />
                   </div>
                 )}
+              </div>
 
-                {/* Campo de Comissão - para Comissão */}
-                {formData.tipo_contrato === 'comissao' && (
+              {/* SEÇÃO COMISSÃO */}
+              {formData.tipo_contrato === 'comissao' && (
+                <div className="space-y-3 p-4 bg-purple-50 rounded-lg border border-purple-200">
+                  <h3 className="font-semibold text-purple-900">💼 Configuração de Comissão</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Percentagem de Comissão (%) *</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        min="0"
+                        max="100"
+                        value={formData.comissao_percentual}
+                        onChange={(e) => setFormData({...formData, comissao_percentual: parseFloat(e.target.value)})}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="via_verde"
+                          checked={formData.via_verde_incluido}
+                          onChange={(e) => setFormData({...formData, via_verde_incluido: e.target.checked})}
+                          className="w-4 h-4"
+                        />
+                        <Label htmlFor="via_verde" className="cursor-pointer text-sm">Via Verde Incluído</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="gasoleo"
+                          checked={formData.gasoleo_incluido}
+                          onChange={(e) => setFormData({...formData, gasoleo_incluido: e.target.checked})}
+                          className="w-4 h-4"
+                        />
+                        <Label htmlFor="gasoleo" className="cursor-pointer text-sm">Gasóleo Incluído</Label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* SEÇÃO SLOT - Compra Veículo e Carro Próprio */}
+              {(formData.tipo_contrato === 'compra_veiculo' || formData.tipo_contrato === 'carro_proprio') && (
+                <div className="space-y-3 p-4 bg-green-50 rounded-lg border border-green-200">
+                  <h3 className="font-semibold text-green-900">🏷️ Aluguer de Slot</h3>
                   <div>
-                    <Label>Comissão (%) *</Label>
+                    <Label>Valor do Slot (€) *</Label>
                     <Input
                       type="number"
-                      step="0.1"
+                      step="0.01"
                       min="0"
-                      max="100"
-                      value={formData.comissao_percentual}
-                      onChange={(e) => setFormData({...formData, comissao_percentual: parseFloat(e.target.value)})}
+                      value={formData.valor_slot}
+                      onChange={(e) => setFormData({...formData, valor_slot: parseFloat(e.target.value)})}
                       required
                     />
                   </div>
-                )}
-
-                {/* Campos de Compra - para Compra */}
-                {formData.tipo_contrato === 'compra' && (
-                  <>
-                    <div>
-                      <Label>Número de Semanadas *</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={formData.numero_semanadas}
-                        onChange={(e) => setFormData({...formData, numero_semanadas: parseInt(e.target.value)})}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label>Valor por Semanada (€) *</Label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={formData.valor_semanada}
-                        onChange={(e) => setFormData({...formData, valor_semanada: parseFloat(e.target.value)})}
-                        required
-                      />
-                    </div>
-                    <div>
-                      <Label>Slot / Número de Identificação</Label>
-                      <Input
-                        type="text"
-                        placeholder="Ex: Slot 15, YZ-2024"
-                        value={formData.slot_numero}
-                        onChange={(e) => setFormData({...formData, slot_numero: e.target.value})}
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
-
-              {/* Checkboxes para Caução e Época - para Aluguer, Comissão e Motorista Privado */}
-              {(formData.tipo_contrato === 'aluguer' || formData.tipo_contrato === 'comissao' || formData.tipo_contrato === 'motorista_privado') && (
-                <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="tem_caucao"
-                      checked={formData.tem_caucao}
-                      onChange={(e) => setFormData({...formData, tem_caucao: e.target.checked})}
-                      className="w-4 h-4"
+                  <div>
+                    <Label>Texto de Aluguer de Slot</Label>
+                    <textarea
+                      className="w-full p-2 border rounded-md min-h-[80px] text-sm"
+                      placeholder="Ex: Aluguer mensal de slot para estacionamento e operação..."
+                      value={formData.texto_slot || ''}
+                      onChange={(e) => setFormData({...formData, texto_slot: e.target.value})}
                     />
-                    <Label htmlFor="tem_caucao" className="cursor-pointer">
-                      Incluir Caução
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="tem_epoca"
-                      checked={formData.tem_epoca}
-                      onChange={(e) => setFormData({...formData, tem_epoca: e.target.checked})}
-                      className="w-4 h-4"
-                    />
-                    <Label htmlFor="tem_epoca" className="cursor-pointer">
-                      Incluir Sazonalidade (Épocas)
-                    </Label>
                   </div>
                 </div>
               )}
