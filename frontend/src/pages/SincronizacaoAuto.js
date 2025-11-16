@@ -155,11 +155,16 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
   };
 
   const handleSyncManual = async (plataforma) => {
+    if (!selectedParceiro) {
+      toast.error('Selecione um parceiro primeiro');
+      return;
+    }
+    
     setSyncing({ ...syncing, [plataforma]: true });
     
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/sincronizar/${plataforma}`, {}, {
+      const response = await axios.post(`${API}/sincronizar/${selectedParceiro.id}/${plataforma}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
