@@ -8,8 +8,6 @@ import { toast } from 'sonner';
 import { Upload, FileText, TrendingUp, DollarSign, Users, Calendar } from 'lucide-react';
 
 const Financeiro = ({ user, onLogout }) => {
-  const [parceiros, setParceiros] = useState([]);
-  const [selectedParceiro, setSelectedParceiro] = useState(null);
   const [selectedPlatform, setSelectedPlatform] = useState('bolt');
   const [uploading, setUploading] = useState(false);
   const [importResult, setImportResult] = useState(null);
@@ -21,25 +19,6 @@ const Financeiro = ({ user, onLogout }) => {
     { id: 'combustivel', name: 'Combustível', icon: '⛽', endpoint: '/import/combustivel/dados' },
     { id: 'gps', name: 'GPS', icon: '📍', endpoint: '/import/gps/dados' }
   ];
-
-  useEffect(() => {
-    fetchParceiros();
-  }, []);
-
-  const fetchParceiros = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/parceiros`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setParceiros(response.data);
-      if (response.data.length > 0) {
-        setSelectedParceiro(response.data[0]);
-      }
-    } catch (error) {
-      console.error('Error fetching parceiros:', error);
-    }
-  };
 
   const handleFileUpload = async (event) => {
     const file = event.target.files[0];
