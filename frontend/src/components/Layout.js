@@ -50,9 +50,9 @@ const Layout = ({ user, onLogout, children }) => {
       items.push({ path: '/sincronizacao-auto', icon: Zap, label: 'Sync Auto' });
     }
 
-    // Add Financeiro for admin and gestao
+    // Add Upload CSV for admin and gestao
     if (user.role === 'admin' || user.role === 'gestao') {
-      items.push({ path: '/financeiro', icon: DollarSign, label: 'Financeiro' });
+      items.push({ path: '/upload-csv', icon: Upload, label: 'Upload CSV' });
     }
 
     return items;
