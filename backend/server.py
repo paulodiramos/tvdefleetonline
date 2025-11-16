@@ -620,6 +620,7 @@ class GanhoUberImportResponse(BaseModel):
 class CredenciaisPlataforma(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    parceiro_id: str  # Cada parceiro tem suas próprias credenciais
     plataforma: str  # uber, bolt, via_verde, combustivel, gps
     email: str
     password_encrypted: str  # Encriptado
