@@ -5399,15 +5399,20 @@ async def salvar_credenciais_plataforma(
 
 @app.get("/api/credenciais-plataforma")
 async def listar_credenciais_plataformas(
+    parceiro_id: Optional[str] = None,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    """Lista todas as credenciais de plataformas (sem passwords)"""
+    """Lista credenciais de plataformas por parceiro (sem passwords)"""
     try:
         user = await verify_token(credentials)
         if user['role'] not in ['admin', 'manager']:
             raise HTTPException(status_code=403, detail="Acesso negado")
         
-        credenciais = await db.credenciais_plataforma.find().to_list(length=None)
+        query = {}
+        if parceiro_id:
+            query['parceiro_id'] = parceiro_id
+            
+        credenciais = await db.credenciais_plataforma.find(query).to_list(length=None)
         
         # Remover passwords encriptadas da resposta
         for cred in credenciais:
