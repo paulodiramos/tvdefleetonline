@@ -32,6 +32,7 @@ import VeiculosPublico from "@/pages/VeiculosPublico";
 import ServicosPublico from "@/pages/ServicosPublico";
 import Contratos from "@/pages/Contratos";
 import ConfiguracoesAdmin from "@/pages/ConfiguracoesAdmin";
+import ImportUber from "@/pages/ImportUber";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
