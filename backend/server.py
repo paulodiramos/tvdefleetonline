@@ -571,6 +571,51 @@ class AdminSettings(BaseModel):
     updated_at: datetime
     updated_by: str
 
+# Modelo para ganhos importados da Uber
+class GanhoUber(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    uuid_motorista_uber: str  # UUID do motorista na Uber
+    motorista_id: Optional[str] = None  # ID do motorista no sistema (se encontrado)
+    nome_motorista: str
+    apelido_motorista: str
+    # Período do ficheiro
+    periodo_inicio: Optional[str] = None
+    periodo_fim: Optional[str] = None
+    # Valores principais
+    pago_total: float
+    rendimentos_total: float
+    dinheiro_recebido: Optional[float] = None
+    # Tarifas
+    tarifa_total: float
+    tarifa_base: Optional[float] = None
+    tarifa_ajuste: Optional[float] = None
+    tarifa_cancelamento: Optional[float] = None
+    tarifa_dinamica: Optional[float] = None
+    taxa_reserva: Optional[float] = None
+    uber_priority: Optional[float] = None
+    tempo_espera: Optional[float] = None
+    # Taxas e impostos
+    taxa_servico: Optional[float] = None
+    imposto_tarifa: Optional[float] = None
+    taxa_aeroporto: Optional[float] = None
+    # Outros
+    gratificacao: Optional[float] = None
+    portagens: Optional[float] = None
+    ajustes: Optional[float] = None
+    # Metadata
+    ficheiro_nome: str
+    data_importacao: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    importado_por: str
+    
+class GanhoUberImportResponse(BaseModel):
+    total_linhas: int
+    motoristas_encontrados: int
+    motoristas_nao_encontrados: int
+    total_ganhos: float
+    ganhos_importados: List[Dict[str, Any]]
+    erros: List[str] = []
+
 class UserBase(BaseModel):
     email: EmailStr
     name: str
