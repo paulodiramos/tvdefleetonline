@@ -343,6 +343,7 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
             );
           })}
         </div>
+        )}
 
         {/* Dialog de Configuração */}
         <Dialog open={showConfigDialog} onOpenChange={setShowConfigDialog}>
