@@ -5328,6 +5328,7 @@ scheduler = AsyncIOScheduler()
 
 @app.post("/api/credenciais-plataforma")
 async def salvar_credenciais_plataforma(
+    parceiro_id: str = Form(...),
     plataforma: str = Form(...),
     email: str = Form(...),
     password: str = Form(...),
@@ -5336,7 +5337,7 @@ async def salvar_credenciais_plataforma(
     frequencia_dias: int = Form(7),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    """Salva credenciais de uma plataforma"""
+    """Salva credenciais de uma plataforma para um parceiro específico"""
     try:
         user = await verify_token(credentials)
         if user['role'] not in ['admin', 'manager']:
@@ -5345,27 +5346,35 @@ async def salvar_credenciais_plataforma(
         # Encriptar password
         password_encrypted = encrypt_password(password)
         
-        # Verificar se já existe
-        existing = await db.credenciais_plataforma.find_one({'plataforma': plataforma})
+        # Verificar se já existe para este parceiro e plataforma
+        existing = await db.credenciais_plataforma.find_one({
+            'parceiro_id': parceiro_id,
+            'plataforma': plataforma
+        })
         
         if existing:
             # Atualizar
+            update_data = {
+                'email': email,
+                'sincronizacao_automatica': sincronizacao_automatica,
+                'horario_sincronizacao': horario_sincronizacao,
+                'frequencia_dias': frequencia_dias,
+                'updated_at': datetime.now(timezone.utc)
+            }
+            # Só atualizar password se foi fornecida
+            if password:
+                update_data['password_encrypted'] = password_encrypted
+                
             await db.credenciais_plataforma.update_one(
-                {'plataforma': plataforma},
-                {'$set': {
-                    'email': email,
-                    'password_encrypted': password_encrypted,
-                    'sincronizacao_automatica': sincronizacao_automatica,
-                    'horario_sincronizacao': horario_sincronizacao,
-                    'frequencia_dias': frequencia_dias,
-                    'updated_at': datetime.now(timezone.utc)
-                }}
+                {'parceiro_id': parceiro_id, 'plataforma': plataforma},
+                {'$set': update_data}
             )
             cred_id = existing['id']
         else:
             # Criar novo
             credencial = {
                 'id': str(uuid.uuid4()),
+                'parceiro_id': parceiro_id,
                 'plataforma': plataforma,
                 'email': email,
                 'password_encrypted': password_encrypted,
@@ -5381,7 +5390,7 @@ async def salvar_credenciais_plataforma(
         
         # Se sincronização automática ativada, agendar job
         if sincronizacao_automatica and horario_sincronizacao:
-            await agendar_sincronizacao(plataforma, horario_sincronizacao, frequencia_dias)
+            await agendar_sincronizacao(cred_id, horario_sincronizacao, frequencia_dias)
         
         return {'success': True, 'message': 'Credenciais salvas com sucesso', 'id': cred_id}
         
