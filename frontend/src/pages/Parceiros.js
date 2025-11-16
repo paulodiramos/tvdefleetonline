@@ -432,7 +432,21 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
         valor_semanal: contractForm.valor_semanal ? parseFloat(contractForm.valor_semanal) : null,
         valor_slot: contractForm.valor_slot ? parseFloat(contractForm.valor_slot) : null,
         percentagem_comissao: contractForm.percentagem_comissao ? parseFloat(contractForm.percentagem_comissao) : null,
-        horarios_disponibilidade: contractForm.horarios
+        horarios_disponibilidade: contractForm.horarios,
+        template_texto: contractForm.texto_contrato,
+        // Caução
+        caucao_texto: contractForm.caucao_texto,
+        caucao_total: contractForm.caucao_total,
+        caucao_parcelas: contractForm.caucao_parcelas,
+        // Épocas
+        data_inicio_epoca_alta: contractForm.data_inicio_epoca_alta,
+        data_fim_epoca_alta: contractForm.data_fim_epoca_alta,
+        valor_epoca_alta: contractForm.valor_epoca_alta,
+        texto_epoca_alta: contractForm.texto_epoca_alta,
+        data_inicio_epoca_baixa: contractForm.data_inicio_epoca_baixa,
+        data_fim_epoca_baixa: contractForm.data_fim_epoca_baixa,
+        valor_epoca_baixa: contractForm.valor_epoca_baixa,
+        texto_epoca_baixa: contractForm.texto_epoca_baixa
       };
       
       await axios.post(`${API}/contratos/gerar`, payload, {
