@@ -112,11 +112,11 @@ const Financeiro = ({ user, onLogout }) => {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-slate-800 flex items-center space-x-3">
-            <DollarSign className="w-8 h-8 text-green-600" />
-            <span>Financeiro</span>
+            <Upload className="w-8 h-8 text-blue-600" />
+            <span>Upload CSV</span>
           </h1>
           <p className="text-slate-600 mt-2">
-            Importe e gerencie dados financeiros de Uber, Bolt e outras plataformas
+            Importe manualmente ficheiros CSV de Uber, Bolt, Via Verde, Combustível e GPS
           </p>
         </div>
 
