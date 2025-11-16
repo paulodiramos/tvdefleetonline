@@ -683,8 +683,10 @@ class Motorista(BaseModel):
     iban: Optional[str] = None
     email_uber: Optional[str] = None
     telefone_uber: Optional[str] = None
+    uuid_motorista_uber: Optional[str] = None  # UUID do motorista na Uber para identificar ganhos
     email_bolt: Optional[str] = None
     telefone_bolt: Optional[str] = None
+    identificador_motorista_bolt: Optional[str] = None  # Identificador do motorista na Bolt para ganhos
     whatsapp: Optional[str] = None
     tipo_pagamento: Optional[str] = None
     documents: MotoristaDocuments
