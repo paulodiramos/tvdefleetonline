@@ -233,6 +233,14 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
         </Card>
 
         {/* Grid de Plataformas */}
+        {!selectedParceiro ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <AlertCircle className="w-16 h-16 mx-auto text-amber-500 mb-4" />
+              <p className="text-lg text-slate-600">Selecione um parceiro para configurar as sincronizações</p>
+            </CardContent>
+          </Card>
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {plataformas.map((platform) => {
             const cred = getPlatformCred(platform.id);
