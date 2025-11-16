@@ -29,11 +29,6 @@ const Financeiro = ({ user, onLogout }) => {
       return;
     }
 
-    if (!selectedParceiro) {
-      toast.error('Selecione um parceiro primeiro');
-      return;
-    }
-
     setUploading(true);
     setImportResult(null);
 
@@ -41,9 +36,6 @@ const Financeiro = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('file', file);
-      if (selectedParceiro) {
-        formData.append('parceiro_id', selectedParceiro.id);
-      }
 
       const platform = platforms.find(p => p.id === selectedPlatform);
       const response = await axios.post(`${API}${platform.endpoint}`, formData, {
