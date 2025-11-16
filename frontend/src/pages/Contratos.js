@@ -826,6 +826,20 @@ ________________________________
                           onChange={(e) => setFormData({...formData, texto_epoca_baixa: e.target.value})}
                         />
                       </div>
+                      
+                      {/* Texto Geral de Época */}
+                      <div className="col-span-2 border-t border-blue-200 pt-3">
+                        <Label>Texto Geral de Época</Label>
+                        <p className="text-xs text-slate-500 mb-1">
+                          Texto adicional sobre a política de sazonalidade
+                        </p>
+                        <textarea
+                          className="w-full p-2 border rounded-md min-h-[80px] text-sm"
+                          placeholder="Ex: Durante períodos de maior/menor demanda, os valores semanais são ajustados..."
+                          value={formData.texto_epoca || ''}
+                          onChange={(e) => setFormData({...formData, texto_epoca: e.target.value})}
+                        />
+                      </div>
                     </div>
                 </div>
               )}
