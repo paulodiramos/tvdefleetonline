@@ -45,7 +45,20 @@ const Parceiros = ({ user, onLogout }) => {
   });
   const [contractForm, setContractForm] = useState({
     tipo_contrato: 'aluguer',
-    texto_contrato: ''
+    texto_contrato: '',
+    // Campos de Caução
+    caucao_texto: '',
+    caucao_total: 300,
+    caucao_parcelas: 4,
+    // Campos de Épocas
+    data_inicio_epoca_alta: '',
+    data_fim_epoca_alta: '',
+    valor_epoca_alta: 300,
+    texto_epoca_alta: '',
+    data_inicio_epoca_baixa: '',
+    data_fim_epoca_baixa: '',
+    valor_epoca_baixa: 200,
+    texto_epoca_baixa: ''
   });
   const [horarioTemp, setHorarioTemp] = useState({ inicio: '', fim: '' });
 
