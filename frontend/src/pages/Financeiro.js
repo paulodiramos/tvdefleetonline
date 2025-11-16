@@ -26,12 +26,6 @@ const Financeiro = ({ user, onLogout }) => {
     fetchParceiros();
   }, []);
 
-  useEffect(() => {
-    if (selectedParceiro) {
-      fetchGanhos();
-    }
-  }, [selectedParceiro]);
-
   const fetchParceiros = async () => {
     try {
       const token = localStorage.getItem('token');
