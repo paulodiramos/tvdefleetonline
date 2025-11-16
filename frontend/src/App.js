@@ -159,9 +159,9 @@ function App() {
             }
           />
           <Route
-            path="/ganhos-bolt"
+            path="/financeiro"
             element={
-              user ? <GanhosBolt user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+              user ? <Financeiro user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
           <Route
