@@ -50,6 +50,11 @@ const Layout = ({ user, onLogout, children }) => {
       items.push({ path: '/import-uber', icon: Upload, label: 'Import Uber' });
     }
 
+    // Add Sincronização Auto for admin and gestao
+    if (user.role === 'admin' || user.role === 'gestao') {
+      items.push({ path: '/sincronizacao-auto', icon: Zap, label: 'Sync Auto' });
+    }
+
     return items;
   };
 
