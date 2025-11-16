@@ -1931,3 +1931,175 @@ agent_communication:
         3. Abrir página Contratos → Criar Contrato → Verificar botões
         4. Testar inserção de exemplos em cada campo
         5. Verificar toast messages de confirmação
+
+backend:
+  - task: "Motorista - Campos de Identificação Plataformas (Uber/Bolt)"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: |
+            Adicionados 2 novos campos aos modelos MotoristaCreate e Motorista:
+            
+            1. uuid_motorista_uber: Optional[str] = None
+               - UUID do motorista na plataforma Uber
+               - Usado para identificar e rastrear ganhos específicos do motorista na Uber
+               - Campo opcional, texto livre
+            
+            2. identificador_motorista_bolt: Optional[str] = None
+               - Identificador individual do motorista na plataforma Bolt
+               - Usado para identificar e rastrear ganhos específicos do motorista na Bolt
+               - Campo opcional, texto livre
+            
+            Ambos os campos foram adicionados nas posições adequadas junto aos campos existentes
+            email_uber, telefone_uber, email_bolt, telefone_bolt.
+
+frontend:
+  - task: "Motoristas.js - Campos de Identificação Plataformas UI"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Motoristas.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: |
+            Adicionados novos campos na seção "Plataformas" do modal de detalhes/edição do motorista:
+            
+            UBER SECTION:
+            - Adicionado campo "UUID do Motorista na Uber"
+            - Ocupa col-span-2 (largura completa)
+            - Label explicativo: "Identificador único para rastrear ganhos na Uber"
+            - Placeholder: "Ex: 550e8400-e29b-41d4-a716-446655440000"
+            - Modo visualização: Mostra "Não definido" se vazio
+            - Modo edição: Input de texto livre
+            
+            BOLT SECTION:
+            - Adicionado campo "Identificador do Motorista na Bolt"
+            - Ocupa col-span-2 (largura completa)
+            - Label explicativo: "Identificador individual para rastrear ganhos na Bolt"
+            - Placeholder: "Ex: BOLT123456"
+            - Modo visualização: Mostra "Não definido" se vazio
+            - Modo edição: Input de texto livre
+            
+            Campos integrados perfeitamente com formulário de edição existente.
+            Salvos automaticamente via endpoint PUT /api/motoristas/{id}.
+
+agent_communication:
+    - agent: "main"
+      message: |
+        ✅ NOVOS CAMPOS DE IDENTIFICAÇÃO - PLATAFORMAS UBER E BOLT
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        SOLICITAÇÃO DO USUÁRIO
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        "motorista campo adicional na bolt Identificador do motorista e campo na bolt 
+        de Identificador individual para identificar motorista para ganho da bolt, 
+        na uber adicionar campo com nome de UUID do motorista para identificar ganho 
+        de motorista na uber"
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        BACKEND - NOVOS CAMPOS NO MODELO MOTORISTA
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        ✅ Modelo MotoristaCreate (server.py):
+        ```python
+        uuid_motorista_uber: Optional[str] = None
+        # UUID do motorista na Uber para identificar ganhos
+        
+        identificador_motorista_bolt: Optional[str] = None  
+        # Identificador do motorista na Bolt para ganhos
+        ```
+        
+        ✅ Modelo Motorista (server.py):
+        ```python
+        uuid_motorista_uber: Optional[str] = None
+        # UUID do motorista na Uber para identificar ganhos
+        
+        identificador_motorista_bolt: Optional[str] = None
+        # Identificador do motorista na Bolt para ganhos
+        ```
+        
+        CARACTERÍSTICAS:
+        - Campos opcionais (Optional[str])
+        - Permitem texto livre
+        - Integrados aos modelos existentes
+        - Posicionados junto aos campos de plataforma (email/telefone)
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        FRONTEND - UI NA PÁGINA DE MOTORISTAS
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        ✅ Seção UBER (🚗):
+        Campo adicionado: "UUID do Motorista na Uber"
+        - Label descritivo com explicação
+        - Texto de ajuda: "Identificador único para rastrear ganhos na Uber"
+        - Placeholder útil: "Ex: 550e8400-e29b-41d4-a716-446655440000"
+        - Grid: col-span-2 (ocupa linha completa)
+        - Visualização: Mostra "Não definido" quando vazio
+        - Edição: Input texto completo
+        
+        ✅ Seção BOLT (⚡):
+        Campo adicionado: "Identificador do Motorista na Bolt"
+        - Label descritivo com explicação
+        - Texto de ajuda: "Identificador individual para rastrear ganhos na Bolt"
+        - Placeholder útil: "Ex: BOLT123456"
+        - Grid: col-span-2 (ocupa linha completa)
+        - Visualização: Mostra "Não definido" quando vazio
+        - Edição: Input texto completo
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        FUNCIONALIDADE
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        🎯 PROPÓSITO:
+        - Identificar motoristas específicos nas plataformas Uber e Bolt
+        - Facilitar rastreamento de ganhos individuais
+        - Permitir integração com sistemas de relatórios
+        - Necessário para importação/correlação de dados CSV
+        
+        🔄 FLUXO DE USO:
+        1. Admin/Gestor abre ficha do motorista
+        2. Clica em "Editar"
+        3. Navega até seção "Plataformas"
+        4. Preenche UUID Uber e/ou Identificador Bolt
+        5. Salva alterações
+        6. Campos ficam disponíveis para:
+           - Upload CSV Uber (correlação por UUID)
+           - Upload CSV Bolt (correlação por Identificador)
+           - Relatórios de ganhos por motorista
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        BENEFÍCIOS
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        ✅ Rastreamento preciso de ganhos por plataforma
+        ✅ Facilita importação de dados CSV
+        ✅ Evita confusões com motoristas homônimos
+        ✅ Integração futura com APIs Uber/Bolt
+        ✅ Relatórios de ganhos mais precisos
+        ✅ Suporte a múltiplas contas por motorista
+        
+        ═══════════════════════════════════════════════════════════════════════════
+        STATUS
+        ═══════════════════════════════════════════════════════════════════════════
+        
+        Backend e Frontend reiniciados com sucesso.
+        
+        PRÓXIMOS TESTES:
+        1. Abrir ficha de motorista existente
+        2. Clicar em "Editar"
+        3. Verificar novos campos na seção "Plataformas"
+        4. Preencher UUID Uber
+        5. Preencher Identificador Bolt
+        6. Salvar e verificar persistência
+        7. Reabrir ficha e confirmar dados salvos
+        8. Testar com motorista novo (criação)
