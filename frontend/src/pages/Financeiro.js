@@ -218,7 +218,7 @@ const Financeiro = ({ user, onLogout }) => {
 
               {/* Import Result */}
               {importResult && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mt-4">
                   <h3 className="font-semibold text-green-900 mb-3 flex items-center space-x-2">
                     <FileText className="w-5 h-5" />
                     <span>Importação Concluída</span>
@@ -230,15 +230,17 @@ const Financeiro = ({ user, onLogout }) => {
                     </div>
                     <div>
                       <p className="text-sm text-green-700">Encontrados</p>
-                      <p className="text-2xl font-bold text-green-900">{importResult.motoristas_encontrados}</p>
+                      <p className="text-2xl font-bold text-green-900">{importResult.motoristas_encontrados || 0}</p>
                     </div>
                     <div>
                       <p className="text-sm text-green-700">Não Encontrados</p>
-                      <p className="text-2xl font-bold text-amber-600">{importResult.motoristas_nao_encontrados}</p>
+                      <p className="text-2xl font-bold text-amber-600">{importResult.motoristas_nao_encontrados || 0}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-green-700">Total Ganhos</p>
-                      <p className="text-2xl font-bold text-green-900">{formatCurrency(importResult.total_ganhos)}</p>
+                      <p className="text-sm text-green-700">Total</p>
+                      <p className="text-2xl font-bold text-green-900">
+                        {importResult.total_ganhos ? formatCurrency(importResult.total_ganhos) : 'N/A'}
+                      </p>
                     </div>
                   </div>
                   {importResult.periodo && (
@@ -246,95 +248,48 @@ const Financeiro = ({ user, onLogout }) => {
                       Período: <strong>{importResult.periodo}</strong>
                     </p>
                   )}
+                  {importResult.erros && importResult.erros.length > 0 && (
+                    <div className="mt-3 p-3 bg-red-50 rounded">
+                      <p className="text-sm font-semibold text-red-900 mb-1">Erros:</p>
+                      <ul className="text-xs text-red-800 space-y-1 max-h-32 overflow-y-auto">
+                        {importResult.erros.map((erro, idx) => (
+                          <li key={idx}>• {erro}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           </CardContent>
         </Card>
 
-        {/* Lista de Ganhos */}
+        {/* Info Card */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
-              <Calendar className="w-5 h-5" />
-              <span>Histórico Financeiro - Bolt</span>
+              <FileText className="w-5 h-5" />
+              <span>Informação</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {Object.keys(ganhosPorPeriodo).length === 0 ? (
-              <p className="text-center text-slate-500 py-8">
-                {selectedParceiro ? 'Nenhum ganho importado ainda' : 'Selecione um parceiro'}
+            <div className="space-y-3 text-sm">
+              <p className="text-slate-700">
+                Esta página permite importar manualmente ficheiros CSV de diferentes plataformas.
               </p>
-            ) : (
-              <div className="space-y-4">
-                {Object.values(ganhosPorPeriodo).reverse().map((periodo, idx) => {
-                  const totalPeriodo = periodo.ganhos.reduce((sum, g) => sum + g.ganhos_liquidos, 0);
-                  const totalBruto = periodo.ganhos.reduce((sum, g) => sum + g.ganhos_brutos_total, 0);
-                  const totalComissoes = periodo.ganhos.reduce((sum, g) => sum + g.comissoes, 0);
-                  
-                  return (
-                    <div key={idx} className="border rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-4 pb-3 border-b">
-                        <div>
-                          <h3 className="font-semibold text-slate-800 text-lg">
-                            Semana {periodo.semana}/{periodo.ano}
-                          </h3>
-                          <p className="text-sm text-slate-600">{periodo.ganhos.length} motoristas</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-xs text-slate-500">Ganhos Líquidos</p>
-                          <p className="text-2xl font-bold text-green-600">{formatCurrency(totalPeriodo)}</p>
-                        </div>
-                      </div>
-
-                      {/* Resumo do período */}
-                      <div className="grid grid-cols-3 gap-4 mb-4 p-3 bg-slate-50 rounded">
-                        <div>
-                          <p className="text-xs text-slate-600">Bruto Total</p>
-                          <p className="text-lg font-bold text-slate-800">{formatCurrency(totalBruto)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-600">Comissões Bolt</p>
-                          <p className="text-lg font-bold text-red-600">{formatCurrency(totalComissoes)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-600">Líquido</p>
-                          <p className="text-lg font-bold text-green-600">{formatCurrency(totalPeriodo)}</p>
-                        </div>
-                      </div>
-
-                      {/* Lista de motoristas */}
-                      <div className="space-y-2">
-                        {periodo.ganhos.map((ganho, gIdx) => (
-                          <div key={gIdx} className="flex items-center justify-between p-3 bg-white border rounded hover:bg-slate-50">
-                            <div className="flex-1">
-                              <p className="font-medium">{ganho.nome_motorista}</p>
-                              <div className="flex items-center space-x-4 text-xs text-slate-500 mt-1">
-                                <span>{ganho.email_motorista}</span>
-                                {ganho.motorista_id ? (
-                                  <span className="text-green-600">✓ Associado</span>
-                                ) : (
-                                  <span className="text-amber-600">⚠ Não encontrado</span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="text-right space-y-1">
-                              <p className="font-bold text-green-600">{formatCurrency(ganho.ganhos_liquidos)}</p>
-                              <p className="text-xs text-slate-500">
-                                Bruto: {formatCurrency(ganho.ganhos_brutos_total)}
-                              </p>
-                              <p className="text-xs text-red-600">
-                                Comissão: {formatCurrency(ganho.comissoes)}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="bg-blue-50 border border-blue-200 rounded p-3">
+                <p className="font-semibold text-blue-900 mb-2">💡 Dica:</p>
+                <p className="text-blue-800">
+                  Para importações automáticas e agendadas, use a página <strong>Sync Auto</strong>.
+                </p>
               </div>
-            )}
+              <div className="bg-amber-50 border border-amber-200 rounded p-3">
+                <p className="font-semibold text-amber-900 mb-2">⚠️ Importante:</p>
+                <p className="text-amber-800">
+                  Certifique-se de que os identificadores dos motoristas (UUID Uber, ID Bolt) estão configurados nos perfis para correlação automática.
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
