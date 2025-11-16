@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Upload, FileText, TrendingUp, DollarSign, Users, Calendar } from 'lucide-react';
 
-const GanhosBolt = ({ user, onLogout }) => {
+const Financeiro = ({ user, onLogout }) => {
   const [parceiros, setParceiros] = useState([]);
   const [selectedParceiro, setSelectedParceiro] = useState(null);
   const [ganhos, setGanhos] = useState([]);
