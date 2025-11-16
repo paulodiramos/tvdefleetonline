@@ -33,7 +33,7 @@ import ServicosPublico from "@/pages/ServicosPublico";
 import Contratos from "@/pages/Contratos";
 import ConfiguracoesAdmin from "@/pages/ConfiguracoesAdmin";
 import SincronizacaoAuto from "@/pages/SincronizacaoAuto";
-import GanhosBolt from "@/pages/GanhosBolt";
+import Financeiro from "@/pages/Financeiro";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
