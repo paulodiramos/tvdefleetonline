@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 
 const SincronizacaoAuto = ({ user, onLogout }) => {
+  const [parceiros, setParceiros] = useState([]);
+  const [selectedParceiro, setSelectedParceiro] = useState(null);
   const [credenciais, setCredenciais] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(false);
