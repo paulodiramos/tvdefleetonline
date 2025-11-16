@@ -448,7 +448,19 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
         valor_semanal: '',
         valor_slot: '',
         percentagem_comissao: '',
-        horarios: []
+        horarios: [],
+        texto_contrato: '',
+        caucao_texto: '',
+        caucao_total: 300,
+        caucao_parcelas: 4,
+        data_inicio_epoca_alta: '',
+        data_fim_epoca_alta: '',
+        valor_epoca_alta: 300,
+        texto_epoca_alta: '',
+        data_inicio_epoca_baixa: '',
+        data_fim_epoca_baixa: '',
+        valor_epoca_baixa: 200,
+        texto_epoca_baixa: ''
       });
       
       // Refresh contratos
