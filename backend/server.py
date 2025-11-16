@@ -5423,21 +5423,25 @@ async def listar_credenciais_plataformas(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/api/sincronizar/{plataforma}")
+@app.post("/api/sincronizar/{parceiro_id}/{plataforma}")
 async def sincronizar_plataforma_manual(
+    parceiro_id: str,
     plataforma: str,
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    """Sincroniza manualmente uma plataforma"""
+    """Sincroniza manualmente uma plataforma para um parceiro específico"""
     try:
         user = await verify_token(credentials)
         if user['role'] not in ['admin', 'manager']:
             raise HTTPException(status_code=403, detail="Acesso negado")
         
-        # Buscar credenciais
-        cred = await db.credenciais_plataforma.find_one({'plataforma': plataforma})
+        # Buscar credenciais do parceiro
+        cred = await db.credenciais_plataforma.find_one({
+            'parceiro_id': parceiro_id,
+            'plataforma': plataforma
+        })
         if not cred:
-            raise HTTPException(status_code=404, detail="Credenciais não configuradas")
+            raise HTTPException(status_code=404, detail="Credenciais não configuradas para este parceiro")
         
         # Criar log de sincronização
         log = {
