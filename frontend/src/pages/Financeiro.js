@@ -144,47 +144,76 @@ const Financeiro = ({ user, onLogout }) => {
           </CardContent>
         </Card>
 
+        {/* Seletor de Plataforma */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Selecione a Plataforma</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              {platforms.map((platform) => (
+                <button
+                  key={platform.id}
+                  onClick={() => setSelectedPlatform(platform.id)}
+                  className={`p-4 border-2 rounded-lg transition-all ${
+                    selectedPlatform === platform.id
+                      ? 'border-blue-600 bg-blue-50'
+                      : 'border-slate-200 hover:border-slate-300'
+                  }`}
+                >
+                  <div className="text-3xl mb-2">{platform.icon}</div>
+                  <div className="font-semibold">{platform.name}</div>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Upload Section */}
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
               <Upload className="w-5 h-5" />
-              <span>Import / Upload CSV</span>
+              <span>Upload Ficheiro CSV</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center">
-                <Upload className="w-12 h-12 mx-auto text-slate-400 mb-3" />
+                <div className="text-4xl mb-3">
+                  {platforms.find(p => p.id === selectedPlatform)?.icon}
+                </div>
                 <p className="text-slate-600 mb-4">
-                  Selecione o ficheiro CSV de ganhos da Bolt
+                  Selecione o ficheiro CSV de <strong>{platforms.find(p => p.id === selectedPlatform)?.name}</strong>
                 </p>
                 <label className="inline-block">
                   <input
                     type="file"
                     accept=".csv"
                     onChange={handleFileUpload}
-                    disabled={uploading || !selectedParceiro}
+                    disabled={uploading}
                     className="hidden"
                   />
                   <Button
                     type="button"
-                    disabled={uploading || !selectedParceiro}
-                    className="cursor-pointer bg-green-600 hover:bg-green-700"
+                    disabled={uploading}
+                    className="cursor-pointer bg-blue-600 hover:bg-blue-700"
                     onClick={() => document.querySelector('input[type="file"]').click()}
                   >
-                    {uploading ? 'A importar...' : 'Upload CSV Bolt'}
+                    {uploading ? 'A importar...' : `Upload CSV ${platforms.find(p => p.id === selectedPlatform)?.name}`}
                   </Button>
                 </label>
-                <p className="text-xs text-slate-500 mt-2">
-                  <strong>Formatos suportados:</strong>
-                </p>
-                <p className="text-xs text-slate-500">
-                  • Bolt: Ganhos por motorista-2025W45-Lisbon Fleet XXX.csv
-                </p>
-                <p className="text-xs text-slate-500">
-                  • Uber: 20251110-20251116-payments_driver-XXX.csv
-                </p>
+                
+                <div className="mt-4 text-xs text-slate-500 text-left max-w-md mx-auto">
+                  <p className="font-semibold mb-2">Formatos aceites:</p>
+                  <ul className="space-y-1">
+                    <li>• <strong>Uber:</strong> 20251110-20251116-payments_driver-XXX.csv</li>
+                    <li>• <strong>Bolt:</strong> Ganhos por motorista-2025W45-XXX.csv</li>
+                    <li>• <strong>Via Verde:</strong> extrato-YYYYMMDD.csv</li>
+                    <li>• <strong>Combustível:</strong> transacoes-YYYYMMDD.csv</li>
+                    <li>• <strong>GPS:</strong> relatorio-YYYYMMDD.csv</li>
+                  </ul>
+                </div>
               </div>
 
               {/* Import Result */}
