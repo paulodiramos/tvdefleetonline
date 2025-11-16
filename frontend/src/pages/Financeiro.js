@@ -316,4 +316,4 @@ const Financeiro = ({ user, onLogout }) => {
   );
 };
 
-export default GanhosBolt;
+export default Financeiro;
