@@ -152,12 +152,6 @@ function App() {
             }
           />
           <Route
-            path="/import-uber"
-            element={
-              user ? <ImportUber user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-            }
-          />
-          <Route
             path="/sincronizacao-auto"
             element={
               user ? <SincronizacaoAuto user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
