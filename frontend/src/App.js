@@ -32,7 +32,6 @@ import VeiculosPublico from "@/pages/VeiculosPublico";
 import ServicosPublico from "@/pages/ServicosPublico";
 import Contratos from "@/pages/Contratos";
 import ConfiguracoesAdmin from "@/pages/ConfiguracoesAdmin";
-import ImportUber from "@/pages/ImportUber";
 import SincronizacaoAuto from "@/pages/SincronizacaoAuto";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
