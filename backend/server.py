@@ -5284,6 +5284,145 @@ async def save_email_config(
 
 
 # ==================== PUBLIC ENDPOINTS (NO AUTH) ====================
+# =============================================================================
+# IMPORTAÇÃO DE GANHOS UBER
+# =============================================================================
+
+@app.post("/api/import/uber/ganhos")
+async def importar_ganhos_uber(
+    file: UploadFile = File(...),
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    """Importa ficheiro CSV de ganhos da Uber"""
+    try:
+        # Verificar autenticação
+        user = await verify_token(credentials)
+        if user['role'] not in ['admin', 'manager']:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        # Ler conteúdo do ficheiro
+        contents = await file.read()
+        decoded = contents.decode('utf-8')
+        csv_reader = csv.DictReader(io.StringIO(decoded))
+        
+        ganhos_importados = []
+        motoristas_encontrados = 0
+        motoristas_nao_encontrados = 0
+        erros = []
+        total_ganhos = 0.0
+        
+        # Extrair período do nome do ficheiro (ex: 20251110-20251116)
+        periodo_match = re.search(r'(\d{8})-(\d{8})', file.filename)
+        periodo_inicio = None
+        periodo_fim = None
+        if periodo_match:
+            periodo_inicio = periodo_match.group(1)
+            periodo_fim = periodo_match.group(2)
+        
+        for row_num, row in enumerate(csv_reader, start=2):
+            try:
+                uuid_motorista = row.get('UUID do motorista', '').strip()
+                if not uuid_motorista:
+                    continue
+                
+                # Procurar motorista pelo UUID
+                motorista = await db.motoristas.find_one({'uuid_motorista_uber': uuid_motorista})
+                motorista_id = motorista['id'] if motorista else None
+                
+                if motorista:
+                    motoristas_encontrados += 1
+                else:
+                    motoristas_nao_encontrados += 1
+                
+                # Função helper para converter valores
+                def parse_float(value):
+                    if not value or value == '':
+                        return 0.0
+                    try:
+                        return float(value.replace(',', '.'))
+                    except:
+                        return 0.0
+                
+                # Extrair valores do CSV
+                pago_total = parse_float(row.get('Pago a si', '0'))
+                rendimentos_total = parse_float(row.get('Pago a si : Os seus rendimentos', '0'))
+                
+                ganho = {
+                    'id': str(uuid.uuid4()),
+                    'uuid_motorista_uber': uuid_motorista,
+                    'motorista_id': motorista_id,
+                    'nome_motorista': row.get('Nome próprio do motorista', ''),
+                    'apelido_motorista': row.get('Apelido do motorista', ''),
+                    'periodo_inicio': periodo_inicio,
+                    'periodo_fim': periodo_fim,
+                    'pago_total': pago_total,
+                    'rendimentos_total': rendimentos_total,
+                    'dinheiro_recebido': parse_float(row.get('Pago a si : Saldo da viagem : Pagamentos : Dinheiro recebido', '0')),
+                    'tarifa_total': parse_float(row.get('Pago a si : Os seus rendimentos : Tarifa', '0')),
+                    'tarifa_base': parse_float(row.get('Pago a si:Os seus rendimentos:Tarifa:Tarifa', '0')),
+                    'tarifa_ajuste': parse_float(row.get('Pago a si:Os seus rendimentos:Tarifa:Ajuste', '0')),
+                    'tarifa_cancelamento': parse_float(row.get('Pago a si:Os seus rendimentos:Tarifa:Cancelamento', '0')),
+                    'tarifa_dinamica': parse_float(row.get('Pago a si:Os seus rendimentos:Tarifa:Tarifa dinâmica', '0')),
+                    'taxa_reserva': parse_float(row.get('Pago a si:Os seus rendimentos:Tarifa:Taxa de reserva', '0')),
+                    'uber_priority': parse_float(row.get('Pago a si:Os seus rendimentos:Tarifa:UberX Priority', '0')),
+                    'tempo_espera': parse_float(row.get('Pago a si:Os seus rendimentos:Tarifa:Tempo de espera na recolha', '0')),
+                    'taxa_servico': parse_float(row.get('Pago a si:Os seus rendimentos:Taxa de serviço', '0')),
+                    'imposto_tarifa': parse_float(row.get('Pago a si:Os seus rendimentos:Tarifa:Imposto sobre a tarifa', '0')),
+                    'taxa_aeroporto': parse_float(row.get('Pago a si:Os seus rendimentos:Outros rendimentos:Taxa de aeroporto', '0')),
+                    'gratificacao': parse_float(row.get('Pago a si:Os seus rendimentos:Gratificação', '0')),
+                    'portagens': parse_float(row.get('Pago a si:Saldo da viagem:Reembolsos:Portagem', '0')),
+                    'ajustes': parse_float(row.get('Pago a si:Os seus rendimentos:Outros rendimentos:Ajuste', '0')),
+                    'ficheiro_nome': file.filename,
+                    'data_importacao': datetime.now(timezone.utc),
+                    'importado_por': user['id']
+                }
+                
+                # Salvar no banco
+                await db.ganhos_uber.insert_one(ganho)
+                ganhos_importados.append(ganho)
+                total_ganhos += pago_total
+                
+            except Exception as e:
+                erros.append(f"Linha {row_num}: {str(e)}")
+        
+        return {
+            'success': True,
+            'total_linhas': len(ganhos_importados),
+            'motoristas_encontrados': motoristas_encontrados,
+            'motoristas_nao_encontrados': motoristas_nao_encontrados,
+            'total_ganhos': round(total_ganhos, 2),
+            'ganhos_importados': ganhos_importados[:10],  # Primeiros 10 para preview
+            'erros': erros
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao importar ficheiro: {str(e)}")
+
+@app.get("/api/ganhos-uber")
+async def listar_ganhos_uber(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    motorista_id: Optional[str] = None,
+    periodo_inicio: Optional[str] = None,
+    periodo_fim: Optional[str] = None
+):
+    """Lista ganhos importados da Uber"""
+    try:
+        user = await verify_token(credentials)
+        
+        query = {}
+        if motorista_id:
+            query['motorista_id'] = motorista_id
+        if periodo_inicio:
+            query['periodo_inicio'] = periodo_inicio
+        if periodo_fim:
+            query['periodo_fim'] = periodo_fim
+        
+        ganhos = await db.ganhos_uber.find(query).sort('data_importacao', -1).to_list(length=None)
+        return ganhos
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/public/veiculos")
 async def get_public_veiculos():
     """Get public vehicles available for sale or rent"""
