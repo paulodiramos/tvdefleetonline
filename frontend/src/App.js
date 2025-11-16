@@ -159,7 +159,7 @@ function App() {
             }
           />
           <Route
-            path="/financeiro"
+            path="/upload-csv"
             element={
               user ? <Financeiro user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
