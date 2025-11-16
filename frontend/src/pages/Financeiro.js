@@ -62,9 +62,12 @@ const Financeiro = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('parceiro_id', selectedParceiro.id);
+      if (selectedParceiro) {
+        formData.append('parceiro_id', selectedParceiro.id);
+      }
 
-      const response = await axios.post(`${API}/import/bolt/ganhos`, formData, {
+      const platform = platforms.find(p => p.id === selectedPlatform);
+      const response = await axios.post(`${API}${platform.endpoint}`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -72,8 +75,7 @@ const Financeiro = ({ user, onLogout }) => {
       });
 
       setImportResult(response.data);
-      toast.success(`${response.data.total_linhas} registos importados!`);
-      fetchGanhos();
+      toast.success(`${response.data.total_linhas} registos importados de ${platform.name}!`);
     } catch (error) {
       console.error('Error uploading file:', error);
       toast.error(error.response?.data?.detail || 'Erro ao importar ficheiro');
