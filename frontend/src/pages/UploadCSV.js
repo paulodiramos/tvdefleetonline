@@ -7,8 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, AlertCircle, Download, Car, MapPin, Zap, Fuel as FuelIcon } from 'lucide-react';
+import { Upload, AlertCircle, Download, Car, MapPin, Zap, Fuel as FuelIcon, UserPlus, CarFront } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const PLATAFORMAS = [
   { 
@@ -63,6 +70,30 @@ const UploadCSV = ({ user, onLogout }) => {
   const [parceiros, setParceiros] = useState([]);
   const [parceiroSelecionado, setParceiroSelecionado] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
+  
+  // Modals state
+  const [motoristasNaoEncontrados, setMotoristasNaoEncontrados] = useState([]);
+  const [veiculosNaoEncontrados, setVeiculosNaoEncontrados] = useState([]);
+  const [showMotoristaModal, setShowMotoristaModal] = useState(false);
+  const [showVeiculoModal, setShowVeiculoModal] = useState(false);
+  
+  // Form state for new motorista
+  const [novoMotorista, setNovoMotorista] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    nif: '',
+    morada: ''
+  });
+  
+  // Form state for new vehicle
+  const [novoVeiculo, setNovoVeiculo] = useState({
+    matricula: '',
+    marca: '',
+    modelo: '',
+    ano: '',
+    cor: ''
+  });
 
   const isAdminOrGestao = user?.role === 'admin' || user?.role === 'gestao';
 
@@ -70,7 +101,6 @@ const UploadCSV = ({ user, onLogout }) => {
     if (isAdminOrGestao) {
       fetchParceiros();
     } else {
-      // Para parceiro/operacional, usar o próprio ID
       setParceiroSelecionado(user.id);
     }
   }, [user]);
@@ -158,14 +188,99 @@ const UploadCSV = ({ user, onLogout }) => {
       }
       
       toast.success(successMsg);
+      
+      // Check for motoristas/veiculos não encontrados
+      if (response.data.motoristas_nao_encontrados && response.data.motoristas_nao_encontrados.length > 0) {
+        setMotoristasNaoEncontrados(response.data.motoristas_nao_encontrados);
+        setShowMotoristaModal(true);
+      }
+      
+      if (response.data.veiculos_nao_encontrados && response.data.veiculos_nao_encontrados.length > 0) {
+        setVeiculosNaoEncontrados(response.data.veiculos_nao_encontrados);
+        setShowVeiculoModal(true);
+      }
+      
       setSelectedFile(null);
-      // Reset file input
       document.getElementById('file-upload').value = '';
     } catch (error) {
       console.error('Upload error:', error);
       toast.error(error.response?.data?.detail || 'Erro ao importar ficheiro');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleCriarMotorista = async (motorista) => {
+    try {
+      const token = localStorage.getItem('token');
+      const payload = {
+        name: motorista.nome || motorista.name,
+        email: motorista.email || `motorista_${Date.now()}@temp.com`,
+        phone: motorista.telefone || motorista.phone || '',
+        nif: novoMotorista.nif || '',
+        morada: novoMotorista.morada || '',
+        status: 'ativo',
+        parceiro_atribuido: parceiroSelecionado
+      };
+      
+      await axios.post(`${API}/motoristas`, payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success(`Motorista ${payload.name} criado com sucesso!`);
+      
+      // Remove from list
+      setMotoristasNaoEncontrados(prev => 
+        prev.filter(m => m.nome !== motorista.nome && m.name !== motorista.name)
+      );
+      
+      // Reset form
+      setNovoMotorista({ name: '', email: '', phone: '', nif: '', morada: '' });
+      
+      // Close modal if no more motoristas
+      if (motoristasNaoEncontrados.length <= 1) {
+        setShowMotoristaModal(false);
+      }
+    } catch (error) {
+      console.error('Error creating motorista:', error);
+      toast.error('Erro ao criar motorista');
+    }
+  };
+
+  const handleCriarVeiculo = async (veiculo) => {
+    try {
+      const token = localStorage.getItem('token');
+      const payload = {
+        matricula: veiculo.matricula,
+        marca: novoVeiculo.marca || '',
+        modelo: novoVeiculo.modelo || '',
+        ano: novoVeiculo.ano ? parseInt(novoVeiculo.ano) : null,
+        cor: novoVeiculo.cor || '',
+        status: 'ativo',
+        parceiro_id: parceiroSelecionado
+      };
+      
+      await axios.post(`${API}/vehicles`, payload, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success(`Veículo ${payload.matricula} criado com sucesso!`);
+      
+      // Remove from list
+      setVeiculosNaoEncontrados(prev => 
+        prev.filter(v => v.matricula !== veiculo.matricula)
+      );
+      
+      // Reset form
+      setNovoVeiculo({ matricula: '', marca: '', modelo: '', ano: '', cor: '' });
+      
+      // Close modal if no more vehicles
+      if (veiculosNaoEncontrados.length <= 1) {
+        setShowVeiculoModal(false);
+      }
+    } catch (error) {
+      console.error('Error creating vehicle:', error);
+      toast.error('Erro ao criar veículo');
     }
   };
 
@@ -331,12 +446,180 @@ const UploadCSV = ({ user, onLogout }) => {
                   <li>Certifique-se que o período corresponde aos dados do ficheiro</li>
                   <li>Em caso de erro, verifique se o formato do ficheiro está correto</li>
                   <li>Pode descarregar o ficheiro de exemplo para verificar o formato esperado</li>
+                  <li>Se motoristas ou veículos não forem encontrados, será solicitado criá-los</li>
                 </ul>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Modal para Motoristas Não Encontrados */}
+      <Dialog open={showMotoristaModal} onOpenChange={setShowMotoristaModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <UserPlus className="w-5 h-5" />
+              <span>Motoristas Não Encontrados</span>
+            </DialogTitle>
+            <DialogDescription>
+              Os seguintes motoristas não foram encontrados no sistema. Crie-os rapidamente:
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            {motoristasNaoEncontrados.map((motorista, index) => (
+              <Card key={index} className="p-4">
+                <div className="space-y-3">
+                  <div className="font-semibold text-lg">
+                    {motorista.nome || motorista.name}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Email</Label>
+                      <Input 
+                        value={motorista.email || ''} 
+                        placeholder="email@exemplo.com"
+                        onChange={(e) => {
+                          const updated = [...motoristasNaoEncontrados];
+                          updated[index].email = e.target.value;
+                          setMotoristasNaoEncontrados(updated);
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <Label>Telefone</Label>
+                      <Input 
+                        value={motorista.telefone || motorista.phone || ''}
+                        placeholder="+351..."
+                        onChange={(e) => {
+                          const updated = [...motoristasNaoEncontrados];
+                          updated[index].telefone = e.target.value;
+                          setMotoristasNaoEncontrados(updated);
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>NIF (opcional)</Label>
+                      <Input 
+                        value={novoMotorista.nif}
+                        placeholder="123456789"
+                        onChange={(e) => setNovoMotorista({...novoMotorista, nif: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>Morada (opcional)</Label>
+                      <Input 
+                        value={novoMotorista.morada}
+                        placeholder="Rua..."
+                        onChange={(e) => setNovoMotorista({...novoMotorista, morada: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => handleCriarMotorista(motorista)} 
+                    className="w-full"
+                    size="sm"
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Criar Motorista
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+          
+          <div className="mt-4 flex justify-end">
+            <Button variant="outline" onClick={() => setShowMotoristaModal(false)}>
+              Fechar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para Veículos Não Encontrados */}
+      <Dialog open={showVeiculoModal} onOpenChange={setShowVeiculoModal}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <CarFront className="w-5 h-5" />
+              <span>Veículos Não Encontrados</span>
+            </DialogTitle>
+            <DialogDescription>
+              Os seguintes veículos não foram encontrados no sistema. Crie-os rapidamente:
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 mt-4">
+            {veiculosNaoEncontrados.map((veiculo, index) => (
+              <Card key={index} className="p-4">
+                <div className="space-y-3">
+                  <div className="font-semibold text-lg">
+                    Matrícula: {veiculo.matricula}
+                  </div>
+                  {veiculo.condutor_atual && (
+                    <p className="text-sm text-slate-600">Condutor atual: {veiculo.condutor_atual}</p>
+                  )}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Marca *</Label>
+                      <Input 
+                        value={novoVeiculo.marca}
+                        placeholder="Toyota, Mercedes..."
+                        onChange={(e) => setNovoVeiculo({...novoVeiculo, marca: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>Modelo *</Label>
+                      <Input 
+                        value={novoVeiculo.modelo}
+                        placeholder="Corolla, Classe A..."
+                        onChange={(e) => setNovoVeiculo({...novoVeiculo, modelo: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Ano</Label>
+                      <Input 
+                        type="number"
+                        value={novoVeiculo.ano}
+                        placeholder="2020"
+                        onChange={(e) => setNovoVeiculo({...novoVeiculo, ano: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>Cor</Label>
+                      <Input 
+                        value={novoVeiculo.cor}
+                        placeholder="Branco, Preto..."
+                        onChange={(e) => setNovoVeiculo({...novoVeiculo, cor: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => handleCriarVeiculo(veiculo)} 
+                    className="w-full"
+                    size="sm"
+                    disabled={!novoVeiculo.marca || !novoVeiculo.modelo}
+                  >
+                    <CarFront className="w-4 h-4 mr-2" />
+                    Criar Veículo
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+          
+          <div className="mt-4 flex justify-end">
+            <Button variant="outline" onClick={() => setShowVeiculoModal(false)}>
+              Fechar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
