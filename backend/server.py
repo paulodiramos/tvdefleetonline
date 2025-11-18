@@ -1771,6 +1771,335 @@ async def process_prio_excel(file_content: bytes, parceiro_id: str) -> Dict[str,
         logger.error(f"Error processing Prio Excel: {e}")
         return {"success": False, "error": str(e)}
 
+async def process_viaverde_excel(file_content: bytes, parceiro_id: str, periodo_inicio: str, periodo_fim: str) -> Dict[str, Any]:
+    """Process Via Verde Excel file and extract toll movements"""
+    try:
+        # Save original Excel file for audit/backup
+        excel_dir = UPLOAD_DIR / "csv" / "viaverde"
+        excel_dir.mkdir(parents=True, exist_ok=True)
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        excel_filename = f"viaverde_{parceiro_id}_{timestamp}.xlsx"
+        excel_path = excel_dir / excel_filename
+        
+        with open(excel_path, 'wb') as f:
+            f.write(file_content)
+        
+        # Read with openpyxl
+        wb = openpyxl.load_workbook(excel_path)
+        sheet = wb.active
+        
+        # Get headers from first row
+        headers = [cell.value for cell in sheet[1]]
+        
+        # Process data rows
+        movimentos = []
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            if not row[0]:  # Skip if no license plate
+                continue
+            
+            movimento = {
+                "id": str(uuid.uuid4()),
+                "parceiro_id": parceiro_id,
+                "license_plate": str(row[0] or ""),
+                "obu": str(row[1] or "") if len(row) > 1 else None,
+                "service": str(row[2] or "") if len(row) > 2 else None,
+                "service_description": str(row[3] or "") if len(row) > 3 else None,
+                "market": str(row[4] or "") if len(row) > 4 else None,
+                "entry_date": str(row[6] or "") if len(row) > 6 else None,
+                "exit_date": str(row[7] or "") if len(row) > 7 else None,
+                "entry_point": str(row[8] or "") if len(row) > 8 else None,
+                "exit_point": str(row[9] or "") if len(row) > 9 else None,
+                "value": float(row[10]) if len(row) > 10 and row[10] and isinstance(row[10], (int, float)) else None,
+                "is_payed": str(row[11] or "") if len(row) > 11 else None,
+                "payment_date": str(row[12] or "") if len(row) > 12 else None,
+                "contract_number": str(row[13] or "") if len(row) > 13 else None,
+                "liquid_value": float(row[16]) if len(row) > 16 and row[16] and isinstance(row[16], (int, float)) else None,
+                "periodo_inicio": periodo_inicio,
+                "periodo_fim": periodo_fim,
+                "ficheiro_nome": excel_filename,
+                "data_importacao": datetime.now(timezone.utc).isoformat()
+            }
+            
+            movimentos.append(movimento)
+        
+        # Store in database
+        if movimentos:
+            await db.viaverde_movimentos.insert_many(movimentos)
+        
+        total_value = sum(m["value"] for m in movimentos if m["value"])
+        
+        return {
+            "success": True,
+            "movimentos_importados": len(movimentos),
+            "total_value": round(total_value, 2),
+            "periodo": f"{periodo_inicio} a {periodo_fim}",
+            "ficheiro_salvo": excel_filename
+        }
+    
+    except Exception as e:
+        logger.error(f"Error processing Via Verde Excel: {e}")
+        return {"success": False, "error": str(e)}
+
+async def process_gps_csv(file_content: bytes, parceiro_id: str, periodo_inicio: str, periodo_fim: str) -> Dict[str, Any]:
+    """Process GPS distance report CSV file"""
+    try:
+        # Save original CSV file for audit/backup
+        csv_dir = UPLOAD_DIR / "csv" / "gps"
+        csv_dir.mkdir(parents=True, exist_ok=True)
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        csv_filename = f"gps_{parceiro_id}_{timestamp}.csv"
+        csv_path = csv_dir / csv_filename
+        
+        with open(csv_path, 'wb') as f:
+            f.write(file_content)
+        
+        # Decode CSV (with Portuguese encoding)
+        csv_text = file_content.decode('utf-8-sig')
+        csv_reader = csv.DictReader(io.StringIO(csv_text))
+        
+        # Process CSV rows
+        registos = []
+        total_distancia = 0
+        
+        for row in csv_reader:
+            veiculo = row.get("Veículo", "").strip()
+            condutor = row.get("Condutor", "").strip()
+            distancia_str = row.get("Distância percorrida durante as horas do turno", "0").replace(",", ".")
+            
+            try:
+                distancia = float(distancia_str) if distancia_str else 0
+            except ValueError:
+                distancia = 0
+            
+            motor_ligado_tempo = row.get("Motor ligado", "").strip()
+            motor_ligado_min = int(row.get("Motor ligado (minutos)", "0") or 0)
+            
+            if veiculo:  # Only process if there's a vehicle
+                registo = {
+                    "id": str(uuid.uuid4()),
+                    "parceiro_id": parceiro_id,
+                    "veiculo": veiculo,
+                    "condutor": condutor if condutor and condutor != "(Não atribuído)" else None,
+                    "distancia_percorrida": distancia,
+                    "motor_ligado_tempo": motor_ligado_tempo,
+                    "motor_ligado_minutos": motor_ligado_min,
+                    "periodo_inicio": periodo_inicio,
+                    "periodo_fim": periodo_fim,
+                    "ficheiro_nome": csv_filename,
+                    "data_importacao": datetime.now(timezone.utc).isoformat()
+                }
+                
+                registos.append(registo)
+                total_distancia += distancia
+        
+        # Store in database
+        if registos:
+            await db.gps_distancia.insert_many(registos)
+        
+        return {
+            "success": True,
+            "registos_importados": len(registos),
+            "total_distancia_km": round(total_distancia, 2),
+            "periodo": f"{periodo_inicio} a {periodo_fim}",
+            "ficheiro_salvo": csv_filename
+        }
+    
+    except Exception as e:
+        logger.error(f"Error processing GPS CSV: {e}")
+        return {"success": False, "error": str(e)}
+
+async def process_combustivel_eletrico_excel(file_content: bytes, parceiro_id: str, periodo_inicio: str, periodo_fim: str) -> Dict[str, Any]:
+    """Process Electric Fuel Transactions Excel file"""
+    try:
+        # Save original Excel file for audit/backup
+        excel_dir = UPLOAD_DIR / "csv" / "combustivel_eletrico"
+        excel_dir.mkdir(parents=True, exist_ok=True)
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        excel_filename = f"eletrico_{parceiro_id}_{timestamp}.xlsx"
+        excel_path = excel_dir / excel_filename
+        
+        with open(excel_path, 'wb') as f:
+            f.write(file_content)
+        
+        # Read with openpyxl
+        wb = openpyxl.load_workbook(excel_path)
+        sheet = wb.active
+        
+        # Get headers from first row
+        headers = [cell.value for cell in sheet[1]]
+        
+        # Process data rows
+        transacoes = []
+        total_custo = 0
+        total_energia = 0
+        
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            if not row[0]:  # Skip if no card number
+                continue
+            
+            # Extrair valores com tratamento de erros
+            def get_float(val):
+                try:
+                    return float(val) if val and isinstance(val, (int, float)) else None
+                except (ValueError, TypeError):
+                    return None
+            
+            energia = get_float(row[6]) if len(row) > 6 else None
+            custo = get_float(row[8]) if len(row) > 8 else None
+            total = get_float(row[11]) if len(row) > 11 else None
+            total_iva = get_float(row[12]) if len(row) > 12 else None
+            
+            transacao = {
+                "id": str(uuid.uuid4()),
+                "parceiro_id": parceiro_id,
+                "numero_cartao": str(row[0] or "") if len(row) > 0 else None,
+                "nome": str(row[1] or "") if len(row) > 1 else None,
+                "descricao": str(row[2] or "") if len(row) > 2 else None,
+                "matricula": str(row[3] or "") if len(row) > 3 else None,
+                "id_carregamento": str(row[4] or "") if len(row) > 4 else None,
+                "posto": str(row[5] or "") if len(row) > 5 else None,
+                "energia": energia,
+                "duracao": get_float(row[7]) if len(row) > 7 else None,
+                "custo": custo,
+                "opc": get_float(row[9]) if len(row) > 9 else None,
+                "iec": get_float(row[10]) if len(row) > 10 else None,
+                "total": total,
+                "total_com_iva": total_iva,
+                "fatura": str(row[13] or "") if len(row) > 13 else None,
+                "periodo_inicio": periodo_inicio,
+                "periodo_fim": periodo_fim,
+                "ficheiro_nome": excel_filename,
+                "data_importacao": datetime.now(timezone.utc).isoformat()
+            }
+            
+            transacoes.append(transacao)
+            if total_iva:
+                total_custo += total_iva
+            if energia:
+                total_energia += energia
+        
+        # Store in database
+        if transacoes:
+            await db.combustivel_eletrico.insert_many(transacoes)
+        
+        return {
+            "success": True,
+            "transacoes_importadas": len(transacoes),
+            "total_energia_kwh": round(total_energia, 2),
+            "total_custo_eur": round(total_custo, 2),
+            "periodo": f"{periodo_inicio} a {periodo_fim}",
+            "ficheiro_salvo": excel_filename
+        }
+    
+    except Exception as e:
+        logger.error(f"Error processing Electric Fuel Excel: {e}")
+        return {"success": False, "error": str(e)}
+
+async def process_combustivel_fossil_excel(file_content: bytes, parceiro_id: str, periodo_inicio: str, periodo_fim: str) -> Dict[str, Any]:
+    """Process Fossil Fuel Transactions Excel file"""
+    try:
+        # Save original Excel file for audit/backup
+        excel_dir = UPLOAD_DIR / "csv" / "combustivel_fossil"
+        excel_dir.mkdir(parents=True, exist_ok=True)
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        excel_filename = f"fossil_{parceiro_id}_{timestamp}.xlsx"
+        excel_path = excel_dir / excel_filename
+        
+        with open(excel_path, 'wb') as f:
+            f.write(file_content)
+        
+        # Read with openpyxl
+        wb = openpyxl.load_workbook(excel_path)
+        sheet = wb.active
+        
+        # Get headers from first row
+        headers = [cell.value for cell in sheet[1]]
+        
+        # Process data rows
+        transacoes = []
+        total_litros = 0
+        total_valor = 0
+        
+        for row in sheet.iter_rows(min_row=2, values_only=True):
+            if not row[5]:  # Skip if no card number
+                continue
+            
+            # Extrair valores com tratamento de erros
+            def get_float(val):
+                try:
+                    return float(val) if val and isinstance(val, (int, float)) else None
+                except (ValueError, TypeError):
+                    return None
+            
+            def get_int(val):
+                try:
+                    return int(val) if val and isinstance(val, (int, float)) else None
+                except (ValueError, TypeError):
+                    return None
+            
+            litros = get_float(row[9]) if len(row) > 9 else None
+            valor_liq = get_float(row[12]) if len(row) > 12 else None
+            iva = get_float(row[13]) if len(row) > 13 else None
+            
+            transacao = {
+                "id": str(uuid.uuid4()),
+                "parceiro_id": parceiro_id,
+                "posto": str(row[0] or "") if len(row) > 0 else None,
+                "pais": str(row[1] or "") if len(row) > 1 else None,
+                "rede": str(row[2] or "") if len(row) > 2 else None,
+                "data": str(row[3] or "") if len(row) > 3 else None,
+                "hora": str(row[4] or "") if len(row) > 4 else None,
+                "cartao": str(row[5] or "") if len(row) > 5 else None,
+                "desc_cartao": str(row[6] or "") if len(row) > 6 else None,
+                "estado": str(row[7] or "") if len(row) > 7 else None,
+                "grupo_cartao": str(row[8] or "") if len(row) > 8 else None,
+                "litros": litros,
+                "combustivel": str(row[10] or "") if len(row) > 10 else None,
+                "recibo": str(row[11] or "") if len(row) > 11 else None,
+                "valor_liquido": valor_liq,
+                "iva": iva,
+                "kms": get_int(row[14]) if len(row) > 14 else None,
+                "id_condutor": str(row[15] or "") if len(row) > 15 else None,
+                "fatura": str(row[16] or "") if len(row) > 16 else None,
+                "data_fatura": str(row[17] or "") if len(row) > 17 else None,
+                "valor_unitario": get_float(row[18]) if len(row) > 18 else None,
+                "valor_ref": get_float(row[19]) if len(row) > 19 else None,
+                "valor_desc": get_float(row[20]) if len(row) > 20 else None,
+                "cliente": str(row[21] or "") if len(row) > 21 else None,
+                "tipo_pagamento": str(row[22] or "") if len(row) > 22 else None,
+                "periodo_inicio": periodo_inicio,
+                "periodo_fim": periodo_fim,
+                "ficheiro_nome": excel_filename,
+                "data_importacao": datetime.now(timezone.utc).isoformat()
+            }
+            
+            transacoes.append(transacao)
+            if litros:
+                total_litros += litros
+            if valor_liq and iva:
+                total_valor += (valor_liq + iva)
+        
+        # Store in database
+        if transacoes:
+            await db.combustivel_fossil.insert_many(transacoes)
+        
+        return {
+            "success": True,
+            "transacoes_importadas": len(transacoes),
+            "total_litros": round(total_litros, 2),
+            "total_valor_eur": round(total_valor, 2),
+            "periodo": f"{periodo_inicio} a {periodo_fim}",
+            "ficheiro_salvo": excel_filename
+        }
+    
+    except Exception as e:
+        logger.error(f"Error processing Fossil Fuel Excel: {e}")
+        return {"success": False, "error": str(e)}
+
 async def generate_contrato_pdf(parceiro: Dict, motorista: Dict, veiculo: Dict) -> str:
     """Generate contract PDF and return file path"""
     from reportlab.lib.pagesizes import A4
