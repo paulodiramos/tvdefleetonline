@@ -3002,3 +3002,67 @@ agent_communication:
         
         🎯 CONCLUSÃO: Sistema de importação de dados financeiros COMPLETAMENTE FUNCIONAL
         Todos os 6 endpoints implementados e testados com sucesso. Pronto para uso em produção!
+
+
+    - agent: "main"
+      message: |
+        \u2728 NOVA FUNCIONALIDADE - CRIA\u00c7\u00c3O R\u00c1PIDA DE MOTORISTAS E VE\u00cdCULOS
+        
+        REQUISITO DO USU\u00c1RIO:
+        - Ao importar dados e encontrar motoristas/ve\u00edculos que n\u00e3o existem no sistema
+        - Mostrar popup para criar rapidamente esses registos
+        
+        IMPLEMENTA\u00c7\u00d5ES BACKEND:
+        \u2705 Atualizado process_uber_csv():
+        - Verifica se motorista existe no sistema (por nome)
+        - Retorna lista motoristas_nao_encontrados com: nome, uuid_uber, email, telefone
+        
+        \u2705 Atualizado process_bolt_csv():
+        - Verifica se motorista existe (por email ou nome)
+        - Retorna lista motoristas_nao_encontrados com: nome, email, telefone, identificador_bolt
+        
+        \u2705 Atualizado process_gps_csv():
+        - Verifica se ve\u00edculo existe (por matr\u00edcula)
+        - Retorna lista veiculos_nao_encontrados com: matricula, condutor_atual
+        
+        \u2705 Atualizado process_viaverde_excel():
+        - Verifica se ve\u00edculo existe (por matr\u00edcula)
+        - Retorna lista veiculos_nao_encontrados com: matricula, obu
+        
+        IMPLEMENTA\u00c7\u00d5ES FRONTEND:
+        \u2705 UploadCSV.js completamente atualizado:
+        - Ap\u00f3s upload bem-sucedido, verifica response.data.motoristas_nao_encontrados
+        - Ap\u00f3s upload bem-sucedido, verifica response.data.veiculos_nao_encontrados
+        
+        \u2705 Modal Motoristas N\u00e3o Encontrados:
+        - Lista todos os motoristas n\u00e3o encontrados
+        - Formul\u00e1rio por motorista com: Nome (pre-filled), Email, Telefone, NIF, Morada
+        - Bot\u00e3o "Criar Motorista" que chama POST /api/motoristas
+        - Remove da lista ap\u00f3s criar
+        - Fecha automaticamente quando lista fica vazia
+        
+        \u2705 Modal Ve\u00edculos N\u00e3o Encontrados:
+        - Lista todos os ve\u00edculos n\u00e3o encontrados
+        - Formul\u00e1rio por ve\u00edculo com: Matr\u00edcula (pre-filled), Marca*, Modelo*, Ano, Cor
+        - Bot\u00e3o "Criar Ve\u00edculo" que chama POST /api/vehicles
+        - Remove da lista ap\u00f3s criar
+        - Fecha automaticamente quando lista fica vazia
+        
+        FLUXO DE USO:
+        1. Usu\u00e1rio faz upload de ficheiro CSV/Excel
+        2. Backend processa e retorna estat\u00edsticas + motoristas/ve\u00edculos n\u00e3o encontrados
+        3. Frontend mostra toast de sucesso com estat\u00edsticas
+        4. Se houver motoristas n\u00e3o encontrados \u2192 abre modal com lista
+        5. Se houver ve\u00edculos n\u00e3o encontrados \u2192 abre modal com lista
+        6. Usu\u00e1rio preenche dados e cria cada um individualmente
+        7. Registos criados ficam dispon\u00edveis imediatamente no sistema
+        
+        BENEFICIOS:
+        - Workflow cont\u00ednuo sem interrup\u00e7\u00f5es
+        - N\u00e3o precisa navegar para outras p\u00e1ginas
+        - Cria\u00e7\u00e3o r\u00e1pida com dados m\u00ednimos necess\u00e1rios
+        - Feedback visual imediato (remo\u00e7\u00e3o da lista ap\u00f3s criar)
+        
+        Backend reiniciado com sucesso.
+        Frontend com hot-reload ativo.
+        Pronto para testes!
