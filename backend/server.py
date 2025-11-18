@@ -1684,15 +1684,39 @@ async def process_bolt_csv(file_content: bytes, parceiro_id: str, periodo_inicio
         total_registos = 0
         total_ganhos_liquidos = 0
         total_viagens = 0
+        motoristas_nao_encontrados = []
+        motoristas_unicos = set()
         
         for row in csv_reader:
             nome = row.get("Motorista", "").strip()
             email = row.get("Email", "").strip()
+            telefone = row.get("Telemóvel", "").strip()
             ganhos_brutos = float(row.get("Ganhos brutos (total)|€", "0").replace(",", ".") or 0)
             ganhos_liquidos = float(row.get("Ganhos líquidos|€", "0").replace(",", ".") or 0)
             viagens = int(row.get("Viagens terminadas", "0") or 0)
             
             if nome:  # Only process if there's a name
+                # Check if motorista exists
+                motorista_key = f"{nome}_{email}"
+                if motorista_key not in motoristas_unicos:
+                    motoristas_unicos.add(motorista_key)
+                    
+                    # Try to find motorista by email or name
+                    motorista = None
+                    if email:
+                        motorista = await db.motoristas.find_one({"email": email}, {"_id": 0})
+                    if not motorista:
+                        motorista = await db.motoristas.find_one({"name": nome}, {"_id": 0})
+                    
+                    if not motorista:
+                        # Motorista não encontrado
+                        motoristas_nao_encontrados.append({
+                            "nome": nome,
+                            "email": email,
+                            "telefone": telefone,
+                            "identificador_bolt": row.get("Identificador do motorista", "")
+                        })
+                
                 # Store in database
                 ganho = {
                     "id": str(uuid.uuid4()),
@@ -1719,7 +1743,8 @@ async def process_bolt_csv(file_content: bytes, parceiro_id: str, periodo_inicio
             "ganhos_liquidos": total_ganhos_liquidos,
             "viagens": total_viagens,
             "periodo": f"{periodo_inicio} a {periodo_fim}",
-            "csv_salvo": csv_filename
+            "csv_salvo": csv_filename,
+            "motoristas_nao_encontrados": motoristas_nao_encontrados
         }
     
     except Exception as e:
