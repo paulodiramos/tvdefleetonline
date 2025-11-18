@@ -5153,6 +5153,86 @@ async def upload_excel_combustivel(
     
     return result
 
+@api_router.post("/import/viaverde")
+async def import_viaverde(
+    file: UploadFile = File(...),
+    parceiro_id: str = Form(...),
+    periodo_inicio: str = Form(...),
+    periodo_fim: str = Form(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Import Via Verde toll movements from Excel file"""
+    if not await check_feature_access(current_user, "upload_csv_ganhos"):
+        raise HTTPException(status_code=403, detail="Sem acesso a import de dados")
+    
+    file_content = await file.read()
+    result = await process_viaverde_excel(file_content, parceiro_id, periodo_inicio, periodo_fim)
+    
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["error"])
+    
+    return result
+
+@api_router.post("/import/gps")
+async def import_gps(
+    file: UploadFile = File(...),
+    parceiro_id: str = Form(...),
+    periodo_inicio: str = Form(...),
+    periodo_fim: str = Form(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Import GPS distance report from CSV file"""
+    if not await check_feature_access(current_user, "upload_csv_km"):
+        raise HTTPException(status_code=403, detail="Sem acesso a import de KMs")
+    
+    file_content = await file.read()
+    result = await process_gps_csv(file_content, parceiro_id, periodo_inicio, periodo_fim)
+    
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["error"])
+    
+    return result
+
+@api_router.post("/import/combustivel-eletrico")
+async def import_combustivel_eletrico(
+    file: UploadFile = File(...),
+    parceiro_id: str = Form(...),
+    periodo_inicio: str = Form(...),
+    periodo_fim: str = Form(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Import electric fuel transactions from Excel file"""
+    if not await check_feature_access(current_user, "combustivel_manual"):
+        raise HTTPException(status_code=403, detail="Sem acesso a gestão de combustível")
+    
+    file_content = await file.read()
+    result = await process_combustivel_eletrico_excel(file_content, parceiro_id, periodo_inicio, periodo_fim)
+    
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["error"])
+    
+    return result
+
+@api_router.post("/import/combustivel-fossil")
+async def import_combustivel_fossil(
+    file: UploadFile = File(...),
+    parceiro_id: str = Form(...),
+    periodo_inicio: str = Form(...),
+    periodo_fim: str = Form(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Import fossil fuel transactions from Excel file"""
+    if not await check_feature_access(current_user, "combustivel_manual"):
+        raise HTTPException(status_code=403, detail="Sem acesso a gestão de combustível")
+    
+    file_content = await file.read()
+    result = await process_combustivel_fossil_excel(file_content, parceiro_id, periodo_inicio, periodo_fim)
+    
+    if not result["success"]:
+        raise HTTPException(status_code=400, detail=result["error"])
+    
+    return result
+
 @api_router.get("/operacional/ganhos-motorista/{motorista_id}")
 async def get_ganhos_motorista(
     motorista_id: str,
