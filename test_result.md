@@ -744,6 +744,42 @@ backend:
           agent: "testing"
           comment: "✅ TESTADO COMPLETAMENTE: Endpoint GET /api/vehicles/{vehicle_id}/relatorio-intervencoes funcionando perfeitamente. Retorna estrutura JSON correta: {vehicle_id, interventions[], total}. Cada intervenção contém todos os campos obrigatórios: tipo, descricao, data, categoria, status. Status corretamente definido como 'pending' ou 'completed' baseado na data. Consolida todas as intervenções do veículo (seguro, inspeção, extintor, revisões). Testado com veículo contendo seguro, inspeção e extintor - encontradas 4 intervenções com tipos: ['Extintor', 'Seguro', 'Inspeção', 'Extintor']."
 
+  - task: "Sistema Importação - Modelos Pydantic"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Criados 4 novos modelos Pydantic: ViaVerdeMovimento (portagens), GPSDistancia (km/horas), CombustivelEletrico (transações carregamento), CombustivelFossil (transações abastecimento). Modelos incluem todos os campos dos ficheiros Excel/CSV fornecidos pelo utilizador."
+
+  - task: "Sistema Importação - Funções Parsing"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implementadas 4 novas funções de parsing: process_viaverde_excel(), process_gps_csv(), process_combustivel_eletrico_excel(), process_combustivel_fossil_excel(). Funções process_uber_csv() e process_bolt_csv() já existiam. Todas as funções salvam ficheiros originais para auditoria e processam dados linha a linha com tratamento de erros."
+
+  - task: "Sistema Importação - Endpoints API"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Criados 4 novos endpoints de importação: POST /api/import/viaverde, POST /api/import/gps, POST /api/import/combustivel-eletrico, POST /api/import/combustivel-fossil. Endpoints Uber e Bolt já existiam (/operacional/upload-csv-uber, /operacional/upload-csv-bolt). Todos os endpoints validam feature access, recebem FormData (file + parceiro_id + periodo), e retornam estatísticas de importação."
+
 frontend:
   - task: "FichaVeiculo.js - Nova Tab Extintor"
     implemented: true
