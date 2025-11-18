@@ -1839,14 +1839,32 @@ async def process_viaverde_excel(file_content: bytes, parceiro_id: str, periodo_
         
         # Process data rows
         movimentos = []
+        veiculos_nao_encontrados = []
+        veiculos_unicos = set()
+        
         for row in sheet.iter_rows(min_row=2, values_only=True):
             if not row[0]:  # Skip if no license plate
                 continue
             
+            matricula = str(row[0] or "")
+            
+            # Check if vehicle exists
+            if matricula and matricula not in veiculos_unicos:
+                veiculos_unicos.add(matricula)
+                
+                veiculo_db = await db.vehicles.find_one({"matricula": matricula}, {"_id": 0})
+                
+                if not veiculo_db:
+                    # Veículo não encontrado
+                    veiculos_nao_encontrados.append({
+                        "matricula": matricula,
+                        "obu": str(row[1] or "") if len(row) > 1 else ""
+                    })
+            
             movimento = {
                 "id": str(uuid.uuid4()),
                 "parceiro_id": parceiro_id,
-                "license_plate": str(row[0] or ""),
+                "license_plate": matricula,
                 "obu": str(row[1] or "") if len(row) > 1 else None,
                 "service": str(row[2] or "") if len(row) > 2 else None,
                 "service_description": str(row[3] or "") if len(row) > 3 else None,
@@ -1879,7 +1897,8 @@ async def process_viaverde_excel(file_content: bytes, parceiro_id: str, periodo_
             "movimentos_importados": len(movimentos),
             "total_value": round(total_value, 2),
             "periodo": f"{periodo_inicio} a {periodo_fim}",
-            "ficheiro_salvo": excel_filename
+            "ficheiro_salvo": excel_filename,
+            "veiculos_nao_encontrados": veiculos_nao_encontrados
         }
     
     except Exception as e:
