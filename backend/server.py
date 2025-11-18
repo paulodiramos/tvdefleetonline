@@ -663,6 +663,98 @@ class GanhoBolt(BaseModel):
     data_importacao: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     importado_por: str
 
+# Modelo para movimentos Via Verde
+class ViaVerdeMovimento(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    parceiro_id: str
+    license_plate: str
+    obu: Optional[str] = None
+    service: Optional[str] = None
+    service_description: Optional[str] = None
+    market: Optional[str] = None
+    entry_date: Optional[str] = None
+    exit_date: Optional[str] = None
+    entry_point: Optional[str] = None
+    exit_point: Optional[str] = None
+    value: Optional[float] = None
+    is_payed: Optional[str] = None
+    payment_date: Optional[str] = None
+    contract_number: Optional[str] = None
+    liquid_value: Optional[float] = None
+    ficheiro_nome: str
+    data_importacao: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    importado_por: str
+
+# Modelo para relatórios GPS de distância
+class GPSDistancia(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    parceiro_id: str
+    veiculo: str  # Matrícula
+    condutor: Optional[str] = None
+    distancia_percorrida: Optional[float] = None  # KM
+    motor_ligado_tempo: Optional[str] = None  # Ex: "13h 16m 34s"
+    motor_ligado_minutos: Optional[int] = None
+    ficheiro_nome: str
+    data_importacao: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    importado_por: str
+
+# Modelo para transações de combustível elétrico
+class CombustivelEletrico(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    parceiro_id: str
+    numero_cartao: Optional[str] = None
+    nome: Optional[str] = None
+    descricao: Optional[str] = None
+    matricula: Optional[str] = None
+    id_carregamento: Optional[str] = None
+    posto: Optional[str] = None
+    energia: Optional[float] = None  # kWh
+    duracao: Optional[float] = None  # minutos
+    custo: Optional[float] = None
+    opc: Optional[float] = None
+    iec: Optional[float] = None
+    total: Optional[float] = None
+    total_com_iva: Optional[float] = None
+    fatura: Optional[str] = None
+    ficheiro_nome: str
+    data_importacao: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    importado_por: str
+
+# Modelo para transações de combustível fóssil
+class CombustivelFossil(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    parceiro_id: str
+    posto: Optional[str] = None
+    pais: Optional[str] = None
+    rede: Optional[str] = None
+    data: Optional[str] = None
+    hora: Optional[str] = None
+    cartao: Optional[str] = None
+    desc_cartao: Optional[str] = None
+    estado: Optional[str] = None
+    grupo_cartao: Optional[str] = None
+    litros: Optional[float] = None
+    combustivel: Optional[str] = None
+    recibo: Optional[str] = None
+    valor_liquido: Optional[float] = None
+    iva: Optional[float] = None
+    kms: Optional[int] = None
+    id_condutor: Optional[str] = None
+    fatura: Optional[str] = None
+    data_fatura: Optional[str] = None
+    valor_unitario: Optional[float] = None
+    valor_ref: Optional[float] = None
+    valor_desc: Optional[float] = None
+    cliente: Optional[str] = None
+    tipo_pagamento: Optional[str] = None
+    ficheiro_nome: str
+    data_importacao: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    importado_por: str
+
 # Modelos para Sincronização Automática
 class CredenciaisPlataforma(BaseModel):
     model_config = ConfigDict(extra="ignore")
