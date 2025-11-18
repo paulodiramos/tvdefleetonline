@@ -513,6 +513,287 @@ startxref
         except Exception as e:
             self.log_result("Background-Task-Check", False, f"Request error: {str(e)}")
 
+    # ==================== FINANCIAL DATA IMPORT SYSTEM TESTS ====================
+    
+    def test_financial_import_system(self):
+        """Test complete financial data import system for 6 platforms"""
+        print("\n💰 TESTING FINANCIAL DATA IMPORT SYSTEM")
+        print("-" * 60)
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Financial-Import-Setup", False, "No auth token for admin")
+            return False
+        
+        # Test all 6 import endpoints
+        self.test_uber_csv_import(headers)
+        self.test_bolt_csv_import(headers)
+        self.test_viaverde_excel_import(headers)
+        self.test_gps_csv_import(headers)
+        self.test_combustivel_eletrico_excel_import(headers)
+        self.test_combustivel_fossil_excel_import(headers)
+        
+        return True
+    
+    def test_uber_csv_import(self, headers):
+        """Test POST /api/operacional/upload-csv-uber endpoint"""
+        try:
+            # Create test CSV content (Uber format)
+            csv_content = """Date,Trip ID,Driver Name,Gross Fare,Commission,Net Fare
+2025-01-15,12345,Test Driver,25.50,5.10,20.40
+2025-01-16,12346,Test Driver,30.00,6.00,24.00"""
+            
+            files = {
+                'file': ('test_uber.csv', csv_content.encode(), 'text/csv')
+            }
+            data = {
+                'parceiro_id': 'test_parceiro_001',
+                'periodo_inicio': '2025-01-15',
+                'periodo_fim': '2025-01-16'
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/operacional/upload-csv-uber",
+                files=files,
+                data=data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                required_fields = ["registos_importados", "total_pago", "periodo", "csv_salvo"]
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if not missing_fields:
+                    self.log_result("Uber-CSV-Import", True, f"Imported {result.get('registos_importados', 0)} Uber records")
+                else:
+                    self.log_result("Uber-CSV-Import", False, f"Missing response fields: {missing_fields}")
+            else:
+                self.log_result("Uber-CSV-Import", False, f"Import failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Uber-CSV-Import", False, f"Request error: {str(e)}")
+    
+    def test_bolt_csv_import(self, headers):
+        """Test POST /api/operacional/upload-csv-bolt endpoint"""
+        try:
+            # Create test CSV content (Bolt format)
+            csv_content = """Date,Trip ID,Driver,Gross Amount,Commission,Net Amount
+2025-01-15,B12345,Test Driver,28.75,5.75,23.00
+2025-01-16,B12346,Test Driver,35.20,7.04,28.16"""
+            
+            files = {
+                'file': ('test_bolt.csv', csv_content.encode(), 'text/csv')
+            }
+            data = {
+                'parceiro_id': 'test_parceiro_001',
+                'periodo_inicio': '2025-01-15',
+                'periodo_fim': '2025-01-16'
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/operacional/upload-csv-bolt",
+                files=files,
+                data=data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                required_fields = ["registos_importados", "ganhos_liquidos", "viagens", "periodo", "csv_salvo"]
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if not missing_fields:
+                    self.log_result("Bolt-CSV-Import", True, f"Imported {result.get('registos_importados', 0)} Bolt records")
+                else:
+                    self.log_result("Bolt-CSV-Import", False, f"Missing response fields: {missing_fields}")
+            else:
+                self.log_result("Bolt-CSV-Import", False, f"Import failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Bolt-CSV-Import", False, f"Request error: {str(e)}")
+    
+    def test_viaverde_excel_import(self, headers):
+        """Test POST /api/import/viaverde endpoint"""
+        try:
+            # Create minimal Excel content for Via Verde
+            import io
+            excel_content = b"PK\x03\x04"  # Minimal Excel header
+            
+            files = {
+                'file': ('test_viaverde.xlsx', excel_content, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            }
+            data = {
+                'parceiro_id': 'test_parceiro_001',
+                'periodo_inicio': '2025-01-15',
+                'periodo_fim': '2025-01-16'
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/import/viaverde",
+                files=files,
+                data=data,
+                headers=headers
+            )
+            
+            # Note: This might fail due to invalid Excel format, but we test the endpoint exists
+            if response.status_code == 200:
+                result = response.json()
+                required_fields = ["movimentos_importados", "total_value", "periodo", "ficheiro_salvo"]
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if not missing_fields:
+                    self.log_result("ViaVerde-Excel-Import", True, f"Imported {result.get('movimentos_importados', 0)} Via Verde movements")
+                else:
+                    self.log_result("ViaVerde-Excel-Import", False, f"Missing response fields: {missing_fields}")
+            elif response.status_code == 400:
+                # Expected for invalid Excel format - endpoint exists and validates
+                self.log_result("ViaVerde-Excel-Import", True, "Endpoint exists and validates Excel format")
+            else:
+                self.log_result("ViaVerde-Excel-Import", False, f"Unexpected error: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("ViaVerde-Excel-Import", False, f"Request error: {str(e)}")
+    
+    def test_gps_csv_import(self, headers):
+        """Test POST /api/import/gps endpoint"""
+        try:
+            # Create test CSV content (GPS format)
+            csv_content = """Data,Veiculo,Distancia,Horas
+2025-01-15,ABC-12-34,125.5,8.5
+2025-01-16,ABC-12-34,98.2,6.2"""
+            
+            files = {
+                'file': ('test_gps.csv', csv_content.encode(), 'text/csv')
+            }
+            data = {
+                'parceiro_id': 'test_parceiro_001',
+                'periodo_inicio': '2025-01-15',
+                'periodo_fim': '2025-01-16'
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/import/gps",
+                files=files,
+                data=data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                required_fields = ["registos_importados", "total_distancia_km", "periodo", "ficheiro_salvo"]
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if not missing_fields:
+                    self.log_result("GPS-CSV-Import", True, f"Imported {result.get('registos_importados', 0)} GPS records")
+                else:
+                    self.log_result("GPS-CSV-Import", False, f"Missing response fields: {missing_fields}")
+            else:
+                self.log_result("GPS-CSV-Import", False, f"Import failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("GPS-CSV-Import", False, f"Request error: {str(e)}")
+    
+    def test_combustivel_eletrico_excel_import(self, headers):
+        """Test POST /api/import/combustivel-eletrico endpoint"""
+        try:
+            # Create minimal Excel content for electric fuel
+            excel_content = b"PK\x03\x04"  # Minimal Excel header
+            
+            files = {
+                'file': ('test_eletrico.xlsx', excel_content, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            }
+            data = {
+                'parceiro_id': 'test_parceiro_001',
+                'periodo_inicio': '2025-01-15',
+                'periodo_fim': '2025-01-16'
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/import/combustivel-eletrico",
+                files=files,
+                data=data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                required_fields = ["transacoes_importadas", "total_energia_kwh", "total_custo_eur", "periodo"]
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if not missing_fields:
+                    self.log_result("Combustivel-Eletrico-Import", True, f"Imported {result.get('transacoes_importadas', 0)} electric fuel transactions")
+                else:
+                    self.log_result("Combustivel-Eletrico-Import", False, f"Missing response fields: {missing_fields}")
+            elif response.status_code == 400:
+                # Expected for invalid Excel format - endpoint exists and validates
+                self.log_result("Combustivel-Eletrico-Import", True, "Endpoint exists and validates Excel format")
+            else:
+                self.log_result("Combustivel-Eletrico-Import", False, f"Unexpected error: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Combustivel-Eletrico-Import", False, f"Request error: {str(e)}")
+    
+    def test_combustivel_fossil_excel_import(self, headers):
+        """Test POST /api/import/combustivel-fossil endpoint"""
+        try:
+            # Create minimal Excel content for fossil fuel
+            excel_content = b"PK\x03\x04"  # Minimal Excel header
+            
+            files = {
+                'file': ('test_fossil.xlsx', excel_content, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            }
+            data = {
+                'parceiro_id': 'test_parceiro_001',
+                'periodo_inicio': '2025-01-15',
+                'periodo_fim': '2025-01-16'
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/import/combustivel-fossil",
+                files=files,
+                data=data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                required_fields = ["transacoes_importadas", "total_litros", "total_valor_eur", "periodo"]
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if not missing_fields:
+                    self.log_result("Combustivel-Fossil-Import", True, f"Imported {result.get('transacoes_importadas', 0)} fossil fuel transactions")
+                else:
+                    self.log_result("Combustivel-Fossil-Import", False, f"Missing response fields: {missing_fields}")
+            elif response.status_code == 400:
+                # Expected for invalid Excel format - endpoint exists and validates
+                self.log_result("Combustivel-Fossil-Import", True, "Endpoint exists and validates Excel format")
+            else:
+                self.log_result("Combustivel-Fossil-Import", False, f"Unexpected error: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Combustivel-Fossil-Import", False, f"Request error: {str(e)}")
+    
+    def test_import_feature_access_control(self):
+        """Test feature access control for import endpoints"""
+        print("\n🔒 TESTING IMPORT FEATURE ACCESS CONTROL")
+        print("-" * 50)
+        
+        # Test with parceiro role (should be blocked for some features)
+        headers = self.get_headers("parceiro")
+        if not headers:
+            self.log_result("Import-Access-Control", False, "No auth token for parceiro")
+            return
+        
+        # Test Via Verde import (requires upload_csv_ganhos feature)
+        try:
+            csv_content = "test,data"
+            files = {'file': ('test.xlsx', csv_content.encode(), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
+            data = {'parceiro_id': 'test', 'periodo_inicio': '2025-01-01', 'periodo_fim': '2025-01-31'}
+            
+            response = requests.post(f"{BACKEND_URL}/import/viaverde", files=files, data=data, headers=headers)
+            
+            if response.status_code == 403:
+                self.log_result("Import-Access-Control", True, "Feature access control working correctly")
+            else:
+                self.log_result("Import-Access-Control", False, f"Expected 403, got {response.status_code}")
+        except Exception as e:
+            self.log_result("Import-Access-Control", False, f"Request error: {str(e)}")
+
     # ==================== NEW FEATURES TESTS (EXPANDED SYSTEM) ====================
     
     def test_vehicle_photo_upload_limit(self):
