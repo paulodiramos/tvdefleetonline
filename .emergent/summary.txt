@@ -1,71 +1,77 @@
 <analysis>
-The trajectory documents a highly iterative and feature-driven development process, transforming a fleet management application from a basic state to a complex, multi-functional platform. The work began by implementing and debugging a feature to assign drivers to partners in . This involved adding frontend state, UI elements (buttons, modals), and leveraging existing backend endpoints. The debugging process was meticulous, addressing frontend errors like invalid select-option values and benign  warnings.
+The trajectory chronicles an intense and highly iterative development process, evolving a fleet management application from a basic MVP into a complex, feature-rich platform. The work began with standard feature completion, such as assigning drivers to partners () and adding new fields to partner profiles ().
 
-The core of the work then shifted to a massive, multi-phased expansion of the contract management system ( and ). This was driven by a continuous stream of detailed user requests. Initially, the focus was on fixing broken API calls (missing  prefix). It rapidly evolved into adding numerous fields to backend models and frontend forms, including contract types, seasonal pricing (high/low seasons with start/end dates), deposit options (including installment plans), and a wide array of personal and legal data for both partners and drivers.
+The project's complexity escalated dramatically with a complete overhaul of the contract management system. The  page and corresponding backend models in  were refactored multiple times to support an intricate system of over 11 conditional contract types, each with unique fields for deposits, seasonal pricing, commissions, and installment plans.
 
-A significant architectural change was the introduction of contract templates (minutas). The logic was refactored so that partners have their own configurable contract templates, which are then used to generate specific contracts for drivers. The public-facing homepage was also simplified by removing one of the registration options. The final cycle of work involved making the contract generation even more modular by adding default text snippets for specific clauses (like deposits and seasons) directly into the partner's profile, a task that was in progress when the trajectory ended.
+The most significant architectural shift was the introduction of a data import and automation layer. This started with manual CSV uploads for Uber and Bolt earnings, leading to the creation of new backend models and endpoints. It then evolved into a sophisticated, multi-platform, multi-tenant web-scraping system using  and . This new system, managed via a  page, is designed to log into external platforms (Uber, Bolt, etc.) on behalf of a specific partner, download reports, and process the data automatically. The work concluded while refining the UI for financial data management and awaiting user-provided CSV examples for all target platforms.
+
+The user's primary language is Portuguese (). All future interactions should be conducted in Portuguese.
 </analysis>
 
 <product_requirements>
-The application, TVDEFleet.com, is a comprehensive fleet management platform designed for internal administration and public recruitment.
+The application, TVDEFleet.com, is a multi-faceted fleet management platform.
 
-**Internal Backoffice (Admin/Manager Portal):**
-The primary function is to manage all aspects of the fleet. This includes:
-- **User & Partner Management:** Admins can approve new user registrations, manage user roles, and block/delete users. They can view and edit detailed partner profiles, which now include fields for legal representatives and default contract templates.
-- **Driver & Vehicle Management:** Admins and managers can manage driver profiles and assign them to partners.
-- **Contract Generation System:** This is the most complex feature. The system allows partners to define multiple contract templates (minutas) for various agreement types (e.g., Rental, Commission, Private Driver). When generating a contract for a specific driver, the system uses the partner's template and automatically populates it with dozens of variables, including names, legal document numbers, vehicle details, dates, and financial terms. The contract forms are highly dynamic, showing fields conditionally based on the selected contract type (e.g., displaying season and deposit fields only for specific rental agreements).
+**Core Functionality:**
+- **Admin Backoffice:** Manages users, partners, drivers, and vehicles.
+- **Contract Management:** A highly sophisticated system allowing partners to define and generate complex, conditional contracts for drivers. It supports over 11 contract types (e.g., rentals with/without deposits, commissions, vehicle purchase) with dynamic fields that appear based on the selected type. The system populates templates with dozens of variables from partner, driver, and vehicle profiles.
+- **Financial Data Management:** This is a newly developed core area. It includes:
+    1.  **Manual CSV Upload:** A dedicated page () for manually uploading and processing driver earnings reports from various platforms (Uber, Bolt, Via Verde, GPS, Fuel Cards).
+    2.  **Automated Data Synchronization:** A Playwright-based web-scraping system that automatically logs into third-party platforms on a per-partner basis, downloads financial reports, and syncs the data. This feature is managed from a dedicated Sync Auto page.
 
-**Public Website:**
-The public-facing site has been simplified for recruitment. The main page features a registration modal that now presents two clear paths: Gerir Frota (Manage Fleet) for partners/companies and Usar Plataforma (Use Platform) for fleet managers, streamlining the onboarding process.
+The entire system is designed to be multi-tenant, where data such as contracts and financial credentials are scoped to individual fleet partners.
 </product_requirements>
 
 <key_technical_concepts>
-- **Backend:** Monolithic FastAPI (Python) server using Pydantic for data modeling and validation.
-- **Frontend:** React.js with functional components, extensive use of Hooks (, ), and  for API requests.
-- **Database:** MongoDB, with models managed via Pydantic.
-- **Styling:** Tailwind CSS, likely using shadcn/ui components (inferred from class names and component behaviors like ).
-- **API Architecture:** RESTful API. Critical reliance on the  prefix for all backend routes due to Kubernetes ingress rules.
+- **Backend:** Monolithic FastAPI (Python) server with Pydantic models.
+- **Frontend:** React.js using functional components, Hooks, and .
+- **Database:** MongoDB.
+- **Automation:**  for browser automation/web-scraping and  for scheduling background sync tasks.
+- **Security:**  library for encrypting and decrypting partner credentials stored in the database.
+- **API:** RESTful architecture, with a critical  prefix for all backend routes.
 </key_technical_concepts>
 
 <code_architecture>
-The application uses a standard React (frontend) and FastAPI (backend) architecture.
+The application follows a standard React/FastAPI architecture, which has been significantly expanded with new modules for automation and data processing.
 
 **Directory Structure:**
 
 
-- ****
-    - **Importance:** The single monolithic file containing all backend logic, API endpoints, and Pydantic database models. It's the engine of the entire application.
-    - **Summary of Changes:** This file underwent massive expansion. The , , and  models were repeatedly updated to include dozens of new fields to support the complex contract requirements. Key additions include fields for legal representatives (, , etc.), contract season dates (, ), and deposit details (, ). New endpoints were added to manage contract templates () and to serve example contract files for download. The main contract generation endpoint () was heavily modified to fetch and populate all the new data fields into the contract text.
+- ****: The core backend file. It was heavily modified to include new Pydantic models (, , , ) and API endpoints for manual CSV imports (, ) and managing the new automated synchronization system (, ). It also now initializes the  on startup.
 
-- ****
-    - **Importance:** The main UI for creating and managing contracts. This file became the most complex part of the frontend.
-    - **Summary of Changes:** The form for creating a contract evolved into a highly dynamic and conditional interface. The UI now changes based on the  selected, showing/hiding entire sections for deposits and seasonal pricing. It includes checkboxes to toggle these optional features. A large textarea for the contract text was added, accompanied by a grid displaying all available template variables (e.g., , ). The file was debugged to fix API calls (adding the  prefix) and to handle React rendering errors (, Objects are not valid as a React child). Scroll functionality was added to the creation modal to handle its large size.
+- ****: A new file created to contain the browser automation logic using Playwright. It holds placeholder functions (, , etc.) that are called by the scheduler. This file is responsible for logging into external sites, navigating to report pages, and downloading files.
 
-- ****
-    - **Importance:** The page for managing fleet partners. Its role was expanded to include contract template management.
-    - **Summary of Changes:** The partner profile/edit modal was modified to become the central place for defining contract rules. A new section was added for managing Minutas de Contrato (Contract Templates), allowing admins to create and edit default contract text for different contract types associated with that partner. The work to add fields for default clause text (, ) was started.
+- ****: This file underwent a massive and complex refactoring. The form logic was completely rewritten to handle 11 distinct contract types with a deeply nested set of conditional fields for various clauses (deposits, installments, seasonal pricing, commissions, etc.), making it one of the most complex UI components.
 
-- ****
-    - **Importance:** The page for managing drivers, and the starting point of the work in the trajectory.
-    - **Summary of Changes:** The Atribuir Parceiro (Assign Partner) feature was fully implemented. This involved adding a button to each driver card, creating a modal for the assignment, fetching a list of partners, and handling the PUT request to the backend. A bug where the assignment modal failed to open due to a  having an empty string  was identified and fixed.
+- ****: Its role was expanded beyond partner management. The UI was updated to allow partners to manage their own contract template text snippets and, more importantly, to securely store their credentials (username/password) for the various external platforms used by the automated sync system.
 
-- ****
-    - **Importance:** The public landing page of the application.
-    - **Summary of Changes:** The registration modal was simplified. The Sou Motorista (I'm a Driver) card was completely removed, and the layout was adjusted to a two-column grid to feature only the Gerir Frota and Usar Plataforma options, streamlining the registration flow.
+- ****: A new page built to serve as the control panel for the automated synchronization feature. It allows users to select a partner, manage platform credentials, view sync history (logs), and manually trigger a sync process.
+
+- ****: A new page, created by renaming and refactoring the previous  and . It now serves as the central hub for *manual* CSV uploads for all supported platforms (Uber, Bolt, etc.), featuring a platform selector.
+
+- ** & **: These files were consistently updated to add routes and navigation links for the new pages (, ). Icons were added to the sidebar for better user navigation.
 </code_architecture>
 
 <pending_tasks>
-- **Finish Partner Profile UI:** Complete the UI in  to add and edit the new default text fields for contract clauses (deposit, seasons) in the partner's profile.
-- **Implement Driver Assignment Popup:** After a driver is assigned a vehicle in , implement the popup that asks the user if they want to create a contract.
-- **Admin Settings UI:** Create the frontend pages and forms in the admin section for editing the site's general terms and privacy policy content. The backend endpoints for this are already in place.
+- **Implement Full CSV Parsing:** The user is about to provide example CSV files for Uber, Bolt, Via Verde, GPS, and fuel cards. The backend parsing logic for each of these needs to be fully implemented.
+- **Implement Web-Scraping Logic:** The  file contains only placeholder functions. The actual Playwright automation scripts for logging in, navigating, and downloading reports from each platform must be written.
+- **Build Financial Dashboard:** Create the  page to provide a consolidated view of all imported financial data, filterable by partner.
 </pending_tasks>
 
 <current_work>
-The most recent task was to enhance the contract template system by allowing partners to define default text snippets for specific, optional clauses. The user requested two additional text fields in the partner's profile to hold standard text for a deposit clause and a season clause. When a contract is generated, if these options (deposit or season) are selected, this predefined text from the partner's profile would be added to the main contract body.
+The most recent work involved a significant refactoring of the financial data import functionality based on user feedback. The previous implementation was being split into two distinct areas:
 
-The previous engineer had already started implementing this on the backend. The last actions taken were to modify the Pydantic models in . Specifically, the , , and  models were edited to include new optional string fields: , , and . This backend groundwork was completed, but the corresponding frontend changes—adding the text area inputs to the partner editing form in —have not been started. The work stopped immediately after successfully modifying the backend models to accommodate this new requirement.
+1.  ** page:** This page was refactored to be the dedicated location for *manual* CSV file uploads. The UI was updated to include a dropdown menu for selecting the platform (e.g., Uber, Bolt) and another dropdown for selecting the partner to whom the data belongs. The logic for fetching partners and passing the  during the upload process was being added back into .
+
+2.  ** page:** This route is planned but not yet fully implemented. It is intended to be a separate dashboard for viewing and analyzing the consolidated financial data that has been imported, either manually or automatically, filterable by partner.
+
+The immediate task before the summary request was adding the partner selector back to the  page. This was interrupted by the user's offer to provide all the necessary CSV example files, which is the crucial next step to unblock the implementation of the backend parsing logic.
 </current_work>
 
 <optional_next_step>
-I will update the partner editing modal in  to include new text area inputs for the  and  fields, completing the feature requested by the user.
+Aguardar o envio dos ficheiros CSV de exemplo pelo utilizador para implementar a lógica de processamento no backend para cada plataforma (Uber, Bolt, Via Verde, etc.).
 </optional_next_step>
+
+<direct_quotes>
+**User:** posso enviar como serao os ficheiros de upload bolt uber gps combustivel e via verde para ficar certo com sistema?
+**AI Engineer:** Sim, por favor! Envie os ficheiros CSV de exemplo de cada plataforma para eu analisar e garantir que o sistema está preparado para processar corretamente
+</direct_quotes>

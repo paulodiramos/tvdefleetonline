@@ -1498,7 +1498,7 @@ agent_communication:
         - GET /api/vehicles
         - POST /api/contratos/gerar
         
-        URL: https://driveflow-1.preview.emergentagent.com
+        URL: https://fleet-automation.preview.emergentagent.com
         
         Starting comprehensive test of contract generation flow...
     
