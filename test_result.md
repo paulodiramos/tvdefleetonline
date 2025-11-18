@@ -805,6 +805,18 @@ frontend:
           agent: "main"
           comment: "Adicionada nova tab 'Intervenções' que mostra relatório visual de todas as intervenções do veículo. Utiliza endpoint /relatorio-intervencoes. Exibe intervenções passadas (verde), futuras (laranja) e vencidas (vermelho). Inclui legenda e badges por categoria (seguro, inspeção, extintor, revisão). Estado relatorioIntervencoes adicionado e carregado em fetchVehicleData."
 
+  - task: "UploadCSV.js - Interface Unificada de Importação"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/UploadCSV.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Reescrita completa da página UploadCSV.js com interface unificada. Criado array PLATAFORMAS com 6 plataformas (Uber, Bolt, Via Verde, GPS, Combustível Elétrico, Combustível Fóssil). Implementado dropdown de seleção de plataforma que muda dinamicamente o formulário (accept, endpoint, ícone). Adicionado dropdown de seleção de parceiro (apenas para Admin/Gestão). Formulário único que adapta-se à plataforma selecionada. Feedback customizado por plataforma com estatísticas específicas. Suporte para CSV e XLSX. Função handleUpload unificada que roteia para o endpoint correto."
+
 agent_communication:
     - agent: "main"
       message: |
