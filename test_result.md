@@ -2880,3 +2880,82 @@ agent_communication:
         4. Confirmar correlação com motoristas
         5. Verificar histórico de importações
         6. Testar visualização de detalhes
+
+
+    - agent: "main"
+      message: |
+        🚀 NOVA IMPLEMENTAÇÃO - SISTEMA COMPLETO DE IMPORTAÇÃO DE DADOS FINANCEIROS
+        
+        REQUISITOS DO USUÁRIO:
+        - Importação manual de ficheiros CSV/Excel de 6 plataformas
+        - Ficheiros fornecidos: Uber, Bolt, Via Verde, GPS, Combustível Elétrico, Combustível Fóssil
+        - Interface unificada com seletor de plataforma
+        - Seletor de parceiro para Admin/Gestão
+        
+        IMPLEMENTAÇÕES BACKEND:
+        ✅ 4 Novos Modelos Pydantic criados:
+        - ViaVerdeMovimento: portagens com license_plate, entry/exit points, values
+        - GPSDistancia: veículo, condutor, distância_percorrida, motor_ligado
+        - CombustivelEletrico: cartão, matrícula, energia (kWh), custo
+        - CombustivelFossil: posto, cartão, litros, combustível, valor
+        
+        ✅ 4 Novas Funções de Parsing implementadas:
+        - process_viaverde_excel(): processa Excel Via Verde com movimentos de portagens
+        - process_gps_csv(): processa CSV GPS com distâncias e horas de motor
+        - process_combustivel_eletrico_excel(): processa Excel de carregamentos elétricos
+        - process_combustivel_fossil_excel(): processa Excel de abastecimentos
+        - NOTA: process_uber_csv() e process_bolt_csv() já existiam
+        
+        ✅ 4 Novos Endpoints de API criados:
+        - POST /api/import/viaverde
+        - POST /api/import/gps
+        - POST /api/import/combustivel-eletrico
+        - POST /api/import/combustivel-fossil
+        - NOTA: Endpoints Uber e Bolt já existiam
+        
+        ✅ Armazenamento MongoDB:
+        - 4 novas coleções: viaverde_movimentos, gps_distancia, combustivel_eletrico, combustivel_fossil
+        - Todas incluem: parceiro_id, periodo, ficheiro_nome, data_importacao
+        - Ficheiros originais salvos em /uploads/csv/ para auditoria
+        
+        IMPLEMENTAÇÕES FRONTEND:
+        ✅ UploadCSV.js completamente reescrito:
+        - Interface unificada com 1 formulário adaptável
+        - Array PLATAFORMAS com 6 plataformas configuradas
+        - Dropdown de seleção de plataforma (muda accept, endpoint, ícone dinamicamente)
+        - Dropdown de parceiro (apenas para Admin/Gestão, hidden para Parceiro)
+        - Campos de período (início e fim)
+        - Upload file input com validação de extensão (.csv ou .xlsx)
+        - Botão "Descarregar Exemplo" para cada plataforma
+        - Feedback customizado por plataforma com estatísticas específicas:
+          * Uber: registos + total pago
+          * Bolt: registos + ganhos líquidos
+          * Via Verde: movimentos + total value
+          * GPS: registos + distância total (km)
+          * Elétrico: transações + energia (kWh) + custo
+          * Fóssil: transações + litros + custo
+        
+        ✅ UX Improvements:
+        - Toast notifications usando sonner
+        - Loading states durante upload
+        - Reset de formulário após sucesso
+        - Card informativo com notas importantes
+        - Ícones específicos por plataforma (Car, MapPin, Zap, Fuel)
+        
+        ESTRUTURA DE DADOS DOS FICHEIROS:
+        1. UBER (CSV): UUID motorista, Nome, Pago a si, Rendimentos, Tarifas detalhadas
+        2. BOLT (CSV): Motorista, Email, Ganhos brutos/líquidos, Comissões, Viagens
+        3. VIA VERDE (XLSX): License Plate, Entry/Exit Points, Dates, Values
+        4. GPS (CSV): Veículo, Condutor, Distância percorrida, Motor ligado (tempo + minutos)
+        5. ELÉTRICO (XLSX): Cartão, Matrícula, Energia (kWh), Duração, Custo, Total c/ IVA
+        6. FÓSSIL (XLSX): Posto, Data, Hora, Cartão, Litros, Combustível, Valor líquido, IVA
+        
+        PRÓXIMOS PASSOS:
+        - Testar backend com ficheiros reais fornecidos pelo utilizador
+        - Testar frontend - interface unificada e seletores
+        - Validar parsing de cada plataforma
+        - Verificar estatísticas retornadas
+        - Confirmar armazenamento em MongoDB
+        
+        Backend reiniciado com sucesso. Frontend com hot-reload ativo.
+        Pronto para testes!
