@@ -2645,6 +2645,12 @@ startxref
         print("-" * 50)
         self.test_driver_assignment_feature()
         
+        # FINANCIAL DATA IMPORT SYSTEM (CURRENT REQUEST)
+        print("\n💰 FINANCIAL DATA IMPORT SYSTEM (HIGH PRIORITY)")
+        print("-" * 60)
+        self.test_financial_import_system()
+        self.test_import_feature_access_control()
+        
         # Summary
         print("\n" + "=" * 80)
         print("TEST SUMMARY")
