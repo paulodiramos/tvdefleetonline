@@ -746,15 +746,18 @@ backend:
 
   - task: "Sistema Importação - Modelos Pydantic"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Criados 4 novos modelos Pydantic: ViaVerdeMovimento (portagens), GPSDistancia (km/horas), CombustivelEletrico (transações carregamento), CombustivelFossil (transações abastecimento). Modelos incluem todos os campos dos ficheiros Excel/CSV fornecidos pelo utilizador."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Modelos Pydantic funcionando corretamente. Todos os 4 novos modelos (ViaVerdeMovimento, GPSDistancia, CombustivelEletrico, CombustivelFossil) estão definidos no código e são utilizados pelas funções de parsing. Modelos existentes GanhoUber e GanhoBolt também funcionais."
 
   - task: "Sistema Importação - Funções Parsing"
     implemented: true
