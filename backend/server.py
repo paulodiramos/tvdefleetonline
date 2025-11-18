@@ -1606,6 +1606,8 @@ async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio
         # Process CSV rows (can have multiple motoristas)
         total_registos = 0
         total_pago_all = 0
+        motoristas_nao_encontrados = []
+        motoristas_unicos = set()
         
         for row in csv_reader:
             uuid_uber = row.get("UUID do motorista", "")
@@ -1613,6 +1615,23 @@ async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio
             total_pago = float(row.get("Pago a si", "0").replace(",", ".") or 0)
             
             if nome:  # Only process if there's a name
+                # Check if motorista exists
+                motorista_key = f"{nome}_{uuid_uber}"
+                if motorista_key not in motoristas_unicos:
+                    motoristas_unicos.add(motorista_key)
+                    
+                    # Try to find motorista by nome or email
+                    motorista = await db.motoristas.find_one({"name": nome}, {"_id": 0})
+                    
+                    if not motorista:
+                        # Motorista não encontrado
+                        motoristas_nao_encontrados.append({
+                            "nome": nome,
+                            "uuid_uber": uuid_uber,
+                            "email": "",  # Uber CSV não tem email
+                            "telefone": ""
+                        })
+                
                 # Store in database
                 ganho = {
                     "id": str(uuid.uuid4()),
@@ -1635,7 +1654,8 @@ async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio
             "registos_importados": total_registos,
             "total_pago": total_pago_all,
             "periodo": f"{periodo_inicio} a {periodo_fim}",
-            "csv_salvo": csv_filename
+            "csv_salvo": csv_filename,
+            "motoristas_nao_encontrados": motoristas_nao_encontrados
         }
     
     except Exception as e:
