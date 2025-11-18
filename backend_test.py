@@ -2672,6 +2672,48 @@ startxref
         print("\n" + "=" * 80)
         return failed == 0
 
+    def run_financial_import_tests_only(self):
+        """Run only financial import tests as requested in review"""
+        print("=" * 80)
+        print("TVDEFleet Backend Testing Suite - Financial Data Import System")
+        print("=" * 80)
+        
+        # Authenticate admin user
+        print("\n🔐 AUTHENTICATION PHASE")
+        print("-" * 40)
+        if not self.authenticate_user("admin"):
+            return False
+        
+        # Also authenticate parceiro for authorization tests
+        self.authenticate_user("parceiro")
+        
+        # Run financial import tests
+        print("\n💰 FINANCIAL DATA IMPORT SYSTEM TESTS")
+        print("-" * 60)
+        success = self.test_financial_import_system()
+        self.test_import_feature_access_control()
+        
+        # Summary
+        print("\n" + "=" * 80)
+        print("FINANCIAL IMPORT TEST SUMMARY")
+        print("=" * 80)
+        
+        passed = sum(1 for r in self.test_results if r["success"])
+        failed = sum(1 for r in self.test_results if not r["success"])
+        
+        print(f"Total Tests: {len(self.test_results)}")
+        print(f"✅ Passed: {passed}")
+        print(f"❌ Failed: {failed}")
+        
+        if failed > 0:
+            print("\n🔍 FAILED TESTS:")
+            for result in self.test_results:
+                if not result["success"]:
+                    print(f"   ❌ {result['test']}: {result['message']}")
+        
+        print("\n" + "=" * 80)
+        return failed == 0
+
     def run_driver_assignment_tests_only(self):
         """Run only driver assignment tests as requested in review"""
         print("=" * 80)
