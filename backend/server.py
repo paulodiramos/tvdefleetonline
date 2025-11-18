@@ -1907,6 +1907,8 @@ async def process_gps_csv(file_content: bytes, parceiro_id: str, periodo_inicio:
         # Process CSV rows
         registos = []
         total_distancia = 0
+        veiculos_nao_encontrados = []
+        veiculos_unicos = set()
         
         for row in csv_reader:
             veiculo = row.get("Veículo", "").strip()
@@ -1922,6 +1924,19 @@ async def process_gps_csv(file_content: bytes, parceiro_id: str, periodo_inicio:
             motor_ligado_min = int(row.get("Motor ligado (minutos)", "0") or 0)
             
             if veiculo:  # Only process if there's a vehicle
+                # Check if vehicle exists
+                if veiculo not in veiculos_unicos:
+                    veiculos_unicos.add(veiculo)
+                    
+                    veiculo_db = await db.vehicles.find_one({"matricula": veiculo}, {"_id": 0})
+                    
+                    if not veiculo_db:
+                        # Veículo não encontrado
+                        veiculos_nao_encontrados.append({
+                            "matricula": veiculo,
+                            "condutor_atual": condutor if condutor and condutor != "(Não atribuído)" else ""
+                        })
+                
                 registo = {
                     "id": str(uuid.uuid4()),
                     "parceiro_id": parceiro_id,
@@ -1948,7 +1963,8 @@ async def process_gps_csv(file_content: bytes, parceiro_id: str, periodo_inicio:
             "registos_importados": len(registos),
             "total_distancia_km": round(total_distancia, 2),
             "periodo": f"{periodo_inicio} a {periodo_fim}",
-            "ficheiro_salvo": csv_filename
+            "ficheiro_salvo": csv_filename,
+            "veiculos_nao_encontrados": veiculos_nao_encontrados
         }
     
     except Exception as e:
