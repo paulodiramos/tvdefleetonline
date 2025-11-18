@@ -2758,12 +2758,12 @@ startxref
 if __name__ == "__main__":
     tester = TVDEFleetTester()
     
-    # Run specific driver assignment tests as requested in review
-    success = tester.run_driver_assignment_tests_only()
+    # Run specific financial import tests as requested in review
+    success = tester.run_financial_import_tests_only()
     
     if success:
-        print("🎉 All driver assignment tests passed!")
+        print("🎉 All financial import tests passed!")
         exit(0)
     else:
-        print("💥 Some driver assignment tests failed!")
+        print("💥 Some financial import tests failed!")
         exit(1)
