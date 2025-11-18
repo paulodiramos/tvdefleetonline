@@ -122,13 +122,26 @@ user_problem_statement: |
   - Alertas para manutenção baseada em KM
   - Verificação automática a cada 6 horas
   
-  NOVA FASE: Melhorias na Ficha do Veículo
+  FASE 4: Melhorias na Ficha do Veículo
   - Remover botão "Editar" duplicado da lista de veículos
   - Sistema de upload de documentos na Ficha do Veículo:
     * Tab Seguro: Carta Verde, Condições, Recibo de pagamento
     * Tab Inspeção: Documento/certificado da inspeção
   - Imagens convertidas automaticamente para PDF formato A4
   - Download disponível para impressão
+  
+  FASE 5: Sistema de Importação de Dados Financeiros (NOVA)
+  - Importação manual de dados de 6 plataformas:
+    * UBER - CSV de ganhos por motorista
+    * BOLT - CSV de ganhos por motorista  
+    * VIA VERDE - Excel de movimentos de portagens
+    * GPS - CSV de distância percorrida
+    * COMBUSTÍVEL ELÉTRICO - Excel de transações de carregamento
+    * COMBUSTÍVEL FÓSSIL - Excel de transações de abastecimento
+  - Interface unificada com seletor de plataforma
+  - Seletor de parceiro (para Admin/Gestão)
+  - Parsing automático e armazenamento em MongoDB
+  - Validação e feedback por plataforma
 
 backend:
   - task: "Restrição de permissões - Parceiros não podem criar receitas"
