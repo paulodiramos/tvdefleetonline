@@ -555,6 +555,10 @@ class Parceiro(BaseModel):
     representante_legal_telefone: Optional[str] = None
     representante_legal_email: Optional[str] = None
     campos_customizados: Dict[str, Any] = {}
+    # Configurações de Alertas
+    dias_aviso_seguro: int = 30  # Dias de antecedência para alertar sobre seguro
+    dias_aviso_inspecao: int = 30  # Dias de antecedência para alertar sobre inspeção
+    km_aviso_revisao: int = 5000  # KM de antecedência para alertar sobre revisão
     created_at: datetime
     # Campos antigos mantidos como opcionais para compatibilidade
     name: Optional[str] = None
