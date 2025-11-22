@@ -702,7 +702,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Partner Alert System - All components tested and working"
+    - "Sistema de Gestão de Senhas - Admin Reset Password"
+    - "Sistema de Gestão de Senhas - Forgot Password"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -712,6 +713,7 @@ test_plan:
   ficha_veiculo_cancel_issue_resolved: true
   document_upload_system_implemented: true
   extintor_and_intervencoes_implemented: true
+  password_management_system_implemented: true
 
 backend:
   - task: "Sistema de Extintor - Campos expandidos"
