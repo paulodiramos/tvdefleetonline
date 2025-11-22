@@ -2230,10 +2230,77 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 <p className="text-sm text-slate-500">
                   Defina a próxima revisão por KM ou Data (ou ambos)
                 </p>
+                </CardContent>
+              </Card>
 
-                {/* Histórico de Manutenções */}
-                <div className="mt-6">
-                  <h3 className="font-semibold mb-3">Histórico de Manutenções</h3>
+              {/* Plano de Manutenções */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2">
+                    <Calendar className="w-5 h-5" />
+                    <span>Plano de Manutenções Periódicas</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="font-semibold text-blue-900 mb-3">Configuração Padrão (baseada em KM)</h4>
+                    <div className="space-y-2 text-sm text-blue-800">
+                      <div className="flex items-center justify-between border-b border-blue-200 pb-2">
+                        <span>Pastilhas</span>
+                        <span className="font-medium">Cada 30.000 km</span>
+                      </div>
+                      <div className="flex items-center justify-between border-b border-blue-200 pb-2">
+                        <span>Pastilhas e Discos</span>
+                        <span className="font-medium">Cada 60.000 km</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span>Óleo e Filtros</span>
+                        <span className="font-medium">Cada 15.000 km</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-blue-700 mt-3">
+                      ⓘ Estes valores são usados para calcular alertas automáticos de manutenção
+                    </p>
+                  </div>
+
+                  {canEdit && editMode && (
+                    <div className="mt-4">
+                      <Label htmlFor="ultima_revisao_km">Última Revisão (KM)</Label>
+                      <Input
+                        id="ultima_revisao_km"
+                        type="number"
+                        value={vehicle.ultima_revisao_km || 0}
+                        onChange={async (e) => {
+                          try {
+                            const token = localStorage.getItem('token');
+                            await axios.put(`${API}/vehicles/${vehicleId}`, 
+                              { ultima_revisao_km: parseInt(e.target.value) || 0 },
+                              { headers: { Authorization: `Bearer ${token}` }}
+                            );
+                            fetchVehicleData();
+                            toast.success('KM da última revisão atualizado!');
+                          } catch (error) {
+                            toast.error('Erro ao atualizar KM');
+                          }
+                        }}
+                        placeholder="Ex: 80000"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">
+                        Este valor é usado como referência para calcular as próximas manutenções
+                      </p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Histórico de Manutenções */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Histórico de Manutenções</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="mt-6">
+                  <h3 className="font-semibold mb-3">Registos Anteriores</h3>
                   {vehicle.manutencoes && vehicle.manutencoes.length > 0 ? (
                     <div className="space-y-2">
                       {vehicle.manutencoes.map((man, index) => (
