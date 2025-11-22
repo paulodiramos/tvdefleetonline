@@ -3004,6 +3004,50 @@ startxref
         print("\n" + "=" * 80)
         return failed == 0
 
+    def run_partner_alert_tests_only(self):
+        """Run only partner alert system tests as requested in review"""
+        print("=" * 80)
+        print("TVDEFleet Backend Testing Suite - Partner Alert System")
+        print("=" * 80)
+        
+        # Authenticate admin user
+        print("\n🔐 AUTHENTICATION PHASE")
+        print("-" * 40)
+        if not self.authenticate_user("admin"):
+            return False
+        
+        # Run partner alert system tests
+        print("\n🔔 PARTNER ALERT SYSTEM TESTS")
+        print("-" * 50)
+        self.test_parceiros_alert_configuration_fields()
+        self.test_parceiro_alertas_endpoint()
+        self.test_alertas_response_structure_validation()
+        self.test_alertas_urgente_flag_logic()
+        self.test_alertas_empty_response_handling()
+        
+        # Summary
+        print("\n" + "=" * 80)
+        print("PARTNER ALERT SYSTEM TEST SUMMARY")
+        print("=" * 80)
+        
+        passed = sum(1 for r in self.test_results if r["success"])
+        failed = sum(1 for r in self.test_results if not r["success"])
+        
+        print(f"Total Tests: {len(self.test_results)}")
+        print(f"✅ Passed: {passed}")
+        print(f"❌ Failed: {failed}")
+        
+        if failed > 0:
+            print("\n🔍 FAILED TESTS:")
+            for result in self.test_results:
+                if not result["success"]:
+                    print(f"   ❌ {result['test']}: {result['message']}")
+                    if result.get("details"):
+                        print(f"      Details: {result['details']}")
+        
+        print("\n" + "=" * 80)
+        return failed == 0
+
     def run_financial_import_tests_only(self):
         """Run only financial import tests as requested in review"""
         print("=" * 80)
