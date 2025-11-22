@@ -826,7 +826,85 @@ frontend:
           agent: "main"
           comment: "Reescrita completa da página UploadCSV.js com interface unificada. Criado array PLATAFORMAS com 6 plataformas (Uber, Bolt, Via Verde, GPS, Combustível Elétrico, Combustível Fóssil). Implementado dropdown de seleção de plataforma que muda dinamicamente o formulário (accept, endpoint, ícone). Adicionado dropdown de seleção de parceiro (apenas para Admin/Gestão). Formulário único que adapta-se à plataforma selecionada. Feedback customizado por plataforma com estatísticas específicas. Suporte para CSV e XLSX. Função handleUpload unificada que roteia para o endpoint correto."
 
+frontend:
+  - task: "Sistema de Dashboard de Alertas do Parceiro - EditParceiro.js"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/EditParceiro.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implementado sistema completo de dashboard de alertas para parceiros. Adicionada seção 'Configurações de Alertas' com 3 campos (dias_aviso_seguro, dias_aviso_inspecao, km_aviso_revisao) e seção 'Dashboard - Alertas e Resumo' que exibe o componente DashboardParceiroTab."
+
+  - task: "DashboardParceiroTab.js - Componente de Dashboard"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/DashboardParceiroTab.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implementado componente completo com 3 cards de estatísticas (Veículos, Motoristas, Contratos), seção de alertas com 4 categorias (Seguros, Inspeções, Extintores, Manutenções) e 4 cards de resumo rápido. Integrado com endpoint /api/parceiros/{id}/alertas."
+
+  - task: "FichaVeiculo.js - Seção Plano de Manutenções"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/FichaVeiculo.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implementada nova seção 'Plano de Manutenções Periódicas' na tab 'Revisão/Intervenções'. Exibe configuração padrão (Pastilhas: 30.000 km, Pastilhas e Discos: 60.000 km, Óleo e Filtros: 15.000 km) e campo editável 'Última Revisão (KM)' em modo de edição."
+
 agent_communication:
+    - agent: "main"
+      message: |
+        🚀 NOVA IMPLEMENTAÇÃO - SISTEMA DE DASHBOARD DE ALERTAS DO PARCEIRO
+        
+        REQUISITO DO USUÁRIO:
+        - Sistema de dashboard de alertas para parceiros que exibe alertas de seguros, inspeções, extintores e manutenções
+        
+        IMPLEMENTAÇÕES COMPLETAS:
+        
+        ✅ EditParceiro.js (/edit-parceiro):
+        - Nova seção "Configurações de Alertas" com 3 campos:
+          * dias_aviso_seguro (número, default 30)
+          * dias_aviso_inspecao (número, default 30) 
+          * km_aviso_revisao (número, default 5000)
+        - Nova seção "Dashboard - Alertas e Resumo" que exibe o DashboardParceiroTab
+        - Integrado com formulário de atualização de parceiro
+        
+        ✅ DashboardParceiroTab.js (componente dentro de EditParceiro):
+        - 3 cards de estatísticas: Veículos (ativos/total), Motoristas (ativos/total), Contratos (ativos/total)
+        - Seção de "Alertas e Avisos" com badge de total de alertas
+        - 4 categorias de alertas com cores específicas:
+          * Seguros a Vencer (vermelho)
+          * Inspeções a Vencer (amarelo)
+          * Extintores a Vencer (laranja)
+          * Manutenções Pendentes (azul)
+        - Cada alerta mostra: veículo, dias/km restantes, data
+        - 4 cards de resumo rápido no final com cores condicionais
+        - Integrado com endpoint GET /api/parceiros/{id}/alertas
+        
+        ✅ FichaVeiculo.js - Nova seção "Plano de Manutenções":
+        - Na tab "Revisão/Intervenções"
+        - Exibe configuração padrão de manutenções:
+          * Pastilhas: Cada 30.000 km
+          * Pastilhas e Discos: Cada 60.000 km
+          * Óleo e Filtros: Cada 15.000 km
+        - Campo editável "Última Revisão (KM)" (apenas em modo de edição)
+        - Integrado com sistema de edição existente
+        
+        PRÓXIMO PASSO: Testar sistema completo de dashboard de alertas do parceiro
+        Frontend implementado e pronto para testes com credenciais admin@tvdefleet.com / admin123
+    
     - agent: "main"
       message: |
         🚀 NOVA IMPLEMENTAÇÃO - SISTEMA DE EXTINTOR E RELATÓRIO DE INTERVENÇÕES
