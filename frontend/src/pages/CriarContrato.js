@@ -106,7 +106,7 @@ const CriarContrato = ({ user, onLogout }) => {
   }, [templateSelecionado, templates]);
 
   useEffect(() => {
-    if (veiculoSelecionado) {
+    if (veiculoSelecionado && veiculoSelecionado !== null) {
       const veiculo = veiculos.find(v => v.id === veiculoSelecionado);
       setVeiculoData(veiculo);
       
