@@ -1235,33 +1235,54 @@ const FichaVeiculo = ({ user, onLogout }) => {
                     )}
 
                     {(editMode ? infoForm.tipo : vehicle.tipo_contrato?.tipo) === 'comissao' && (
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <Label htmlFor="comissao_parceiro">Comissão Parceiro (%)</Label>
-                          {canEdit && editMode ? (
-                            <Input
-                              id="comissao_parceiro"
-                              type="number"
-                              value={infoForm.comissao_parceiro}
-                              onChange={(e) => setInfoForm({...infoForm, comissao_parceiro: e.target.value})}
-                              placeholder="Ex: 60"
-                            />
-                          ) : (
-                            <p className="font-medium">{vehicle.tipo_contrato?.comissao_parceiro || 0}%</p>
-                          )}
+                      <div className="space-y-3 bg-green-50 p-3 rounded-lg">
+                        <div className="font-semibold text-sm text-green-900">Comissão</div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label htmlFor="comissao_parceiro">Comissão Parceiro (%)</Label>
+                            {canEdit && editMode ? (
+                              <Input
+                                id="comissao_parceiro"
+                                type="number"
+                                value={infoForm.comissao_parceiro}
+                                onChange={(e) => setInfoForm({...infoForm, comissao_parceiro: e.target.value})}
+                                placeholder="Ex: 60"
+                              />
+                            ) : (
+                              <p className="font-medium">{vehicle.tipo_contrato?.comissao_parceiro || 0}%</p>
+                            )}
+                          </div>
+                          <div>
+                            <Label htmlFor="comissao_motorista">Comissão Motorista (%)</Label>
+                            {canEdit && editMode ? (
+                              <Input
+                                id="comissao_motorista"
+                                type="number"
+                                value={infoForm.comissao_motorista}
+                                onChange={(e) => setInfoForm({...infoForm, comissao_motorista: e.target.value})}
+                                placeholder="Ex: 40"
+                              />
+                            ) : (
+                              <p className="font-medium">{vehicle.tipo_contrato?.comissao_motorista || 0}%</p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <Label htmlFor="comissao_motorista">Comissão Motorista (%)</Label>
+                        <div className="flex items-center space-x-2">
                           {canEdit && editMode ? (
-                            <Input
-                              id="comissao_motorista"
-                              type="number"
-                              value={infoForm.comissao_motorista}
-                              onChange={(e) => setInfoForm({...infoForm, comissao_motorista: e.target.value})}
-                              placeholder="Ex: 40"
-                            />
+                            <>
+                              <input
+                                type="checkbox"
+                                id="inclui_combustivel"
+                                checked={infoForm.inclui_combustivel}
+                                onChange={(e) => setInfoForm({...infoForm, inclui_combustivel: e.target.checked})}
+                                className="rounded"
+                              />
+                              <Label htmlFor="inclui_combustivel" className="cursor-pointer">Combustível Incluído</Label>
+                            </>
                           ) : (
-                            <p className="font-medium">{vehicle.tipo_contrato?.comissao_motorista || 0}%</p>
+                            <p className="text-sm">
+                              Combustível: {vehicle.tipo_contrato?.inclui_combustivel ? '✓ Incluído' : '✗ Não incluído'}
+                            </p>
                           )}
                         </div>
                       </div>
