@@ -831,39 +831,48 @@ frontend:
 frontend:
   - task: "Sistema de Dashboard de Alertas do Parceiro - EditParceiro.js"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/pages/EditParceiro.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implementado sistema completo de dashboard de alertas para parceiros. Adicionada seção 'Configurações de Alertas' com 3 campos (dias_aviso_seguro, dias_aviso_inspecao, km_aviso_revisao) e seção 'Dashboard - Alertas e Resumo' que exibe o componente DashboardParceiroTab."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: EditParceiro funcionando perfeitamente. Navegação para /edit-parceiro bem-sucedida. Dropdown de parceiros com 21 opções funcionando. Seção 'Configurações de Alertas' encontrada com todos os 3 campos (dias_aviso_seguro=30, dias_aviso_inspecao=30, km_aviso_revisao=5000). Seção 'Dashboard - Alertas e Resumo' renderizando corretamente o componente DashboardParceiroTab."
 
   - task: "DashboardParceiroTab.js - Componente de Dashboard"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/components/DashboardParceiroTab.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implementado componente completo com 3 cards de estatísticas (Veículos, Motoristas, Contratos), seção de alertas com 4 categorias (Seguros, Inspeções, Extintores, Manutenções) e 4 cards de resumo rápido. Integrado com endpoint /api/parceiros/{id}/alertas."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: DashboardParceiroTab funcionando perfeitamente. Cards de estatísticas (Veículos, Motoristas, Contratos) todos encontrados. Seção 'Alertas e Avisos' funcionando - mostra mensagem 'Tudo em dia! Nenhum alerta pendente.' quando não há alertas. 4 cards de resumo rápido encontrados no final. Componente integrado corretamente com EditParceiro."
 
   - task: "FichaVeiculo.js - Seção Plano de Manutenções"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/pages/FichaVeiculo.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implementada nova seção 'Plano de Manutenções Periódicas' na tab 'Revisão/Intervenções'. Exibe configuração padrão (Pastilhas: 30.000 km, Pastilhas e Discos: 60.000 km, Óleo e Filtros: 15.000 km) e campo editável 'Última Revisão (KM)' em modo de edição."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Seção Plano de Manutenções funcionando perfeitamente. Navegação para Ficha do Veículo bem-sucedida. Tab 'Revisão/Intervenções' encontrada e selecionada. Seção 'Plano de Manutenções Periódicas' encontrada com configuração padrão correta: Pastilhas (30.000 km), Pastilhas e Discos (60.000 km), Óleo e Filtros (15.000 km). Campo 'Última Revisão (KM)' encontrado em modo de edição e está editável. Funcionalidade cancelar funcionando corretamente. Minor: Campo de edição tem pequeno problema de atualização visual mas funcionalidade core está operacional."
 
 agent_communication:
     - agent: "main"
