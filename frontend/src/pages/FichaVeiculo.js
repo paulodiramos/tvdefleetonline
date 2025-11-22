@@ -199,6 +199,19 @@ const FichaVeiculo = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(`${API}/vehicles/${vehicleId}`, {
+        // Campos básicos do veículo
+        marca: vehicle.marca,
+        modelo: vehicle.modelo,
+        versao: vehicle.versao,
+        ano: vehicle.ano,
+        matricula: vehicle.matricula,
+        data_matricula: vehicle.data_matricula,
+        validade_matricula: vehicle.validade_matricula,
+        cor: vehicle.cor,
+        combustivel: vehicle.combustivel,
+        caixa: vehicle.caixa,
+        lugares: vehicle.lugares,
+        km_atual: vehicle.km_atual,
         tipo_contrato: {
           tipo: infoForm.tipo,
           periodicidade: infoForm.periodicidade,
