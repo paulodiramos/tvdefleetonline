@@ -177,6 +177,48 @@ const Usuarios = ({ user, onLogout }) => {
     setShowDialog(true);
   };
 
+  const handleResetPassword = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      toast.error('Senha deve ter no mínimo 6 caracteres');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.put(
+        `${API}/users/${selectedUser.id}/reset-password`,
+        { new_password: newPassword },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setGeneratedPassword(response.data.new_password);
+      toast.success('Senha alterada com sucesso!');
+      setNewPassword('');
+      fetchUsers();
+    } catch (error) {
+      console.error('Error resetting password:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao alterar senha');
+    }
+  };
+
+  const generateRandomPassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+    let password = '';
+    for (let i = 0; i < 8; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setNewPassword(password);
+    setShowPassword(true);
+  };
+
+  const openPasswordDialog = (userToReset) => {
+    setSelectedUser(userToReset);
+    setNewPassword('');
+    setGeneratedPassword('');
+    setShowPassword(false);
+    setShowPasswordDialog(true);
+  };
+
   const openDeleteDialog = (userToDelete) => {
     setSelectedUser(userToDelete);
     setActionType('delete');
