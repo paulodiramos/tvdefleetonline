@@ -7827,6 +7827,9 @@ async def download_csv_template(template_name: str, current_user: Dict = Depends
 
 app.include_router(api_router)
 
+# Mount static files for uploads (PDFs, documents, etc.)
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
