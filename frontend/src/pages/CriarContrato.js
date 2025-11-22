@@ -449,10 +449,9 @@ const CriarContrato = ({ user, onLogout }) => {
                       disabled={!parceiroSelecionado || veiculos.length === 0}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o veículo" />
+                        <SelectValue placeholder="Nenhum veículo selecionado" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Nenhum</SelectItem>
                         {veiculos.map(v => (
                           <SelectItem key={v.id} value={v.id}>
                             {v.matricula} - {v.marca} {v.modelo}
@@ -460,6 +459,17 @@ const CriarContrato = ({ user, onLogout }) => {
                         ))}
                       </SelectContent>
                     </Select>
+                    {veiculoSelecionado && (
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => setVeiculoSelecionado('')}
+                        className="mt-1 text-xs"
+                      >
+                        Limpar seleção
+                      </Button>
+                    )}
                   </div>
                 </div>
 
