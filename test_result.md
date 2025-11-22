@@ -702,11 +702,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Partner Alert System - All components tested and working"
+    - "Sistema de Dashboard de Alertas do Parceiro - EditParceiro.js"
+    - "DashboardParceiroTab.js - Componente de Dashboard"
+    - "FichaVeiculo.js - Seção Plano de Manutenções"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
-  partner_alert_system_tested: true
+  partner_alert_system_needs_testing: true
   backend_csv_templates_tested: true
   backend_inspection_value_tested: true
   ficha_veiculo_cancel_issue_resolved: true
