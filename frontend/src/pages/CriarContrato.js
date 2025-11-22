@@ -222,7 +222,7 @@ const CriarContrato = ({ user, onLogout }) => {
       const payload = {
         template_id: templateSelecionado,
         motorista_id: motoristaSelecionado,
-        veiculo_id: veiculoSelecionado || null,
+        veiculo_id: veiculoSelecionado && veiculoSelecionado !== null ? veiculoSelecionado : null,
         periodicidade: formData.periodicidade,
         valor_aplicado: parseFloat(formData.valor_aplicado),
         valor_caucao_aplicado: formData.valor_caucao_aplicado ? parseFloat(formData.valor_caucao_aplicado) : null,
