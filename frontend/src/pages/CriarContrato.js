@@ -360,7 +360,7 @@ const CriarContrato = ({ user, onLogout }) => {
                   setContratoGerado(null);
                   setTemplateSelecionado('');
                   setMotoristaSelecionado('');
-                  setVeiculoSelecionado('');
+                  setVeiculoSelecionado(null);
                 }}>
                   Criar Outro Contrato
                 </Button>
