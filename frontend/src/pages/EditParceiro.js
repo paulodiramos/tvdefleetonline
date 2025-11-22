@@ -361,6 +361,19 @@ const EditParceiro = ({ user, onLogout }) => {
               </CardContent>
             </Card>
 
+            {/* Templates de Contrato */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <FileText className="w-5 h-5" />
+                  <span>Templates de Contrato</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <TemplatesContratoTab parceiroId={selectedParceiro} user={user} />
+              </CardContent>
+            </Card>
+
             {/* Motoristas Associados */}
             <Card>
               <CardHeader>
