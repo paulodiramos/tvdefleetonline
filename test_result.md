@@ -3312,27 +3312,33 @@ backend:
 frontend:
   - task: "Usuarios.js - Botão Alterar Senha"
     implemented: true
-    working: "NA"
+    working: false
     file: "frontend/src/pages/Usuarios.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Adicionado botão 'Senha' (Key icon) na tabela de utilizadores registrados. Abre modal com: campo de senha com show/hide toggle, botão gerar senha aleatória, validação mínimo 6 caracteres, exibição da senha gerada com sucesso em verde."
+        - working: false
+          agent: "testing"
+          comment: "❌ TESTADO PARCIALMENTE: Não foi possível acessar a página /usuarios devido a problemas de autenticação. Login com admin@tvdefleet.com/admin123 não está funcionando corretamente - permanece na página de login. Componentes implementados no código estão corretos: botão 'Senha' com Key icon, modal 'Alterar Senha', campo 'Nova Senha' com toggle show/hide, botão 'Gerar Senha Aleatória' com RefreshCw icon, validação mínimo 6 caracteres, botões Cancelar/Alterar Senha. PROBLEMA: Sistema de autenticação impedindo acesso à funcionalidade."
 
   - task: "Login.js - Recuperação de Senha"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/pages/Login.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Adicionado link 'Esqueci minha senha' ao lado do campo senha. Modal de recuperação com: campo email, botão recuperar, exibição da senha temporária gerada em verde com instruções para copiar e fazer login."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Sistema de recuperação de senha funcionando perfeitamente. Link 'Esqueci minha senha' visível ao lado do label Senha. Modal 'Recuperar Senha' abre corretamente com campo email (placeholder correto), botões Cancelar/Recuperar Senha. Teste com admin@tvdefleet.com gerou senha temporária '8 caracteres' exibida em card verde com instruções. Success card mostra 'Senha temporária gerada com sucesso!' e instruções 'Use esta senha para fazer login'. Botão 'Entendido' fecha modal corretamente. TODOS OS COMPONENTES FUNCIONANDO: KeyRound icon no título, email field, success feedback, temporary password display."
 
 metadata:
   created_by: "main_agent"
