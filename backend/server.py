@@ -1081,22 +1081,45 @@ class CaucaoVeiculo(BaseModel):
 
 # Vehicle Models - COMPLETE EXPANDED
 class TipoContrato(BaseModel):
-    tipo: Optional[str] = "aluguer"  # aluguer, comissao, motorista_privado, compra_veiculo
-    # Para Aluguer
+    # Tipo de contrato alinhado com sistema de templates
+    tipo: Optional[str] = "aluguer"  # aluguer_sem_caucao, aluguer_com_caucao, aluguer_caucao_parcelada,
+                                      # periodo_epoca, aluguer_epocas_sem_caucao, aluguer_epocas_caucao,
+                                      # aluguer_epoca_caucao_parcelada, compra_veiculo, comissao, 
+                                      # motorista_privado, outros
+    
+    # Para Aluguer (todos os tipos de aluguer)
     valor_aluguer: Optional[float] = None
+    periodicidade: Optional[str] = "semanal"  # semanal, mensal
+    
+    # Caução (para tipos com caução)
+    valor_caucao: Optional[float] = None
+    numero_parcelas_caucao: Optional[int] = None
+    
+    # Épocas (para tipos com época)
+    valor_epoca_alta: Optional[float] = None
+    valor_epoca_baixa: Optional[float] = None
+    
     # Para Comissão
     comissao_parceiro: Optional[float] = None  # % da comissão para o parceiro
     comissao_motorista: Optional[float] = None  # % da comissão para o motorista (soma deve ser 100%)
+    inclui_combustivel: bool = False
+    regime: Optional[str] = None  # full_time, part_time
+    
     # Para Compra do Veículo
-    valor_semanal_compra: Optional[float] = None
-    periodo_compra: Optional[int] = None  # Número de semanas
+    valor_compra_veiculo: Optional[float] = None
+    numero_semanas_compra: Optional[int] = None
+    valor_semanal_compra: Optional[float] = None  # Calculado
+    periodo_compra: Optional[int] = None  # Número de semanas (legacy)
     valor_acumulado: Optional[float] = None
     valor_falta_cobrar: Optional[float] = None
-    custo_slot: Optional[float] = None
-    # Geral
-    inclui_combustivel: bool = False
+    com_slot: bool = False
+    custo_slot: Optional[float] = None  # Legacy
+    extra_seguro: bool = False
+    valor_extra_seguro: Optional[float] = None
+    
+    # Geral (mantido para compatibilidade)
     inclui_via_verde: bool = False
-    regime: Optional[str] = None  # full_time, part_time
+    
     # Part-time: 4 turnos livres configuráveis (opcionais)
     horario_turno_1: Optional[str] = None  # Ex: "09:00-13:00"
     horario_turno_2: Optional[str] = None  # Ex: "14:00-18:00"
