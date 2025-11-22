@@ -73,7 +73,8 @@ const FichaVeiculo = ({ user, onLogout }) => {
   });
 
   const [infoForm, setInfoForm] = useState({
-    tipo: 'aluguer',
+    tipo: 'aluguer_sem_caucao',
+    periodicidade: 'semanal',
     regime: 'full_time',
     horario_turno_1: '',
     horario_turno_2: '',
@@ -81,10 +82,21 @@ const FichaVeiculo = ({ user, onLogout }) => {
     horario_turno_4: '',
     // Aluguer
     valor_aluguer: '',
+    valor_caucao: '',
+    numero_parcelas_caucao: '',
+    // Épocas
+    valor_epoca_alta: '',
+    valor_epoca_baixa: '',
     // Comissão
     comissao_parceiro: '',
     comissao_motorista: '',
+    inclui_combustivel: false,
     // Compra do Veículo
+    valor_compra_veiculo: '',
+    numero_semanas_compra: '',
+    com_slot: false,
+    extra_seguro: false,
+    valor_extra_seguro: '',
     valor_semanal_compra: '',
     periodo_compra: '',
     valor_acumulado: '',
