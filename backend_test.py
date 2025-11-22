@@ -1512,11 +1512,27 @@ startxref
         try:
             # Get any user ID
             users_response = requests.get(f"{BACKEND_URL}/users/all", headers=headers)
-            if users_response.status_code != 200 or not users_response.json():
+            if users_response.status_code != 200:
+                self.log_result("Admin-Reset-Password-Invalid-Length", False, "Could not get users list")
+                return
+            
+            users_data = users_response.json()
+            
+            # Handle the structure returned by /users/all endpoint
+            all_users = []
+            if isinstance(users_data, dict):
+                if "registered_users" in users_data:
+                    all_users = users_data["registered_users"]
+                elif "users" in users_data:
+                    all_users = users_data["users"]
+            elif isinstance(users_data, list):
+                all_users = users_data
+            
+            if not all_users:
                 self.log_result("Admin-Reset-Password-Invalid-Length", False, "No users available for test")
                 return
             
-            user_id = users_response.json()[0]["id"]
+            user_id = all_users[0]["id"]
             
             # Try to reset with short password
             reset_data = {"new_password": "12345"}  # Only 5 characters
