@@ -2569,6 +2569,329 @@ startxref
             except Exception as e:
                 self.log_result(f"Tipo-Motorista-{tipo}", False, f"Error testing tipo '{tipo}': {str(e)}")
 
+    # ==================== PARTNER ALERT SYSTEM TESTS ====================
+    
+    def test_parceiros_alert_configuration_fields(self):
+        """Test GET /api/parceiros - verify alert configuration fields are present"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Parceiros-Alert-Config-Fields", False, "No auth token for admin")
+            return
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/parceiros", headers=headers)
+            
+            if response.status_code == 200:
+                parceiros = response.json()
+                
+                if not parceiros:
+                    self.log_result("Parceiros-Alert-Config-Fields", False, "No parceiros available for test")
+                    return
+                
+                # Check first parceiro for alert configuration fields
+                first_parceiro = parceiros[0]
+                alert_config_fields = ["dias_aviso_seguro", "dias_aviso_inspecao", "km_aviso_revisao"]
+                
+                # Check if fields exist (they should have default values)
+                missing_fields = []
+                for field in alert_config_fields:
+                    if field not in first_parceiro:
+                        missing_fields.append(field)
+                
+                if not missing_fields:
+                    # Verify default values
+                    dias_seguro = first_parceiro.get("dias_aviso_seguro", 0)
+                    dias_inspecao = first_parceiro.get("dias_aviso_inspecao", 0)
+                    km_revisao = first_parceiro.get("km_aviso_revisao", 0)
+                    
+                    self.log_result("Parceiros-Alert-Config-Fields", True, 
+                                  f"Alert config fields present: seguro={dias_seguro}d, inspecao={dias_inspecao}d, revisao={km_revisao}km")
+                else:
+                    self.log_result("Parceiros-Alert-Config-Fields", False, f"Missing alert config fields: {missing_fields}")
+            else:
+                self.log_result("Parceiros-Alert-Config-Fields", False, f"Failed to get parceiros: {response.status_code}")
+        except Exception as e:
+            self.log_result("Parceiros-Alert-Config-Fields", False, f"Request error: {str(e)}")
+    
+    def test_parceiro_alertas_endpoint(self):
+        """Test GET /api/parceiros/{parceiro_id}/alertas endpoint"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Parceiro-Alertas-Endpoint", False, "No auth token for admin")
+            return
+        
+        try:
+            # First get a valid parceiro_id
+            parceiros_response = requests.get(f"{BACKEND_URL}/parceiros", headers=headers)
+            
+            if parceiros_response.status_code != 200:
+                self.log_result("Parceiro-Alertas-Endpoint", False, "Could not get parceiros list")
+                return
+            
+            parceiros = parceiros_response.json()
+            if not parceiros:
+                self.log_result("Parceiro-Alertas-Endpoint", False, "No parceiros available for test")
+                return
+            
+            parceiro_id = parceiros[0]["id"]
+            
+            # Test the alertas endpoint
+            response = requests.get(f"{BACKEND_URL}/parceiros/{parceiro_id}/alertas", headers=headers)
+            
+            if response.status_code == 200:
+                alertas_data = response.json()
+                
+                # Verify response structure
+                required_fields = ["parceiro_id", "configuracao", "alertas", "totais"]
+                missing_fields = [field for field in required_fields if field not in alertas_data]
+                
+                if missing_fields:
+                    self.log_result("Parceiro-Alertas-Endpoint", False, f"Missing response fields: {missing_fields}")
+                    return
+                
+                # Verify configuracao structure
+                config = alertas_data.get("configuracao", {})
+                config_fields = ["dias_aviso_seguro", "dias_aviso_inspecao", "km_aviso_revisao"]
+                missing_config = [field for field in config_fields if field not in config]
+                
+                if missing_config:
+                    self.log_result("Parceiro-Alertas-Endpoint", False, f"Missing config fields: {missing_config}")
+                    return
+                
+                # Verify alertas structure
+                alertas = alertas_data.get("alertas", {})
+                alert_types = ["seguros", "inspecoes", "extintores", "manutencoes"]
+                missing_alert_types = [alert_type for alert_type in alert_types if alert_type not in alertas]
+                
+                if missing_alert_types:
+                    self.log_result("Parceiro-Alertas-Endpoint", False, f"Missing alert types: {missing_alert_types}")
+                    return
+                
+                # Verify totais structure
+                totais = alertas_data.get("totais", {})
+                total_fields = ["seguros", "inspecoes", "extintores", "manutencoes", "total"]
+                missing_totals = [field for field in total_fields if field not in totais]
+                
+                if missing_totals:
+                    self.log_result("Parceiro-Alertas-Endpoint", False, f"Missing total fields: {missing_totals}")
+                    return
+                
+                # All structure checks passed
+                total_alertas = totais.get("total", 0)
+                self.log_result("Parceiro-Alertas-Endpoint", True, 
+                              f"Alertas endpoint working correctly. Total alerts: {total_alertas}")
+                
+                # Log details for debugging
+                print(f"   Config: seguro={config.get('dias_aviso_seguro')}d, inspecao={config.get('dias_aviso_inspecao')}d, revisao={config.get('km_aviso_revisao')}km")
+                print(f"   Totals: seguros={totais.get('seguros')}, inspecoes={totais.get('inspecoes')}, extintores={totais.get('extintores')}, manutencoes={totais.get('manutencoes')}")
+                
+            else:
+                self.log_result("Parceiro-Alertas-Endpoint", False, f"Alertas endpoint failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Parceiro-Alertas-Endpoint", False, f"Request error: {str(e)}")
+    
+    def test_alertas_response_structure_validation(self):
+        """Test detailed validation of alertas response structure"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Alertas-Response-Structure", False, "No auth token for admin")
+            return
+        
+        try:
+            # Get a parceiro
+            parceiros_response = requests.get(f"{BACKEND_URL}/parceiros", headers=headers)
+            if parceiros_response.status_code != 200 or not parceiros_response.json():
+                self.log_result("Alertas-Response-Structure", False, "No parceiros available")
+                return
+            
+            parceiro_id = parceiros_response.json()[0]["id"]
+            
+            # Get alertas
+            response = requests.get(f"{BACKEND_URL}/parceiros/{parceiro_id}/alertas", headers=headers)
+            
+            if response.status_code != 200:
+                self.log_result("Alertas-Response-Structure", False, f"Alertas request failed: {response.status_code}")
+                return
+            
+            data = response.json()
+            
+            # Detailed structure validation
+            validation_errors = []
+            
+            # Check parceiro_id
+            if data.get("parceiro_id") != parceiro_id:
+                validation_errors.append(f"parceiro_id mismatch: expected {parceiro_id}, got {data.get('parceiro_id')}")
+            
+            # Check each alert type has correct structure
+            alertas = data.get("alertas", {})
+            for alert_type in ["seguros", "inspecoes", "extintores", "manutencoes"]:
+                if alert_type not in alertas:
+                    validation_errors.append(f"Missing alert type: {alert_type}")
+                    continue
+                
+                alerts_list = alertas[alert_type]
+                if not isinstance(alerts_list, list):
+                    validation_errors.append(f"{alert_type} should be a list, got {type(alerts_list)}")
+                    continue
+                
+                # If there are alerts, check their structure
+                if len(alerts_list) > 0:
+                    first_alert = alerts_list[0]
+                    
+                    # Common fields for all alert types
+                    common_fields = ["vehicle_id", "matricula", "urgente"]
+                    for field in common_fields:
+                        if field not in first_alert:
+                            validation_errors.append(f"{alert_type} alert missing field: {field}")
+                    
+                    # Type-specific fields
+                    if alert_type == "seguros":
+                        if "data_validade" not in first_alert or "dias_restantes" not in first_alert:
+                            validation_errors.append(f"seguros alert missing specific fields")
+                    elif alert_type == "inspecoes":
+                        if "proxima_inspecao" not in first_alert or "dias_restantes" not in first_alert:
+                            validation_errors.append(f"inspecoes alert missing specific fields")
+                    elif alert_type == "extintores":
+                        if "data_validade" not in first_alert or "dias_restantes" not in first_alert:
+                            validation_errors.append(f"extintores alert missing specific fields")
+                    elif alert_type == "manutencoes":
+                        if "tipo_manutencao" not in first_alert or "km_atual" not in first_alert or "km_proxima" not in first_alert or "km_restantes" not in first_alert:
+                            validation_errors.append(f"manutencoes alert missing specific fields")
+            
+            # Check totals calculation
+            totais = data.get("totais", {})
+            calculated_total = sum([totais.get(key, 0) for key in ["seguros", "inspecoes", "extintores", "manutencoes"]])
+            reported_total = totais.get("total", 0)
+            
+            if calculated_total != reported_total:
+                validation_errors.append(f"Total calculation error: calculated {calculated_total}, reported {reported_total}")
+            
+            # Final result
+            if not validation_errors:
+                self.log_result("Alertas-Response-Structure", True, "All response structure validations passed")
+            else:
+                self.log_result("Alertas-Response-Structure", False, f"Structure validation errors: {validation_errors}")
+                
+        except Exception as e:
+            self.log_result("Alertas-Response-Structure", False, f"Validation error: {str(e)}")
+    
+    def test_alertas_urgente_flag_logic(self):
+        """Test urgente flag logic (days <= 7 or km <= 1000)"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Alertas-Urgente-Flag", False, "No auth token for admin")
+            return
+        
+        try:
+            # Get parceiro alertas
+            parceiros_response = requests.get(f"{BACKEND_URL}/parceiros", headers=headers)
+            if parceiros_response.status_code != 200 or not parceiros_response.json():
+                self.log_result("Alertas-Urgente-Flag", False, "No parceiros available")
+                return
+            
+            parceiro_id = parceiros_response.json()[0]["id"]
+            response = requests.get(f"{BACKEND_URL}/parceiros/{parceiro_id}/alertas", headers=headers)
+            
+            if response.status_code != 200:
+                self.log_result("Alertas-Urgente-Flag", False, f"Could not get alertas: {response.status_code}")
+                return
+            
+            data = response.json()
+            alertas = data.get("alertas", {})
+            
+            urgente_logic_errors = []
+            
+            # Check seguros and inspecoes (date-based)
+            for alert_type in ["seguros", "inspecoes", "extintores"]:
+                for alert in alertas.get(alert_type, []):
+                    dias_restantes = alert.get("dias_restantes", 999)
+                    urgente = alert.get("urgente", False)
+                    
+                    # Logic: urgente should be True if dias_restantes <= 7
+                    expected_urgente = dias_restantes <= 7
+                    
+                    if urgente != expected_urgente:
+                        urgente_logic_errors.append(
+                            f"{alert_type}: dias_restantes={dias_restantes}, urgente={urgente}, expected={expected_urgente}"
+                        )
+            
+            # Check manutencoes (km-based)
+            for alert in alertas.get("manutencoes", []):
+                km_restantes = alert.get("km_restantes", 9999)
+                urgente = alert.get("urgente", False)
+                
+                # Logic: urgente should be True if km_restantes <= 1000
+                expected_urgente = km_restantes <= 1000
+                
+                if urgente != expected_urgente:
+                    urgente_logic_errors.append(
+                        f"manutencoes: km_restantes={km_restantes}, urgente={urgente}, expected={expected_urgente}"
+                    )
+            
+            if not urgente_logic_errors:
+                self.log_result("Alertas-Urgente-Flag", True, "Urgente flag logic working correctly")
+            else:
+                self.log_result("Alertas-Urgente-Flag", False, f"Urgente flag logic errors: {urgente_logic_errors}")
+                
+        except Exception as e:
+            self.log_result("Alertas-Urgente-Flag", False, f"Urgente flag test error: {str(e)}")
+    
+    def test_alertas_empty_response_handling(self):
+        """Test that alertas endpoint works even without vehicles (returns empty arrays)"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Alertas-Empty-Response", False, "No auth token for admin")
+            return
+        
+        try:
+            # Get parceiros
+            parceiros_response = requests.get(f"{BACKEND_URL}/parceiros", headers=headers)
+            if parceiros_response.status_code != 200 or not parceiros_response.json():
+                self.log_result("Alertas-Empty-Response", False, "No parceiros available")
+                return
+            
+            # Test with any parceiro (even if they have no vehicles)
+            parceiro_id = parceiros_response.json()[0]["id"]
+            response = requests.get(f"{BACKEND_URL}/parceiros/{parceiro_id}/alertas", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Verify structure exists even if empty
+                required_structure = {
+                    "parceiro_id": str,
+                    "configuracao": dict,
+                    "alertas": dict,
+                    "totais": dict
+                }
+                
+                structure_ok = True
+                for field, expected_type in required_structure.items():
+                    if field not in data:
+                        structure_ok = False
+                        break
+                    if not isinstance(data[field], expected_type):
+                        structure_ok = False
+                        break
+                
+                if structure_ok:
+                    # Verify alertas has all required arrays
+                    alertas = data["alertas"]
+                    required_arrays = ["seguros", "inspecoes", "extintores", "manutencoes"]
+                    arrays_ok = all(isinstance(alertas.get(arr, []), list) for arr in required_arrays)
+                    
+                    if arrays_ok:
+                        self.log_result("Alertas-Empty-Response", True, "Alertas endpoint handles empty data correctly")
+                    else:
+                        self.log_result("Alertas-Empty-Response", False, "Alert arrays not properly initialized")
+                else:
+                    self.log_result("Alertas-Empty-Response", False, "Response structure incomplete")
+            else:
+                self.log_result("Alertas-Empty-Response", False, f"Alertas endpoint failed: {response.status_code}")
+                
+        except Exception as e:
+            self.log_result("Alertas-Empty-Response", False, f"Empty response test error: {str(e)}")
+
     # ==================== MAIN TEST RUNNER ====================
     
     def run_all_tests(self):
