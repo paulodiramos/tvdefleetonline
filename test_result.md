@@ -1161,6 +1161,30 @@ agent_communication:
         
         ✅ LOGIN ENDPOINT TOTALMENTE OPERACIONAL E SEGURO!
 
+backend:
+  - task: "Sistema de Gestão de Senhas - Admin Reset Password"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implementado endpoint PUT /api/users/{user_id}/reset-password para admin resetar senhas de utilizadores. Requer autenticação ADMIN, valida senha mínimo 6 caracteres, retorna senha em plaintext, marca senha_provisoria: true."
+
+  - task: "Sistema de Gestão de Senhas - Forgot Password"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implementado endpoint POST /api/auth/forgot-password (público) para recuperação de senha. Gera senha temporária aleatória (8 caracteres), retorna senha em plaintext, marca senha_provisoria: true, retorna 404 se email não existe."
     - agent: "main"
       message: |
         🔧 NOVA IMPLEMENTAÇÃO - FIX DO EDIT/SAVE/CANCEL EM FICHAVEICULO.JS
