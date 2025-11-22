@@ -43,6 +43,7 @@ const Layout = ({ user, onLogout, children }) => {
     // Add Contratos for admin and gestao
     if (user.role === 'admin' || user.role === 'gestao') {
       items.push({ path: '/contratos', icon: FileText, label: 'Contratos' });
+      items.push({ path: '/criar-contrato', icon: FileText, label: 'Gerar Contrato' });
     }
 
     // Add Sincronização Auto for admin and gestao
