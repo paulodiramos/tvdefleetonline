@@ -237,12 +237,12 @@ const Contratos = ({ user, onLogout }) => {
               {(user.role === 'admin' || user.role === 'gestao') && (
                 <div>
                   <Label htmlFor="parceiro">Parceiro</Label>
-                  <Select value={filtroParceiro} onValueChange={setFiltroParceiro}>
+                  <Select value={filtroParceiro || 'all'} onValueChange={(val) => setFiltroParceiro(val === 'all' ? '' : val)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos</SelectItem>
+                      <SelectItem value="all">Todos</SelectItem>
                       {parceiros.map(p => (
                         <SelectItem key={p.id} value={p.id}>
                           {p.nome_empresa || p.name}
@@ -256,12 +256,12 @@ const Contratos = ({ user, onLogout }) => {
               {/* Motorista */}
               <div>
                 <Label htmlFor="motorista">Motorista</Label>
-                <Select value={filtroMotorista} onValueChange={setFiltroMotorista}>
+                <Select value={filtroMotorista || 'all'} onValueChange={(val) => setFiltroMotorista(val === 'all' ? '' : val)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Todos" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Todos</SelectItem>
+                    <SelectItem value="all">Todos</SelectItem>
                     {motoristas.map(m => (
                       <SelectItem key={m.id} value={m.id}>
                         {m.name}
