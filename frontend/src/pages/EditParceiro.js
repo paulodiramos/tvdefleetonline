@@ -334,6 +334,72 @@ const EditParceiro = ({ user, onLogout }) => {
               </CardContent>
             </Card>
 
+            {/* Configurações de Alertas */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <BarChart3 className="w-5 h-5" />
+                  <span>Configurações de Alertas</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleUpdateParceiro} className="space-y-4">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="dias_aviso_seguro">Dias de Aviso - Seguro</Label>
+                      <Input
+                        id="dias_aviso_seguro"
+                        type="number"
+                        value={parceiroData.dias_aviso_seguro || 30}
+                        onChange={(e) => setParceiroData({...parceiroData, dias_aviso_seguro: parseInt(e.target.value) || 30})}
+                        placeholder="Ex: 30"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Alertar X dias antes do vencimento</p>
+                    </div>
+                    <div>
+                      <Label htmlFor="dias_aviso_inspecao">Dias de Aviso - Inspeção</Label>
+                      <Input
+                        id="dias_aviso_inspecao"
+                        type="number"
+                        value={parceiroData.dias_aviso_inspecao || 30}
+                        onChange={(e) => setParceiroData({...parceiroData, dias_aviso_inspecao: parseInt(e.target.value) || 30})}
+                        placeholder="Ex: 30"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Alertar X dias antes da inspeção</p>
+                    </div>
+                    <div>
+                      <Label htmlFor="km_aviso_revisao">KM de Aviso - Revisão</Label>
+                      <Input
+                        id="km_aviso_revisao"
+                        type="number"
+                        value={parceiroData.km_aviso_revisao || 5000}
+                        onChange={(e) => setParceiroData({...parceiroData, km_aviso_revisao: parseInt(e.target.value) || 5000})}
+                        placeholder="Ex: 5000"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Alertar X km antes da revisão</p>
+                    </div>
+                  </div>
+                  <Button type="submit">
+                    <Save className="w-4 h-4 mr-2" />
+                    Guardar Configurações
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Dashboard do Parceiro */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <BarChart3 className="w-5 h-5" />
+                  <span>Dashboard - Alertas e Resumo</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DashboardParceiroTab parceiroId={selectedParceiro} />
+              </CardContent>
+            </Card>
+
             {/* Veículos Associados */}
             <Card>
               <CardHeader>
