@@ -1275,6 +1275,10 @@ class Vehicle(BaseModel):
     motorista_atribuido_nome: Optional[str] = None  # Nome do motorista
     status: str = "disponivel"  # disponivel, atribuido, manutencao, venda, condicoes
     km_atual: Optional[int] = None  # KM atual do veículo
+    ultima_revisao_km: Optional[int] = None  # KM da última revisão
+    data_seguro_ate: Optional[str] = None  # Validade do seguro (alias para insurance.data_validade)
+    data_inspecao_ate: Optional[str] = None  # Validade da inspeção (alias para inspection.proxima_inspecao)
+    plano_manutencoes: List[Dict[str, Any]] = []  # Plano de manutenções periódicas
     campos_customizados: Dict[str, Any] = {}  # Campos adicionais customizáveis
     # Marketplace fields
     disponivel_venda: bool = False  # Se está disponível para venda no marketplace
