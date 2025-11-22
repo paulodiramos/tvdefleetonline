@@ -36,6 +36,22 @@ const Login = ({ onLogin }) => {
     }
   };
 
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setLoadingForgot(true);
+    setTempPassword('');
+
+    try {
+      const response = await axios.post(`${API}/auth/forgot-password`, { email: forgotEmail });
+      setTempPassword(response.data.temp_password);
+      toast.success('Senha temporária gerada com sucesso!');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao recuperar senha');
+    } finally {
+      setLoadingForgot(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
