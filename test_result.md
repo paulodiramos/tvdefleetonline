@@ -3206,6 +3206,119 @@ agent_communication:
         - Mostrar popup para criar rapidamente esses registos
         
         IMPLEMENTA\u00c7\u00d5ES BACKEND:
+
+
+backend:
+  - task: "Sistema de Gestão de Senhas - Admin Reset Password"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Criado endpoint PUT /api/users/{user_id}/reset-password que permite admin alterar senha de qualquer utilizador. Retorna a senha em texto plano para o admin visualizar. Marca senha como provisória (senha_provisoria: true)."
+
+  - task: "Sistema de Recuperação de Senha - Forgot Password"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Criado endpoint POST /api/auth/forgot-password que recebe email e gera senha temporária aleatória (8 caracteres). Retorna senha em texto plano. Marca como provisória. Em produção, seria enviado por email."
+
+frontend:
+  - task: "Usuarios.js - Botão Alterar Senha"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Usuarios.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Adicionado botão 'Senha' (Key icon) na tabela de utilizadores registrados. Abre modal com: campo de senha com show/hide toggle, botão gerar senha aleatória, validação mínimo 6 caracteres, exibição da senha gerada com sucesso em verde."
+
+  - task: "Login.js - Recuperação de Senha"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/Login.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Adicionado link 'Esqueci minha senha' ao lado do campo senha. Modal de recuperação com: campo email, botão recuperar, exibição da senha temporária gerada em verde com instruções para copiar e fazer login."
+
+metadata:
+  created_by: "main_agent"
+  version: "4.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Sistema de Gestão de Senhas - Backend"
+    - "Sistema de Gestão de Senhas - Frontend"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: |
+        🔐 NOVA IMPLEMENTAÇÃO - SISTEMA DE GESTÃO DE SENHAS
+        
+        REQUISITOS DO USUÁRIO:
+        1. Admin pode alterar senha de utilizadores e visualizar
+        2. Recuperação de senha no login ("Esqueci minha senha")
+        
+        IMPLEMENTAÇÕES BACKEND:
+        ✅ PUT /api/users/{user_id}/reset-password (Admin only):
+        - Recebe: {new_password: string}
+        - Valida: mínimo 6 caracteres
+        - Retorna: {message, new_password (plaintext), user_id}
+        - Marca senha_provisoria: true
+        - Atualiza em users e motoristas collections
+        
+        ✅ POST /api/auth/forgot-password (público):
+        - Recebe: {email: string}
+        - Busca user por email
+        - Gera senha temporária aleatória (8 chars: letras + números)
+        - Retorna: {message, temp_password (plaintext), email, instructions}
+        - Marca senha_provisoria: true
+        
+        IMPLEMENTAÇÕES FRONTEND:
+        ✅ Usuarios.js:
+        - Botão "Senha" (azul, icon Key) para cada utilizador
+        - Modal com campo de senha + toggle show/hide
+        - Botão "Gerar Senha Aleatória" (RefreshCw icon)
+        - Validação: mínimo 6 caracteres
+        - Exibe senha gerada com sucesso em card verde
+        - Estados: showPasswordDialog, newPassword, showPassword, generatedPassword
+        
+        ✅ Login.js:
+        - Link "Esqueci minha senha" ao lado do Label "Senha"
+        - Modal de recuperação com campo email
+        - Exibe senha temporária em card verde após geração
+        - Instruções: "Copie e faça login. Altere senha no primeiro acesso"
+        - Estados: showForgotPasswordModal, forgotEmail, tempPassword, loadingForgot
+        
+        FLUXO COMPLETO:
+        1. Admin altera senha: Usuarios → Botão Senha → Digita/Gera → Salva → Vê senha
+        2. Esqueci senha: Login → Link → Digite email → Gera → Copia senha → Login
+        
+        PRÓXIMO PASSO: Testar backend e frontend completos
+        Backend reiniciado com sucesso.
+
         \u2705 Atualizado process_uber_csv():
         - Verifica se motorista existe no sistema (por nome)
         - Retorna lista motoristas_nao_encontrados com: nome, uuid_uber, email, telefone
