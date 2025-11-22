@@ -1059,28 +1059,64 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <div>
-                      <Label htmlFor="tipo_contrato">Tipo de Contrato</Label>
-                      {canEdit && editMode ? (
-                        <select
-                          id="tipo_contrato"
-                          value={infoForm.tipo}
-                          onChange={(e) => setInfoForm({...infoForm, tipo: e.target.value})}
-                          className="w-full p-2 border rounded-md"
-                        >
-                          <option value="aluguer">Aluguer</option>
-                          <option value="comissao">Comissão</option>
-                          <option value="motorista_privado">Motorista Privado</option>
-                          <option value="compra_veiculo">Compra do Veículo</option>
-                        </select>
-                      ) : (
-                        <p className="font-medium">
-                          {vehicle.tipo_contrato?.tipo === 'aluguer' ? 'Aluguer' :
-                           vehicle.tipo_contrato?.tipo === 'comissao' ? 'Comissão' :
-                           vehicle.tipo_contrato?.tipo === 'motorista_privado' ? 'Motorista Privado' :
-                           vehicle.tipo_contrato?.tipo === 'compra_veiculo' ? 'Compra do Veículo' : 'N/A'}
-                        </p>
-                      )}
+                    {/* Tipo de Contrato */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <Label htmlFor="tipo_contrato">Tipo de Contrato</Label>
+                        {canEdit && editMode ? (
+                          <select
+                            id="tipo_contrato"
+                            value={infoForm.tipo}
+                            onChange={(e) => setInfoForm({...infoForm, tipo: e.target.value})}
+                            className="w-full p-2 border rounded-md"
+                          >
+                            <option value="aluguer_sem_caucao">Aluguer sem Caução</option>
+                            <option value="aluguer_com_caucao">Aluguer com Caução</option>
+                            <option value="aluguer_caucao_parcelada">Aluguer com Caução Parcelada</option>
+                            <option value="periodo_epoca">Período de Época</option>
+                            <option value="aluguer_epocas_sem_caucao">Aluguer com Épocas sem Caução</option>
+                            <option value="aluguer_epocas_caucao">Aluguer com Épocas e Caução</option>
+                            <option value="aluguer_epoca_caucao_parcelada">Aluguer Época com Caução Parcelada</option>
+                            <option value="compra_veiculo">Compra de Veículo</option>
+                            <option value="comissao">Comissão</option>
+                            <option value="motorista_privado">Motorista Privado</option>
+                            <option value="outros">Outros</option>
+                          </select>
+                        ) : (
+                          <p className="font-medium text-sm">
+                            {vehicle.tipo_contrato?.tipo === 'aluguer_sem_caucao' ? 'Aluguer sem Caução' :
+                             vehicle.tipo_contrato?.tipo === 'aluguer_com_caucao' ? 'Aluguer com Caução' :
+                             vehicle.tipo_contrato?.tipo === 'aluguer_caucao_parcelada' ? 'Aluguer com Caução Parcelada' :
+                             vehicle.tipo_contrato?.tipo === 'periodo_epoca' ? 'Período de Época' :
+                             vehicle.tipo_contrato?.tipo === 'aluguer_epocas_sem_caucao' ? 'Aluguer com Épocas sem Caução' :
+                             vehicle.tipo_contrato?.tipo === 'aluguer_epocas_caucao' ? 'Aluguer com Épocas e Caução' :
+                             vehicle.tipo_contrato?.tipo === 'aluguer_epoca_caucao_parcelada' ? 'Aluguer Época com Caução Parcelada' :
+                             vehicle.tipo_contrato?.tipo === 'compra_veiculo' ? 'Compra de Veículo' :
+                             vehicle.tipo_contrato?.tipo === 'comissao' ? 'Comissão' :
+                             vehicle.tipo_contrato?.tipo === 'motorista_privado' ? 'Motorista Privado' :
+                             vehicle.tipo_contrato?.tipo === 'aluguer' ? 'Aluguer (Legacy)' :
+                             'N/A'}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* Periodicidade */}
+                      <div>
+                        <Label htmlFor="periodicidade">Periodicidade</Label>
+                        {canEdit && editMode ? (
+                          <select
+                            id="periodicidade"
+                            value={infoForm.periodicidade}
+                            onChange={(e) => setInfoForm({...infoForm, periodicidade: e.target.value})}
+                            className="w-full p-2 border rounded-md"
+                          >
+                            <option value="semanal">Semanal</option>
+                            <option value="mensal">Mensal</option>
+                          </select>
+                        ) : (
+                          <p className="font-medium capitalize">{vehicle.tipo_contrato?.periodicidade || 'semanal'}</p>
+                        )}
+                      </div>
                     </div>
 
                     {/* Campos específicos por tipo */}
