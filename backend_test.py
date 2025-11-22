@@ -3134,12 +3134,12 @@ startxref
 if __name__ == "__main__":
     tester = TVDEFleetTester()
     
-    # Run specific financial import tests as requested in review
-    success = tester.run_financial_import_tests_only()
+    # Run specific partner alert system tests as requested in review
+    success = tester.run_partner_alert_tests_only()
     
     if success:
-        print("🎉 All financial import tests passed!")
+        print("🎉 All partner alert system tests passed!")
         exit(0)
     else:
-        print("💥 Some financial import tests failed!")
+        print("💥 Some partner alert system tests failed!")
         exit(1)
