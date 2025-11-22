@@ -1398,6 +1398,313 @@ startxref
         except Exception as e:
             self.log_result("Parceiros-Listing", False, f"Request error: {str(e)}")
     
+    # ==================== PASSWORD MANAGEMENT SYSTEM TESTS ====================
+    
+    def test_password_management_system(self):
+        """Test complete password management system"""
+        print("\n🔐 TESTING PASSWORD MANAGEMENT SYSTEM")
+        print("-" * 60)
+        
+        # Test admin reset password functionality
+        self.test_admin_reset_password_valid()
+        self.test_admin_reset_password_invalid_length()
+        self.test_admin_reset_password_non_admin()
+        self.test_admin_reset_password_nonexistent_user()
+        
+        # Test forgot password functionality
+        self.test_forgot_password_valid_email()
+        self.test_forgot_password_invalid_email()
+        self.test_forgot_password_empty_email()
+        
+        # Test login with new passwords
+        self.test_login_with_reset_password()
+        self.test_login_with_temp_password()
+        
+        return True
+    
+    def test_admin_reset_password_valid(self):
+        """Test admin resetting user password with valid data"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Admin-Reset-Password-Valid", False, "No auth token for admin")
+            return
+        
+        # First get a user ID to reset (get a motorista)
+        try:
+            users_response = requests.get(f"{BACKEND_URL}/users/all", headers=headers)
+            if users_response.status_code != 200:
+                self.log_result("Admin-Reset-Password-Valid", False, "Could not get users list")
+                return
+            
+            users = users_response.json()
+            if not users:
+                self.log_result("Admin-Reset-Password-Valid", False, "No users available for test")
+                return
+            
+            # Find a non-admin user to reset
+            target_user = None
+            for user in users:
+                if user.get("role") != "admin":
+                    target_user = user
+                    break
+            
+            if not target_user:
+                self.log_result("Admin-Reset-Password-Valid", False, "No non-admin users found for test")
+                return
+            
+            user_id = target_user["id"]
+            new_password = "NewPassword123"
+            
+            # Reset password
+            reset_data = {"new_password": new_password}
+            response = requests.put(
+                f"{BACKEND_URL}/users/{user_id}/reset-password",
+                json=reset_data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Verify response structure
+                required_fields = ["message", "new_password", "user_id"]
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if not missing_fields:
+                    if (result["new_password"] == new_password and 
+                        result["user_id"] == user_id and
+                        "successfully" in result["message"].lower()):
+                        
+                        self.log_result("Admin-Reset-Password-Valid", True, f"Password reset successful for user {user_id}")
+                        
+                        # Store for later login test
+                        self.reset_password_test_data = {
+                            "email": target_user["email"],
+                            "new_password": new_password
+                        }
+                    else:
+                        self.log_result("Admin-Reset-Password-Valid", False, "Response data incorrect")
+                else:
+                    self.log_result("Admin-Reset-Password-Valid", False, f"Missing response fields: {missing_fields}")
+            else:
+                self.log_result("Admin-Reset-Password-Valid", False, f"Reset failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Admin-Reset-Password-Valid", False, f"Request error: {str(e)}")
+    
+    def test_admin_reset_password_invalid_length(self):
+        """Test admin reset password with password < 6 characters"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Admin-Reset-Password-Invalid-Length", False, "No auth token for admin")
+            return
+        
+        try:
+            # Get any user ID
+            users_response = requests.get(f"{BACKEND_URL}/users/all", headers=headers)
+            if users_response.status_code != 200 or not users_response.json():
+                self.log_result("Admin-Reset-Password-Invalid-Length", False, "No users available for test")
+                return
+            
+            user_id = users_response.json()[0]["id"]
+            
+            # Try to reset with short password
+            reset_data = {"new_password": "12345"}  # Only 5 characters
+            response = requests.put(
+                f"{BACKEND_URL}/users/{user_id}/reset-password",
+                json=reset_data,
+                headers=headers
+            )
+            
+            if response.status_code == 400:
+                result = response.json()
+                if "6 characters" in result.get("detail", "").lower():
+                    self.log_result("Admin-Reset-Password-Invalid-Length", True, "Correctly rejected password < 6 characters")
+                else:
+                    self.log_result("Admin-Reset-Password-Invalid-Length", False, f"Wrong error message: {result.get('detail')}")
+            else:
+                self.log_result("Admin-Reset-Password-Invalid-Length", False, f"Expected 400, got {response.status_code}")
+        except Exception as e:
+            self.log_result("Admin-Reset-Password-Invalid-Length", False, f"Request error: {str(e)}")
+    
+    def test_admin_reset_password_non_admin(self):
+        """Test non-admin user trying to reset password (should fail)"""
+        headers = self.get_headers("parceiro")  # Use parceiro (non-admin)
+        if not headers:
+            self.log_result("Admin-Reset-Password-Non-Admin", False, "No auth token for parceiro")
+            return
+        
+        try:
+            # Try to reset password as non-admin
+            reset_data = {"new_password": "ValidPassword123"}
+            response = requests.put(
+                f"{BACKEND_URL}/users/dummy_user_id/reset-password",
+                json=reset_data,
+                headers=headers
+            )
+            
+            if response.status_code == 403:
+                result = response.json()
+                if "admin only" in result.get("detail", "").lower():
+                    self.log_result("Admin-Reset-Password-Non-Admin", True, "Non-admin correctly blocked from resetting passwords")
+                else:
+                    self.log_result("Admin-Reset-Password-Non-Admin", False, f"Wrong error message: {result.get('detail')}")
+            else:
+                self.log_result("Admin-Reset-Password-Non-Admin", False, f"Expected 403, got {response.status_code}")
+        except Exception as e:
+            self.log_result("Admin-Reset-Password-Non-Admin", False, f"Request error: {str(e)}")
+    
+    def test_admin_reset_password_nonexistent_user(self):
+        """Test admin reset password for non-existent user"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Admin-Reset-Password-Nonexistent", False, "No auth token for admin")
+            return
+        
+        try:
+            # Try to reset password for non-existent user
+            reset_data = {"new_password": "ValidPassword123"}
+            response = requests.put(
+                f"{BACKEND_URL}/users/nonexistent_user_id/reset-password",
+                json=reset_data,
+                headers=headers
+            )
+            
+            if response.status_code == 404:
+                result = response.json()
+                if "not found" in result.get("detail", "").lower():
+                    self.log_result("Admin-Reset-Password-Nonexistent", True, "Correctly returns 404 for non-existent user")
+                else:
+                    self.log_result("Admin-Reset-Password-Nonexistent", False, f"Wrong error message: {result.get('detail')}")
+            else:
+                self.log_result("Admin-Reset-Password-Nonexistent", False, f"Expected 404, got {response.status_code}")
+        except Exception as e:
+            self.log_result("Admin-Reset-Password-Nonexistent", False, f"Request error: {str(e)}")
+    
+    def test_forgot_password_valid_email(self):
+        """Test forgot password with valid email"""
+        try:
+            # Use a known email from our test credentials
+            email_data = {"email": "motorista@tvdefleet.com"}
+            
+            response = requests.post(f"{BACKEND_URL}/auth/forgot-password", json=email_data)
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Verify response structure
+                required_fields = ["message", "temp_password", "email", "instructions"]
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if not missing_fields:
+                    temp_password = result["temp_password"]
+                    
+                    # Verify temp password format (8 characters, letters + numbers)
+                    if (len(temp_password) == 8 and 
+                        temp_password.isalnum() and
+                        result["email"] == "motorista@tvdefleet.com"):
+                        
+                        self.log_result("Forgot-Password-Valid", True, f"Temporary password generated: {temp_password}")
+                        
+                        # Store for later login test
+                        self.temp_password_test_data = {
+                            "email": "motorista@tvdefleet.com",
+                            "temp_password": temp_password
+                        }
+                    else:
+                        self.log_result("Forgot-Password-Valid", False, f"Invalid temp password format: {temp_password}")
+                else:
+                    self.log_result("Forgot-Password-Valid", False, f"Missing response fields: {missing_fields}")
+            else:
+                self.log_result("Forgot-Password-Valid", False, f"Request failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Forgot-Password-Valid", False, f"Request error: {str(e)}")
+    
+    def test_forgot_password_invalid_email(self):
+        """Test forgot password with non-existent email"""
+        try:
+            email_data = {"email": "nonexistent@example.com"}
+            
+            response = requests.post(f"{BACKEND_URL}/auth/forgot-password", json=email_data)
+            
+            if response.status_code == 404:
+                result = response.json()
+                if "not found" in result.get("detail", "").lower():
+                    self.log_result("Forgot-Password-Invalid-Email", True, "Correctly returns 404 for non-existent email")
+                else:
+                    self.log_result("Forgot-Password-Invalid-Email", False, f"Wrong error message: {result.get('detail')}")
+            else:
+                self.log_result("Forgot-Password-Invalid-Email", False, f"Expected 404, got {response.status_code}")
+        except Exception as e:
+            self.log_result("Forgot-Password-Invalid-Email", False, f"Request error: {str(e)}")
+    
+    def test_forgot_password_empty_email(self):
+        """Test forgot password with empty email"""
+        try:
+            email_data = {"email": ""}
+            
+            response = requests.post(f"{BACKEND_URL}/auth/forgot-password", json=email_data)
+            
+            if response.status_code == 400:
+                result = response.json()
+                if "required" in result.get("detail", "").lower():
+                    self.log_result("Forgot-Password-Empty-Email", True, "Correctly rejects empty email")
+                else:
+                    self.log_result("Forgot-Password-Empty-Email", False, f"Wrong error message: {result.get('detail')}")
+            else:
+                self.log_result("Forgot-Password-Empty-Email", False, f"Expected 400, got {response.status_code}")
+        except Exception as e:
+            self.log_result("Forgot-Password-Empty-Email", False, f"Request error: {str(e)}")
+    
+    def test_login_with_reset_password(self):
+        """Test login with admin-reset password"""
+        if not hasattr(self, 'reset_password_test_data'):
+            self.log_result("Login-With-Reset-Password", False, "No reset password test data available")
+            return
+        
+        try:
+            login_data = {
+                "email": self.reset_password_test_data["email"],
+                "password": self.reset_password_test_data["new_password"]
+            }
+            
+            response = requests.post(f"{BACKEND_URL}/auth/login", json=login_data)
+            
+            if response.status_code == 200:
+                result = response.json()
+                if "access_token" in result and "user" in result:
+                    self.log_result("Login-With-Reset-Password", True, "Successfully logged in with admin-reset password")
+                else:
+                    self.log_result("Login-With-Reset-Password", False, "Login response missing required fields")
+            else:
+                self.log_result("Login-With-Reset-Password", False, f"Login failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Login-With-Reset-Password", False, f"Login error: {str(e)}")
+    
+    def test_login_with_temp_password(self):
+        """Test login with temporary password from forgot-password"""
+        if not hasattr(self, 'temp_password_test_data'):
+            self.log_result("Login-With-Temp-Password", False, "No temp password test data available")
+            return
+        
+        try:
+            login_data = {
+                "email": self.temp_password_test_data["email"],
+                "password": self.temp_password_test_data["temp_password"]
+            }
+            
+            response = requests.post(f"{BACKEND_URL}/auth/login", json=login_data)
+            
+            if response.status_code == 200:
+                result = response.json()
+                if "access_token" in result and "user" in result:
+                    self.log_result("Login-With-Temp-Password", True, "Successfully logged in with temporary password")
+                else:
+                    self.log_result("Login-With-Temp-Password", False, "Login response missing required fields")
+            else:
+                self.log_result("Login-With-Temp-Password", False, f"Login failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Login-With-Temp-Password", False, f"Login error: {str(e)}")
+
     # ==================== INTEGRATION TESTS ====================
     
     def test_different_image_formats(self):
