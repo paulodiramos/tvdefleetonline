@@ -729,6 +729,90 @@ const Usuarios = ({ user, onLogout }) => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Password Reset Dialog */}
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <Key className="w-5 h-5" />
+              <span>Alterar Senha</span>
+            </DialogTitle>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="space-y-4">
+              <p className="text-sm text-slate-600">
+                Alterar senha para: <strong>{selectedUser.name}</strong>
+              </p>
+              
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">Nova Senha</Label>
+                <div className="flex space-x-2">
+                  <div className="relative flex-1">
+                    <Input
+                      id="newPassword"
+                      type={showPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Digite a nova senha"
+                      className="pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={generateRandomPassword}
+                    className="px-3"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-slate-500">Mínimo 6 caracteres</p>
+              </div>
+
+              {generatedPassword && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800">
+                    <strong>Senha alterada com sucesso!</strong>
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    Nova senha: <code className="bg-green-100 px-1 rounded">{generatedPassword}</code>
+                  </p>
+                </div>
+              )}
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowPasswordDialog(false);
+                    setNewPassword('');
+                    setGeneratedPassword('');
+                    setShowPassword(false);
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleResetPassword}
+                  disabled={!newPassword || newPassword.length < 6}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Key className="w-4 h-4 mr-1" />
+                  Alterar Senha
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
