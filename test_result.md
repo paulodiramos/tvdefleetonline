@@ -1166,27 +1166,33 @@ agent_communication:
 backend:
   - task: "Sistema de Gestão de Senhas - Admin Reset Password"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implementado endpoint PUT /api/users/{user_id}/reset-password para admin resetar senhas de utilizadores. Requer autenticação ADMIN, valida senha mínimo 6 caracteres, retorna senha em plaintext, marca senha_provisoria: true."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Endpoint PUT /api/users/{user_id}/reset-password funcionando perfeitamente. Admin pode resetar senhas de utilizadores com sucesso. Validação de senha mínimo 6 caracteres funcionando (rejeita senhas < 6 chars com 400). Não-admin corretamente bloqueado (403 Forbidden). Utilizador inexistente retorna 404. Resposta contém senha em plaintext, user_id e mensagem de sucesso. Login com nova senha funciona corretamente."
 
   - task: "Sistema de Gestão de Senhas - Forgot Password"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "main"
           comment: "Implementado endpoint POST /api/auth/forgot-password (público) para recuperação de senha. Gera senha temporária aleatória (8 caracteres), retorna senha em plaintext, marca senha_provisoria: true, retorna 404 se email não existe."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Endpoint POST /api/auth/forgot-password funcionando perfeitamente. Gera senha temporária de 8 caracteres (letras + números) para email válido. Retorna senha em plaintext, email, mensagem e instruções. Email inexistente retorna 404 corretamente. Email vazio rejeitado com 400. Login com senha temporária funciona imediatamente. Marca senha_provisoria: true conforme especificado."
     - agent: "main"
       message: |
         🔧 NOVA IMPLEMENTAÇÃO - FIX DO EDIT/SAVE/CANCEL EM FICHAVEICULO.JS
