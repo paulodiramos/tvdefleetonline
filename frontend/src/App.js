@@ -148,6 +148,12 @@ function App() {
             }
           />
           <Route
+            path="/criar-contrato"
+            element={
+              user ? <CriarContrato user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/configuracoes-admin"
             element={
               user ? <ConfiguracoesAdmin user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
