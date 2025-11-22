@@ -3066,3 +3066,149 @@ agent_communication:
         Backend reiniciado com sucesso.
         Frontend com hot-reload ativo.
         Pronto para testes!
+
+
+backend:
+  - task: "Sistema de Alertas do Parceiro - Campos de configuração"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Adicionados campos no modelo Parceiro: dias_aviso_seguro (default 30), dias_aviso_inspecao (default 30), km_aviso_revisao (default 5000). Adicionados campos no modelo Vehicle: ultima_revisao_km, data_seguro_ate, data_inspecao_ate, plano_manutencoes (array de Dict com tipo e intervalo_km)."
+
+  - task: "Sistema de Alertas do Parceiro - Endpoint de alertas"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Criado endpoint GET /api/parceiros/{parceiro_id}/alertas que retorna alertas de seguros, inspeções, extintores e manutenções baseados nas configurações do parceiro. Calcula alertas dinamicamente baseado em: dias_aviso_seguro, dias_aviso_inspecao, km_aviso_revisao. Retorna estrutura com alertas separados por tipo, totais e configuração usada. Plano de manutenções padrão: Pastilhas (30000km), Pastilhas e Discos (60000km), Óleo e Filtros (15000km)."
+
+frontend:
+  - task: "EditParceiro.js - Configurações de Alertas"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/EditParceiro.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Adicionada seção 'Configurações de Alertas' no EditParceiro com 3 campos editáveis: dias_aviso_seguro, dias_aviso_inspecao, km_aviso_revisao. Campos conectados ao form de parceiro e salvos via PUT /api/parceiros/{parceiro_id}."
+
+  - task: "EditParceiro.js - Dashboard do Parceiro"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/EditParceiro.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Integrado componente DashboardParceiroTab na página EditParceiro. Dashboard exibido logo após a seção de configurações de alertas."
+
+  - task: "DashboardParceiroTab.js - Componente de Dashboard"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/components/DashboardParceiroTab.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Atualizado componente DashboardParceiroTab para buscar alertas do novo endpoint GET /api/parceiros/{parceiro_id}/alertas. Exibe estatísticas de veículos, motoristas e contratos. Exibe alertas categorizados: Seguros (vermelho), Inspeções (amarelo), Extintores (laranja), Manutenções (azul). Cada alerta mostra veículo, dias restantes ou km restantes, e marcação de urgência."
+
+  - task: "FichaVeiculo.js - Plano de Manutenções"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/FichaVeiculo.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Adicionada nova seção 'Plano de Manutenções Periódicas' na tab Revisão/Intervenções. Exibe configuração padrão: Pastilhas (30000km), Pastilhas e Discos (60000km), Óleo e Filtros (15000km). Campo editável 'Última Revisão (KM)' para definir referência de cálculo das próximas manutenções. Atualização instantânea via PUT /api/vehicles/{vehicle_id}."
+
+metadata:
+  created_by: "main_agent"
+  version: "3.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Sistema de Alertas do Parceiro - Backend"
+    - "Sistema de Alertas do Parceiro - Frontend"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: |
+        🚀 NOVA IMPLEMENTAÇÃO - SISTEMA DE ALERTAS DO PARCEIRO
+        
+        REQUISITOS DO USUÁRIO:
+        - Todos os alertas (seguros, inspeções, manutenções) em um dashboard
+        - Apenas veículos do parceiro selecionado
+        - Configurações de alertas personalizáveis por parceiro
+        - Plano de manutenções baseado em KM
+        
+        IMPLEMENTAÇÕES BACKEND:
+        ✅ Modelo Parceiro expandido:
+        - dias_aviso_seguro: int = 30
+        - dias_aviso_inspecao: int = 30
+        - km_aviso_revisao: int = 5000
+        
+        ✅ Modelo Vehicle expandido:
+        - ultima_revisao_km: KM da última revisão
+        - data_seguro_ate: alias para insurance.data_validade
+        - data_inspecao_ate: alias para inspection.proxima_inspecao
+        - plano_manutencoes: Array[Dict] com tipo e intervalo_km
+        
+        ✅ Novo Endpoint GET /api/parceiros/{parceiro_id}/alertas:
+        - Busca configurações do parceiro
+        - Filtra todos os veículos do parceiro
+        - Calcula alertas de seguros (baseado em dias_aviso_seguro)
+        - Calcula alertas de inspeções (baseado em dias_aviso_inspecao)
+        - Calcula alertas de extintores (mesmo critério de inspeções)
+        - Calcula alertas de manutenções (baseado em km_aviso_revisao + plano_manutencoes)
+        - Plano padrão: Pastilhas (30000km), Pastilhas+Discos (60000km), Óleo+Filtros (15000km)
+        - Retorna estrutura: {configuracao, alertas{seguros[], inspecoes[], extintores[], manutencoes[]}, totais}
+        
+        IMPLEMENTAÇÕES FRONTEND:
+        ✅ EditParceiro.js:
+        - Nova seção "Configurações de Alertas" com 3 campos editáveis
+        - Integração do DashboardParceiroTab
+        - Salvamento via PUT /api/parceiros/{parceiro_id}
+        
+        ✅ DashboardParceiroTab.js:
+        - Busca alertas do novo endpoint
+        - Estatísticas: veículos, motoristas, contratos (ativos/total)
+        - 4 categorias de alertas com cores distintas
+        - Seguros (vermelho), Inspeções (amarelo), Extintores (laranja), Manutenções (azul)
+        - Cada alerta mostra: veículo, dias/km restantes, marcação de urgência
+        - Cards de resumo rápido no final
+        
+        ✅ FichaVeiculo.js:
+        - Nova seção "Plano de Manutenções Periódicas" na tab Revisão
+        - Exibe configuração padrão de manutenções
+        - Campo editável "Última Revisão (KM)" com atualização instantânea
+        - Informação sobre uso dos valores para alertas automáticos
+        
+        PRÓXIMO PASSO: Testar backend completo com deep_testing_backend_v2
+        Backend reiniciado com sucesso. Pronto para testes.
+
