@@ -1120,6 +1120,102 @@ const FichaVeiculo = ({ user, onLogout }) => {
                     </div>
 
                     {/* Campos específicos por tipo */}
+                    
+                    {/* Valor Aluguer (para todos os tipos de aluguer) */}
+                    {(editMode ? infoForm.tipo : vehicle.tipo_contrato?.tipo)?.includes('aluguer') && (
+                      <div>
+                        <Label htmlFor="valor_aluguer">Valor Aluguer (€)</Label>
+                        {canEdit && editMode ? (
+                          <Input
+                            id="valor_aluguer"
+                            type="number"
+                            step="0.01"
+                            value={infoForm.valor_aluguer}
+                            onChange={(e) => setInfoForm({...infoForm, valor_aluguer: e.target.value})}
+                            placeholder="Ex: 250.00"
+                          />
+                        ) : (
+                          <p className="font-medium">€{vehicle.tipo_contrato?.valor_aluguer || '0.00'}</p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Caução (para tipos com caução) */}
+                    {['aluguer_com_caucao', 'aluguer_caucao_parcelada', 'aluguer_epocas_caucao', 'aluguer_epoca_caucao_parcelada'].includes(editMode ? infoForm.tipo : vehicle.tipo_contrato?.tipo) && (
+                      <div className="grid grid-cols-2 gap-3 bg-blue-50 p-3 rounded-lg">
+                        <div className="col-span-2 font-semibold text-sm text-blue-900">Caução</div>
+                        <div>
+                          <Label htmlFor="valor_caucao">Valor Caução (€)</Label>
+                          {canEdit && editMode ? (
+                            <Input
+                              id="valor_caucao"
+                              type="number"
+                              step="0.01"
+                              value={infoForm.valor_caucao}
+                              onChange={(e) => setInfoForm({...infoForm, valor_caucao: e.target.value})}
+                              placeholder="Ex: 500.00"
+                            />
+                          ) : (
+                            <p className="font-medium">€{vehicle.tipo_contrato?.valor_caucao || '0.00'}</p>
+                          )}
+                        </div>
+                        {['aluguer_caucao_parcelada', 'aluguer_epoca_caucao_parcelada'].includes(editMode ? infoForm.tipo : vehicle.tipo_contrato?.tipo) && (
+                          <div>
+                            <Label htmlFor="numero_parcelas_caucao">Número de Parcelas</Label>
+                            {canEdit && editMode ? (
+                              <Input
+                                id="numero_parcelas_caucao"
+                                type="number"
+                                value={infoForm.numero_parcelas_caucao}
+                                onChange={(e) => setInfoForm({...infoForm, numero_parcelas_caucao: e.target.value})}
+                                placeholder="Ex: 4"
+                              />
+                            ) : (
+                              <p className="font-medium">{vehicle.tipo_contrato?.numero_parcelas_caucao || '0'}</p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Épocas (para tipos com época) */}
+                    {['periodo_epoca', 'aluguer_epocas_sem_caucao', 'aluguer_epocas_caucao', 'aluguer_epoca_caucao_parcelada'].includes(editMode ? infoForm.tipo : vehicle.tipo_contrato?.tipo) && (
+                      <div className="grid grid-cols-2 gap-3 bg-amber-50 p-3 rounded-lg">
+                        <div className="col-span-2 font-semibold text-sm text-amber-900">Épocas</div>
+                        <div>
+                          <Label htmlFor="valor_epoca_alta">Época Alta (€)</Label>
+                          {canEdit && editMode ? (
+                            <Input
+                              id="valor_epoca_alta"
+                              type="number"
+                              step="0.01"
+                              value={infoForm.valor_epoca_alta}
+                              onChange={(e) => setInfoForm({...infoForm, valor_epoca_alta: e.target.value})}
+                              placeholder="Ex: 300.00"
+                            />
+                          ) : (
+                            <p className="font-medium">€{vehicle.tipo_contrato?.valor_epoca_alta || '0.00'}</p>
+                          )}
+                        </div>
+                        <div>
+                          <Label htmlFor="valor_epoca_baixa">Época Baixa (€)</Label>
+                          {canEdit && editMode ? (
+                            <Input
+                              id="valor_epoca_baixa"
+                              type="number"
+                              step="0.01"
+                              value={infoForm.valor_epoca_baixa}
+                              onChange={(e) => setInfoForm({...infoForm, valor_epoca_baixa: e.target.value})}
+                              placeholder="Ex: 200.00"
+                            />
+                          ) : (
+                            <p className="font-medium">€{vehicle.tipo_contrato?.valor_epoca_baixa || '0.00'}</p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Legacy: Aluguer simples (compatibilidade) */}
                     {(editMode ? infoForm.tipo : vehicle.tipo_contrato?.tipo) === 'aluguer' && (
                       <div>
                         <Label htmlFor="valor_aluguer">Valor Aluguer (€)</Label>
