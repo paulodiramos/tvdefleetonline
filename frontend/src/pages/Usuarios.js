@@ -476,6 +476,15 @@ const Usuarios = ({ user, onLogout }) => {
                             <>
                               <Button
                                 size="sm"
+                                variant="outline"
+                                onClick={() => openPasswordDialog(regUser)}
+                                className="bg-blue-50 hover:bg-blue-100"
+                              >
+                                <Key className="w-4 h-4 mr-1" />
+                                Senha
+                              </Button>
+                              <Button
+                                size="sm"
                                 variant={regUser.status === 'blocked' ? 'default' : 'outline'}
                                 onClick={() => handleBlockUser(regUser.id, regUser.status)}
                                 className={regUser.status === 'blocked' ? 'bg-green-600 hover:bg-green-700' : ''}
