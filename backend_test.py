@@ -3481,12 +3481,12 @@ startxref
 if __name__ == "__main__":
     tester = TVDEFleetTester()
     
-    # Run specific partner alert system tests as requested in review
-    success = tester.run_partner_alert_tests_only()
+    # Run specific password management system tests as requested in review
+    success = tester.run_password_management_tests_only()
     
     if success:
-        print("🎉 All partner alert system tests passed!")
+        print("🎉 All password management system tests passed!")
         exit(0)
     else:
-        print("💥 Some partner alert system tests failed!")
+        print("💥 Some password management system tests failed!")
         exit(1)
