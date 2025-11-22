@@ -85,7 +85,16 @@ const Login = ({ onLogin }) => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Senha</Label>
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPasswordModal(true)}
+                    className="text-xs text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    Esqueci minha senha
+                  </button>
+                </div>
                 <Input
                   id="password"
                   type="password"
