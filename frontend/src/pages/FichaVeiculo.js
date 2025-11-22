@@ -961,55 +961,161 @@ const FichaVeiculo = ({ user, onLogout }) => {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <Label className="text-slate-600">Marca</Label>
-                      <p className="font-medium">{vehicle.marca}</p>
+                      {canEdit && editMode ? (
+                        <Input
+                          value={vehicle.marca}
+                          onChange={(e) => setVehicle({...vehicle, marca: e.target.value})}
+                          placeholder="Ex: Toyota"
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.marca}</p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-slate-600">Modelo</Label>
-                      <p className="font-medium">{vehicle.modelo}</p>
+                      {canEdit && editMode ? (
+                        <Input
+                          value={vehicle.modelo}
+                          onChange={(e) => setVehicle({...vehicle, modelo: e.target.value})}
+                          placeholder="Ex: Corolla"
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.modelo}</p>
+                      )}
                     </div>
-                    {vehicle.versao && (
-                      <div>
-                        <Label className="text-slate-600">Versão</Label>
-                        <p className="font-medium">{vehicle.versao}</p>
-                      </div>
-                    )}
-                    {vehicle.ano && (
-                      <div>
-                        <Label className="text-slate-600">Ano</Label>
-                        <p className="font-medium">{vehicle.ano}</p>
-                      </div>
-                    )}
+                    <div>
+                      <Label className="text-slate-600">Versão</Label>
+                      {canEdit && editMode ? (
+                        <Input
+                          value={vehicle.versao || ''}
+                          onChange={(e) => setVehicle({...vehicle, versao: e.target.value})}
+                          placeholder="Ex: Hybrid"
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.versao || 'N/A'}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-slate-600">Ano</Label>
+                      {canEdit && editMode ? (
+                        <Input
+                          type="number"
+                          value={vehicle.ano || ''}
+                          onChange={(e) => setVehicle({...vehicle, ano: parseInt(e.target.value) || null})}
+                          placeholder="Ex: 2020"
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.ano || 'N/A'}</p>
+                      )}
+                    </div>
                     <div>
                       <Label className="text-slate-600">Matrícula</Label>
-                      <p className="font-medium">{vehicle.matricula}</p>
+                      {canEdit && editMode ? (
+                        <Input
+                          value={vehicle.matricula}
+                          onChange={(e) => setVehicle({...vehicle, matricula: e.target.value.toUpperCase()})}
+                          placeholder="Ex: AA-00-BB"
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.matricula}</p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-slate-600">Data de Matrícula</Label>
-                      <p className="font-medium">{vehicle.data_matricula ? new Date(vehicle.data_matricula).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                      {canEdit && editMode ? (
+                        <Input
+                          type="date"
+                          value={vehicle.data_matricula ? vehicle.data_matricula.split('T')[0] : ''}
+                          onChange={(e) => setVehicle({...vehicle, data_matricula: e.target.value})}
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.data_matricula ? new Date(vehicle.data_matricula).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-slate-600">Validade da Matrícula</Label>
-                      <p className="font-medium">{vehicle.validade_matricula ? new Date(vehicle.validade_matricula).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                      {canEdit && editMode ? (
+                        <Input
+                          type="date"
+                          value={vehicle.validade_matricula ? vehicle.validade_matricula.split('T')[0] : ''}
+                          onChange={(e) => setVehicle({...vehicle, validade_matricula: e.target.value})}
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.validade_matricula ? new Date(vehicle.validade_matricula).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-slate-600">Cor</Label>
-                      <p className="font-medium">{vehicle.cor}</p>
+                      {canEdit && editMode ? (
+                        <Input
+                          value={vehicle.cor || ''}
+                          onChange={(e) => setVehicle({...vehicle, cor: e.target.value})}
+                          placeholder="Ex: Branco"
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.cor}</p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-slate-600">Combustível</Label>
-                      <p className="font-medium">{vehicle.combustivel}</p>
+                      {canEdit && editMode ? (
+                        <select
+                          value={vehicle.combustivel || ''}
+                          onChange={(e) => setVehicle({...vehicle, combustivel: e.target.value})}
+                          className="w-full p-2 border rounded-md"
+                        >
+                          <option value="">Selecione</option>
+                          <option value="Gasolina">Gasolina</option>
+                          <option value="Diesel">Diesel</option>
+                          <option value="Híbrido">Híbrido</option>
+                          <option value="Elétrico">Elétrico</option>
+                          <option value="GPL">GPL</option>
+                        </select>
+                      ) : (
+                        <p className="font-medium">{vehicle.combustivel}</p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-slate-600">Caixa</Label>
-                      <p className="font-medium">{vehicle.caixa}</p>
+                      {canEdit && editMode ? (
+                        <select
+                          value={vehicle.caixa || ''}
+                          onChange={(e) => setVehicle({...vehicle, caixa: e.target.value})}
+                          className="w-full p-2 border rounded-md"
+                        >
+                          <option value="">Selecione</option>
+                          <option value="Manual">Manual</option>
+                          <option value="Automática">Automática</option>
+                        </select>
+                      ) : (
+                        <p className="font-medium">{vehicle.caixa}</p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-slate-600">Lugares</Label>
-                      <p className="font-medium">{vehicle.lugares}</p>
+                      {canEdit && editMode ? (
+                        <Input
+                          type="number"
+                          value={vehicle.lugares || ''}
+                          onChange={(e) => setVehicle({...vehicle, lugares: parseInt(e.target.value) || null})}
+                          placeholder="Ex: 5"
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.lugares}</p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-slate-600">KM Atual</Label>
-                      <p className="font-medium">{vehicle.km_atual || 0} km</p>
+                      {canEdit && editMode ? (
+                        <Input
+                          type="number"
+                          value={vehicle.km_atual || 0}
+                          onChange={(e) => setVehicle({...vehicle, km_atual: parseInt(e.target.value) || 0})}
+                          placeholder="Ex: 50000"
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.km_atual || 0} km</p>
+                      )}
                     </div>
                     <div>
                       <Label className="text-slate-600">Status</Label>
