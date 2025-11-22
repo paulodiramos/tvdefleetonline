@@ -14,6 +14,10 @@ const Login = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [showRegistroModal, setShowRegistroModal] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [tempPassword, setTempPassword] = useState('');
+  const [loadingForgot, setLoadingForgot] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
