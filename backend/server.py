@@ -5422,6 +5422,244 @@ async def get_contrato(
     
     return contrato
 
+@api_router.post("/contratos/{contrato_id}/gerar-pdf")
+async def gerar_pdf_contrato(
+    contrato_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Generate PDF for a contract"""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.units import cm
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
+    
+    # Get contract
+    contrato = await db.contratos_motorista.find_one({"id": contrato_id}, {"_id": 0})
+    if not contrato:
+        raise HTTPException(status_code=404, detail="Contrato não encontrado")
+    
+    # Get related data
+    parceiro = await db.users.find_one({"id": contrato["parceiro_id"], "role": "parceiro"}, {"_id": 0})
+    motorista = await db.motoristas.find_one({"id": contrato["motorista_id"]}, {"_id": 0})
+    veiculo = None
+    if contrato.get("veiculo_id"):
+        veiculo = await db.vehicles.find_one({"id": contrato["veiculo_id"]}, {"_id": 0})
+    
+    # Create PDFs directory
+    contratos_dir = UPLOAD_DIR / "contratos"
+    contratos_dir.mkdir(parents=True, exist_ok=True)
+    
+    pdf_filename = f"contrato_{contrato_id}.pdf"
+    pdf_path = contratos_dir / pdf_filename
+    
+    # Create PDF
+    c = canvas.Canvas(str(pdf_path), pagesize=A4)
+    width, height = A4
+    
+    # Title
+    c.setFont("Helvetica-Bold", 18)
+    c.drawCentredString(width/2, height - 2*cm, "CONTRATO DE PRESTAÇÃO DE SERVIÇOS TVDE")
+    
+    # Subtitle with contract type
+    c.setFont("Helvetica", 12)
+    tipo_nome = {
+        "aluguer_sem_caucao": "Aluguer sem Caução",
+        "aluguer_com_caucao": "Aluguer com Caução",
+        "aluguer_caucao_parcelada": "Aluguer com Caução Parcelada",
+        "periodo_epoca": "Período de Época",
+        "aluguer_epocas_sem_caucao": "Aluguer com Épocas sem Caução",
+        "aluguer_epocas_caucao": "Aluguer com Épocas e Caução",
+        "aluguer_epoca_caucao_parcelada": "Aluguer Época com Caução Parcelada",
+        "compra_veiculo": "Compra de Veículo",
+        "comissao": "Comissão",
+        "motorista_privado": "Motorista Privado",
+        "outros": "Outros"
+    }.get(contrato["tipo_contrato"], contrato["tipo_contrato"])
+    
+    c.drawCentredString(width/2, height - 2.8*cm, f"({tipo_nome})")
+    
+    # Date
+    c.setFont("Helvetica", 10)
+    data_hoje = datetime.now().strftime("%d/%m/%Y")
+    c.drawCentredString(width/2, height - 3.5*cm, f"Data de Emissão: {data_hoje}")
+    
+    y = height - 5*cm
+    
+    # Section 1: Parceiro
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2*cm, y, "1. PRIMEIRO OUTORGANTE (PARCEIRO/EMPRESA)")
+    y -= 0.8*cm
+    
+    c.setFont("Helvetica", 10)
+    c.drawString(2.5*cm, y, f"Nome/Empresa: {parceiro.get('nome_empresa', parceiro.get('name', 'N/A'))}")
+    y -= 0.6*cm
+    c.drawString(2.5*cm, y, f"NIF: {parceiro.get('contribuinte_empresa', parceiro.get('nif', 'N/A'))}")
+    y -= 0.6*cm
+    c.drawString(2.5*cm, y, f"Email: {parceiro.get('email', 'N/A')}")
+    y -= 0.6*cm
+    c.drawString(2.5*cm, y, f"Telefone: {parceiro.get('telefone', parceiro.get('phone', 'N/A'))}")
+    y -= 1*cm
+    
+    # Section 2: Motorista
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2*cm, y, "2. SEGUNDO OUTORGANTE (MOTORISTA)")
+    y -= 0.8*cm
+    
+    c.setFont("Helvetica", 10)
+    c.drawString(2.5*cm, y, f"Nome: {motorista.get('name', 'N/A')}")
+    y -= 0.6*cm
+    c.drawString(2.5*cm, y, f"NIF: {motorista.get('nif', 'N/A')}")
+    y -= 0.6*cm
+    c.drawString(2.5*cm, y, f"Email: {motorista.get('email', 'N/A')}")
+    y -= 0.6*cm
+    c.drawString(2.5*cm, y, f"Telefone: {motorista.get('phone', 'N/A')}")
+    y -= 0.6*cm
+    c.drawString(2.5*cm, y, f"Licença TVDE: {motorista.get('licenca_tvde_numero', 'N/A')}")
+    y -= 1*cm
+    
+    # Section 3: Veículo (se aplicável)
+    if veiculo:
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(2*cm, y, "3. VEÍCULO")
+        y -= 0.8*cm
+        
+        c.setFont("Helvetica", 10)
+        c.drawString(2.5*cm, y, f"Marca/Modelo: {veiculo.get('marca', 'N/A')} {veiculo.get('modelo', 'N/A')}")
+        y -= 0.6*cm
+        c.drawString(2.5*cm, y, f"Matrícula: {veiculo.get('matricula', 'N/A')}")
+        y -= 0.6*cm
+        c.drawString(2.5*cm, y, f"Ano: {veiculo.get('ano', 'N/A')}")
+        y -= 1*cm
+    
+    # Section 4: Condições Financeiras
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2*cm, y, f"{4 if veiculo else 3}. CONDIÇÕES FINANCEIRAS")
+    y -= 0.8*cm
+    
+    c.setFont("Helvetica", 10)
+    c.drawString(2.5*cm, y, f"Periodicidade: {contrato['periodicidade'].upper()}")
+    y -= 0.6*cm
+    c.drawString(2.5*cm, y, f"Valor: €{contrato['valor_aplicado']:.2f}")
+    y -= 0.6*cm
+    
+    # Caução
+    if contrato.get("valor_caucao_aplicado"):
+        c.drawString(2.5*cm, y, f"Caução: €{contrato['valor_caucao_aplicado']:.2f}")
+        y -= 0.6*cm
+        if contrato.get("numero_parcelas_caucao_aplicado"):
+            c.drawString(2.5*cm, y, f"  Parcelado em: {contrato['numero_parcelas_caucao_aplicado']}x €{contrato['valor_parcela_caucao_aplicado']:.2f}")
+            y -= 0.6*cm
+    
+    # Épocas
+    if contrato.get("valor_epoca_alta_aplicado"):
+        c.drawString(2.5*cm, y, f"Época Alta: €{contrato['valor_epoca_alta_aplicado']:.2f}")
+        y -= 0.6*cm
+        c.drawString(2.5*cm, y, f"Época Baixa: €{contrato['valor_epoca_baixa_aplicado']:.2f}")
+        y -= 0.6*cm
+    
+    # Comissão
+    if contrato.get("percentagem_motorista_aplicado"):
+        c.drawString(2.5*cm, y, f"Comissão Motorista: {contrato['percentagem_motorista_aplicado']}%")
+        y -= 0.6*cm
+        c.drawString(2.5*cm, y, f"Comissão Parceiro: {contrato['percentagem_parceiro_aplicado']}%")
+        y -= 0.6*cm
+        c.drawString(2.5*cm, y, f"Combustível Incluído: {'Sim' if contrato.get('combustivel_incluido_aplicado') else 'Não'}")
+        y -= 0.6*cm
+        if contrato.get("regime_trabalho_aplicado"):
+            c.drawString(2.5*cm, y, f"Regime: {contrato['regime_trabalho_aplicado'].upper()}")
+            y -= 0.6*cm
+    
+    # Compra de veículo
+    if contrato.get("valor_compra_aplicado"):
+        c.drawString(2.5*cm, y, f"Valor de Compra: €{contrato['valor_compra_aplicado']:.2f}")
+        y -= 0.6*cm
+        c.drawString(2.5*cm, y, f"Número de Semanas: {contrato['numero_semanas_aplicado']}")
+        y -= 0.6*cm
+        c.drawString(2.5*cm, y, f"Com Slot: {'Sim' if contrato.get('com_slot_aplicado') else 'Não'}")
+        y -= 0.6*cm
+        if contrato.get("extra_seguro_aplicado"):
+            c.drawString(2.5*cm, y, f"Extra Seguro: €{contrato.get('valor_extra_seguro_aplicado', 0):.2f}")
+            y -= 0.6*cm
+    
+    y -= 0.5*cm
+    
+    # Section 5: Período
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2*cm, y, f"{5 if veiculo else 4}. PERÍODO DE VIGÊNCIA")
+    y -= 0.8*cm
+    
+    c.setFont("Helvetica", 10)
+    c.drawString(2.5*cm, y, f"Início: {contrato['data_inicio']}")
+    y -= 0.6*cm
+    if contrato.get("data_fim"):
+        c.drawString(2.5*cm, y, f"Fim: {contrato['data_fim']}")
+        y -= 0.6*cm
+    else:
+        c.drawString(2.5*cm, y, "Duração: Indeterminada")
+        y -= 0.6*cm
+    
+    y -= 1*cm
+    
+    # Cláusulas (se houver)
+    if contrato.get("clausulas_texto"):
+        if y < 10*cm:  # New page if needed
+            c.showPage()
+            y = height - 2*cm
+        
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(2*cm, y, f"{6 if veiculo else 5}. CLÁUSULAS CONTRATUAIS")
+        y -= 0.8*cm
+        
+        c.setFont("Helvetica", 9)
+        # Split text into lines
+        clausulas_lines = contrato["clausulas_texto"].split('\n')
+        for line in clausulas_lines:
+            if y < 2*cm:
+                c.showPage()
+                y = height - 2*cm
+            c.drawString(2.5*cm, y, line[:100])  # Limit line length
+            y -= 0.5*cm
+    
+    # Assinaturas
+    if y < 6*cm:
+        c.showPage()
+        y = height - 2*cm
+    
+    y -= 2*cm
+    
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(4*cm, y, "______________________________")
+    c.drawString(13*cm, y, "______________________________")
+    y -= 0.6*cm
+    c.setFont("Helvetica", 9)
+    c.drawString(4*cm, y, "Assinatura do Parceiro")
+    c.drawString(13*cm, y, "Assinatura do Motorista")
+    y -= 0.4*cm
+    c.drawString(4*cm, y, parceiro.get('nome_empresa', parceiro.get('name', '')))
+    c.drawString(13*cm, y, motorista.get('name', ''))
+    
+    # Footer
+    c.setFont("Helvetica", 8)
+    c.drawCentredString(width/2, 1.5*cm, f"Contrato ID: {contrato_id}")
+    c.drawCentredString(width/2, 1*cm, f"Template: {contrato['nome_template']}")
+    
+    c.save()
+    
+    # Update contract with PDF URL
+    pdf_url = f"/uploads/contratos/{pdf_filename}"
+    await db.contratos_motorista.update_one(
+        {"id": contrato_id},
+        {"$set": {"pdf_url": pdf_url}}
+    )
+    
+    return {
+        "message": "PDF gerado com sucesso",
+        "pdf_url": pdf_url,
+        "pdf_filename": pdf_filename
+    }
+
 @api_router.post("/subscriptions", response_model=UserSubscription)
 async def create_subscription(
     subscription_data: SubscriptionCreate,
