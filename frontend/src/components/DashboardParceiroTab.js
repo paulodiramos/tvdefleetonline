@@ -46,85 +46,77 @@ const DashboardParceiroTab = ({ parceiroId }) => {
       const parceiroMotoristas = motoristasRes.data.filter(m => m.parceiro_atribuido === parceiroId);
       
       // Fetch contratos
-      const contratosRes = await axios.get(`${API}/contratos?parceiro_id=${parceiroId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      // Calculate stats
-      const statsData = {
-        veiculos_total: parceiroVehicles.length,
-        veiculos_ativos: parceiroVehicles.filter(v => v.status === 'ativo').length,
-        motoristas_total: parceiroMotoristas.length,
-        motoristas_ativos: parceiroMotoristas.filter(m => m.status === 'ativo').length,
-        contratos_ativos: contratosRes.data.filter(c => c.status === 'ativo').length,
-        contratos_total: contratosRes.data.length
-      };
-      setStats(statsData);
-      
-      // Calculate alertas
-      const hoje = new Date();
-      const proximosMeses = new Date();
-      proximosMeses.setMonth(proximosMeses.getMonth() + 2);
-      
-      const alertasData = {
-        seguros_vencer: [],
-        inspecoes_vencer: [],
-        extintores_vencer: [],
-        manutencoes_pendentes: []
-      };
-      
-      parceiroVehicles.forEach(vehicle => {
-        // Seguros a vencer
-        if (vehicle.seguro?.validade) {
-          const validadeSeguro = new Date(vehicle.seguro.validade);
-          if (validadeSeguro > hoje && validadeSeguro <= proximosMeses) {
-            alertasData.seguros_vencer.push({
-              veiculo: vehicle.matricula,
-              data: validadeSeguro,
-              dias: Math.ceil((validadeSeguro - hoje) / (1000 * 60 * 60 * 24))
-            });
-          }
-        }
+      try {
+        const contratosRes = await axios.get(`${API}/contratos?parceiro_id=${parceiroId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         
-        // Inspeções a vencer
-        if (vehicle.inspecao?.proxima_inspecao) {
-          const proximaInspecao = new Date(vehicle.inspecao.proxima_inspecao);
-          if (proximaInspecao > hoje && proximaInspecao <= proximosMeses) {
-            alertasData.inspecoes_vencer.push({
-              veiculo: vehicle.matricula,
-              data: proximaInspecao,
-              dias: Math.ceil((proximaInspecao - hoje) / (1000 * 60 * 60 * 24))
-            });
-          }
-        }
-        
-        // Extintores a vencer
-        if (vehicle.extintor?.validade) {
-          const validadeExtintor = new Date(vehicle.extintor.validade);
-          if (validadeExtintor > hoje && validadeExtintor <= proximosMeses) {
-            alertasData.extintores_vencer.push({
-              veiculo: vehicle.matricula,
-              data: validadeExtintor,
-              dias: Math.ceil((validadeExtintor - hoje) / (1000 * 60 * 60 * 24))
-            });
-          }
-        }
-        
-        // Manutenções pendentes (baseado em KM)
-        if (vehicle.revisao?.km_proxima_revisao && vehicle.km_atual) {
-          const kmRestantes = vehicle.revisao.km_proxima_revisao - vehicle.km_atual;
-          if (kmRestantes <= 2000 && kmRestantes > 0) {
-            alertasData.manutencoes_pendentes.push({
-              veiculo: vehicle.matricula,
-              km_atual: vehicle.km_atual,
-              km_proxima: vehicle.revisao.km_proxima_revisao,
-              km_restantes: kmRestantes
-            });
-          }
-        }
-      });
+        // Calculate stats
+        const statsData = {
+          veiculos_total: parceiroVehicles.length,
+          veiculos_ativos: parceiroVehicles.filter(v => v.status === 'atribuido' || v.status === 'disponivel').length,
+          motoristas_total: parceiroMotoristas.length,
+          motoristas_ativos: parceiroMotoristas.filter(m => m.approved).length,
+          contratos_ativos: contratosRes.data.filter(c => c.status === 'ativo').length,
+          contratos_total: contratosRes.data.length
+        };
+        setStats(statsData);
+      } catch (err) {
+        // Contratos endpoint might not exist, set default stats
+        const statsData = {
+          veiculos_total: parceiroVehicles.length,
+          veiculos_ativos: parceiroVehicles.filter(v => v.status === 'atribuido' || v.status === 'disponivel').length,
+          motoristas_total: parceiroMotoristas.length,
+          motoristas_ativos: parceiroMotoristas.filter(m => m.approved).length,
+          contratos_ativos: 0,
+          contratos_total: 0
+        };
+        setStats(statsData);
+      }
       
-      setAlertas(alertasData);
+      // Fetch alertas from new endpoint
+      try {
+        const alertasRes = await axios.get(`${API}/parceiros/${parceiroId}/alertas`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        // Convert backend format to component format
+        const alertasData = {
+          seguros_vencer: alertasRes.data.alertas.seguros.map(a => ({
+            veiculo: a.matricula,
+            data: new Date(a.data_validade),
+            dias: a.dias_restantes
+          })),
+          inspecoes_vencer: alertasRes.data.alertas.inspecoes.map(a => ({
+            veiculo: a.matricula,
+            data: new Date(a.proxima_inspecao),
+            dias: a.dias_restantes
+          })),
+          extintores_vencer: alertasRes.data.alertas.extintores.map(a => ({
+            veiculo: a.matricula,
+            data: new Date(a.data_validade),
+            dias: a.dias_restantes
+          })),
+          manutencoes_pendentes: alertasRes.data.alertas.manutencoes.map(a => ({
+            veiculo: a.matricula,
+            km_atual: a.km_atual,
+            km_proxima: a.km_proxima,
+            km_restantes: a.km_restantes,
+            tipo: a.tipo_manutencao
+          }))
+        };
+        
+        setAlertas(alertasData);
+      } catch (err) {
+        console.error('Error fetching alertas:', err);
+        // Set empty alertas if endpoint fails
+        setAlertas({
+          seguros_vencer: [],
+          inspecoes_vencer: [],
+          extintores_vencer: [],
+          manutencoes_pendentes: []
+        });
+      }
       
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
