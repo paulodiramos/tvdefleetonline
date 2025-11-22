@@ -6714,6 +6714,92 @@ async def delete_user(
     
     return {"message": "User deleted successfully"}
 
+@api_router.put("/users/{user_id}/reset-password")
+async def admin_reset_password(
+    user_id: str,
+    password_data: Dict[str, str],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Admin resets user password and returns the new password (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    new_password = password_data.get("new_password")
+    if not new_password or len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters")
+    
+    # Hash the new password
+    hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+    
+    # Update user password
+    result = await db.users.update_one(
+        {"id": user_id},
+        {"$set": {
+            "password": hashed_password.decode('utf-8'),
+            "senha_provisoria": True  # Mark as temporary password
+        }}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Also update in motoristas if exists
+    await db.motoristas.update_one(
+        {"id": user_id},
+        {"$set": {"senha_provisoria": True}}
+    )
+    
+    return {
+        "message": "Password reset successfully",
+        "new_password": new_password,  # Return plaintext password for admin to see
+        "user_id": user_id
+    }
+
+@api_router.post("/auth/forgot-password")
+async def forgot_password(email_data: Dict[str, str]):
+    """Generate temporary password for user who forgot password"""
+    import random
+    import string
+    
+    email = email_data.get("email")
+    if not email:
+        raise HTTPException(status_code=400, detail="Email is required")
+    
+    # Find user by email
+    user = await db.users.find_one({"email": email}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Email not found in system")
+    
+    # Generate temporary password (8 characters: letters + numbers)
+    temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
+    
+    # Hash the temporary password
+    hashed_password = bcrypt.hashpw(temp_password.encode('utf-8'), bcrypt.gensalt())
+    
+    # Update user password
+    await db.users.update_one(
+        {"email": email},
+        {"$set": {
+            "password": hashed_password.decode('utf-8'),
+            "senha_provisoria": True
+        }}
+    )
+    
+    # Also update in motoristas if exists
+    await db.motoristas.update_one(
+        {"email": email},
+        {"$set": {"senha_provisoria": True}}
+    )
+    
+    # In production, this would send an email
+    # For now, we return the temporary password
+    return {
+        "message": "Temporary password generated successfully",
+        "temp_password": temp_password,
+        "email": email,
+        "instructions": "Use this temporary password to login. You will be prompted to change it on first login."
+    }
+
 
 # ==================== CONFIGURAÇÕES ====================
 @api_router.get("/configuracoes/email")
