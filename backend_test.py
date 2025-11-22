@@ -2974,6 +2974,15 @@ startxref
         self.test_financial_import_system()
         self.test_import_feature_access_control()
         
+        # PARTNER ALERT SYSTEM (NEW REQUEST)
+        print("\n🔔 PARTNER ALERT SYSTEM (HIGH PRIORITY)")
+        print("-" * 50)
+        self.test_parceiros_alert_configuration_fields()
+        self.test_parceiro_alertas_endpoint()
+        self.test_alertas_response_structure_validation()
+        self.test_alertas_urgente_flag_logic()
+        self.test_alertas_empty_response_handling()
+        
         # Summary
         print("\n" + "=" * 80)
         print("TEST SUMMARY")
