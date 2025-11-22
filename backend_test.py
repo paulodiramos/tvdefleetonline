@@ -1436,14 +1436,25 @@ startxref
                 self.log_result("Admin-Reset-Password-Valid", False, "Could not get users list")
                 return
             
-            users = users_response.json()
-            if not users:
+            users_data = users_response.json()
+            
+            # Handle the structure returned by /users/all endpoint
+            all_users = []
+            if isinstance(users_data, dict):
+                if "registered_users" in users_data:
+                    all_users = users_data["registered_users"]
+                elif "users" in users_data:
+                    all_users = users_data["users"]
+            elif isinstance(users_data, list):
+                all_users = users_data
+            
+            if not all_users:
                 self.log_result("Admin-Reset-Password-Valid", False, "No users available for test")
                 return
             
             # Find a non-admin user to reset
             target_user = None
-            for user in users:
+            for user in all_users:
                 if user.get("role") != "admin":
                     target_user = user
                     break
