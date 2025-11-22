@@ -121,20 +121,18 @@ const EditParceiro = ({ user, onLogout }) => {
           </div>
         )}
 
-        {/* Seleção de Parceiro */}
+        {/* Seletor de Parceiro */}
         <Card>
           <CardHeader>
             <CardTitle>Selecionar Parceiro</CardTitle>
           </CardHeader>
           <CardContent>
-            <Label htmlFor="parceiro">Parceiro</Label>
             <select
-              id="parceiro"
               value={selectedParceiro || ''}
               onChange={(e) => setSelectedParceiro(e.target.value)}
               className="w-full p-2 border rounded-md"
             >
-              <option value="">Selecione um parceiro</option>
+              <option value="">-- Selecione um Parceiro --</option>
               {parceiros.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.nome_empresa || p.name || p.email}
