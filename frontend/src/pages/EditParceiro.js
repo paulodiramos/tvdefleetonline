@@ -97,12 +97,19 @@ const EditParceiro = ({ user, onLogout }) => {
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="space-y-6">
+        {/* Header com botão Voltar */}
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Editar Parceiros</h1>
-          <Button variant="outline" onClick={() => navigate('/parceiros')}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Voltar
-          </Button>
+          <div className="flex items-center space-x-4">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/parceiros')}
+              className="flex items-center"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
+            <h1 className="text-2xl font-bold">Editar Parceiro</h1>
+          </div>
         </div>
 
         {message.text && (
