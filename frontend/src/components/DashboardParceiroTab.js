@@ -265,7 +265,7 @@ const DashboardParceiroTab = ({ parceiroId }) => {
                     {alertas.manutencoes_pendentes.map((item, idx) => (
                       <div key={idx} className="text-sm text-blue-800">
                         <span className="font-medium">{item.veiculo}</span> - 
-                        Faltam <strong>{item.km_restantes} km</strong> para revisão ({item.km_atual}/{item.km_proxima} km)
+                        <strong>{item.tipo || 'Manutenção'}</strong>: Faltam <strong>{item.km_restantes} km</strong> ({item.km_atual}/{item.km_proxima} km)
                       </div>
                     ))}
                   </div>
