@@ -5180,6 +5180,248 @@ async def atribuir_plano_parceiro(
     
     return {"message": "Plan assigned successfully", "plano_id": plano_id}
 
+# ==================== ENDPOINTS DE CONTRATOS ====================
+
+@api_router.get("/parceiros/{parceiro_id}/templates-contrato")
+async def get_templates_contrato(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get all contract templates for a parceiro"""
+    # Check permissions
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        if current_user["role"] == "operacional":
+            # Check if has premium
+            if not await check_feature_access(current_user, "criar_contratos"):
+                raise HTTPException(status_code=403, detail="Operacional base não pode ver templates")
+        elif current_user["id"] != parceiro_id:
+            raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    templates = await db.templates_contrato.find({"parceiro_id": parceiro_id}, {"_id": 0}).to_list(length=None)
+    return templates
+
+@api_router.post("/parceiros/{parceiro_id}/templates-contrato")
+async def create_template_contrato(
+    parceiro_id: str,
+    template_data: TemplateContratoCreate,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Create a new contract template for a parceiro"""
+    # Check permissions - apenas operacional premium+, gestor e admin
+    if current_user["role"] == "operacional":
+        if not await check_feature_access(current_user, "criar_contratos"):
+            raise HTTPException(status_code=403, detail="Operacional base não pode criar templates")
+    elif current_user["role"] == "parceiro":
+        raise HTTPException(status_code=403, detail="Parceiro não pode criar templates")
+    elif current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    # Validações
+    if template_data.tipo_contrato == "comissao":
+        if template_data.percentagem_motorista and template_data.percentagem_parceiro:
+            if (template_data.percentagem_motorista + template_data.percentagem_parceiro) != 100:
+                raise HTTPException(status_code=400, detail="Percentagens de comissão devem somar 100%")
+    
+    template = TemplateContrato(
+        parceiro_id=parceiro_id,
+        nome_template=template_data.nome_template,
+        tipo_contrato=template_data.tipo_contrato,
+        periodicidade_padrao=template_data.periodicidade_padrao,
+        valor_base=template_data.valor_base,
+        valor_caucao=template_data.valor_caucao,
+        numero_parcelas_caucao=template_data.numero_parcelas_caucao,
+        valor_epoca_alta=template_data.valor_epoca_alta,
+        valor_epoca_baixa=template_data.valor_epoca_baixa,
+        percentagem_motorista=template_data.percentagem_motorista,
+        percentagem_parceiro=template_data.percentagem_parceiro,
+        combustivel_incluido=template_data.combustivel_incluido,
+        regime_trabalho=template_data.regime_trabalho,
+        valor_compra_veiculo=template_data.valor_compra_veiculo,
+        numero_semanas_compra=template_data.numero_semanas_compra,
+        com_slot=template_data.com_slot,
+        extra_seguro=template_data.extra_seguro,
+        valor_extra_seguro=template_data.valor_extra_seguro,
+        clausulas_texto=template_data.clausulas_texto,
+        created_by=current_user["id"]
+    )
+    
+    # Calcular valor_parcela_caucao se necessário
+    if template.numero_parcelas_caucao and template.valor_caucao:
+        template.valor_parcela_caucao = round(template.valor_caucao / template.numero_parcelas_caucao, 2)
+    
+    await db.templates_contrato.insert_one(template.dict())
+    
+    return template
+
+@api_router.put("/templates-contrato/{template_id}")
+async def update_template_contrato(
+    template_id: str,
+    template_data: TemplateContratoCreate,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Update a contract template"""
+    # Check permissions
+    if current_user["role"] == "operacional":
+        if not await check_feature_access(current_user, "criar_contratos"):
+            raise HTTPException(status_code=403, detail="Sem permissão")
+    elif current_user["role"] == "parceiro":
+        raise HTTPException(status_code=403, detail="Parceiro não pode editar templates")
+    elif current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    # Validações
+    if template_data.tipo_contrato == "comissao":
+        if template_data.percentagem_motorista and template_data.percentagem_parceiro:
+            if (template_data.percentagem_motorista + template_data.percentagem_parceiro) != 100:
+                raise HTTPException(status_code=400, detail="Percentagens de comissão devem somar 100%")
+    
+    update_data = template_data.dict()
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    
+    # Calcular valor_parcela_caucao
+    if update_data.get("numero_parcelas_caucao") and update_data.get("valor_caucao"):
+        update_data["valor_parcela_caucao"] = round(update_data["valor_caucao"] / update_data["numero_parcelas_caucao"], 2)
+    
+    result = await db.templates_contrato.update_one(
+        {"id": template_id},
+        {"$set": update_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Template não encontrado")
+    
+    return {"message": "Template atualizado com sucesso"}
+
+@api_router.delete("/templates-contrato/{template_id}")
+async def delete_template_contrato(
+    template_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Delete a contract template (soft delete)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    result = await db.templates_contrato.update_one(
+        {"id": template_id},
+        {"$set": {"ativo": False, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Template não encontrado")
+    
+    return {"message": "Template removido com sucesso"}
+
+@api_router.post("/contratos")
+async def create_contrato_motorista(
+    contrato_data: ContratoMotoristaCreate,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Create a contract for a motorista from a template"""
+    # Check permissions
+    if current_user["role"] == "operacional":
+        if not await check_feature_access(current_user, "criar_contratos"):
+            raise HTTPException(status_code=403, detail="Operacional base não pode criar contratos")
+    elif current_user["role"] == "parceiro":
+        raise HTTPException(status_code=403, detail="Parceiro não pode criar contratos")
+    elif current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    # Get template
+    template = await db.templates_contrato.find_one({"id": contrato_data.template_id}, {"_id": 0})
+    if not template:
+        raise HTTPException(status_code=404, detail="Template não encontrado")
+    
+    # Get motorista
+    motorista = await db.motoristas.find_one({"id": contrato_data.motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Validações específicas por tipo
+    if template["tipo_contrato"] == "comissao":
+        if contrato_data.percentagem_motorista_aplicado and contrato_data.percentagem_parceiro_aplicado:
+            if (contrato_data.percentagem_motorista_aplicado + contrato_data.percentagem_parceiro_aplicado) != 100:
+                raise HTTPException(status_code=400, detail="Percentagens devem somar 100%")
+    
+    # Calcular parcela de caução se aplicável
+    valor_parcela_calculado = None
+    if contrato_data.numero_parcelas_caucao_aplicado and contrato_data.valor_caucao_aplicado:
+        valor_parcela_calculado = round(contrato_data.valor_caucao_aplicado / contrato_data.numero_parcelas_caucao_aplicado, 2)
+    
+    contrato = ContratoMotorista(
+        template_id=contrato_data.template_id,
+        parceiro_id=template["parceiro_id"],
+        motorista_id=contrato_data.motorista_id,
+        veiculo_id=contrato_data.veiculo_id,
+        nome_template=template["nome_template"],
+        tipo_contrato=template["tipo_contrato"],
+        periodicidade=contrato_data.periodicidade,
+        valor_aplicado=contrato_data.valor_aplicado,
+        valor_caucao_aplicado=contrato_data.valor_caucao_aplicado,
+        numero_parcelas_caucao_aplicado=contrato_data.numero_parcelas_caucao_aplicado,
+        valor_parcela_caucao_aplicado=valor_parcela_calculado,
+        epoca_atual=contrato_data.epoca_atual,
+        valor_epoca_alta_aplicado=contrato_data.valor_epoca_alta_aplicado,
+        valor_epoca_baixa_aplicado=contrato_data.valor_epoca_baixa_aplicado,
+        percentagem_motorista_aplicado=contrato_data.percentagem_motorista_aplicado,
+        percentagem_parceiro_aplicado=contrato_data.percentagem_parceiro_aplicado,
+        combustivel_incluido_aplicado=contrato_data.combustivel_incluido_aplicado,
+        regime_trabalho_aplicado=contrato_data.regime_trabalho_aplicado,
+        valor_compra_aplicado=contrato_data.valor_compra_aplicado,
+        numero_semanas_aplicado=contrato_data.numero_semanas_aplicado,
+        com_slot_aplicado=contrato_data.com_slot_aplicado,
+        extra_seguro_aplicado=contrato_data.extra_seguro_aplicado,
+        valor_extra_seguro_aplicado=contrato_data.valor_extra_seguro_aplicado,
+        clausulas_texto=template.get("clausulas_texto"),
+        data_inicio=contrato_data.data_inicio,
+        data_fim=contrato_data.data_fim,
+        created_by=current_user["id"]
+    )
+    
+    await db.contratos_motorista.insert_one(contrato.dict())
+    
+    return contrato
+
+@api_router.get("/contratos")
+async def get_contratos(
+    parceiro_id: Optional[str] = None,
+    motorista_id: Optional[str] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get contracts with optional filters"""
+    query = {}
+    
+    if parceiro_id:
+        query["parceiro_id"] = parceiro_id
+    if motorista_id:
+        query["motorista_id"] = motorista_id
+    
+    # Check permissions
+    if current_user["role"] == "parceiro":
+        query["parceiro_id"] = current_user["id"]
+    elif current_user["role"] == "operacional":
+        if not await check_feature_access(current_user, "visualizar_contratos"):
+            raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    contratos = await db.contratos_motorista.find(query, {"_id": 0}).to_list(length=None)
+    return contratos
+
+@api_router.get("/contratos/{contrato_id}")
+async def get_contrato(
+    contrato_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get a specific contract"""
+    contrato = await db.contratos_motorista.find_one({"id": contrato_id}, {"_id": 0})
+    if not contrato:
+        raise HTTPException(status_code=404, detail="Contrato não encontrado")
+    
+    # Check permissions
+    if current_user["role"] == "parceiro":
+        if contrato["parceiro_id"] != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    return contrato
+
 @api_router.post("/subscriptions", response_model=UserSubscription)
 async def create_subscription(
     subscription_data: SubscriptionCreate,
