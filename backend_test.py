@@ -1899,6 +1899,46 @@ startxref
             self.log_result("Create-Test-User", False, f"Error creating test user: {str(e)}")
             return None
     
+    def run_password_management_tests_only(self):
+        """Run only password management system tests as requested in review"""
+        print("TVDEFleet Backend Testing Suite - Password Management System")
+        print("=" * 80)
+        
+        # Authenticate users
+        print("\n🔐 AUTHENTICATION PHASE")
+        print("-" * 40)
+        if not self.authenticate_user("admin"):
+            return False
+        
+        # Also authenticate parceiro for authorization tests
+        self.authenticate_user("parceiro")
+        
+        # Run password management tests
+        print("\n🔐 PASSWORD MANAGEMENT SYSTEM TESTS")
+        print("-" * 50)
+        success = self.test_password_management_system()
+        
+        # Summary
+        print("\n" + "=" * 80)
+        print("PASSWORD MANAGEMENT SYSTEM TEST SUMMARY")
+        print("=" * 80)
+        
+        passed = sum(1 for r in self.test_results if r["success"])
+        failed = sum(1 for r in self.test_results if not r["success"])
+        
+        print(f"Total Tests: {len(self.test_results)}")
+        print(f"✅ Passed: {passed}")
+        print(f"❌ Failed: {failed}")
+        
+        if failed > 0:
+            print("\n🔍 FAILED TESTS:")
+            for result in self.test_results:
+                if not result["success"]:
+                    print(f"   ❌ {result['test']}: {result['message']}")
+        
+        print("\n" + "=" * 80)
+        return failed == 0
+    
     def test_approve_user(self, headers, user_id):
         """Test PUT /api/users/{user_id}/approve endpoint"""
         try:
