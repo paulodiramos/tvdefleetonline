@@ -1289,10 +1289,94 @@ const FichaVeiculo = ({ user, onLogout }) => {
                     )}
 
                     {(editMode ? infoForm.tipo : vehicle.tipo_contrato?.tipo) === 'compra_veiculo' && (
-                      <div className="space-y-3">
+                      <div className="space-y-3 bg-purple-50 p-3 rounded-lg">
+                        <div className="font-semibold text-sm text-purple-900">Compra de Veículo</div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <Label htmlFor="valor_semanal_compra">Valor Semanal (€)</Label>
+                            <Label htmlFor="valor_compra_veiculo">Valor Total Compra (€)</Label>
+                            {canEdit && editMode ? (
+                              <Input
+                                id="valor_compra_veiculo"
+                                type="number"
+                                step="0.01"
+                                value={infoForm.valor_compra_veiculo}
+                                onChange={(e) => setInfoForm({...infoForm, valor_compra_veiculo: e.target.value})}
+                                placeholder="Ex: 15000.00"
+                              />
+                            ) : (
+                              <p className="font-medium">€{vehicle.tipo_contrato?.valor_compra_veiculo || '0.00'}</p>
+                            )}
+                          </div>
+                          <div>
+                            <Label htmlFor="numero_semanas_compra">Número de Semanas</Label>
+                            {canEdit && editMode ? (
+                              <Input
+                                id="numero_semanas_compra"
+                                type="number"
+                                value={infoForm.numero_semanas_compra}
+                                onChange={(e) => setInfoForm({...infoForm, numero_semanas_compra: e.target.value})}
+                                placeholder="Ex: 104"
+                              />
+                            ) : (
+                              <p className="font-medium">{vehicle.tipo_contrato?.numero_semanas_compra || 0} semanas</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="flex items-center space-x-2">
+                            {canEdit && editMode ? (
+                              <>
+                                <input
+                                  type="checkbox"
+                                  id="com_slot"
+                                  checked={infoForm.com_slot}
+                                  onChange={(e) => setInfoForm({...infoForm, com_slot: e.target.checked})}
+                                  className="rounded"
+                                />
+                                <Label htmlFor="com_slot" className="cursor-pointer">Com Slot</Label>
+                              </>
+                            ) : (
+                              <p className="text-sm">Slot: {vehicle.tipo_contrato?.com_slot ? '✓ Sim' : '✗ Não'}</p>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            {canEdit && editMode ? (
+                              <>
+                                <input
+                                  type="checkbox"
+                                  id="extra_seguro"
+                                  checked={infoForm.extra_seguro}
+                                  onChange={(e) => setInfoForm({...infoForm, extra_seguro: e.target.checked})}
+                                  className="rounded"
+                                />
+                                <Label htmlFor="extra_seguro" className="cursor-pointer">Extra Seguro</Label>
+                              </>
+                            ) : (
+                              <p className="text-sm">Extra Seguro: {vehicle.tipo_contrato?.extra_seguro ? '✓ Sim' : '✗ Não'}</p>
+                            )}
+                          </div>
+                          {(editMode ? infoForm.extra_seguro : vehicle.tipo_contrato?.extra_seguro) && (
+                            <div>
+                              <Label htmlFor="valor_extra_seguro">Valor (€)</Label>
+                              {canEdit && editMode ? (
+                                <Input
+                                  id="valor_extra_seguro"
+                                  type="number"
+                                  step="0.01"
+                                  value={infoForm.valor_extra_seguro}
+                                  onChange={(e) => setInfoForm({...infoForm, valor_extra_seguro: e.target.value})}
+                                  placeholder="Ex: 50.00"
+                                />
+                              ) : (
+                                <p className="font-medium">€{vehicle.tipo_contrato?.valor_extra_seguro || '0.00'}</p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-500 border-t pt-2 mt-2">Legacy (compatibilidade):</div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label htmlFor="valor_semanal_compra">Valor Semanal (€) [Legacy]</Label>
                             {canEdit && editMode ? (
                               <Input
                                 id="valor_semanal_compra"
