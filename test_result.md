@@ -1253,6 +1253,66 @@ backend:
           agent: "testing"
           comment: "✅ TESTADO COMPLETAMENTE: GET /api/files/motoristas/{filename} funcionando perfeitamente. Endpoint acessível com autenticação válida. Retorna 404 para ficheiros inexistentes (comportamento correto). Sem problemas de autenticação (401/403). Pasta 'motoristas' está nos allowed_folders e funciona adequadamente."
 
+  - task: "Partner Alert System - Configuration fields"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: GET /api/parceiros funcionando perfeitamente. Campos de configuração de alertas presentes: dias_aviso_seguro=30d, dias_aviso_inspecao=30d, km_aviso_revisao=5000km. Valores padrão aplicados corretamente conforme especificação."
+
+  - task: "Partner Alert System - Alertas endpoint"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: GET /api/parceiros/{parceiro_id}/alertas funcionando perfeitamente. Estrutura de resposta completa: parceiro_id, configuracao, alertas (seguros, inspecoes, extintores, manutencoes), totais. Endpoint funciona mesmo sem veículos (retorna arrays vazios). Configuração padrão aplicada corretamente."
+
+  - task: "Partner Alert System - Response structure validation"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Validação detalhada da estrutura de resposta do endpoint de alertas. Todos os campos obrigatórios presentes: vehicle_id, matricula, urgente para todos os tipos. Campos específicos por tipo: data_validade/dias_restantes (seguros/inspecoes/extintores), tipo_manutencao/km_atual/km_proxima/km_restantes (manutencoes). Cálculo de totais correto."
+
+  - task: "Partner Alert System - Urgente flag logic"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Lógica da flag 'urgente' funcionando corretamente. Para alertas baseados em data (seguros, inspeções, extintores): urgente=true quando dias_restantes <= 7. Para alertas baseados em KM (manutenções): urgente=true quando km_restantes <= 1000. Lógica implementada conforme especificação."
+
+  - task: "Partner Alert System - Empty response handling"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Endpoint de alertas funciona corretamente mesmo sem veículos. Retorna estrutura completa com arrays vazios: seguros[], inspecoes[], extintores[], manutencoes[]. Configuração do parceiro sempre presente. Totais calculados corretamente (todos zeros quando sem alertas)."
+
 frontend:
   - task: "User Management - Usuarios page"
     implemented: true
