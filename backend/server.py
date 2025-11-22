@@ -787,6 +787,163 @@ class LogSincronizacao(BaseModel):
     detalhes: Dict[str, Any] = {}
     executado_por: Optional[str] = None  # user_id se manual
 
+# ==================== MODELOS DE CONTRATOS ====================
+
+class TemplateContrato(BaseModel):
+    """Template de contrato criado pelo parceiro"""
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    parceiro_id: str
+    nome_template: str  # Ex: "Aluguer Básico", "Comissão Premium"
+    tipo_contrato: str  # aluguer_sem_caucao, aluguer_com_caucao, aluguer_caucao_parcelada, 
+                        # periodo_epoca, aluguer_epocas_sem_caucao, aluguer_epocas_caucao,
+                        # aluguer_epoca_caucao_parcelada, compra_veiculo, comissao, 
+                        # motorista_privado, outros
+    periodicidade_padrao: str = "semanal"  # semanal ou mensal
+    
+    # Configurações base (valores padrão, podem ser editados ao criar contrato)
+    valor_base: Optional[float] = None  # Valor semanal/mensal base
+    valor_caucao: Optional[float] = None
+    numero_parcelas_caucao: Optional[int] = None
+    valor_parcela_caucao: Optional[float] = None
+    
+    # Épocas (apenas para tipos com época)
+    valor_epoca_alta: Optional[float] = None
+    valor_epoca_baixa: Optional[float] = None
+    caucao_epoca_alta: Optional[float] = None
+    caucao_epoca_baixa: Optional[float] = None
+    
+    # Comissão
+    percentagem_motorista: Optional[float] = None  # Ex: 60
+    percentagem_parceiro: Optional[float] = None   # Ex: 40 (soma deve ser 100)
+    combustivel_incluido: bool = False
+    regime_trabalho: Optional[str] = None  # part_time, full_time
+    
+    # Compra de veículo
+    valor_compra_veiculo: Optional[float] = None
+    numero_semanas_compra: Optional[int] = None
+    com_slot: bool = False
+    extra_seguro: bool = False
+    valor_extra_seguro: Optional[float] = None
+    
+    # Cláusulas do contrato (texto livre, editável pelo parceiro)
+    clausulas_texto: Optional[str] = None
+    
+    # Metadata
+    ativo: bool = True
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_by: str  # user_id
+
+class ContratoMotorista(BaseModel):
+    """Contrato individual criado para um motorista"""
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    
+    # Relacionamentos
+    template_id: str  # Template usado
+    parceiro_id: str
+    motorista_id: str
+    veiculo_id: Optional[str] = None
+    
+    # Dados do template (snapshot no momento da criação)
+    nome_template: str
+    tipo_contrato: str
+    periodicidade: str  # semanal ou mensal
+    
+    # Valores aplicados (podem ser diferentes do template)
+    valor_aplicado: float
+    valor_caucao_aplicado: Optional[float] = None
+    numero_parcelas_caucao_aplicado: Optional[int] = None
+    valor_parcela_caucao_aplicado: Optional[float] = None
+    
+    # Épocas
+    epoca_atual: Optional[str] = None  # alta, baixa
+    valor_epoca_alta_aplicado: Optional[float] = None
+    valor_epoca_baixa_aplicado: Optional[float] = None
+    
+    # Comissão
+    percentagem_motorista_aplicado: Optional[float] = None
+    percentagem_parceiro_aplicado: Optional[float] = None
+    combustivel_incluido_aplicado: bool = False
+    regime_trabalho_aplicado: Optional[str] = None
+    
+    # Compra de veículo
+    valor_compra_aplicado: Optional[float] = None
+    numero_semanas_aplicado: Optional[int] = None
+    com_slot_aplicado: bool = False
+    extra_seguro_aplicado: bool = False
+    valor_extra_seguro_aplicado: Optional[float] = None
+    
+    # Cláusulas (snapshot do template)
+    clausulas_texto: Optional[str] = None
+    
+    # Datas
+    data_inicio: str  # Data de início do contrato
+    data_fim: Optional[str] = None  # Data de fim (se aplicável)
+    data_emissao: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    
+    # Status
+    status: str = "ativo"  # ativo, terminado, cancelado
+    
+    # PDF gerado
+    pdf_url: Optional[str] = None
+    
+    # Assinaturas
+    assinado_motorista: bool = False
+    data_assinatura_motorista: Optional[datetime] = None
+    assinado_parceiro: bool = False
+    data_assinatura_parceiro: Optional[datetime] = None
+    
+    # Metadata
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_by: str  # user_id
+
+class TemplateContratoCreate(BaseModel):
+    """Schema para criar template de contrato"""
+    nome_template: str
+    tipo_contrato: str
+    periodicidade_padrao: str = "semanal"
+    valor_base: Optional[float] = None
+    valor_caucao: Optional[float] = None
+    numero_parcelas_caucao: Optional[int] = None
+    valor_epoca_alta: Optional[float] = None
+    valor_epoca_baixa: Optional[float] = None
+    percentagem_motorista: Optional[float] = None
+    percentagem_parceiro: Optional[float] = None
+    combustivel_incluido: bool = False
+    regime_trabalho: Optional[str] = None
+    valor_compra_veiculo: Optional[float] = None
+    numero_semanas_compra: Optional[int] = None
+    com_slot: bool = False
+    extra_seguro: bool = False
+    valor_extra_seguro: Optional[float] = None
+    clausulas_texto: Optional[str] = None
+
+class ContratoMotoristaCreate(BaseModel):
+    """Schema para criar contrato de motorista"""
+    template_id: str
+    motorista_id: str
+    veiculo_id: Optional[str] = None
+    periodicidade: str
+    valor_aplicado: float
+    valor_caucao_aplicado: Optional[float] = None
+    numero_parcelas_caucao_aplicado: Optional[int] = None
+    epoca_atual: Optional[str] = None
+    valor_epoca_alta_aplicado: Optional[float] = None
+    valor_epoca_baixa_aplicado: Optional[float] = None
+    percentagem_motorista_aplicado: Optional[float] = None
+    percentagem_parceiro_aplicado: Optional[float] = None
+    combustivel_incluido_aplicado: bool = False
+    regime_trabalho_aplicado: Optional[str] = None
+    valor_compra_aplicado: Optional[float] = None
+    numero_semanas_aplicado: Optional[int] = None
+    com_slot_aplicado: bool = False
+    extra_seguro_aplicado: bool = False
+    valor_extra_seguro_aplicado: Optional[float] = None
+    data_inicio: str
+    data_fim: Optional[str] = None
+
 class UserBase(BaseModel):
     email: EmailStr
     name: str
