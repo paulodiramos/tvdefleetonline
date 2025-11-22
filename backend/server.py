@@ -4414,6 +4414,149 @@ async def update_parceiro(
     
     return {"message": "Parceiro updated successfully"}
 
+@api_router.get("/parceiros/{parceiro_id}/alertas")
+async def get_parceiro_alertas(parceiro_id: str, current_user: Dict = Depends(get_current_user)):
+    """
+    Get all alerts for a specific partner's vehicles and drivers
+    Returns: seguros, inspeções, manutenções baseadas em KM configurado no parceiro
+    """
+    from datetime import date, timedelta
+    
+    # Get parceiro to retrieve alert configurations
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro not found")
+    
+    # Get configuration (use defaults if not set)
+    dias_aviso_seguro = parceiro.get("dias_aviso_seguro", 30)
+    dias_aviso_inspecao = parceiro.get("dias_aviso_inspecao", 30)
+    km_aviso_revisao = parceiro.get("km_aviso_revisao", 5000)
+    
+    today = date.today()
+    
+    # Get all vehicles for this partner
+    vehicles = await db.vehicles.find({"parceiro_id": parceiro_id}, {"_id": 0}).to_list(None)
+    
+    alertas_seguro = []
+    alertas_inspecao = []
+    alertas_manutencao = []
+    alertas_extintor = []
+    
+    for vehicle in vehicles:
+        matricula = vehicle.get("matricula", "N/A")
+        
+        # Check insurance expiry
+        if vehicle.get("insurance") and vehicle["insurance"].get("data_validade"):
+            try:
+                data_validade = datetime.strptime(vehicle["insurance"]["data_validade"], "%Y-%m-%d").date()
+                dias_restantes = (data_validade - today).days
+                
+                if 0 <= dias_restantes <= dias_aviso_seguro:
+                    alertas_seguro.append({
+                        "vehicle_id": vehicle["id"],
+                        "matricula": matricula,
+                        "data_validade": vehicle["insurance"]["data_validade"],
+                        "dias_restantes": dias_restantes,
+                        "urgente": dias_restantes <= 7
+                    })
+            except Exception as e:
+                logging.error(f"Error parsing insurance date for {matricula}: {e}")
+        
+        # Check inspection expiry
+        if vehicle.get("inspection") and vehicle["inspection"].get("proxima_inspecao"):
+            try:
+                proxima_inspecao = datetime.strptime(vehicle["inspection"]["proxima_inspecao"], "%Y-%m-%d").date()
+                dias_restantes = (proxima_inspecao - today).days
+                
+                if 0 <= dias_restantes <= dias_aviso_inspecao:
+                    alertas_inspecao.append({
+                        "vehicle_id": vehicle["id"],
+                        "matricula": matricula,
+                        "proxima_inspecao": vehicle["inspection"]["proxima_inspecao"],
+                        "dias_restantes": dias_restantes,
+                        "urgente": dias_restantes <= 7
+                    })
+            except Exception as e:
+                logging.error(f"Error parsing inspection date for {matricula}: {e}")
+        
+        # Check extinguisher expiry
+        if vehicle.get("extintor") and vehicle["extintor"].get("data_validade"):
+            try:
+                data_validade_extintor = datetime.strptime(vehicle["extintor"]["data_validade"], "%Y-%m-%d").date()
+                dias_restantes = (data_validade_extintor - today).days
+                
+                if 0 <= dias_restantes <= dias_aviso_inspecao:
+                    alertas_extintor.append({
+                        "vehicle_id": vehicle["id"],
+                        "matricula": matricula,
+                        "data_validade": vehicle["extintor"]["data_validade"],
+                        "dias_restantes": dias_restantes,
+                        "urgente": dias_restantes <= 7
+                    })
+            except Exception as e:
+                logging.error(f"Error parsing extintor date for {matricula}: {e}")
+        
+        # Check maintenance based on KM (plano_manutencoes)
+        km_atual = vehicle.get("km_atual", 0)
+        ultima_revisao_km = vehicle.get("ultima_revisao_km", 0)
+        plano_manutencoes = vehicle.get("plano_manutencoes", [])
+        
+        # Default maintenance plan if not configured
+        if not plano_manutencoes:
+            plano_manutencoes = [
+                {"tipo": "Pastilhas", "intervalo_km": 30000},
+                {"tipo": "Pastilhas e Discos", "intervalo_km": 60000},
+                {"tipo": "Óleo e Filtros", "intervalo_km": 15000}
+            ]
+        
+        for manutencao in plano_manutencoes:
+            intervalo_km = manutencao.get("intervalo_km", 0)
+            tipo_manutencao = manutencao.get("tipo", "Manutenção")
+            
+            if intervalo_km > 0:
+                # Calculate next maintenance KM
+                proxima_manutencao_km = ultima_revisao_km + intervalo_km
+                km_restantes = proxima_manutencao_km - km_atual
+                
+                if 0 <= km_restantes <= km_aviso_revisao:
+                    alertas_manutencao.append({
+                        "vehicle_id": vehicle["id"],
+                        "matricula": matricula,
+                        "tipo_manutencao": tipo_manutencao,
+                        "km_atual": km_atual,
+                        "km_proxima": proxima_manutencao_km,
+                        "km_restantes": km_restantes,
+                        "urgente": km_restantes <= 1000
+                    })
+    
+    # Sort by urgency
+    alertas_seguro.sort(key=lambda x: x["dias_restantes"])
+    alertas_inspecao.sort(key=lambda x: x["dias_restantes"])
+    alertas_extintor.sort(key=lambda x: x["dias_restantes"])
+    alertas_manutencao.sort(key=lambda x: x["km_restantes"])
+    
+    return {
+        "parceiro_id": parceiro_id,
+        "configuracao": {
+            "dias_aviso_seguro": dias_aviso_seguro,
+            "dias_aviso_inspecao": dias_aviso_inspecao,
+            "km_aviso_revisao": km_aviso_revisao
+        },
+        "alertas": {
+            "seguros": alertas_seguro,
+            "inspecoes": alertas_inspecao,
+            "extintores": alertas_extintor,
+            "manutencoes": alertas_manutencao
+        },
+        "totais": {
+            "seguros": len(alertas_seguro),
+            "inspecoes": len(alertas_inspecao),
+            "extintores": len(alertas_extintor),
+            "manutencoes": len(alertas_manutencao),
+            "total": len(alertas_seguro) + len(alertas_inspecao) + len(alertas_extintor) + len(alertas_manutencao)
+        }
+    }
+
 # ==================== DOCUMENT SEND ENDPOINTS ====================
 
 @api_router.post("/documents/send-email")
