@@ -293,6 +293,92 @@ const Login = ({ onLogin }) => {
           </Card>
         </div>
       )}
+
+      {/* Forgot Password Modal */}
+      <Dialog open={showForgotPasswordModal} onOpenChange={setShowForgotPasswordModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <KeyRound className="w-5 h-5" />
+              <span>Recuperar Senha</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {!tempPassword ? (
+              <form onSubmit={handleForgotPassword} className="space-y-4">
+                <p className="text-sm text-slate-600">
+                  Digite seu email para receber uma senha temporária
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="forgotEmail">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      id="forgotEmail"
+                      type="email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder="seu@email.com"
+                      required
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowForgotPasswordModal(false);
+                      setForgotEmail('');
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={loadingForgot}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {loadingForgot ? 'Gerando...' : 'Recuperar Senha'}
+                  </Button>
+                </div>
+              </form>
+            ) : (
+              <div className="space-y-4">
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-800 font-semibold mb-2">
+                    ✓ Senha temporária gerada com sucesso!
+                  </p>
+                  <p className="text-xs text-green-700 mb-3">
+                    Use esta senha para fazer login:
+                  </p>
+                  <div className="bg-white p-3 rounded border border-green-300">
+                    <code className="text-lg font-mono text-green-900 select-all">
+                      {tempPassword}
+                    </code>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-600">
+                  💡 Copie esta senha e faça login. Será solicitado que altere a senha no primeiro acesso.
+                </p>
+                <div className="flex justify-end">
+                  <Button
+                    onClick={() => {
+                      setShowForgotPasswordModal(false);
+                      setForgotEmail('');
+                      setTempPassword('');
+                    }}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    Entendido
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
