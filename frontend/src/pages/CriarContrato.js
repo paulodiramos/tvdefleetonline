@@ -33,7 +33,7 @@ const CriarContrato = ({ user, onLogout }) => {
   const [parceiroSelecionado, setParceiroSelecionado] = useState('');
   const [templateSelecionado, setTemplateSelecionado] = useState('');
   const [motoristaSelecionado, setMotoristaSelecionado] = useState('');
-  const [veiculoSelecionado, setVeiculoSelecionado] = useState('');
+  const [veiculoSelecionado, setVeiculoSelecionado] = useState(null);
   
   const [templateData, setTemplateData] = useState(null);
   const [veiculoData, setVeiculoData] = useState(null);
