@@ -50,10 +50,14 @@ const Usuarios = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedRole, setSelectedRole] = useState('');
-  const [actionType, setActionType] = useState(''); // 'approve', 'delete', 'changeRole'
+  const [actionType, setActionType] = useState(''); // 'approve', 'delete', 'changeRole', 'resetPassword'
   const [showDialog, setShowDialog] = useState(false);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [viewingUser, setViewingUser] = useState(null);
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [generatedPassword, setGeneratedPassword] = useState('');
 
   useEffect(() => {
     fetchUsers();
