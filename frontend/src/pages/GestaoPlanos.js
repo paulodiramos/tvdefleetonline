@@ -229,6 +229,12 @@ const GestaoPlanos = ({ user, onLogout }) => {
               <CardContent>
                 <p className="text-sm text-slate-600 mb-4">{plano.descricao}</p>
                 
+                <div className="mb-3">
+                  <span className={`text-xs px-2 py-1 rounded ${plano.tipo_cobranca === 'por_veiculo' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'}`}>
+                    Cobrança: {plano.tipo_cobranca === 'por_veiculo' ? 'Por Veículo' : 'Por Motorista'}
+                  </span>
+                </div>
+
                 <div className="space-y-2 mb-4">
                   <div className="flex justify-between text-sm">
                     <span>Semanal:</span>
