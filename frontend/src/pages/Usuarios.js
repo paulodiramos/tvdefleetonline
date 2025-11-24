@@ -60,9 +60,14 @@ const Usuarios = ({ user, onLogout }) => {
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState('');
+  const [showPlanoDialog, setShowPlanoDialog] = useState(false);
+  const [planos, setPlanos] = useState([]);
+  const [selectedPlanoId, setSelectedPlanoId] = useState('');
+  const [duracaoDias, setDuracaoDias] = useState(30);
 
   useEffect(() => {
     fetchUsers();
+    fetchPlanos();
   }, []);
 
   const fetchUsers = async () => {
