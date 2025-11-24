@@ -72,6 +72,23 @@ const FichaVeiculo = ({ user, onLogout }) => {
     data_validade: ''
   });
 
+  const [planoManutencoes, setPlanoManutencoes] = useState([
+    { nome: 'Revisão', intervalo_km: 15000, ativo: true },
+    { nome: 'Pastilhas', intervalo_km: 30000, ativo: true },
+    { nome: 'Discos e Pastilhas', intervalo_km: 60000, ativo: true },
+    { nome: 'Distribuição', intervalo_km: 80000, ativo: true },
+    { nome: 'Pneus', intervalo_km: 40000, ativo: true }
+  ]);
+
+  const [alertasConfig, setAlertasConfig] = useState({
+    dias_aviso_seguro: 30,
+    dias_aviso_inspecao: 30,
+    dias_aviso_extintor: 30,
+    km_aviso_manutencao: 5000
+  });
+
+  const [verificacaoDanosAtiva, setVerificacaoDanosAtiva] = useState(false);
+
   const [infoForm, setInfoForm] = useState({
     tipo: 'aluguer_sem_caucao',
     periodicidade: 'semanal',
