@@ -295,6 +295,25 @@ const FichaVeiculo = ({ user, onLogout }) => {
     }
   };
 
+  const handleSavePlanoManutencoes = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/vehicles/${vehicleId}`, 
+        { 
+          plano_manutencoes: planoManutencoes,
+          alertas_configuracao: alertasConfig,
+          verificacao_danos_ativa: verificacaoDanosAtiva
+        },
+        { headers: { Authorization: `Bearer ${token}` }}
+      );
+      await fetchVehicleData();
+      toast.success('Plano de manutenções e alertas atualizados!');
+    } catch (error) {
+      console.error('Error saving plano:', error);
+      toast.error('Erro ao atualizar plano de manutenções');
+    }
+  };
+
   const fetchVehicleData = async () => {
     try {
       const token = localStorage.getItem('token');
