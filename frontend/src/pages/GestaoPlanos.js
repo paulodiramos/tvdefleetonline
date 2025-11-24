@@ -169,6 +169,17 @@ const GestaoPlanos = ({ user, onLogout }) => {
     setPlanoForm({ ...planoForm, features });
   };
 
+  const togglePerfil = (perfilId) => {
+    const perfis = [...planoForm.perfis_permitidos];
+    const index = perfis.indexOf(perfilId);
+    if (index > -1) {
+      perfis.splice(index, 1);
+    } else {
+      perfis.push(perfilId);
+    }
+    setPlanoForm({ ...planoForm, perfis_permitidos: perfis });
+  };
+
   const calculatePrecoComIVA = (precoSemIVA) => {
     return (precoSemIVA * (1 + planoForm.iva_percentagem / 100)).toFixed(2);
   };
