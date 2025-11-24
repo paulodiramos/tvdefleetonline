@@ -88,6 +88,40 @@ const Usuarios = ({ user, onLogout }) => {
     }
   };
 
+  const fetchPlanos = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/planos`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPlanos(response.data);
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+    }
+  };
+
+  const handleAtribuirPlano = async () => {
+    if (!selectedPlanoId) {
+      toast.error('Selecione um plano');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/users/${selectedUser.id}/atribuir-plano`,
+        { plano_id: selectedPlanoId, duracao_dias: duracaoDias },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Plano atribuído por ${duracaoDias} dias!`);
+      setShowPlanoDialog(false);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error assigning plan:', error);
+      toast.error('Erro ao atribuir plano');
+    }
+  };
+
   const handleApproveUser = async (userId, role) => {
     try {
       const token = localStorage.getItem('token');
