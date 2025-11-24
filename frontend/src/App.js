@@ -251,6 +251,12 @@ function App() {
               user ? <GestaoPlanos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
+          <Route
+            path="/meus-planos"
+            element={
+              user ? <MeusPlanos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
