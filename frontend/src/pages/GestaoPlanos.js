@@ -245,6 +245,24 @@ const GestaoPlanos = ({ user, onLogout }) => {
                   </div>
                 )}
 
+                <div className="mb-4">
+                  <p className="text-xs font-semibold text-slate-700 mb-2">Perfis Permitidos:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {plano.perfis_permitidos && plano.perfis_permitidos.length > 0 ? (
+                      plano.perfis_permitidos.map((perfil) => {
+                        const perfilInfo = PERFIS_DISPONIVEIS.find(p => p.id === perfil);
+                        return (
+                          <span key={perfil} className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded">
+                            {perfilInfo?.nome || perfil}
+                          </span>
+                        );
+                      })
+                    ) : (
+                      <span className="text-xs text-slate-500">Todos os perfis</span>
+                    )}
+                  </div>
+                </div>
+
                 <div className="space-y-1">
                   <p className="text-xs font-semibold text-slate-700 mb-2">Funcionalidades:</p>
                   {plano.features.map((feature) => {
