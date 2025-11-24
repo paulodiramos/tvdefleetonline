@@ -2827,6 +2827,8 @@ async def register_motorista(motorista_data: MotoristaCreate):
     motorista_dict = motorista_data.model_dump()
     motorista_dict.pop("password", None)
     motorista_dict["id"] = user_dict["id"]
+    # Generate automatic ID for fleet card (format: FROTA-XXXXXXXX)
+    motorista_dict["id_cartao_frota_combustivel"] = f"FROTA-{str(uuid.uuid4())[:8].upper()}"
     motorista_dict["documents"] = {
         "license_photo": None, 
         "cv_file": None, 
