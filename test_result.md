@@ -577,6 +577,18 @@ backend:
           comment: "✅ TESTADO: Todos os 5 templates CSV funcionando perfeitamente. CORRIGIDO: Endpoint estava definido após app.include_router - movido para posição correta. Testados: GET /api/templates/csv/uber (CSV), /bolt (CSV), /prio (XLSX), /viaverde (CSV), /gps (CSV). Content-Type headers corretos. Template inválido retorna 404 corretamente. Todos os arquivos existem em /app/backend/templates/csv_examples/."
 
 frontend:
+  - task: "Sistema de Plano de Manutenções e Alertas - Melhorias"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/FichaVeiculo.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Todas as novas funcionalidades de melhorias funcionando perfeitamente! NOMES EDITÁVEIS: 5 campos de input editáveis para nomes das manutenções (Revisão → Revisão Geral testado). BOTÃO ADICIONAR: 'Adicionar Item de Manutenção' com ícone Plus funcionando (adiciona novo item à lista). BOTÕES REMOVER: 6 botões Trash icon funcionando (removem itens individuais). CONTROLE DE ACESSO: Admin tem acesso total sem restrições. TAB ALERTAS: Fundo amber, 4 campos editáveis, switch funcionando, sem avisos de restrição para admin. TAB PLANO: Fundo azul, nomes editáveis, add/remove funcionando. SALVAMENTO: Toast success 'Plano de manutenções e alertas atualizados!' funcionando. MODO EDIÇÃO: Editar/Guardar/Cancelar operacional. Todas as melhorias do review request implementadas e testadas com sucesso!"
+
   - task: "Sistema de Gestão de Senhas - Frontend Modal"
     implemented: true
     working: true
