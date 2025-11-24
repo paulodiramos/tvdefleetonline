@@ -3388,6 +3388,105 @@ frontend:
   - task: "Usuarios.js - Botão Alterar Senha"
     implemented: true
     working: false
+
+
+backend:
+  - task: "Plano de Manutenções e Alertas - Modelo Vehicle"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Expandido modelo Vehicle com: plano_manutencoes (List[Dict] com nome, intervalo_km, ativo), alertas_configuracao (Dict com dias_aviso_seguro, dias_aviso_inspecao, dias_aviso_extintor, km_aviso_manutencao), verificacao_danos_ativa (bool). Endpoint PUT /api/vehicles/{vehicle_id} já existente aceita estes campos."
+
+frontend:
+  - task: "FichaVeiculo.js - Plano de Manutenções e Alertas (Tabs)"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/FichaVeiculo.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Substituída seção 'Plano de Manutenções Periódicas' por componente com 2 tabs: 'Alertas' (configurar dias/km de aviso para seguros, inspeção, extintor, manutenção + toggle verificação de danos) e 'Plano de Manutenção' (lista editável com 5 itens: Revisão, Pastilhas, Discos e Pastilhas, Distribuição, Pneus - cada um com Switch on/off e campo km). Adicionados estados: planoManutencoes, alertasConfig, verificacaoDanosAtiva. Função handleSavePlanoManutencoes salva tudo via PUT /api/vehicles/{vehicle_id}. Carrega dados existentes em fetchVehicleData."
+
+metadata:
+  created_by: "main_agent"
+  version: "5.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Plano de Manutenções e Alertas - Backend"
+    - "Plano de Manutenções e Alertas - Frontend"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+    - agent: "main"
+      message: |
+        🔧 NOVA IMPLEMENTAÇÃO - PLANO DE MANUTENÇÕES E ALERTAS POR VEÍCULO
+        
+        REQUISITOS DO USUÁRIO:
+        1. Seção "Plano de Manutenções Periódicas" com 2 tabs:
+           - Tab "Alertas": configurar avisos (dias/km antes)
+           - Tab "Plano de Manutenção": configurar itens e intervalos
+        2. Controle de acesso: Admin (tudo), Gestor/Operacional (se plano ativado), Parceiro (visualizar)
+        3. Configurações únicas por veículo
+        4. Campos editáveis e desativáveis (ex: carros elétricos não levam óleo)
+        5. Toggle "Verificação de Danos"
+        
+        IMPLEMENTAÇÕES BACKEND:
+        ✅ Modelo Vehicle expandido:
+        - plano_manutencoes: List[Dict[nome, intervalo_km, ativo]]
+        - alertas_configuracao: Dict{dias_aviso_seguro, dias_aviso_inspecao, dias_aviso_extintor, km_aviso_manutencao}
+        - verificacao_danos_ativa: bool
+        ✅ Endpoint PUT /api/vehicles/{vehicle_id} aceita novos campos
+        
+        IMPLEMENTAÇÕES FRONTEND:
+        ✅ FichaVeiculo.js - Seção "Plano de Manutenções e Alertas":
+        - Tabs component com 2 tabs: "Alertas" e "Plano de Manutenção"
+        
+        ✅ Tab "Alertas" (bg-amber-50):
+        - 4 campos numéricos: dias_aviso_seguro, dias_aviso_inspecao, dias_aviso_extintor, km_aviso_manutencao
+        - Switch "Verificação de Danos"
+        - Botão "Guardar Configurações de Alertas"
+        - Disabled quando não em editMode ou sem permissão
+        
+        ✅ Tab "Plano de Manutenção" (bg-blue-50):
+        - Lista de 5 itens pré-definidos:
+          * Revisão: 15000 km
+          * Pastilhas: 30000 km
+          * Discos e Pastilhas: 60000 km
+          * Distribuição: 80000 km
+          * Pneus: 40000 km
+        - Cada item: Switch (ativo/inativo) + Input (intervalo_km)
+        - Campo "Última Revisão (KM)" para referência
+        - Botão "Guardar Plano de Manutenção"
+        
+        ✅ Estados e Funções:
+        - planoManutencoes: array com itens do plano
+        - alertasConfig: objeto com 4 configurações
+        - verificacaoDanosAtiva: boolean
+        - handleSavePlanoManutencoes(): salva via PUT /api/vehicles/{vehicle_id}
+        - fetchVehicleData(): carrega dados existentes
+        
+        SCREENSHOTS CONFIRMAM:
+        - ✅ Tabs visíveis e funcionais
+        - ✅ Tab "Plano de Manutenção" mostra lista completa
+        - ✅ Switches e campos de km presentes
+        
+        PRÓXIMO PASSO: Testar funcionalidade completa
+        Backend e frontend prontos para testes.
+
     file: "frontend/src/pages/Usuarios.js"
     stuck_count: 0
     priority: "high"
