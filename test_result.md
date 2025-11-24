@@ -1181,6 +1181,18 @@ backend:
 
   - task: "Sistema de Gestão de Senhas - Forgot Password"
     implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implementado endpoint POST /api/auth/forgot-password para utilizadores recuperarem senhas. Endpoint público, gera senha temporária de 8 caracteres, marca senha_provisoria: true."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Endpoint POST /api/auth/forgot-password funcionando perfeitamente. Endpoint público não requer autenticação. Email válido gera senha temporária de 8 caracteres (letras + números). Resposta completa com message, temp_password (plaintext), email, instructions. Email inexistente retorna 404. Email vazio retorna 400. Marca senha_provisoria: true. Login com senha temporária funciona imediatamente."
     - agent: "testing"
       message: |
         🎉 TESTES COMPLETOS - SISTEMA DE GESTÃO DE SENHAS 100% FUNCIONANDO!
