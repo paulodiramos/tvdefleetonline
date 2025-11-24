@@ -2409,34 +2409,56 @@ const FichaVeiculo = ({ user, onLogout }) => {
                             <div key={index} className="flex items-center space-x-3 p-3 bg-white rounded border border-blue-200">
                               <Switch
                                 checked={item.ativo}
-                                onCheckedChange={(checked) => {
-                                  const newPlano = [...planoManutencoes];
-                                  newPlano[index].ativo = checked;
-                                  setPlanoManutencoes(newPlano);
-                                }}
-                                disabled={!canEdit || !editMode}
+                                onCheckedChange={(checked) => handleUpdatePlanoItem(index, 'ativo', checked)}
+                                disabled={!canEditPlanoManutencao || !editMode}
                               />
                               <div className="flex-1">
-                                <Label>{item.nome}</Label>
+                                {canEditPlanoManutencao && editMode ? (
+                                  <Input
+                                    value={item.nome}
+                                    onChange={(e) => handleUpdatePlanoItem(index, 'nome', e.target.value)}
+                                    placeholder="Nome da manutenção"
+                                    className="font-medium"
+                                  />
+                                ) : (
+                                  <Label className="font-medium">{item.nome}</Label>
+                                )}
                               </div>
                               <div className="flex items-center space-x-2">
                                 <span className="text-sm text-slate-600">Cada</span>
                                 <Input
                                   type="number"
                                   value={item.intervalo_km}
-                                  onChange={(e) => {
-                                    const newPlano = [...planoManutencoes];
-                                    newPlano[index].intervalo_km = parseInt(e.target.value) || 0;
-                                    setPlanoManutencoes(newPlano);
-                                  }}
+                                  onChange={(e) => handleUpdatePlanoItem(index, 'intervalo_km', parseInt(e.target.value) || 0)}
                                   className="w-24"
-                                  disabled={!canEdit || !editMode || !item.ativo}
+                                  disabled={!canEditPlanoManutencao || !editMode || !item.ativo}
                                 />
                                 <span className="text-sm text-slate-600">km</span>
                               </div>
+                              {canEditPlanoManutencao && editMode && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleRemovePlanoItem(index)}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              )}
                             </div>
                           ))}
                         </div>
+
+                        {canEditPlanoManutencao && editMode && (
+                          <Button
+                            onClick={handleAddPlanoItem}
+                            variant="outline"
+                            className="w-full mt-3 border-blue-300 text-blue-700 hover:bg-blue-50"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Adicionar Item de Manutenção
+                          </Button>
+                        )}
 
                         {canEdit && editMode && (
                           <div className="mt-4 space-y-3">
