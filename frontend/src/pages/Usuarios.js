@@ -867,6 +867,69 @@ const Usuarios = ({ user, onLogout }) => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Atribuir Plano Dialog */}
+      <Dialog open={showPlanoDialog} onOpenChange={setShowPlanoDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Atribuir Plano Manualmente</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-slate-600 mb-2">
+                Utilizador: <strong>{selectedUser?.name || selectedUser?.email}</strong>
+              </p>
+            </div>
+
+            <div>
+              <Label htmlFor="plano">Selecionar Plano</Label>
+              <Select value={selectedPlanoId} onValueChange={setSelectedPlanoId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Escolha um plano" />
+                </SelectTrigger>
+                <SelectContent>
+                  {planos.map((plano) => (
+                    <SelectItem key={plano.id} value={plano.id}>
+                      {plano.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="duracao">Duração (dias)</Label>
+              <Input
+                id="duracao"
+                type="number"
+                value={duracaoDias}
+                onChange={(e) => setDuracaoDias(parseInt(e.target.value) || 30)}
+                placeholder="30"
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                O plano ficará ativo por {duracaoDias} dias
+              </p>
+            </div>
+
+            <div className="bg-blue-50 p-3 rounded">
+              <p className="text-xs text-blue-800">
+                ℹ️ Esta ação atribui o plano gratuitamente sem necessidade de pagamento. 
+                O plano será ativado imediatamente.
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowPlanoDialog(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAtribuirPlano}>
+                <Package className="w-4 h-4 mr-2" />
+                Atribuir Plano
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
