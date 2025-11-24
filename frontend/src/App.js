@@ -36,6 +36,7 @@ import ConfiguracoesAdmin from "@/pages/ConfiguracoesAdmin";
 import SincronizacaoAuto from "@/pages/SincronizacaoAuto";
 import Financeiro from "@/pages/Financeiro";
 import GestaoPlanos from "@/pages/GestaoPlanos";
+import MeusPlanos from "@/pages/MeusPlanos";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
