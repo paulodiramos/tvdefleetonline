@@ -992,8 +992,9 @@ class Plano(BaseModel):
     id: str
     nome: str  # Ex: "Plano Premium"
     descricao: str
-    features: List[str] = []  # ["relatorios", "gestao_seguros", "gestao_contas", etc]
+    features: List[str] = []  # ["relatorios", "gestao_seguros", "gestao_contas", "gestao_motoristas", "gestao_veiculos", etc]
     perfis_permitidos: List[str] = []  # ["admin", "parceiro", "operacional", "gestao"]
+    tipo_cobranca: str = "por_veiculo"  # "por_veiculo" ou "por_motorista"
     preco_semanal_sem_iva: float
     iva_percentagem: float = 23  # IVA em Portugal
     preco_mensal_sem_iva: float
@@ -1008,6 +1009,7 @@ class PlanoCreate(BaseModel):
     descricao: str
     features: List[str] = []
     perfis_permitidos: List[str] = []  # ["admin", "parceiro", "operacional", "gestao"]
+    tipo_cobranca: str = "por_veiculo"  # "por_veiculo" ou "por_motorista"
     preco_semanal_sem_iva: float
     iva_percentagem: float = 23
     preco_mensal_sem_iva: float
