@@ -1329,6 +1329,7 @@ class Vehicle(BaseModel):
     categorias_uber: CategoriasUber
     categorias_bolt: CategoriasBolt
     via_verde_disponivel: bool = False
+    via_verde_id: Optional[str] = None  # ID do Via Verde
     cartao_frota_disponivel: bool = False
     seguro: Optional[VehicleInsurance] = None
     manutencoes: List[VehicleMaintenance] = []
