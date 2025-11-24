@@ -44,7 +44,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { UserCheck, UserX, Users, UserPlus, Clock, Shield, Eye, EyeOff, Mail, Phone, Calendar, Building, Lock, Unlock, Trash2, Key, RefreshCw } from 'lucide-react';
+import { UserCheck, UserX, Users, UserPlus, Clock, Shield, Eye, EyeOff, Mail, Phone, Calendar, Building, Lock, Unlock, Trash2, Key, RefreshCw, Package } from 'lucide-react';
 
 const Usuarios = ({ user, onLogout }) => {
   const [pendingUsers, setPendingUsers] = useState([]);
