@@ -317,6 +317,21 @@ const FichaVeiculo = ({ user, onLogout }) => {
     }
   };
 
+  const handleAddPlanoItem = () => {
+    setPlanoManutencoes([...planoManutencoes, { nome: 'Nova Manutenção', intervalo_km: 10000, ativo: true }]);
+  };
+
+  const handleRemovePlanoItem = (index) => {
+    const newPlano = planoManutencoes.filter((_, i) => i !== index);
+    setPlanoManutencoes(newPlano);
+  };
+
+  const handleUpdatePlanoItem = (index, field, value) => {
+    const newPlano = [...planoManutencoes];
+    newPlano[index][field] = value;
+    setPlanoManutencoes(newPlano);
+  };
+
   const fetchVehicleData = async () => {
     try {
       const token = localStorage.getItem('token');
