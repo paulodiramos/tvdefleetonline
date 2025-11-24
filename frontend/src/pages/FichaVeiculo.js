@@ -366,6 +366,15 @@ const FichaVeiculo = ({ user, onLogout }) => {
         });
       }
 
+      // Load plano de manutenções and alertas
+      if (vehicleRes.data.plano_manutencoes && vehicleRes.data.plano_manutencoes.length > 0) {
+        setPlanoManutencoes(vehicleRes.data.plano_manutencoes);
+      }
+      if (vehicleRes.data.alertas_configuracao) {
+        setAlertasConfig(vehicleRes.data.alertas_configuracao);
+      }
+      setVerificacaoDanosAtiva(vehicleRes.data.verificacao_danos_ativa || false);
+
       // Load vehicle info form
       if (vehicleRes.data.tipo_contrato) {
         setInfoForm({
