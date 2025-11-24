@@ -23,6 +23,13 @@ const FEATURES_DISPONIVEIS = [
   { id: 'upload_csv', nome: 'Upload CSV' }
 ];
 
+const PERFIS_DISPONIVEIS = [
+  { id: 'admin', nome: 'Admin' },
+  { id: 'parceiro', nome: 'Parceiro' },
+  { id: 'operacional', nome: 'Operacional' },
+  { id: 'gestao', nome: 'Gestor' }
+];
+
 const GestaoPlanos = ({ user, onLogout }) => {
   const [planos, setPlanos] = useState([]);
   const [loading, setLoading] = useState(true);
