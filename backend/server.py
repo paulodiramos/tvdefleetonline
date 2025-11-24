@@ -979,6 +979,78 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     user: User
 
+# ==================== PLANOS E SUBSCRIÇÕES ====================
+
+class PlanoPromocao(BaseModel):
+    ativa: bool = False
+    nome: str = ""  # Ex: "Black Friday"
+    desconto_percentagem: float = 0  # Ex: 20 (para 20%)
+    valida_ate: Optional[str] = None  # Data ISO
+
+class Plano(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    nome: str  # Ex: "Plano Premium"
+    descricao: str
+    features: List[str] = []  # ["relatorios", "gestao_seguros", "gestao_contas", etc]
+    preco_semanal_sem_iva: float
+    iva_percentagem: float = 23  # IVA em Portugal
+    preco_mensal_sem_iva: float
+    desconto_mensal_percentagem: float = 0  # Desconto para pagamento mensal
+    promocao: PlanoPromocao = PlanoPromocao()
+    ativo: bool = True
+    created_at: datetime
+    updated_at: datetime
+
+class PlanoCreate(BaseModel):
+    nome: str
+    descricao: str
+    features: List[str] = []
+    preco_semanal_sem_iva: float
+    iva_percentagem: float = 23
+    preco_mensal_sem_iva: float
+    desconto_mensal_percentagem: float = 0
+    promocao: PlanoPromocao = PlanoPromocao()
+
+class Subscription(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    user_id: str
+    user_name: str  # Nome do utilizador
+    user_email: str  # Email do utilizador
+    plano_id: str
+    plano_nome: str  # Nome do plano
+    periodo: str  # "semanal" ou "mensal"
+    status: str  # "pendente", "ativo", "expirado", "cancelado"
+    preco_pago: float  # Preço final com IVA e descontos
+    data_inicio: Optional[datetime] = None
+    data_expiracao: Optional[datetime] = None
+    data_proximo_pagamento: Optional[datetime] = None  # Para notificações
+    # Dados de pagamento
+    pagamento_metodo: Optional[str] = None  # "multibanco", "mbway"
+    pagamento_referencia: Optional[str] = None  # Referência Multibanco
+    pagamento_entidade: Optional[str] = None  # Entidade Multibanco
+    pagamento_id_transacao: Optional[str] = None  # ID da transação IFThenPay
+    pagamento_status: str = "pendente"  # "pendente", "pago", "expirado"
+    created_at: datetime
+    updated_at: datetime
+    # Admin pode atribuir manualmente
+    atribuido_manualmente: bool = False  # Se admin atribuiu sem pagamento
+    duracao_dias: Optional[int] = None  # Se admin definiu duração específica
+
+class SubscriptionCreate(BaseModel):
+    plano_id: str
+    periodo: str  # "semanal" ou "mensal"
+    pagamento_metodo: str  # "multibanco" ou "mbway"
+
+class ConfiguracaoIFThenPay(BaseModel):
+    id: str = "ifthen_pay_config"
+    ativa: bool = False
+    entidade: str = ""  # Entidade Multibanco
+    subentidade: str = ""  # Subentidade
+    chave_api: str = ""  # Chave API IFThenPay
+    modo_teste: bool = True  # Se está em modo de teste
+
 # Motorista Models - EXPANDED
 class MotoristaDocuments(BaseModel):
     # Documentos principais com foto (convertidos para PDF A4)
