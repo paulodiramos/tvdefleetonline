@@ -1278,7 +1278,14 @@ class Vehicle(BaseModel):
     ultima_revisao_km: Optional[int] = None  # KM da última revisão
     data_seguro_ate: Optional[str] = None  # Validade do seguro (alias para insurance.data_validade)
     data_inspecao_ate: Optional[str] = None  # Validade da inspeção (alias para inspection.proxima_inspecao)
-    plano_manutencoes: List[Dict[str, Any]] = []  # Plano de manutenções periódicas
+    plano_manutencoes: List[Dict[str, Any]] = []  # Plano de manutenções periódicas: [{nome, intervalo_km, ativo}]
+    alertas_configuracao: Dict[str, int] = {
+        "dias_aviso_seguro": 30,
+        "dias_aviso_inspecao": 30,
+        "dias_aviso_extintor": 30,
+        "km_aviso_manutencao": 5000
+    }  # Configuração de alertas específica do veículo
+    verificacao_danos_ativa: bool = False  # Verificação de danos pelo gestor/operacional
     campos_customizados: Dict[str, Any] = {}  # Campos adicionais customizáveis
     # Marketplace fields
     disponivel_venda: bool = False  # Se está disponível para venda no marketplace
