@@ -6882,6 +6882,238 @@ async def forgot_password(email_data: Dict[str, str]):
     }
 
 
+# ==================== PLANOS E SUBSCRIÇÕES ====================
+
+@api_router.get("/planos", response_model=List[Plano])
+async def get_planos(current_user: Dict = Depends(get_current_user)):
+    """Get all available plans"""
+    planos = await db.planos.find({"ativo": True}, {"_id": 0}).to_list(None)
+    return planos
+
+@api_router.post("/planos")
+async def create_plano(plano: PlanoCreate, current_user: Dict = Depends(get_current_user)):
+    """Create a new plan (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    plano_dict = plano.dict()
+    plano_dict["id"] = str(uuid.uuid4())
+    plano_dict["ativo"] = True
+    plano_dict["created_at"] = datetime.now(timezone.utc)
+    plano_dict["updated_at"] = datetime.now(timezone.utc)
+    
+    await db.planos.insert_one(plano_dict)
+    return {"message": "Plan created successfully", "plano_id": plano_dict["id"]}
+
+@api_router.put("/planos/{plano_id}")
+async def update_plano(plano_id: str, updates: Dict[str, Any], current_user: Dict = Depends(get_current_user)):
+    """Update a plan (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    updates["updated_at"] = datetime.now(timezone.utc)
+    result = await db.planos.update_one({"id": plano_id}, {"$set": updates})
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    
+    return {"message": "Plan updated successfully"}
+
+@api_router.delete("/planos/{plano_id}")
+async def delete_plano(plano_id: str, current_user: Dict = Depends(get_current_user)):
+    """Delete a plan (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    await db.planos.update_one({"id": plano_id}, {"$set": {"ativo": False}})
+    return {"message": "Plan deactivated successfully"}
+
+@api_router.post("/subscriptions/solicitar")
+async def solicitar_subscription(sub_create: SubscriptionCreate, current_user: Dict = Depends(get_current_user)):
+    """User requests a plan subscription"""
+    # Get plan details
+    plano = await db.planos.find_one({"id": sub_create.plano_id, "ativo": True}, {"_id": 0})
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    
+    # Calculate price with IVA and discounts
+    if sub_create.periodo == "semanal":
+        preco_sem_iva = plano["preco_semanal_sem_iva"]
+    else:  # mensal
+        preco_sem_iva = plano["preco_mensal_sem_iva"]
+        # Apply monthly discount
+        if plano.get("desconto_mensal_percentagem", 0) > 0:
+            preco_sem_iva = preco_sem_iva * (1 - plano["desconto_mensal_percentagem"] / 100)
+    
+    # Apply promotional discount
+    if plano.get("promocao", {}).get("ativa", False):
+        promocao = plano["promocao"]
+        valida_ate = promocao.get("valida_ate")
+        if valida_ate:
+            valida_ate_date = datetime.fromisoformat(valida_ate).date()
+            if valida_ate_date >= datetime.now(timezone.utc).date():
+                preco_sem_iva = preco_sem_iva * (1 - promocao.get("desconto_percentagem", 0) / 100)
+    
+    # Calculate final price with IVA
+    iva = plano.get("iva_percentagem", 23)
+    preco_final = preco_sem_iva * (1 + iva / 100)
+    
+    # Generate payment reference (mock for now, will integrate IFThenPay)
+    import random
+    referencia = f"{random.randint(100, 999)} {random.randint(100, 999)} {random.randint(100, 999)}"
+    entidade = "11604"  # Mock entity
+    
+    # Create subscription
+    subscription_dict = {
+        "id": str(uuid.uuid4()),
+        "user_id": current_user["id"],
+        "user_name": current_user["name"],
+        "user_email": current_user["email"],
+        "plano_id": sub_create.plano_id,
+        "plano_nome": plano["nome"],
+        "periodo": sub_create.periodo,
+        "status": "pendente",
+        "preco_pago": round(preco_final, 2),
+        "data_inicio": None,
+        "data_expiracao": None,
+        "data_proximo_pagamento": None,
+        "pagamento_metodo": sub_create.pagamento_metodo,
+        "pagamento_referencia": referencia,
+        "pagamento_entidade": entidade,
+        "pagamento_id_transacao": str(uuid.uuid4()),
+        "pagamento_status": "pendente",
+        "atribuido_manualmente": False,
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc)
+    }
+    
+    await db.subscriptions.insert_one(subscription_dict)
+    
+    return {
+        "message": "Subscription created successfully. Please complete payment.",
+        "subscription_id": subscription_dict["id"],
+        "pagamento": {
+            "metodo": sub_create.pagamento_metodo,
+            "referencia": referencia,
+            "entidade": entidade,
+            "valor": preco_final
+        }
+    }
+
+@api_router.get("/subscriptions/minhas")
+async def get_minhas_subscriptions(current_user: Dict = Depends(get_current_user)):
+    """Get user's subscriptions"""
+    subscriptions = await db.subscriptions.find(
+        {"user_id": current_user["id"]},
+        {"_id": 0}
+    ).to_list(None)
+    return subscriptions
+
+@api_router.post("/users/{user_id}/atribuir-plano")
+async def atribuir_plano_manual(
+    user_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Admin manually assigns a plan to a user"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    plano_id = data.get("plano_id")
+    duracao_dias = data.get("duracao_dias", 30)  # Default 30 days
+    
+    # Get plan and user details
+    plano = await db.planos.find_one({"id": plano_id}, {"_id": 0})
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Create active subscription
+    now = datetime.now(timezone.utc)
+    data_expiracao = now + timedelta(days=duracao_dias)
+    
+    subscription_dict = {
+        "id": str(uuid.uuid4()),
+        "user_id": user_id,
+        "user_name": user.get("name", ""),
+        "user_email": user.get("email", ""),
+        "plano_id": plano_id,
+        "plano_nome": plano["nome"],
+        "periodo": "manual",
+        "status": "ativo",
+        "preco_pago": 0,
+        "data_inicio": now,
+        "data_expiracao": data_expiracao,
+        "data_proximo_pagamento": data_expiracao - timedelta(days=2),
+        "pagamento_metodo": "manual_admin",
+        "pagamento_status": "pago",
+        "atribuido_manualmente": True,
+        "duracao_dias": duracao_dias,
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.subscriptions.insert_one(subscription_dict)
+    
+    # Update user subscription_id
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": {"subscription_id": subscription_dict["id"]}}
+    )
+    
+    return {
+        "message": f"Plan assigned successfully for {duracao_dias} days",
+        "subscription_id": subscription_dict["id"]
+    }
+
+@api_router.post("/webhooks/ifthen_pay-callback")
+async def ifthen_pay_callback(data: Dict[str, Any]):
+    """Webhook callback from IFThenPay to confirm payment"""
+    # This will be called by IFThenPay when payment is confirmed
+    # For now, we'll keep it simple
+    
+    transacao_id = data.get("id")
+    status = data.get("status")
+    
+    if status == "pago":
+        # Find subscription by transaction ID
+        subscription = await db.subscriptions.find_one(
+            {"pagamento_id_transacao": transacao_id},
+            {"_id": 0}
+        )
+        
+        if subscription:
+            # Activate subscription
+            now = datetime.now(timezone.utc)
+            if subscription["periodo"] == "semanal":
+                data_expiracao = now + timedelta(days=7)
+            else:  # mensal
+                data_expiracao = now + timedelta(days=30)
+            
+            await db.subscriptions.update_one(
+                {"id": subscription["id"]},
+                {"$set": {
+                    "status": "ativo",
+                    "pagamento_status": "pago",
+                    "data_inicio": now,
+                    "data_expiracao": data_expiracao,
+                    "data_proximo_pagamento": data_expiracao - timedelta(days=2),
+                    "updated_at": now
+                }}
+            )
+            
+            # Update user subscription_id
+            await db.users.update_one(
+                {"id": subscription["user_id"]},
+                {"$set": {"subscription_id": subscription["id"]}}
+            )
+    
+    return {"status": "received"}
+
+
 # ==================== CONFIGURAÇÕES ====================
 @api_router.get("/configuracoes/email")
 async def get_email_config(current_user: Dict = Depends(get_current_user)):
