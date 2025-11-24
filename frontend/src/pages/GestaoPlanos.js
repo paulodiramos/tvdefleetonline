@@ -318,6 +318,36 @@ const GestaoPlanos = ({ user, onLogout }) => {
                 />
               </div>
 
+              <div>
+                <Label className="mb-2 block">Tipo de Cobrança</Label>
+                <div className="flex space-x-4">
+                  <button
+                    type="button"
+                    onClick={() => setPlanoForm({ ...planoForm, tipo_cobranca: 'por_veiculo' })}
+                    className={`flex-1 p-3 border-2 rounded-lg transition-colors ${
+                      planoForm.tipo_cobranca === 'por_veiculo'
+                        ? 'border-blue-600 bg-blue-50 text-blue-700'
+                        : 'border-slate-300 hover:border-slate-400'
+                    }`}
+                  >
+                    <div className="font-semibold">Por Veículo</div>
+                    <div className="text-xs text-slate-600">Cobrado por cada veículo</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPlanoForm({ ...planoForm, tipo_cobranca: 'por_motorista' })}
+                    className={`flex-1 p-3 border-2 rounded-lg transition-colors ${
+                      planoForm.tipo_cobranca === 'por_motorista'
+                        ? 'border-green-600 bg-green-50 text-green-700'
+                        : 'border-slate-300 hover:border-slate-400'
+                    }`}
+                  >
+                    <div className="font-semibold">Por Motorista</div>
+                    <div className="text-xs text-slate-600">Cobrado por cada motorista</div>
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="preco_semanal">Preço Semanal (sem IVA)</Label>
