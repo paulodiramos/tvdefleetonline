@@ -577,6 +577,21 @@ backend:
           comment: "✅ TESTADO: Todos os 5 templates CSV funcionando perfeitamente. CORRIGIDO: Endpoint estava definido após app.include_router - movido para posição correta. Testados: GET /api/templates/csv/uber (CSV), /bolt (CSV), /prio (XLSX), /viaverde (CSV), /gps (CSV). Content-Type headers corretos. Template inválido retorna 404 corretamente. Todos os arquivos existem em /app/backend/templates/csv_examples/."
 
 frontend:
+  - task: "Sistema de Gestão de Senhas - Frontend Modal"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/Usuarios.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implementado modal completo de gestão de senhas em Usuarios.js. Inclui campo Nova Senha com placeholder, ícone Eye/EyeOff para toggle show/hide, botão RefreshCw para gerar senha aleatória, texto 'Mínimo 6 caracteres', botões 'Cancelar' e 'Alterar Senha'. Integrado com backend via PUT /api/users/{user_id}/reset-password."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Sistema de gestão de senhas funcionando perfeitamente! Login admin@tvdefleet.com/admin123 ✅. Navegação para /usuarios ✅. Modal 'Alterar Senha' abre ao clicar botão 'Senha' ✅. GERADOR DE SENHA: RefreshCw gera senhas de 8 caracteres diferentes a cada clique ✅. TOGGLE SHOW/HIDE: Eye/EyeOff alterna entre type='password' e type='text' ✅. VALIDAÇÃO: Botão 'Alterar Senha' desabilitado com <6 caracteres, habilitado com ≥6 ✅. ALTERAÇÃO DE SENHA: Funciona com senhas geradas e manuais, mostra card verde de sucesso com senha em código ✅. ENTRADA MANUAL: Aceita senhas digitadas manualmente ✅. Todos os componentes implementados e visíveis conforme especificado."
+
   - task: "VehicleData.js - Campo Valor da Inspeção"
     implemented: true
     working: "NA"
