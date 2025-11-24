@@ -517,6 +517,20 @@ const Usuarios = ({ user, onLogout }) => {
                               <Button
                                 size="sm"
                                 variant="outline"
+                                onClick={() => {
+                                  setSelectedUser(regUser);
+                                  setSelectedPlanoId('');
+                                  setDuracaoDias(30);
+                                  setShowPlanoDialog(true);
+                                }}
+                                className="bg-purple-50 hover:bg-purple-100"
+                              >
+                                <Package className="w-4 h-4 mr-1" />
+                                Plano
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
                                 onClick={() => openPasswordDialog(regUser)}
                                 className="bg-blue-50 hover:bg-blue-100"
                               >
