@@ -17,6 +17,8 @@ const FEATURES_DISPONIVEIS = [
   { id: 'gestao_contas', nome: 'Gestão de Contas' },
   { id: 'gestao_pagamentos', nome: 'Gestão de Pagamentos' },
   { id: 'gestao_manutencao', nome: 'Gestão de Manutenção' },
+  { id: 'gestao_motoristas', nome: 'Gestão de Motoristas' },
+  { id: 'gestao_veiculos', nome: 'Gestão de Veículos' },
   { id: 'emissao_contrato', nome: 'Emissão de Contratos' },
   { id: 'financeiro', nome: 'Financeiro' },
   { id: 'sync_automatico', nome: 'Sincronização Automática' },
