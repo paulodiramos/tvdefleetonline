@@ -2279,63 +2279,188 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 </CardContent>
               </Card>
 
-              {/* Plano de Manutenções */}
+              {/* Plano de Manutenções e Alertas */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
                     <Calendar className="w-5 h-5" />
-                    <span>Plano de Manutenções Periódicas</span>
+                    <span>Plano de Manutenções e Alertas</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="font-semibold text-blue-900 mb-3">Configuração Padrão (baseada em KM)</h4>
-                    <div className="space-y-2 text-sm text-blue-800">
-                      <div className="flex items-center justify-between border-b border-blue-200 pb-2">
-                        <span>Pastilhas</span>
-                        <span className="font-medium">Cada 30.000 km</span>
-                      </div>
-                      <div className="flex items-center justify-between border-b border-blue-200 pb-2">
-                        <span>Pastilhas e Discos</span>
-                        <span className="font-medium">Cada 60.000 km</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span>Óleo e Filtros</span>
-                        <span className="font-medium">Cada 15.000 km</span>
-                      </div>
-                    </div>
-                    <p className="text-xs text-blue-700 mt-3">
-                      ⓘ Estes valores são usados para calcular alertas automáticos de manutenção
-                    </p>
-                  </div>
+                <CardContent>
+                  <Tabs defaultValue="alertas" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="alertas">Alertas</TabsTrigger>
+                      <TabsTrigger value="plano">Plano de Manutenção</TabsTrigger>
+                    </TabsList>
 
-                  {canEdit && editMode && (
-                    <div className="mt-4">
-                      <Label htmlFor="ultima_revisao_km">Última Revisão (KM)</Label>
-                      <Input
-                        id="ultima_revisao_km"
-                        type="number"
-                        value={vehicle.ultima_revisao_km || 0}
-                        onChange={async (e) => {
-                          try {
-                            const token = localStorage.getItem('token');
-                            await axios.put(`${API}/vehicles/${vehicleId}`, 
-                              { ultima_revisao_km: parseInt(e.target.value) || 0 },
-                              { headers: { Authorization: `Bearer ${token}` }}
-                            );
-                            fetchVehicleData();
-                            toast.success('KM da última revisão atualizado!');
-                          } catch (error) {
-                            toast.error('Erro ao atualizar KM');
-                          }
-                        }}
-                        placeholder="Ex: 80000"
-                      />
-                      <p className="text-xs text-slate-500 mt-1">
-                        Este valor é usado como referência para calcular as próximas manutenções
-                      </p>
-                    </div>
-                  )}
+                    {/* Tab Alertas */}
+                    <TabsContent value="alertas" className="space-y-4">
+                      <div className="bg-amber-50 p-4 rounded-lg">
+                        <h4 className="font-semibold text-amber-900 mb-3">Configurar Alertas para este Veículo</h4>
+                        <p className="text-xs text-amber-700 mb-4">
+                          Configure quantos dias/km antes você quer ser alertado sobre vencimentos e manutenções
+                        </p>
+                        
+                        <div className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="dias_aviso_seguro">Aviso Seguro (dias antes)</Label>
+                              <Input
+                                id="dias_aviso_seguro"
+                                type="number"
+                                value={alertasConfig.dias_aviso_seguro}
+                                onChange={(e) => setAlertasConfig({...alertasConfig, dias_aviso_seguro: parseInt(e.target.value) || 30})}
+                                placeholder="30"
+                                disabled={!canEdit || !editMode}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="dias_aviso_inspecao">Aviso Inspeção (dias antes)</Label>
+                              <Input
+                                id="dias_aviso_inspecao"
+                                type="number"
+                                value={alertasConfig.dias_aviso_inspecao}
+                                onChange={(e) => setAlertasConfig({...alertasConfig, dias_aviso_inspecao: parseInt(e.target.value) || 30})}
+                                placeholder="30"
+                                disabled={!canEdit || !editMode}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="dias_aviso_extintor">Aviso Extintor (dias antes)</Label>
+                              <Input
+                                id="dias_aviso_extintor"
+                                type="number"
+                                value={alertasConfig.dias_aviso_extintor}
+                                onChange={(e) => setAlertasConfig({...alertasConfig, dias_aviso_extintor: parseInt(e.target.value) || 30})}
+                                placeholder="30"
+                                disabled={!canEdit || !editMode}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="km_aviso_manutencao">Aviso Manutenção (km antes)</Label>
+                              <Input
+                                id="km_aviso_manutencao"
+                                type="number"
+                                value={alertasConfig.km_aviso_manutencao}
+                                onChange={(e) => setAlertasConfig({...alertasConfig, km_aviso_manutencao: parseInt(e.target.value) || 5000})}
+                                placeholder="5000"
+                                disabled={!canEdit || !editMode}
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between p-3 bg-white rounded border border-amber-200">
+                            <div>
+                              <Label htmlFor="verificacao_danos">Verificação de Danos</Label>
+                              <p className="text-xs text-slate-500">Ativar verificação de danos pelo gestor/operacional</p>
+                            </div>
+                            <Switch
+                              id="verificacao_danos"
+                              checked={verificacaoDanosAtiva}
+                              onCheckedChange={setVerificacaoDanosAtiva}
+                              disabled={!canEdit || !editMode}
+                            />
+                          </div>
+                        </div>
+
+                        {canEdit && editMode && (
+                          <Button 
+                            onClick={handleSavePlanoManutencoes}
+                            className="mt-4 w-full"
+                          >
+                            <Save className="w-4 h-4 mr-2" />
+                            Guardar Configurações de Alertas
+                          </Button>
+                        )}
+                      </div>
+                    </TabsContent>
+
+                    {/* Tab Plano de Manutenção */}
+                    <TabsContent value="plano" className="space-y-4">
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <h4 className="font-semibold text-blue-900 mb-3">Plano de Manutenções Periódicas (baseado em KM)</h4>
+                        <p className="text-xs text-blue-700 mb-4">
+                          Configure os intervalos de manutenção específicos para este veículo. Desative itens não aplicáveis (ex: carros elétricos não levam óleo).
+                        </p>
+
+                        <div className="space-y-3">
+                          {planoManutencoes.map((item, index) => (
+                            <div key={index} className="flex items-center space-x-3 p-3 bg-white rounded border border-blue-200">
+                              <Switch
+                                checked={item.ativo}
+                                onCheckedChange={(checked) => {
+                                  const newPlano = [...planoManutencoes];
+                                  newPlano[index].ativo = checked;
+                                  setPlanoManutencoes(newPlano);
+                                }}
+                                disabled={!canEdit || !editMode}
+                              />
+                              <div className="flex-1">
+                                <Label>{item.nome}</Label>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm text-slate-600">Cada</span>
+                                <Input
+                                  type="number"
+                                  value={item.intervalo_km}
+                                  onChange={(e) => {
+                                    const newPlano = [...planoManutencoes];
+                                    newPlano[index].intervalo_km = parseInt(e.target.value) || 0;
+                                    setPlanoManutencoes(newPlano);
+                                  }}
+                                  className="w-24"
+                                  disabled={!canEdit || !editMode || !item.ativo}
+                                />
+                                <span className="text-sm text-slate-600">km</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {canEdit && editMode && (
+                          <div className="mt-4 space-y-3">
+                            <div>
+                              <Label htmlFor="ultima_revisao_km">Última Revisão (KM)</Label>
+                              <Input
+                                id="ultima_revisao_km"
+                                type="number"
+                                value={vehicle.ultima_revisao_km || 0}
+                                onChange={async (e) => {
+                                  try {
+                                    const token = localStorage.getItem('token');
+                                    await axios.put(`${API}/vehicles/${vehicleId}`, 
+                                      { ultima_revisao_km: parseInt(e.target.value) || 0 },
+                                      { headers: { Authorization: `Bearer ${token}` }}
+                                    );
+                                    fetchVehicleData();
+                                    toast.success('KM da última revisão atualizado!');
+                                  } catch (error) {
+                                    toast.error('Erro ao atualizar KM');
+                                  }
+                                }}
+                                placeholder="Ex: 80000"
+                              />
+                              <p className="text-xs text-slate-500 mt-1">
+                                Este valor é usado como referência para calcular as próximas manutenções
+                              </p>
+                            </div>
+
+                            <Button 
+                              onClick={handleSavePlanoManutencoes}
+                              className="w-full"
+                            >
+                              <Save className="w-4 h-4 mr-2" />
+                              Guardar Plano de Manutenção
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
 
