@@ -1145,6 +1145,7 @@ class Motorista(BaseModel):
     identificador_motorista_bolt: Optional[str] = None  # Identificador do motorista na Bolt para ganhos
     whatsapp: Optional[str] = None
     tipo_pagamento: Optional[str] = None
+    id_cartao_frota_combustivel: Optional[str] = None  # ID automático do cartão frota (gerado)
     documents: MotoristaDocuments
     approved: bool = False
     senha_provisoria: bool = False
