@@ -43,6 +43,7 @@ const GestaoPlanos = ({ user, onLogout }) => {
     descricao: '',
     features: [],
     perfis_permitidos: [],
+    tipo_cobranca: 'por_veiculo',
     preco_semanal_sem_iva: 0,
     iva_percentagem: 23,
     preco_mensal_sem_iva: 0,
