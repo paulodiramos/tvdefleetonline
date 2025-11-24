@@ -6888,9 +6888,23 @@ async def forgot_password(email_data: Dict[str, str]):
 
 @api_router.get("/planos", response_model=List[Plano])
 async def get_planos(current_user: Dict = Depends(get_current_user)):
-    """Get all available plans"""
+    """Get available plans (filtered by user role, except admin sees all)"""
     planos = await db.planos.find({"ativo": True}, {"_id": 0}).to_list(None)
-    return planos
+    
+    # Admin sees all plans
+    if current_user["role"] == UserRole.ADMIN:
+        return planos
+    
+    # Filter plans by user role
+    user_role = current_user["role"]
+    filtered_planos = []
+    for plano in planos:
+        perfis = plano.get("perfis_permitidos", [])
+        # If no profiles specified or user's role is in the list
+        if not perfis or user_role in perfis:
+            filtered_planos.append(plano)
+    
+    return filtered_planos
 
 @api_router.post("/planos")
 async def create_plano(plano: PlanoCreate, current_user: Dict = Depends(get_current_user)):
