@@ -717,8 +717,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Sistema de Gestão de Senhas - Admin Reset Password"
-    - "Sistema de Gestão de Senhas - Forgot Password"
+    - "VehicleData.js - Campo Valor da Inspeção"
+    - "UploadCSV.js - Botões de download de templates"
+    - "VehiclePhotos.js - Upload de fotos (verificar)"
+    - "EditParceiro.js - Edição de parceiros por Admin"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -729,6 +731,7 @@ test_plan:
   document_upload_system_implemented: true
   extintor_and_intervencoes_implemented: true
   password_management_system_implemented: true
+  password_management_system_tested: true
 
 backend:
   - task: "Sistema de Extintor - Campos expandidos"
