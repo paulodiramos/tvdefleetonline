@@ -416,6 +416,25 @@ const GestaoPlanos = ({ user, onLogout }) => {
                 )}
               </div>
 
+              {/* Perfis Permitidos */}
+              <div className="border-t pt-4">
+                <Label className="mb-3 block">Perfis Permitidos (deixe vazio para todos)</Label>
+                <div className="grid grid-cols-2 gap-3">
+                  {PERFIS_DISPONIVEIS.map((perfil) => (
+                    <div key={perfil.id} className="flex items-center space-x-2">
+                      <Switch
+                        checked={planoForm.perfis_permitidos.includes(perfil.id)}
+                        onCheckedChange={() => togglePerfil(perfil.id)}
+                      />
+                      <Label className="cursor-pointer">{perfil.nome}</Label>
+                    </div>
+                  ))}
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  Se nenhum perfil for selecionado, o plano estará disponível para todos.
+                </p>
+              </div>
+
               {/* Funcionalidades */}
               <div className="border-t pt-4">
                 <Label className="mb-3 block">Funcionalidades Incluídas</Label>
