@@ -296,6 +296,53 @@ const Financeiro = ({ user, onLogout }) => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Adicionar Despesa/Receita Manual */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-red-600">
+                <TrendingUp className="w-5 h-5 rotate-180" />
+                <span>Adicionar Despesa</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-600 mb-4">
+                Registre despesas associadas ao parceiro <strong>{selectedParceiro.nome}</strong>
+              </p>
+              <Button className="w-full bg-red-600 hover:bg-red-700" disabled>
+                <DollarSign className="w-4 h-4 mr-2" />
+                Em Desenvolvimento
+              </Button>
+              <p className="text-xs text-slate-500 mt-2 text-center">
+                Funcionalidade em breve
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-green-600">
+                <TrendingUp className="w-5 h-5" />
+                <span>Adicionar Receita</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-slate-600 mb-4">
+                Registre receitas associadas ao parceiro <strong>{selectedParceiro.nome}</strong>
+              </p>
+              <Button className="w-full bg-green-600 hover:bg-green-700" disabled>
+                <DollarSign className="w-4 h-4 mr-2" />
+                Em Desenvolvimento
+              </Button>
+              <p className="text-xs text-slate-500 mt-2 text-center">
+                Funcionalidade em breve
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+          </>
+        )}
       </div>
     </Layout>
   );
