@@ -2033,7 +2033,7 @@ agent_communication:
         - GET /api/vehicles
         - POST /api/contratos/gerar
         
-        URL: https://tvdemanager.preview.emergentagent.com
+        URL: https://finview-hub-2.preview.emergentagent.com
         
         Starting comprehensive test of contract generation flow...
     
