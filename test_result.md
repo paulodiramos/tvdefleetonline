@@ -889,6 +889,18 @@ frontend:
           agent: "testing"
           comment: "✅ TESTADO COMPLETAMENTE: DashboardParceiroTab funcionando perfeitamente. Cards de estatísticas (Veículos, Motoristas, Contratos) todos encontrados. Seção 'Alertas e Avisos' funcionando - mostra mensagem 'Tudo em dia! Nenhum alerta pendente.' quando não há alertas. 4 cards de resumo rápido encontrados no final. Componente integrado corretamente com EditParceiro."
 
+  - task: "Partner Filter Functionality on /financials page"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/Financials.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Partner filter functionality funcionando perfeitamente! NAVEGAÇÃO: Login admin@tvdefleet.com/o72ocUHy ✅. Navegação para /financials ✅. FILTRO DE PARCEIRO: Label 'Filtrar por Parceiro' encontrado ✅. Dropdown visível no top right ✅. Opção padrão 'Todos os Parceiros' ✅. 21 opções de parceiros disponíveis ✅. FUNCIONALIDADE DE FILTRAGEM: Seleção de parceiro específico altera totais (€3270/€530/€2740 → €0.00/€0.00/€0.00) ✅. Listas de receitas e despesas filtradas corretamente ✅. MODAIS: Modal 'Adicionar Despesa' mostra apenas veículos do parceiro selecionado (6 veículos filtrados) ✅. RESET: Voltar para 'Todos os Parceiros' restaura dados originais ✅. Todos os requisitos do review request atendidos com sucesso!"
+
   - task: "FichaVeiculo.js - Seção Plano de Manutenções"
     implemented: true
     working: true
