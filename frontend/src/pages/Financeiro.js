@@ -147,7 +147,11 @@ const Financeiro = ({ user, onLogout }) => {
             {/* Seletor de Plataforma para Import */}
             <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Selecione a Plataforma</CardTitle>
+            <CardTitle className="flex items-center space-x-2">
+              <Upload className="w-5 h-5" />
+              <span>Importar Dados CSV</span>
+            </CardTitle>
+            <p className="text-sm text-slate-600 mt-1">Importe ficheiros CSV de ganhos e despesas</p>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
