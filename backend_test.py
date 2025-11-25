@@ -3669,15 +3669,45 @@ startxref
         print("\n" + "=" * 80)
         return failed == 0
 
+    def run_partner_financial_tests_only(self):
+        """Run only partner financial management tests as requested in review"""
+        print("=" * 80)
+        print("TVDEFleet Backend Testing Suite - Partner Financial Management")
+        print("=" * 80)
+        
+        # Run partner financial management tests
+        self.test_partner_financial_management()
+        
+        # Summary
+        print("\n" + "=" * 80)
+        print("PARTNER FINANCIAL MANAGEMENT TEST SUMMARY")
+        print("=" * 80)
+        
+        passed = sum(1 for r in self.test_results if r["success"])
+        failed = sum(1 for r in self.test_results if not r["success"])
+        
+        print(f"Total Tests: {len(self.test_results)}")
+        print(f"✅ Passed: {passed}")
+        print(f"❌ Failed: {failed}")
+        
+        if failed > 0:
+            print("\n🔍 FAILED TESTS:")
+            for result in self.test_results:
+                if not result["success"]:
+                    print(f"   ❌ {result['test']}: {result['message']}")
+        
+        print("\n" + "=" * 80)
+        return failed == 0
+
 if __name__ == "__main__":
     tester = TVDEFleetTester()
     
-    # Run specific password management system tests as requested in review
-    success = tester.run_password_management_tests_only()
+    # Run specific partner financial management tests as requested in review
+    success = tester.run_partner_financial_tests_only()
     
     if success:
-        print("🎉 All password management system tests passed!")
+        print("🎉 All partner financial management tests passed!")
         exit(0)
     else:
-        print("💥 Some password management system tests failed!")
+        print("💥 Some partner financial management tests failed!")
         exit(1)
