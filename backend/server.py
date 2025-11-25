@@ -4077,6 +4077,80 @@ async def get_revenues(vehicle_id: Optional[str] = None, current_user: Dict = De
             r["created_at"] = datetime.fromisoformat(r["created_at"])
     return revenues
 
+# ==================== PARTNER FINANCIAL ENDPOINTS ====================
+
+@api_router.post("/parceiros/{parceiro_id}/despesas", response_model=PartnerExpense)
+async def create_partner_expense(
+    parceiro_id: str,
+    expense_data: PartnerExpenseCreate, 
+    current_user: Dict = Depends(get_current_user)
+):
+    """Create a manual expense entry for a partner"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTOR, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    
+    expense_dict = expense_data.model_dump()
+    expense_dict["id"] = str(uuid.uuid4())
+    expense_dict["created_by"] = current_user["id"]
+    expense_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.partner_expenses.insert_one(expense_dict)
+    
+    if isinstance(expense_dict["created_at"], str):
+        expense_dict["created_at"] = datetime.fromisoformat(expense_dict["created_at"])
+    
+    return PartnerExpense(**expense_dict)
+
+@api_router.get("/parceiros/{parceiro_id}/despesas", response_model=List[PartnerExpense])
+async def get_partner_expenses(parceiro_id: str, current_user: Dict = Depends(get_current_user)):
+    """Get all expenses for a specific partner"""
+    expenses = await db.partner_expenses.find(
+        {"parceiro_id": parceiro_id}, 
+        {"_id": 0}
+    ).to_list(1000)
+    
+    for e in expenses:
+        if isinstance(e["created_at"], str):
+            e["created_at"] = datetime.fromisoformat(e["created_at"])
+    
+    return expenses
+
+@api_router.post("/parceiros/{parceiro_id}/receitas", response_model=PartnerRevenue)
+async def create_partner_revenue(
+    parceiro_id: str,
+    revenue_data: PartnerRevenueCreate, 
+    current_user: Dict = Depends(get_current_user)
+):
+    """Create a manual revenue entry for a partner"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTOR, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    
+    revenue_dict = revenue_data.model_dump()
+    revenue_dict["id"] = str(uuid.uuid4())
+    revenue_dict["created_by"] = current_user["id"]
+    revenue_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.partner_revenues.insert_one(revenue_dict)
+    
+    if isinstance(revenue_dict["created_at"], str):
+        revenue_dict["created_at"] = datetime.fromisoformat(revenue_dict["created_at"])
+    
+    return PartnerRevenue(**revenue_dict)
+
+@api_router.get("/parceiros/{parceiro_id}/receitas", response_model=List[PartnerRevenue])
+async def get_partner_revenues(parceiro_id: str, current_user: Dict = Depends(get_current_user)):
+    """Get all revenues for a specific partner"""
+    revenues = await db.partner_revenues.find(
+        {"parceiro_id": parceiro_id}, 
+        {"_id": 0}
+    ).to_list(1000)
+    
+    for r in revenues:
+        if isinstance(r["created_at"], str):
+            r["created_at"] = datetime.fromisoformat(r["created_at"])
+    
+    return revenues
+
 @api_router.get("/reports/roi/{vehicle_id}")
 async def get_vehicle_roi(vehicle_id: str, periodo: str = "mensal", current_user: Dict = Depends(get_current_user)):
     revenues = await db.revenues.find({"vehicle_id": vehicle_id}, {"_id": 0}).to_list(1000)
