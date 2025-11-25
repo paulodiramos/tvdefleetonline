@@ -1055,6 +1055,56 @@ class ConfiguracaoIFThenPay(BaseModel):
     chave_api: str = ""  # Chave API IFThenPay
     modo_teste: bool = True  # Se está em modo de teste
 
+# Recibos e Ganhos
+class Recibo(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    motorista_id: str
+    motorista_nome: str
+    parceiro_id: Optional[str] = None
+    parceiro_nome: Optional[str] = None
+    valor: float
+    mes_referencia: str  # Ex: "2024-11"
+    ficheiro_url: str  # URL do PDF do recibo
+    status: str = "pendente"  # "pendente", "verificado", "pago", "rejeitado"
+    verificado_por: Optional[str] = None  # ID de quem verificou
+    verificado_em: Optional[datetime] = None
+    observacoes: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+class ReciboCreate(BaseModel):
+    mes_referencia: str
+    valor: float
+    ficheiro_url: str
+
+class Ganho(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    motorista_id: str
+    motorista_nome: str
+    parceiro_id: Optional[str] = None
+    parceiro_nome: Optional[str] = None
+    valor: float
+    data: str  # Data do ganho
+    plataforma: str  # "uber", "bolt", "outro"
+    descricao: Optional[str] = None
+    created_at: datetime
+
+class PedidoAlteracao(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    motorista_id: str
+    motorista_nome: str
+    campo: str  # Campo que quer alterar
+    valor_atual: str
+    valor_novo: str
+    motivo: str
+    status: str = "pendente"  # "pendente", "aprovado", "rejeitado"
+    respondido_por: Optional[str] = None
+    respondido_em: Optional[datetime] = None
+    created_at: datetime
+
 # Motorista Models - EXPANDED
 class MotoristaDocuments(BaseModel):
     # Documentos principais com foto (convertidos para PDF A4)
