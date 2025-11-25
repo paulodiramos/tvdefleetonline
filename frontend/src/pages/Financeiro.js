@@ -420,15 +420,15 @@ const Financeiro = ({ user, onLogout }) => {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-slate-600 mb-4">
-                Registre despesas associadas ao parceiro <strong>{selectedParceiro.nome}</strong>
+                Registre despesas associadas ao parceiro <strong>{selectedParceiro.nome_empresa || selectedParceiro.nome}</strong>
               </p>
-              <Button className="w-full bg-red-600 hover:bg-red-700" disabled>
-                <DollarSign className="w-4 h-4 mr-2" />
-                Em Desenvolvimento
+              <Button 
+                className="w-full bg-red-600 hover:bg-red-700"
+                onClick={() => setShowExpenseModal(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Despesa
               </Button>
-              <p className="text-xs text-slate-500 mt-2 text-center">
-                Funcionalidade em breve
-              </p>
             </CardContent>
           </Card>
 
@@ -441,15 +441,15 @@ const Financeiro = ({ user, onLogout }) => {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-slate-600 mb-4">
-                Registre receitas associadas ao parceiro <strong>{selectedParceiro.nome}</strong>
+                Registre receitas associadas ao parceiro <strong>{selectedParceiro.nome_empresa || selectedParceiro.nome}</strong>
               </p>
-              <Button className="w-full bg-green-600 hover:bg-green-700" disabled>
-                <DollarSign className="w-4 h-4 mr-2" />
-                Em Desenvolvimento
+              <Button 
+                className="w-full bg-green-600 hover:bg-green-700"
+                onClick={() => setShowRevenueModal(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Receita
               </Button>
-              <p className="text-xs text-slate-500 mt-2 text-center">
-                Funcionalidade em breve
-              </p>
             </CardContent>
           </Card>
         </div>
