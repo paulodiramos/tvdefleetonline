@@ -259,6 +259,18 @@ function App() {
               user ? <MeusPlanos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
+          <Route
+            path="/meus-recibos-ganhos"
+            element={
+              user ? <MeusRecibosGanhos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/verificar-recibos"
+            element={
+              user ? <VerificarRecibos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
