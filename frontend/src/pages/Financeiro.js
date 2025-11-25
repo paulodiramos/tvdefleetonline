@@ -89,16 +89,63 @@ const Financeiro = ({ user, onLogout }) => {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-slate-800 flex items-center space-x-3">
-            <Upload className="w-8 h-8 text-blue-600" />
-            <span>Upload CSV</span>
+            <DollarSign className="w-8 h-8 text-green-600" />
+            <span>Financeiro</span>
           </h1>
           <p className="text-slate-600 mt-2">
-            Importe manualmente ficheiros CSV de Uber, Bolt, Via Verde, Combustível e GPS
+            Gerir despesas, receitas e importar dados financeiros por parceiro
           </p>
         </div>
 
-        {/* Seletor de Plataforma */}
+        {/* Seletor de Parceiro */}
         <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Users className="w-5 h-5" />
+              <span>Selecionar Parceiro</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {parceiros.length === 0 ? (
+              <p className="text-slate-500">Nenhum parceiro disponível</p>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {parceiros.map((parceiro) => (
+                  <button
+                    key={parceiro.id}
+                    onClick={() => setSelectedParceiro(parceiro)}
+                    className={`p-4 border-2 rounded-lg transition-all text-left ${
+                      selectedParceiro?.id === parceiro.id
+                        ? 'border-green-600 bg-green-50'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="font-semibold text-sm">{parceiro.nome}</div>
+                    <div className="text-xs text-slate-500">{parceiro.empresa || 'Empresa'}</div>
+                  </button>
+                ))}
+              </div>
+            )}
+            {selectedParceiro && (
+              <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded">
+                <p className="text-sm text-green-800">
+                  ✓ Parceiro selecionado: <strong>{selectedParceiro.nome}</strong>
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {!selectedParceiro ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-slate-500">Selecione um parceiro para continuar</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Seletor de Plataforma para Import */}
+            <Card className="mb-6">
           <CardHeader>
             <CardTitle>Selecione a Plataforma</CardTitle>
           </CardHeader>
