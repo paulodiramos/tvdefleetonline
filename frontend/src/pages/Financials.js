@@ -47,18 +47,21 @@ const Financials = ({ user, onLogout }) => {
 
   const fetchData = async () => {
     try {
-      const [vehiclesRes, expensesRes, revenuesRes, motoristasRes, relatoriosRes] = await Promise.all([
-        axios.get(`${API}/vehicles`),
-        axios.get(`${API}/expenses`),
-        axios.get(`${API}/revenues`),
-        axios.get(`${API}/motoristas`),
-        axios.get(`${API}/relatorios-ganhos`)
+      const token = localStorage.getItem('token');
+      const [vehiclesRes, expensesRes, revenuesRes, motoristasRes, relatoriosRes, parceirosRes] = await Promise.all([
+        axios.get(`${API}/vehicles`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/expenses`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/revenues`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/motoristas`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/relatorios-ganhos`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/parceiros`, { headers: { Authorization: `Bearer ${token}` } })
       ]);
       setVehicles(vehiclesRes.data);
       setExpenses(expensesRes.data);
       setRevenues(revenuesRes.data);
       setMotoristas(motoristasRes.data);
       setRelatorios(relatoriosRes.data);
+      setParceiros(parceirosRes.data);
     } catch (error) {
       toast.error('Erro ao carregar dados financeiros');
     } finally {
