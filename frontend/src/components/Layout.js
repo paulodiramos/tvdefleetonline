@@ -124,6 +124,12 @@ const Layout = ({ user, onLogout, children }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link to="/verificar-recibos" className="flex items-center space-x-2 cursor-pointer">
+                          <Receipt className="w-4 h-4" />
+                          <span>Verificar Recibos</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to="/vehicle-data" className="flex items-center space-x-2 cursor-pointer">
                           <Database className="w-4 h-4" />
                           <span>Dados de Veículos</span>
