@@ -120,7 +120,7 @@ const Layout = ({ user, onLogout, children }) => {
                       <DropdownMenuItem asChild>
                         <Link to="/gestao-planos" className="flex items-center space-x-2 cursor-pointer">
                           <Package className="w-4 h-4" />
-                          <span>Gestão de Planos</span>
+                          <span>Planos de Assinatura</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
