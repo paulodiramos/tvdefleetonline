@@ -193,7 +193,7 @@ const Financials = ({ user, onLogout }) => {
                         <SelectValue placeholder="Selecionar veículo" />
                       </SelectTrigger>
                       <SelectContent>
-                        {vehicles.map(v => (
+                        {filteredVehicles.map(v => (
                           <SelectItem key={v.id} value={v.id}>{v.marca} {v.modelo} - {v.matricula}</SelectItem>
                         ))}
                       </SelectContent>
@@ -252,7 +252,7 @@ const Financials = ({ user, onLogout }) => {
                         <SelectValue placeholder="Selecionar veículo" />
                       </SelectTrigger>
                       <SelectContent>
-                        {vehicles.map(v => (
+                        {filteredVehicles.map(v => (
                           <SelectItem key={v.id} value={v.id}>{v.marca} {v.modelo} - {v.matricula}</SelectItem>
                         ))}
                       </SelectContent>
