@@ -3811,6 +3811,21 @@ backend:
           agent: "main"
           comment: "Criado endpoint GET /api/parceiros/{parceiro_id}/alertas que retorna alertas de seguros, inspeções, extintores e manutenções baseados nas configurações do parceiro. Calcula alertas dinamicamente baseado em: dias_aviso_seguro, dias_aviso_inspecao, km_aviso_revisao. Retorna estrutura com alertas separados por tipo, totais e configuração usada. Plano de manutenções padrão: Pastilhas (30000km), Pastilhas e Discos (60000km), Óleo e Filtros (15000km)."
 
+  - task: "Partner Financial Management - Manual Expenses and Revenues"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Implementados endpoints para gestão financeira manual de parceiros: POST /api/parceiros/{parceiro_id}/despesas (criar despesa), GET /api/parceiros/{parceiro_id}/despesas (listar despesas), POST /api/parceiros/{parceiro_id}/receitas (criar receita), GET /api/parceiros/{parceiro_id}/receitas (listar receitas). Modelos PartnerExpenseCreate, PartnerExpense, PartnerRevenueCreate, PartnerRevenue criados com validação completa."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Todos os endpoints de gestão financeira de parceiros funcionando perfeitamente! AUTENTICAÇÃO: Login com admin@tvdefleet.com/J6L2vaFP ✅ funcionando. CRIAR DESPESA: POST /api/parceiros/{parceiro_id}/despesas ✅ criou despesa com ID válido (dados: descricao='Teste automático despesa', valor=99.99, categoria='manutencao'). LISTAR DESPESAS: GET /api/parceiros/{parceiro_id}/despesas ✅ retornou lista com 2 itens incluindo despesa de teste. CRIAR RECEITA: POST /api/parceiros/{parceiro_id}/receitas ✅ criou receita com ID válido (dados: descricao='Teste automático receita', valor=199.99, tipo='comissao'). LISTAR RECEITAS: GET /api/parceiros/{parceiro_id}/receitas ✅ retornou lista com 2 itens incluindo receita de teste. Todos os endpoints retornam 200 OK com estrutura de dados correta. Sistema pronto para produção!"
+
 frontend:
   - task: "EditParceiro.js - Configurações de Alertas"
     implemented: true
