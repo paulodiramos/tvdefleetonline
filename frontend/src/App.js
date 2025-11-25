@@ -37,6 +37,8 @@ import SincronizacaoAuto from "@/pages/SincronizacaoAuto";
 import Financeiro from "@/pages/Financeiro";
 import GestaoPlanos from "@/pages/GestaoPlanos";
 import MeusPlanos from "@/pages/MeusPlanos";
+import MeusRecibosGanhos from "@/pages/MeusRecibosGanhos";
+import VerificarRecibos from "@/pages/VerificarRecibos";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
