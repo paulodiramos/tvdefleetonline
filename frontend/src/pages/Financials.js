@@ -340,13 +340,13 @@ const Financials = ({ user, onLogout }) => {
             </CardHeader>
             <CardContent>
               <TabsContent value="revenues" className="space-y-4">
-                {revenues.length === 0 ? (
+                {filteredRevenues.length === 0 ? (
                   <div className="text-center py-8 text-slate-500">
                     <p>Nenhuma receita registada</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {revenues.map((revenue) => {
+                    {filteredRevenues.map((revenue) => {
                       const vehicle = vehicles.find(v => v.id === revenue.vehicle_id);
                       return (
                         <div key={revenue.id} className="flex items-center justify-between p-4 bg-emerald-50 rounded-lg" data-testid={`revenue-item-${revenue.id}`}>
