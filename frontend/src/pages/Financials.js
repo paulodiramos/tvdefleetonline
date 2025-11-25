@@ -108,8 +108,24 @@ const Financials = ({ user, onLogout }) => {
     }
   };
 
-  const totalExpenses = expenses.reduce((sum, exp) => sum + exp.valor, 0);
-  const totalRevenues = revenues.reduce((sum, rev) => sum + rev.valor, 0);
+  // Filter vehicles by selected partner
+  const filteredVehicles = selectedParceiro === 'all' 
+    ? vehicles 
+    : vehicles.filter(v => v.parceiro_id === selectedParceiro);
+  
+  const filteredVehicleIds = filteredVehicles.map(v => v.id);
+  
+  // Filter expenses and revenues by partner's vehicles
+  const filteredExpenses = selectedParceiro === 'all'
+    ? expenses
+    : expenses.filter(exp => filteredVehicleIds.includes(exp.vehicle_id));
+  
+  const filteredRevenues = selectedParceiro === 'all'
+    ? revenues
+    : revenues.filter(rev => filteredVehicleIds.includes(rev.vehicle_id));
+  
+  const totalExpenses = filteredExpenses.reduce((sum, exp) => sum + exp.valor, 0);
+  const totalRevenues = filteredRevenues.reduce((sum, rev) => sum + rev.valor, 0);
   const roi = totalRevenues - totalExpenses;
 
   if (loading) {
