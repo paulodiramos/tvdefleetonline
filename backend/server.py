@@ -7192,6 +7192,129 @@ async def ifthen_pay_callback(data: Dict[str, Any]):
     
     return {"status": "received"}
 
+# ==================== RECIBOS E GANHOS ====================
+
+@api_router.post("/recibos")
+async def criar_recibo(recibo: ReciboCreate, current_user: Dict = Depends(get_current_user)):
+    """Motorista cria um recibo (upload)"""
+    # Get motorista info
+    motorista = await db.motoristas.find_one({"id": current_user["id"]}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista not found")
+    
+    recibo_dict = {
+        "id": str(uuid.uuid4()),
+        "motorista_id": current_user["id"],
+        "motorista_nome": motorista.get("name", ""),
+        "parceiro_id": motorista.get("parceiro_atribuido"),
+        "parceiro_nome": motorista.get("parceiro_atribuido_nome", ""),
+        "valor": recibo.valor,
+        "mes_referencia": recibo.mes_referencia,
+        "ficheiro_url": recibo.ficheiro_url,
+        "status": "pendente",
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc)
+    }
+    
+    await db.recibos.insert_one(recibo_dict)
+    
+    return {"message": "Recibo enviado para verificação", "recibo_id": recibo_dict["id"]}
+
+@api_router.get("/recibos/meus")
+async def get_meus_recibos(current_user: Dict = Depends(get_current_user)):
+    """Get recibos do motorista"""
+    recibos = await db.recibos.find(
+        {"motorista_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(None)
+    return recibos
+
+@api_router.get("/recibos")
+async def get_all_recibos(
+    parceiro_id: Optional[str] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get recibos (filtered by role)"""
+    query = {}
+    
+    # Se for parceiro, só vê seus recibos
+    if current_user["role"] == "parceiro":
+        query["parceiro_id"] = current_user["associated_partner_id"]
+    elif parceiro_id:
+        query["parceiro_id"] = parceiro_id
+    
+    recibos = await db.recibos.find(query, {"_id": 0}).sort("created_at", -1).to_list(None)
+    return recibos
+
+@api_router.put("/recibos/{recibo_id}/verificar")
+async def verificar_recibo(
+    recibo_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Admin/Gestor/Operacional verifica recibo"""
+    if current_user["role"] not in [UserRole.ADMIN, "gestao", "operacional"]:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    
+    status = data.get("status", "verificado")
+    observacoes = data.get("observacoes", "")
+    
+    await db.recibos.update_one(
+        {"id": recibo_id},
+        {"$set": {
+            "status": status,
+            "verificado_por": current_user["id"],
+            "verificado_em": datetime.now(timezone.utc),
+            "observacoes": observacoes,
+            "updated_at": datetime.now(timezone.utc)
+        }}
+    )
+    
+    return {"message": f"Recibo {status}"}
+
+@api_router.get("/ganhos/meus")
+async def get_meus_ganhos(current_user: Dict = Depends(get_current_user)):
+    """Get ganhos do motorista"""
+    ganhos = await db.ganhos.find(
+        {"motorista_id": current_user["id"]},
+        {"_id": 0}
+    ).sort("data", -1).to_list(None)
+    return ganhos
+
+@api_router.post("/pedidos-alteracao")
+async def criar_pedido_alteracao(data: Dict[str, str], current_user: Dict = Depends(get_current_user)):
+    """Motorista solicita alteração de dados"""
+    motorista = await db.motoristas.find_one({"id": current_user["id"]}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista not found")
+    
+    pedido_dict = {
+        "id": str(uuid.uuid4()),
+        "motorista_id": current_user["id"],
+        "motorista_nome": motorista.get("name", ""),
+        "campo": data.get("campo"),
+        "valor_atual": data.get("valor_atual"),
+        "valor_novo": data.get("valor_novo"),
+        "motivo": data.get("motivo"),
+        "status": "pendente",
+        "created_at": datetime.now(timezone.utc)
+    }
+    
+    await db.pedidos_alteracao.insert_one(pedido_dict)
+    
+    return {"message": "Pedido enviado para análise", "pedido_id": pedido_dict["id"]}
+
+@api_router.get("/pedidos-alteracao")
+async def get_pedidos_alteracao(current_user: Dict = Depends(get_current_user)):
+    """Get pedidos de alteração"""
+    if current_user["role"] == "motorista":
+        query = {"motorista_id": current_user["id"]}
+    else:
+        query = {}
+    
+    pedidos = await db.pedidos_alteracao.find(query, {"_id": 0}).sort("created_at", -1).to_list(None)
+    return pedidos
+
 
 # ==================== CONFIGURAÇÕES ====================
 @api_router.get("/configuracoes/email")
