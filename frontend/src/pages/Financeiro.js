@@ -4,8 +4,12 @@ import { API } from '@/App';
 import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Upload, FileText, TrendingUp, DollarSign, Users, Calendar } from 'lucide-react';
+import { Upload, FileText, TrendingUp, DollarSign, Users, Calendar, Plus } from 'lucide-react';
 
 const Financeiro = ({ user, onLogout }) => {
   const [parceiros, setParceiros] = useState([]);
@@ -13,6 +17,28 @@ const Financeiro = ({ user, onLogout }) => {
   const [selectedPlatform, setSelectedPlatform] = useState('bolt');
   const [uploading, setUploading] = useState(false);
   const [importResult, setImportResult] = useState(null);
+  
+  // Modal states
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [showRevenueModal, setShowRevenueModal] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  
+  // Form states
+  const [expenseForm, setExpenseForm] = useState({
+    descricao: '',
+    valor: '',
+    data: new Date().toISOString().split('T')[0],
+    categoria: 'manutencao',
+    observacoes: ''
+  });
+  
+  const [revenueForm, setRevenueForm] = useState({
+    descricao: '',
+    valor: '',
+    data: new Date().toISOString().split('T')[0],
+    tipo: 'comissao',
+    observacoes: ''
+  });
 
   const platforms = [
     { id: 'uber', name: 'Uber', icon: '🚕', endpoint: '/import/uber/ganhos' },
