@@ -365,13 +365,13 @@ const Financials = ({ user, onLogout }) => {
                 )}
               </TabsContent>
               <TabsContent value="expenses" className="space-y-4">
-                {expenses.length === 0 ? (
+                {filteredExpenses.length === 0 ? (
                   <div className="text-center py-8 text-slate-500">
                     <p>Nenhuma despesa registada</p>
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {expenses.map((expense) => {
+                    {filteredExpenses.map((expense) => {
                       const vehicle = vehicles.find(v => v.id === expense.vehicle_id);
                       return (
                         <div key={expense.id} className="flex items-center justify-between p-4 bg-red-50 rounded-lg" data-testid={`expense-item-${expense.id}`}>
