@@ -146,7 +146,27 @@ const Financials = ({ user, onLogout }) => {
             <h1 className="text-4xl font-bold text-slate-800 mb-2">Financeiro</h1>
             <p className="text-slate-600">Gerir receitas e despesas</p>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex items-center space-x-3">
+            <div className="flex flex-col">
+              <Label className="text-xs text-slate-600 mb-1">Filtrar por Parceiro</Label>
+              <Select value={selectedParceiro} onValueChange={setSelectedParceiro}>
+                <SelectTrigger className="w-[250px]">
+                  <SelectValue placeholder="Todos os parceiros" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os Parceiros</SelectItem>
+                  {parceiros.map(p => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.nome_empresa || p.nome || p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center justify-end space-x-2">
             <Button 
               onClick={() => navigate('/upload-csv')}
               className="bg-blue-600 hover:bg-blue-700 text-white"
