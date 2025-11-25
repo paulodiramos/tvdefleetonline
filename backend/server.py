@@ -1478,6 +1478,47 @@ class Revenue(BaseModel):
     km_percorridos: Optional[int] = None
     created_at: datetime
 
+# Partner Financial Models
+class PartnerExpenseCreate(BaseModel):
+    parceiro_id: str
+    descricao: str
+    valor: float
+    data: str
+    categoria: str  # manutencao, combustivel, portagem, seguro, etc
+    observacoes: Optional[str] = None
+
+class PartnerExpense(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    parceiro_id: str
+    descricao: str
+    valor: float
+    data: str
+    categoria: str
+    observacoes: Optional[str] = None
+    created_by: str
+    created_at: datetime
+
+class PartnerRevenueCreate(BaseModel):
+    parceiro_id: str
+    descricao: str
+    valor: float
+    data: str
+    tipo: str  # comissao, aluguer, servico, outro
+    observacoes: Optional[str] = None
+
+class PartnerRevenue(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    parceiro_id: str
+    descricao: str
+    valor: float
+    data: str
+    tipo: str
+    observacoes: Optional[str] = None
+    created_by: str
+    created_at: datetime
+
 # Reports
 class ROIReport(BaseModel):
     vehicle_id: str
