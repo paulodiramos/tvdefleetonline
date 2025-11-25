@@ -3374,6 +3374,7 @@ startxref
     def test_partner_create_revenue(self, headers, parceiro_id):
         """Test POST /api/parceiros/{parceiro_id}/receitas"""
         revenue_data = {
+            "parceiro_id": parceiro_id,
             "descricao": "Teste automático receita",
             "valor": 199.99,
             "data": "2025-11-25",
