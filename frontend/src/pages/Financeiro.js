@@ -109,6 +109,92 @@ const Financeiro = ({ user, onLogout }) => {
       currency: 'EUR'
     }).format(value || 0);
   };
+  
+  const handleExpenseSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!selectedParceiro) {
+      toast.error('Selecione um parceiro primeiro');
+      return;
+    }
+    
+    if (!expenseForm.descricao || !expenseForm.valor) {
+      toast.error('Preencha os campos obrigatórios');
+      return;
+    }
+    
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/parceiros/${selectedParceiro.id}/despesas`,
+        {
+          parceiro_id: selectedParceiro.id,
+          ...expenseForm,
+          valor: parseFloat(expenseForm.valor)
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success('Despesa adicionada com sucesso!');
+      setShowExpenseModal(false);
+      setExpenseForm({
+        descricao: '',
+        valor: '',
+        data: new Date().toISOString().split('T')[0],
+        categoria: 'manutencao',
+        observacoes: ''
+      });
+    } catch (error) {
+      console.error('Error creating expense:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao adicionar despesa');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  
+  const handleRevenueSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!selectedParceiro) {
+      toast.error('Selecione um parceiro primeiro');
+      return;
+    }
+    
+    if (!revenueForm.descricao || !revenueForm.valor) {
+      toast.error('Preencha os campos obrigatórios');
+      return;
+    }
+    
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/parceiros/${selectedParceiro.id}/receitas`,
+        {
+          parceiro_id: selectedParceiro.id,
+          ...revenueForm,
+          valor: parseFloat(revenueForm.valor)
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success('Receita adicionada com sucesso!');
+      setShowRevenueModal(false);
+      setRevenueForm({
+        descricao: '',
+        valor: '',
+        data: new Date().toISOString().split('T')[0],
+        tipo: 'comissao',
+        observacoes: ''
+      });
+    } catch (error) {
+      console.error('Error creating revenue:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao adicionar receita');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <Layout user={user} onLogout={onLogout}>
