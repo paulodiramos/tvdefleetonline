@@ -1146,6 +1146,9 @@ class Motorista(BaseModel):
     whatsapp: Optional[str] = None
     tipo_pagamento: Optional[str] = None
     id_cartao_frota_combustivel: Optional[str] = None  # ID automático do cartão frota (gerado)
+    # Registo Criminal
+    data_limite_registo_criminal: Optional[str] = None
+    dias_aviso_renovacao_registo: int = 30  # Dias de antecedência para aviso
     documents: MotoristaDocuments
     approved: bool = False
     senha_provisoria: bool = False
