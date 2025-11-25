@@ -4086,7 +4086,7 @@ async def create_partner_expense(
     current_user: Dict = Depends(get_current_user)
 ):
     """Create a manual expense entry for a partner"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTOR, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
         raise HTTPException(status_code=403, detail="Unauthorized")
     
     expense_dict = expense_data.model_dump()
