@@ -456,6 +456,196 @@ const Financeiro = ({ user, onLogout }) => {
           </>
         )}
       </div>
+
+      {/* Modal de Despesa */}
+      <Dialog open={showExpenseModal} onOpenChange={setShowExpenseModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2 text-red-600">
+              <TrendingUp className="w-5 h-5 rotate-180" />
+              <span>Nova Despesa</span>
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleExpenseSubmit}>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="expense-descricao">Descrição *</Label>
+                <Input
+                  id="expense-descricao"
+                  value={expenseForm.descricao}
+                  onChange={(e) => setExpenseForm({...expenseForm, descricao: e.target.value})}
+                  placeholder="Ex: Manutenção de viatura"
+                  required
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="expense-valor">Valor (€) *</Label>
+                  <Input
+                    id="expense-valor"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={expenseForm.valor}
+                    onChange={(e) => setExpenseForm({...expenseForm, valor: e.target.value})}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="expense-data">Data</Label>
+                  <Input
+                    id="expense-data"
+                    type="date"
+                    value={expenseForm.data}
+                    onChange={(e) => setExpenseForm({...expenseForm, data: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="expense-categoria">Categoria</Label>
+                <select
+                  id="expense-categoria"
+                  value={expenseForm.categoria}
+                  onChange={(e) => setExpenseForm({...expenseForm, categoria: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option value="manutencao">Manutenção</option>
+                  <option value="combustivel">Combustível</option>
+                  <option value="portagem">Portagem</option>
+                  <option value="seguro">Seguro</option>
+                  <option value="multa">Multa</option>
+                  <option value="outro">Outro</option>
+                </select>
+              </div>
+              
+              <div>
+                <Label htmlFor="expense-observacoes">Observações</Label>
+                <Textarea
+                  id="expense-observacoes"
+                  value={expenseForm.observacoes}
+                  onChange={(e) => setExpenseForm({...expenseForm, observacoes: e.target.value})}
+                  placeholder="Observações adicionais (opcional)"
+                  rows={3}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowExpenseModal(false)}
+                disabled={submitting}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                className="bg-red-600 hover:bg-red-700"
+                disabled={submitting}
+              >
+                {submitting ? 'A guardar...' : 'Adicionar Despesa'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Receita */}
+      <Dialog open={showRevenueModal} onOpenChange={setShowRevenueModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2 text-green-600">
+              <TrendingUp className="w-5 h-5" />
+              <span>Nova Receita</span>
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleRevenueSubmit}>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="revenue-descricao">Descrição *</Label>
+                <Input
+                  id="revenue-descricao"
+                  value={revenueForm.descricao}
+                  onChange={(e) => setRevenueForm({...revenueForm, descricao: e.target.value})}
+                  placeholder="Ex: Comissão semanal Uber"
+                  required
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="revenue-valor">Valor (€) *</Label>
+                  <Input
+                    id="revenue-valor"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={revenueForm.valor}
+                    onChange={(e) => setRevenueForm({...revenueForm, valor: e.target.value})}
+                    placeholder="0.00"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="revenue-data">Data</Label>
+                  <Input
+                    id="revenue-data"
+                    type="date"
+                    value={revenueForm.data}
+                    onChange={(e) => setRevenueForm({...revenueForm, data: e.target.value})}
+                  />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="revenue-tipo">Tipo</Label>
+                <select
+                  id="revenue-tipo"
+                  value={revenueForm.tipo}
+                  onChange={(e) => setRevenueForm({...revenueForm, tipo: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                >
+                  <option value="comissao">Comissão</option>
+                  <option value="aluguer">Aluguer</option>
+                  <option value="servico">Serviço</option>
+                  <option value="outro">Outro</option>
+                </select>
+              </div>
+              
+              <div>
+                <Label htmlFor="revenue-observacoes">Observações</Label>
+                <Textarea
+                  id="revenue-observacoes"
+                  value={revenueForm.observacoes}
+                  onChange={(e) => setRevenueForm({...revenueForm, observacoes: e.target.value})}
+                  placeholder="Observações adicionais (opcional)"
+                  rows={3}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setShowRevenueModal(false)}
+                disabled={submitting}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                className="bg-green-600 hover:bg-green-700"
+                disabled={submitting}
+              >
+                {submitting ? 'A guardar...' : 'Adicionar Receita'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
