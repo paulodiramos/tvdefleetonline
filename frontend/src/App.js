@@ -176,6 +176,12 @@ function App() {
             }
           />
           <Route
+            path="/financeiro"
+            element={
+              user ? <Financeiro user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/profile"
             element={
               user ? <Profile user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
