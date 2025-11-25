@@ -3313,6 +3313,7 @@ startxref
     def test_partner_create_expense(self, headers, parceiro_id):
         """Test POST /api/parceiros/{parceiro_id}/despesas"""
         expense_data = {
+            "parceiro_id": parceiro_id,
             "descricao": "Teste automático despesa",
             "valor": 99.99,
             "data": "2025-11-25",
