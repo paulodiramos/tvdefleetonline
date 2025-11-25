@@ -1332,6 +1332,10 @@ class Vehicle(BaseModel):
     via_verde_disponivel: bool = False
     via_verde_id: Optional[str] = None  # ID do Via Verde
     cartao_frota_disponivel: bool = False
+    # Garantia
+    tem_garantia: bool = False
+    stand_responsavel: Optional[str] = None
+    data_limite_garantia: Optional[str] = None
     seguro: Optional[VehicleInsurance] = None
     manutencoes: List[VehicleMaintenance] = []
     extintor: Optional[VehicleExtinguisher] = None
