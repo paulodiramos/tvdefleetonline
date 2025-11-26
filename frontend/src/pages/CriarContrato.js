@@ -349,7 +349,7 @@ const CriarContrato = ({ user, onLogout }) => {
                 )}
                 <Button variant="outline" onClick={() => {
                   setContratoGerado(null);
-                  setTemplateSelecionado('');
+                  setTipoContratoSelecionado('');
                   setMotoristaSelecionado('');
                   setVeiculoSelecionado(null);
                 }}>
