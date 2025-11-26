@@ -190,8 +190,8 @@ const CriarContrato = ({ user, onLogout }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!templateSelecionado || !motoristaSelecionado) {
-      toast.error('Selecione template e motorista');
+    if (!tipoContratoSelecionado || !motoristaSelecionado) {
+      toast.error('Selecione tipo de contrato e motorista');
       return;
     }
 
