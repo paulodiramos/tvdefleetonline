@@ -148,15 +148,16 @@ const CriarContrato = ({ user, onLogout }) => {
     }
   };
 
-  const fetchTemplates = async (parceiroId) => {
+  const fetchParceiroData = async (parceiroId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/parceiros/${parceiroId}/templates-contrato`, {
+      const response = await axios.get(`${API}/parceiros/${parceiroId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setTemplates(response.data.filter(t => t.ativo));
+      setParceiroData(response.data);
     } catch (error) {
-      console.error('Error fetching templates:', error);
+      console.error('Error fetching parceiro data:', error);
+      toast.error('Erro ao carregar dados do parceiro');
     }
   };
 
