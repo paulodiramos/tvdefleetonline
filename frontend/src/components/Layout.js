@@ -189,20 +189,14 @@ const Layout = ({ user, onLogout, children }) => {
                           <span>Perfil</span>
                         </Link>
                       </DropdownMenuItem>
-                      {user.role === 'motorista' && (
+                      {user.role !== 'motorista' && (
                         <DropdownMenuItem asChild>
-                          <Link to="/meus-recibos-ganhos" className="flex items-center space-x-2 cursor-pointer">
-                            <Receipt className="w-4 h-4" />
-                            <span>Recibos e Ganhos</span>
+                          <Link to="/meus-planos" className="flex items-center space-x-2 cursor-pointer">
+                            <Package className="w-4 h-4" />
+                            <span>Meus Planos</span>
                           </Link>
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem asChild>
-                        <Link to="/meus-planos" className="flex items-center space-x-2 cursor-pointer">
-                          <Package className="w-4 h-4" />
-                          <span>Meus Planos</span>
-                        </Link>
-                      </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={onLogout}
                         className="flex items-center space-x-2 cursor-pointer text-red-600"
