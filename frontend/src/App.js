@@ -15,6 +15,7 @@ import MotoristaRegister from "@/pages/MotoristaRegister";
 import Parceiros from "@/pages/Parceiros";
 import Profile from "@/pages/Profile";
 import PerfilMotorista from "@/pages/PerfilMotorista";
+import CriarRelatorioSemanal from "@/pages/CriarRelatorioSemanal";
 import ParceiroReports from "@/pages/ParceiroReports";
 import Pagamentos from "@/pages/Pagamentos";
 import UploadCSV from "@/pages/UploadCSV";
