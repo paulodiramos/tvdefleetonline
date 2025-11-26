@@ -18,17 +18,25 @@ const Layout = ({ user, onLogout, children }) => {
 
   // Build navigation items based on role
   const getNavItems = () => {
+    // For motorista role: Only show Recibos e Ganhos
+    if (user.role === 'motorista') {
+      return [
+        { path: '/meus-recibos-ganhos', icon: Receipt, label: 'Recibos e Ganhos' }
+      ];
+    }
+
     // For parceiro/operacional role: Replace dashboard with reports, add payments, REMOVE financials
     if (user.role === 'parceiro' || user.role === 'operacional') {
       return [
         { path: '/relatorios', icon: FileText, label: 'Relatórios' },
         { path: '/vehicles', icon: Car, label: 'Veículos' },
         { path: '/motoristas', icon: Users, label: 'Motoristas' },
-        { path: '/pagamentos', icon: CreditCard, label: 'Pagamentos' }
+        { path: '/pagamentos', icon: CreditCard, label: 'Pagamentos' },
+        { path: '/criar-relatorio-semanal', icon: TrendingUp, label: 'Criar Relatório' }
       ];
     }
 
-    // Default items for admin, gestao, motorista (Dashboard removed - logo handles that)
+    // Default items for admin, gestao (Dashboard removed - logo handles that)
     const items = [
       { path: '/vehicles', icon: Car, label: 'Veículos' },
       { path: '/motoristas', icon: Users, label: 'Motoristas' },
@@ -44,6 +52,11 @@ const Layout = ({ user, onLogout, children }) => {
     if (user.role === 'admin' || user.role === 'gestao') {
       items.push({ path: '/contratos', icon: FileText, label: 'Contratos' });
       items.push({ path: '/criar-contrato', icon: FileText, label: 'Gerar Contrato' });
+    }
+
+    // Add Criar Relatório Semanal for admin and gestao
+    if (user.role === 'admin' || user.role === 'gestao') {
+      items.push({ path: '/criar-relatorio-semanal', icon: TrendingUp, label: 'Criar Relatório' });
     }
 
     // Add Sincronização Auto for admin and gestao
