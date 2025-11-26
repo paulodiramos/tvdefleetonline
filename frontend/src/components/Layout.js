@@ -117,7 +117,7 @@ const Layout = ({ user, onLogout, children }) => {
                     className="hidden md:flex items-center space-x-2"
                     data-testid="profile-dropdown"
                   >
-                    <span className="text-sm font-medium text-slate-800">Admin</span>
+                    <span className="text-sm font-medium text-slate-800">{user.name || user.email?.split('@')[0] || 'Utilizador'}</span>
                     <ChevronDown className="w-4 h-4 text-slate-600" />
                   </Button>
                 </DropdownMenuTrigger>
