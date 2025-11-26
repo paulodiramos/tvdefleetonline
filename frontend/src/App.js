@@ -293,6 +293,12 @@ function App() {
             }
           />
           <Route
+            path="/pagamentos-parceiro"
+            element={
+              user ? <PagamentosParceiro user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/verificar-recibos"
             element={
               user ? <VerificarRecibos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
