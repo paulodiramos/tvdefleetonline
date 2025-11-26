@@ -14,6 +14,7 @@ import PublicSite from "@/pages/PublicSite";
 import MotoristaRegister from "@/pages/MotoristaRegister";
 import Parceiros from "@/pages/Parceiros";
 import Profile from "@/pages/Profile";
+import PerfilMotorista from "@/pages/PerfilMotorista";
 import ParceiroReports from "@/pages/ParceiroReports";
 import Pagamentos from "@/pages/Pagamentos";
 import UploadCSV from "@/pages/UploadCSV";
