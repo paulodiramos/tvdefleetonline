@@ -347,60 +347,6 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
 
   // Minutas removed - now using Contrato e Tipos in EditParceiro
 
-  const handleCreateMinuta = async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${API}/parceiros/${profileParceiro.id}/minutas`,
-        editingMinuta,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success('Minuta criada com sucesso!');
-      setShowEditMinutaDialog(false);
-      setEditingMinuta(null);
-      fetchMinutas(profileParceiro.id);
-    } catch (error) {
-      console.error('Error creating minuta:', error);
-      toast.error('Erro ao criar minuta');
-    }
-  };
-
-  const handleUpdateMinuta = async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem('token');
-      await axios.put(
-        `${API}/minutas/${editingMinuta.id}`,
-        editingMinuta,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success('Minuta atualizada com sucesso!');
-      setShowEditMinutaDialog(false);
-      setEditingMinuta(null);
-      fetchMinutas(profileParceiro.id);
-    } catch (error) {
-      console.error('Error updating minuta:', error);
-      toast.error('Erro ao atualizar minuta');
-    }
-  };
-
-  const handleDeleteMinuta = async (minutaId) => {
-    if (!window.confirm('Tem certeza que deseja excluir esta minuta?')) return;
-    
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API}/minutas/${minutaId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      toast.success('Minuta excluída com sucesso!');
-      fetchMinutas(profileParceiro.id);
-    } catch (error) {
-      console.error('Error deleting minuta:', error);
-      toast.error('Erro ao excluir minuta');
-    }
-  };
-
 
   const handleCreateContract = async (e) => {
     e.preventDefault();
