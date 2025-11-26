@@ -185,8 +185,12 @@ const PerfilMotorista = ({ user, onLogout }) => {
           <Badge className="text-lg px-4 py-2">Motorista</Badge>
         </div>
 
-        <Tabs defaultValue="dados" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+        <Tabs defaultValue="dashboard" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="dashboard">
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Dashboard
+            </TabsTrigger>
             <TabsTrigger value="dados">
               <User className="w-4 h-4 mr-2" />
               Dados Pessoais
