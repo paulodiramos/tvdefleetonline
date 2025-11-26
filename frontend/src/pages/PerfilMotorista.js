@@ -209,6 +209,117 @@ const PerfilMotorista = ({ user, onLogout }) => {
             </TabsTrigger>
           </TabsList>
 
+          {/* Tab: Dashboard */}
+          <TabsContent value="dashboard">
+            <div className="space-y-6">
+              {/* Period Selector */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Análise de Ganhos Semanais</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Data Início</Label>
+                      <Input type="date" defaultValue={new Date(Date.now() - 7*24*60*60*1000).toISOString().split('T')[0]} />
+                    </div>
+                    <div>
+                      <Label>Data Fim</Label>
+                      <Input type="date" defaultValue={new Date().toISOString().split('T')[0]} />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-slate-600">Total Ganhos</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-green-600">
+                      €{relatorios.reduce((sum, r) => sum + (r.valor_liquido || r.valor_total || 0), 0).toFixed(2)}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">{relatorios.length} semanas</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-slate-600">Média Semanal</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-blue-600">
+                      €{relatorios.length > 0 
+                        ? (relatorios.reduce((sum, r) => sum + (r.valor_liquido || r.valor_total || 0), 0) / relatorios.length).toFixed(2)
+                        : '0.00'}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">por semana</p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium text-slate-600">Total Viagens</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-3xl font-bold text-purple-600">
+                      {relatorios.reduce((sum, r) => sum + (r.numero_viagens || 0), 0)}
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">viagens realizadas</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Weekly Details */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Resumo Semanal</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {relatorios.length === 0 ? (
+                    <p className="text-slate-500 text-center py-8">Nenhum dado disponível para o período selecionado</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {relatorios.map(relatorio => (
+                        <div key={relatorio.id} className="border rounded-lg p-4 hover:bg-slate-50">
+                          <div className="flex items-center justify-between mb-2">
+                            <div>
+                              <p className="font-semibold">
+                                Semana: {new Date(relatorio.periodo_inicio).toLocaleDateString('pt-PT')} - {new Date(relatorio.periodo_fim).toLocaleDateString('pt-PT')}
+                              </p>
+                            </div>
+                            <Badge>{relatorio.status}</Badge>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mt-3">
+                            <div>
+                              <p className="text-slate-600">Ganhos Uber</p>
+                              <p className="font-semibold text-green-600">€{(relatorio.ganhos_uber || 0).toFixed(2)}</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-600">Ganhos Bolt</p>
+                              <p className="font-semibold text-blue-600">€{(relatorio.ganhos_bolt || 0).toFixed(2)}</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-600">Viagens</p>
+                              <p className="font-semibold">{relatorio.numero_viagens || 0}</p>
+                            </div>
+                            <div>
+                              <p className="text-slate-600">Valor Líquido</p>
+                              <p className="font-semibold text-lg text-purple-600">€{(relatorio.valor_liquido || relatorio.valor_total || 0).toFixed(2)}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
           {/* Tab: Dados Pessoais */}
           <TabsContent value="dados">
             <Card>
