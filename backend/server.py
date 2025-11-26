@@ -7309,6 +7309,36 @@ async def ifthen_pay_callback(data: Dict[str, Any]):
 
 # ==================== RECIBOS E GANHOS ====================
 
+@api_router.post("/recibos/upload-ficheiro")
+async def upload_recibo_file(
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload de ficheiro PDF de recibo"""
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(status_code=400, detail="Apenas ficheiros PDF são permitidos")
+    
+    # Create uploads directory if it doesn't exist
+    recibos_dir = ROOT_DIR / "uploads" / "recibos"
+    recibos_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Generate unique filename
+    file_id = str(uuid.uuid4())
+    file_extension = file.filename.split('.')[-1]
+    new_filename = f"{current_user['id']}_{file_id}.{file_extension}"
+    
+    # Save file
+    file_path = await save_uploaded_file(file, recibos_dir, new_filename)
+    
+    # Return relative URL
+    file_url = f"uploads/recibos/{new_filename}"
+    
+    return {
+        "success": True,
+        "file_url": file_url,
+        "filename": new_filename
+    }
+
 @api_router.post("/recibos")
 async def criar_recibo(recibo: ReciboCreate, current_user: Dict = Depends(get_current_user)):
     """Motorista cria um recibo (upload)"""
