@@ -1758,20 +1758,59 @@ class RelatorioGanhos(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
     motorista_id: str
+    parceiro_id: str
     motorista_nome: str
     periodo_inicio: str
     periodo_fim: str
-    valor_total: float
-    detalhes: Dict[str, Any]
+    
+    # Ganhos
+    ganhos_uber: float = 0.0
+    ganhos_bolt: float = 0.0
+    
+    # Despesas
+    despesas_combustivel: List[Dict[str, Any]] = []  # [{data, hora, valor, quantidade, local}]
+    total_combustivel: float = 0.0
+    
+    despesas_via_verde: List[Dict[str, Any]] = []  # [{data, hora, valor, local}]
+    total_via_verde: float = 0.0
+    
+    # Extras e deduções
+    km_efetuados: Optional[int] = None
+    extras_parceiro: List[Dict[str, Any]] = []  # [{tipo, descricao, valor}] - danos, multas, etc
+    total_extras: float = 0.0
+    
+    valor_divida_anterior: float = 0.0
+    valor_caucao_semanal: float = 0.0
+    valor_caucao_acumulada: float = 0.0
+    valor_dano_veiculo_semanal: float = 0.0
+    valor_dano_veiculo_total: float = 0.0
+    
+    # Estatísticas
+    horas_online: Optional[float] = None
+    numero_viagens: Optional[int] = None
+    media_por_viagem: Optional[float] = None
+    media_por_hora: Optional[float] = None
+    
+    # Valores finais
+    valor_bruto: float = 0.0  # ganhos_uber + ganhos_bolt
+    valor_descontos: float = 0.0  # total de todas as deduções
+    valor_liquido: float = 0.0  # valor final a receber
+    
+    # Dados do parceiro (para recibo)
+    parceiro_nome: Optional[str] = None
+    parceiro_nif: Optional[str] = None
+    parceiro_morada: Optional[str] = None
+    
+    detalhes: Dict[str, Any] = {}
     notas: Optional[str] = None
-    status: str  # "pendente_recibo", "recibo_emitido", "aguardando_pagamento", "pago"
+    status: str = "rascunho"  # "rascunho", "enviado", "recibo_gerado", "pago"
     recibo_url: Optional[str] = None
     recibo_emitido_em: Optional[str] = None
     aprovado_pagamento: bool = False
-    aprovado_pagamento_por: Optional[str] = None  # user_id
+    aprovado_pagamento_por: Optional[str] = None
     aprovado_pagamento_em: Optional[str] = None
     pago: bool = False
-    pago_por: Optional[str] = None  # user_id
+    pago_por: Optional[str] = None
     pago_em: Optional[str] = None
     comprovativo_pagamento_url: Optional[str] = None
     created_by: str  # user_id (admin, gestor, operacional)
