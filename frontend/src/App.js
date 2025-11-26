@@ -112,7 +112,11 @@ function App() {
           <Route
             path="/login"
             element={
-              user ? <Navigate to="/dashboard" /> : <Login onLogin={handleLogin} />
+              user ? (
+                user.role === 'motorista' ? <Navigate to="/profile" /> : <Navigate to="/dashboard" />
+              ) : (
+                <Login onLogin={handleLogin} />
+              )
             }
           />
           
