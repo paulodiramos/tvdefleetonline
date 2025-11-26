@@ -345,18 +345,7 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
     }
   };
 
-  const fetchMinutas = async (parceiroId) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/parceiros/${parceiroId}/minutas`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setMinutas(response.data);
-    } catch (error) {
-      console.error('Error fetching minutas:', error);
-      toast.error('Erro ao carregar minutas');
-    }
-  };
+  // Minutas removed - now using Contrato e Tipos in EditParceiro
 
   const handleCreateMinuta = async (e) => {
     e.preventDefault();
