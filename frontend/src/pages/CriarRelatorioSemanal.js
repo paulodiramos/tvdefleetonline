@@ -690,6 +690,99 @@ const CriarRelatorioSemanal = ({ user, onLogout }) => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Modal Via Verde */}
+        <Dialog open={showViaVerdeModal} onOpenChange={setShowViaVerdeModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adicionar Despesa de Via Verde</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Data *</Label>
+                  <Input
+                    type="date"
+                    value={novaViaVerde.data}
+                    onChange={(e) => setNovaViaVerde({...novaViaVerde, data: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label>Hora</Label>
+                  <Input
+                    type="time"
+                    value={novaViaVerde.hora}
+                    onChange={(e) => setNovaViaVerde({...novaViaVerde, hora: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Valor (€) *</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={novaViaVerde.valor}
+                  onChange={(e) => setNovaViaVerde({...novaViaVerde, valor: e.target.value})}
+                />
+              </div>
+              <div>
+                <Label>Local</Label>
+                <Input
+                  value={novaViaVerde.local}
+                  onChange={(e) => setNovaViaVerde({...novaViaVerde, local: e.target.value})}
+                  placeholder="Ex: A1 Norte"
+                />
+              </div>
+              <Button onClick={addViaVerde} className="w-full">
+                Adicionar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal Extras */}
+        <Dialog open={showExtrasModal} onOpenChange={setShowExtrasModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adicionar Extra/Dedução</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Tipo *</Label>
+                <select
+                  value={novoExtra.tipo}
+                  onChange={(e) => setNovoExtra({...novoExtra, tipo: e.target.value})}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                >
+                  <option value="dano">Dano</option>
+                  <option value="multa">Multa</option>
+                  <option value="penalizacao">Penalização</option>
+                  <option value="outro">Outro</option>
+                </select>
+              </div>
+              <div>
+                <Label>Descrição *</Label>
+                <Input
+                  value={novoExtra.descricao}
+                  onChange={(e) => setNovoExtra({...novoExtra, descricao: e.target.value})}
+                  placeholder="Descrição do extra"
+                />
+              </div>
+              <div>
+                <Label>Valor (€) *</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={novoExtra.valor}
+                  onChange={(e) => setNovoExtra({...novoExtra, valor: e.target.value})}
+                />
+              </div>
+              <Button onClick={addExtra} className="w-full">
+                Adicionar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
