@@ -1,0 +1,458 @@
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { API } from '@/App';
+import Layout from '@/components/Layout';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import { 
+  User, Car, FileText, Download, DollarSign, Upload, 
+  Calendar, TrendingUp, AlertCircle, CheckCircle 
+} from 'lucide-react';
+
+const PerfilMotorista = ({ user, onLogout }) => {
+  const [motoristaData, setMotoristaData] = useState(null);
+  const [veiculosDisponiveis, setVeiculosDisponiveis] = useState([]);
+  const [relatorios, setRelatorios] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false);
+  
+  // File uploads
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState(null);
+  const [docType, setDocType] = useState('');
+  
+  // Request vehicle modal
+  const [showRequestModal, setShowRequestModal] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
+
+  useEffect(() => {
+    fetchMotoristaData();
+    fetchVeiculosDisponiveis();
+    fetchRelatorios();
+  }, []);
+
+  const fetchMotoristaData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      // Assuming motorista_id is stored in user or we fetch by user email
+      const response = await axios.get(`${API}/motoristas`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Find motorista by user email
+      const motorista = response.data.find(m => m.email === user.email);
+      setMotoristaData(motorista);
+    } catch (error) {
+      console.error('Error fetching motorista data:', error);
+      toast.error('Erro ao carregar dados do motorista');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchVeiculosDisponiveis = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/vehicles/disponiveis`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setVeiculosDisponiveis(response.data);
+    } catch (error) {
+      console.error('Error fetching vehicles:', error);
+    }
+  };
+
+  const fetchRelatorios = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/relatorios-ganhos`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRelatorios(response.data);
+    } catch (error) {
+      console.error('Error fetching relatorios:', error);
+    }
+  };
+
+  const handleUpdateProfile = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/motoristas/${motoristaData.id}`,
+        motoristaData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Perfil atualizado com sucesso!');
+      setEditMode(false);
+    } catch (error) {
+      toast.error('Erro ao atualizar perfil');
+    }
+  };
+
+  const handleUploadDocument = async (type) => {
+    if (!selectedDoc) {
+      toast.error('Selecione um ficheiro');
+      return;
+    }
+
+    setUploadingDoc(true);
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', selectedDoc);
+
+      const uploadRes = await axios.post(
+        `${API}/motoristas/${motoristaData.id}/upload-documento/${type}`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      toast.success('Documento enviado com sucesso!');
+      setSelectedDoc(null);
+      setDocType('');
+      fetchMotoristaData();
+    } catch (error) {
+      toast.error('Erro ao enviar documento');
+    } finally {
+      setUploadingDoc(false);
+    }
+  };
+
+  const handleRequestVehicle = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/vehicles/${selectedVehicle}/request`,
+        { motorista_id: motoristaData.id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Solicitação enviada! Aguarde aprovação.');
+      setShowRequestModal(false);
+      setSelectedVehicle(null);
+    } catch (error) {
+      toast.error('Erro ao solicitar veículo');
+    }
+  };
+
+  const downloadRecibo = (reciboUrl) => {
+    window.open(`${API}${reciboUrl}`, '_blank');
+  };
+
+  if (loading) {
+    return (
+      <Layout user={user} onLogout={onLogout}>
+        <div className="flex items-center justify-center h-64">
+          <p>A carregar...</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!motoristaData) {
+    return (
+      <Layout user={user} onLogout={onLogout}>
+        <div className="text-center py-12">
+          <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-2">Perfil de Motorista não encontrado</h2>
+          <p className="text-slate-600">
+            Contacte o administrador para configurar o seu perfil de motorista.
+          </p>
+        </div>
+      </Layout>
+    );
+  }
+
+  return (
+    <Layout user={user} onLogout={onLogout}>
+      <div className="max-w-7xl mx-auto space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-800">Meu Perfil</h1>
+            <p className="text-slate-600 mt-2">Gerir dados pessoais, veículos e relatórios</p>
+          </div>
+          <Badge className="text-lg px-4 py-2">Motorista</Badge>
+        </div>
+
+        <Tabs defaultValue="dados" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="dados">
+              <User className="w-4 h-4 mr-2" />
+              Dados Pessoais
+            </TabsTrigger>
+            <TabsTrigger value="veiculos">
+              <Car className="w-4 h-4 mr-2" />
+              Veículos
+            </TabsTrigger>
+            <TabsTrigger value="financeiro">
+              <DollarSign className="w-4 h-4 mr-2" />
+              Financeiro
+            </TabsTrigger>
+            <TabsTrigger value="documentos">
+              <FileText className="w-4 h-4 mr-2" />
+              Documentos
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Tab: Dados Pessoais */}
+          <TabsContent value="dados">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>Informações Pessoais</CardTitle>
+                <Button
+                  variant="outline"
+                  onClick={() => setEditMode(!editMode)}
+                >
+                  {editMode ? <X className="w-4 h-4 mr-2" /> : <User className="w-4 h-4 mr-2" />}
+                  {editMode ? 'Cancelar' : 'Editar'}
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleUpdateProfile} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Nome Completo</Label>
+                      <Input
+                        value={motoristaData.name || ''}
+                        onChange={(e) => setMotoristaData({...motoristaData, name: e.target.value})}
+                        disabled={!editMode}
+                      />
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <Input value={motoristaData.email || ''} disabled />
+                    </div>
+                    <div>
+                      <Label>Telefone</Label>
+                      <Input
+                        value={motoristaData.telefone || ''}
+                        onChange={(e) => setMotoristaData({...motoristaData, telefone: e.target.value})}
+                        disabled={!editMode}
+                      />
+                    </div>
+                    <div>
+                      <Label>NIF</Label>
+                      <Input
+                        value={motoristaData.nif || ''}
+                        onChange={(e) => setMotoristaData({...motoristaData, nif: e.target.value})}
+                        disabled={!editMode}
+                      />
+                    </div>
+                    <div>
+                      <Label>Morada</Label>
+                      <Input
+                        value={motoristaData.morada || ''}
+                        onChange={(e) => setMotoristaData({...motoristaData, morada: e.target.value})}
+                        disabled={!editMode}
+                      />
+                    </div>
+                    <div>
+                      <Label>Data de Nascimento</Label>
+                      <Input
+                        type="date"
+                        value={motoristaData.data_nascimento || ''}
+                        onChange={(e) => setMotoristaData({...motoristaData, data_nascimento: e.target.value})}
+                        disabled={!editMode}
+                      />
+                    </div>
+                  </div>
+
+                  {editMode && (
+                    <Button type="submit" className="w-full">
+                      Guardar Alterações
+                    </Button>
+                  )}
+                </form>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab: Veículos */}
+          <TabsContent value="veiculos">
+            <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Veículo Atual</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {motoristaData.veiculo_atual ? (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <p className="font-semibold">Veículo atribuído!</p>
+                      <p className="text-sm text-slate-600 mt-1">
+                        Veículo ID: {motoristaData.veiculo_atual}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-slate-500 text-center py-4">
+                      Nenhum veículo atribuído
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Veículos Disponíveis para Requisitar</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {veiculosDisponiveis.length === 0 ? (
+                    <p className="text-slate-500 text-center py-8">
+                      Nenhum veículo disponível no momento
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {veiculosDisponiveis.map(veiculo => (
+                        <div key={veiculo.id} className="border rounded-lg p-4 hover:shadow-md transition">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="font-semibold text-lg">{veiculo.marca} {veiculo.modelo}</h3>
+                              <p className="text-sm text-slate-600">{veiculo.matricula}</p>
+                              <p className="text-sm text-slate-500 mt-1">Ano: {veiculo.ano}</p>
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setSelectedVehicle(veiculo.id);
+                                setShowRequestModal(true);
+                              }}
+                            >
+                              Solicitar
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          {/* Tab: Financeiro */}
+          <TabsContent value="financeiro">
+            <Card>
+              <CardHeader>
+                <CardTitle>Relatórios de Ganhos Semanais</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {relatorios.length === 0 ? (
+                  <p className="text-slate-500 text-center py-8">
+                    Nenhum relatório disponível
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {relatorios.map(relatorio => (
+                      <div key={relatorio.id} className="border rounded-lg p-4 hover:bg-slate-50">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold">
+                              Semana: {new Date(relatorio.periodo_inicio).toLocaleDateString()} - {new Date(relatorio.periodo_fim).toLocaleDateString()}
+                            </p>
+                            <p className="text-sm text-slate-600 mt-1">
+                              Valor Líquido: €{relatorio.valor_liquido?.toFixed(2) || relatorio.valor_total?.toFixed(2)}
+                            </p>
+                            <Badge className="mt-2">{relatorio.status}</Badge>
+                          </div>
+                          <div className="flex space-x-2">
+                            {relatorio.recibo_url && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => downloadRecibo(relatorio.recibo_url)}
+                              >
+                                <Download className="w-4 h-4 mr-2" />
+                                Recibo
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab: Documentos */}
+          <TabsContent value="documentos">
+            <Card>
+              <CardHeader>
+                <CardTitle>Carregar Documentos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <Label>Tipo de Documento</Label>
+                    <select
+                      value={docType}
+                      onChange={(e) => setDocType(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                    >
+                      <option value="">Selecione...</option>
+                      <option value="carta_conducao">Carta de Condução</option>
+                      <option value="certificado_motorista">Certificado de Motorista TVDE</option>
+                      <option value="iban">Comprovativo IBAN</option>
+                      <option value="registo_criminal">Registo Criminal</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <Label>Selecionar Ficheiro (PDF)</Label>
+                    <Input
+                      type="file"
+                      accept=".pdf"
+                      onChange={(e) => setSelectedDoc(e.target.files[0])}
+                    />
+                  </div>
+
+                  <Button
+                    onClick={() => handleUploadDocument(docType)}
+                    disabled={!docType || !selectedDoc || uploadingDoc}
+                    className="w-full"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    {uploadingDoc ? 'A enviar...' : 'Carregar Documento'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Request Vehicle Modal */}
+        <Dialog open={showRequestModal} onOpenChange={setShowRequestModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirmar Solicitação de Veículo</DialogTitle>
+            </DialogHeader>
+            <p className="text-slate-600">
+              Deseja solicitar este veículo? A solicitação será enviada para aprovação do gestor.
+            </p>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowRequestModal(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleRequestVehicle}>
+                Confirmar Solicitação
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </Layout>
+  );
+};
+
+export default PerfilMotorista;
