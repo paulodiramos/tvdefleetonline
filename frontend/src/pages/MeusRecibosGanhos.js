@@ -301,17 +301,21 @@ const MeusRecibosGanhos = ({ user, onLogout }) => {
               </div>
 
               <div>
-                <Label htmlFor="ficheiro">URL do Ficheiro (PDF)</Label>
+                <Label htmlFor="ficheiro">Ficheiro do Recibo (PDF) *</Label>
                 <Input
                   id="ficheiro"
-                  type="text"
-                  value={uploadForm.ficheiro_url}
-                  onChange={(e) => setUploadForm({ ...uploadForm, ficheiro_url: e.target.value })}
-                  placeholder="https://..."
+                  type="file"
+                  accept=".pdf"
+                  onChange={(e) => setSelectedFile(e.target.files[0])}
                   required
                 />
+                {selectedFile && (
+                  <p className="text-xs text-green-600 mt-1">
+                    ✓ {selectedFile.name} ({(selectedFile.size / 1024).toFixed(2)} KB)
+                  </p>
+                )}
                 <p className="text-xs text-slate-500 mt-1">
-                  Cole o link do seu recibo em PDF (Google Drive, Dropbox, etc.)
+                  Selecione o seu recibo em formato PDF (máx. 10MB)
                 </p>
               </div>
 
