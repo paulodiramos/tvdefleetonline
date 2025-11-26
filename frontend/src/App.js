@@ -185,7 +185,15 @@ function App() {
           <Route
             path="/profile"
             element={
-              user ? <Profile user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+              user ? (
+                user.role === 'motorista' ? (
+                  <PerfilMotorista user={user} onLogout={handleLogout} />
+                ) : (
+                  <Profile user={user} onLogout={handleLogout} />
+                )
+              ) : (
+                <Navigate to="/login" />
+              )
             }
           />
           <Route
