@@ -32,7 +32,9 @@ const CriarRelatorioSemanal = ({ user, onLogout }) => {
     numero_viagens: 0,
     valor_divida_anterior: 0,
     valor_caucao_semanal: 0,
+    valor_caucao_acumulada: 0,
     valor_dano_veiculo_semanal: 0,
+    valor_dano_veiculo_total: 0,
     notas: ''
   });
 
