@@ -426,8 +426,79 @@ const CriarRelatorioSemanal = ({ user, onLogout }) => {
               </CardContent>
             </Card>
 
-            {/* Similar cards for Via Verde and Extras... */}
-            {/* ... (truncated for brevity, follow same pattern) */}
+            {/* Despesas Via Verde */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center text-orange-600">
+                  <TrendingDown className="w-5 h-5 mr-2" />
+                  3. Via Verde
+                </CardTitle>
+                <Button size="sm" onClick={() => setShowViaVerdeModal(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {despesasViaVerde.length === 0 ? (
+                  <p className="text-slate-500 text-center py-4">Nenhuma despesa adicionada</p>
+                ) : (
+                  <div className="space-y-2">
+                    {despesasViaVerde.map((d, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2 bg-slate-50 rounded">
+                        <div>
+                          <p className="text-sm font-semibold">{d.data} {d.hora} - €{d.valor.toFixed(2)}</p>
+                          <p className="text-xs text-slate-600">{d.local}</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setDespesasViaVerde(despesasViaVerde.filter((_, i) => i !== idx))}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Extras do Parceiro */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="flex items-center text-purple-600">
+                  <AlertCircle className="w-5 h-5 mr-2" />
+                  4. Extras e Deduções
+                </CardTitle>
+                <Button size="sm" onClick={() => setShowExtrasModal(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {extrasParceiro.length === 0 ? (
+                  <p className="text-slate-500 text-center py-4">Nenhum extra adicionado</p>
+                ) : (
+                  <div className="space-y-2">
+                    {extrasParceiro.map((e, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2 bg-slate-50 rounded">
+                        <div>
+                          <p className="text-sm font-semibold capitalize">{e.tipo}: €{e.valor.toFixed(2)}</p>
+                          <p className="text-xs text-slate-600">{e.descricao}</p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setExtrasParceiro(extrasParceiro.filter((_, i) => i !== idx))}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Outras Informações */}
             <Card>
