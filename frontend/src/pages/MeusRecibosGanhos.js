@@ -326,12 +326,12 @@ const MeusRecibosGanhos = ({ user, onLogout }) => {
               </div>
 
               <div className="flex justify-end space-x-2">
-                <Button type="button" variant="outline" onClick={() => setShowUploadModal(false)}>
+                <Button type="button" variant="outline" onClick={() => setShowUploadModal(false)} disabled={uploading}>
                   Cancelar
                 </Button>
-                <Button type="submit">
+                <Button type="submit" disabled={uploading}>
                   <Upload className="w-4 h-4 mr-2" />
-                  Enviar Recibo
+                  {uploading ? 'A enviar...' : 'Enviar Recibo'}
                 </Button>
               </div>
             </form>
