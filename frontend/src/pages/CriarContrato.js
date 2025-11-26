@@ -70,40 +70,30 @@ const CriarContrato = ({ user, onLogout }) => {
 
   useEffect(() => {
     if (parceiroSelecionado) {
-      fetchTemplates(parceiroSelecionado);
+      fetchParceiroData(parceiroSelecionado);
       fetchMotoristas(parceiroSelecionado);
       fetchVeiculos(parceiroSelecionado);
     }
   }, [parceiroSelecionado]);
 
   useEffect(() => {
-    if (templateSelecionado) {
-      const template = templates.find(t => t.id === templateSelecionado);
-      setTemplateData(template);
-      
-      // Pre-fill com valores do template
-      setFormData(prev => ({
-        ...prev,
-        periodicidade: template.periodicidade_padrao,
-        valor_aplicado: template.valor_base || '',
-        valor_caucao_aplicado: template.valor_caucao || '',
-        numero_parcelas_caucao_aplicado: template.numero_parcelas_caucao || '',
-        valor_epoca_alta_aplicado: template.valor_epoca_alta || '',
-        valor_epoca_baixa_aplicado: template.valor_epoca_baixa || '',
-        percentagem_motorista_aplicado: template.percentagem_motorista || '',
-        percentagem_parceiro_aplicado: template.percentagem_parceiro || '',
-        combustivel_incluido_aplicado: template.combustivel_incluido || false,
-        regime_trabalho_aplicado: template.regime_trabalho || 'full_time',
-        valor_compra_aplicado: template.valor_compra_veiculo || '',
-        numero_semanas_aplicado: template.numero_semanas_compra || '',
-        com_slot_aplicado: template.com_slot || false,
-        extra_seguro_aplicado: template.extra_seguro || false,
-        valor_extra_seguro_aplicado: template.valor_extra_seguro || ''
-      }));
-      
-      setTipoContrato(template.tipo_contrato);
+    if (tipoContratoSelecionado && parceiroData) {
+      const tipoConfig = parceiroData.contratos_tipos?.find(t => t.nome === tipoContratoSelecionado);
+      if (tipoConfig) {
+        // Pre-fill com valores do tipo de contrato
+        setFormData(prev => ({
+          ...prev,
+          periodicidade: tipoConfig.valores.periodicidade || 'semanal',
+          valor_aplicado: tipoConfig.valores.valor_aluguer || '',
+          valor_caucao_aplicado: tipoConfig.valores.valor_caucao || '',
+          percentagem_motorista_aplicado: tipoConfig.valores.comissao_motorista || '',
+          percentagem_parceiro_aplicado: tipoConfig.valores.comissao_parceiro || ''
+        }));
+        
+        setTipoContrato(tipoConfig.tipo);
+      }
     }
-  }, [templateSelecionado, templates]);
+  }, [tipoContratoSelecionado, parceiroData]);
 
   useEffect(() => {
     if (veiculoSelecionado && veiculoSelecionado !== null) {
