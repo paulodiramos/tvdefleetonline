@@ -395,45 +395,57 @@ const PerfilMotorista = ({ user, onLogout }) => {
 
           {/* Tab: Veículos */}
           <TabsContent value="veiculos">
-            <div className="space-y-4">
+            {motoristaData.veiculo_atual ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>Veículo Atual</CardTitle>
+                  <CardTitle>Veículo Atribuído</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {motoristaData.veiculo_atual ? (
-                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <p className="font-semibold">Veículo atribuído!</p>
-                      <p className="text-sm text-slate-600 mt-1">
-                        Veículo ID: {motoristaData.veiculo_atual}
-                      </p>
-                    </div>
-                  ) : (
-                    <p className="text-slate-500 text-center py-4">
-                      Nenhum veículo atribuído
+                  <div className="p-6 bg-green-50 border border-green-200 rounded-lg text-center">
+                    <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
+                    <p className="text-xl font-semibold text-green-800">Você já tem um veículo atribuído!</p>
+                    <p className="text-sm text-slate-600 mt-2">
+                      Veículo ID: {motoristaData.veiculo_atual}
                     </p>
-                  )}
+                    <p className="text-xs text-slate-500 mt-4">
+                      Para mais informações sobre o seu veículo, contacte o gestor.
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
-
+            ) : (
               <Card>
                 <CardHeader>
-                  <CardTitle>Veículos Disponíveis para Requisitar</CardTitle>
+                  <CardTitle>Veículos Disponíveis para Trabalhar</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {veiculosDisponiveis.length === 0 ? (
-                    <p className="text-slate-500 text-center py-8">
-                      Nenhum veículo disponível no momento
+                  <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      <strong>Candidatar-se a um veículo:</strong> Selecione o veículo desejado e formalize a sua candidatura. 
+                      O gestor irá avaliar e responder em breve.
                     </p>
+                  </div>
+
+                  {veiculosDisponiveis.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Car className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                      <p className="text-slate-500">Nenhum veículo disponível no momento</p>
+                      <p className="text-xs text-slate-400 mt-2">Verifique novamente mais tarde</p>
+                    </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {veiculosDisponiveis.map(veiculo => (
-                        <div key={veiculo.id} className="border rounded-lg p-4 hover:shadow-md transition">
-                          <div className="flex items-start justify-between">
+                        <div key={veiculo.id} className="border rounded-lg p-4 hover:shadow-lg transition">
+                          <div className="flex items-start justify-between mb-3">
                             <div>
                               <h3 className="font-semibold text-lg">{veiculo.marca} {veiculo.modelo}</h3>
                               <p className="text-sm text-slate-600">{veiculo.matricula}</p>
-                              <p className="text-sm text-slate-500 mt-1">Ano: {veiculo.ano}</p>
+                              <p className="text-sm text-slate-500">Ano: {veiculo.ano}</p>
+                              {veiculo.tipo_contrato?.tipo && (
+                                <Badge className="mt-2" variant="outline">
+                                  {veiculo.tipo_contrato.tipo}
+                                </Badge>
+                              )}
                             </div>
                             <Button
                               size="sm"
@@ -441,17 +453,23 @@ const PerfilMotorista = ({ user, onLogout }) => {
                                 setSelectedVehicle(veiculo.id);
                                 setShowRequestModal(true);
                               }}
+                              className="bg-green-600 hover:bg-green-700"
                             >
-                              Solicitar
+                              Candidatar-se
                             </Button>
                           </div>
+                          {veiculo.tipo_contrato?.valor_aluguer && (
+                            <p className="text-xs text-slate-500">
+                              Valor: €{veiculo.tipo_contrato.valor_aluguer}/{veiculo.tipo_contrato.periodicidade || 'semana'}
+                            </p>
+                          )}
                         </div>
                       ))}
                     </div>
                   )}
                 </CardContent>
               </Card>
-            </div>
+            )}
           </TabsContent>
 
           {/* Tab: Financeiro */}
