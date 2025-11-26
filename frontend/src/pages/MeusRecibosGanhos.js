@@ -21,6 +21,8 @@ const MeusRecibosGanhos = ({ user, onLogout }) => {
     valor: '',
     ficheiro_url: ''
   });
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetchData();
