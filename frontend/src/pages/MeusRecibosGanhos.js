@@ -50,17 +50,39 @@ const MeusRecibosGanhos = ({ user, onLogout }) => {
   const handleUploadRecibo = async (e) => {
     e.preventDefault();
     
-    if (!uploadForm.mes_referencia || !uploadForm.valor || !uploadForm.ficheiro_url) {
-      toast.error('Preencha todos os campos');
+    if (!uploadForm.mes_referencia || !uploadForm.valor) {
+      toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
+    if (!selectedFile) {
+      toast.error('Selecione um ficheiro PDF');
+      return;
+    }
+
+    setUploading(true);
+
     try {
       const token = localStorage.getItem('token');
+      
+      // First, upload the file
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      
+      const uploadRes = await axios.post(`${API}/recibos/upload-ficheiro`, formData, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      const fileUrl = uploadRes.data.file_url;
+      
+      // Then create the recibo record
       await axios.post(`${API}/recibos`, {
         mes_referencia: uploadForm.mes_referencia,
         valor: parseFloat(uploadForm.valor),
-        ficheiro_url: uploadForm.ficheiro_url
+        ficheiro_url: fileUrl
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -68,10 +90,13 @@ const MeusRecibosGanhos = ({ user, onLogout }) => {
       toast.success('Recibo enviado para verificação!');
       setShowUploadModal(false);
       setUploadForm({ mes_referencia: '', valor: '', ficheiro_url: '' });
+      setSelectedFile(null);
       fetchData();
     } catch (error) {
       console.error('Error uploading recibo:', error);
-      toast.error('Erro ao enviar recibo');
+      toast.error(error.response?.data?.detail || 'Erro ao enviar recibo');
+    } finally {
+      setUploading(false);
     }
   };
 
