@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Building, Users, Car, Save, ArrowLeft, FileText, BarChart3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import TemplatesContratoTab from '@/components/TemplatesContratoTab';
 import DashboardParceiroTab from '@/components/DashboardParceiroTab';
+import ContratosParceiroTab from '@/components/ContratosParceiroTab';
 
 const EditParceiro = ({ user, onLogout }) => {
   const navigate = useNavigate();
