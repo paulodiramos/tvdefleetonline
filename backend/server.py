@@ -3235,6 +3235,34 @@ async def get_available_vehicles():
             v["updated_at"] = datetime.fromisoformat(v["updated_at"])
     return vehicles
 
+@api_router.post("/vehicles/{vehicle_id}/request")
+async def request_vehicle(vehicle_id: str, request_data: Dict[str, str], current_user: Dict = Depends(get_current_user)):
+    """Motorista requests a vehicle"""
+    if current_user["role"] != UserRole.MOTORISTA:
+        raise HTTPException(status_code=403, detail="Only motoristas can request vehicles")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    if vehicle.get("disponibilidade", {}).get("status") != "disponivel":
+        raise HTTPException(status_code=400, detail="Vehicle not available")
+    
+    # Create request record
+    request_id = str(uuid.uuid4())
+    vehicle_request = {
+        "id": request_id,
+        "vehicle_id": vehicle_id,
+        "motorista_id": request_data.get("motorista_id", current_user["id"]),
+        "status": "pendente",  # pendente, aprovado, rejeitado
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.vehicle_requests.insert_one(vehicle_request)
+    
+    return {"message": "Vehicle request submitted successfully", "request_id": request_id}
+
 @api_router.get("/vehicles/{vehicle_id}", response_model=Vehicle)
 async def get_vehicle(vehicle_id: str, current_user: Dict = Depends(get_current_user)):
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
