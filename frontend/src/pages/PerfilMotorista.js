@@ -365,6 +365,15 @@ const PerfilMotorista = ({ user, onLogout }) => {
                       />
                     </div>
                     <div>
+                      <Label>Nacionalidade</Label>
+                      <Input
+                        value={motoristaData.nacionalidade || ''}
+                        onChange={(e) => setMotoristaData({...motoristaData, nacionalidade: e.target.value})}
+                        disabled={!editMode}
+                        placeholder="Ex: Portuguesa"
+                      />
+                    </div>
+                    <div>
                       <Label>Morada</Label>
                       <Input
                         value={motoristaData.morada || ''}
