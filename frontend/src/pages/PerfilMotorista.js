@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { 
   User, Car, FileText, Download, DollarSign, Upload, 
-  Calendar, TrendingUp, AlertCircle, CheckCircle 
+  Calendar, TrendingUp, AlertCircle, CheckCircle, X 
 } from 'lucide-react';
 
 const PerfilMotorista = ({ user, onLogout }) => {
