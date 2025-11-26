@@ -503,7 +503,7 @@ const CriarRelatorioSemanal = ({ user, onLogout }) => {
             {/* Outras Informações */}
             <Card>
               <CardHeader>
-                <CardTitle>4. Estatísticas e Deduções</CardTitle>
+                <CardTitle>5. Estatísticas e Deduções</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 gap-4">
@@ -541,6 +541,11 @@ const CriarRelatorioSemanal = ({ user, onLogout }) => {
                       onChange={(e) => setRelatorioData({...relatorioData, valor_divida_anterior: e.target.value})}
                     />
                   </div>
+                </div>
+
+                <hr className="my-4" />
+                <p className="text-sm font-semibold text-slate-700 mb-3">Valores Acumulados</p>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Caução Semanal (€)</Label>
                     <Input
@@ -549,6 +554,9 @@ const CriarRelatorioSemanal = ({ user, onLogout }) => {
                       value={relatorioData.valor_caucao_semanal}
                       onChange={(e) => setRelatorioData({...relatorioData, valor_caucao_semanal: e.target.value})}
                     />
+                    <p className="text-xs text-slate-500 mt-1">
+                      Total acumulado: €{((parseFloat(relatorioData.valor_caucao_acumulada) || 0) + (parseFloat(relatorioData.valor_caucao_semanal) || 0)).toFixed(2)}
+                    </p>
                   </div>
                   <div>
                     <Label>Dano Veículo Semanal (€)</Label>
@@ -557,6 +565,29 @@ const CriarRelatorioSemanal = ({ user, onLogout }) => {
                       step="0.01"
                       value={relatorioData.valor_dano_veiculo_semanal}
                       onChange={(e) => setRelatorioData({...relatorioData, valor_dano_veiculo_semanal: e.target.value})}
+                    />
+                    <p className="text-xs text-slate-500 mt-1">
+                      Total acumulado: €{((parseFloat(relatorioData.valor_dano_veiculo_total) || 0) + (parseFloat(relatorioData.valor_dano_veiculo_semanal) || 0)).toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <Label>Caução Acumulada Anterior (€)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={relatorioData.valor_caucao_acumulada}
+                      onChange={(e) => setRelatorioData({...relatorioData, valor_caucao_acumulada: e.target.value})}
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label>Dano Acumulado Anterior (€)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={relatorioData.valor_dano_veiculo_total}
+                      onChange={(e) => setRelatorioData({...relatorioData, valor_dano_veiculo_total: e.target.value})}
+                      placeholder="0.00"
                     />
                   </div>
                 </div>
