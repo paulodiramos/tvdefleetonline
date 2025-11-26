@@ -384,28 +384,28 @@ const CriarContrato = ({ user, onLogout }) => {
                     </Select>
                   </div>
 
-                  {/* Template */}
+                  {/* Tipo de Contrato */}
                   <div>
-                    <Label htmlFor="template">Template de Contrato *</Label>
+                    <Label htmlFor="tipo-contrato">Tipo de Contrato *</Label>
                     <Select 
-                      value={templateSelecionado} 
-                      onValueChange={setTemplateSelecionado}
-                      disabled={!parceiroSelecionado || templates.length === 0}
+                      value={tipoContratoSelecionado} 
+                      onValueChange={setTipoContratoSelecionado}
+                      disabled={!parceiroSelecionado || !parceiroData?.contratos_tipos?.length}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o template" />
+                        <SelectValue placeholder="Selecione o tipo de contrato" />
                       </SelectTrigger>
                       <SelectContent>
-                        {templates.map(t => (
-                          <SelectItem key={t.id} value={t.id}>
-                            {t.nome_template} ({TIPOS_CONTRATO.find(tipo => tipo.value === t.tipo_contrato)?.label})
+                        {parceiroData?.contratos_tipos?.map((tipo, idx) => (
+                          <SelectItem key={idx} value={tipo.nome}>
+                            {tipo.nome}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    {parceiroSelecionado && templates.length === 0 && (
+                    {parceiroSelecionado && (!parceiroData?.contratos_tipos || parceiroData.contratos_tipos.length === 0) && (
                       <p className="text-xs text-amber-600 mt-1">
-                        Nenhum template criado para este parceiro
+                        Este parceiro não tem tipos de contrato configurados. Configure em "Parceiros" → "Contrato e Tipos"
                       </p>
                     )}
                   </div>
