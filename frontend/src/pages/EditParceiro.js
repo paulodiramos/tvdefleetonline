@@ -433,16 +433,21 @@ const EditParceiro = ({ user, onLogout }) => {
               </CardContent>
             </Card>
 
-            {/* Templates de Contrato */}
+            {/* Contratos do Parceiro */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <FileText className="w-5 h-5" />
-                  <span>Templates de Contrato</span>
+                  <span>Contrato e Tipos</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <TemplatesContratoTab parceiroId={selectedParceiro} user={user} />
+                <ContratosParceiroTab 
+                  parceiroId={selectedParceiro} 
+                  parceiroData={parceiroData}
+                  onUpdate={() => fetchParceiroDetails(selectedParceiro)}
+                  userRole={user?.role}
+                />
               </CardContent>
             </Card>
 
