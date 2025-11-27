@@ -7301,8 +7301,11 @@ async def create_plano_motorista(plano_data: PlanoMotoristaCreate, current_user:
             "id": plano_id,
             "nome": plano_data.nome,
             "descricao": plano_data.descricao,
+            "preco_semanal": plano_data.preco_semanal,
             "preco_mensal": plano_data.preco_mensal,
+            "desconto_mensal_percentagem": plano_data.desconto_mensal_percentagem,
             "features": plano_data.features,
+            "permite_pagamento_online": plano_data.permite_pagamento_online,
             "ativo": True,
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat()
