@@ -78,8 +78,29 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
   const [uploading, setUploading] = useState({});
   const [saving, setSaving] = useState(false);
 
-  const canEdit = ['admin', 'gestao', 'operacional'].includes(userRole);
+  const canEdit = ['admin', 'gestao', 'operacional', 'parceiro'].includes(userRole);
   const isMotorista = userRole === 'motorista';
+  
+  const canEditDocument = (docType) => {
+    // IBAN e Registo Criminal sempre podem ser editados
+    if (docType === 'comprovativo_iban' || docType === 'registo_criminal') {
+      return true;
+    }
+    
+    // Admin/Gestor/Operacional/Parceiro sempre podem editar
+    if (canEdit) {
+      return true;
+    }
+    
+    // Motorista: verificar se documento está validado
+    if (isMotorista) {
+      const validacao = motoristaData?.documents_validacao?.[docType];
+      // Se não tem validação ou não está validado, pode editar
+      return !validacao || !validacao.validado;
+    }
+    
+    return false;
+  };
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
