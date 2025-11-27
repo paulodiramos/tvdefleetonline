@@ -577,6 +577,18 @@ backend:
           comment: "✅ TESTADO: Todos os 5 templates CSV funcionando perfeitamente. CORRIGIDO: Endpoint estava definido após app.include_router - movido para posição correta. Testados: GET /api/templates/csv/uber (CSV), /bolt (CSV), /prio (XLSX), /viaverde (CSV), /gps (CSV). Content-Type headers corretos. Template inválido retorna 404 corretamente. Todos os arquivos existem em /app/backend/templates/csv_examples/."
 
 frontend:
+  - task: "Novo Perfil de Motorista com 3 Componentes"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/PerfilMotorista.js, frontend/src/components/MotoristaDashboard.js, frontend/src/components/MotoristaDadosPessoais.js, frontend/src/components/MotoristaPlanos.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Novo perfil de motorista com 3 componentes funcionando perfeitamente! LOGIN: motorista@tvdefleet.com/2rEFuwQO funcionando. DASHBOARD: Cabeçalho 'Bem-vindo, Carlos!', texto 'Motorista Independente', badge 'Conta Ativa', 4 cards de estatísticas (Total Ganhos, Recibos Enviados/Pendentes, Documentos 14/8), alertas laranja/azul funcionando. DADOS PESSOAIS: Seção informações pessoais com campos desabilitados para motorista, aviso admin-only, seção documentos com 5/8 cards encontrados (Carta Condução, Licença TVDE, Comprovativo Morada/IBAN, Registo Criminal), ícones status, botões carregar/bloqueado, aviso restrições upload. PLANOS: Card 'Nenhum Plano Ativo' amarelo, 2 planos disponíveis (Base/VIP), preços semanal/mensal, funcionalidades com checkmarks, botão 'Escolher Plano'. FLUXO PAGAMENTO: Modal periodicidade (pulou direto), modal método pagamento com Multibanco/MB WAY, resumo plano, botão confirmar. APIS: GET motoristas/relatorios-ganhos status 200. NAVEGAÇÃO: 3 tabs funcionando, componentes não perdem dados. Sistema completamente operacional e pronto para produção!"
+
   - task: "Sistema de Plano de Manutenções e Alertas - Melhorias"
     implemented: true
     working: true
