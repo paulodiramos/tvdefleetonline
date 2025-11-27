@@ -1,90 +1,173 @@
-<analysis>
-The trajectory documents a massive expansion of a fleet management application, moving from a basic MVP to a complex, multi-feature platform. The work began by implementing a comprehensive financial data import system. This involved receiving and analyzing six different CSV/XLSX file formats (Uber, Bolt, GPS, Via Verde, Electric & Fossil Fuel), identifying data inconsistencies, and proceeding with user approval. The AI engineer built corresponding Pydantic models, parsing functions, and dedicated API endpoints in the backend (). The frontend  page was completely refactored into a unified interface with platform/partner selectors and dynamic modals for on-the-fly creation of missing drivers/vehicles.
+<analysis>**original_problem_statement:**
+The user's initial goal was a simple partner dashboard. This has evolved into a comprehensive fleet management system with the following key features:
+1.  **Multi-Role System**: Distinct functionalities for Admins, Partners (Parceiros), Managers (Gestores), Operational staff, and Drivers (Motoristas).
+2.  **Advanced Financial Management**:
+    *   Manual entry of expenses and revenues on a per-partner basis ().
+    *   A detailed financial overview page () with filtering by partner.
+    *   A comprehensive weekly earnings report for drivers, including earnings from platforms (Uber/Bolt), expenses (fuel, tolls), deductions (damages, deposits), and performance metrics (hours online, trips).
+3.  **Driver-Centric Portal ()**:
+    *   A detailed personal profile with fields for nationality, tax/social security numbers, emergency contacts, etc.
+    *   A document management system for uploading ID, driver's license, criminal record, proof of address, etc.
+    *   A view of available vehicles for drivers without an assigned car, with an option to apply.
+    *   A financial dashboard to view weekly earnings reports and their payment status.
+4.  **Simplified Contract Management**: The old system of minutas (drafts) and templates has been replaced. Now, Partners have a single contract text, and Admins can define various contract types within the partner's profile, which are then used when generating new driver contracts.
+5.  **Payment & Receipt Workflow**:
+    *   Drivers can upload receipts for expenses ().
+    *   Admins/Managers can generate detailed weekly reports for drivers ().
+    *   Drivers receive these reports, which act as an invoice/receipt for the partner.
+    *   Partners have a dedicated page () to view these reports, change their payment status (e.g., Em Análise, Liquidado), and upload proof of payment.
+6.  **Subscription & Payment System**: A subscription management system where admins can create plans. (Future integration with IFThenPay is planned).
 
-The project's focus then shifted dramatically to a highly sophisticated, custom contract management system. This involved creating backend models and endpoints for partner-specific contract templates (over 11 types) and generating contracts for drivers. The frontend work was extensive, including a new  page with complex, dynamic forms, a  list page, and modifications to vehicle () and partner () pages to integrate the new system. The development involved several debugging cycles, notably fixing a recurring React error with  components. The work concluded while implementing UI enhancements on the partner edit page, specifically creating a placeholder for a new partner-specific dashboard.
+**User's preferred language**: Portuguese (português)
 
-The user's primary language is Portuguese (). All future interactions must be conducted in Portuguese.
-</analysis>
+**what currently exists?**
+The application has been significantly refactored and expanded.
+-   **Backend ()**: Includes new Pydantic models and FastAPI endpoints for partner-specific financial entries, a highly detailed weekly report (), vehicle requests by drivers, and file uploads for receipts and driver documents.
+-   **Frontend (React)**:
+    -   : Now fixed and functional, allowing manual entry of partner expenses/revenues via modals.
+    -   : Enhanced with a partner selection dropdown to filter financial data.
+    -    ( for drivers): A new, comprehensive page serving as the main hub for drivers, with tabs for a financial dashboard, personal data, document uploads, and vehicle requests.
+    -   : Dynamically adjusts visible menu items and redirects based on the user's role (e.g., drivers see a simplified menu).
+    -   : The main partner list page has been cleaned up, removing all obsolete UI related to the old minuta de contrato system.
+    -   : The partner profile page now features the new, simplified contract management system.
+    -   : Refactored to use the new contract system, pulling available contract types from the selected partner.
+    -    (): A new page for partners to manage payments to drivers, including changing status and uploading proof of payment. **This was the last feature being worked on.**
+    -   : A file has been created with login credentials for all user roles.
 
-<product_requirements>
-The application, TVDEFleet.com, has two primary, newly-developed functionalities:
+**Last working item**:
+-   **Last item agent was working**: The agent was implementing the frontend for the Partner Payments page (). The goal was to allow partners to view the list of weekly reports (payments due to drivers), change the payment status of each report (e.g., from Por Enviar to Em Análise, A Pagamento, Liquidado), and upload a proof of payment. The agent has added the necessary UI components (dropdown for status, button for upload) and the handler functions (, ).
+-   **Status**: IN PROGRESS
+-   **Agent Testing Done**: N
+-   **Which testing method agent to use?**: Frontend testing agent. The agent should log in as a partner, navigate to the  page, and test the full workflow: changing a report's status and uploading a payment confirmation file. This requires both frontend interaction and backend validation.
+-   **User Testing Done**: N
 
-1.  **Financial Data Import System**: A centralized system for manually uploading and processing driver earnings and vehicle expense reports from various platforms.
-    -   **Unified Upload Interface**: A single page () allows users (Admin/Manager) to select a partner and a platform (Uber, Bolt, Via Verde, GPS, Electric Fuel, Fossil Fuel) to upload a file.
-    -   **Automated Parsing**: The backend processes six different file formats (CSV and XLSX), mapping the data to internal models.
-    -   **On-the-Fly Entity Creation**: If an imported report contains a driver or vehicle not present in the database, the UI prompts the user with a modal to create the new entity immediately, preventing data import failures.
+**All Pending/In progress Issue list**:
+-   **Issue 1**: Testing and completion of the Partner Payment page (). (Priority: P0)
 
-2.  **Advanced Contract Management System**: A highly flexible, multi-level system for creating and managing driver contracts.
-    -   **Vehicle-Level Configuration**: Contract terms (e.g., rent value, seasonal pricing, deposit requirements) can be pre-configured directly on a vehicle's profile ().
-    -   **Contract Generation**: A dedicated page () allows for the creation of contracts by selecting a partner, driver, and vehicle. The form dynamically populates based on the vehicle's pre-configured contract type and allows for real-time adjustments.
-    -   **PDF Generation & Download**: Upon creation, a PDF of the contract is automatically generated and made available for download.
-    -   **Contract Listing**: A central page () lists all generated contracts with status indicators and filters.
-</product_requirements>
+**Issues Detail**:
+-   **Issue 1**: The functionality on  has been coded but not tested.
+    -   **Attempted fixes**: N/A.
+    -   **Next debug checklist**:
+        1.  Log in as a user with the  role.
+        2.  Navigate to the  page.
+        3.  Verify that a list of weekly reports is displayed.
+        4.  Attempt to change the status of a report using the new dropdown. Check for a success message and verify the change persists on page refresh (i.e., the backend was updated).
+        5.  Attempt to upload a proof of payment. Verify the upload modal opens and the file submission triggers the correct API call. Check backend logs and the file system to ensure the file was saved.
+    -   **Why fix this issue and what will be achieved with the fix?**: This is the final piece of the driver payment workflow. Completing it will allow partners to manage and track payments made to drivers, closing the loop started by the driver's weekly report.
+    -   **Status**: IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?**: Both
+    -   **Blocked on other issue**: None
 
-<key_technical_concepts>
-- **Backend**: Python with FastAPI, using Pydantic for data modeling and validation.
-- **Frontend**: React.js with functional components, Hooks (, ), and Axios for API requests.
-- **Database**: MongoDB for data persistence.
-- **File Parsing**:  and  libraries are used in the backend to read and process  and  files.
-- **PDF Generation**:  library is used to dynamically generate PDF contract documents.
-- **Static File Serving**: FastAPI's  is configured to serve generated PDF files from the  directory.
-</key_technical_concepts>
+**In progress Task List**:
+-   **Task 1**: Complete the Partner Payment Workflow. (Priority: P0)
 
-<code_architecture>
-The application uses a React frontend and a FastAPI backend. The recent work has heavily modified existing files and added new ones, primarily for the data import and contract management features.
+**Task Detail**:
+-   **Task 1**:
+    -   **Where to resume**: Test the functionality implemented in . Debug any issues found during testing.
+    -   **What will be achieved with this?**: A fully functional payment management portal for partners.
+    -   **Status**: IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?**: Both
+    -   **Blocked on something**: None
 
-**Directory Structure:**
+**Upcoming and Future Tasks**
+-   **P1**: Implement the frontend for  for admins/managers to review and approve receipts submitted by drivers.
+-   **P2**: Implement the backend logic and frontend UI for the payment integration with IFThenPay, allowing users to pay for subscriptions and have them activated automatically.
+-   **P3**: Add a dashboard/analytics view for admins to compare driver performance, vehicle ROI, and overall partner profitability over time.
+
+**Completed work in this session**
+-   **Bug Fix**: Fixed the blank  page by adding the correct route in .
+-   **Feature Implemented**: Added forms for manual entry of expenses and revenues on the  page, including new backend models and endpoints.
+-   **Feature Implemented**: Added a partner filter dropdown to the  page to refine data visibility.
+-   **Contract System Refactor**: Completely removed the old minuta (draft) contract system and replaced it with a simplified model where admins define contract types directly within a partner's profile.
+-   **Driver Portal Created**: Built the comprehensive  page, which includes:
+    -   A detailed personal data form.
+    -   A multi-file document upload system.
+    -   A financial dashboard for viewing weekly reports.
+    -   Logic to view and apply for available vehicles.
+-   **Weekly Report Feature**: Created backend models and frontend pages () for admins to generate detailed weekly earnings reports for drivers.
+-   **Test Users Created**: Created and tested logins for all user roles (admin, gestor, operacional, parceiro, motorista) and documented their credentials.
+-   **UI/UX Improvements**:
+    -   Refined the main  to provide a role-based navigation experience.
+    -   Corrected the login redirect to send drivers directly to their new profile page.
+    -   Fixed a JavaScript error () on the driver profile page.
+
+**Known issue recurrence from previous fork**
+-   None.
+
+**Code Architecture**
 
 
-- ****:
-    - **Importance**: This monolithic file contains the entire backend logic. It has been significantly expanded.
-    - **Changes**:
-        - Added new Pydantic models for six data import sources (e.g., , ) and a complete contract system (, , and an expanded  enum-like model with 11+ options).
-        - Implemented parsing functions (e.g., , ) for each of the six file types, including logic to identify non-existent entities.
-        - Added new API endpoints for each import type () and full CRUD operations for the new contract system (, ).
-        - Integrated  for dynamic PDF generation of contracts.
-        - Configured  to mount the  directory, making generated PDFs accessible via a URL.
+**Key Technical Concepts**
+-   **Backend**: Python, FastAPI, Pydantic, MongoDB ( driver).
+-   **Frontend**: React.js (with Hooks), Axios, .
+-   **UI Library**: .
+-   **Styling**: Tailwind CSS.
 
-- ****:
-    - **Importance**: The main interface for the financial data import feature.
-    - **Changes**: Completely refactored from a simpler page to a unified hub. It now features dropdowns to select the partner and platform, handles both  and  uploads, and displays modals to create new drivers or vehicles if they are not found during the import process.
+**key DB schema**
+-   **parceiros**:  (new field),  fields removed.
+-   **motoristas**: Now contains a much more detailed structure for personal data, emergency contacts, and document URLs.
+-   **relatorios_semanais** (new collection): 
 
-- ****:
-    - **Importance**: A new, core page for the contract management system.
-    - **Changes**: Created from scratch, this page contains a complex, multi-step form. It uses chained API calls to load partners, then their associated drivers, vehicles, and templates. The form fields are rendered dynamically based on the selected contract type, showing/hiding options for deposits, seasonal pricing, installments, etc.
+**changes in tech stack**
+-   None.
 
-- ****:
-    - **Importance**: The central dashboard for viewing all generated contracts.
-    - **Changes**: The original file was completely replaced with a modern list page. It now fetches and displays all contracts, showing key details, status badges (e.g., Ativo), and provides filters (by partner, status). It also includes a link to download the contract PDF.
+**All files**
+-   **Created**:
+    -   : New UI for simplified contract type management.
+    -   : The new comprehensive driver portal.
+    -   : Admin/Manager page to generate weekly reports.
+    -   : Partner page to manage payments (in progress).
+    -   : Document with test user credentials.
+-   **Updated/Refactored**:
+    -   : Added numerous new models (, partner-specific financials) and endpoints.
+    -   : Added new routes and role-based redirects.
+    -   : Implemented role-based menu visibility.
+    -   : Fixed rendering bug and added modals for data entry.
+    -   : Added partner filter.
+    -   : Removed all UI related to the obsolete minuta contract system.
+    -   : Integrated the new contract management tab.
+    -   : Rewired to use the new simplified contract system.
+    -   : Switched from URL input to a proper file upload mechanism.
 
-- ****:
-    - **Importance**: The vehicle details and editing page.
-    - **Changes**: Heavily modified to integrate with the contract system. A Tipo de Contrato section was added/updated to allow pre-configuring a vehicle with one of the 11 contract types and its specific values (rent, commission, deposit, seasonal prices). Additionally, the main vehicle information section was changed from read-only display to editable form fields for users with 'admin' roles.
+**Critical Info for New Agent**
+-   **Role-Based Logic is Key**: The application's behavior, especially on the frontend (, ), changes significantly based on the logged-in user's role. Always test features from the perspective of the correct user role.
+-   **Contract System is New**: The entire contract creation and management flow was refactored. The old templates and minutas are gone, replaced by contract types defined within the partner's profile.
+-   **Driver-Centric Shift**: The  page is now the central point for all driver interactions, including viewing finances, managing documents, and requesting vehicles.
+-   **Test Credentials Exist**: Use the logins from  to test different roles. The admin password was most recently reset to .
 
-- ****:
-    - **Importance**: The partner details and editing page.
-    - **Changes**: Updated to act as a hub for partner-specific configurations. A Voltar button was added for better navigation. It was modified to integrate two new tab components:  (for managing contract templates) and the newly created .
-</code_architecture>
+**documents created in this job**
+-   
 
-<pending_tasks>
-- **Implement Partner Dashboard**: The component  has been created and integrated into the  page, but it is currently an empty placeholder. The backend logic and frontend UI to display partner-specific data like insurance and maintenance alerts need to be built.
-</pending_tasks>
+**Last 5 User Messages and any pending user messages**
+1.  **Request**: perfil de motorista ... erro ERROR X is not defined....
+    -   **Action**: Fixed the missing  icon import in  and added the nacionalidade field as requested. (Completed)
+2.  **Request**: A massive request to expand the driver profile with many new fields (documents, personal info, emergency contacts), add a detailed weekly financial dashboard for drivers, and implement the partner-side payment status flow.
+    -   **Action**: Implemented all the new fields in . Started implementing the partner payment flow in . (In Progress)
+3.  **Request**: no metodo de pagamento colocar dropbox com as opçoes recibo, fatura, outro....
+    -   **Action**: Corrected the payment method field in  to be a dropdown with a conditional text input. (Completed)
+4.  **Request**: go
+    -   **Action**: Continued implementation of the partner payment page. (In Progress)
+5.  **Request**: go (User's last message, indicating approval to proceed).
+    -   **Action**: Agent edited  to finalize the UI and logic for the partner payment flow. **This is the current unfinished work.**
 
-<current_work>
-The work immediately prior to this summary was focused on enhancing the user interface and functionality of the partner editing page (). The user requested several changes to streamline the workflow for 'admin' and 'gestor' roles.
+**Project Health Check:**
+-   **Broken**: None known, but the last feature is untested.
+-   **Mocked**: None.
 
-The specific tasks undertaken were:
-1.  **Adding a Back Button**: A button was added to the top of the page to allow users to easily navigate back to the main list of partners.
-2.  **Creating a Partner Dashboard**: Per the user's request to have a dedicated view for partner-specific alerts (seguros manutetocoes a efetuar etc), a new placeholder component was created: .
-3.  **Integrating the Dashboard**: This new, empty dashboard component was then integrated as a new section or tab within the  page layout.
+**Testing status**
+-   **Testing agent used after significant changes**: YES, both backend and frontend testing agents were used multiple times.
+-   **Troubleshoot agent used after agent stuck in loop**: NO
+-   **Test files created**: A test script was used by the agent but not saved permanently.
+-   **Known regressions**: None. The  page regression from the previous fork was fixed.
 
-The last action was the successful creation and integration of the  component file. The next logical step is to populate this component with actual data and functionality.
-</current_work>
+**Credentials to test flow:**
+-   Credentials for all roles are available in the file .
+-   **Admin**:  / 
+-   **Gestor**:  / 
+-   **Operacional**:  / 
+-   **Parceiro**:  / 
+-   **Motorista**:  / 
 
-<optional_next_step>
-Implement the UI and backend logic for the  to fetch and display partner-specific alerts for insurance, maintenance, and other relevant items as requested.
-</optional_next_step>
-
-<direct_quotes>
-**User Request for Current Work**: parceiro quando gestor ou admin seleciona parceiros editar perfil ... criar icon com dashboard para ver dentro do parceiro os seguros manutetocoes a efetuar etc com possibilidade de gestor e admin voltar a lista de parceiros
-</direct_quotes>
+**What agent forgot to execute**
+-   The agent did not test the final implementation on the  page after adding the logic for changing payment status and uploading proof of payment. This is the immediate next step.</analysis>
