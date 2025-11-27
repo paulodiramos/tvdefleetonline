@@ -3215,19 +3215,19 @@ async def update_motorista(
     current_user: Dict = Depends(get_current_user)
 ):
     """Update motorista data (partial updates allowed)"""
-    # Allow admin, gestao, parceiro OR motorista editing their own profile
-    is_authorized = (
-        current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO] or
-        (current_user["role"] == UserRole.MOTORISTA and current_user["id"] == motorista_id)
-    )
-    
-    if not is_authorized:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    
     # Check if motorista exists
     motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista not found")
+    
+    # Allow admin, gestao, parceiro OR motorista editing their own profile (check by email)
+    is_authorized = (
+        current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO] or
+        (current_user["role"] == UserRole.MOTORISTA and current_user["email"] == motorista.get("email"))
+    )
+    
+    if not is_authorized:
+        raise HTTPException(status_code=403, detail="Not authorized")
     
     # Remove fields that shouldn't be updated directly
     update_data.pop("id", None)
