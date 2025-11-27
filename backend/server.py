@@ -7358,23 +7358,33 @@ async def atribuir_plano_motorista(
     plano_data: dict,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Assign a plan to a motorista (Admin only)"""
+    """Assign a motorista plan manually (Admin only)"""
     if current_user["role"] != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Admin only")
     
     try:
         plano_id = plano_data.get("plano_id")
-        duracao_dias = plano_data.get("duracao_dias", 30)
+        periodicidade = plano_data.get("periodicidade", "mensal")  # "semanal" ou "mensal"
         
-        # Verify plan exists
+        # Verify plan exists and is a MOTORISTA plan
         plano = await db.planos_motorista.find_one({"id": plano_id, "ativo": True}, {"_id": 0})
         if not plano:
-            raise HTTPException(status_code=404, detail="Plano not found")
+            raise HTTPException(status_code=404, detail="Plano de motorista not found")
         
         # Verify motorista exists
         motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
         if not motorista:
             raise HTTPException(status_code=404, detail="Motorista not found")
+        
+        # Calculate price based on periodicidade
+        if periodicidade == "semanal":
+            preco_pago = plano["preco_semanal"]
+            duracao_dias = 7
+        else:  # mensal
+            preco_base = plano["preco_mensal"]
+            desconto = plano.get("desconto_mensal_percentagem", 0)
+            preco_pago = preco_base * (1 - desconto / 100) if desconto > 0 else preco_base
+            duracao_dias = 30
         
         # Cancel any existing active subscription
         await db.motorista_plano_assinaturas.update_many(
@@ -7385,17 +7395,22 @@ async def atribuir_plano_motorista(
         # Create new subscription
         assinatura_id = str(uuid.uuid4())
         data_inicio = datetime.now(timezone.utc)
-        data_fim = data_inicio + timedelta(days=duracao_dias) if duracao_dias > 0 else None
+        data_fim = data_inicio + timedelta(days=duracao_dias)
         
         assinatura = {
             "id": assinatura_id,
             "motorista_id": motorista_id,
             "plano_id": plano_id,
             "plano_nome": plano["nome"],
+            "periodicidade": periodicidade,
+            "preco_pago": preco_pago,
             "status": "ativo",
             "data_inicio": data_inicio.isoformat(),
-            "data_fim": data_fim.isoformat() if data_fim else None,
+            "data_fim": data_fim.isoformat(),
             "auto_renovacao": plano_data.get("auto_renovacao", False),
+            "metodo_pagamento": "manual",  # Atribuição manual pelo admin
+            "pagamento_confirmado": True,
+            "data_pagamento": data_inicio.isoformat(),
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
@@ -7409,11 +7424,12 @@ async def atribuir_plano_motorista(
                 "plano_id": plano_id,
                 "plano_nome": plano["nome"],
                 "plano_features": plano["features"],
+                "plano_periodicidade": periodicidade,
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }}
         )
         
-        return {"message": "Plano atribuído com sucesso", "assinatura_id": assinatura_id}
+        return {"message": f"Plano {periodicidade} atribuído com sucesso", "assinatura_id": assinatura_id, "preco_pago": preco_pago}
     except HTTPException:
         raise
     except Exception as e:
