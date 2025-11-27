@@ -763,33 +763,50 @@ const Usuarios = ({ user, onLogout }) => {
               )}
 
               {/* Action Buttons */}
-              <div className="flex justify-end space-x-3 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowDetailsDialog(false)}
-                >
-                  Fechar
-                </Button>
-                <Button
-                  variant="destructive"
-                  onClick={() => {
-                    setShowDetailsDialog(false);
-                    openDeleteDialog(viewingUser);
-                  }}
-                >
-                  <UserX className="w-4 h-4 mr-1" />
-                  Rejeitar
-                </Button>
-                <Button
-                  className="bg-blue-600 hover:bg-blue-700"
-                  onClick={() => {
-                    setShowDetailsDialog(false);
-                    openApproveDialog(viewingUser);
-                  }}
-                >
-                  <UserCheck className="w-4 h-4 mr-1" />
-                  Aprovar
-                </Button>
+              <div className="flex justify-between pt-4 border-t">
+                <div className="flex space-x-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowDetailsDialog(false)}
+                  >
+                    Fechar
+                  </Button>
+                  {viewingUser.role === 'motorista' && (
+                    <Button
+                      variant="outline"
+                      className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                      onClick={() => {
+                        setShowDetailsDialog(false);
+                        navigate(`/validacao-documentos/${viewingUser.id}`);
+                      }}
+                    >
+                      <Shield className="w-4 h-4 mr-2" />
+                      Validar Documentos
+                    </Button>
+                  )}
+                </div>
+                <div className="flex space-x-3">
+                  <Button
+                    variant="destructive"
+                    onClick={() => {
+                      setShowDetailsDialog(false);
+                      openDeleteDialog(viewingUser);
+                    }}
+                  >
+                    <UserX className="w-4 h-4 mr-1" />
+                    Rejeitar
+                  </Button>
+                  <Button
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => {
+                      setShowDetailsDialog(false);
+                      openApproveDialog(viewingUser);
+                    }}
+                  >
+                    <UserCheck className="w-4 h-4 mr-1" />
+                    Aprovar
+                  </Button>
+                </div>
               </div>
             </div>
           )}
