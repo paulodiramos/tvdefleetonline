@@ -1138,6 +1138,21 @@ class DocumentoValidacao(BaseModel):
     validado_em: Optional[str] = None  # Data de validação
     pode_editar: bool = True  # Se motorista pode editar (iban e registo_criminal sempre podem)
 
+class SolicitacaoAlteracao(BaseModel):
+    """Solicitação de alteração de dados pelo motorista"""
+    id: str
+    motorista_id: str
+    motorista_nome: str
+    campo: str  # Nome do campo que quer alterar
+    valor_atual: str  # Valor atual do campo
+    valor_solicitado: str  # Novo valor solicitado
+    justificativa: str  # Motivo da alteração
+    status: str = "pendente"  # pendente, aprovada, rejeitada
+    respondido_por: Optional[str] = None
+    resposta: Optional[str] = None
+    created_at: datetime
+    respondido_em: Optional[datetime] = None
+
 class MotoristaCreate(BaseModel):
     email: EmailStr
     password: Optional[str] = None  # Optional for admin creation
