@@ -889,53 +889,124 @@ const Usuarios = ({ user, onLogout }) => {
               <p className="text-sm text-slate-600 mb-2">
                 Utilizador: <strong>{selectedUser?.name || selectedUser?.email}</strong>
               </p>
-            </div>
-
-            <div>
-              <Label htmlFor="plano">Selecionar Plano</Label>
-              <Select value={selectedPlanoId} onValueChange={setSelectedPlanoId}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Escolha um plano" />
-                </SelectTrigger>
-                <SelectContent>
-                  {planos.map((plano) => (
-                    <SelectItem key={plano.id} value={plano.id}>
-                      {plano.nome}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="duracao">Duração (dias)</Label>
-              <Input
-                id="duracao"
-                type="number"
-                value={duracaoDias}
-                onChange={(e) => setDuracaoDias(parseInt(e.target.value) || 30)}
-                placeholder="30"
-              />
-              <p className="text-xs text-slate-500 mt-1">
-                O plano ficará ativo por {duracaoDias} dias
+              <p className="text-xs text-slate-500">
+                Perfil: <strong className="text-blue-600">{selectedUser?.role === 'motorista' ? 'Motorista' : selectedUser?.role}</strong>
               </p>
             </div>
 
-            <div className="bg-blue-50 p-3 rounded">
-              <p className="text-xs text-blue-800">
-                ℹ️ Esta ação atribui o plano gratuitamente sem necessidade de pagamento. 
-                O plano será ativado imediatamente.
-              </p>
-            </div>
+            {selectedUser?.role !== 'motorista' && (
+              <div className="bg-yellow-50 border border-yellow-200 p-3 rounded">
+                <p className="text-xs text-yellow-800">
+                  ⚠️ Apenas utilizadores com perfil <strong>Motorista</strong> podem ter planos de motorista atribuídos.
+                </p>
+              </div>
+            )}
+
+            {selectedUser?.role === 'motorista' && (
+              <>
+                <div>
+                  <Label htmlFor="plano">Selecionar Plano de Motorista</Label>
+                  <Select value={selectedPlanoId} onValueChange={setSelectedPlanoId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Escolha um plano" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {planos.length === 0 ? (
+                        <div className="p-2 text-center text-sm text-slate-500">
+                          Nenhum plano de motorista disponível
+                        </div>
+                      ) : (
+                        planos.map((plano) => (
+                          <SelectItem key={plano.id} value={plano.id}>
+                            {plano.nome} - Semanal: €{plano.preco_semanal?.toFixed(2) || '0.00'} | Mensal: €{plano.preco_mensal?.toFixed(2) || '0.00'}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="periodicidade">Periodicidade de Pagamento</Label>
+                  <Select value={selectedPeriodicidade} onValueChange={setSelectedPeriodicidade}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Escolha a periodicidade" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="semanal">
+                        Semanal (renovação a cada 7 dias)
+                      </SelectItem>
+                      <SelectItem value="mensal">
+                        Mensal (renovação a cada 30 dias)
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedPlanoId && planos.find(p => p.id === selectedPlanoId) && (
+                  <div className="bg-slate-50 p-3 rounded">
+                    <p className="text-sm font-semibold text-slate-700 mb-2">Resumo do Plano:</p>
+                    {(() => {
+                      const plano = planos.find(p => p.id === selectedPlanoId);
+                      const precoSemanal = plano.preco_semanal || 0;
+                      const precoMensal = plano.preco_mensal || 0;
+                      const desconto = plano.desconto_mensal_percentagem || 0;
+                      const precoMensalComDesconto = precoMensal * (1 - desconto / 100);
+                      
+                      return (
+                        <>
+                          <p className="text-xs text-slate-600">
+                            <strong>Plano:</strong> {plano.nome}
+                          </p>
+                          <p className="text-xs text-slate-600">
+                            <strong>Periodicidade:</strong> {selectedPeriodicidade === 'semanal' ? 'Semanal' : 'Mensal'}
+                          </p>
+                          {selectedPeriodicidade === 'semanal' ? (
+                            <p className="text-xs text-slate-600">
+                              <strong>Valor:</strong> €{precoSemanal.toFixed(2)}/semana
+                            </p>
+                          ) : (
+                            <>
+                              <p className="text-xs text-slate-600">
+                                <strong>Valor base:</strong> €{precoMensal.toFixed(2)}/mês
+                              </p>
+                              {desconto > 0 && (
+                                <>
+                                  <p className="text-xs text-green-600">
+                                    <strong>Desconto mensal:</strong> {desconto}%
+                                  </p>
+                                  <p className="text-xs text-slate-700 font-bold">
+                                    <strong>Valor final:</strong> €{precoMensalComDesconto.toFixed(2)}/mês
+                                  </p>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+
+                <div className="bg-blue-50 p-3 rounded">
+                  <p className="text-xs text-blue-800">
+                    ℹ️ Esta ação atribui o plano <strong>gratuitamente</strong> sem necessidade de pagamento. 
+                    O plano será ativado imediatamente e o motorista terá acesso às funcionalidades incluídas.
+                  </p>
+                </div>
+              </>
+            )}
 
             <div className="flex justify-end space-x-2">
               <Button variant="outline" onClick={() => setShowPlanoDialog(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleAtribuirPlano}>
-                <Package className="w-4 h-4 mr-2" />
-                Atribuir Plano
-              </Button>
+              {selectedUser?.role === 'motorista' && (
+                <Button onClick={handleAtribuirPlano} disabled={!selectedPlanoId}>
+                  <Package className="w-4 h-4 mr-2" />
+                  Atribuir Plano
+                </Button>
+              )}
             </div>
           </div>
         </DialogContent>
