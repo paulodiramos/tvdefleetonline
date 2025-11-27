@@ -18,6 +18,9 @@ const PagamentosParceiro = ({ user, onLogout }) => {
   const [selectedPagamento, setSelectedPagamento] = useState(null);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [showEstadoModal, setShowEstadoModal] = useState(false);
+  const [selectedRelatorio, setSelectedRelatorio] = useState(null);
+  const [novoEstado, setNovoEstado] = useState('');
 
   useEffect(() => {
     fetchPagamentos();
