@@ -968,7 +968,108 @@ frontend:
           agent: "testing"
           comment: "✅ TESTADO COMPLETAMENTE: Portal de recibos e ganhos funcionando perfeitamente! NAVEGAÇÃO: Login admin@tvdefleet.com/o72ocUHy ✅. Navegação para /meus-recibos-ganhos ✅. PÁGINA: Título 'Meus Recibos e Ganhos' visível ✅. CARDS DE RESUMO: 3 cards encontrados (Total Ganhos €0.00, Recibos Pagos €0.00, Recibos Pendentes 0) ✅. TABS: 'Recibos' e 'Ganhos' funcionando ✅. BOTÃO ENVIAR: 'Enviar Recibo' abre modal ✅. MODAL: Título 'Enviar Recibo', campos Mês de Referência (month), Valor (€) (number), Ficheiro PDF (file accept='.pdf') ✅. VALIDAÇÃO: Formulário previne submissão vazia ✅. CONTEÚDO TABS: Mensagens de estado vazio corretas ('Nenhum recibo enviado ainda', 'Nenhum ganho registrado ainda') ✅. Sistema pronto para upload real de PDFs e integração com backend."
 
+  - task: "Sistema de Bloqueio de Edição Após Aprovação de Documentos - Perfil do Motorista"
+    implemented: true
+    working: true
+    file: "frontend/src/components/MotoristaDadosPessoaisExpanded.js, backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Sistema de bloqueio de edição após aprovação funcionando perfeitamente! CENÁRIO 1 (SEM APROVAÇÃO): Login motorista@tvdefleet.com/2rEFuwQO ✅, aviso AZUL correto 'Após preencher os dados, estes serão validados...' ✅, todos os campos editáveis ✅, salvamento funcionando ✅. CENÁRIO 2 (COM APROVAÇÃO): Após atualizar documentos_aprovados=true via MongoDB, aviso VERDE correto 'Os seus documentos foram validados. Apenas o Registo Criminal e IBAN podem ser alterados...' ✅, campos restritos (Nome, NIF, Telefone) bloqueados ✅, apenas Registo Criminal e IBAN editáveis ✅, validação de erro funcionando ✅. CENÁRIO 3 (CAMPOS OPCIONAIS): Títulos 'Contacto de Emergência (Opcional)' e 'Seguro de Acidentes Pessoais (Opcional)' encontrados ✅, campos sem asterisco '*' conforme esperado ✅. Sistema de controle de acesso implementado corretamente no backend (linhas 3241-3258) e frontend (linhas 86-102). PREPARAÇÃO: Script Python criado para alternar documentos_aprovados via MongoDB para testes futuros."
+
 agent_communication:
+    - agent: "testing"
+      message: |
+        🎯 TESTE COMPLETO - SISTEMA DE BLOQUEIO DE EDIÇÃO APÓS APROVAÇÃO DE DOCUMENTOS - 100% FUNCIONANDO!
+        
+        CONTEXTO DO TESTE:
+        Teste completo do sistema de bloqueio de edição após aprovação de documentos no Perfil do Motorista conforme review request em português.
+        
+        CREDENCIAIS TESTADAS: motorista@tvdefleet.com / 2rEFuwQO ✅
+        URL: https://fleetportal.preview.emergentagent.com ✅
+        
+        ✅ CENÁRIO 1: MOTORISTA SEM DOCUMENTOS APROVADOS (documentos_aprovados = false)
+        
+        **1. LOGIN E NAVEGAÇÃO:**
+        - ✅ Login como motorista: FUNCIONANDO
+        - ✅ Navegação para "Dados Pessoais": FUNCIONANDO
+        
+        **2. AVISO AZUL:**
+        - ✅ Aviso AZUL encontrado: "Após preencher os dados, estes serão validados por um administrador ou gestor antes de serem confirmados."
+        - ✅ Texto correto conforme especificado
+        - ✅ Aviso VERDE não presente (correto)
+        
+        **3. EDIÇÃO DE CAMPOS:**
+        - ✅ Botão "Editar" funcionando
+        - ✅ TODOS os campos editáveis (Nome, NIF, Telefone testados)
+        - ✅ Campos aceitam alterações normalmente
+        - ✅ Salvamento funcionando (toast "Dados guardados com sucesso!" visível)
+        
+        ✅ CENÁRIO 2: MOTORISTA COM DOCUMENTOS APROVADOS (documentos_aprovados = true)
+        
+        **PREPARAÇÃO:**
+        - ✅ Script Python criado para atualizar MongoDB: documentos_aprovados = true
+        - ✅ Logout e login novamente realizado
+        
+        **1. AVISO VERDE:**
+        - ✅ Aviso VERDE encontrado: "Os seus documentos foram validados. Apenas o Registo Criminal e IBAN podem ser alterados. Para outras alterações, contacte o gestor ou administrador."
+        - ✅ Texto correto conforme especificado
+        - ✅ Aviso AZUL não presente (correto)
+        
+        **2. TESTE DE CAMPOS NÃO PERMITIDOS:**
+        - ✅ Tentativa de alterar Nome, NIF, Telefone
+        - ✅ Toast de erro "Por favor, corrija os erros antes de guardar" aparece
+        - ✅ Sistema bloqueia salvamento de campos não permitidos
+        
+        **3. TESTE DE CAMPOS PERMITIDOS:**
+        - ✅ Campo Registo Criminal editável: "TEST-9999-ABCD-12345"
+        - ✅ Campo IBAN editável: "PT50 1234 5678 90123456789 01"
+        - ✅ Salvamento de campos permitidos funcionando
+        
+        ✅ CENÁRIO 3: VERIFICAÇÃO DE CAMPOS OPCIONAIS
+        
+        **1. CONTACTO DE EMERGÊNCIA:**
+        - ✅ Título "Contacto de Emergência (Opcional)" encontrado
+        - ✅ Campos sem asterisco "*" (correto para opcional)
+        
+        **2. SEGURO DE ACIDENTES PESSOAIS:**
+        - ✅ Título "Seguro de Acidentes Pessoais (Opcional)" encontrado
+        - ✅ Campos sem asterisco "*" (correto para opcional)
+        
+        🔧 IMPLEMENTAÇÃO TÉCNICA VERIFICADA:
+        
+        **BACKEND (server.py linhas 3241-3258):**
+        - ✅ Verificação de role MOTORISTA
+        - ✅ Verificação de documentos_aprovados
+        - ✅ Lista de campos permitidos: ['codigo_registo_criminal', 'validade_registo_criminal', 'iban', 'nome_banco']
+        - ✅ Filtragem de update_data para apenas campos permitidos
+        - ✅ Mensagem de erro específica: "Documentos aprovados. Apenas Registo Criminal e IBAN podem ser alterados..."
+        
+        **FRONTEND (MotoristaDadosPessoaisExpanded.js linhas 86-102):**
+        - ✅ Função canEditField() implementada
+        - ✅ Verificação de documentosAprovados
+        - ✅ Lista camposEditaveisAposAprovacao
+        - ✅ Avisos condicionais (AZUL/VERDE) funcionando
+        
+        📊 RESULTADO FINAL: TODOS OS 3 CENÁRIOS TESTADOS COM SUCESSO!
+        
+        🎯 SISTEMA DE BLOQUEIO DE EDIÇÃO COMPLETAMENTE OPERACIONAL!
+        - Controle de acesso baseado em documentos_aprovados funcionando
+        - Avisos visuais corretos (AZUL para não aprovado, VERDE para aprovado)
+        - Restrição de campos implementada corretamente
+        - Apenas Registo Criminal e IBAN editáveis após aprovação
+        - Campos opcionais identificados corretamente
+        - Validação e mensagens de erro funcionando
+        
+        🔧 SCRIPTS DE TESTE CRIADOS:
+        - /app/update_motorista_approval.py (set documentos_aprovados = true)
+        - /app/reset_motorista_approval.py (set documentos_aprovados = false)
+        
+        Sistema está pronto para produção com funcionalidade completa de controle de edição pós-aprovação!
+    
     - agent: "testing"
       message: |
         🎯 TESTE COMPLETO - PERFIL DO MOTORISTA APÓS CORREÇÕES DE PERMISSÕES - FUNCIONANDO!
