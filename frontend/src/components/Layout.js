@@ -84,7 +84,12 @@ const Layout = ({ user, onLogout, children }) => {
               <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center">
                 <Truck className="w-6 h-6 text-white" />
               </div>
-              <Link to="/dashboard" className="text-xl font-bold text-slate-800">TVDEFleet</Link>
+              <Link 
+                to={user?.role === 'motorista' ? '/profile' : '/dashboard'} 
+                className="text-xl font-bold text-slate-800"
+              >
+                TVDEFleet
+              </Link>
             </div>
 
             {/* Desktop Navigation */}
