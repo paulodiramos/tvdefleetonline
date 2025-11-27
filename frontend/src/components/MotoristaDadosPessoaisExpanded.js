@@ -385,9 +385,13 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
           { key: 'comprovativo_morada', label: 'Comprovativo de Morada' }
         ];
         
-        const documentosEmFalta = documentosObrigatorios.filter(doc => 
-          !motoristaData?.documents?.[doc.key]
-        );
+        // Filtrar documentos que não têm upload OU não estão validados
+        const documentosEmFalta = documentosObrigatorios.filter(doc => {
+          const hasDocument = motoristaData?.documents?.[doc.key];
+          const isValidated = motoristaData?.documents_validacao?.[doc.key]?.validado;
+          // Documento está em falta se não foi carregado OU se foi carregado mas não foi validado
+          return !hasDocument || !isValidated;
+        });
 
         if (documentosEmFalta.length > 0) {
           return (
