@@ -1277,6 +1277,7 @@ class Motorista(BaseModel):
     documents: MotoristaDocuments
     documents_validacao: Dict[str, DocumentoValidacao] = {}  # Controle de validação por documento
     documentos_aprovados: bool = False  # Se true, motorista não pode editar dados (exceto registo_criminal e iban)
+    observacoes_internas: Optional[str] = None  # Notas internas visíveis apenas para Admin/Gestor/Parceiro/Operacional
     approved: bool = False
     senha_provisoria: bool = False
     campos_customizados: Dict[str, Any] = {}  # Campos adicionais customizáveis
