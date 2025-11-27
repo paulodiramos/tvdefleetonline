@@ -381,10 +381,12 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
               <Input
                 value={formData.codigo_postal}
                 onChange={(e) => handleChange('codigo_postal', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                disabled={!editMode}
                 placeholder="1234-567"
                 maxLength={8}
+                className={errors.codigo_postal ? 'border-red-500' : ''}
               />
+              {errors.codigo_postal && <p className="text-xs text-red-500 mt-1">{errors.codigo_postal}</p>}
             </div>
             <div>
               <Label>Localidade *</Label>
