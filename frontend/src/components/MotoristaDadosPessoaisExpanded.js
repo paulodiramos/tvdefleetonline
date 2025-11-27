@@ -372,6 +372,46 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
         </Card>
       )}
 
+      {/* Documentos em Falta */}
+      {isMotorista && (() => {
+        const documentosObrigatorios = [
+          { key: 'cc_frente', label: 'Cartão de Cidadão - Frente' },
+          { key: 'cc_verso', label: 'Cartão de Cidadão - Verso' },
+          { key: 'carta_conducao_frente', label: 'Carta de Condução - Frente' },
+          { key: 'carta_conducao_verso', label: 'Carta de Condução - Verso' },
+          { key: 'licenca_tvde', label: 'Licença TVDE' },
+          { key: 'registo_criminal', label: 'Registo Criminal' },
+          { key: 'comprovativo_iban', label: 'Comprovativo IBAN' },
+          { key: 'comprovativo_morada', label: 'Comprovativo de Morada' }
+        ];
+        
+        const documentosEmFalta = documentosObrigatorios.filter(doc => 
+          !motoristaData?.documents?.[doc.key]
+        );
+
+        if (documentosEmFalta.length > 0) {
+          return (
+            <Card className="border-l-4 border-amber-500">
+              <CardContent className="pt-6">
+                <div className="flex items-start space-x-3">
+                  <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
+                  <div className="text-sm text-amber-800">
+                    <p className="font-semibold mb-2">Documentos em Falta ({documentosEmFalta.length}):</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      {documentosEmFalta.map(doc => (
+                        <li key={doc.key}>{doc.label}</li>
+                      ))}
+                    </ul>
+                    <p className="mt-2 text-xs">Por favor, carregue todos os documentos obrigatórios para completar o seu perfil.</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        }
+        return null;
+      })()}
+
       {/* Seção de Downloads */}
       {isMotorista && (
         <Card>
