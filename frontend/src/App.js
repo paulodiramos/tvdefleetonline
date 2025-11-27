@@ -206,6 +206,18 @@ function App() {
             }
           />
           <Route
+            path="/motorista/recibos"
+            element={
+              user ? <MotoristaRecibosGanhos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/motorista/envio-recibo"
+            element={
+              user ? <MotoristaEnvioRecibo user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/relatorios"
             element={
               user ? <ParceiroReports user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
