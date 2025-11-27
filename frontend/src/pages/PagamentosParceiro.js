@@ -338,6 +338,58 @@ const PagamentosParceiro = ({ user, onLogout }) => {
           </CardContent>
         </Card>
 
+        {/* Modal Alterar Estado */}
+        <Dialog open={showEstadoModal} onOpenChange={setShowEstadoModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Alterar Estado do Pagamento</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label>Motorista</Label>
+                <p className="text-sm text-slate-600">{selectedRelatorio?.motorista_nome || selectedRelatorio?.nome}</p>
+              </div>
+
+              <div>
+                <Label>Valor</Label>
+                <p className="text-sm font-semibold">€{selectedRelatorio?.valor?.toFixed(2)}</p>
+              </div>
+
+              <div>
+                <Label>Novo Estado</Label>
+                <select
+                  value={novoEstado}
+                  onChange={(e) => setNovoEstado(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                >
+                  <option value="por_enviar">Por Enviar</option>
+                  <option value="em_analise">Em Análise</option>
+                  <option value="a_pagamento">A Pagamento</option>
+                  <option value="liquidado">Liquidado</option>
+                </select>
+              </div>
+
+              <div className="p-3 bg-blue-50 rounded border border-blue-200">
+                <p className="text-xs font-semibold mb-1">Estados:</p>
+                <ul className="text-xs space-y-1">
+                  <li>🟡 <strong>Por Enviar:</strong> Recibo enviado pelo sistema</li>
+                  <li>🔵 <strong>Em Análise:</strong> A rever recibo</li>
+                  <li>🟠 <strong>A Pagamento:</strong> Aprovado, a processar pagamento</li>
+                  <li>🟢 <strong>Liquidado:</strong> Pago (adicione comprovativo)</li>
+                </ul>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowEstadoModal(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAlterarEstado}>
+                Confirmar Alteração
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Upload Modal */}
         <Dialog open={showUploadModal} onOpenChange={setShowUploadModal}>
           <DialogContent>
