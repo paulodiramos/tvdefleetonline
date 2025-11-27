@@ -768,11 +768,13 @@ metadata:
 
 test_plan:
   current_focus:
-    - "VehicleData.js - Campo Valor da Inspeção"
-    - "UploadCSV.js - Botões de download de templates"
-    - "VehiclePhotos.js - Upload de fotos (verificar)"
-    - "EditParceiro.js - Edição de parceiros por Admin"
-  stuck_tasks: []
+    - "Botão 'Validar Documentos' na Página de Usuários - FASE B"
+    - "Página de Validação de Documentos - FASE B"
+    - "Botão Download de Contrato para Motoristas - FASE B"
+  stuck_tasks:
+    - "Botão 'Validar Documentos' na Página de Usuários - FASE B"
+    - "Página de Validação de Documentos - FASE B"
+    - "Botão Download de Contrato para Motoristas - FASE B"
   test_all: false
   test_priority: "high_first"
   partner_alert_system_tested: true
@@ -781,8 +783,9 @@ test_plan:
   ficha_veiculo_cancel_issue_resolved: true
   document_upload_system_implemented: true
   extintor_and_intervencoes_implemented: true
-  password_management_system_implemented: true
   password_management_system_tested: true
+  fase_b_document_validation_tested: true
+  fase_b_critical_issues_found: true
 
 backend:
   - task: "Sistema de Extintor - Campos expandidos"
