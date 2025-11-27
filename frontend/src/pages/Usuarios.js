@@ -42,6 +42,7 @@ import {
 import { UserCheck, UserX, Users, UserPlus, Clock, Shield, Eye, EyeOff, Mail, Phone, Calendar, Building, Lock, Unlock, Trash2, Key, RefreshCw, Package } from 'lucide-react';
 
 const Usuarios = ({ user, onLogout }) => {
+  const navigate = useNavigate();
   const [pendingUsers, setPendingUsers] = useState([]);
   const [registeredUsers, setRegisteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
