@@ -18,6 +18,8 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
   const [processingApproval, setProcessingApproval] = useState(false);
   const [editingField, setEditingField] = useState(null);
   const [editValue, setEditValue] = useState('');
+  const [observacoes, setObservacoes] = useState('');
+  const [editingObservacoes, setEditingObservacoes] = useState(false);
 
   useEffect(() => {
     fetchMotoristaData();
