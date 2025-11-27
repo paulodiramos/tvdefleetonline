@@ -280,7 +280,7 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
   return (
     <div className="space-y-6">
       {/* Avisos */}
-      {isMotorista && (
+      {isMotorista && !documentosAprovados && (
         <Card className="border-l-4 border-blue-500">
           <CardContent className="pt-6">
             <div className="flex items-start space-x-3">
@@ -288,6 +288,20 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
               <div className="text-sm text-blue-800">
                 <p className="font-semibold mb-1">Importante:</p>
                 <p>Após preencher os dados, estes serão validados por um administrador ou gestor antes de serem confirmados.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+      
+      {isMotorista && documentosAprovados && (
+        <Card className="border-l-4 border-green-500">
+          <CardContent className="pt-6">
+            <div className="flex items-start space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+              <div className="text-sm text-green-800">
+                <p className="font-semibold mb-1">Documentos Aprovados:</p>
+                <p>Os seus documentos foram validados. Apenas o Registo Criminal e IBAN podem ser alterados. Para outras alterações, contacte o gestor ou administrador.</p>
               </div>
             </div>
           </CardContent>
