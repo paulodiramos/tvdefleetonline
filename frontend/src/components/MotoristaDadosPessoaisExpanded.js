@@ -745,13 +745,16 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <Label>Código do Registo Criminal *</Label>
+              <Label>Código do Registo Criminal * (formato: xxxx-xxxx-xxxx-xxxxx)</Label>
               <Input
                 value={formData.codigo_registo_criminal}
-                onChange={(e) => handleChange('codigo_registo_criminal', e.target.value)}
-                disabled={!canEdit && !isMotorista}
-                placeholder="Código"
+                onChange={(e) => handleChange('codigo_registo_criminal', e.target.value.toUpperCase())}
+                disabled={!editMode}
+                placeholder="ABCD-1234-EFGH-5678I"
+                maxLength={24}
+                className={errors.codigo_registo_criminal ? 'border-red-500' : ''}
               />
+              {errors.codigo_registo_criminal && <p className="text-xs text-red-500 mt-1">{errors.codigo_registo_criminal}</p>}
             </div>
             <div>
               <Label>Validade *</Label>
@@ -759,7 +762,7 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
                 type="date"
                 value={formData.validade_registo_criminal}
                 onChange={(e) => handleChange('validade_registo_criminal', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                disabled={!editMode}
               />
             </div>
           </div>
