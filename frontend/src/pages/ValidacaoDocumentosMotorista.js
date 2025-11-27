@@ -248,11 +248,11 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
                     <p className="text-sm text-slate-600">Nome Completo</p>
                     {editingField === 'name' ? (
                       <div className="flex items-center space-x-2 mt-1">
-                        <input
+                        <Input
                           type="text"
                           value={editValue}
                           onChange={(e) => setEditValue(e.target.value)}
-                          className="border rounded px-2 py-1 text-sm"
+                          className="text-sm"
                         />
                         <Button size="sm" onClick={handleSaveField}>Guardar</Button>
                         <Button size="sm" variant="outline" onClick={() => setEditingField(null)}>Cancelar</Button>
