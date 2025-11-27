@@ -68,6 +68,7 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
     emergencia_email: motoristaData?.emergencia_email || '',
     emergencia_morada: motoristaData?.emergencia_morada || '',
     emergencia_codigo_postal: motoristaData?.emergencia_codigo_postal || '',
+    emergencia_localidade: motoristaData?.emergencia_localidade || '',
     emergencia_ligacao: motoristaData?.emergencia_ligacao || '',
 
     // Seguro de Acidentes Pessoais
