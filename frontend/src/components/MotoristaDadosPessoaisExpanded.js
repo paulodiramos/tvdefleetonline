@@ -809,14 +809,23 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid md:grid-cols-3 gap-4">
+          <div className="grid md:grid-cols-4 gap-4">
             <div>
               <Label>Número da Carta *</Label>
               <Input
                 value={formData.numero_carta}
                 onChange={(e) => handleChange('numero_carta', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                disabled={!editMode}
                 placeholder="Número"
+              />
+            </div>
+            <div>
+              <Label>Categoria *</Label>
+              <Input
+                value={formData.categoria_carta_conducao}
+                onChange={(e) => handleChange('categoria_carta_conducao', e.target.value)}
+                disabled={!editMode}
+                placeholder="B, B+E, C, D"
               />
             </div>
             <div>
@@ -825,7 +834,7 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
                 type="date"
                 value={formData.emissao_carta}
                 onChange={(e) => handleChange('emissao_carta', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                disabled={!editMode}
               />
             </div>
             <div>
@@ -834,7 +843,7 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
                 type="date"
                 value={formData.validade_carta}
                 onChange={(e) => handleChange('validade_carta', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                disabled={!editMode}
               />
             </div>
           </div>
