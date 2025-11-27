@@ -93,27 +93,19 @@ const PerfilMotorista = ({ user, onLogout }) => {
     );
   }
 
-  const handleTabChange = (value) => {
-    if (window.checkUnsavedChanges && window.checkUnsavedChanges()) {
-      const confirmLeave = window.confirm('Tem alterações não guardadas. Deseja sair sem guardar?');
-      if (!confirmLeave) {
-        return false;
-      }
-    }
-    return true;
-  };
-
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="max-w-7xl mx-auto space-y-6 p-6">
-        <Tabs defaultValue="dashboard" className="space-y-6" onValueChange={(value) => {
-          const currentValue = document.querySelector('[data-state="active"]')?.getAttribute('value');
-          if (currentValue && handleTabChange(value)) {
-            // Tab change is allowed
-          }
-        }}>
+        <Tabs defaultValue="dashboard" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="dashboard">
+            <TabsTrigger value="dashboard" onClick={(e) => {
+              if (window.hasUnsavedChanges && window.hasUnsavedChanges()) {
+                const confirmLeave = window.confirm('Tem alterações não guardadas. Deseja sair sem guardar?');
+                if (!confirmLeave) {
+                  e.preventDefault();
+                }
+              }
+            }}>
               <TrendingUp className="w-4 h-4 mr-2" />
               Dashboard
             </TabsTrigger>
@@ -121,7 +113,14 @@ const PerfilMotorista = ({ user, onLogout }) => {
               <User className="w-4 h-4 mr-2" />
               Dados Pessoais
             </TabsTrigger>
-            <TabsTrigger value="planos">
+            <TabsTrigger value="planos" onClick={(e) => {
+              if (window.hasUnsavedChanges && window.hasUnsavedChanges()) {
+                const confirmLeave = window.confirm('Tem alterações não guardadas. Deseja sair sem guardar?');
+                if (!confirmLeave) {
+                  e.preventDefault();
+                }
+              }
+            }}>
               <Package className="w-4 h-4 mr-2" />
               Meus Planos
             </TabsTrigger>
