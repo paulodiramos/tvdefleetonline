@@ -229,6 +229,14 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
   const handleFileUpload = async (docType, file) => {
     if (!file) return;
 
+    // Verificar se motorista pode fazer upload após aprovação
+    const documentosPermitidosAposAprovacao = ['comprovativo_iban', 'registo_criminal'];
+    
+    if (isMotorista && documentosAprovados && !documentosPermitidosAposAprovacao.includes(docType)) {
+      toast.error('Documentos aprovados. Apenas IBAN e Registo Criminal podem ser alterados. Contacte o gestor.');
+      return;
+    }
+
     setUploading(prev => ({ ...prev, [docType]: true }));
 
     try {
@@ -252,7 +260,7 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Error uploading document:', error);
-      toast.error('Erro ao enviar documento');
+      toast.error(error.response?.data?.detail || 'Erro ao enviar documento');
     } finally {
       setUploading(prev => ({ ...prev, [docType]: false }));
     }
