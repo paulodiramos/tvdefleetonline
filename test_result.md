@@ -941,13 +941,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Botão 'Validar Documentos' na Página de Usuários - FASE B"
-    - "Página de Validação de Documentos - FASE B"
-    - "Botão Download de Contrato para Motoristas - FASE B"
-  stuck_tasks:
-    - "Botão 'Validar Documentos' na Página de Usuários - FASE B"
-    - "Página de Validação de Documentos - FASE B"
-    - "Botão Download de Contrato para Motoristas - FASE B"
+    - "All FASE B testing completed successfully"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
   partner_alert_system_tested: true
@@ -958,7 +953,9 @@ test_plan:
   extintor_and_intervencoes_implemented: true
   password_management_system_tested: true
   fase_b_document_validation_tested: true
-  fase_b_critical_issues_found: true
+  fase_b_critical_issues_resolved: true
+  fase_b_complete_testing_passed: true
+  fase_b_all_scenarios_working: true
 
 backend:
   - task: "Sistema de Extintor - Campos expandidos"
