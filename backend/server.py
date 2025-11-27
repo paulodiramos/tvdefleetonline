@@ -1247,6 +1247,16 @@ class Motorista(BaseModel):
     data_limite_registo_criminal: Optional[str] = None
     dias_aviso_renovacao_registo: int = 30  # Dias de antecedência para aviso
     
+    # CC / Documento de Identificação
+    numero_cc: Optional[str] = None
+    validade_cc: Optional[str] = None
+    numero_documento_identificacao: Optional[str] = None  # CC ou Cartão de Residência
+    validade_documento_identificacao: Optional[str] = None
+    
+    # Passaporte
+    numero_passaporte: Optional[str] = None
+    validade_passaporte: Optional[str] = None
+    
     # Dados Bancários
     nome_banco: Optional[str] = None
     
