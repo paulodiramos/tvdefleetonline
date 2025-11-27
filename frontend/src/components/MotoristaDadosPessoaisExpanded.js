@@ -196,9 +196,20 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
       {/* 1. INFORMAÇÕES BÁSICAS */}
       <Card>
         <CardHeader>
-          <div className="flex items-center space-x-2">
-            <User className="w-5 h-5 text-blue-600" />
-            <CardTitle>Informações Básicas</CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <User className="w-5 h-5 text-blue-600" />
+              <CardTitle>Informações Básicas</CardTitle>
+            </div>
+            {(canEdit || isMotorista) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setEditMode(!editMode)}
+              >
+                {editMode ? 'Cancelar Edição' : 'Editar'}
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -208,7 +219,7 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
               <Input
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                disabled={!editMode}
                 placeholder="Nome completo"
               />
             </div>
