@@ -3215,7 +3215,13 @@ async def update_motorista(
     current_user: Dict = Depends(get_current_user)
 ):
     """Update motorista data (partial updates allowed)"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+    # Allow admin, gestao, parceiro OR motorista editing their own profile
+    is_authorized = (
+        current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO] or
+        (current_user["role"] == UserRole.MOTORISTA and current_user["id"] == motorista_id)
+    )
+    
+    if not is_authorized:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Check if motorista exists
