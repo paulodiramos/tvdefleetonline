@@ -5071,3 +5071,17 @@ agent_communication:
         Sistema está completamente operacional e pronto para uso em produção.
         Parceiro ID testado: 6213e4ce-6b04-47e6-94e9-8390d98fe170
 
+
+
+frontend:
+  - task: "Melhorias na Página de Validação de Documentos - Visualização de Dados"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/ValidacaoDocumentosMotorista.js, frontend/src/pages/Usuarios.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Melhorias na página de validação de documentos funcionando perfeitamente! TESTE 1 - ACESSO À PÁGINA: Login admin@tvdefleet.com/o72ocUHy ✅, navegação para /usuarios ✅, 2 botões Documentos verdes com ícone Shield encontrados ✅, navegação para /validacao-documentos/{motorista_id} funcionando ✅. TESTE 2 - REMOÇÃO DE DOCUMENTOS DESNECESSÁRIOS: Licença Foto, Documento de Identificação, Additional Docs não aparecem ✅, documentos relevantes (Licença TVDE, Registo Criminal, Comprovativo Morada, CC, Carta Condução) presentes ✅. TESTE 3 - DADOS MOSTRADOS: Seções Dados no Perfil com fundo cinza claro encontradas ✅, dados específicos por documento implementados (Morada/Localidade/Código Postal para Comprovativo Morada, NIF/Segurança Social/IBAN presentes) ✅. TESTE 4 - SEÇÃO DADOS DO MOTORISTA EXPANDIDA: Campos editáveis Número do CC, Número Segurança Social, IBAN encontrados ✅, 8 botões Editar funcionais ✅. TESTE 5 - VISUAL E UI: Documentos aprovados com fundo verde e badge Aprovado ✅, botões Revogar Aprovação ✅, documentos pendentes com badge Pendente e botões Aprovar/Rejeitar ✅, botão Aprovar Todos os Documentos encontrado ✅. Minor: Palavra Contrato ainda aparece (possivelmente referência textual). Todas as melhorias do review request implementadas e funcionando!"
