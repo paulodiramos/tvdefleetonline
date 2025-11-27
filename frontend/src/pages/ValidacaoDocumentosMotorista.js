@@ -151,8 +151,7 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
     const labels = {
       'cc_frente': 'Cartão de Cidadão - Frente',
       'cc_verso': 'Cartão de Cidadão - Verso',
-      'documento_frente': 'Documento Identificação - Frente',
-      'documento_verso': 'Documento Identificação - Verso',
+      'passport_frente': 'Passaporte',
       'comprovativo_morada': 'Comprovativo de Morada',
       'carta_conducao_frente': 'Carta de Condução - Frente',
       'carta_conducao_verso': 'Carta de Condução - Verso',
@@ -162,6 +161,49 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
       'seguro_comprovativo': 'Comprovativo de Seguro'
     };
     return labels[docType] || docType;
+  };
+
+  const getDocumentData = (docType) => {
+    const data = {
+      'carta_conducao_frente': [
+        { label: 'Número da Carta', value: motorista.numero_carta_conducao || 'N/A' }
+      ],
+      'carta_conducao_verso': [
+        { label: 'Data de Emissão', value: motorista.data_emissao_carta ? new Date(motorista.data_emissao_carta).toLocaleDateString('pt-PT') : 'N/A' },
+        { label: 'Data de Validade', value: motorista.validade_carta_conducao ? new Date(motorista.validade_carta_conducao).toLocaleDateString('pt-PT') : 'N/A' }
+      ],
+      'cc_frente': [
+        { label: 'Número do CC', value: motorista.numero_cc || 'N/A' },
+        { label: 'Validade', value: motorista.validade_cc ? new Date(motorista.validade_cc).toLocaleDateString('pt-PT') : 'N/A' }
+      ],
+      'passport_frente': [
+        { label: 'Número do Passaporte', value: motorista.numero_passaporte || 'N/A' },
+        { label: 'Validade', value: motorista.validade_passaporte ? new Date(motorista.validade_passaporte).toLocaleDateString('pt-PT') : 'N/A' }
+      ],
+      'cc_verso': [
+        { label: 'NIF', value: motorista.nif || 'N/A' },
+        { label: 'Segurança Social', value: motorista.numero_seguranca_social || 'N/A' },
+        { label: 'Cartão de Utente', value: motorista.numero_cartao_utente || 'N/A' }
+      ],
+      'licenca_tvde': [
+        { label: 'Número da Licença', value: motorista.numero_licenca_tvde || 'N/A' },
+        { label: 'Validade', value: motorista.validade_licenca_tvde ? new Date(motorista.validade_licenca_tvde).toLocaleDateString('pt-PT') : 'N/A' }
+      ],
+      'comprovativo_morada': [
+        { label: 'Morada', value: motorista.morada_completa || 'N/A' },
+        { label: 'Localidade', value: motorista.localidade || 'N/A' },
+        { label: 'Código Postal', value: motorista.codigo_postal || 'N/A' }
+      ],
+      'registo_criminal': [
+        { label: 'Código de Registo', value: motorista.codigo_registo_criminal || 'N/A' },
+        { label: 'Validade', value: motorista.validade_registo_criminal ? new Date(motorista.validade_registo_criminal).toLocaleDateString('pt-PT') : 'N/A' }
+      ],
+      'comprovativo_iban': [
+        { label: 'Banco', value: motorista.nome_banco || 'N/A' },
+        { label: 'IBAN', value: motorista.iban || 'N/A' }
+      ]
+    };
+    return data[docType] || [];
   };
 
   if (loading) {
