@@ -57,6 +57,7 @@ const Usuarios = ({ user, onLogout }) => {
   const [showPlanoDialog, setShowPlanoDialog] = useState(false);
   const [planos, setPlanos] = useState([]);
   const [selectedPlanoId, setSelectedPlanoId] = useState('');
+  const [selectedPeriodicidade, setSelectedPeriodicidade] = useState('mensal');
   const [duracaoDias, setDuracaoDias] = useState(30);
 
   useEffect(() => {
