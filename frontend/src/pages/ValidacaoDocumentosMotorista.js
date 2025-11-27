@@ -168,10 +168,10 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
   const getDocumentData = (docType) => {
     const data = {
       'carta_conducao_frente': [
-        { label: 'Número da Carta', value: motorista.numero_carta_conducao || 'N/A' },
-        { label: 'Categoria', value: motorista.categoria_carta_conducao || 'N/A' }
+        { label: 'Número da Carta', value: motorista.numero_carta_conducao || 'N/A' }
       ],
       'carta_conducao_verso': [
+        { label: 'Categoria', value: motorista.categoria_carta_conducao || 'N/A' },
         { label: 'Data de Emissão', value: motorista.data_emissao_carta ? new Date(motorista.data_emissao_carta).toLocaleDateString('pt-PT') : 'N/A' },
         { label: 'Data de Validade', value: motorista.validade_carta_conducao ? new Date(motorista.validade_carta_conducao).toLocaleDateString('pt-PT') : 'N/A' }
       ],
