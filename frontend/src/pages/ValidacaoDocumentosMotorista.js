@@ -151,6 +151,8 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
     const labels = {
       'cc_frente': 'Cartão de Cidadão - Frente',
       'cc_verso': 'Cartão de Cidadão - Verso',
+      'documento_identificacao_frente': 'Documento de Identificação - Frente (CC/Residência)',
+      'documento_identificacao_verso': 'Documento de Identificação - Verso (CC/Residência)',
       'passport_frente': 'Passaporte',
       'comprovativo_morada': 'Comprovativo de Morada',
       'carta_conducao_frente': 'Carta de Condução - Frente',
