@@ -277,6 +277,62 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
     window.open(`${API.replace('/api', '')}/${docUrl}`, '_blank');
   };
 
+  const handleDownloadDocumento = async (docType) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API}/motoristas/${motoristaData.id}/documento/${docType}/download`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${docType}_${motoristaData.name}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success('Documento descarregado com sucesso!');
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      toast.error('Erro ao descarregar documento');
+    }
+  };
+
+  const handleDownloadContrato = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API}/motoristas/${motoristaData.id}/contrato/download`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `contrato_${motoristaData.name}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success('Contrato descarregado com sucesso!');
+    } catch (error) {
+      console.error('Error downloading contract:', error);
+      if (error.response?.status === 404) {
+        toast.error('Contrato não encontrado');
+      } else {
+        toast.error('Erro ao descarregar contrato');
+      }
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Avisos */}
