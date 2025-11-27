@@ -14,6 +14,7 @@ const PerfilMotorista = ({ user, onLogout }) => {
   const [motoristaData, setMotoristaData] = useState(null);
   const [relatorios, setRelatorios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   useEffect(() => {
     fetchMotoristaData();
