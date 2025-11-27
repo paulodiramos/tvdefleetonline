@@ -374,11 +374,20 @@ const PerfilMotorista = ({ user, onLogout }) => {
                       />
                     </div>
                     <div>
-                      <Label>Morada</Label>
+                      <Label>Morada Completa</Label>
                       <Input
                         value={motoristaData.morada || ''}
                         onChange={(e) => setMotoristaData({...motoristaData, morada: e.target.value})}
                         disabled={!editMode}
+                      />
+                    </div>
+                    <div>
+                      <Label>Código Postal</Label>
+                      <Input
+                        value={motoristaData.codigo_postal || ''}
+                        onChange={(e) => setMotoristaData({...motoristaData, codigo_postal: e.target.value})}
+                        disabled={!editMode}
+                        placeholder="0000-000"
                       />
                     </div>
                     <div>
@@ -392,8 +401,180 @@ const PerfilMotorista = ({ user, onLogout }) => {
                     </div>
                   </div>
 
+                  {/* Documentação */}
+                  <div className="border-t pt-4 mt-4">
+                    <h3 className="font-semibold text-slate-700 mb-3">Documentação</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>CC/Residência/Passaporte Nº</Label>
+                        <Input
+                          value={motoristaData.documento_id || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, documento_id: e.target.value})}
+                          disabled={!editMode}
+                        />
+                      </div>
+                      <div>
+                        <Label>Validade do Documento</Label>
+                        <Input
+                          type="date"
+                          value={motoristaData.documento_validade || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, documento_validade: e.target.value})}
+                          disabled={!editMode}
+                        />
+                      </div>
+                      <div>
+                        <Label>Segurança Social</Label>
+                        <Input
+                          value={motoristaData.seguranca_social || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, seguranca_social: e.target.value})}
+                          disabled={!editMode}
+                        />
+                      </div>
+                      <div>
+                        <Label>Cartão de Utente</Label>
+                        <Input
+                          value={motoristaData.cartao_utente || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, cartao_utente: e.target.value})}
+                          disabled={!editMode}
+                        />
+                      </div>
+                      <div>
+                        <Label>Código Registo Criminal</Label>
+                        <Input
+                          value={motoristaData.codigo_registo_criminal || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, codigo_registo_criminal: e.target.value})}
+                          disabled={!editMode}
+                        />
+                      </div>
+                      <div>
+                        <Label>Validade Registo Criminal</Label>
+                        <Input
+                          type="date"
+                          value={motoristaData.registo_criminal_validade || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, registo_criminal_validade: e.target.value})}
+                          disabled={!editMode}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Método de Pagamento */}
+                  <div className="border-t pt-4 mt-4">
+                    <h3 className="font-semibold text-slate-700 mb-3">Método de Pagamento</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Tipo (Recibo/Fatura/Outro)</Label>
+                        <Input
+                          value={motoristaData.metodo_pagamento || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, metodo_pagamento: e.target.value})}
+                          disabled={!editMode}
+                          placeholder="Ex: Recibo Verde"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Dados Uber/Bolt */}
+                  <div className="border-t pt-4 mt-4">
+                    <h3 className="font-semibold text-slate-700 mb-3">Dados de Registo Plataformas</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Email Uber</Label>
+                        <Input
+                          type="email"
+                          value={motoristaData.email_uber || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, email_uber: e.target.value})}
+                          disabled={!editMode}
+                        />
+                      </div>
+                      <div>
+                        <Label>Telefone Uber</Label>
+                        <Input
+                          value={motoristaData.telefone_uber || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, telefone_uber: e.target.value})}
+                          disabled={!editMode}
+                        />
+                      </div>
+                      <div>
+                        <Label>Email Bolt</Label>
+                        <Input
+                          type="email"
+                          value={motoristaData.email_bolt || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, email_bolt: e.target.value})}
+                          disabled={!editMode}
+                        />
+                      </div>
+                      <div>
+                        <Label>Telefone Bolt</Label>
+                        <Input
+                          value={motoristaData.telefone_bolt || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, telefone_bolt: e.target.value})}
+                          disabled={!editMode}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contacto de Emergência */}
+                  <div className="border-t pt-4 mt-4">
+                    <h3 className="font-semibold text-slate-700 mb-3">Contacto de Emergência</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Nome</Label>
+                        <Input
+                          value={motoristaData.emergencia_nome || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, emergencia_nome: e.target.value})}
+                          disabled={!editMode}
+                        />
+                      </div>
+                      <div>
+                        <Label>Telefone</Label>
+                        <Input
+                          value={motoristaData.emergencia_telefone || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, emergencia_telefone: e.target.value})}
+                          disabled={!editMode}
+                        />
+                      </div>
+                      <div>
+                        <Label>Email</Label>
+                        <Input
+                          type="email"
+                          value={motoristaData.emergencia_email || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, emergencia_email: e.target.value})}
+                          disabled={!editMode}
+                        />
+                      </div>
+                      <div>
+                        <Label>Ligação (Parentesco)</Label>
+                        <Input
+                          value={motoristaData.emergencia_ligacao || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, emergencia_ligacao: e.target.value})}
+                          disabled={!editMode}
+                          placeholder="Ex: Cônjuge, Pai/Mãe"
+                        />
+                      </div>
+                      <div>
+                        <Label>Morada</Label>
+                        <Input
+                          value={motoristaData.emergencia_morada || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, emergencia_morada: e.target.value})}
+                          disabled={!editMode}
+                        />
+                      </div>
+                      <div>
+                        <Label>Código Postal</Label>
+                        <Input
+                          value={motoristaData.emergencia_codigo_postal || ''}
+                          onChange={(e) => setMotoristaData({...motoristaData, emergencia_codigo_postal: e.target.value})}
+                          disabled={!editMode}
+                          placeholder="0000-000"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   {editMode && (
-                    <Button type="submit" className="w-full">
+                    <Button type="submit" className="w-full mt-6">
                       Guardar Alterações
                     </Button>
                   )}
