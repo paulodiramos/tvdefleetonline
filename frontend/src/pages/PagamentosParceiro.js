@@ -30,9 +30,13 @@ const PagamentosParceiro = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       
-      // Fetch all payment types
-      const [motoristasRes, combustivelRes, viaVerdeRes, gestaoRes, contabilistaRes] = await Promise.all([
-        axios.get(`${API}/pagamentos/motoristas`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
+      // Fetch relatórios de ganhos dos motoristas (recibos/faturas semanais)
+      const relatoriosRes = await axios.get(`${API}/relatorios-ganhos`, { 
+        headers: { Authorization: `Bearer ${token}` } 
+      }).catch(() => ({ data: [] }));
+
+      // Fetch all other payment types
+      const [combustivelRes, viaVerdeRes, gestaoRes, contabilistaRes] = await Promise.all([
         axios.get(`${API}/pagamentos/combustivel`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
         axios.get(`${API}/pagamentos/via-verde`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
         axios.get(`${API}/pagamentos/gestao`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
@@ -40,7 +44,14 @@ const PagamentosParceiro = ({ user, onLogout }) => {
       ]);
 
       const allPagamentos = [
-        ...motoristasRes.data.map(p => ({ ...p, tipo: 'Motorista' })),
+        ...relatoriosRes.data.map(r => ({ 
+          ...r, 
+          tipo: 'Motorista',
+          valor: r.valor_liquido || r.valor_total || 0,
+          nome: r.motorista_nome,
+          status: r.status || 'por_enviar',
+          data_vencimento: r.periodo_fim
+        })),
         ...combustivelRes.data.map(p => ({ ...p, tipo: 'Combustível' })),
         ...viaVerdeRes.data.map(p => ({ ...p, tipo: 'Via Verde' })),
         ...gestaoRes.data.map(p => ({ ...p, tipo: 'Gestão' })),
