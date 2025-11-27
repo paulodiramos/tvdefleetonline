@@ -232,6 +232,172 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
           </Card>
         )}
 
+        {/* Dados do Motorista - Para Verificação */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Dados do Motorista</CardTitle>
+            <p className="text-sm text-slate-600">Verifique se os dados correspondem aos documentos</p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Nome */}
+              <div className="border-b pb-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-slate-600">Nome Completo</p>
+                    {editingField === 'name' ? (
+                      <div className="flex items-center space-x-2 mt-1">
+                        <input
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="border rounded px-2 py-1 text-sm"
+                        />
+                        <Button size="sm" onClick={handleSaveField}>Guardar</Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditingField(null)}>Cancelar</Button>
+                      </div>
+                    ) : (
+                      <p className="font-medium">{motorista.name}</p>
+                    )}
+                  </div>
+                  {!editingField && (
+                    <Button size="sm" variant="ghost" onClick={() => handleEditField('name', motorista.name)}>
+                      Editar
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Email */}
+              <div className="border-b pb-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-slate-600">Email</p>
+                    <p className="font-medium">{motorista.email}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Telefone */}
+              <div className="border-b pb-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-slate-600">Telefone</p>
+                    {editingField === 'phone' ? (
+                      <div className="flex items-center space-x-2 mt-1">
+                        <input
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="border rounded px-2 py-1 text-sm"
+                          placeholder="+351 912345678"
+                        />
+                        <Button size="sm" onClick={handleSaveField}>Guardar</Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditingField(null)}>Cancelar</Button>
+                      </div>
+                    ) : (
+                      <p className="font-medium">{motorista.phone}</p>
+                    )}
+                  </div>
+                  {!editingField && (
+                    <Button size="sm" variant="ghost" onClick={() => handleEditField('phone', motorista.phone)}>
+                      Editar
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* NIF */}
+              <div className="border-b pb-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-slate-600">NIF</p>
+                    {editingField === 'nif' ? (
+                      <div className="flex items-center space-x-2 mt-1">
+                        <input
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="border rounded px-2 py-1 text-sm"
+                          placeholder="123456789"
+                          maxLength={9}
+                        />
+                        <Button size="sm" onClick={handleSaveField}>Guardar</Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditingField(null)}>Cancelar</Button>
+                      </div>
+                    ) : (
+                      <p className="font-medium">{motorista.nif || 'N/A'}</p>
+                    )}
+                  </div>
+                  {!editingField && (
+                    <Button size="sm" variant="ghost" onClick={() => handleEditField('nif', motorista.nif)}>
+                      Editar
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Licença TVDE */}
+              <div className="border-b pb-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-slate-600">Licença TVDE</p>
+                    {editingField === 'numero_licenca_tvde' ? (
+                      <div className="flex items-center space-x-2 mt-1">
+                        <input
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="border rounded px-2 py-1 text-sm"
+                          placeholder="12345/2024"
+                        />
+                        <Button size="sm" onClick={handleSaveField}>Guardar</Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditingField(null)}>Cancelar</Button>
+                      </div>
+                    ) : (
+                      <p className="font-medium">{motorista.numero_licenca_tvde || 'N/A'}</p>
+                    )}
+                  </div>
+                  {!editingField && (
+                    <Button size="sm" variant="ghost" onClick={() => handleEditField('numero_licenca_tvde', motorista.numero_licenca_tvde)}>
+                      Editar
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Registo Criminal */}
+              <div className="border-b pb-3">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <p className="text-sm text-slate-600">Código Registo Criminal</p>
+                    {editingField === 'codigo_registo_criminal' ? (
+                      <div className="flex items-center space-x-2 mt-1">
+                        <input
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          className="border rounded px-2 py-1 text-sm"
+                          placeholder="ABCD-1234-EFGH-5678I"
+                        />
+                        <Button size="sm" onClick={handleSaveField}>Guardar</Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditingField(null)}>Cancelar</Button>
+                      </div>
+                    ) : (
+                      <p className="font-medium">{motorista.codigo_registo_criminal || 'N/A'}</p>
+                    )}
+                  </div>
+                  {!editingField && (
+                    <Button size="sm" variant="ghost" onClick={() => handleEditField('codigo_registo_criminal', motorista.codigo_registo_criminal)}>
+                      Editar
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Documents List */}
         <div className="grid md:grid-cols-2 gap-4">
           {documentTypes.length === 0 ? (
