@@ -941,7 +941,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "All FASE B testing completed successfully"
+    - "Novos Campos na Validação de Documentos - Documento de Identificação e Dados Expandidos"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -956,6 +956,7 @@ test_plan:
   fase_b_critical_issues_resolved: true
   fase_b_complete_testing_passed: true
   fase_b_all_scenarios_working: true
+  new_document_validation_fields_testing: true
 
 backend:
   - task: "Sistema de Extintor - Campos expandidos"
