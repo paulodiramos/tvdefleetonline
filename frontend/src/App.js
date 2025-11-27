@@ -320,6 +320,12 @@ function App() {
             }
           />
           <Route
+            path="/validacao-documentos/:motoristaId"
+            element={
+              user ? <ValidacaoDocumentosMotorista user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/gestao-planos"
             element={
               user ? <GestaoPlanos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
