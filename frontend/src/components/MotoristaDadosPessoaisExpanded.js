@@ -83,6 +83,23 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
 
   const canEdit = ['admin', 'gestao', 'operacional', 'parceiro'].includes(userRole);
   const isMotorista = userRole === 'motorista';
+  const documentosAprovados = motoristaData?.documentos_aprovados || false;
+  
+  // Campos que o motorista pode editar mesmo após aprovação
+  const camposEditaveisAposAprovacao = [
+    'codigo_registo_criminal', 'validade_registo_criminal',
+    'iban', 'nome_banco'
+  ];
+  
+  // Função para verificar se o campo pode ser editado
+  const canEditField = (fieldName) => {
+    if (canEdit) return true; // Admin, Gestor, Operacional, Parceiro sempre podem editar
+    if (isMotorista) {
+      if (!documentosAprovados) return true; // Se não aprovado, pode editar tudo
+      return camposEditaveisAposAprovacao.includes(fieldName); // Se aprovado, só campos permitidos
+    }
+    return false;
+  };
 
   // Validação de campos
   const validateField = (field, value) => {
