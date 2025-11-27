@@ -22,7 +22,9 @@ const RegistoMotorista = () => {
     nif: '',
     nacionalidade: 'Portuguesa',
     morada_completa: '',
-    codigo_postal: ''
+    codigo_postal: '',
+    password: '',
+    confirmPassword: ''
   });
 
   const handleChange = (e) => {
@@ -34,17 +36,29 @@ const RegistoMotorista = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validar senhas
+    if (formData.password.length < 6) {
+      toast.error('A senha deve ter no mínimo 6 caracteres');
+      return;
+    }
+    
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
+    
     setLoading(true);
 
     try {
-      const registoData = {
-        ...formData,
+      const { confirmPassword, ...registoData } = formData;
+      const finalData = {
+        ...registoData,
         role: 'motorista',
-        approved: false,
-        password: 'temporary123' // Temporary password, admin will set real one
+        approved: false
       };
 
-      await axios.post(`${API}/auth/register`, registoData);
+      await axios.post(`${API}/auth/register`, finalData);
       
       setSuccess(true);
       toast.success('Registo enviado com sucesso!');
@@ -235,11 +249,42 @@ const RegistoMotorista = () => {
                 </div>
               </div>
 
+              {/* Senha */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="password">Senha *</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                    placeholder="Mínimo 6 caracteres"
+                    minLength={6}
+                  />
+                  <p className="text-xs text-slate-500 mt-1">Mínimo 6 caracteres</p>
+                </div>
+                <div>
+                  <Label htmlFor="confirmPassword">Confirmar Senha *</Label>
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    required
+                    placeholder="Repita a senha"
+                    minLength={6}
+                  />
+                </div>
+              </div>
+
               {/* Info */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
-                  <strong>Próximos passos:</strong> Após o registo, receberá um email de confirmação com as suas credenciais de acesso. 
-                  A nossa equipa irá analisar os seus dados e entrará em contacto em 24-48 horas.
+                  <strong>Próximos passos:</strong> Após o registo, a nossa equipa irá analisar os seus dados. 
+                  Receberá um email em 24-48 horas quando a sua conta for aprovada. Poderá então fazer login com o email e senha que escolheu.
                 </p>
               </div>
 
