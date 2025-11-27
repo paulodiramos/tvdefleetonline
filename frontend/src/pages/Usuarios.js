@@ -1058,6 +1058,14 @@ const Usuarios = ({ user, onLogout }) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Motorista Detail Dialog */}
+      <MotoristaDetailDialog
+        open={showMotoristaDialog}
+        onClose={() => setShowMotoristaDialog(false)}
+        motoristaId={selectedMotoristaId}
+        userRole={user.role}
+      />
     </Layout>
   );
 };
