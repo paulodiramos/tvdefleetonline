@@ -1062,43 +1062,43 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
       <Card>
         <CardHeader>
           <div className="flex items-center space-x-2">
-            <Shield className="w-5 h-5 text-green-600" />
-            <CardTitle>Seguro de Acidentes Pessoais</CardTitle>
+            <Shield className="w-5 h-5 text-slate-600" />
+            <CardTitle>Seguro de Acidentes Pessoais (Opcional)</CardTitle>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-3 gap-4">
             <div>
-              <Label>Número da Apólice *</Label>
+              <Label>Número da Apólice</Label>
               <Input
                 value={formData.seguro_numero_apolice}
                 onChange={(e) => handleChange('seguro_numero_apolice', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                disabled={!editMode}
                 placeholder="Número da apólice"
               />
             </div>
             <div>
-              <Label>Seguradora *</Label>
+              <Label>Seguradora</Label>
               <Input
                 value={formData.seguro_seguradora}
                 onChange={(e) => handleChange('seguro_seguradora', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                disabled={!editMode}
                 placeholder="Nome da seguradora"
               />
             </div>
             <div>
-              <Label>Validade *</Label>
+              <Label>Validade</Label>
               <Input
                 type="date"
                 value={formData.seguro_validade}
                 onChange={(e) => handleChange('seguro_validade', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                disabled={!editMode}
               />
             </div>
           </div>
 
           <div className="border rounded p-4">
-            <Label className="mb-2 block">Comprovativo de Seguro *</Label>
+            <Label className="mb-2 block">Comprovativo de Seguro</Label>
             <div className="flex space-x-2">
               <Button
                 size="sm"
