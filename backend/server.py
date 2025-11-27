@@ -3441,6 +3441,42 @@ async def download_motorista_contrato(
         filename=f"contrato_{motorista['name']}.pdf"
     )
 
+@api_router.get("/relatorios-ganhos/{relatorio_id}/download")
+async def download_relatorio_recibo(
+    relatorio_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Download receipt PDF from earnings report (Motorista/Admin/Gestor)"""
+    relatorio = await db.relatorios_ganhos.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    # Check authorization
+    is_authorized = (
+        current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO] or
+        (current_user["role"] == UserRole.MOTORISTA and current_user["id"] == relatorio["motorista_id"])
+    )
+    
+    if not is_authorized:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get receipt path
+    recibo_url = relatorio.get("recibo_pdf")
+    if not recibo_url:
+        raise HTTPException(status_code=404, detail="Receipt not uploaded yet")
+    
+    # Construct file path
+    file_path = Path(recibo_url.replace("/uploads/", str(UPLOAD_DIR) + "/"))
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Receipt file not found")
+    
+    return FileResponse(
+        path=file_path,
+        media_type="application/pdf",
+        filename=f"recibo_{relatorio_id}.pdf"
+    )
+
 @api_router.post("/solicitacoes-alteracao")
 async def criar_solicitacao_alteracao(
     data: Dict[str, Any],
