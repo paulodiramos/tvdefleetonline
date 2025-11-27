@@ -140,21 +140,46 @@ const MotoristaDashboard = ({ motoristaData, relatorios }) => {
             </Card>
           )}
 
-          {documentosValidos < totalDocumentos && (
-            <Card className="border-l-4 border-yellow-500">
-              <CardContent className="pt-6">
-                <div className="flex items-start space-x-3">
-                  <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
-                  <div>
-                    <h3 className="font-semibold text-slate-800">Documentos Incompletos</h3>
-                    <p className="text-sm text-slate-600">
-                      Faltam {totalDocumentos - documentosValidos} documento(s). Complete seu perfil na aba "Dados Pessoais".
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+          {(() => {
+            const documentosObrigatorios = [
+              { key: 'cc_frente', label: 'Cartão de Cidadão - Frente' },
+              { key: 'cc_verso', label: 'Cartão de Cidadão - Verso' },
+              { key: 'carta_conducao_frente', label: 'Carta de Condução - Frente' },
+              { key: 'carta_conducao_verso', label: 'Carta de Condução - Verso' },
+              { key: 'licenca_tvde', label: 'Licença TVDE' },
+              { key: 'registo_criminal', label: 'Registo Criminal' },
+              { key: 'comprovativo_iban', label: 'Comprovativo IBAN' },
+              { key: 'comprovativo_morada', label: 'Comprovativo de Morada' }
+            ];
+            
+            const documentosEmFalta = documentosObrigatorios.filter(doc => 
+              !motoristaData?.documents?.[doc.key]
+            );
+
+            if (documentosEmFalta.length > 0) {
+              return (
+                <Card className="border-l-4 border-yellow-500">
+                  <CardContent className="pt-6">
+                    <div className="flex items-start space-x-3">
+                      <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5" />
+                      <div className="text-sm text-yellow-800">
+                        <h3 className="font-semibold text-slate-800 mb-2">Documentos em Falta ({documentosEmFalta.length}):</h3>
+                        <ul className="list-disc list-inside space-y-1 text-slate-700">
+                          {documentosEmFalta.map(doc => (
+                            <li key={doc.key}>{doc.label}</li>
+                          ))}
+                        </ul>
+                        <p className="mt-2 text-xs text-slate-600">
+                          Complete seu perfil na aba "Dados Pessoais".
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            }
+            return null;
+          })()}
 
           {!motoristaData.plano_id && (
             <Card className="border-l-4 border-blue-500">
