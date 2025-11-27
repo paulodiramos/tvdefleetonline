@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { AlertCircle, TrendingUp, User, Package } from 'lucide-react';
 import MotoristaDashboard from '@/components/MotoristaDashboard';
-import MotoristaDadosPessoais from '@/components/MotoristaDadosPessoais';
+import MotoristaDadosPessoaisExpanded from '@/components/MotoristaDadosPessoaisExpanded';
 import MotoristaPlanos from '@/components/MotoristaPlanos';
 
 const PerfilMotorista = ({ user, onLogout }) => {
@@ -122,7 +122,7 @@ const PerfilMotorista = ({ user, onLogout }) => {
 
           {/* Tab: Dados Pessoais e Documentos */}
           <TabsContent value="dados">
-            <MotoristaDadosPessoais 
+            <MotoristaDadosPessoaisExpanded 
               motoristaData={motoristaData}
               onUpdate={handleUpdate}
               userRole={user.role}
