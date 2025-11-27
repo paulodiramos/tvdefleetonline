@@ -202,9 +202,11 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
 
   // Exportar função para verificar mudanças não guardadas
   useEffect(() => {
-    if (window.checkUnsavedChanges) {
-      window.checkUnsavedChanges = () => hasUnsavedChanges;
-    }
+    window.hasUnsavedChanges = () => hasUnsavedChanges;
+    
+    return () => {
+      window.hasUnsavedChanges = null;
+    };
   }, [hasUnsavedChanges]);
 
   const handleFileUpload = async (docType, file) => {
