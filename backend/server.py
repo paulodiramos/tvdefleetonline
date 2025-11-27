@@ -6982,13 +6982,46 @@ async def approve_user(
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="User not found")
     
-    # If user has motorista role, also update motoristas collection
+    # If user has motorista role, create/update motoristas profile
     user = await db.users.find_one({"id": user_id}, {"_id": 0})
     if user and user.get("role") == "motorista":
-        await db.motoristas.update_one(
-            {"id": user_id},
-            {"$set": {"status": "approved", "approved": True}}
-        )
+        # Check if motorista profile exists
+        motorista_exists = await db.motoristas.find_one({"id": user_id}, {"_id": 0})
+        
+        if not motorista_exists:
+            # Create motorista profile from user data
+            motorista_profile = {
+                "id": user_id,
+                "name": user.get("name"),
+                "email": user.get("email"),
+                "phone": user.get("phone", ""),
+                "whatsapp": user.get("whatsapp", ""),
+                "data_nascimento": user.get("data_nascimento", ""),
+                "nif": user.get("nif", ""),
+                "nacionalidade": user.get("nacionalidade", "Portuguesa"),
+                "morada_completa": user.get("morada_completa", ""),
+                "codigo_postal": user.get("codigo_postal", ""),
+                "status": "approved",
+                "approved": True,
+                "vehicle_assigned": None,
+                "parceiro_atribuido": None,
+                "contrato_id": None,
+                "documentos": {},
+                "contacto_emergencia": {},
+                "dados_bancarios": {},
+                "plano_id": None,
+                "plano_nome": None,
+                "plano_features": {},
+                "created_at": user.get("created_at"),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.motoristas.insert_one(motorista_profile)
+        else:
+            # Update existing motorista profile
+            await db.motoristas.update_one(
+                {"id": user_id},
+                {"$set": {"status": "approved", "approved": True, "updated_at": datetime.now(timezone.utc).isoformat()}}
+            )
     
     return {"message": "User approved successfully"}
 
