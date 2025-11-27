@@ -1138,7 +1138,7 @@ agent_communication:
         
         ✅ CREDENCIAIS TESTADAS COM SUCESSO:
         - **Motorista:** motorista@tvdefleet.com / 2rEFuwQO ✅ FUNCIONANDO
-        - **URL:** https://fleetmasterapp.preview.emergentagent.com ✅ ACESSÍVEL
+        - **URL:** https://fleetportal.preview.emergentagent.com ✅ ACESSÍVEL
         
         ✅ 1. LOGIN E ACESSO AO PERFIL:
         - ✅ Login como motorista: FUNCIONANDO
@@ -1425,7 +1425,7 @@ agent_communication:
         ✅ CREDENCIAIS TESTADAS:
         - Email: motorista@tvdefleet.com
         - Senha: 2rEFuwQO
-        - URL: https://fleetmasterapp.preview.emergentagent.com
+        - URL: https://fleetportal.preview.emergentagent.com
         
         ✅ FLUXO COMPLETO TESTADO COM SUCESSO:
         
@@ -1441,7 +1441,7 @@ agent_communication:
         
         **3. REDIRECIONAMENTO:**
         - ✅ Redirecionamento automático para /profile: FUNCIONANDO
-        - ✅ URL final correta: https://fleetmasterapp.preview.emergentagent.com/profile
+        - ✅ URL final correta: https://fleetportal.preview.emergentagent.com/profile
         - ✅ Sem erros de navegação: FUNCIONANDO
         
         **4. CARREGAMENTO DA PÁGINA DE PERFIL:**
@@ -2561,7 +2561,7 @@ agent_communication:
         - GET /api/vehicles
         - POST /api/contratos/gerar
         
-        URL: https://fleetmasterapp.preview.emergentagent.com
+        URL: https://fleetportal.preview.emergentagent.com
         
         Starting comprehensive test of contract generation flow...
     

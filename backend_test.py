@@ -14,7 +14,7 @@ import base64
 from pathlib import Path
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://fleetmasterapp.preview.emergentagent.com/api"
+BACKEND_URL = "https://fleetportal.preview.emergentagent.com/api"
 
 # Test credentials (already seeded in DB)
 TEST_CREDENTIALS = {

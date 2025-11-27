@@ -1,173 +1,161 @@
 <analysis>**original_problem_statement:**
-The user's initial goal was a simple partner dashboard. This has evolved into a comprehensive fleet management system with the following key features:
-1.  **Multi-Role System**: Distinct functionalities for Admins, Partners (Parceiros), Managers (Gestores), Operational staff, and Drivers (Motoristas).
-2.  **Advanced Financial Management**:
-    *   Manual entry of expenses and revenues on a per-partner basis ().
-    *   A detailed financial overview page () with filtering by partner.
-    *   A comprehensive weekly earnings report for drivers, including earnings from platforms (Uber/Bolt), expenses (fuel, tolls), deductions (damages, deposits), and performance metrics (hours online, trips).
-3.  **Driver-Centric Portal ()**:
-    *   A detailed personal profile with fields for nationality, tax/social security numbers, emergency contacts, etc.
-    *   A document management system for uploading ID, driver's license, criminal record, proof of address, etc.
-    *   A view of available vehicles for drivers without an assigned car, with an option to apply.
-    *   A financial dashboard to view weekly earnings reports and their payment status.
-4.  **Simplified Contract Management**: The old system of minutas (drafts) and templates has been replaced. Now, Partners have a single contract text, and Admins can define various contract types within the partner's profile, which are then used when generating new driver contracts.
-5.  **Payment & Receipt Workflow**:
-    *   Drivers can upload receipts for expenses ().
-    *   Admins/Managers can generate detailed weekly reports for drivers ().
-    *   Drivers receive these reports, which act as an invoice/receipt for the partner.
-    *   Partners have a dedicated page () to view these reports, change their payment status (e.g., Em Análise, Liquidado), and upload proof of payment.
-6.  **Subscription & Payment System**: A subscription management system where admins can create plans. (Future integration with IFThenPay is planned).
+The user's initial goal was a comprehensive fleet management system. The scope has significantly expanded to include a massive overhaul of the driver's portal and the introduction of several new, complex features.
+
+The current project is divided into several phases based on the user's latest requests:
+*   **Phase 1 (Completed): Driver Profile Data Expansion.** A complete redesign of the driver's personal data page () to include an extensive list of fields: personal details, multiple document types (ID, license, criminal record) with front/back uploads and expiry dates, financial information (IBAN), tax details, emergency contacts, and personal accident insurance.
+*   **Phase 2 (Completed): Driver Navigation & UI.** A dedicated, role-based navigation menu for drivers. The main dashboard was also enhanced to show the status of weekly payment reports.
+*   **Phase 3: Messaging/Chat System.** Implement an internal messaging system allowing communication between all user roles (Admin, Gestor, Parceiro, Motorista).
+*   **Phase 4: Ticket System.** Implement a ticketing system for drivers to report issues with vehicles or their activity.
+*   **Phase 5: Vehicle Opportunities.** Create a page where drivers without an assigned vehicle can view available cars from all partners, see their conditions (rent, commission, sale), and express interest via the internal messaging system.
+*   **Phase 6: IFThenPay Integration.** Allow drivers to select and pay for subscription plans directly from their profile using IFThenPay.
+
+A critical requirement is the implementation of a **document validation system**: once a driver uploads a document, it must be validated by an Admin, Manager, or Partner. After validation, the document and its associated data become non-editable by the driver, with the exception of the IBAN and criminal record. Any other changes would require a support ticket.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-The application has been significantly refactored and expanded.
--   **Backend ()**: Includes new Pydantic models and FastAPI endpoints for partner-specific financial entries, a highly detailed weekly report (), vehicle requests by drivers, and file uploads for receipts and driver documents.
--   **Frontend (React)**:
-    -   : Now fixed and functional, allowing manual entry of partner expenses/revenues via modals.
-    -   : Enhanced with a partner selection dropdown to filter financial data.
-    -    ( for drivers): A new, comprehensive page serving as the main hub for drivers, with tabs for a financial dashboard, personal data, document uploads, and vehicle requests.
-    -   : Dynamically adjusts visible menu items and redirects based on the user's role (e.g., drivers see a simplified menu).
-    -   : The main partner list page has been cleaned up, removing all obsolete UI related to the old minuta de contrato system.
-    -   : The partner profile page now features the new, simplified contract management system.
-    -   : Refactored to use the new contract system, pulling available contract types from the selected partner.
-    -    (): A new page for partners to manage payments to drivers, including changing status and uploading proof of payment. **This was the last feature being worked on.**
-    -   : A file has been created with login credentials for all user roles.
+The application now features a completely refactored driver experience.
+-   **Backend ():** The  Pydantic model has been massively expanded to accommodate dozens of new fields for personal data, documents, and contacts. A new data structure, , has been added to the  model to track the validation status of each document. New endpoints have been added for driver plan management () and for admins/managers to validate documents (). Critical bugs in the driver registration and approval flow have been fixed, ensuring a driver profile is correctly created upon approval.
+-   **Frontend (React):**
+    -   : The driver profile page has been completely rewritten. It now uses a tabbed interface with new, dedicated components: , , and .
+    -   : A large, complex component containing form fields for all the new data points. It includes logic to disable fields and file uploads based on  and the document's validation status fetched from the backend.
+    -   : Now provides a unique, role-specific navigation menu for logged-in drivers, and the main logo correctly links to the user's role-specific home page.
+    -   : Updated to fetch and display the status of the driver's weekly payment reports.
+    -   Placeholder pages for future features (Messages, Tickets, Opportunities) have been created and routed in .
 
 **Last working item**:
--   **Last item agent was working**: The agent was implementing the frontend for the Partner Payments page (). The goal was to allow partners to view the list of weekly reports (payments due to drivers), change the payment status of each report (e.g., from Por Enviar to Em Análise, A Pagamento, Liquidado), and upload a proof of payment. The agent has added the necessary UI components (dropdown for status, button for upload) and the handler functions (, ).
+-   **Last item agent was working**: The agent just finished updating the  component to display the status of weekly reports and removed the Dashboard link from the driver's navigation menu as requested by the user.
 -   **Status**: IN PROGRESS
 -   **Agent Testing Done**: N
--   **Which testing method agent to use?**: Frontend testing agent. The agent should log in as a partner, navigate to the  page, and test the full workflow: changing a report's status and uploading a payment confirmation file. This requires both frontend interaction and backend validation.
+-   **Which testing method agent to use?**: Frontend testing agent. The agent needs to log in as a driver and verify that the dashboard correctly fetches and displays the status of any existing weekly reports. This will require ensuring test data for  exists for the test driver.
 -   **User Testing Done**: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1**: Testing and completion of the Partner Payment page (). (Priority: P0)
+-   **Issue 1**: Testing of the Driver Dashboard () functionality. (Priority: P0)
+-   **Issue 2**: The save functionality for the expanded driver profile is not implemented. (Priority: P1)
+-   **Issue 3**: The original task of testing the Partner Payment page () was never completed. (Priority: P2)
 
 **Issues Detail**:
--   **Issue 1**: The functionality on  has been coded but not tested.
-    -   **Attempted fixes**: N/A.
+-   **Issue 1**:
+    -   **Attempted fixes**: The agent wrote the frontend code to fetch and display report statuses.
     -   **Next debug checklist**:
-        1.  Log in as a user with the  role.
-        2.  Navigate to the  page.
-        3.  Verify that a list of weekly reports is displayed.
-        4.  Attempt to change the status of a report using the new dropdown. Check for a success message and verify the change persists on page refresh (i.e., the backend was updated).
-        5.  Attempt to upload a proof of payment. Verify the upload modal opens and the file submission triggers the correct API call. Check backend logs and the file system to ensure the file was saved.
-    -   **Why fix this issue and what will be achieved with the fix?**: This is the final piece of the driver payment workflow. Completing it will allow partners to manage and track payments made to drivers, closing the loop started by the driver's weekly report.
+        1.  Ensure a test driver user exists.
+        2.  Ensure at least one  document exists in the database linked to that driver.
+        3.  Log in as the driver using the frontend testing agent.
+        4.  Verify the dashboard page () loads without errors.
+        5.  Confirm that cards representing the status of the weekly reports are displayed correctly.
+    -   **Why fix this issue and what will be achieved with the fix?**: This completes the latest user request and provides drivers with crucial visibility into their payment status.
+    -   **Status**: IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?**: Both
+    -   **Blocked on other issue**: None
+
+-   **Issue 2**:
+    -   **Attempted fixes**: The agent built the extensive frontend form in  and updated the backend model. However, the  function that gathers all the data and sends it to the  endpoint is incomplete.
+    -   **Next debug checklist**:
+        1.  Complete the  function in  to collect data from all form fields, including file uploads.
+        2.  Ensure the  endpoint in  correctly processes and saves all the new fields.
+        3.  Test the entire flow: fill out the form, save, refresh the page, and verify the data persists.
+    -   **Why fix this issue and what will be achieved with the fix?**: This will make the entire Phase 1 (Driver Profile Data Expansion) functional, allowing data to be saved.
+    -   **Status**: NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?**: Both
+    -   **Blocked on other issue**: None
+
+-   **Issue 3**:
+    -   **Attempted fixes**: The agent identified that the frontend  was calling non-existent backend endpoints and created the correct ones (). However, the agent then moved to other tasks without creating the necessary test data () to test the complete workflow.
+    -   **Next debug checklist**:
+        1.  Create a weekly report for a test driver linked to a test partner.
+        2.  Log in as the partner.
+        3.  Navigate to .
+        4.  Verify the report is listed.
+        5.  Test changing the status and uploading a payment proof file.
+    -   **Why fix this issue and what will be achieved with the fix?**: This completes a core feature of the payment workflow between partners and drivers.
     -   **Status**: IN PROGRESS
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?**: Both
     -   **Blocked on other issue**: None
 
 **In progress Task List**:
--   **Task 1**: Complete the Partner Payment Workflow. (Priority: P0)
-
-**Task Detail**:
--   **Task 1**:
-    -   **Where to resume**: Test the functionality implemented in . Debug any issues found during testing.
-    -   **What will be achieved with this?**: A fully functional payment management portal for partners.
-    -   **Status**: IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?**: Both
-    -   **Blocked on something**: None
+-   None separate from the issues above.
 
 **Upcoming and Future Tasks**
--   **P1**: Implement the frontend for  for admins/managers to review and approve receipts submitted by drivers.
--   **P2**: Implement the backend logic and frontend UI for the payment integration with IFThenPay, allowing users to pay for subscriptions and have them activated automatically.
--   **P3**: Add a dashboard/analytics view for admins to compare driver performance, vehicle ROI, and overall partner profitability over time.
+-   **P0 - FASE 3: Messaging System**: Implement a real-time chat/inbox system for inter-role communication.
+-   **P1 - FASE 4: Ticket System**: Build a support ticket system for drivers.
+-   **P2 - FASE 5: Vehicle Opportunities Page**: Develop the UI and backend logic for drivers to browse and apply for available vehicles.
+-   **P3 - FASE 6: IFThenPay Integration**: Implement the full payment flow for driver subscription plans using the IFThenPay integration playbook.
 
 **Completed work in this session**
--   **Bug Fix**: Fixed the blank  page by adding the correct route in .
--   **Feature Implemented**: Added forms for manual entry of expenses and revenues on the  page, including new backend models and endpoints.
--   **Feature Implemented**: Added a partner filter dropdown to the  page to refine data visibility.
--   **Contract System Refactor**: Completely removed the old minuta (draft) contract system and replaced it with a simplified model where admins define contract types directly within a partner's profile.
--   **Driver Portal Created**: Built the comprehensive  page, which includes:
-    -   A detailed personal data form.
-    -   A multi-file document upload system.
-    -   A financial dashboard for viewing weekly reports.
-    -   Logic to view and apply for available vehicles.
--   **Weekly Report Feature**: Created backend models and frontend pages () for admins to generate detailed weekly earnings reports for drivers.
--   **Test Users Created**: Created and tested logins for all user roles (admin, gestor, operacional, parceiro, motorista) and documented their credentials.
--   **UI/UX Improvements**:
-    -   Refined the main  to provide a role-based navigation experience.
-    -   Corrected the login redirect to send drivers directly to their new profile page.
-    -   Fixed a JavaScript error () on the driver profile page.
+-   **Critical Bug Fix**: Resolved the driver registration flow: drivers can now set their own password, and their profile is correctly created in the  collection upon admin approval.
+-   **Critical Bug Fix**: Fixed the profile not found error for drivers on login by correcting the API call to fetch by ID instead of fetching all drivers.
+-   **Feature Implemented**: Created a complete system for driver-specific subscription plans, including backend models, CRUD endpoints (), and an admin management page ().
+-   **Feature Implemented**: Implemented a document validation system. Backend now tracks validation status, and the frontend UI disables editing of validated documents.
+-   **UI/UX Overhaul**: Completely redesigned the driver's profile page () into a modern, tabbed interface with dedicated components.
+-   **UI/UX Overhaul**: Implemented a role-specific navigation menu in  for drivers and fixed the main logo link to be role-aware.
+-   **Bug Fix**: Fixed a 500 error on the  endpoint caused by a Pydantic model mismatch.
 
-**Known issue recurrence from previous fork**
--   None.
+**Earlier issues found/mentioned but not fixed**
+-   **Issue 1**: The partner payment page () functionality was implemented but never fully tested due to a lack of test data. This task was abandoned mid-session.
+    -   **Debug checklist**: Create  test data, log in as a partner, and test the status change and file upload workflow on the  page.
+    -   **Why to solve this issue and what will be achieved with this?**: It's a core feature that closes the financial loop between drivers and partners.
+    -   **Should Test frontend/backend/both after fix**: Both
+    -   **Is recurring issue?** N
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend**: Python, FastAPI, Pydantic, MongoDB ( driver).
--   **Frontend**: React.js (with Hooks), Axios, .
--   **UI Library**: .
--   **Styling**: Tailwind CSS.
+-   **Backend**: FastAPI, Pydantic (with complex nested models), MongoDB.
+-   **Frontend**: React.js (with Hooks), Axios, , , Tailwind CSS.
+-   **Core Logic**: Heavy reliance on role-based conditional rendering and logic on both frontend and backend. A new state management pattern for edit mode and validation status has been introduced on the driver profile.
 
 **key DB schema**
--   **parceiros**:  (new field),  fields removed.
--   **motoristas**: Now contains a much more detailed structure for personal data, emergency contacts, and document URLs.
--   **relatorios_semanais** (new collection): 
-
-**changes in tech stack**
--   None.
+-   **motoristas**: Massively expanded collection with dozens of new fields for personal info, documents (each as an object with , , etc.), contacts, and financial data. Includes a new nested object  to store the validation state of each document.
+-   **planos_motorista** (new collection): Stores subscription plans specific to drivers, with fields for name, description, weekly/monthly prices, and features.
+-   **assinaturas_motoristas** (new collection): To store driver subscriptions to plans.
 
 **All files**
 -   **Created**:
-    -   : New UI for simplified contract type management.
-    -   : The new comprehensive driver portal.
-    -   : Admin/Manager page to generate weekly reports.
-    -   : Partner page to manage payments (in progress).
-    -   : Document with test user credentials.
+    -   : Dashboard card view for drivers.
+    -   : The new, comprehensive form for all driver data.
+    -   : Component for viewing/selecting plans.
+    -   : Admin page to manage driver plans.
+    -   : Standalone page for drivers to manage their plan.
+    -   Multiple placeholder pages: , , , etc.
 -   **Updated/Refactored**:
-    -   : Added numerous new models (, partner-specific financials) and endpoints.
-    -   : Added new routes and role-based redirects.
-    -   : Implemented role-based menu visibility.
-    -   : Fixed rendering bug and added modals for data entry.
-    -   : Added partner filter.
-    -   : Removed all UI related to the obsolete minuta contract system.
-    -   : Integrated the new contract management tab.
-    -   : Rewired to use the new simplified contract system.
-    -   : Switched from URL input to a proper file upload mechanism.
+    -   : Major updates to  model, new models (, ), and new endpoints for plan management and document validation. Critical fixes to user approval logic.
+    -   : Completely rewritten to use the new component-based, tabbed layout.
+    -   : Major logic added for role-based navigation menus and home links.
+    -   : Added numerous new routes for the driver-specific pages.
+    -   : Fixed to allow drivers to set their own password.
+    -   : Logic updated to handle assignment of driver-specific plans.
 
 **Critical Info for New Agent**
--   **Role-Based Logic is Key**: The application's behavior, especially on the frontend (, ), changes significantly based on the logged-in user's role. Always test features from the perspective of the correct user role.
--   **Contract System is New**: The entire contract creation and management flow was refactored. The old templates and minutas are gone, replaced by contract types defined within the partner's profile.
--   **Driver-Centric Shift**: The  page is now the central point for all driver interactions, including viewing finances, managing documents, and requesting vehicles.
--   **Test Credentials Exist**: Use the logins from  to test different roles. The admin password was most recently reset to .
-
-**documents created in this job**
--   
+-   **Phased Development is Key**: The user has approved a multi-phase plan. The next agent must follow this plan, starting with the implementation of the Messaging System (Phase 3) after fixing pending issues.
+-   **Document Validation Logic**: The logic for locking down fields based on  and validation status in  is critical and complex. It's the core of a major user requirement.
+-   **Saving is Not Implemented**: The new expanded driver profile form  is UI-only. The agent must implement the  function to actually save the data to the backend.
+-   **Abandoned Task**: The testing for the Partner Payment page () was left incomplete. This is technical debt that should be addressed.
 
 **Last 5 User Messages and any pending user messages**
-1.  **Request**: perfil de motorista ... erro ERROR X is not defined....
-    -   **Action**: Fixed the missing  icon import in  and added the nacionalidade field as requested. (Completed)
-2.  **Request**: A massive request to expand the driver profile with many new fields (documents, personal info, emergency contacts), add a detailed weekly financial dashboard for drivers, and implement the partner-side payment status flow.
-    -   **Action**: Implemented all the new fields in . Started implementing the partner payment flow in . (In Progress)
-3.  **Request**: no metodo de pagamento colocar dropbox com as opçoes recibo, fatura, outro....
-    -   **Action**: Corrected the payment method field in  to be a dropdown with a conditional text input. (Completed)
-4.  **Request**: go
-    -   **Action**: Continued implementation of the partner payment page. (In Progress)
-5.  **Request**: go (User's last message, indicating approval to proceed).
-    -   **Action**: Agent edited  to finalize the UI and logic for the partner payment flow. **This is the current unfinished work.**
+1.  **Request**: logo dashboard... nao pode ser este... avancar para proxima fase - The logo link is wrong; move to the next phase. (Completed - Logo link fixed).
+2.  **Request**: todos os documentos terao de ser validados... nao podem ser mais editados... continuar - Implement document validation and lockdown. (Completed - Backend and frontend logic implemented).
+3.  **Request**: continuar - User approval to proceed with completing Phase 2. (Completed).
+4.  **Request**: adicionar menu planos , resto continuar - Add a Plans item to the driver menu. (Completed).
+5.  **Request**: menu dashboard remover pois dashboar faz logotipo, dashboard com informacao do estado do recibo continuar - Remove the Dashboard link from the menu and add receipt status to the dashboard itself. (Completed - This was the last action taken).
 
 **Project Health Check:**
--   **Broken**: None known, but the last feature is untested.
+-   **Broken**: The saving mechanism on the new driver profile page ( -> ) is not implemented.
 -   **Mocked**: None.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES, both backend and frontend testing agents were used multiple times.
+-   **Testing agent used after significant changes**: YES, frequently used to test login flows and page rendering.
 -   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: A test script was used by the agent but not saved permanently.
--   **Known regressions**: None. The  page regression from the previous fork was fixed.
+-   **Test files created**: None saved.
+-   **Known regressions**: None.
 
 **Credentials to test flow:**
--   Credentials for all roles are available in the file .
--   **Admin**:  / 
--   **Gestor**:  / 
--   **Operacional**:  / 
--   **Parceiro**:  / 
--   **Motorista**:  / 
+-   Credentials for all roles are available in . The  user is the primary one for testing the new features.
 
 **What agent forgot to execute**
--   The agent did not test the final implementation on the  page after adding the logic for changing payment status and uploading proof of payment. This is the immediate next step.</analysis>
+-   The agent never implemented the  function in  to save the new driver data.
+-   The agent never went back to create test data for and fully test the Partner Payment page () after fixing its backend endpoints early in the session.</analysis>
