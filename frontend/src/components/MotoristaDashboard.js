@@ -153,18 +153,14 @@ const MotoristaDashboard = ({ motoristaData, relatorios }) => {
             ];
             
             // Se documentos_aprovados = true, considerar tudo validado
-            if (motoristaData?.documentos_aprovados) {
-              // Todos os documentos foram aprovados globalmente
-              const documentosEmFalta = [];
-            } else {
-              // Filtrar documentos que não têm upload OU não estão validados
-              var documentosEmFalta = documentosObrigatorios.filter(doc => {
-                const hasDocument = motoristaData?.documents?.[doc.key];
-                const isValidated = motoristaData?.documents_validacao?.[doc.key]?.validado;
-                // Documento está em falta se não foi carregado OU se foi carregado mas não foi validado
-                return !hasDocument || !isValidated;
-              });
-            }
+            const documentosEmFalta = motoristaData?.documentos_aprovados 
+              ? [] 
+              : documentosObrigatorios.filter(doc => {
+                  const hasDocument = motoristaData?.documents?.[doc.key];
+                  const isValidated = motoristaData?.documents_validacao?.[doc.key]?.validado;
+                  // Documento está em falta se não foi carregado OU se foi carregado mas não foi validado
+                  return !hasDocument || !isValidated;
+                });
 
             if (documentosEmFalta.length > 0) {
               return (
