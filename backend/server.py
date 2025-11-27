@@ -1237,6 +1237,7 @@ class Motorista(BaseModel):
     emergencia_email: Optional[str] = None
     emergencia_morada: Optional[str] = None
     emergencia_codigo_postal: Optional[str] = None
+    emergencia_localidade: Optional[str] = None
     emergencia_ligacao: Optional[str] = None
     
     # Seguro de Acidentes Pessoais
