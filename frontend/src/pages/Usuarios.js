@@ -521,15 +521,29 @@ const Usuarios = ({ user, onLogout }) => {
                             Ver
                           </Button>
                           {regUser.role === 'motorista' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => navigate(`/validacao-documentos/${regUser.id}`)}
-                              className="bg-green-50 hover:bg-green-100 border-green-500 text-green-700"
-                            >
-                              <Shield className="w-4 h-4 mr-1" />
-                              Documentos
-                            </Button>
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => {
+                                  setSelectedMotoristaId(regUser.id);
+                                  setShowMotoristaDialog(true);
+                                }}
+                                className="bg-blue-50 hover:bg-blue-100 border-blue-500 text-blue-700"
+                              >
+                                <User className="w-4 h-4 mr-1" />
+                                Ver Motorista
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => navigate(`/validacao-documentos/${regUser.id}`)}
+                                className="bg-green-50 hover:bg-green-100 border-green-500 text-green-700"
+                              >
+                                <Shield className="w-4 h-4 mr-1" />
+                                Validar
+                              </Button>
+                            </>
                           )}
                           <Button
                             size="sm"
