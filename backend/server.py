@@ -3441,6 +3441,98 @@ async def download_motorista_contrato(
         filename=f"contrato_{motorista['name']}.pdf"
     )
 
+@api_router.post("/solicitacoes-alteracao")
+async def criar_solicitacao_alteracao(
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Criar solicitação de alteração de dados (Motorista)"""
+    if current_user["role"] != UserRole.MOTORISTA:
+        raise HTTPException(status_code=403, detail="Only motoristas can create change requests")
+    
+    # Get motorista data
+    motorista = await db.motoristas.find_one({"email": current_user["email"]}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista profile not found")
+    
+    solicitacao = {
+        "id": str(uuid4()),
+        "motorista_id": motorista["id"],
+        "motorista_nome": motorista["name"],
+        "campo": data["campo"],
+        "valor_atual": data["valor_atual"],
+        "valor_solicitado": data["valor_solicitado"],
+        "justificativa": data["justificativa"],
+        "status": "pendente",
+        "respondido_por": None,
+        "resposta": None,
+        "created_at": datetime.now(timezone.utc),
+        "respondido_em": None
+    }
+    
+    await db.solicitacoes_alteracao.insert_one(solicitacao)
+    
+    return {"message": "Solicitação criada com sucesso", "id": solicitacao["id"]}
+
+@api_router.get("/solicitacoes-alteracao")
+async def listar_solicitacoes_alteracao(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Listar solicitações de alteração"""
+    if current_user["role"] == UserRole.MOTORISTA:
+        # Motorista vê apenas suas próprias solicitações
+        motorista = await db.motoristas.find_one({"email": current_user["email"]}, {"_id": 0})
+        if not motorista:
+            return []
+        solicitacoes = await db.solicitacoes_alteracao.find(
+            {"motorista_id": motorista["id"]},
+            {"_id": 0}
+        ).to_list(100)
+    else:
+        # Admin/Gestor/Parceiro/Operacional veem todas
+        solicitacoes = await db.solicitacoes_alteracao.find({}, {"_id": 0}).to_list(100)
+    
+    return solicitacoes
+
+@api_router.put("/solicitacoes-alteracao/{solicitacao_id}/responder")
+async def responder_solicitacao(
+    solicitacao_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Responder solicitação de alteração (Admin/Gestor/Parceiro/Operacional)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    solicitacao = await db.solicitacoes_alteracao.find_one({"id": solicitacao_id}, {"_id": 0})
+    if not solicitacao:
+        raise HTTPException(status_code=404, detail="Solicitação not found")
+    
+    status = data.get("status")  # "aprovada" ou "rejeitada"
+    resposta = data.get("resposta", "")
+    
+    # Update solicitação
+    await db.solicitacoes_alteracao.update_one(
+        {"id": solicitacao_id},
+        {
+            "$set": {
+                "status": status,
+                "respondido_por": current_user["name"],
+                "resposta": resposta,
+                "respondido_em": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    # Se aprovada, atualizar dados do motorista
+    if status == "aprovada":
+        await db.motoristas.update_one(
+            {"id": solicitacao["motorista_id"]},
+            {"$set": {solicitacao["campo"]: solicitacao["valor_solicitado"]}}
+        )
+    
+    return {"message": f"Solicitação {status} com sucesso"}
+
 @api_router.post("/motoristas/{motorista_id}/upload-documento")
 async def upload_motorista_documento(
     motorista_id: str,
