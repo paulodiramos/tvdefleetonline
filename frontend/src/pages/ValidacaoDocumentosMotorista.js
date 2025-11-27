@@ -461,8 +461,10 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
               const validacao = validacoes[docType];
               const isValidado = validacao?.validado || false;
 
+              const documentData = getDocumentData(docType);
+              
               return (
-                <Card key={docType} className={`${isValidado ? 'border-green-200' : 'border-slate-200'}`}>
+                <Card key={docType} className={`${isValidado ? 'border-green-200 bg-green-50' : 'border-slate-200'}`}>
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
@@ -470,7 +472,7 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
                         <CardTitle className="text-lg">{getDocumentLabel(docType)}</CardTitle>
                       </div>
                       {isValidado ? (
-                        <Badge className="bg-green-100 text-green-800">
+                        <Badge className="bg-green-600 text-white">
                           <CheckCircle className="w-3 h-3 mr-1" />
                           Aprovado
                         </Badge>
@@ -483,14 +485,31 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
-                      {validacao && (
-                        <div className="text-sm text-slate-600">
+                    <div className="space-y-4">
+                      {/* Dados do Documento */}
+                      {documentData.length > 0 && (
+                        <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                          <p className="text-xs font-semibold text-slate-700 mb-2 uppercase">Dados no Perfil:</p>
+                          <div className="space-y-1">
+                            {documentData.map((item, idx) => (
+                              <div key={idx} className="flex justify-between text-sm">
+                                <span className="text-slate-600">{item.label}:</span>
+                                <span className="font-medium text-slate-900">{item.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Informação de Validação */}
+                      {validacao && isValidado && (
+                        <div className="text-xs text-slate-600 border-t pt-3">
                           <p><strong>Validado por:</strong> {validacao.validado_por || 'N/A'}</p>
                           <p><strong>Data:</strong> {validacao.validado_em ? new Date(validacao.validado_em).toLocaleDateString('pt-PT') : 'N/A'}</p>
                         </div>
                       )}
                       
+                      {/* Botões de Ação */}
                       <div className="flex space-x-2">
                         <Button
                           size="sm"
@@ -507,7 +526,7 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
                             <Button
                               size="sm"
                               onClick={() => handleValidateDocument(docType, true)}
-                              className="bg-green-600 hover:bg-green-700"
+                              className="bg-green-600 hover:bg-green-700 text-white"
                             >
                               <CheckCircle className="w-4 h-4 mr-2" />
                               Aprovar
@@ -525,9 +544,10 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
                           <Button
                             size="sm"
                             variant="outline"
+                            className="border-red-500 text-red-600 hover:bg-red-50"
                             onClick={() => handleValidateDocument(docType, false)}
                           >
-                            Revogar
+                            Revogar Aprovação
                           </Button>
                         )}
                       </div>
