@@ -388,6 +388,49 @@ test_plan:
   expanded_features_tested: false
 
 agent_communication:
+    - agent: "testing"
+      message: |
+        🚨 TESTE CRÍTICO FALHADO - NOVOS CAMPOS NA VALIDAÇÃO DE DOCUMENTOS
+        
+        CONTEXTO DO TESTE:
+        Teste completo dos novos campos na validação de documentos conforme review request em português.
+        
+        CREDENCIAIS TESTADAS:
+        - Admin: admin@tvdefleet.com / o72ocUHy ✅
+        
+        URL: https://fleetportal.preview.emergentagent.com ✅
+        
+        ❌ PROBLEMA CRÍTICO IDENTIFICADO: PÁGINA DE VALIDAÇÃO NÃO CARREGA CORRETAMENTE
+        
+        **NAVEGAÇÃO FUNCIONANDO:**
+        - ✅ Login admin bem-sucedido
+        - ✅ Navegação para /usuarios funcionando
+        - ✅ Página "Gestão de Utilizadores" carrega corretamente
+        - ✅ Encontrados 2 botões "Documentos" na tabela de utilizadores registados
+        - ✅ Botão "Documentos" clicável e navega para /validacao-documentos/{motorista_id}
+        
+        **PROBLEMA PRINCIPAL:**
+        - ❌ Página de validação não renderiza o conteúdo correto
+        - ❌ Mostra página de login em vez do conteúdo de validação
+        - ❌ Possível problema de autenticação, roteamento ou dados do motorista
+        
+        **RESULTADOS DOS TESTES (1/7 PASSARAM):**
+        - ❌ TEST 1: Documento de Identificação cards - 0 cards encontrados
+        - ❌ TEST 2-3: Dados nos documentos - 0 seções "Dados no Perfil"
+        - ❌ TEST 4: Categoria na Carta de Condução - Campo não encontrado
+        - ❌ TEST 5: Dados do Seguro - Campos não encontrados
+        - ❌ TEST 6: Novos campos editáveis - 0/4 encontrados
+        - ❌ TEST 7: Funcionalidade de edição - 0 botões "Editar"
+        
+        **AÇÃO NECESSÁRIA:**
+        1. Verificar se o motorista tem documentos carregados no sistema
+        2. Verificar autenticação na página de validação
+        3. Verificar se a rota /validacao-documentos/{id} está funcionando corretamente
+        4. Verificar se os dados do motorista estão sendo carregados
+        5. Testar com diferentes motoristas que tenham documentos
+        
+        **OBSERVAÇÃO:** O código parece estar implementado corretamente no ValidacaoDocumentosMotorista.js, mas a página não está carregando os dados necessários para exibir o conteúdo.
+    
     - agent: "main"
       message: |
         NOVAS IMPLEMENTAÇÕES - Melhorias de Campos:
