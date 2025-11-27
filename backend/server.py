@@ -1231,8 +1231,12 @@ class Motorista(BaseModel):
     
     # Carta de Condução (expandido)
     numero_carta: Optional[str] = None
+    numero_carta_conducao: Optional[str] = None  # Alias para numero_carta
+    categoria_carta_conducao: Optional[str] = None  # B, B+E, C, D, etc
     emissao_carta: Optional[str] = None
+    data_emissao_carta: Optional[str] = None  # Alias para emissao_carta
     validade_carta: Optional[str] = None
+    validade_carta_conducao: Optional[str] = None  # Alias para validade_carta
     
     # Licença TVDE (expandido)
     numero_licenca_tvde: Optional[str] = None
