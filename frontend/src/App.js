@@ -18,6 +18,7 @@ import PerfilMotorista from "@/pages/PerfilMotorista";
 import MotoristaRecibosGanhos from "@/pages/MotoristaRecibosGanhos";
 import MotoristaEnvioRecibo from "@/pages/MotoristaEnvioRecibo";
 import MotoristaPerfil from "@/pages/MotoristaPerfil";
+import MotoristaPlanosPagina from "@/pages/MotoristaPlanosPagina";
 import MotoristaMensagens from "@/pages/MotoristaMensagens";
 import MotoristaTickets from "@/pages/MotoristaTickets";
 import MotoristaOportunidades from "@/pages/MotoristaOportunidades";
@@ -225,6 +226,12 @@ function App() {
             path="/motorista/perfil"
             element={
               user ? <MotoristaPerfil user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/motorista/planos"
+            element={
+              user ? <MotoristaPlanosPagina user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
           <Route
