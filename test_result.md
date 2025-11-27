@@ -983,6 +983,109 @@ frontend:
 agent_communication:
     - agent: "testing"
       message: |
+        🎯 TESTE COMPLETO FASE B - VALIDAÇÃO DE DOCUMENTOS E SISTEMA DE CONTRATOS
+        
+        CONTEXTO DO TESTE:
+        Teste completo da FASE B conforme review request em português, incluindo:
+        1. Botão "Validar Documentos" na página de usuários
+        2. Página de validação de documentos 
+        3. Botão download de contrato para motoristas
+        4. Sistema de bloqueio após aprovação
+        
+        CREDENCIAIS TESTADAS:
+        - Admin: admin@tvdefleet.com / o72ocUHy ✅
+        - Motorista: motorista@tvdefleet.com / 2rEFuwQO ✅
+        
+        URL: https://fleetportal.preview.emergentagent.com ✅
+        
+        ✅ TESTE 1: BOTÃO "VALIDAR DOCUMENTOS" NA PÁGINA DE USUÁRIOS
+        
+        **1. LOGIN E NAVEGAÇÃO:**
+        - ✅ Login como admin: FUNCIONANDO
+        - ✅ Navegação para /usuarios: FUNCIONANDO
+        - ✅ Página "Gestão de Utilizadores" carrega corretamente
+        
+        **2. IDENTIFICAÇÃO DE MOTORISTAS:**
+        - ✅ Encontrados 3 motoristas na tabela de utilizadores registados
+        - ✅ Encontrados 7 botões "Ver" na tabela
+        - ✅ Diálogo de detalhes do utilizador abre corretamente
+        
+        **3. BOTÃO "VALIDAR DOCUMENTOS":**
+        - ❌ CRÍTICO: Botão "Validar Documentos" NÃO ENCONTRADO no diálogo de detalhes
+        - ❌ CRÍTICO: Ícone Shield não encontrado
+        - ❌ CRÍTICO: Navegação para /validacao-documentos/{motorista_id} não funciona
+        
+        **PROBLEMA IDENTIFICADO:**
+        O botão "Validar Documentos" não aparece no diálogo de detalhes do utilizador, mesmo para utilizadores com role "Motorista". Verificado código em Usuarios.js linhas 774-786 - botão existe apenas para viewingUser.role === 'motorista' mas não está a aparecer na interface.
+        
+        ❌ TESTE 2: PÁGINA DE VALIDAÇÃO DE DOCUMENTOS
+        
+        **RESULTADO:**
+        - ❌ Não foi possível testar devido ao TESTE 1 falhar
+        - ❌ Navegação para página de validação não funciona
+        - ❌ Elementos da página não puderam ser verificados
+        
+        ⚠️ TESTE 3: BOTÃO DOWNLOAD DE CONTRATO (MOTORISTA)
+        
+        **1. LOGIN COMO MOTORISTA:**
+        - ✅ Login motorista@tvdefleet.com/2rEFuwQO: FUNCIONANDO
+        - ✅ Dashboard do motorista carrega corretamente
+        
+        **2. NAVEGAÇÃO PARA DADOS PESSOAIS:**
+        - ❌ CRÍTICO: Timeout ao tentar navegar para página de perfil
+        - ❌ CRÍTICO: Não foi possível encontrar aba "Dados Pessoais"
+        - ❌ CRÍTICO: URLs testadas falharam: /profile, /motorista/perfil
+        
+        **3. CARD CONTRATO:**
+        - ❌ Não foi possível verificar devido a problemas de navegação
+        - ❌ Texto "Descarregue o seu contrato assinado" não verificado
+        - ❌ Botão "Descarregar Contrato" não verificado
+        
+        ❌ TESTE 4: BLOQUEIO APÓS APROVAÇÃO
+        
+        **RESULTADO:**
+        - ❌ Não foi possível testar devido aos problemas nos testes anteriores
+        - ❌ Avisos de aprovação não verificados
+        - ❌ Restrições de edição não testadas
+        
+        🔧 PROBLEMAS CRÍTICOS IDENTIFICADOS:
+        
+        **1. BOTÃO "VALIDAR DOCUMENTOS" AUSENTE:**
+        - Código existe em Usuarios.js mas não renderiza na interface
+        - Condição viewingUser.role === 'motorista' pode não estar a funcionar
+        - Botão deveria aparecer no diálogo de detalhes para motoristas
+        
+        **2. NAVEGAÇÃO DO PERFIL DO MOTORISTA:**
+        - Timeout ao tentar aceder páginas de perfil do motorista
+        - URLs /profile e /motorista/perfil não respondem adequadamente
+        - Componente MotoristaDadosPessoaisExpanded pode não estar acessível
+        
+        **3. SISTEMA DE VALIDAÇÃO DE DOCUMENTOS:**
+        - Página ValidacaoDocumentosMotorista não acessível
+        - Rota /validacao-documentos/{motoristaId} pode não estar configurada
+        - Funcionalidade completa de validação não testável
+        
+        📊 RESULTADO FINAL FASE B: 0/4 TESTES PASSARAM (0% sucesso)
+        
+        🚨 FASE B NÃO ESTÁ FUNCIONAL - REQUER CORREÇÕES URGENTES:
+        
+        **PRIORIDADE ALTA:**
+        1. Corrigir renderização do botão "Validar Documentos" em Usuarios.js
+        2. Corrigir navegação para páginas de perfil do motorista
+        3. Verificar roteamento para /validacao-documentos/{motoristaId}
+        4. Testar componente ValidacaoDocumentosMotorista
+        5. Verificar componente MotoristaDadosPessoaisExpanded e card de contrato
+        
+        **RECOMENDAÇÕES:**
+        - Verificar se as rotas estão corretamente definidas em App.js
+        - Testar componentes individualmente antes da integração
+        - Verificar condições de renderização nos componentes
+        - Implementar logs de debug para identificar problemas de estado
+        
+        Sistema FASE B requer desenvolvimento adicional antes de estar pronto para produção.
+    
+    - agent: "testing"
+      message: |
         🎯 TESTE COMPLETO - SISTEMA DE BLOQUEIO DE EDIÇÃO APÓS APROVAÇÃO DE DOCUMENTOS - 100% FUNCIONANDO!
         
         CONTEXTO DO TESTE:
