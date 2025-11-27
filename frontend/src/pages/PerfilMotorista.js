@@ -93,10 +93,25 @@ const PerfilMotorista = ({ user, onLogout }) => {
     );
   }
 
+  const handleTabChange = (value) => {
+    if (window.checkUnsavedChanges && window.checkUnsavedChanges()) {
+      const confirmLeave = window.confirm('Tem alterações não guardadas. Deseja sair sem guardar?');
+      if (!confirmLeave) {
+        return false;
+      }
+    }
+    return true;
+  };
+
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="max-w-7xl mx-auto space-y-6 p-6">
-        <Tabs defaultValue="dashboard" className="space-y-6">
+        <Tabs defaultValue="dashboard" className="space-y-6" onValueChange={(value) => {
+          const currentValue = document.querySelector('[data-state="active"]')?.getAttribute('value');
+          if (currentValue && handleTabChange(value)) {
+            // Tab change is allowed
+          }
+        }}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="dashboard">
               <TrendingUp className="w-4 h-4 mr-2" />
