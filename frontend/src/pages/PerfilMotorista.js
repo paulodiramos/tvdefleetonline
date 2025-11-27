@@ -41,17 +41,28 @@ const PerfilMotorista = ({ user, onLogout }) => {
   const fetchMotoristaData = async () => {
     try {
       const token = localStorage.getItem('token');
-      // Assuming motorista_id is stored in user or we fetch by user email
-      const response = await axios.get(`${API}/motoristas`, {
+      
+      // Buscar motorista pelo ID do usuário logado
+      const response = await axios.get(`${API}/motoristas/${user.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Find motorista by user email
-      const motorista = response.data.find(m => m.email === user.email);
-      setMotoristaData(motorista);
+      if (response.data) {
+        setMotoristaData(response.data);
+      } else {
+        toast.error('Perfil de motorista não encontrado. Contacte o administrador.');
+      }
     } catch (error) {
       console.error('Error fetching motorista data:', error);
-      toast.error('Erro ao carregar dados do motorista');
+      
+      // Mensagem de erro mais detalhada
+      if (error.response?.status === 404) {
+        toast.error('Perfil de motorista não encontrado. Contacte o administrador para criar seu perfil.');
+      } else if (error.response?.status === 403) {
+        toast.error('Acesso negado. Verifique suas permissões.');
+      } else {
+        toast.error('Erro ao carregar dados do motorista. Tente novamente.');
+      }
     } finally {
       setLoading(false);
     }
