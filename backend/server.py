@@ -1191,10 +1191,46 @@ class Motorista(BaseModel):
     identificador_motorista_bolt: Optional[str] = None  # Identificador do motorista na Bolt para ganhos
     whatsapp: Optional[str] = None
     tipo_pagamento: Optional[str] = None
+    tipo_pagamento_outro: Optional[str] = None
     id_cartao_frota_combustivel: Optional[str] = None  # ID automático do cartão frota (gerado)
+    
+    # Localidade
+    localidade: Optional[str] = None
+    
+    # Documentos Fiscais
+    numero_seguranca_social: Optional[str] = None
+    numero_cartao_utente: Optional[str] = None
+    
+    # Carta de Condução (expandido)
+    numero_carta: Optional[str] = None
+    emissao_carta: Optional[str] = None
+    validade_carta: Optional[str] = None
+    
+    # Licença TVDE (expandido)
+    numero_licenca_tvde: Optional[str] = None
+    validade_licenca_tvde: Optional[str] = None
+    
     # Registo Criminal
+    validade_registo_criminal: Optional[str] = None
     data_limite_registo_criminal: Optional[str] = None
     dias_aviso_renovacao_registo: int = 30  # Dias de antecedência para aviso
+    
+    # Dados Bancários
+    nome_banco: Optional[str] = None
+    
+    # Contacto de Emergência
+    emergencia_nome: Optional[str] = None
+    emergencia_telefone: Optional[str] = None
+    emergencia_email: Optional[str] = None
+    emergencia_morada: Optional[str] = None
+    emergencia_codigo_postal: Optional[str] = None
+    emergencia_ligacao: Optional[str] = None
+    
+    # Seguro de Acidentes Pessoais
+    seguro_numero_apolice: Optional[str] = None
+    seguro_seguradora: Optional[str] = None
+    seguro_validade: Optional[str] = None
+    
     documents: MotoristaDocuments
     approved: bool = False
     senha_provisoria: bool = False
