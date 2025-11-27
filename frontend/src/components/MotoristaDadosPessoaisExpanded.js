@@ -442,46 +442,6 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
               </Button>
             </div>
 
-            {/* Documentos Pessoais */}
-            <div className="flex items-center justify-between border-b pb-3">
-              <div className="flex items-center space-x-3">
-                <FileText className="w-5 h-5 text-slate-600" />
-                <div>
-                  <p className="font-medium text-slate-800">Documentos Pessoais</p>
-                  <p className="text-xs text-slate-600">CC, Carta Condução, Licença TVDE, etc.</p>
-                </div>
-              </div>
-              <div className="flex space-x-2">
-                {motoristaData?.documents?.cc_frente && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDownloadDocumento('cc_frente')}
-                  >
-                    CC Frente
-                  </Button>
-                )}
-                {motoristaData?.documents?.carta_conducao_frente && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDownloadDocumento('carta_conducao_frente')}
-                  >
-                    Carta
-                  </Button>
-                )}
-                {motoristaData?.documents?.licenca_tvde && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleDownloadDocumento('licenca_tvde')}
-                  >
-                    TVDE
-                  </Button>
-                )}
-              </div>
-            </div>
-
             {/* Recibos */}
             <div className="flex items-center justify-between border-b pb-3">
               <div className="flex items-center space-x-3">
