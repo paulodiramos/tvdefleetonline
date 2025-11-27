@@ -235,7 +235,7 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
   const validacoes = motorista.documents_validacao || {};
   
   // Filtrar documentos removendo os que não devem aparecer na validação
-  const excludedDocs = ['licenca_foto', 'documento_frente', 'documento_verso', 'contrato', 'additional_docs'];
+  const excludedDocs = ['licenca_foto', 'contrato', 'additional_docs'];
   const documentTypes = Object.keys(documents).filter(key => 
     documents[key] && !excludedDocs.includes(key)
   );
