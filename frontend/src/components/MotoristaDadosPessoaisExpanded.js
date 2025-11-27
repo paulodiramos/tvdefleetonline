@@ -155,9 +155,31 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
 
   const handleChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    setHasUnsavedChanges(true);
+    
+    // Validar campo em tempo real
+    const isValid = validateField(field, value);
+    setErrors(prev => ({
+      ...prev,
+      [field]: isValid ? null : getFieldErrorMessage(field)
+    }));
   };
 
   const handleSave = async () => {
+    // Validar todos os campos antes de guardar
+    const newErrors = {};
+    Object.keys(formData).forEach(field => {
+      if (formData[field] && !validateField(field, formData[field])) {
+        newErrors[field] = getFieldErrorMessage(field);
+      }
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      toast.error('Por favor, corrija os erros antes de guardar');
+      return;
+    }
+
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
@@ -167,14 +189,22 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success('Dados guardados com sucesso!');
+      setHasUnsavedChanges(false);
       if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Error saving data:', error);
-      toast.error('Erro ao guardar dados');
+      toast.error(error.response?.data?.detail || 'Erro ao guardar dados');
     } finally {
       setSaving(false);
     }
   };
+
+  // Exportar função para verificar mudanças não guardadas
+  useEffect(() => {
+    if (window.checkUnsavedChanges) {
+      window.checkUnsavedChanges = () => hasUnsavedChanges;
+    }
+  }, [hasUnsavedChanges]);
 
   const handleFileUpload = async (docType, file) => {
     if (!file) return;
