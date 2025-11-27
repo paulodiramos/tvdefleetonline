@@ -594,11 +594,376 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
         </CardContent>
       </Card>
 
+      {/* 6. REGISTO CRIMINAL */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <Shield className="w-5 h-5 text-red-600" />
+            <CardTitle>Registo Criminal</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label>Código do Registo Criminal *</Label>
+              <Input
+                value={formData.codigo_registo_criminal}
+                onChange={(e) => handleChange('codigo_registo_criminal', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+                placeholder="Código"
+              />
+            </div>
+            <div>
+              <Label>Validade *</Label>
+              <Input
+                type="date"
+                value={formData.validade_registo_criminal}
+                onChange={(e) => handleChange('validade_registo_criminal', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+              />
+            </div>
+          </div>
+
+          <div className="border rounded p-4">
+            <Label className="mb-2 block">Documento Registo Criminal *</Label>
+            <div className="flex space-x-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => triggerFileUpload('registo_criminal')}
+                disabled={uploading.registo_criminal}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {uploading.registo_criminal ? 'A enviar...' : 'Carregar'}
+              </Button>
+              {motoristaData?.documents?.registo_criminal && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleDownload(motoristaData.documents.registo_criminal)}
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 7. PLATAFORMAS (UBER / BOLT) */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <Phone className="w-5 h-5 text-indigo-600" />
+            <CardTitle>Plataformas Uber e Bolt</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-slate-600 mb-4">Preencha apenas se usar email ou telefone diferente do principal</p>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h3 className="font-semibold text-slate-700">Uber</h3>
+              <div>
+                <Label>Email Uber</Label>
+                <Input
+                  type="email"
+                  value={formData.email_uber}
+                  onChange={(e) => handleChange('email_uber', e.target.value)}
+                  disabled={!canEdit && !isMotorista}
+                  placeholder="email.uber@exemplo.com"
+                />
+              </div>
+              <div>
+                <Label>Telefone Uber</Label>
+                <Input
+                  value={formData.telefone_uber}
+                  onChange={(e) => handleChange('telefone_uber', e.target.value)}
+                  disabled={!canEdit && !isMotorista}
+                  placeholder="+351 912 345 678"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="font-semibold text-slate-700">Bolt</h3>
+              <div>
+                <Label>Email Bolt</Label>
+                <Input
+                  type="email"
+                  value={formData.email_bolt}
+                  onChange={(e) => handleChange('email_bolt', e.target.value)}
+                  disabled={!canEdit && !isMotorista}
+                  placeholder="email.bolt@exemplo.com"
+                />
+              </div>
+              <div>
+                <Label>Telefone Bolt</Label>
+                <Input
+                  value={formData.telefone_bolt}
+                  onChange={(e) => handleChange('telefone_bolt', e.target.value)}
+                  disabled={!canEdit && !isMotorista}
+                  placeholder="+351 912 345 678"
+                />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 8. DADOS BANCÁRIOS */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <CreditCard className="w-5 h-5 text-teal-600" />
+            <CardTitle>Dados Bancários</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label>Nome do Banco *</Label>
+              <Input
+                value={formData.nome_banco}
+                onChange={(e) => handleChange('nome_banco', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+                placeholder="Ex: Caixa Geral de Depósitos"
+              />
+            </div>
+            <div>
+              <Label>IBAN *</Label>
+              <Input
+                value={formData.iban}
+                onChange={(e) => handleChange('iban', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+                placeholder="PT50 0000 0000 0000 0000 0000 0"
+                maxLength={29}
+              />
+            </div>
+          </div>
+
+          <div className="border rounded p-4">
+            <Label className="mb-2 block">Comprovativo IBAN *</Label>
+            <div className="flex space-x-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => triggerFileUpload('comprovativo_iban')}
+                disabled={uploading.comprovativo_iban}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {uploading.comprovativo_iban ? 'A enviar...' : 'Carregar'}
+              </Button>
+              {motoristaData?.documents?.comprovativo_iban && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleDownload(motoristaData.documents.comprovativo_iban)}
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 9. TIPO DE PAGAMENTO */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <FileText className="w-5 h-5 text-amber-600" />
+            <CardTitle>Sistema de Pagamento</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <Label>Tipo de Pagamento *</Label>
+            <Select 
+              value={formData.tipo_pagamento} 
+              onValueChange={(val) => handleChange('tipo_pagamento', val)}
+              disabled={!canEdit && !isMotorista}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o tipo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="recibo_verde">Recibo Verde</SelectItem>
+                <SelectItem value="fatura">Fatura</SelectItem>
+                <SelectItem value="outro">Outro</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {formData.tipo_pagamento === 'outro' && (
+            <div>
+              <Label>Especifique o Tipo de Pagamento</Label>
+              <Textarea
+                value={formData.tipo_pagamento_outro}
+                onChange={(e) => handleChange('tipo_pagamento_outro', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+                placeholder="Descreva o tipo de pagamento..."
+                rows={3}
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* 10. CONTACTO DE EMERGÊNCIA */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <AlertCircle className="w-5 h-5 text-red-600" />
+            <CardTitle>Contacto de Emergência</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label>Nome Completo *</Label>
+              <Input
+                value={formData.emergencia_nome}
+                onChange={(e) => handleChange('emergencia_nome', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+                placeholder="Nome do contacto"
+              />
+            </div>
+            <div>
+              <Label>Telefone *</Label>
+              <Input
+                value={formData.emergencia_telefone}
+                onChange={(e) => handleChange('emergencia_telefone', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+                placeholder="+351 912 345 678"
+              />
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={formData.emergencia_email}
+                onChange={(e) => handleChange('emergencia_email', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+                placeholder="email@exemplo.com"
+              />
+            </div>
+            <div>
+              <Label>Ligação *</Label>
+              <Select 
+                value={formData.emergencia_ligacao} 
+                onValueChange={(val) => handleChange('emergencia_ligacao', val)}
+                disabled={!canEdit && !isMotorista}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Tipo de ligação" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="mae">Mãe</SelectItem>
+                  <SelectItem value="pai">Pai</SelectItem>
+                  <SelectItem value="irmao">Irmão/Irmã</SelectItem>
+                  <SelectItem value="conjuge">Cônjuge</SelectItem>
+                  <SelectItem value="filho">Filho/Filha</SelectItem>
+                  <SelectItem value="amigo">Amigo/Amiga</SelectItem>
+                  <SelectItem value="outro">Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-2">
+              <Label>Morada</Label>
+              <Input
+                value={formData.emergencia_morada}
+                onChange={(e) => handleChange('emergencia_morada', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+                placeholder="Morada completa"
+              />
+            </div>
+            <div>
+              <Label>Código Postal</Label>
+              <Input
+                value={formData.emergencia_codigo_postal}
+                onChange={(e) => handleChange('emergencia_codigo_postal', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+                placeholder="1234-567"
+                maxLength={8}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 11. SEGURO DE ACIDENTES PESSOAIS */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <Shield className="w-5 h-5 text-green-600" />
+            <CardTitle>Seguro de Acidentes Pessoais</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <Label>Número da Apólice *</Label>
+              <Input
+                value={formData.seguro_numero_apolice}
+                onChange={(e) => handleChange('seguro_numero_apolice', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+                placeholder="Número da apólice"
+              />
+            </div>
+            <div>
+              <Label>Seguradora *</Label>
+              <Input
+                value={formData.seguro_seguradora}
+                onChange={(e) => handleChange('seguro_seguradora', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+                placeholder="Nome da seguradora"
+              />
+            </div>
+            <div>
+              <Label>Validade *</Label>
+              <Input
+                type="date"
+                value={formData.seguro_validade}
+                onChange={(e) => handleChange('seguro_validade', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+              />
+            </div>
+          </div>
+
+          <div className="border rounded p-4">
+            <Label className="mb-2 block">Comprovativo de Seguro *</Label>
+            <div className="flex space-x-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => triggerFileUpload('seguro_comprovativo')}
+                disabled={uploading.seguro_comprovativo}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {uploading.seguro_comprovativo ? 'A enviar...' : 'Carregar'}
+              </Button>
+              {motoristaData?.documents?.seguro_comprovativo && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleDownload(motoristaData.documents.seguro_comprovativo)}
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Botão Guardar no final */}
-      <div className="flex justify-end">
+      <div className="flex justify-end space-x-4">
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          Cancelar
+        </Button>
         <Button onClick={handleSave} disabled={saving} size="lg">
           <Save className="w-4 h-4 mr-2" />
-          {saving ? 'A guardar...' : 'Guardar Dados'}
+          {saving ? 'A guardar...' : 'Guardar Todos os Dados'}
         </Button>
       </div>
     </div>
