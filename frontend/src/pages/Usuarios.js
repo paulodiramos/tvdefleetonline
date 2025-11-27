@@ -85,7 +85,8 @@ const Usuarios = ({ user, onLogout }) => {
   const fetchPlanos = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/planos`, {
+      // Buscar planos de MOTORISTA apenas
+      const response = await axios.get(`${API}/planos-motorista`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPlanos(response.data);
@@ -100,19 +101,34 @@ const Usuarios = ({ user, onLogout }) => {
       return;
     }
 
+    // Verificar se o utilizador é motorista
+    if (selectedUser?.role !== 'motorista') {
+      toast.error('Apenas motoristas podem ter planos de motorista atribuídos');
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
+      
+      // Usar endpoint específico para motoristas
       await axios.post(
-        `${API}/users/${selectedUser.id}/atribuir-plano`,
-        { plano_id: selectedPlanoId, duracao_dias: duracaoDias },
+        `${API}/motoristas/${selectedUser.id}/atribuir-plano`,
+        { 
+          plano_id: selectedPlanoId, 
+          periodicidade: selectedPeriodicidade || 'mensal',
+          auto_renovacao: false 
+        },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success(`Plano atribuído por ${duracaoDias} dias!`);
+      
+      toast.success(`Plano ${selectedPeriodicidade} atribuído com sucesso!`);
       setShowPlanoDialog(false);
+      setSelectedPlanoId('');
+      setSelectedPeriodicidade('mensal');
       fetchUsers();
     } catch (error) {
       console.error('Error assigning plan:', error);
-      toast.error('Erro ao atribuir plano');
+      toast.error(error.response?.data?.detail || 'Erro ao atribuir plano');
     }
   };
 
