@@ -339,27 +339,33 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                disabled={!editMode}
                 placeholder="email@exemplo.com"
+                className={errors.email ? 'border-red-500' : ''}
               />
+              {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
             </div>
             <div>
               <Label>Telefone *</Label>
               <Input
                 value={formData.phone}
                 onChange={(e) => handleChange('phone', e.target.value)}
-                disabled={!canEdit && !isMotorista}
-                placeholder="+351 912 345 678"
+                disabled={!editMode}
+                placeholder="+351 912345678"
+                className={errors.phone ? 'border-red-500' : ''}
               />
+              {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone}</p>}
             </div>
             <div>
               <Label>WhatsApp</Label>
               <Input
                 value={formData.whatsapp}
                 onChange={(e) => handleChange('whatsapp', e.target.value)}
-                disabled={!canEdit && !isMotorista}
-                placeholder="+351 912 345 678"
+                disabled={!editMode}
+                placeholder="+351 912345678"
+                className={errors.whatsapp ? 'border-red-500' : ''}
               />
+              {errors.whatsapp && <p className="text-xs text-red-500 mt-1">{errors.whatsapp}</p>}
             </div>
             <div className="md:col-span-2">
               <Label>Morada Completa *</Label>
