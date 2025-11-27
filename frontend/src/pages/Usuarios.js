@@ -531,7 +531,7 @@ const Usuarios = ({ user, onLogout }) => {
                                 }}
                                 className="bg-blue-50 hover:bg-blue-100 border-blue-500 text-blue-700"
                               >
-                                <User className="w-4 h-4 mr-1" />
+                                <UserCircle className="w-4 h-4 mr-1" />
                                 Ver Motorista
                               </Button>
                               <Button
