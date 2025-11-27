@@ -7467,6 +7467,121 @@ async def get_plano_atual_motorista(motorista_id: str, current_user: Dict = Depe
         logger.error(f"Error getting motorista current plan: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/motoristas/{motorista_id}/iniciar-pagamento-plano")
+async def iniciar_pagamento_plano(
+    motorista_id: str,
+    payment_data: dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Initiate payment for motorista plan (Multibanco or MBWay)"""
+    try:
+        # Verify access - motorista can only pay for their own plan
+        if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+            if current_user["id"] != motorista_id:
+                raise HTTPException(status_code=403, detail="Not authorized")
+        
+        plano_id = payment_data.get("plano_id")
+        periodicidade = payment_data.get("periodicidade", "mensal")
+        metodo_pagamento = payment_data.get("metodo_pagamento", "multibanco")
+        
+        # Verify plan exists
+        plano = await db.planos_motorista.find_one({"id": plano_id, "ativo": True}, {"_id": 0})
+        if not plano:
+            raise HTTPException(status_code=404, detail="Plano not found")
+        
+        # Verify motorista exists
+        motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+        if not motorista:
+            raise HTTPException(status_code=404, detail="Motorista not found")
+        
+        # Calculate price
+        if periodicidade == "semanal":
+            preco_pago = plano.get("preco_semanal", 0)
+            duracao_dias = 7
+        else:  # mensal
+            preco_base = plano.get("preco_mensal", 0)
+            desconto = plano.get("desconto_mensal_percentagem", 0)
+            preco_pago = preco_base * (1 - desconto / 100) if desconto > 0 else preco_base
+            duracao_dias = 30
+        
+        if preco_pago == 0:
+            raise HTTPException(status_code=400, detail="Cannot initiate payment for free plan")
+        
+        # Cancel any existing pending payments
+        await db.motorista_plano_assinaturas.update_many(
+            {"motorista_id": motorista_id, "status": {"$in": ["aguardando_pagamento", "pagamento_pendente"]}},
+            {"$set": {"status": "cancelado", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        # Create assinatura in pending status
+        assinatura_id = str(uuid.uuid4())
+        referencia_id = f"PLN-{assinatura_id[:8].upper()}"
+        
+        assinatura = {
+            "id": assinatura_id,
+            "motorista_id": motorista_id,
+            "plano_id": plano_id,
+            "plano_nome": plano["nome"],
+            "periodicidade": periodicidade,
+            "preco_pago": preco_pago,
+            "status": "aguardando_pagamento",
+            "data_inicio": datetime.now(timezone.utc).isoformat(),
+            "data_fim": (datetime.now(timezone.utc) + timedelta(days=duracao_dias)).isoformat(),
+            "auto_renovacao": payment_data.get("auto_renovacao", False),
+            "metodo_pagamento": metodo_pagamento,
+            "pagamento_confirmado": False,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Generate payment reference based on method
+        if metodo_pagamento == "multibanco":
+            # Generate Multibanco reference (simplified - in production use IFThenPay API)
+            entidade = "11604"  # Example entity
+            referencia = f"{assinatura_id[:3]}{assinatura_id[-6:]}".upper()[:9]
+            
+            assinatura["entidade_pagamento"] = entidade
+            assinatura["referencia_pagamento"] = referencia
+            
+            await db.motorista_plano_assinaturas.insert_one(assinatura)
+            
+            return {
+                "message": "Referência Multibanco gerada com sucesso",
+                "assinatura_id": assinatura_id,
+                "metodo": "multibanco",
+                "entidade": entidade,
+                "referencia": referencia,
+                "valor": f"{preco_pago:.2f}",
+                "status": "aguardando_pagamento"
+            }
+            
+        elif metodo_pagamento == "mbway":
+            # Generate MBWay transaction (simplified - in production use IFThenPay API)
+            transaction_id = f"MBWAY-{assinatura_id[:12].upper()}"
+            phone_number = motorista.get("phone", "")
+            
+            assinatura["referencia_pagamento"] = transaction_id
+            
+            await db.motorista_plano_assinaturas.insert_one(assinatura)
+            
+            return {
+                "message": "Pedido MB WAY enviado com sucesso",
+                "assinatura_id": assinatura_id,
+                "metodo": "mbway",
+                "transaction_id": transaction_id,
+                "phone_number": phone_number,
+                "valor": f"{preco_pago:.2f}",
+                "status": "aguardando_pagamento"
+            }
+        else:
+            raise HTTPException(status_code=400, detail="Invalid payment method")
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error initiating plan payment: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.post("/subscriptions/solicitar")
 async def solicitar_subscription(sub_create: SubscriptionCreate, current_user: Dict = Depends(get_current_user)):
     """User requests a plan subscription"""
