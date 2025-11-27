@@ -1579,6 +1579,45 @@ class UserSubscription(BaseModel):
     unidades_ativas: int = 0  # Número de veículos (parceiro) ou motoristas (operacional)
     valor_mensal: float = 0.0  # Calculado: preco_por_unidade * unidades_ativas
 
+# ==================== PLANOS MOTORISTA MODELS ====================
+
+class PlanoMotorista(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    nome: str  # Ex: "Básico", "Premium", "Profissional"
+    descricao: str
+    preco_mensal: float  # 0 para plano básico gratuito
+    features: Dict[str, bool]  # Ex: {"alertas_recibos": True, "alertas_documentos": True, "dashboard_analytics": False}
+    ativo: bool = True
+    created_at: datetime
+    updated_at: datetime
+
+class PlanoMotoristaCreate(BaseModel):
+    nome: str
+    descricao: str
+    preco_mensal: float
+    features: Dict[str, bool]
+
+class PlanoMotoristaUpdate(BaseModel):
+    nome: Optional[str] = None
+    descricao: Optional[str] = None
+    preco_mensal: Optional[float] = None
+    features: Optional[Dict[str, bool]] = None
+    ativo: Optional[bool] = None
+
+class MotoristaPlanoAssinatura(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    motorista_id: str
+    plano_id: str
+    plano_nome: Optional[str] = None
+    status: str  # "ativo", "cancelado", "expirado", "pagamento_pendente"
+    data_inicio: str
+    data_fim: Optional[str] = None  # Para assinaturas com duração definida
+    auto_renovacao: bool = False
+    created_at: datetime
+    updated_at: datetime
+
 
 # ==================== CONTRACT MODELS ====================
 
