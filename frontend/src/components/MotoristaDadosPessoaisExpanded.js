@@ -687,13 +687,15 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <Label>Número da Licença TVDE *</Label>
+              <Label>Número da Licença TVDE * (formato: números/ano)</Label>
               <Input
                 value={formData.numero_licenca_tvde}
                 onChange={(e) => handleChange('numero_licenca_tvde', e.target.value)}
-                disabled={!canEdit && !isMotorista}
-                placeholder="Número da licença"
+                disabled={!editMode}
+                placeholder="12345/2024"
+                className={errors.numero_licenca_tvde ? 'border-red-500' : ''}
               />
+              {errors.numero_licenca_tvde && <p className="text-xs text-red-500 mt-1">{errors.numero_licenca_tvde}</p>}
             </div>
             <div>
               <Label>Validade *</Label>
@@ -701,7 +703,7 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
                 type="date"
                 value={formData.validade_licenca_tvde}
                 onChange={(e) => handleChange('validade_licenca_tvde', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                disabled={!editMode}
               />
             </div>
           </div>
