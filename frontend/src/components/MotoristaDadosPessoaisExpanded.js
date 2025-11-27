@@ -37,6 +37,7 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
 
     // Carta de Condução
     numero_carta: motoristaData?.numero_carta || '',
+    categoria_carta_conducao: motoristaData?.categoria_carta_conducao || '',
     emissao_carta: motoristaData?.emissao_carta || '',
     validade_carta: motoristaData?.validade_carta || '',
 
