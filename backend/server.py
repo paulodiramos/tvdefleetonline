@@ -7224,6 +7224,176 @@ async def delete_plano(plano_id: str, current_user: Dict = Depends(get_current_u
     await db.planos.update_one({"id": plano_id}, {"$set": {"ativo": False}})
     return {"message": "Plan deactivated successfully"}
 
+# ==================== PLANOS MOTORISTA ENDPOINTS ====================
+
+@api_router.get("/planos-motorista")
+async def list_planos_motorista(current_user: Dict = Depends(get_current_user)):
+    """List all motorista plans"""
+    try:
+        planos = await db.planos_motorista.find({"ativo": True}, {"_id": 0}).to_list(100)
+        return planos
+    except Exception as e:
+        logger.error(f"Error listing motorista plans: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/planos-motorista")
+async def create_plano_motorista(plano_data: PlanoMotoristaCreate, current_user: Dict = Depends(get_current_user)):
+    """Create a new motorista plan (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    try:
+        plano_id = str(uuid.uuid4())
+        plano = {
+            "id": plano_id,
+            "nome": plano_data.nome,
+            "descricao": plano_data.descricao,
+            "preco_mensal": plano_data.preco_mensal,
+            "features": plano_data.features,
+            "ativo": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.planos_motorista.insert_one(plano)
+        return {"message": "Plano criado com sucesso", "plano_id": plano_id}
+    except Exception as e:
+        logger.error(f"Error creating motorista plan: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/planos-motorista/{plano_id}")
+async def update_plano_motorista(
+    plano_id: str,
+    plano_data: PlanoMotoristaUpdate,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Update a motorista plan (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    try:
+        plano = await db.planos_motorista.find_one({"id": plano_id}, {"_id": 0})
+        if not plano:
+            raise HTTPException(status_code=404, detail="Plano not found")
+        
+        update_data = plano_data.dict(exclude_unset=True)
+        update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        await db.planos_motorista.update_one({"id": plano_id}, {"$set": update_data})
+        return {"message": "Plano atualizado com sucesso"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating motorista plan: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.delete("/planos-motorista/{plano_id}")
+async def delete_plano_motorista(plano_id: str, current_user: Dict = Depends(get_current_user)):
+    """Delete a motorista plan (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    await db.planos_motorista.update_one({"id": plano_id}, {"$set": {"ativo": False}})
+    return {"message": "Plano desativado com sucesso"}
+
+@api_router.post("/motoristas/{motorista_id}/atribuir-plano")
+async def atribuir_plano_motorista(
+    motorista_id: str,
+    plano_data: dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Assign a plan to a motorista (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    try:
+        plano_id = plano_data.get("plano_id")
+        duracao_dias = plano_data.get("duracao_dias", 30)
+        
+        # Verify plan exists
+        plano = await db.planos_motorista.find_one({"id": plano_id, "ativo": True}, {"_id": 0})
+        if not plano:
+            raise HTTPException(status_code=404, detail="Plano not found")
+        
+        # Verify motorista exists
+        motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+        if not motorista:
+            raise HTTPException(status_code=404, detail="Motorista not found")
+        
+        # Cancel any existing active subscription
+        await db.motorista_plano_assinaturas.update_many(
+            {"motorista_id": motorista_id, "status": "ativo"},
+            {"$set": {"status": "cancelado", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        
+        # Create new subscription
+        assinatura_id = str(uuid.uuid4())
+        data_inicio = datetime.now(timezone.utc)
+        data_fim = data_inicio + timedelta(days=duracao_dias) if duracao_dias > 0 else None
+        
+        assinatura = {
+            "id": assinatura_id,
+            "motorista_id": motorista_id,
+            "plano_id": plano_id,
+            "plano_nome": plano["nome"],
+            "status": "ativo",
+            "data_inicio": data_inicio.isoformat(),
+            "data_fim": data_fim.isoformat() if data_fim else None,
+            "auto_renovacao": plano_data.get("auto_renovacao", False),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.motorista_plano_assinaturas.insert_one(assinatura)
+        
+        # Update motorista with plan info
+        await db.motoristas.update_one(
+            {"id": motorista_id},
+            {"$set": {
+                "plano_id": plano_id,
+                "plano_nome": plano["nome"],
+                "plano_features": plano["features"],
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        return {"message": "Plano atribuído com sucesso", "assinatura_id": assinatura_id}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error assigning plan to motorista: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/motoristas/{motorista_id}/plano-atual")
+async def get_plano_atual_motorista(motorista_id: str, current_user: Dict = Depends(get_current_user)):
+    """Get current motorista plan"""
+    try:
+        # Verify access
+        if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+            if current_user["id"] != motorista_id:
+                raise HTTPException(status_code=403, detail="Not authorized")
+        
+        assinatura = await db.motorista_plano_assinaturas.find_one(
+            {"motorista_id": motorista_id, "status": "ativo"},
+            {"_id": 0}
+        )
+        
+        if not assinatura:
+            return {"message": "Nenhum plano ativo", "plano": None}
+        
+        # Get plan details
+        plano = await db.planos_motorista.find_one({"id": assinatura["plano_id"]}, {"_id": 0})
+        
+        return {
+            "assinatura": assinatura,
+            "plano": plano
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting motorista current plan: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.post("/subscriptions/solicitar")
 async def solicitar_subscription(sub_create: SubscriptionCreate, current_user: Dict = Depends(get_current_user)):
     """User requests a plan subscription"""
