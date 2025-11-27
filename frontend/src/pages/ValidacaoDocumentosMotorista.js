@@ -108,6 +108,29 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
     }
   };
 
+  const handleEditField = (field, currentValue) => {
+    setEditingField(field);
+    setEditValue(currentValue || '');
+  };
+
+  const handleSaveField = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/motoristas/${motoristaId}`,
+        { [editingField]: editValue },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success('Campo atualizado com sucesso!');
+      setEditingField(null);
+      fetchMotoristaData();
+    } catch (error) {
+      console.error('Error updating field:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao atualizar campo');
+    }
+  };
+
   const getDocumentIcon = (docType) => {
     const icons = {
       'cc_frente': FileText,
