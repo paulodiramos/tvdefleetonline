@@ -181,8 +181,23 @@ const MotoristaDashboard = ({ motoristaData, relatorios }) => {
                   </CardContent>
                 </Card>
               );
+            } else {
+              return (
+                <Card className="border-l-4 border-green-500">
+                  <CardContent className="pt-6">
+                    <div className="flex items-start space-x-3">
+                      <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
+                      <div className="text-sm text-green-800">
+                        <h3 className="font-semibold text-slate-800 mb-2">Documentos Completos (0 em falta)</h3>
+                        <p className="text-slate-700">
+                          Todos os documentos obrigatórios foram carregados e validados.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
             }
-            return null;
           })()}
 
           {!motoristaData.plano_id && (
