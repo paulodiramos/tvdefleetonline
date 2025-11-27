@@ -724,20 +724,37 @@ const PerfilMotorista = ({ user, onLogout }) => {
                       className="w-full px-3 py-2 border border-slate-300 rounded-md"
                     >
                       <option value="">Selecione...</option>
-                      <option value="carta_conducao">Carta de Condução</option>
-                      <option value="certificado_motorista">Certificado de Motorista TVDE</option>
-                      <option value="iban">Comprovativo IBAN</option>
-                      <option value="registo_criminal">Registo Criminal</option>
+                      <optgroup label="Identificação">
+                        <option value="cc_frente">CC/Residência/Passaporte - Frente</option>
+                        <option value="cc_verso">CC/Residência/Passaporte - Verso</option>
+                      </optgroup>
+                      <optgroup label="Carta de Condução">
+                        <option value="carta_conducao_frente">Carta de Condução - Frente</option>
+                        <option value="carta_conducao_verso">Carta de Condução - Verso</option>
+                      </optgroup>
+                      <optgroup label="Certificados">
+                        <option value="licenca_tvde">Licença TVDE</option>
+                        <option value="comprovativo_morada">Comprovativo de Morada</option>
+                        <option value="registo_criminal">Registo Criminal</option>
+                      </optgroup>
+                      <optgroup label="Bancário">
+                        <option value="comprovativo_iban">Comprovativo de IBAN</option>
+                      </optgroup>
                     </select>
                   </div>
 
                   <div>
-                    <Label>Selecionar Ficheiro (PDF)</Label>
+                    <Label>Selecionar Ficheiro (PDF/Imagem)</Label>
                     <Input
                       type="file"
-                      accept=".pdf"
+                      accept=".pdf,.jpg,.jpeg,.png"
                       onChange={(e) => setSelectedDoc(e.target.files[0])}
                     />
+                    {selectedDoc && (
+                      <p className="text-xs text-green-600 mt-1">
+                        ✓ {selectedDoc.name}
+                      </p>
+                    )}
                   </div>
 
                   <Button
@@ -748,6 +765,30 @@ const PerfilMotorista = ({ user, onLogout }) => {
                     <Upload className="w-4 h-4 mr-2" />
                     {uploadingDoc ? 'A enviar...' : 'Carregar Documento'}
                   </Button>
+                </div>
+
+                {/* Lista de Documentos Carregados */}
+                <div className="mt-6 border-t pt-4">
+                  <h3 className="font-semibold text-slate-700 mb-3">Documentos Carregados</h3>
+                  <div className="space-y-2">
+                    {motoristaData?.documentos && Object.keys(motoristaData.documentos).length > 0 ? (
+                      Object.entries(motoristaData.documentos).map(([key, url]) => (
+                        <div key={key} className="flex items-center justify-between p-2 bg-slate-50 rounded">
+                          <span className="text-sm capitalize">{key.replace(/_/g, ' ')}</span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => window.open(`${API}/${url}`, '_blank')}
+                          >
+                            <Download className="w-3 h-3 mr-1" />
+                            Ver
+                          </Button>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-slate-500 text-center py-4">Nenhum documento carregado ainda</p>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
