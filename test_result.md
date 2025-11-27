@@ -702,15 +702,18 @@ frontend:
 
   - task: "Perfil do Motorista - Validações e Funcionalidade de Guardar Dados"
     implemented: true
-    working: false
+    working: true
     file: "frontend/src/components/MotoristaDadosPessoaisExpanded.js"
-    stuck_count: 1
+    stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
         - working: false
           agent: "testing"
           comment: "TESTADO COMPLETAMENTE: ✅ Validações de campos funcionando 100% (7/7 validações testadas). ✅ Interface e modo de edição funcionando. ❌ CRÍTICO: Funcionalidade de guardar falhou - erro 403 'Not authorized'. Motorista não tem permissão para salvar seus próprios dados. ❌ CRÍTICO: Persistência de dados falhou devido ao erro de salvamento. ❌ CRÍTICO: Confirmação de mudança de aba não funciona - diálogo não aparece. Problemas: 1) Endpoint PUT /api/motoristas/{id} retorna 403 para motorista, 2) Sistema de detecção de alterações não guardadas não funciona, 3) window.confirm não é chamado ao mudar de aba."
+        - working: true
+          agent: "testing"
+          comment: "✅ RE-TESTADO APÓS CORREÇÕES DE PERMISSÕES: FUNCIONANDO PERFEITAMENTE! LOGIN: motorista@tvdefleet.com/2rEFuwQO ✅. NAVEGAÇÃO: Aba 'Dados Pessoais' ✅. MODO DE EDIÇÃO: Botão 'Editar' ativa campos ✅. ALTERAÇÃO DE CAMPOS: NIF→999888777, Nome→'Carlos Oliveira Teste', Telefone→+351912345678 ✅. GUARDAR DADOS: API PUT /api/motoristas/motorista-001 retorna 200 OK ✅. SEM ERRO 403: Permissões corrigidas ✅. PERSISTÊNCIA: Dados persistem após reload (NIF=999888777, Nome='Carlos Oliveira Teste') ✅. CONFIRMAÇÃO DE MUDANÇA DE ABA: Diálogo 'Tem alterações não guardadas. Deseja sair sem guardar?' aparece corretamente ✅. Minor: Toast de sucesso não aparece visualmente, mas API funciona. TODAS AS FUNCIONALIDADES PRINCIPAIS TESTADAS E FUNCIONANDO!"
 
   - task: "FichaVeiculo.js - Fix Edit/Save/Cancel Logic"
     implemented: true
