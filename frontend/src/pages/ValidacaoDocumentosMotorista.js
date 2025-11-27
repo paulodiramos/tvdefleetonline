@@ -168,7 +168,8 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
   const getDocumentData = (docType) => {
     const data = {
       'carta_conducao_frente': [
-        { label: 'Número da Carta', value: motorista.numero_carta_conducao || 'N/A' }
+        { label: 'Número da Carta', value: motorista.numero_carta_conducao || 'N/A' },
+        { label: 'Categoria', value: motorista.categoria_carta_conducao || 'N/A' }
       ],
       'carta_conducao_verso': [
         { label: 'Data de Emissão', value: motorista.data_emissao_carta ? new Date(motorista.data_emissao_carta).toLocaleDateString('pt-PT') : 'N/A' },
@@ -177,6 +178,15 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
       'cc_frente': [
         { label: 'Número do CC', value: motorista.numero_cc || 'N/A' },
         { label: 'Validade', value: motorista.validade_cc ? new Date(motorista.validade_cc).toLocaleDateString('pt-PT') : 'N/A' }
+      ],
+      'documento_identificacao_frente': [
+        { label: 'Número do Documento', value: motorista.numero_documento_identificacao || motorista.numero_cc || 'N/A' },
+        { label: 'Validade', value: motorista.validade_documento_identificacao ? new Date(motorista.validade_documento_identificacao).toLocaleDateString('pt-PT') : (motorista.validade_cc ? new Date(motorista.validade_cc).toLocaleDateString('pt-PT') : 'N/A') }
+      ],
+      'documento_identificacao_verso': [
+        { label: 'NIF', value: motorista.nif || 'N/A' },
+        { label: 'Número Segurança Social', value: motorista.numero_seguranca_social || 'N/A' },
+        { label: 'Cartão de Utente', value: motorista.numero_cartao_utente || 'N/A' }
       ],
       'passport_frente': [
         { label: 'Número do Passaporte', value: motorista.numero_passaporte || 'N/A' },
@@ -203,6 +213,11 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
       'comprovativo_iban': [
         { label: 'Banco', value: motorista.nome_banco || 'N/A' },
         { label: 'IBAN', value: motorista.iban || 'N/A' }
+      ],
+      'seguro_comprovativo': [
+        { label: 'Seguradora', value: motorista.seguro_seguradora || 'N/A' },
+        { label: 'Número da Apólice', value: motorista.seguro_numero_apolice || 'N/A' },
+        { label: 'Validade', value: motorista.seguro_validade ? new Date(motorista.seguro_validade).toLocaleDateString('pt-PT') : 'N/A' }
       ]
     };
     return data[docType] || [];
