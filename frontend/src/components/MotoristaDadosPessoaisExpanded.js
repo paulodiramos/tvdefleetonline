@@ -78,9 +78,59 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
 
   const [uploading, setUploading] = useState({});
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const canEdit = ['admin', 'gestao', 'operacional', 'parceiro'].includes(userRole);
   const isMotorista = userRole === 'motorista';
+
+  // Validação de campos
+  const validateField = (field, value) => {
+    const validations = {
+      nif: /^\d{9}$/,
+      numero_seguranca_social: /^\d{11}$/,
+      numero_cartao_utente: /^\d{9}$/,
+      numero_licenca_tvde: /^\d+\/\d{4}$/,
+      codigo_registo_criminal: /^[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{5}$/,
+      iban: /^[A-Z]{2}\d{2}(\s?\d{4}){5}(\s?\d{1,2})?$/,
+      email: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
+      emergencia_email: /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/,
+      phone: /^\+\d{1,3}\s?\d{9}$/,
+      whatsapp: /^\+\d{1,3}\s?\d{9}$/,
+      telefone_uber: /^\+\d{1,3}\s?\d{9}$/,
+      telefone_bolt: /^\+\d{1,3}\s?\d{9}$/,
+      emergencia_telefone: /^\+\d{1,3}\s?\d{9}$/,
+      codigo_postal: /^\d{4}-\d{3}$/,
+      emergencia_codigo_postal: /^\d{4}-\d{3}$/,
+    };
+
+    if (!value) return true; // Campo vazio é válido (opcional)
+    
+    if (validations[field]) {
+      return validations[field].test(value);
+    }
+    return true;
+  };
+
+  const getFieldErrorMessage = (field) => {
+    const messages = {
+      nif: 'NIF deve ter exatamente 9 dígitos',
+      numero_seguranca_social: 'Número de Segurança Social deve ter 11 dígitos',
+      numero_cartao_utente: 'Cartão de Utente deve ter 9 dígitos',
+      numero_licenca_tvde: 'Formato: números/ano (ex: 12345/2024)',
+      codigo_registo_criminal: 'Formato: xxxx-xxxx-xxxx-xxxxx',
+      iban: 'Formato: PT50 0035 0268 00038229130 61',
+      email: 'Email inválido (deve conter @ e domínio)',
+      emergencia_email: 'Email inválido (deve conter @ e domínio)',
+      phone: 'Formato: +351 912345678',
+      whatsapp: 'Formato: +351 912345678',
+      telefone_uber: 'Formato: +351 912345678',
+      telefone_bolt: 'Formato: +351 912345678',
+      emergencia_telefone: 'Formato: +351 912345678',
+      codigo_postal: 'Formato: 1234-567',
+      emergencia_codigo_postal: 'Formato: 1234-567',
+    };
+    return messages[field] || 'Campo inválido';
+  };
   
   const canEditDocument = (docType) => {
     // IBAN e Registo Criminal sempre podem ser editados
