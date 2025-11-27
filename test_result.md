@@ -589,6 +589,18 @@ frontend:
           agent: "testing"
           comment: "✅ TESTADO COMPLETAMENTE: Todas as novas funcionalidades de melhorias funcionando perfeitamente! NOMES EDITÁVEIS: 5 campos de input editáveis para nomes das manutenções (Revisão → Revisão Geral testado). BOTÃO ADICIONAR: 'Adicionar Item de Manutenção' com ícone Plus funcionando (adiciona novo item à lista). BOTÕES REMOVER: 6 botões Trash icon funcionando (removem itens individuais). CONTROLE DE ACESSO: Admin tem acesso total sem restrições. TAB ALERTAS: Fundo amber, 4 campos editáveis, switch funcionando, sem avisos de restrição para admin. TAB PLANO: Fundo azul, nomes editáveis, add/remove funcionando. SALVAMENTO: Toast success 'Plano de manutenções e alertas atualizados!' funcionando. MODO EDIÇÃO: Editar/Guardar/Cancelar operacional. Todas as melhorias do review request implementadas e testadas com sucesso!"
 
+  - task: "Página de Pagamentos do Parceiro - Sistema Completo"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/Pagamentos.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Página de pagamentos do parceiro funcionando perfeitamente! LOGIN: Credenciais parceiro@tvdefleet.com/UQ1B6DXU funcionando. NAVEGAÇÃO: /pagamentos carrega sem erros. CARDS RESUMO: Total a Pagar €0.00, Total Pago €0.00, Semana Atual exibidos corretamente. NOVO PAGAMENTO: Modal com formulário completo (motorista, valor, datas, tipo documento, notas) funcionando. RELATÓRIOS GANHOS: Links para /relatorios e /criar-relatorio-semanal funcionando. BACKEND: APIs /api/pagamentos/semana-atual, /api/motoristas, /api/reports/parceiro/* funcionando. VALIDAÇÃO: Formulário aceita dados válidos, interface preparada para alteração de estado e upload quando há dados. UI responsiva e clara. Sistema pronto para produção."
+
   - task: "Sistema de Gestão de Senhas - Frontend Modal"
     implemented: true
     working: true
