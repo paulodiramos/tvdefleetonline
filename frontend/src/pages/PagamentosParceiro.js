@@ -67,6 +67,31 @@ const PagamentosParceiro = ({ user, onLogout }) => {
     }
   };
 
+  const handleAlterarEstado = async () => {
+    if (!novoEstado) {
+      toast.error('Selecione um novo estado');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/relatorios-ganhos/${selectedRelatorio.id}/alterar-estado`,
+        { status: novoEstado },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success('Estado alterado com sucesso!');
+      setShowEstadoModal(false);
+      setSelectedRelatorio(null);
+      setNovoEstado('');
+      fetchPagamentos();
+    } catch (error) {
+      console.error('Error changing status:', error);
+      toast.error('Erro ao alterar estado');
+    }
+  };
+
   const handleUploadComprovativo = async () => {
     if (!selectedFile) {
       toast.error('Selecione um ficheiro');
@@ -79,16 +104,31 @@ const PagamentosParceiro = ({ user, onLogout }) => {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      await axios.post(
-        `${API}/pagamentos/${selectedPagamento.id}/comprovativo`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
+      // For relatórios (motoristas)
+      if (selectedPagamento.tipo === 'Motorista') {
+        await axios.post(
+          `${API}/relatorios-ganhos/${selectedPagamento.id}/comprovativo`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data'
+            }
           }
-        }
-      );
+        );
+      } else {
+        // For other payment types
+        await axios.post(
+          `${API}/pagamentos/${selectedPagamento.id}/comprovativo`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
+      }
 
       toast.success('Comprovativo enviado com sucesso!');
       setShowUploadModal(false);
