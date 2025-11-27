@@ -1245,6 +1245,7 @@ class Motorista(BaseModel):
     seguro_validade: Optional[str] = None
     
     documents: MotoristaDocuments
+    documents_validacao: Dict[str, DocumentoValidacao] = {}  # Controle de validação por documento
     approved: bool = False
     senha_provisoria: bool = False
     campos_customizados: Dict[str, Any] = {}  # Campos adicionais customizáveis
