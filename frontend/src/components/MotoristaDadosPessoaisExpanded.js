@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API } from '@/App';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { Upload, Download, Save, AlertCircle, CheckCircle, User, FileText, Credi
 
 const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) => {
   const [editMode, setEditMode] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [formData, setFormData] = useState({
     // Informações Básicas
     name: motoristaData?.name || '',
