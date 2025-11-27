@@ -8817,6 +8817,93 @@ async def marcar_pago(
         logger.error(f"Error marking as paid: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.put("/relatorios-ganhos/{relatorio_id}/alterar-estado")
+async def alterar_estado_relatorio(
+    relatorio_id: str,
+    estado_data: dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Change report status (Admin, Gestor, Operacional, Parceiro)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    relatorio = await db.relatorios_ganhos.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    # If parceiro, verify ownership
+    if current_user["role"] == UserRole.PARCEIRO:
+        motorista = await db.motoristas.find_one({"id": relatorio["motorista_id"]}, {"_id": 0})
+        if not motorista or motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized for this report")
+    
+    new_status = estado_data.get("status")
+    if not new_status:
+        raise HTTPException(status_code=400, detail="Status is required")
+    
+    # Valid status transitions
+    valid_statuses = ["por_enviar", "em_analise", "a_pagamento", "liquidado", "pendente_recibo", "recibo_emitido", "aguardando_pagamento", "pago"]
+    if new_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Valid options: {', '.join(valid_statuses)}")
+    
+    update_data = {
+        "status": new_status,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # If marking as liquidado, also update pago flag
+    if new_status == "liquidado":
+        update_data["pago"] = True
+        update_data["pago_por"] = current_user["id"]
+        update_data["pago_em"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.relatorios_ganhos.update_one({"id": relatorio_id}, {"$set": update_data})
+    
+    return {"message": "Status updated successfully", "new_status": new_status}
+
+@api_router.post("/relatorios-ganhos/{relatorio_id}/comprovativo")
+async def upload_comprovativo_pagamento(
+    relatorio_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload payment proof (Admin, Gestor, Operacional, Parceiro)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    relatorio = await db.relatorios_ganhos.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    # If parceiro, verify ownership
+    if current_user["role"] == UserRole.PARCEIRO:
+        motorista = await db.motoristas.find_one({"id": relatorio["motorista_id"]}, {"_id": 0})
+        if not motorista or motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized for this report")
+    
+    try:
+        # Create comprovativos directory
+        comprova_dir = UPLOAD_DIR / "comprovativos_pagamento"
+        comprova_dir.mkdir(exist_ok=True)
+        
+        # Process file
+        file_id = f"comprovativo_{relatorio_id}_{uuid.uuid4()}"
+        file_info = await process_uploaded_file(file, comprova_dir, file_id)
+        
+        # Update relatorio with comprovativo URL only
+        update_data = {
+            "comprovativo_pagamento_url": file_info["saved_path"],
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        await db.relatorios_ganhos.update_one({"id": relatorio_id}, {"$set": update_data})
+        
+        return {"message": "Payment proof uploaded successfully", "comprovativo_url": file_info["saved_path"]}
+        
+    except Exception as e:
+        logger.error(f"Error uploading payment proof: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 # ==================== CSV TEMPLATE DOWNLOADS ====================
 
