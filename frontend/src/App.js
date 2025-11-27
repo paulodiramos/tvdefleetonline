@@ -39,6 +39,7 @@ import ConfiguracoesAdmin from "@/pages/ConfiguracoesAdmin";
 import SincronizacaoAuto from "@/pages/SincronizacaoAuto";
 import Financeiro from "@/pages/Financeiro";
 import GestaoPlanos from "@/pages/GestaoPlanos";
+import GestaoPlanosMotorista from "@/pages/GestaoPlanosMotorista";
 import MeusPlanos from "@/pages/MeusPlanos";
 import MeusRecibosGanhos from "@/pages/MeusRecibosGanhos";
 import VerificarRecibos from "@/pages/VerificarRecibos";
