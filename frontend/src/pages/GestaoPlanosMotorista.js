@@ -24,7 +24,7 @@ const FEATURES_DISPONIVEIS = [
   { id: 'backup_nuvem', nome: 'Backup na Nuvem', descricao: 'Backup automático de todos os documentos' }
 ];
 
-const GestaoPlanosMot orista = ({ user, onLogout }) => {
+const GestaoPlanosMotorista = ({ user, onLogout }) => {
   const [planos, setPlanos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -405,4 +405,4 @@ const GestaoPlanosMot orista = ({ user, onLogout }) => {
   );
 };
 
-export default GestaoPlanosMot orista;
+export default GestaoPlanosMotorista;
