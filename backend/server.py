@@ -3221,19 +3221,47 @@ async def update_motorista(
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista not found")
     
-    # Allow admin, gestao, parceiro OR motorista editing their own profile (check by email)
+    # Check if parceiro/operacional is assigned to this motorista
+    is_assigned = False
+    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        # Check if current user is the assigned parceiro
+        is_assigned = motorista.get("parceiro_atribuido") == current_user["id"]
+    
+    # Allow admin, gestao, OR parceiro/operacional assigned OR motorista editing their own profile
     is_authorized = (
-        current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO] or
+        current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO] or
+        is_assigned or
         (current_user["role"] == UserRole.MOTORISTA and current_user["email"] == motorista.get("email"))
     )
     
     if not is_authorized:
         raise HTTPException(status_code=403, detail="Not authorized")
     
+    # If motorista is editing and documents are approved, only allow specific fields
+    if (current_user["role"] == UserRole.MOTORISTA and 
+        motorista.get("documentos_aprovados", False)):
+        # Only allow editing: registo criminal and iban
+        allowed_fields = [
+            'codigo_registo_criminal', 'validade_registo_criminal',
+            'iban', 'nome_banco'
+        ]
+        
+        # Filter update_data to only allowed fields
+        filtered_update = {k: v for k, v in update_data.items() if k in allowed_fields}
+        
+        if not filtered_update:
+            raise HTTPException(
+                status_code=403, 
+                detail="Documentos aprovados. Apenas Registo Criminal e IBAN podem ser alterados. Contacte o gestor para outras alterações."
+            )
+        
+        update_data = filtered_update
+    
     # Remove fields that shouldn't be updated directly
     update_data.pop("id", None)
     update_data.pop("created_at", None)
     update_data.pop("_id", None)
+    update_data.pop("documentos_aprovados", None)  # Não permitir mudança direta deste campo
     
     if not update_data:
         raise HTTPException(status_code=400, detail="No data to update")
