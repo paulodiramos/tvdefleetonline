@@ -700,6 +700,18 @@ frontend:
           agent: "main"
           comment: "Página já implementada com tabs para Planos de Assinatura e Outras Configurações. Inclui sistema de features disponíveis por tipo de usuário (parceiro/operacional) com checkboxes para seleção. Precisa ser testada."
 
+  - task: "Perfil do Motorista - Validações e Funcionalidade de Guardar Dados"
+    implemented: true
+    working: false
+    file: "frontend/src/components/MotoristaDadosPessoaisExpanded.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "TESTADO COMPLETAMENTE: ✅ Validações de campos funcionando 100% (7/7 validações testadas). ✅ Interface e modo de edição funcionando. ❌ CRÍTICO: Funcionalidade de guardar falhou - erro 403 'Not authorized'. Motorista não tem permissão para salvar seus próprios dados. ❌ CRÍTICO: Persistência de dados falhou devido ao erro de salvamento. ❌ CRÍTICO: Confirmação de mudança de aba não funciona - diálogo não aparece. Problemas: 1) Endpoint PUT /api/motoristas/{id} retorna 403 para motorista, 2) Sistema de detecção de alterações não guardadas não funciona, 3) window.confirm não é chamado ao mudar de aba."
+
   - task: "FichaVeiculo.js - Fix Edit/Save/Cancel Logic"
     implemented: true
     working: true
