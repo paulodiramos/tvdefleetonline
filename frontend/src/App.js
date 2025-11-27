@@ -222,6 +222,30 @@ function App() {
             }
           />
           <Route
+            path="/motorista/perfil"
+            element={
+              user ? <MotoristaPerfil user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/motorista/mensagens"
+            element={
+              user ? <MotoristaMensagens user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/motorista/tickets"
+            element={
+              user ? <MotoristaTickets user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/motorista/oportunidades"
+            element={
+              user ? <MotoristaOportunidades user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/relatorios"
             element={
               user ? <ParceiroReports user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
