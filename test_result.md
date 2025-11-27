@@ -1022,6 +1022,85 @@ agent_communication:
     
     - agent: "testing"
       message: |
+        🎯 TESTE COMPLETO - PERFIL DO MOTORISTA COM VALIDAÇÕES E FUNCIONALIDADE DE GUARDAR DADOS
+        
+        CONTEXTO DO TESTE:
+        Teste completo da funcionalidade do Perfil do Motorista conforme review request em português, incluindo validações de campos, funcionalidade de guardar dados e confirmação de mudança de aba.
+        
+        CREDENCIAIS TESTADAS: motorista@tvdefleet.com / 2rEFuwQO ✅
+        URL: https://fleetportal.preview.emergentagent.com ✅
+        
+        ✅ FUNCIONALIDADES TESTADAS COM SUCESSO:
+        
+        **1. LOGIN E NAVEGAÇÃO:**
+        - ✅ Login como motorista: FUNCIONANDO
+        - ✅ Dashboard carrega corretamente: FUNCIONANDO
+        - ✅ Clicar na aba "Dados Pessoais": FUNCIONANDO
+        
+        **2. MODO DE EDIÇÃO:**
+        - ✅ Botão "Editar" ativa modo de edição: FUNCIONANDO
+        - ✅ Campos ficam editáveis em modo de edição: FUNCIONANDO
+        
+        **3. VALIDAÇÕES DE CAMPOS COM VALORES INVÁLIDOS:**
+        - ✅ NIF com "12345" (menos de 9 dígitos): Erro "NIF deve ter exatamente 9 dígitos" ✅
+        - ✅ Segurança Social com "123456789" (menos de 11 dígitos): Erro "Número de Segurança Social deve ter 11 dígitos" ✅
+        - ✅ Cartão de Utente com "123456" (com letras): Erro "Cartão de Utente deve ter 9 dígitos" ✅
+        - ✅ Licença TVDE com "12345" (sem formato /ano): Erro "Formato: números/ano (ex: 12345/2024)" ✅
+        - ✅ Código Postal com "12345" (sem hífen): Erro "Formato: 1234-567" ✅
+        - ✅ Email com "emailinvalido" (sem @): Erro "Email inválido (deve conter @ e domínio)" ✅
+        - ✅ Telefone com "912345678" (sem código país): Erro "Formato: +351 912345678" ✅
+        
+        **4. VALIDAÇÕES COM VALORES VÁLIDOS:**
+        - ✅ NIF: "123456789" (9 dígitos): SEM ERRO ✅
+        - ✅ Segurança Social: "12345678901" (11 dígitos): SEM ERRO ✅
+        - ✅ Cartão de Utente: "987654321" (9 dígitos): SEM ERRO ✅
+        - ✅ Licença TVDE: "54321/2024": SEM ERRO ✅
+        - ✅ Código Postal: "1000-100": SEM ERRO ✅
+        - ✅ Email: "teste@email.com": SEM ERRO ✅
+        - ✅ Telefone: "+351912345678": SEM ERRO ✅
+        
+        **5. PLACEHOLDERS ESPECÍFICOS:**
+        - ✅ Registo Criminal: "ABCD-1234-EFGH-5678I" ✅ CORRETO
+        - ✅ IBAN: "PT50 0035 0268 00038229130 61" ✅ CORRETO
+        - ✅ Telefones: "+351 912345678" ✅ CORRETO
+        
+        **6. VALIDAÇÕES DE FORMATO ESPECÍFICAS:**
+        - ✅ Registo Criminal com formato inválido: Erro "Formato: xxxx-xxxx-xxxx-xxxxx" ✅
+        - ✅ IBAN com formato inválido: Erro "Formato: PT50 0000 0000 0000 0000 0000 0" ✅
+        
+        ❌ PROBLEMAS CRÍTICOS ENCONTRADOS:
+        
+        **1. FUNCIONALIDADE DE GUARDAR DADOS:**
+        - ❌ CRÍTICO: Botão "Guardar Todos os Dados" retorna erro 403 "Not authorized"
+        - ❌ CRÍTICO: Motorista não tem permissão para salvar seus próprios dados
+        - ❌ API Error: PUT /api/motoristas/motorista-001 retorna 403 Forbidden
+        - ❌ Toast mostra "Not authorized" em vez de "Dados guardados com sucesso!"
+        
+        **2. PERSISTÊNCIA DE DADOS:**
+        - ❌ CRÍTICO: Dados não são persistidos após reload (devido ao erro de salvamento)
+        - ❌ Campos voltam aos valores originais após F5
+        
+        **3. CONFIRMAÇÃO DE MUDANÇA DE ABA:**
+        - ❌ CRÍTICO: Diálogo de confirmação não aparece ao tentar mudar de aba com alterações não guardadas
+        - ❌ Sistema permite mudança de aba sem aviso sobre alterações não guardadas
+        
+        📊 RESULTADO FINAL:
+        ✅ Validações de campos: 100% FUNCIONANDO (7/7 validações testadas)
+        ✅ Interface e modo de edição: 100% FUNCIONANDO
+        ❌ Funcionalidade de guardar: FALHOU (erro 403 - sem autorização)
+        ❌ Persistência de dados: FALHOU (devido ao erro de salvamento)
+        ❌ Confirmação de mudança de aba: FALHOU (diálogo não aparece)
+        
+        🔧 PROBLEMAS IDENTIFICADOS PARA CORREÇÃO:
+        1. **PERMISSÕES**: Motorista precisa ter permissão para editar seus próprios dados
+        2. **AUTORIZAÇÃO**: Endpoint PUT /api/motoristas/{id} deve permitir que motorista edite seu próprio perfil
+        3. **CONFIRMAÇÃO DE SAÍDA**: Sistema de detecção de alterações não guardadas não está funcionando
+        4. **DIÁLOGO DE CONFIRMAÇÃO**: window.confirm não está sendo chamado ao mudar de aba
+        
+        Sistema de validações está perfeito, mas funcionalidade de salvamento e confirmação precisam ser corrigidas.
+    
+    - agent: "testing"
+      message: |
         🎉 TESTE COMPLETO - SISTEMA PLANO DE MANUTENÇÕES E ALERTAS 100% FUNCIONANDO!
         
         ✅ NAVEGAÇÃO E ACESSO: 100% FUNCIONANDO
