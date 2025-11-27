@@ -2,39 +2,19 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { API } from '@/App';
 import Layout from '@/components/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { 
-  User, Car, FileText, Download, DollarSign, Upload, 
-  Calendar, TrendingUp, AlertCircle, CheckCircle, X 
-} from 'lucide-react';
+import MotoristaDashboard from '@/components/MotoristaDashboard';
+import MotoristaDadosPessoais from '@/components/MotoristaDadosPessoais';
+import MotoristaPlanos from '@/components/MotoristaPlanos';
 
 const PerfilMotorista = ({ user, onLogout }) => {
   const [motoristaData, setMotoristaData] = useState(null);
-  const [veiculosDisponiveis, setVeiculosDisponiveis] = useState([]);
   const [relatorios, setRelatorios] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false);
-  const [showOutroMetodo, setShowOutroMetodo] = useState(false);
-  
-  // File uploads
-  const [uploadingDoc, setUploadingDoc] = useState(false);
-  const [selectedDoc, setSelectedDoc] = useState(null);
-  const [docType, setDocType] = useState('');
-  
-  // Request vehicle modal
-  const [showRequestModal, setShowRequestModal] = useState(false);
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
 
   useEffect(() => {
     fetchMotoristaData();
-    fetchVeiculosDisponiveis();
     fetchRelatorios();
   }, []);
 
