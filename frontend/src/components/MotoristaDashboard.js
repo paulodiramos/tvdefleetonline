@@ -71,6 +71,58 @@ const MotoristaDashboard = ({ motoristaData, relatorios }) => {
         </Card>
       </div>
 
+      {/* Estado dos Recibos */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Estado dos Recibos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                <span className="text-sm font-medium text-slate-700">Pendentes de Envio</span>
+              </div>
+              <span className="text-lg font-bold text-yellow-700">{recibosPendentes}</span>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span className="text-sm font-medium text-slate-700">Enviados</span>
+              </div>
+              <span className="text-lg font-bold text-blue-700">{recibosEnviados}</span>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <span className="text-sm font-medium text-slate-700">Verificados</span>
+              </div>
+              <span className="text-lg font-bold text-green-700">{recibosVerificados}</span>
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                <span className="text-sm font-medium text-slate-700">Pagos</span>
+              </div>
+              <span className="text-lg font-bold text-emerald-700">{recibosPagos}</span>
+            </div>
+
+            {recibosRejeitados > 0 && (
+              <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                  <span className="text-sm font-medium text-slate-700">Rejeitados</span>
+                </div>
+                <span className="text-lg font-bold text-red-700">{recibosRejeitados}</span>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Alertas e Notificações */}
       {motoristaData && (
         <div className="space-y-3">
