@@ -21,6 +21,7 @@ const PerfilMotorista = ({ user, onLogout }) => {
   const [relatorios, setRelatorios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
+  const [showOutroMetodo, setShowOutroMetodo] = useState(false);
   
   // File uploads
   const [uploadingDoc, setUploadingDoc] = useState(false);
