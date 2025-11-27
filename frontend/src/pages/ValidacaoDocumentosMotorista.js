@@ -687,6 +687,57 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
           </CardContent>
         </Card>
 
+        {/* Notas Internas / Observações */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Notas Internas / Observações</CardTitle>
+                <p className="text-sm text-slate-600 mt-1">Observações visíveis apenas para Admin/Gestor/Parceiro/Operacional</p>
+              </div>
+              {!editingObservacoes && (
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => setEditingObservacoes(true)}
+                >
+                  Editar
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {editingObservacoes ? (
+              <div className="space-y-3">
+                <textarea
+                  value={observacoes}
+                  onChange={(e) => setObservacoes(e.target.value)}
+                  className="w-full border rounded-lg p-3 min-h-[120px] text-sm"
+                  placeholder="Adicione observações internas sobre este motorista..."
+                />
+                <div className="flex space-x-2">
+                  <Button onClick={handleSaveObservacoes}>
+                    Guardar Observações
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setEditingObservacoes(false);
+                      setObservacoes(motorista.observacoes_internas || '');
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-lg p-4 min-h-[80px]">
+                {observacoes || 'Nenhuma observação registada.'}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Documents List */}
         <div className="grid md:grid-cols-2 gap-4">
           {documentTypes.length === 0 ? (
