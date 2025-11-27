@@ -62,6 +62,8 @@ const Usuarios = ({ user, onLogout }) => {
   const [selectedPlanoId, setSelectedPlanoId] = useState('');
   const [selectedPeriodicidade, setSelectedPeriodicidade] = useState('mensal');
   const [duracaoDias, setDuracaoDias] = useState(30);
+  const [showMotoristaDialog, setShowMotoristaDialog] = useState(false);
+  const [selectedMotoristaId, setSelectedMotoristaId] = useState(null);
 
   useEffect(() => {
     fetchUsers();
