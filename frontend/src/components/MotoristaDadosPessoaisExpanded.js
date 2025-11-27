@@ -872,19 +872,21 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
               <Input
                 value={formData.nome_banco}
                 onChange={(e) => handleChange('nome_banco', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                disabled={!editMode}
                 placeholder="Ex: Caixa Geral de Depósitos"
               />
             </div>
             <div>
-              <Label>IBAN *</Label>
+              <Label>IBAN * (formato: PT50 0000 0000 0000 0000 0000 0)</Label>
               <Input
                 value={formData.iban}
-                onChange={(e) => handleChange('iban', e.target.value)}
-                disabled={!canEdit && !isMotorista}
-                placeholder="PT50 0000 0000 0000 0000 0000 0"
-                maxLength={29}
+                onChange={(e) => handleChange('iban', e.target.value.toUpperCase())}
+                disabled={!editMode}
+                placeholder="PT50 0035 0268 00038229130 61"
+                maxLength={34}
+                className={errors.iban ? 'border-red-500' : ''}
               />
+              {errors.iban && <p className="text-xs text-red-500 mt-1">{errors.iban}</p>}
             </div>
           </div>
 
