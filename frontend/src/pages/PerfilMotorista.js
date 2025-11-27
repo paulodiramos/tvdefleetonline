@@ -94,19 +94,22 @@ const PerfilMotorista = ({ user, onLogout }) => {
     );
   }
 
+  const handleTabChange = (newTab) => {
+    if (window.hasUnsavedChanges && window.hasUnsavedChanges()) {
+      const confirmLeave = window.confirm('Tem alterações não guardadas. Deseja sair sem guardar?');
+      if (!confirmLeave) {
+        return; // Não muda de aba
+      }
+    }
+    setActiveTab(newTab);
+  };
+
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="max-w-7xl mx-auto space-y-6 p-6">
-        <Tabs defaultValue="dashboard" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="dashboard" onClick={(e) => {
-              if (window.hasUnsavedChanges && window.hasUnsavedChanges()) {
-                const confirmLeave = window.confirm('Tem alterações não guardadas. Deseja sair sem guardar?');
-                if (!confirmLeave) {
-                  e.preventDefault();
-                }
-              }
-            }}>
+            <TabsTrigger value="dashboard">
               <TrendingUp className="w-4 h-4 mr-2" />
               Dashboard
             </TabsTrigger>
@@ -114,14 +117,7 @@ const PerfilMotorista = ({ user, onLogout }) => {
               <User className="w-4 h-4 mr-2" />
               Dados Pessoais
             </TabsTrigger>
-            <TabsTrigger value="planos" onClick={(e) => {
-              if (window.hasUnsavedChanges && window.hasUnsavedChanges()) {
-                const confirmLeave = window.confirm('Tem alterações não guardadas. Deseja sair sem guardar?');
-                if (!confirmLeave) {
-                  e.preventDefault();
-                }
-              }
-            }}>
+            <TabsTrigger value="planos">
               <Package className="w-4 h-4 mr-2" />
               Meus Planos
             </TabsTrigger>
