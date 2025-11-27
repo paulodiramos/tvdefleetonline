@@ -687,48 +687,248 @@ const PerfilMotorista = ({ user, onLogout }) => {
 
           {/* Tab: Financeiro */}
           <TabsContent value="financeiro">
-            <Card>
-              <CardHeader>
-                <CardTitle>Relatórios de Ganhos Semanais</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {relatorios.length === 0 ? (
-                  <p className="text-slate-500 text-center py-8">
-                    Nenhum relatório disponível
-                  </p>
-                ) : (
-                  <div className="space-y-3">
+            <div className="space-y-6">
+              {/* Seletor de Semana */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Selecionar Semana</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <select
+                    className="w-full px-3 py-2 border border-slate-300 rounded-md"
+                    onChange={(e) => {
+                      const selected = relatorios.find(r => r.id === e.target.value);
+                      // Handle selection
+                    }}
+                  >
+                    <option value="">Semana Atual / Mais Recente</option>
                     {relatorios.map(relatorio => (
-                      <div key={relatorio.id} className="border rounded-lg p-4 hover:bg-slate-50">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold">
-                              Semana: {new Date(relatorio.periodo_inicio).toLocaleDateString()} - {new Date(relatorio.periodo_fim).toLocaleDateString()}
-                            </p>
-                            <p className="text-sm text-slate-600 mt-1">
-                              Valor Líquido: €{relatorio.valor_liquido?.toFixed(2) || relatorio.valor_total?.toFixed(2)}
-                            </p>
-                            <Badge className="mt-2">{relatorio.status}</Badge>
+                      <option key={relatorio.id} value={relatorio.id}>
+                        {new Date(relatorio.periodo_inicio).toLocaleDateString('pt-PT')} - {new Date(relatorio.periodo_fim).toLocaleDateString('pt-PT')}
+                      </option>
+                    ))}
+                  </select>
+                </CardContent>
+              </Card>
+
+              {relatorios.length > 0 ? (
+                <>
+                  {/* Dashboard Semanal */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <p className="text-sm text-slate-600">Ganhos Totais</p>
+                          <p className="text-2xl font-bold text-green-600 mt-1">
+                            €{((relatorios[0]?.ganhos_uber || 0) + (relatorios[0]?.ganhos_bolt || 0)).toFixed(2)}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <p className="text-sm text-slate-600">Horas Online</p>
+                          <p className="text-2xl font-bold text-blue-600 mt-1">
+                            {relatorios[0]?.horas_online || 0}h
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <p className="text-sm text-slate-600">KM Percorridos</p>
+                          <p className="text-2xl font-bold text-purple-600 mt-1">
+                            {relatorios[0]?.km_efetuados || 0}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card>
+                      <CardContent className="pt-6">
+                        <div className="text-center">
+                          <p className="text-sm text-slate-600">Viagens</p>
+                          <p className="text-2xl font-bold text-orange-600 mt-1">
+                            {relatorios[0]?.numero_viagens || 0}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {/* Detalhes */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Ganhos */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg text-green-600">💰 Ganhos</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Uber:</span>
+                            <span className="font-semibold">€{(relatorios[0]?.ganhos_uber || 0).toFixed(2)}</span>
                           </div>
-                          <div className="flex space-x-2">
-                            {relatorio.recibo_url && (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => downloadRecibo(relatorio.recibo_url)}
-                              >
-                                <Download className="w-4 h-4 mr-2" />
-                                Recibo
-                              </Button>
-                            )}
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Bolt:</span>
+                            <span className="font-semibold">€{(relatorios[0]?.ganhos_bolt || 0).toFixed(2)}</span>
+                          </div>
+                          <hr className="my-2" />
+                          <div className="flex justify-between font-bold">
+                            <span>Total:</span>
+                            <span className="text-green-600">€{((relatorios[0]?.ganhos_uber || 0) + (relatorios[0]?.ganhos_bolt || 0)).toFixed(2)}</span>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      </CardContent>
+                    </Card>
+
+                    {/* Gastos */}
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg text-red-600">📉 Gastos</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Via Verde:</span>
+                            <span className="font-semibold text-red-600">€{(relatorios[0]?.total_via_verde || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Combustível:</span>
+                            <span className="font-semibold text-red-600">€{(relatorios[0]?.total_combustivel || 0).toFixed(2)}</span>
+                          </div>
+                          <hr className="my-2" />
+                          <div className="flex justify-between font-bold">
+                            <span>Total Gastos:</span>
+                            <span className="text-red-600">€{((relatorios[0]?.total_via_verde || 0) + (relatorios[0]?.total_combustivel || 0)).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+
+                  {/* Via Verde Detalhado */}
+                  {relatorios[0]?.despesas_via_verde && relatorios[0].despesas_via_verde.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">🛣️ Via Verde - Detalhes</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          {relatorios[0].despesas_via_verde.map((vv, idx) => (
+                            <div key={idx} className="flex justify-between text-sm p-2 bg-slate-50 rounded">
+                              <span>{vv.data} {vv.hora} - {vv.local}</span>
+                              <span className="font-semibold">€{vv.valor.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Combustível Detalhado */}
+                  {relatorios[0]?.despesas_combustivel && relatorios[0].despesas_combustivel.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">⛽ Combustível - Detalhes</CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          {relatorios[0].despesas_combustivel.map((comb, idx) => (
+                            <div key={idx} className="flex justify-between text-sm p-2 bg-slate-50 rounded">
+                              <div>
+                                <p>{comb.data} {comb.hora} - {comb.local}</p>
+                                <p className="text-xs text-slate-500">{comb.quantidade}L</p>
+                              </div>
+                              <span className="font-semibold">€{comb.valor.toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Recibo/Fatura */}
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <CardTitle className="text-lg">📄 Recibo/Fatura</CardTitle>
+                      <Badge className={
+                        relatorios[0]?.status === 'por_enviar' ? 'bg-yellow-100 text-yellow-800' :
+                        relatorios[0]?.status === 'em_analise' ? 'bg-blue-100 text-blue-800' :
+                        relatorios[0]?.status === 'a_pagamento' ? 'bg-orange-100 text-orange-800' :
+                        relatorios[0]?.status === 'liquidado' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }>
+                        {relatorios[0]?.status === 'por_enviar' ? 'Por Enviar' :
+                         relatorios[0]?.status === 'em_analise' ? 'Em Análise' :
+                         relatorios[0]?.status === 'a_pagamento' ? 'A Pagamento' :
+                         relatorios[0]?.status === 'liquidado' ? 'Liquidado' :
+                         relatorios[0]?.status || 'Pendente'}
+                      </Badge>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        {/* Dados do Parceiro */}
+                        <div className="p-4 bg-slate-50 rounded-lg">
+                          <h4 className="font-semibold mb-2">Dados do Parceiro:</h4>
+                          <div className="text-sm space-y-1">
+                            <p><strong>Nome:</strong> {relatorios[0]?.parceiro_nome || 'N/A'}</p>
+                            <p><strong>Contribuinte:</strong> {relatorios[0]?.parceiro_nif || 'N/A'}</p>
+                            <p><strong>Morada:</strong> {relatorios[0]?.parceiro_morada || 'N/A'}</p>
+                          </div>
+                        </div>
+
+                        {/* Valor a Receber */}
+                        <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                          <div className="flex justify-between items-center">
+                            <span className="text-lg font-semibold">Valor Líquido a Receber:</span>
+                            <span className="text-2xl font-bold text-green-700">
+                              €{(relatorios[0]?.valor_liquido || 0).toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Botões */}
+                        <div className="flex space-x-2">
+                          {relatorios[0]?.recibo_url && (
+                            <Button
+                              onClick={() => downloadRecibo(relatorios[0].recibo_url)}
+                              className="flex-1"
+                            >
+                              <Download className="w-4 h-4 mr-2" />
+                              Download Recibo
+                            </Button>
+                          )}
+                        </div>
+
+                        {relatorios[0]?.comprovativo_pagamento_url && (
+                          <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
+                            <p className="text-sm font-semibold mb-2">✓ Comprovativo de Pagamento Disponível</p>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => window.open(`${API}/${relatorios[0].comprovativo_pagamento_url}`, '_blank')}
+                            >
+                              Ver Comprovativo
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              ) : (
+                <Card>
+                  <CardContent className="py-12">
+                    <p className="text-slate-500 text-center">Nenhum relatório disponível ainda</p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
 
           {/* Tab: Documentos */}
