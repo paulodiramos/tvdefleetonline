@@ -276,6 +276,12 @@ function App() {
             }
           />
           <Route
+            path="/gestao-planos-motorista"
+            element={
+              user ? <GestaoPlanosMotorista user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/meus-planos"
             element={
               user ? <MeusPlanos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
