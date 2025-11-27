@@ -1586,24 +1586,33 @@ class PlanoMotorista(BaseModel):
     id: str
     nome: str  # Ex: "Básico", "Premium", "Profissional"
     descricao: str
-    preco_mensal: float  # 0 para plano básico gratuito
+    preco_semanal: float  # Preço semanal (0 para plano gratuito)
+    preco_mensal: float  # Preço mensal
+    desconto_mensal_percentagem: float = 0  # Desconto para pagamento mensal (ex: 15%)
     features: Dict[str, bool]  # Ex: {"alertas_recibos": True, "alertas_documentos": True, "dashboard_analytics": False}
     ativo: bool = True
+    permite_pagamento_online: bool = True  # Se permite pagamento via IFThenPay
     created_at: datetime
     updated_at: datetime
 
 class PlanoMotoristaCreate(BaseModel):
     nome: str
     descricao: str
+    preco_semanal: float
     preco_mensal: float
+    desconto_mensal_percentagem: float = 0
     features: Dict[str, bool]
+    permite_pagamento_online: bool = True
 
 class PlanoMotoristaUpdate(BaseModel):
     nome: Optional[str] = None
     descricao: Optional[str] = None
+    preco_semanal: Optional[float] = None
     preco_mensal: Optional[float] = None
+    desconto_mensal_percentagem: Optional[float] = None
     features: Optional[Dict[str, bool]] = None
     ativo: Optional[bool] = None
+    permite_pagamento_online: Optional[bool] = None
 
 class MotoristaPlanoAssinatura(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -1611,10 +1620,17 @@ class MotoristaPlanoAssinatura(BaseModel):
     motorista_id: str
     plano_id: str
     plano_nome: Optional[str] = None
-    status: str  # "ativo", "cancelado", "expirado", "pagamento_pendente"
+    periodicidade: str  # "semanal" ou "mensal"
+    preco_pago: float  # Valor efetivamente pago (com descontos aplicados)
+    status: str  # "ativo", "cancelado", "expirado", "pagamento_pendente", "aguardando_pagamento"
     data_inicio: str
-    data_fim: Optional[str] = None  # Para assinaturas com duração definida
+    data_fim: Optional[str] = None  # Data de vencimento da assinatura
     auto_renovacao: bool = False
+    metodo_pagamento: Optional[str] = None  # "manual", "ifthenpay", "multibanco", "mbway"
+    referencia_pagamento: Optional[str] = None  # Referência multibanco ou MBWay
+    entidade_pagamento: Optional[str] = None  # Entidade multibanco
+    pagamento_confirmado: bool = False
+    data_pagamento: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
