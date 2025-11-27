@@ -364,6 +364,31 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
         </Card>
       )}
 
+      {/* Download de Contrato */}
+      {isMotorista && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <FileText className="w-6 h-6 text-blue-600" />
+                <div>
+                  <p className="font-semibold text-slate-800">Contrato</p>
+                  <p className="text-sm text-slate-600">Descarregue o seu contrato assinado</p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                onClick={handleDownloadContrato}
+                className="border-blue-500 text-blue-600 hover:bg-blue-50"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Descarregar Contrato
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* 1. INFORMAÇÕES BÁSICAS */}
       <Card>
         <CardHeader>
