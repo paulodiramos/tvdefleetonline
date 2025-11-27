@@ -25,6 +25,12 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
     fetchMotoristaData();
   }, [motoristaId]);
 
+  useEffect(() => {
+    if (motorista) {
+      setObservacoes(motorista.observacoes_internas || '');
+    }
+  }, [motorista]);
+
   const fetchMotoristaData = async () => {
     try {
       const token = localStorage.getItem('token');
