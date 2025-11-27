@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Upload, Download, Save, AlertCircle, CheckCircle, User, FileText, CreditCard, Shield, Phone, MapPin } from 'lucide-react';
 
 const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) => {
+  const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     // Informações Básicas
     name: motoristaData?.name || '',
