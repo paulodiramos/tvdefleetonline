@@ -982,9 +982,11 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
               <Input
                 value={formData.emergencia_telefone}
                 onChange={(e) => handleChange('emergencia_telefone', e.target.value)}
-                disabled={!canEdit && !isMotorista}
-                placeholder="+351 912 345 678"
+                disabled={!editMode}
+                placeholder="+351 912345678"
+                className={errors.emergencia_telefone ? 'border-red-500' : ''}
               />
+              {errors.emergencia_telefone && <p className="text-xs text-red-500 mt-1">{errors.emergencia_telefone}</p>}
             </div>
             <div>
               <Label>Email</Label>
@@ -992,9 +994,11 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
                 type="email"
                 value={formData.emergencia_email}
                 onChange={(e) => handleChange('emergencia_email', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                disabled={!editMode}
                 placeholder="email@exemplo.com"
+                className={errors.emergencia_email ? 'border-red-500' : ''}
               />
+              {errors.emergencia_email && <p className="text-xs text-red-500 mt-1">{errors.emergencia_email}</p>}
             </div>
             <div>
               <Label>Ligação *</Label>
