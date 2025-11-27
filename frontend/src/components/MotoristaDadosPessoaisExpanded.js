@@ -1035,9 +1035,20 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
               <Input
                 value={formData.emergencia_codigo_postal}
                 onChange={(e) => handleChange('emergencia_codigo_postal', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                disabled={!editMode}
                 placeholder="1234-567"
                 maxLength={8}
+                className={errors.emergencia_codigo_postal ? 'border-red-500' : ''}
+              />
+              {errors.emergencia_codigo_postal && <p className="text-xs text-red-500 mt-1">{errors.emergencia_codigo_postal}</p>}
+            </div>
+            <div>
+              <Label>Localidade</Label>
+              <Input
+                value={formData.emergencia_localidade}
+                onChange={(e) => handleChange('emergencia_localidade', e.target.value)}
+                disabled={!editMode}
+                placeholder="Lisboa, Porto, etc."
               />
             </div>
           </div>
