@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { FileText, Download, User, Shield, AlertCircle, CheckCircle } from 'lucide-react';
+import { FileText, Download, UserCircle, Shield, AlertCircle, CheckCircle } from 'lucide-react';
 
 const MotoristaDetailDialog = ({ open, onClose, motoristaId, userRole }) => {
   const [motorista, setMotorista] = useState(null);
