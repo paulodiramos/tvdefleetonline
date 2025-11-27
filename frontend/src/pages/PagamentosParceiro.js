@@ -267,12 +267,52 @@ const PagamentosParceiro = ({ user, onLogout }) => {
                       </div>
                     </div>
 
+                    {/* Dados do Parceiro (se for pagamento de motorista) */}
+                    {pagamento.tipo === 'Motorista' && (
+                      <div className="mt-3 p-3 bg-blue-50 rounded border border-blue-200">
+                        <p className="text-xs font-semibold text-blue-800 mb-1">Dados para Recibo:</p>
+                        <div className="text-xs text-slate-700 space-y-0.5">
+                          <p><strong>Parceiro:</strong> {pagamento.parceiro_nome || 'N/A'}</p>
+                          <p><strong>NIF:</strong> {pagamento.parceiro_nif || 'N/A'}</p>
+                          <p><strong>Morada:</strong> {pagamento.parceiro_morada || 'N/A'}</p>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-end space-x-2 mt-3">
-                      {pagamento.comprovativo_url ? (
+                      {/* Botão Alterar Estado (apenas para motoristas) */}
+                      {pagamento.tipo === 'Motorista' && (
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => window.open(`${API}/${pagamento.comprovativo_url}`, '_blank')}
+                          onClick={() => {
+                            setSelectedRelatorio(pagamento);
+                            setNovoEstado(pagamento.status);
+                            setShowEstadoModal(true);
+                          }}
+                        >
+                          Alterar Estado
+                        </Button>
+                      )}
+
+                      {/* Botão Ver Recibo (se disponível) */}
+                      {pagamento.recibo_url && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => window.open(`${API}/${pagamento.recibo_url}`, '_blank')}
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Ver Recibo
+                        </Button>
+                      )}
+
+                      {/* Botão Comprovativo */}
+                      {pagamento.comprovativo_pagamento_url ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => window.open(`${API}/${pagamento.comprovativo_pagamento_url}`, '_blank')}
                         >
                           <Download className="w-4 h-4 mr-2" />
                           Ver Comprovativo
@@ -284,7 +324,7 @@ const PagamentosParceiro = ({ user, onLogout }) => {
                             setSelectedPagamento(pagamento);
                             setShowUploadModal(true);
                           }}
-                          disabled={pagamento.status === 'pago'}
+                          disabled={pagamento.status === 'liquidado'}
                         >
                           <Upload className="w-4 h-4 mr-2" />
                           Adicionar Comprovativo
