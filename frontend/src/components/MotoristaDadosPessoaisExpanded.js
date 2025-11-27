@@ -372,25 +372,113 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
         </Card>
       )}
 
-      {/* Download de Contrato */}
+      {/* Seção de Downloads */}
       {isMotorista && (
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
+          <CardHeader>
+            <div className="flex items-center space-x-2">
+              <Download className="w-5 h-5 text-blue-600" />
+              <CardTitle>Meus Downloads</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {/* Contrato */}
+            <div className="flex items-center justify-between border-b pb-3">
               <div className="flex items-center space-x-3">
-                <FileText className="w-6 h-6 text-blue-600" />
+                <FileText className="w-5 h-5 text-slate-600" />
                 <div>
-                  <p className="font-semibold text-slate-800">Contrato</p>
-                  <p className="text-sm text-slate-600">Descarregue o seu contrato assinado</p>
+                  <p className="font-medium text-slate-800">Contrato</p>
+                  <p className="text-xs text-slate-600">Contrato assinado com parceiro</p>
                 </div>
               </div>
               <Button
+                size="sm"
                 variant="outline"
                 onClick={handleDownloadContrato}
                 className="border-blue-500 text-blue-600 hover:bg-blue-50"
               >
                 <Download className="w-4 h-4 mr-2" />
-                Descarregar Contrato
+                Descarregar
+              </Button>
+            </div>
+
+            {/* Documentos Pessoais */}
+            <div className="flex items-center justify-between border-b pb-3">
+              <div className="flex items-center space-x-3">
+                <FileText className="w-5 h-5 text-slate-600" />
+                <div>
+                  <p className="font-medium text-slate-800">Documentos Pessoais</p>
+                  <p className="text-xs text-slate-600">CC, Carta Condução, Licença TVDE, etc.</p>
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                {motoristaData?.documents?.cc_frente && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDownloadDocumento('cc_frente')}
+                  >
+                    CC Frente
+                  </Button>
+                )}
+                {motoristaData?.documents?.carta_conducao_frente && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDownloadDocumento('carta_conducao_frente')}
+                  >
+                    Carta
+                  </Button>
+                )}
+                {motoristaData?.documents?.licenca_tvde && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleDownloadDocumento('licenca_tvde')}
+                  >
+                    TVDE
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Recibos */}
+            <div className="flex items-center justify-between border-b pb-3">
+              <div className="flex items-center space-x-3">
+                <FileText className="w-5 h-5 text-slate-600" />
+                <div>
+                  <p className="font-medium text-slate-800">Recibos</p>
+                  <p className="text-xs text-slate-600">Recibos de ganhos semanais</p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => window.location.href = '/recibos-ganhos'}
+                className="border-green-500 text-green-600 hover:bg-green-50"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Ver Recibos
+              </Button>
+            </div>
+
+            {/* Relatórios de Ganhos */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <FileText className="w-5 h-5 text-slate-600" />
+                <div>
+                  <p className="font-medium text-slate-800">Relatórios de Ganhos</p>
+                  <p className="text-xs text-slate-600">Histórico de ganhos semanais</p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => window.location.href = '/recibos-ganhos'}
+                className="border-purple-500 text-purple-600 hover:bg-purple-50"
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Ver Relatórios
               </Button>
             </div>
           </CardContent>
