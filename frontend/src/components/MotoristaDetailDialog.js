@@ -116,7 +116,7 @@ const MotoristaDetailDialog = ({ open, onClose, motoristaId, userRole }) => {
           <Tabs defaultValue="dados" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="dados">
-                <User className="w-4 h-4 mr-2" />
+                <UserCircle className="w-4 h-4 mr-2" />
                 Dados
               </TabsTrigger>
               <TabsTrigger value="documentos">
