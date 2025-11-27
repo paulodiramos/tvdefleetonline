@@ -3119,6 +3119,51 @@ async def upload_document(
         "converted_to_pdf": file_info["pdf_path"] is not None
     }
 
+@api_router.post("/motoristas/{motorista_id}/validar-documento")
+async def validar_documento(
+    motorista_id: str,
+    validacao_data: dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Validar documento (Admin, Gestor, Operacional, Parceiro)"""
+    # Verificar permissões
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista not found")
+    
+    doc_type = validacao_data.get("doc_type")
+    validar = validacao_data.get("validar", True)
+    
+    if not doc_type:
+        raise HTTPException(status_code=400, detail="doc_type is required")
+    
+    # Verificar se documento existe
+    if not motorista.get("documents", {}).get(doc_type):
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Atualizar validação
+    validacao = {
+        "validado": validar,
+        "validado_por": current_user["id"] if validar else None,
+        "validado_em": datetime.now(timezone.utc).isoformat() if validar else None,
+        "pode_editar": doc_type in ["comprovativo_iban", "registo_criminal"]  # Sempre editáveis
+    }
+    
+    update_field = f"documents_validacao.{doc_type}"
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        {"$set": {update_field: validacao}}
+    )
+    
+    return {
+        "message": f"Documento {'validado' if validar else 'invalidado'} com sucesso",
+        "doc_type": doc_type,
+        "validacao": validacao
+    }
+
 @api_router.get("/motoristas", response_model=List[Motorista])
 async def get_motoristas(current_user: Dict = Depends(get_current_user)):
     motoristas = await db.motoristas.find({}, {"_id": 0}).to_list(1000)
