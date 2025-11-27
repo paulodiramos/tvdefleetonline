@@ -140,6 +140,24 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
     }
   };
 
+  const handleSaveObservacoes = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/motoristas/${motoristaId}`,
+        { observacoes_internas: observacoes },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success('Observações guardadas com sucesso!');
+      setEditingObservacoes(false);
+      fetchMotoristaData();
+    } catch (error) {
+      console.error('Error saving observacoes:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao guardar observações');
+    }
+  };
+
   const getDocumentIcon = (docType) => {
     const icons = {
       'cc_frente': FileText,
