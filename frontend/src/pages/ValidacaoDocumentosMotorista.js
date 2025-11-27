@@ -65,13 +65,11 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
   const handleValidateDocument = async (docType, isValid) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(
+      await axios.post(
         `${API}/motoristas/${motoristaId}/validar-documento`,
         {
-          documento_tipo: docType,
-          validado: isValid,
-          validado_por: user.name,
-          validado_em: new Date().toISOString()
+          doc_type: docType,
+          validar: isValid
         },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -80,7 +78,7 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
       fetchMotoristaData();
     } catch (error) {
       console.error('Error validating document:', error);
-      toast.error('Erro ao validar documento');
+      toast.error(error.response?.data?.detail || 'Erro ao validar documento');
     }
   };
 
