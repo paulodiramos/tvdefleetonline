@@ -1120,10 +1120,23 @@ class MotoristaDocuments(BaseModel):
     cv_file: Optional[str] = None
     profile_photo: Optional[str] = None
     documento_identificacao: Optional[str] = None
+    documento_identificacao_frente: Optional[str] = None
+    documento_identificacao_verso: Optional[str] = None
+    carta_conducao_frente: Optional[str] = None
+    carta_conducao_verso: Optional[str] = None
     licenca_tvde: Optional[str] = None
     registo_criminal: Optional[str] = None
+    comprovativo_iban: Optional[str] = None
+    seguro_comprovativo: Optional[str] = None
     contrato: Optional[str] = None
     additional_docs: List[str] = []
+
+class DocumentoValidacao(BaseModel):
+    """Estado de validação de cada documento"""
+    validado: bool = False
+    validado_por: Optional[str] = None  # ID do validador (admin/gestor/operacional/parceiro)
+    validado_em: Optional[str] = None  # Data de validação
+    pode_editar: bool = True  # Se motorista pode editar (iban e registo_criminal sempre podem)
 
 class MotoristaCreate(BaseModel):
     email: EmailStr
