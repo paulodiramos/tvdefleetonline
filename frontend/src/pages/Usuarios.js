@@ -517,6 +517,17 @@ const Usuarios = ({ user, onLogout }) => {
                             <Eye className="w-4 h-4 mr-1" />
                             Ver
                           </Button>
+                          {regUser.role === 'motorista' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => navigate(`/validacao-documentos/${regUser.id}`)}
+                              className="bg-green-50 hover:bg-green-100 border-green-500 text-green-700"
+                            >
+                              <Shield className="w-4 h-4 mr-1" />
+                              Documentos
+                            </Button>
+                          )}
                           <Button
                             size="sm"
                             variant="outline"
