@@ -821,9 +821,11 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
                 <Input
                   value={formData.telefone_uber}
                   onChange={(e) => handleChange('telefone_uber', e.target.value)}
-                  disabled={!canEdit && !isMotorista}
-                  placeholder="+351 912 345 678"
+                  disabled={!editMode}
+                  placeholder="+351 912345678"
+                  className={errors.telefone_uber ? 'border-red-500' : ''}
                 />
+                {errors.telefone_uber && <p className="text-xs text-red-500 mt-1">{errors.telefone_uber}</p>}
               </div>
             </div>
 
@@ -835,7 +837,7 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
                   type="email"
                   value={formData.email_bolt}
                   onChange={(e) => handleChange('email_bolt', e.target.value)}
-                  disabled={!canEdit && !isMotorista}
+                  disabled={!editMode}
                   placeholder="email.bolt@exemplo.com"
                 />
               </div>
@@ -844,9 +846,11 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
                 <Input
                   value={formData.telefone_bolt}
                   onChange={(e) => handleChange('telefone_bolt', e.target.value)}
-                  disabled={!canEdit && !isMotorista}
-                  placeholder="+351 912 345 678"
+                  disabled={!editMode}
+                  placeholder="+351 912345678"
+                  className={errors.telefone_bolt ? 'border-red-500' : ''}
                 />
+                {errors.telefone_bolt && <p className="text-xs text-red-500 mt-1">{errors.telefone_bolt}</p>}
               </div>
             </div>
           </div>
