@@ -7,10 +7,13 @@ const MotoristaDashboard = ({ motoristaData, relatorios }) => {
   const totalGanhos = relatorios.reduce((sum, r) => sum + (r.valor_total || 0), 0);
   const recibosEnviados = relatorios.filter(r => r.status === 'enviado' || r.status === 'verificado').length;
   const recibosPendentes = relatorios.filter(r => r.status === 'pendente').length;
+  const recibosVerificados = relatorios.filter(r => r.status === 'verificado').length;
+  const recibosPagos = relatorios.filter(r => r.status === 'pago').length;
+  const recibosRejeitados = relatorios.filter(r => r.status === 'rejeitado').length;
   
   const documentosValidos = motoristaData?.documents ? 
     Object.entries(motoristaData.documents).filter(([key, value]) => value && value !== '').length : 0;
-  const totalDocumentos = 8; // Total de documentos principais
+  const totalDocumentos = 15; // Total de documentos principais (expandido)
   
   return (
     <div className="space-y-6">
