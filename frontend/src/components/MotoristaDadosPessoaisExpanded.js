@@ -537,33 +537,49 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
         <CardContent>
           <div className="grid md:grid-cols-3 gap-4">
             <div>
-              <Label>NIF *</Label>
+              <Label>NIF * (9 dígitos)</Label>
               <Input
                 value={formData.nif}
-                onChange={(e) => handleChange('nif', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  handleChange('nif', value);
+                }}
+                disabled={!editMode}
                 placeholder="123456789"
                 maxLength={9}
+                className={errors.nif ? 'border-red-500' : ''}
               />
+              {errors.nif && <p className="text-xs text-red-500 mt-1">{errors.nif}</p>}
             </div>
             <div>
-              <Label>Número Segurança Social *</Label>
+              <Label>Número Segurança Social * (11 dígitos)</Label>
               <Input
                 value={formData.numero_seguranca_social}
-                onChange={(e) => handleChange('numero_seguranca_social', e.target.value)}
-                disabled={!canEdit && !isMotorista}
-                placeholder="11111111111"
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  handleChange('numero_seguranca_social', value);
+                }}
+                disabled={!editMode}
+                placeholder="12345678901"
                 maxLength={11}
+                className={errors.numero_seguranca_social ? 'border-red-500' : ''}
               />
+              {errors.numero_seguranca_social && <p className="text-xs text-red-500 mt-1">{errors.numero_seguranca_social}</p>}
             </div>
             <div>
-              <Label>Cartão de Utente SNS</Label>
+              <Label>Cartão de Utente SNS (9 dígitos)</Label>
               <Input
                 value={formData.numero_cartao_utente}
-                onChange={(e) => handleChange('numero_cartao_utente', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  handleChange('numero_cartao_utente', value);
+                }}
+                disabled={!editMode}
                 placeholder="123456789"
+                maxLength={9}
+                className={errors.numero_cartao_utente ? 'border-red-500' : ''}
               />
+              {errors.numero_cartao_utente && <p className="text-xs text-red-500 mt-1">{errors.numero_cartao_utente}</p>}
             </div>
           </div>
         </CardContent>
