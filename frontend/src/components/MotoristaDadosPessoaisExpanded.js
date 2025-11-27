@@ -965,23 +965,23 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
       <Card>
         <CardHeader>
           <div className="flex items-center space-x-2">
-            <AlertCircle className="w-5 h-5 text-red-600" />
-            <CardTitle>Contacto de Emergência</CardTitle>
+            <AlertCircle className="w-5 h-5 text-slate-600" />
+            <CardTitle>Contacto de Emergência (Opcional)</CardTitle>
           </div>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <Label>Nome Completo *</Label>
+              <Label>Nome Completo</Label>
               <Input
                 value={formData.emergencia_nome}
                 onChange={(e) => handleChange('emergencia_nome', e.target.value)}
-                disabled={!canEdit && !isMotorista}
+                disabled={!editMode}
                 placeholder="Nome do contacto"
               />
             </div>
             <div>
-              <Label>Telefone *</Label>
+              <Label>Telefone</Label>
               <Input
                 value={formData.emergencia_telefone}
                 onChange={(e) => handleChange('emergencia_telefone', e.target.value)}
@@ -1004,11 +1004,11 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
               {errors.emergencia_email && <p className="text-xs text-red-500 mt-1">{errors.emergencia_email}</p>}
             </div>
             <div>
-              <Label>Ligação *</Label>
+              <Label>Ligação</Label>
               <Select 
                 value={formData.emergencia_ligacao} 
                 onValueChange={(val) => handleChange('emergencia_ligacao', val)}
-                disabled={!canEdit && !isMotorista}
+                disabled={!editMode}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Tipo de ligação" />
