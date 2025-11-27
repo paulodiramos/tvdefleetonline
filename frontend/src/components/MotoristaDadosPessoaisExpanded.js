@@ -404,6 +404,196 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
         </CardContent>
       </Card>
 
+      {/* 3. DOCUMENTOS FISCAIS */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <FileText className="w-5 h-5 text-green-600" />
+            <CardTitle>Documentos Fiscais e Identificação</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <Label>NIF *</Label>
+              <Input
+                value={formData.nif}
+                onChange={(e) => handleChange('nif', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+                placeholder="123456789"
+                maxLength={9}
+              />
+            </div>
+            <div>
+              <Label>Número Segurança Social *</Label>
+              <Input
+                value={formData.numero_seguranca_social}
+                onChange={(e) => handleChange('numero_seguranca_social', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+                placeholder="11111111111"
+                maxLength={11}
+              />
+            </div>
+            <div>
+              <Label>Cartão de Utente SNS</Label>
+              <Input
+                value={formData.numero_cartao_utente}
+                onChange={(e) => handleChange('numero_cartao_utente', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+                placeholder="123456789"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 4. CARTA DE CONDUÇÃO */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <CreditCard className="w-5 h-5 text-orange-600" />
+            <CardTitle>Carta de Condução</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <Label>Número da Carta *</Label>
+              <Input
+                value={formData.numero_carta}
+                onChange={(e) => handleChange('numero_carta', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+                placeholder="Número"
+              />
+            </div>
+            <div>
+              <Label>Data de Emissão *</Label>
+              <Input
+                type="date"
+                value={formData.emissao_carta}
+                onChange={(e) => handleChange('emissao_carta', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+              />
+            </div>
+            <div>
+              <Label>Validade *</Label>
+              <Input
+                type="date"
+                value={formData.validade_carta}
+                onChange={(e) => handleChange('validade_carta', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+              />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="border rounded p-4">
+              <Label className="mb-2 block">Carta - Frente *</Label>
+              <div className="flex space-x-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => triggerFileUpload('carta_conducao_frente')}
+                  disabled={uploading.carta_conducao_frente}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {uploading.carta_conducao_frente ? 'A enviar...' : 'Carregar'}
+                </Button>
+                {motoristaData?.documents?.carta_conducao_frente && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleDownload(motoristaData.documents.carta_conducao_frente)}
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="border rounded p-4">
+              <Label className="mb-2 block">Carta - Verso *</Label>
+              <div className="flex space-x-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => triggerFileUpload('carta_conducao_verso')}
+                  disabled={uploading.carta_conducao_verso}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {uploading.carta_conducao_verso ? 'A enviar...' : 'Carregar'}
+                </Button>
+                {motoristaData?.documents?.carta_conducao_verso && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleDownload(motoristaData.documents.carta_conducao_verso)}
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 5. LICENÇA TVDE */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <Shield className="w-5 h-5 text-blue-600" />
+            <CardTitle>Licença TVDE</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <Label>Número da Licença TVDE *</Label>
+              <Input
+                value={formData.numero_licenca_tvde}
+                onChange={(e) => handleChange('numero_licenca_tvde', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+                placeholder="Número da licença"
+              />
+            </div>
+            <div>
+              <Label>Validade *</Label>
+              <Input
+                type="date"
+                value={formData.validade_licenca_tvde}
+                onChange={(e) => handleChange('validade_licenca_tvde', e.target.value)}
+                disabled={!canEdit && !isMotorista}
+              />
+            </div>
+          </div>
+
+          <div className="border rounded p-4">
+            <Label className="mb-2 block">Documento Licença TVDE *</Label>
+            <div className="flex space-x-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => triggerFileUpload('licenca_tvde')}
+                disabled={uploading.licenca_tvde}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {uploading.licenca_tvde ? 'A enviar...' : 'Carregar'}
+              </Button>
+              {motoristaData?.documents?.licenca_tvde && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleDownload(motoristaData.documents.licenca_tvde)}
+                >
+                  <Download className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Botão Guardar no final */}
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saving} size="lg">
