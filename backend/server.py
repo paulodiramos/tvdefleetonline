@@ -3294,6 +3294,138 @@ async def delete_motorista(
     
     return {"message": "Motorista deleted successfully"}
 
+@api_router.put("/motoristas/{motorista_id}/aprovar-todos-documentos")
+async def aprovar_todos_documentos(
+    motorista_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Aprovar todos os documentos do motorista (Admin/Gestor/Parceiro/Operacional)"""
+    # Check authorization
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista not found")
+    
+    # Check if parceiro/operacional is assigned
+    is_assigned = False
+    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        is_assigned = motorista.get("parceiro_atribuido") == current_user["id"]
+    
+    is_authorized = (
+        current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO] or
+        is_assigned
+    )
+    
+    if not is_authorized:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Update all documents as validated
+    documents_validacao = motorista.get("documents_validacao", {})
+    for doc_type in motorista.get("documents", {}).keys():
+        if motorista["documents"].get(doc_type):
+            documents_validacao[doc_type] = {
+                "validado": True,
+                "validado_por": data.get("aprovado_por", current_user["name"]),
+                "validado_em": datetime.now(timezone.utc).isoformat(),
+                "observacoes": "Aprovação em lote"
+            }
+    
+    # Set documentos_aprovados = True
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        {
+            "$set": {
+                "documentos_aprovados": True,
+                "documents_validacao": documents_validacao
+            }
+        }
+    )
+    
+    return {"message": "Todos os documentos aprovados com sucesso"}
+
+@api_router.get("/motoristas/{motorista_id}/documento/{doc_type}/download")
+async def download_motorista_documento(
+    motorista_id: str,
+    doc_type: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Download document of motorista (Admin/Gestor/Parceiro/Operacional/Motorista)"""
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista not found")
+    
+    # Check authorization
+    is_assigned = False
+    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        is_assigned = motorista.get("parceiro_atribuido") == current_user["id"]
+    
+    is_authorized = (
+        current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO] or
+        is_assigned or
+        (current_user["role"] == UserRole.MOTORISTA and current_user["email"] == motorista.get("email"))
+    )
+    
+    if not is_authorized:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get document path
+    doc_url = motorista.get("documents", {}).get(doc_type)
+    if not doc_url:
+        raise HTTPException(status_code=404, detail="Document not found")
+    
+    # Construct file path
+    file_path = Path(doc_url.replace("/uploads/", str(UPLOAD_DIR) + "/"))
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Document file not found")
+    
+    return FileResponse(
+        path=file_path,
+        media_type="application/pdf",
+        filename=f"{doc_type}_{motorista['name']}.pdf"
+    )
+
+@api_router.get("/motoristas/{motorista_id}/contrato/download")
+async def download_motorista_contrato(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Download contract of motorista (Admin/Gestor/Parceiro/Operacional/Motorista)"""
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista not found")
+    
+    # Check authorization
+    is_assigned = False
+    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        is_assigned = motorista.get("parceiro_atribuido") == current_user["id"]
+    
+    is_authorized = (
+        current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO] or
+        is_assigned or
+        (current_user["role"] == UserRole.MOTORISTA and current_user["email"] == motorista.get("email"))
+    )
+    
+    if not is_authorized:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Find contract for this motorista
+    contrato = await db.contratos.find_one({"motorista_id": motorista_id}, {"_id": 0})
+    if not contrato or not contrato.get("contrato_assinado"):
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    # Get contract path
+    contract_path = Path(contrato["contrato_assinado"].replace("/uploads/", str(UPLOAD_DIR) + "/"))
+    
+    if not contract_path.exists():
+        raise HTTPException(status_code=404, detail="Contract file not found")
+    
+    return FileResponse(
+        path=contract_path,
+        media_type="application/pdf",
+        filename=f"contrato_{motorista['name']}.pdf"
+    )
+
 @api_router.post("/motoristas/{motorista_id}/upload-documento")
 async def upload_motorista_documento(
     motorista_id: str,
