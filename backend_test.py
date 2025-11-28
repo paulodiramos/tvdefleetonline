@@ -3724,6 +3724,13 @@ startxref
         self.test_alertas_urgente_flag_logic()
         self.test_alertas_empty_response_handling()
         
+        # USER MANAGEMENT & PARTNER DASHBOARD (CURRENT REQUEST)
+        print("\n👥 USER MANAGEMENT & PARTNER DASHBOARD (HIGH PRIORITY)")
+        print("-" * 60)
+        self.test_user_management_endpoints()
+        self.test_partner_dashboard_endpoints()
+        self.test_user_details_functionality()
+        
         # Summary
         print("\n" + "=" * 80)
         print("TEST SUMMARY")
