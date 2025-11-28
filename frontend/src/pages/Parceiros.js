@@ -950,20 +950,40 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => handlePreviewTemplate(template)}
+                            title="Visualizar template"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => handleEditTemplate(template)}
                             className="text-blue-600 hover:text-blue-700"
+                            title="Editar template"
                           >
                             <Edit className="w-4 h-4" />
                           </Button>
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => {
-                              // Preview template text
-                              toast.info('Preview do template em desenvolvimento');
-                            }}
+                            onClick={() => handleDuplicateTemplate(template)}
+                            className="text-purple-600 hover:text-purple-700"
+                            title="Duplicar template"
                           >
-                            <Eye className="w-4 h-4" />
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setTemplateToDelete(template);
+                              setShowDeleteDialog(true);
+                            }}
+                            className="text-red-600 hover:text-red-700"
+                            title="Deletar template"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
                       </div>
