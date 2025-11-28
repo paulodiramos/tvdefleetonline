@@ -231,10 +231,10 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
     if (!file) return;
 
     // Verificar se motorista pode fazer upload após aprovação
-    const documentosPermitidosAposAprovacao = ['comprovativo_iban', 'registo_criminal'];
+    const documentosPermitidosAposAprovacao = ['comprovativo_iban', 'registo_criminal', 'comprovativo_seguro'];
     
     if (isMotorista && documentosAprovados && !documentosPermitidosAposAprovacao.includes(docType)) {
-      toast.error('Documentos aprovados. Apenas IBAN e Registo Criminal podem ser alterados. Contacte o gestor.');
+      toast.error('Documentos aprovados. Apenas IBAN, Registo Criminal e Seguro podem ser alterados. Contacte o gestor.');
       return;
     }
 
