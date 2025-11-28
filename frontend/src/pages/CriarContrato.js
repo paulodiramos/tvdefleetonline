@@ -320,9 +320,27 @@ const CriarContrato = ({ user, onLogout }) => {
     }
   };
 
-  const downloadPDF = () => {
+  const downloadPDF = async () => {
     if (contratoGerado?.pdf_url) {
-      window.open(`${API}${contratoGerado.pdf_url}`, '_blank');
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API}${contratoGerado.pdf_url}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        });
+        
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `contrato_${contratoGerado.id}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (error) {
+        console.error('Error downloading PDF:', error);
+        toast.error('Erro ao fazer download do PDF');
+      }
     }
   };
 
