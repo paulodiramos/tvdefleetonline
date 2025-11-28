@@ -5915,11 +5915,6 @@ async def verificar_acesso_modulo(
     }
 
 
-        "total_vehicles": len(dashboard_data),
-        "dashboard": dashboard_data
-    }
-
-
 # ==================== VEHICLE VISTORIAS (INSPECTIONS) ====================
 
 @api_router.post("/vehicles/{vehicle_id}/vistorias")
