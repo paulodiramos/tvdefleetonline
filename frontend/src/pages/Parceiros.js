@@ -398,13 +398,23 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
         valor_extra_seguro: null,
         clausulas_texto: contractForm.texto_contrato
       };
-      
-      await axios.post(`${API}/parceiros/${selectedParceiro.id}/templates-contrato`, payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
 
-      toast.success('Template de contrato criado com sucesso!');
+      if (editingTemplate) {
+        // Update existing template
+        await axios.put(`${API}/templates-contrato/${editingTemplate.id}`, payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        toast.success('Template atualizado com sucesso!');
+      } else {
+        // Create new template
+        await axios.post(`${API}/parceiros/${selectedParceiro.id}/templates-contrato`, payload, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        toast.success('Template de contrato criado com sucesso!');
+      }
+
       setShowContractDialog(false);
+      setEditingTemplate(null);
       setContractForm({ 
         tipo_contrato: 'aluguer_sem_caucao',
         texto_contrato: '',
@@ -424,9 +434,29 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
       // Refresh templates/contratos
       handleSelectParceiro(selectedParceiro);
     } catch (error) {
-      console.error('Error creating contract template:', error);
-      toast.error(error.response?.data?.detail || 'Erro ao criar template de contrato');
+      console.error('Error saving contract template:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao salvar template de contrato');
     }
+  };
+
+  const handleEditTemplate = (template) => {
+    setEditingTemplate(template);
+    setContractForm({
+      tipo_contrato: template.tipo_contrato,
+      texto_contrato: template.clausulas_texto || '',
+      caucao_texto: '',
+      caucao_total: template.valor_caucao || 300,
+      caucao_parcelas: template.numero_parcelas_caucao || 4,
+      data_inicio_epoca_alta: '',
+      data_fim_epoca_alta: '',
+      valor_epoca_alta: template.valor_epoca_alta || 300,
+      texto_epoca_alta: '',
+      data_inicio_epoca_baixa: '',
+      data_fim_epoca_baixa: '',
+      valor_epoca_baixa: template.valor_epoca_baixa || 200,
+      texto_epoca_baixa: ''
+    });
+    setShowContractDialog(true);
   };
 
   const handleAddHorario = () => {
