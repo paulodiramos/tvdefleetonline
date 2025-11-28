@@ -27,7 +27,7 @@ const Layout = ({ user, onLogout, children }) => {
         { path: '/motorista/envio-recibo', icon: Upload, label: 'Envio Recibo' },
         { path: '/motorista/planos', icon: Package, label: 'Planos' },
         { path: '/motorista/oportunidades', icon: Car, label: 'Oportunidades' },
-        { path: '/motorista/mensagens', icon: FileText, label: 'Mensagens' },
+        { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' },
         { path: '/motorista/tickets', icon: Settings, label: 'Tickets' }
       ];
     }
