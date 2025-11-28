@@ -19,12 +19,10 @@ const Layout = ({ user, onLogout, children }) => {
 
   // Build navigation items based on role
   const getNavItems = () => {
-    // For motorista role: Menu completo (7 itens - Dashboard é logo)
+    // For motorista role: Menu completo (5 itens - Dashboard é logo)
     if (user.role === 'motorista') {
       return [
         { path: '/motorista/recibos', icon: Receipt, label: 'Ganhos' },
-        { path: '/motorista/perfil', icon: UserCircle, label: 'Perfil' },
-        { path: '/motorista/envio-recibo', icon: Upload, label: 'Envio Recibo' },
         { path: '/motorista/planos', icon: Package, label: 'Módulos' },
         { path: '/motorista/oportunidades', icon: Car, label: 'Oportunidades' },
         { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' },
