@@ -899,6 +899,14 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => handleEditTemplate(template)}
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => {
                               // Preview template text
                               toast.info('Preview do template em desenvolvimento');
