@@ -13,11 +13,23 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [uploadingId, setUploadingId] = useState(null);
   const [uploadingComprovativoId, setUploadingComprovativoId] = useState(null);
+  const [highlightId, setHighlightId] = useState(null);
   const [stats, setStats] = useState({
     totalGanhos: 0,
     totalRecibos: 0,
     mesAtual: 0
   });
+
+  // Check URL params for highlight
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const relatorioId = params.get('relatorio');
+    if (relatorioId) {
+      setHighlightId(relatorioId);
+      // Remove highlight after 3 seconds
+      setTimeout(() => setHighlightId(null), 3000);
+    }
+  }, []);
 
   useEffect(() => {
     fetchRelatorios();
