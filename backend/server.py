@@ -4785,7 +4785,7 @@ async def get_parceiro_weekly_report(current_user: Dict = Depends(get_current_us
 
 @api_router.get("/reports/parceiro/por-veiculo")
 async def get_parceiro_vehicle_report(current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] != UserRole.PARCEIRO:
+    if current_user["role"] not in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicles = await db.vehicles.find({"parceiro_id": current_user["id"]}, {"_id": 0}).to_list(1000)
