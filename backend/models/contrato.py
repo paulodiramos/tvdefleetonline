@@ -34,7 +34,7 @@ class ContratoMotoristaCreate(BaseModel):
     motorista_id: str
     veiculo_id: Optional[str] = None
     periodicidade: str
-    valor_aplicado: float
+    valor_aplicado: float = 0.0
     valor_caucao_aplicado: Optional[float] = None
     numero_parcelas_caucao_aplicado: Optional[int] = None
     epoca_atual: Optional[str] = None
@@ -50,6 +50,7 @@ class ContratoMotoristaCreate(BaseModel):
     extra_seguro_aplicado: bool = False
     valor_extra_seguro_aplicado: Optional[float] = None
     data_inicio: str
+    data_fim: Optional[str] = None
 
 
 class ContratoMotorista(BaseModel):
