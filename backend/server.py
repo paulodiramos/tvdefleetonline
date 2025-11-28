@@ -9821,6 +9821,23 @@ async def check_alerts_periodically():
         # Wait 6 hours before next check
         await asyncio.sleep(6 * 60 * 60)
 
+
+async def check_notifications_periodically():
+    """Background task to check and create notifications every 12 hours"""
+    from utils.notificacoes import check_documentos_expirando, check_recibos_pendentes
+    
+    while True:
+        try:
+            logger.info("Running periodic notification check...")
+            await check_documentos_expirando(db)
+            await check_recibos_pendentes(db)
+            logger.info("Notification check completed successfully")
+        except Exception as e:
+            logger.error(f"Error during periodic notification check: {e}")
+        
+        # Wait 12 hours before next check
+        await asyncio.sleep(12 * 60 * 60)
+
 # CSV template endpoint moved to correct location before app.include_router
 
 @app.on_event("startup")
