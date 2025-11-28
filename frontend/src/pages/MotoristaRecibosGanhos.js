@@ -12,6 +12,7 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
   const [relatorios, setRelatorios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploadingId, setUploadingId] = useState(null);
+  const [uploadingComprovativoId, setUploadingComprovativoId] = useState(null);
   const [stats, setStats] = useState({
     totalGanhos: 0,
     totalRecibos: 0,
