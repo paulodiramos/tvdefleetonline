@@ -515,8 +515,22 @@ const Vehicles = ({ user, onLogout }) => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {vehicles.map((vehicle) => (
+          <>
+            <FilterBar
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onClear={handleClearFilters}
+              options={filterOptions}
+            />
+
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-slate-600">
+                Mostrando {filteredVehicles.length} de {vehicles.length} veículos
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredVehicles.map((vehicle) => (
               <Card key={vehicle.id} className="card-hover" data-testid={`vehicle-card-${vehicle.id}`}>
                 <CardHeader>
                   <div className="flex items-start justify-between">
