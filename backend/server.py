@@ -54,6 +54,9 @@ JWT_EXPIRATION_HOURS = 24
 
 security = HTTPBearer()
 
+# Import routers from routes package
+from routes.auth import router as auth_router
+
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
 
