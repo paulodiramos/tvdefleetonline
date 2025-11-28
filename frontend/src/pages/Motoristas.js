@@ -370,6 +370,60 @@ const Motoristas = ({ user, onLogout }) => {
     );
   }
 
+  // Filter motoristas
+  const filteredMotoristas = useMemo(() => {
+    return motoristas.filter(motorista => {
+      if (filters.parceiro && filters.parceiro !== 'all' && motorista.parceiro_atribuido !== filters.parceiro) return false;
+      if (filters.status && filters.status !== 'all') {
+        if (filters.status === 'aprovado' && !motorista.approved) return false;
+        if (filters.status === 'pendente' && motorista.approved) return false;
+        if (filters.status === 'nao_atribuido' && motorista.parceiro_atribuido) return false;
+      }
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase();
+        const searchableText = `${motorista.name} ${motorista.email} ${motorista.phone || ''}`.toLowerCase();
+        if (!searchableText.includes(searchLower)) return false;
+      }
+      return true;
+    });
+  }, [motoristas, filters]);
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      parceiro: 'all',
+      status: 'all',
+      search: ''
+    });
+  };
+
+  const filterOptions = {
+    search: {
+      type: 'text',
+      label: 'Pesquisar',
+      placeholder: 'Nome, email ou telefone...'
+    },
+    parceiro: {
+      type: 'select',
+      label: 'Parceiro',
+      placeholder: 'Todos os parceiros',
+      items: parceiros.map(p => ({ value: p.id, label: p.nome }))
+    },
+    status: {
+      type: 'select',
+      label: 'Status',
+      placeholder: 'Todos',
+      items: [
+        { value: 'aprovado', label: 'Aprovado' },
+        { value: 'pendente', label: 'Pendente Aprovação' },
+        { value: 'nao_atribuido', label: 'Não Atribuído' }
+      ]
+    }
+  };
+
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="space-y-6" data-testid="motoristas-page">
