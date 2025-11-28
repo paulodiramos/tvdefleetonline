@@ -27,6 +27,10 @@ const Parceiros = ({ user, onLogout }) => {
   const [profileMotoristas, setProfileMotoristas] = useState([]);
   const [profileVeiculos, setProfileVeiculos] = useState([]);
   const [editingTemplate, setEditingTemplate] = useState(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState(null);
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false);
+  const [previewTemplate, setPreviewTemplate] = useState(null);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingParceiro, setEditingParceiro] = useState(null);
   const [showPlanosDialog, setShowPlanosDialog] = useState(false);
