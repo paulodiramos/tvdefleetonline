@@ -123,7 +123,8 @@ const PagamentosParceiro = ({ user, onLogout }) => {
       fetchPagamentos();
     } catch (error) {
       console.error('Error uploading:', error);
-      toast.error('Erro ao enviar comprovativo');
+      const errorMsg = error.response?.data?.detail || error.message || 'Erro ao enviar comprovativo';
+      toast.error(errorMsg);
     } finally {
       setUploadingFile(false);
     }
