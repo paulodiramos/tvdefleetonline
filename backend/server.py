@@ -8291,16 +8291,24 @@ async def get_all_recibos(
     current_user: Dict = Depends(get_current_user)
 ):
     """Get recibos (filtered by role)"""
-    query = {}
-    
-    # Se for parceiro, só vê seus recibos
-    if current_user["role"] == "parceiro":
-        query["parceiro_id"] = current_user["associated_partner_id"]
-    elif parceiro_id:
-        query["parceiro_id"] = parceiro_id
-    
-    recibos = await db.recibos.find(query, {"_id": 0}).sort("created_at", -1).to_list(None)
-    return recibos
+    try:
+        query = {}
+        
+        # Se for parceiro ou operacional, só vê seus recibos
+        if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+            # Get motoristas associated with this parceiro/operacional
+            motoristas = await db.motoristas.find({"parceiro_atribuido": current_user["id"]}, {"_id": 0, "id": 1}).to_list(100)
+            motorista_ids = [m["id"] for m in motoristas]
+            query["motorista_id"] = {"$in": motorista_ids}
+        elif parceiro_id:
+            query["parceiro_id"] = parceiro_id
+        # Admin and Gestao can see all recibos
+        
+        recibos = await db.recibos.find(query, {"_id": 0}).sort("created_at", -1).to_list(None)
+        return recibos
+    except Exception as e:
+        logger.error(f"Error fetching recibos: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.put("/recibos/{recibo_id}/verificar")
 async def verificar_recibo(
