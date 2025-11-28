@@ -217,7 +217,7 @@ const VehicleVistorias = ({ user, onLogout }) => {
 
   if (loading) {
     return (
-      <Layout>
+      <Layout user={user} onLogout={onLogout}>
         <div className="flex items-center justify-center h-64">
           <div className="text-lg">Carregando...</div>
         </div>
