@@ -321,33 +321,46 @@ const CriarContrato = ({ user, onLogout }) => {
   };
 
   const downloadPDF = async () => {
-    if (contratoGerado?.pdf_url) {
-      try {
-        const token = localStorage.getItem('token');
-        // Check if pdf_url already contains full path or just the relative path
-        const pdfUrl = contratoGerado.pdf_url.startsWith('/api') 
-          ? contratoGerado.pdf_url 
-          : `${contratoGerado.pdf_url}`;
-        
-        const response = await axios.get(pdfUrl, {
-          baseURL: process.env.REACT_APP_BACKEND_URL,
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: 'blob'
-        });
-        
-        const url = window.URL.createObjectURL(new Blob([response.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `contrato_${contratoGerado.id}.pdf`);
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        window.URL.revokeObjectURL(url);
-        toast.success('Download iniciado!');
-      } catch (error) {
-        console.error('Error downloading PDF:', error);
-        toast.error('Erro ao fazer download do PDF');
+    if (!contratoGerado?.pdf_url) {
+      toast.error('PDF não disponível');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Construct full URL
+      let pdfUrl = contratoGerado.pdf_url;
+      if (!pdfUrl.startsWith('http')) {
+        // It's a relative path
+        const backendUrl = process.env.REACT_APP_BACKEND_URL || '';
+        pdfUrl = `${backendUrl}${pdfUrl.startsWith('/') ? pdfUrl : '/' + pdfUrl}`;
       }
+      
+      const response = await fetch(pdfUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `contrato_${contratoGerado.id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Download concluído!');
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      toast.error(`Erro ao fazer download: ${error.message}`);
     }
   };
 
