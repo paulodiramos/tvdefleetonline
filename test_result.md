@@ -5422,3 +5422,42 @@ frontend:
         - working: true
           agent: "testing"
           comment: "✅ TESTADO COMPLETAMENTE: Melhorias na página de validação de documentos funcionando perfeitamente! TESTE 1 - ACESSO À PÁGINA: Login admin@tvdefleet.com/o72ocUHy ✅, navegação para /usuarios ✅, 2 botões Documentos verdes com ícone Shield encontrados ✅, navegação para /validacao-documentos/{motorista_id} funcionando ✅. TESTE 2 - REMOÇÃO DE DOCUMENTOS DESNECESSÁRIOS: Licença Foto, Documento de Identificação, Additional Docs não aparecem ✅, documentos relevantes (Licença TVDE, Registo Criminal, Comprovativo Morada, CC, Carta Condução) presentes ✅. TESTE 3 - DADOS MOSTRADOS: Seções Dados no Perfil com fundo cinza claro encontradas ✅, dados específicos por documento implementados (Morada/Localidade/Código Postal para Comprovativo Morada, NIF/Segurança Social/IBAN presentes) ✅. TESTE 4 - SEÇÃO DADOS DO MOTORISTA EXPANDIDA: Campos editáveis Número do CC, Número Segurança Social, IBAN encontrados ✅, 8 botões Editar funcionais ✅. TESTE 5 - VISUAL E UI: Documentos aprovados com fundo verde e badge Aprovado ✅, botões Revogar Aprovação ✅, documentos pendentes com badge Pendente e botões Aprovar/Rejeitar ✅, botão Aprovar Todos os Documentos encontrado ✅. Minor: Palavra Contrato ainda aparece (possivelmente referência textual). Todas as melhorias do review request implementadas e funcionando!"
+
+---
+
+## 🔧 CORREÇÕES P0 - 28/11/2025
+
+### Agente: Fork Agent E1
+### Sessão: Correção de Bugs Críticos (P0)
+
+**BUGS CORRIGIDOS:**
+
+1. ✅ **Gestor → Financeiro → Pagamentos** (403 Forbidden)
+   - Endpoint: `/api/pagamentos/semana-atual`
+   - Problema: Apenas permitia acesso a PARCEIRO
+   - Solução: Adicionado ADMIN, GESTAO, PARCEIRO, OPERACIONAL
+   - Status: TESTADO E FUNCIONANDO
+
+2. ✅ **Parceiro → Financeiro → Verificar Recibos** (500 Error)
+   - Endpoint: `/api/recibos`
+   - Problema: Query incorreta usando `associated_partner_id`
+   - Solução: Corrigida query para buscar motoristas associados
+   - Status: TESTADO E FUNCIONANDO
+
+3. ✅ **Operacional → Relatórios** (403 Forbidden)
+   - Endpoints: 4 endpoints de relatórios do parceiro
+   - Problema: Apenas permitia PARCEIRO
+   - Solução: Adicionado OPERACIONAL
+   - Status: PARCIALMENTE TESTADO
+
+4. ✅ **Parceiro → Pagamentos** 
+   - Endpoint: `/relatorios-ganhos`
+   - Problema: Permissões insuficientes
+   - Solução: Adicionado OPERACIONAL, ADMIN, GESTAO
+   - Status: TESTADO E FUNCIONANDO
+
+**PRÓXIMO PASSO:**
+- Testing agent para validação completa de todos os fluxos
+- Testar bugs reportados mas não reproduzidos
+- Verificar fluxos de notificações
+
