@@ -463,7 +463,7 @@ const Usuarios = ({ user, onLogout }) => {
           </Card>
         )}
 
-        {/* Registered Users - Card Layout */}
+        {/* Registered Users - Simple List */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -475,8 +475,53 @@ const Usuarios = ({ user, onLogout }) => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {registeredUsers.map((regUser) => (
+            {/* Search and Filter Bar */}
+            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+              <div className="flex-1">
+                <Input
+                  placeholder="Pesquisar por nome, email ou telefone..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <div className="w-full sm:w-48">
+                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filtrar por role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="motorista">Motorista</SelectItem>
+                    <SelectItem value="parceiro">Parceiro</SelectItem>
+                    <SelectItem value="gestao">Gestor</SelectItem>
+                    <SelectItem value="operacional">Operacional</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Simple List */}
+            <div className="space-y-2">
+              {registeredUsers
+                .filter(regUser => {
+                  // Apply role filter
+                  if (roleFilter !== 'todos' && regUser.role !== roleFilter) {
+                    return false;
+                  }
+                  // Apply search filter
+                  if (searchTerm) {
+                    const search = searchTerm.toLowerCase();
+                    return (
+                      regUser.name?.toLowerCase().includes(search) ||
+                      regUser.email?.toLowerCase().includes(search) ||
+                      regUser.phone?.toLowerCase().includes(search)
+                    );
+                  }
+                  return true;
+                })
+                .map((regUser) => (
                 <Card key={regUser.id} className="hover:shadow-md transition-shadow border-2">
                   <CardContent className="pt-6">
                     {/* User Header */}
