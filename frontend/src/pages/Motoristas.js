@@ -360,16 +360,6 @@ const Motoristas = ({ user, onLogout }) => {
       .substring(0, 2);
   };
 
-  if (loading) {
-    return (
-      <Layout user={user} onLogout={onLogout}>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        </div>
-      </Layout>
-    );
-  }
-
   // Filter motoristas
   const filteredMotoristas = useMemo(() => {
     return motoristas.filter(motorista => {
