@@ -340,6 +340,62 @@ const CriarRelatorioSemanal = ({ user, onLogout }) => {
                     </Select>
                   </div>
 
+                  <div className="col-span-2">
+                    <Label>Selecionar por Número da Semana (Opcional)</Label>
+                    <div className="flex space-x-2">
+                      <Input
+                        type="number"
+                        min="1"
+                        max="53"
+                        placeholder="Semana (1-53)"
+                        onChange={(e) => {
+                          const weekNum = parseInt(e.target.value);
+                          if (weekNum >= 1 && weekNum <= 53) {
+                            const year = new Date().getFullYear();
+                            const firstDay = new Date(year, 0, 1);
+                            const daysOffset = (weekNum - 1) * 7;
+                            const weekStart = new Date(firstDay.getTime() + daysOffset * 24 * 60 * 60 * 1000);
+                            const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+                            
+                            // Adjust to Monday start
+                            const dayOfWeek = weekStart.getDay();
+                            const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+                            weekStart.setDate(weekStart.getDate() + mondayOffset);
+                            weekEnd.setDate(weekStart.getDate() + 6);
+                            
+                            setRelatorioData({
+                              ...relatorioData,
+                              periodo_inicio: weekStart.toISOString().split('T')[0],
+                              periodo_fim: weekEnd.toISOString().split('T')[0]
+                            });
+                          }
+                        }}
+                        className="w-32"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          const today = new Date();
+                          const dayOfWeek = today.getDay();
+                          const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+                          const monday = new Date(today);
+                          monday.setDate(today.getDate() + mondayOffset);
+                          const sunday = new Date(monday);
+                          sunday.setDate(monday.getDate() + 6);
+                          
+                          setRelatorioData({
+                            ...relatorioData,
+                            periodo_inicio: monday.toISOString().split('T')[0],
+                            periodo_fim: sunday.toISOString().split('T')[0]
+                          });
+                        }}
+                      >
+                        Semana Atual
+                      </Button>
+                    </div>
+                  </div>
+
                   <div>
                     <Label>Período Início *</Label>
                     <Input
