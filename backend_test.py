@@ -3909,15 +3909,59 @@ startxref
         print("\n" + "=" * 80)
         return failed == 0
 
+    def run_user_management_dashboard_tests_only(self):
+        """Run only user management and partner dashboard tests as requested in review"""
+        print("=" * 80)
+        print("TVDEFleet Backend Testing Suite - User Management & Partner Dashboard")
+        print("=" * 80)
+        
+        # Authenticate required users
+        print("\n🔐 AUTHENTICATION PHASE")
+        print("-" * 40)
+        if not self.authenticate_user("admin"):
+            return False
+        if not self.authenticate_user("parceiro"):
+            return False
+        
+        # Run user management and partner dashboard tests
+        print("\n👥 USER MANAGEMENT & PARTNER DASHBOARD TESTS")
+        print("-" * 60)
+        self.test_user_management_endpoints()
+        self.test_partner_dashboard_endpoints()
+        self.test_user_details_functionality()
+        
+        # Summary
+        print("\n" + "=" * 80)
+        print("USER MANAGEMENT & PARTNER DASHBOARD TEST SUMMARY")
+        print("=" * 80)
+        
+        passed = sum(1 for r in self.test_results if r["success"])
+        failed = sum(1 for r in self.test_results if not r["success"])
+        
+        print(f"Total Tests: {len(self.test_results)}")
+        print(f"✅ Passed: {passed}")
+        print(f"❌ Failed: {failed}")
+        
+        if failed > 0:
+            print("\n🔍 FAILED TESTS:")
+            for result in self.test_results:
+                if not result["success"]:
+                    print(f"   ❌ {result['test']}: {result['message']}")
+                    if result.get("details"):
+                        print(f"      Details: {result['details']}")
+        
+        print("\n" + "=" * 80)
+        return failed == 0
+
 if __name__ == "__main__":
     tester = TVDEFleetTester()
     
-    # Run specific partner financial management tests as requested in review
-    success = tester.run_partner_financial_tests_only()
+    # Run specific user management and partner dashboard tests as requested in review
+    success = tester.run_user_management_dashboard_tests_only()
     
     if success:
-        print("🎉 All partner financial management tests passed!")
+        print("🎉 All user management and partner dashboard tests passed!")
         exit(0)
     else:
-        print("💥 Some partner financial management tests failed!")
+        print("💥 Some user management and partner dashboard tests failed!")
         exit(1)
