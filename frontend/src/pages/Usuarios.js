@@ -64,6 +64,10 @@ const Usuarios = ({ user, onLogout }) => {
   const [duracaoDias, setDuracaoDias] = useState(30);
   const [showMotoristaDialog, setShowMotoristaDialog] = useState(false);
   const [selectedMotoristaId, setSelectedMotoristaId] = useState(null);
+  
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('todos');
 
   useEffect(() => {
     fetchUsers();
