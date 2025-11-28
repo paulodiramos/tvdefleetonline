@@ -120,6 +120,9 @@ const Layout = ({ user, onLogout, children }) => {
 
             {/* User Menu */}
             <div className="flex items-center space-x-4">
+              {/* Notification Bell */}
+              <NotificationBell user={user} />
+              
               {/* Admin Dropdown Menu */}
               <DropdownMenu open={profileMenuOpen} onOpenChange={setProfileMenuOpen}>
                 <DropdownMenuTrigger asChild>
