@@ -19,9 +19,10 @@ BACKEND_URL = "https://fleet-bugs.preview.emergentagent.com/api"
 # Test credentials (from review request)
 TEST_CREDENTIALS = {
     "admin": {"email": "admin@tvdefleet.com", "password": "o72ocUHy"},
-    "gestor": {"email": "gestor@tvdefleet.com", "password": "gestor123"},
+    "gestor": {"email": "gestor@tvdefleet.com", "password": "OrR44xJ1"},
     "parceiro": {"email": "parceiro@tvdefleet.com", "password": "UQ1B6DXU"},
-    "motorista": {"email": "motorista@tvdefleet.com", "password": "motorista123"}
+    "operacional": {"email": "operacional@tvdefleet.com", "password": "rn8rYw7E"},
+    "motorista": {"email": "motorista@tvdefleet.com", "password": "2rEFuwQO"}
 }
 
 class TVDEFleetTester:
