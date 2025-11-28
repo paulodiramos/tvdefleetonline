@@ -32,13 +32,20 @@ const Layout = ({ user, onLogout, children }) => {
       ];
     }
 
-    // For parceiro/operacional role: Replace dashboard with reports, add payments, REMOVE financials
+    // For parceiro/operacional role: Replace dashboard with reports, add payments with financeiro submenu
     if (user.role === 'parceiro' || user.role === 'operacional') {
       return [
         { path: '/relatorios', icon: FileText, label: 'Relatórios' },
         { path: '/vehicles', icon: Car, label: 'Veículos' },
         { path: '/motoristas', icon: Users, label: 'Motoristas' },
-        { path: '/pagamentos-parceiro', icon: CreditCard, label: 'Pagamentos' },
+        { 
+          label: 'Financeiro', 
+          icon: DollarSign,
+          submenu: [
+            { path: '/pagamentos-parceiro', label: 'Pagamentos' },
+            { path: '/verificar-recibos', label: 'Verificar Recibos' }
+          ]
+        },
         { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' },
         { path: '/criar-relatorio-semanal', icon: TrendingUp, label: 'Criar Relatório' }
       ];
