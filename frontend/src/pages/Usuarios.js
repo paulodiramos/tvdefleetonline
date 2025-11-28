@@ -459,7 +459,7 @@ const Usuarios = ({ user, onLogout }) => {
           </Card>
         )}
 
-        {/* Registered Users Table */}
+        {/* Registered Users - Card Layout */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center space-x-2">
@@ -471,145 +471,69 @@ const Usuarios = ({ user, onLogout }) => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nome</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Data de Registo</TableHead>
-                    <TableHead>Telefone</TableHead>
-                    <TableHead className="text-right">Ações</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {registeredUsers.map((regUser) => (
-                    <TableRow key={regUser.id}>
-                      <TableCell className="font-medium">{regUser.name}</TableCell>
-                      <TableCell>{regUser.email}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(
-                              regUser.role
-                            )}`}
-                          >
-                            {getRoleLabel(regUser.role)}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {registeredUsers.map((regUser) => (
+                <Card key={regUser.id} className="hover:shadow-md transition-shadow border-2">
+                  <CardContent className="pt-6">
+                    {/* User Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                          {regUser.name?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-semibold text-slate-800 truncate">{regUser.name}</h3>
+                          <p className="text-xs text-slate-500 truncate">{regUser.email}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* User Info */}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-600">Role:</span>
+                        <span
+                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(
+                            regUser.role
+                          )}`}
+                        >
+                          {getRoleLabel(regUser.role)}
+                        </span>
+                      </div>
+                      {regUser.status === 'blocked' && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-slate-600">Status:</span>
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                            <Lock className="w-3 h-3 mr-1" />
+                            Bloqueado
                           </span>
-                          {regUser.status === 'blocked' && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                              <Lock className="w-3 h-3 mr-1" />
-                              Bloqueado
-                            </span>
-                          )}
                         </div>
-                      </TableCell>
-                      <TableCell>{formatDate(regUser.created_at)}</TableCell>
-                      <TableCell>{regUser.phone || 'N/A'}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setViewingUser(regUser);
-                              setShowDetailsDialog(true);
-                            }}
-                          >
-                            <Eye className="w-4 h-4 mr-1" />
-                            Ver
-                          </Button>
-                          {regUser.role === 'motorista' && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setSelectedMotoristaId(regUser.id);
-                                  setShowMotoristaDialog(true);
-                                }}
-                                className="bg-blue-50 hover:bg-blue-100 border-blue-500 text-blue-700"
-                              >
-                                <UserCircle className="w-4 h-4 mr-1" />
-                                Ver Motorista
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => navigate(`/validacao-documentos/${regUser.id}`)}
-                                className="bg-green-50 hover:bg-green-100 border-green-500 text-green-700"
-                              >
-                                <Shield className="w-4 h-4 mr-1" />
-                                Validar
-                              </Button>
-                            </>
-                          )}
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openChangeRoleDialog(regUser)}
-                          >
-                            Alterar Role
-                          </Button>
-                          {regUser.id !== user.id && (
-                            <>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => {
-                                  setSelectedUser(regUser);
-                                  setSelectedPlanoId('');
-                                  setDuracaoDias(30);
-                                  setShowPlanoDialog(true);
-                                }}
-                                className="bg-purple-50 hover:bg-purple-100"
-                              >
-                                <Package className="w-4 h-4 mr-1" />
-                                Plano
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => openPasswordDialog(regUser)}
-                                className="bg-blue-50 hover:bg-blue-100"
-                              >
-                                <Key className="w-4 h-4 mr-1" />
-                                Senha
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant={regUser.status === 'blocked' ? 'default' : 'outline'}
-                                onClick={() => handleBlockUser(regUser.id, regUser.status)}
-                                className={regUser.status === 'blocked' ? 'bg-green-600 hover:bg-green-700' : ''}
-                              >
-                                {regUser.status === 'blocked' ? (
-                                  <>
-                                    <Unlock className="w-4 h-4 mr-1" />
-                                    Desbloquear
-                                  </>
-                                ) : (
-                                  <>
-                                    <Lock className="w-4 h-4 mr-1" />
-                                    Bloquear
-                                  </>
-                                )}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="destructive"
-                                onClick={() => openDeleteDialog(regUser)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-600">Telefone:</span>
+                        <span className="text-xs text-slate-800">{regUser.phone || 'N/A'}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-600">Registo:</span>
+                        <span className="text-xs text-slate-800">{formatDate(regUser.created_at)}</span>
+                      </div>
+                    </div>
+
+                    {/* Action Button */}
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      onClick={() => {
+                        setViewingUser(regUser);
+                        setShowDetailsDialog(true);
+                      }}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Ver Detalhes
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </CardContent>
         </Card>
