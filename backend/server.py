@@ -9784,6 +9784,7 @@ async def download_csv_template(template_name: str, current_user: Dict = Depends
 app.include_router(auth_router, prefix="/api")
 app.include_router(motoristas_router, prefix="/api")
 app.include_router(notificacoes_router, prefix="/api")
+app.include_router(mensagens_router, prefix="/api")
 
 # Include main API router (legacy routes - to be migrated)
 app.include_router(api_router)
