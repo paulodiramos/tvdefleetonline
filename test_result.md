@@ -1067,6 +1067,21 @@ frontend:
           agent: "testing"
           comment: "✅ TESTADO COMPLETAMENTE: Sistema de bloqueio funcionando perfeitamente! 10 botões de upload encontrados, sistema de restrições implementado para documentos aprovados. Aviso AZUL correto para documentos pendentes de validação, sistema preparado para aviso VERDE quando aprovados. Funcionalidade de restrição de upload após aprovação implementada conforme especificação."
 
+  - task: "Enhanced contract system with conditional fields"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/CriarContrato.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Sistema completo de criação de contratos implementado com campos condicionais baseados no tipo de template. Inclui validações, pré-preenchimento automático, e geração de PDF. Corrigidos erros React relacionados a 'Objects are not valid as a React child'."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Fluxo completo de criação de contrato funcionando perfeitamente! LOGIN: admin@tvdefleet.com/o72ocUHy ✅. NAVEGAÇÃO: /criar-contrato carrega corretamente ✅. SELEÇÃO PARCEIRO: 'xxx' (ID: 6213e4ce-6b04-47e6-94e9-8390d98fe170) funcionando ✅. TEMPLATES: Dropdown populado com 2 templates conforme esperado ✅. SELEÇÃO TEMPLATE: Primeiro template selecionado, campos aparecem dinamicamente ✅. MOTORISTA: 'Carlos Silva Teste' selecionado ✅. CAMPOS OBRIGATÓRIOS: valor_aplicado=250, data_inicio=2025-11-28 preenchidos ✅. CRIAÇÃO CONTRATO: Botão 'Gerar Contrato' funciona, contrato criado com sucesso ✅. MENSAGEM SUCESSO: 'Contrato Gerado com Sucesso!' exibida ✅. DETALHES CONTRATO: ID, tipo, data início, valor exibidos corretamente ✅. CORREÇÃO CRÍTICA: Corrigido erro no backend (linha 6423) onde parceiro era buscado na collection 'users' em vez de 'parceiros', causando falha na geração de PDF ✅. PDF GERAÇÃO: Após correção, PDF gerado com sucesso via API ✅. REACT ERRORS: Nenhum erro React 'Objects are not valid as a React child' encontrado ✅. Sistema completamente funcional e pronto para produção!"
+
 metadata:
   created_by: "main_agent"
   version: "2.0"
