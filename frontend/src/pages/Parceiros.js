@@ -789,10 +789,86 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
             </Card>
           </div>
 
+          {/* Lista de Templates de Contrato */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span>Templates de Contrato</span>
+                <span className="text-sm font-normal text-slate-500">
+                  {templates.length} {templates.length === 1 ? 'template' : 'templates'}
+                </span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {templates.length > 0 ? (
+                <div className="space-y-3">
+                  {templates.map((template) => (
+                    <div key={template.id} className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-5 h-5 text-blue-600" />
+                            <h3 className="font-semibold text-slate-800">
+                              {template.nome_template || template.tipo_contrato}
+                            </h3>
+                            <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                              {template.tipo_contrato}
+                            </span>
+                          </div>
+                          <div className="mt-2 grid grid-cols-2 gap-2 text-sm text-slate-600">
+                            {template.valor_caucao && (
+                              <div>
+                                <span className="font-medium">Caução:</span> €{template.valor_caucao}
+                                {template.numero_parcelas_caucao && ` (${template.numero_parcelas_caucao}x)`}
+                              </div>
+                            )}
+                            {template.periodicidade_padrao && (
+                              <div>
+                                <span className="font-medium">Periodicidade:</span> {template.periodicidade_padrao}
+                              </div>
+                            )}
+                            {template.valor_epoca_alta && (
+                              <div>
+                                <span className="font-medium">Época Alta:</span> €{template.valor_epoca_alta}
+                              </div>
+                            )}
+                            {template.valor_epoca_baixa && (
+                              <div>
+                                <span className="font-medium">Época Baixa:</span> €{template.valor_epoca_baixa}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              // Preview template text
+                              toast.info('Preview do template em desenvolvimento');
+                            }}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-slate-500">
+                  <FileText className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                  <p>Nenhum template de contrato criado ainda</p>
+                  <p className="text-sm mt-1">Clique em "Criar Template de Contrato" para começar</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Lista de Contratos */}
           <Card>
             <CardHeader>
-              <CardTitle>Contratos</CardTitle>
+              <CardTitle>Contratos Gerados</CardTitle>
             </CardHeader>
             <CardContent>
               {contratos.length > 0 ? (
