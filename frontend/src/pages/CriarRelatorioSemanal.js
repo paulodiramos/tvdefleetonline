@@ -456,10 +456,57 @@ const CriarRelatorioSemanal = ({ user, onLogout }) => {
                   <TrendingDown className="w-5 h-5 mr-2" />
                   3. Combustível
                 </CardTitle>
-                <Button size="sm" onClick={() => setShowCombustivelModal(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar
-                </Button>
+                <div className="flex space-x-2">
+                  <label>
+                    <Button size="sm" variant="outline" asChild>
+                      <span>
+                        <FileText className="w-4 h-4 mr-2" />
+                        Importar CSV
+                      </span>
+                    </Button>
+                    <input
+                      type="file"
+                      accept=".csv"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            const text = event.target.result;
+                            const lines = text.split('\n').filter(line => line.trim());
+                            const despesas = [];
+                            
+                            // Skip header if exists
+                            const startIdx = lines[0].includes('data') || lines[0].includes('Data') ? 1 : 0;
+                            
+                            for (let i = startIdx; i < lines.length; i++) {
+                              const values = lines[i].split(',').map(v => v.trim());
+                              if (values.length >= 5) {
+                                despesas.push({
+                                  data: values[0],
+                                  hora: values[1] || '12:00',
+                                  valor: parseFloat(values[2]) || 0,
+                                  quantidade: parseFloat(values[3]) || 0,
+                                  local: values[4] || 'N/A'
+                                });
+                              }
+                            }
+                            
+                            setDespesasCombustivel([...despesasCombustivel, ...despesas]);
+                            toast.success(`${despesas.length} despesas importadas`);
+                          };
+                          reader.readAsText(file);
+                        }
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                  <Button size="sm" onClick={() => setShowCombustivelModal(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {despesasCombustivel.length === 0 ? (
