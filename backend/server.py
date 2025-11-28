@@ -5644,8 +5644,8 @@ async def get_proximas_datas_dashboard(current_user: Dict = Depends(get_current_
             })
         
         # Renovação de seguro
-        seguro = vehicle.get("seguro", {})
-        if seguro.get("data_validade"):
+        seguro = vehicle.get("seguro", {}) or {}
+        if seguro and seguro.get("data_validade"):
             data_seguro = datetime.fromisoformat(seguro.get("data_validade")).date()
             dias_restantes = (data_seguro - today).days
             proximas_datas["datas"].append({
