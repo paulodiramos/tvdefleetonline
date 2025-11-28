@@ -37,7 +37,7 @@ import {
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
-const VehicleVistorias = () => {
+const VehicleVistorias = ({ user, onLogout }) => {
   const { vehicleId } = useParams();
   const navigate = useNavigate();
   const [vehicle, setVehicle] = useState(null);
