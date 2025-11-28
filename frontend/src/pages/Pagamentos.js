@@ -142,6 +142,57 @@ const Pagamentos = ({ user, onLogout }) => {
     return statusMap[status] || <Badge>{status}</Badge>;
   };
 
+  // Filter pagamentos
+  const filteredPagamentos = useMemo(() => {
+    return pagamentos.filter(pagamento => {
+      if (filters.motorista && filters.motorista !== 'all' && pagamento.motorista_id !== filters.motorista) return false;
+      if (filters.status && filters.status !== 'all' && pagamento.status !== filters.status) return false;
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase();
+        const searchableText = `${pagamento.motorista_nome || ''} ${pagamento.periodo_inicio || ''} ${pagamento.periodo_fim || ''}`.toLowerCase();
+        if (!searchableText.includes(searchLower)) return false;
+      }
+      return true;
+    });
+  }, [pagamentos, filters]);
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      motorista: 'all',
+      status: 'all',
+      search: ''
+    });
+  };
+
+  const filterOptions = {
+    search: {
+      type: 'text',
+      label: 'Pesquisar',
+      placeholder: 'Nome do motorista ou período...'
+    },
+    motorista: {
+      type: 'select',
+      label: 'Motorista',
+      placeholder: 'Todos os motoristas',
+      items: motoristas.map(m => ({ value: m.id, label: m.name }))
+    },
+    status: {
+      type: 'select',
+      label: 'Status',
+      placeholder: 'Todos os status',
+      items: [
+        { value: 'pendente', label: 'Pendente' },
+        { value: 'aguardando_recibo', label: 'Aguardando Recibo' },
+        { value: 'recibo_enviado', label: 'Recibo Enviado' },
+        { value: 'pago', label: 'Pago' }
+      ]
+    }
+  };
+
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="space-y-6">
