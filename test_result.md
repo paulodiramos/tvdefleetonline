@@ -398,7 +398,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         
-        URL: https://fleetrack-4.preview.emergentagent.com ✅
+        URL: https://fleet-control-43.preview.emergentagent.com ✅
         
         ✅ TEST 1: LOGIN E NAVEGAÇÃO - 100% FUNCIONANDO
         
@@ -486,7 +486,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Admin: admin@tvdefleet.com / o72ocUHy ✅
         
-        URL: https://fleetrack-4.preview.emergentagent.com ✅
+        URL: https://fleet-control-43.preview.emergentagent.com ✅
         
         ❌ PROBLEMA CRÍTICO IDENTIFICADO: PÁGINA DE VALIDAÇÃO NÃO CARREGA CORRETAMENTE
         
@@ -642,7 +642,7 @@ agent_communication:
         - Admin: admin@tvdefleet.com / o72ocUHy ✅
         - Motorista: motorista@tvdefleet.com / 2rEFuwQO ✅
         
-        URL: https://fleetrack-4.preview.emergentagent.com ✅
+        URL: https://fleet-control-43.preview.emergentagent.com ✅
         
         ✅ TESTE 1: BOTÃO "DOCUMENTOS" NA TABELA DE USUÁRIOS - 100% FUNCIONANDO
         
@@ -1353,7 +1353,7 @@ agent_communication:
         - Admin: admin@tvdefleet.com / o72ocUHy ✅
         - Motorista: motorista@tvdefleet.com / 2rEFuwQO ✅
         
-        URL: https://fleetrack-4.preview.emergentagent.com ✅
+        URL: https://fleet-control-43.preview.emergentagent.com ✅
         
         ✅ TESTE 1: BOTÃO "VALIDAR DOCUMENTOS" NA PÁGINA DE USUÁRIOS
         
@@ -1449,7 +1449,7 @@ agent_communication:
         Teste completo do sistema de bloqueio de edição após aprovação de documentos no Perfil do Motorista conforme review request em português.
         
         CREDENCIAIS TESTADAS: motorista@tvdefleet.com / 2rEFuwQO ✅
-        URL: https://fleetrack-4.preview.emergentagent.com ✅
+        URL: https://fleet-control-43.preview.emergentagent.com ✅
         
         ✅ CENÁRIO 1: MOTORISTA SEM DOCUMENTOS APROVADOS (documentos_aprovados = false)
         
@@ -1538,7 +1538,7 @@ agent_communication:
         Teste da funcionalidade de guardar dados do Perfil do Motorista após as correções de permissões, conforme review request em português.
         
         CREDENCIAIS TESTADAS: motorista@tvdefleet.com / 2rEFuwQO ✅
-        URL: https://fleetrack-4.preview.emergentagent.com ✅
+        URL: https://fleet-control-43.preview.emergentagent.com ✅
         
         ✅ RESULTADOS ESPERADOS ALCANÇADOS:
         
@@ -1658,7 +1658,7 @@ agent_communication:
         Teste completo da funcionalidade do Perfil do Motorista conforme review request em português, incluindo validações de campos, funcionalidade de guardar dados e confirmação de mudança de aba.
         
         CREDENCIAIS TESTADAS: motorista@tvdefleet.com / 2rEFuwQO ✅
-        URL: https://fleetrack-4.preview.emergentagent.com ✅
+        URL: https://fleet-control-43.preview.emergentagent.com ✅
         
         ✅ FUNCIONALIDADES TESTADAS COM SUCESSO:
         
@@ -1847,7 +1847,7 @@ agent_communication:
         
         ✅ CREDENCIAIS TESTADAS COM SUCESSO:
         - **Motorista:** motorista@tvdefleet.com / 2rEFuwQO ✅ FUNCIONANDO
-        - **URL:** https://fleetrack-4.preview.emergentagent.com ✅ ACESSÍVEL
+        - **URL:** https://fleet-control-43.preview.emergentagent.com ✅ ACESSÍVEL
         
         ✅ 1. LOGIN E ACESSO AO PERFIL:
         - ✅ Login como motorista: FUNCIONANDO
@@ -2134,7 +2134,7 @@ agent_communication:
         ✅ CREDENCIAIS TESTADAS:
         - Email: motorista@tvdefleet.com
         - Senha: 2rEFuwQO
-        - URL: https://fleetrack-4.preview.emergentagent.com
+        - URL: https://fleet-control-43.preview.emergentagent.com
         
         ✅ FLUXO COMPLETO TESTADO COM SUCESSO:
         
@@ -2150,7 +2150,7 @@ agent_communication:
         
         **3. REDIRECIONAMENTO:**
         - ✅ Redirecionamento automático para /profile: FUNCIONANDO
-        - ✅ URL final correta: https://fleetrack-4.preview.emergentagent.com/profile
+        - ✅ URL final correta: https://fleet-control-43.preview.emergentagent.com/profile
         - ✅ Sem erros de navegação: FUNCIONANDO
         
         **4. CARREGAMENTO DA PÁGINA DE PERFIL:**
@@ -3270,7 +3270,7 @@ agent_communication:
         - GET /api/vehicles
         - POST /api/contratos/gerar
         
-        URL: https://fleetrack-4.preview.emergentagent.com
+        URL: https://fleet-control-43.preview.emergentagent.com
         
         Starting comprehensive test of contract generation flow...
     
@@ -5269,7 +5269,7 @@ agent_communication:
         - Admin: admin@tvdefleet.com / o72ocUHy ✅
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         
-        URL: https://fleetrack-4.preview.emergentagent.com ✅
+        URL: https://fleet-control-43.preview.emergentagent.com ✅
         
         ✅ TESTE 1: ADMIN - USER MANAGEMENT API ENDPOINTS - 100% FUNCIONANDO
         
