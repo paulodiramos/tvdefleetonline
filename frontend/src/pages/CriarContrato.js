@@ -253,6 +253,8 @@ const CriarContrato = ({ user, onLogout }) => {
         motorista_id: motoristaSelecionado,
         veiculo_id: veiculoSelecionado || null,
         periodicidade: formData.periodicidade || 'semanal',
+        data_inicio: formData.data_inicio,
+        data_fim: formData.data_fim || null,
         valor_aplicado: parseFloat(formData.valor_aplicado) || 0,
         valor_caucao_aplicado: formData.valor_caucao_aplicado ? parseFloat(formData.valor_caucao_aplicado) : 0,
         numero_parcelas_caucao_aplicado: formData.numero_parcelas_caucao_aplicado ? parseInt(formData.numero_parcelas_caucao_aplicado) : null,
