@@ -49,7 +49,14 @@ const Layout = ({ user, onLogout, children }) => {
       { path: '/vehicles', icon: Car, label: 'Veículos' },
       { path: '/motoristas', icon: Users, label: 'Motoristas' },
       { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' },
-      { path: '/financials', icon: DollarSign, label: 'Financeiro' }
+      { 
+        label: 'Financeiro', 
+        icon: DollarSign,
+        submenu: [
+          { path: '/pagamentos', label: 'Pagamentos a Motoristas' },
+          { path: '/verificar-recibos', label: 'Verificar Recibos' }
+        ]
+      }
     ];
 
     // Add Parceiros for admin and gestao
