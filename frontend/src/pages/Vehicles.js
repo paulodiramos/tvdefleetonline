@@ -23,9 +23,9 @@ const Vehicles = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [filters, setFilters] = useState({
-    parceiro: '',
-    status: '',
-    combustivel: '',
+    parceiro: 'all',
+    status: 'all',
+    combustivel: 'all',
     search: ''
   });
   const [newVehicle, setNewVehicle] = useState({
