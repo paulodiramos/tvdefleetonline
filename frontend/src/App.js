@@ -371,6 +371,12 @@ function App() {
             }
           />
           <Route
+            path="/recibos-ganhos"
+            element={
+              user ? <MotoristaRecibosGanhos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/criar-relatorio-semanal"
             element={
               user ? <CriarRelatorioSemanal user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
