@@ -178,7 +178,14 @@ const CriarContrato = ({ user, onLogout }) => {
       const response = await axios.get(`${API}/parceiros/${parceiroId}/templates-contrato`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setTemplates(response.data || []);
+      
+      // Ensure response.data is an array
+      if (Array.isArray(response.data)) {
+        setTemplates(response.data);
+      } else {
+        console.warn('Expected array but got:', typeof response.data);
+        setTemplates([]);
+      }
     } catch (error) {
       console.log('No templates found for this parceiro');
       setTemplates([]);
