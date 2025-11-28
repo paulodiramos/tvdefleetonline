@@ -48,6 +48,7 @@ const Layout = ({ user, onLogout, children }) => {
     const items = [
       { path: '/vehicles', icon: Car, label: 'Veículos' },
       { path: '/motoristas', icon: Users, label: 'Motoristas' },
+      { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' },
       { path: '/financials', icon: DollarSign, label: 'Financeiro' }
     ];
 
