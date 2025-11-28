@@ -351,6 +351,22 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
   const handleCreateContract = async (e) => {
     e.preventDefault();
     
+    // Validações
+    if (!contractForm.motorista_id) {
+      toast.error('Selecione um motorista');
+      return;
+    }
+    
+    if (!contractForm.vehicle_id && contractForm.tipo_contrato !== 'carro_proprio') {
+      toast.error('Selecione um veículo');
+      return;
+    }
+    
+    if (!contractForm.texto_contrato) {
+      toast.error('Insira o texto do contrato');
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('token');
       
@@ -358,25 +374,27 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
         parceiro_id: selectedParceiro.id,
         motorista_id: contractForm.motorista_id,
         vehicle_id: contractForm.tipo_contrato === 'carro_proprio' ? null : contractForm.vehicle_id,
+        data_inicio: new Date().toISOString().split('T')[0], // Data atual no formato YYYY-MM-DD
         tipo_contrato: contractForm.tipo_contrato,
-        valor_semanal: contractForm.valor_semanal ? parseFloat(contractForm.valor_semanal) : null,
-        valor_slot: contractForm.valor_slot ? parseFloat(contractForm.valor_slot) : null,
-        percentagem_comissao: contractForm.percentagem_comissao ? parseFloat(contractForm.percentagem_comissao) : null,
-        horarios_disponibilidade: contractForm.horarios,
+        valor_semanal: contractForm.valor_semanal ? parseFloat(contractForm.valor_semanal) : 230.0,
+        comissao_percentual: contractForm.percentagem_comissao ? parseFloat(contractForm.percentagem_comissao) : null,
+        caucao_total: contractForm.caucao_total ? parseFloat(contractForm.caucao_total) : 300.0,
+        caucao_lavagem: 90.0,
+        tem_caucao: !!contractForm.caucao_total,
+        caucao_parcelada: !!contractForm.caucao_parcelas,
+        caucao_parcelas: contractForm.caucao_parcelas ? parseInt(contractForm.caucao_parcelas) : null,
+        caucao_texto: contractForm.caucao_texto || null,
+        tem_epoca: !!(contractForm.data_inicio_epoca_alta || contractForm.data_inicio_epoca_baixa),
+        data_inicio_epoca_alta: contractForm.data_inicio_epoca_alta || null,
+        data_fim_epoca_alta: contractForm.data_fim_epoca_alta || null,
+        valor_epoca_alta: contractForm.valor_epoca_alta ? parseFloat(contractForm.valor_epoca_alta) : null,
+        texto_epoca_alta: contractForm.texto_epoca_alta || null,
+        data_inicio_epoca_baixa: contractForm.data_inicio_epoca_baixa || null,
+        data_fim_epoca_baixa: contractForm.data_fim_epoca_baixa || null,
+        valor_epoca_baixa: contractForm.valor_epoca_baixa ? parseFloat(contractForm.valor_epoca_baixa) : null,
+        texto_epoca_baixa: contractForm.texto_epoca_baixa || null,
         template_texto: contractForm.texto_contrato,
-        // Caução
-        caucao_texto: contractForm.caucao_texto,
-        caucao_total: contractForm.caucao_total,
-        caucao_parcelas: contractForm.caucao_parcelas,
-        // Épocas
-        data_inicio_epoca_alta: contractForm.data_inicio_epoca_alta,
-        data_fim_epoca_alta: contractForm.data_fim_epoca_alta,
-        valor_epoca_alta: contractForm.valor_epoca_alta,
-        texto_epoca_alta: contractForm.texto_epoca_alta,
-        data_inicio_epoca_baixa: contractForm.data_inicio_epoca_baixa,
-        data_fim_epoca_baixa: contractForm.data_fim_epoca_baixa,
-        valor_epoca_baixa: contractForm.valor_epoca_baixa,
-        texto_epoca_baixa: contractForm.texto_epoca_baixa
+        condicoes_veiculo: null
       };
       
       await axios.post(`${API}/contratos/gerar`, payload, {
