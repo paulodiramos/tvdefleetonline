@@ -5657,8 +5657,8 @@ async def get_proximas_datas_dashboard(current_user: Dict = Depends(get_current_
             })
         
         # Revisão do extintor
-        extintor = vehicle.get("extintor", {})
-        if extintor.get("data_validade"):
+        extintor = vehicle.get("extintor", {}) or {}
+        if extintor and extintor.get("data_validade"):
             data_extintor = datetime.fromisoformat(extintor.get("data_validade")).date()
             dias_restantes = (data_extintor - today).days
             proximas_datas["datas"].append({
