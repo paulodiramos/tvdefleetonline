@@ -1160,7 +1160,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "P0 Bug Fixes Testing - COMPLETED"
+    - "Sistema de Vistorias de Veículos - Teste Completo"
+    - "Sistema de Vistorias de Veículos - 7 Endpoints CRUD"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
