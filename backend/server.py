@@ -57,6 +57,7 @@ security = HTTPBearer()
 # Import routers from routes package
 from routes.auth import router as auth_router
 from routes.motoristas import router as motoristas_router
+from routes.notificacoes import router as notificacoes_router
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
