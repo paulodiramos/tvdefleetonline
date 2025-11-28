@@ -5691,6 +5691,254 @@ async def get_proximas_datas_dashboard(current_user: Dict = Depends(get_current_
         "dashboard": dashboard_data
     }
 
+
+# ==================== VEHICLE VISTORIAS (INSPECTIONS) ====================
+
+@api_router.post("/vehicles/{vehicle_id}/vistorias")
+async def create_vistoria(
+    vehicle_id: str,
+    vistoria_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Create a new vehicle vistoria/inspection"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verify vehicle exists
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Create vistoria
+    vistoria_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    vistoria = {
+        "id": vistoria_id,
+        "veiculo_id": vehicle_id,
+        "data_vistoria": vistoria_data.get("data_vistoria", now.isoformat()),
+        "tipo": vistoria_data.get("tipo", "periodica"),
+        "km_veiculo": vistoria_data.get("km_veiculo"),
+        "responsavel_nome": current_user.get("name"),
+        "responsavel_id": current_user.get("id"),
+        "observacoes": vistoria_data.get("observacoes"),
+        "estado_geral": vistoria_data.get("estado_geral", "bom"),
+        "fotos": vistoria_data.get("fotos", []),
+        "itens_verificados": vistoria_data.get("itens_verificados", {}),
+        "danos_encontrados": vistoria_data.get("danos_encontrados", []),
+        "pdf_relatorio": None,
+        "assinatura_responsavel": vistoria_data.get("assinatura_responsavel"),
+        "assinatura_motorista": vistoria_data.get("assinatura_motorista"),
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.vistorias.insert_one(vistoria)
+    
+    # Update vehicle with next vistoria date if provided
+    if vistoria_data.get("proxima_vistoria"):
+        await db.vehicles.update_one(
+            {"id": vehicle_id},
+            {"$set": {"proxima_vistoria": vistoria_data.get("proxima_vistoria")}}
+        )
+    
+    return {"message": "Vistoria created successfully", "vistoria_id": vistoria_id, "vistoria": vistoria}
+
+
+@api_router.get("/vehicles/{vehicle_id}/vistorias")
+async def get_vehicle_vistorias(
+    vehicle_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get all vistorias for a vehicle"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL, UserRole.MOTORISTA]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vistorias = await db.vistorias.find(
+        {"veiculo_id": vehicle_id},
+        {"_id": 0}
+    ).sort("data_vistoria", -1).to_list(100)
+    
+    return vistorias
+
+
+@api_router.get("/vehicles/{vehicle_id}/vistorias/{vistoria_id}")
+async def get_vistoria(
+    vehicle_id: str,
+    vistoria_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get a specific vistoria"""
+    vistoria = await db.vistorias.find_one(
+        {"id": vistoria_id, "veiculo_id": vehicle_id},
+        {"_id": 0}
+    )
+    
+    if not vistoria:
+        raise HTTPException(status_code=404, detail="Vistoria not found")
+    
+    return vistoria
+
+
+@api_router.put("/vehicles/{vehicle_id}/vistorias/{vistoria_id}")
+async def update_vistoria(
+    vehicle_id: str,
+    vistoria_id: str,
+    update_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Update a vistoria"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    
+    result = await db.vistorias.update_one(
+        {"id": vistoria_id, "veiculo_id": vehicle_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Vistoria not found")
+    
+    return {"message": "Vistoria updated successfully"}
+
+
+@api_router.delete("/vehicles/{vehicle_id}/vistorias/{vistoria_id}")
+async def delete_vistoria(
+    vehicle_id: str,
+    vistoria_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Delete a vistoria"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    result = await db.vistorias.delete_one({"id": vistoria_id, "veiculo_id": vehicle_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Vistoria not found")
+    
+    return {"message": "Vistoria deleted successfully"}
+
+
+@api_router.post("/vehicles/{vehicle_id}/vistorias/{vistoria_id}/upload-foto")
+async def upload_vistoria_foto(
+    vehicle_id: str,
+    vistoria_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload a photo for a vistoria"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verify vistoria exists
+    vistoria = await db.vistorias.find_one({"id": vistoria_id, "veiculo_id": vehicle_id}, {"_id": 0})
+    if not vistoria:
+        raise HTTPException(status_code=404, detail="Vistoria not found")
+    
+    try:
+        # Create vistorias directory
+        vistorias_dir = UPLOAD_DIR / "vistorias" / vehicle_id
+        vistorias_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Process file
+        file_id = f"vistoria_{vistoria_id}_{uuid.uuid4()}"
+        file_info = await process_uploaded_file(file, vistorias_dir, file_id)
+        
+        # Update vistoria with photo URL
+        await db.vistorias.update_one(
+            {"id": vistoria_id},
+            {"$push": {"fotos": file_info["url"]}, "$set": {"updated_at": datetime.now(timezone.utc)}}
+        )
+        
+        return {"message": "Photo uploaded successfully", "photo_url": file_info["url"]}
+    
+    except Exception as e:
+        logger.error(f"Error uploading vistoria photo: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/vehicles/{vehicle_id}/vistorias/{vistoria_id}/gerar-pdf")
+async def gerar_pdf_vistoria(
+    vehicle_id: str,
+    vistoria_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Generate PDF report for a vistoria"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get vistoria and vehicle data
+    vistoria = await db.vistorias.find_one({"id": vistoria_id, "veiculo_id": vehicle_id}, {"_id": 0})
+    if not vistoria:
+        raise HTTPException(status_code=404, detail="Vistoria not found")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.units import cm
+        
+        # Create PDF
+        pdf_dir = UPLOAD_DIR / "vistorias" / "relatorios"
+        pdf_dir.mkdir(parents=True, exist_ok=True)
+        pdf_path = pdf_dir / f"vistoria_{vistoria_id}.pdf"
+        
+        c = canvas.Canvas(str(pdf_path), pagesize=A4)
+        width, height = A4
+        
+        # Title
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(2*cm, height - 2*cm, "RELATÓRIO DE VISTORIA")
+        
+        # Vehicle info
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(2*cm, height - 3.5*cm, "Dados do Veículo:")
+        c.setFont("Helvetica", 10)
+        c.drawString(2*cm, height - 4*cm, f"Marca/Modelo: {vehicle.get('marca')} {vehicle.get('modelo')}")
+        c.drawString(2*cm, height - 4.5*cm, f"Matrícula: {vehicle.get('matricula')}")
+        
+        # Vistoria info
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(2*cm, height - 6*cm, "Dados da Vistoria:")
+        c.setFont("Helvetica", 10)
+        c.drawString(2*cm, height - 6.5*cm, f"Tipo: {vistoria.get('tipo')}")
+        c.drawString(2*cm, height - 7*cm, f"Data: {vistoria.get('data_vistoria')}")
+        c.drawString(2*cm, height - 7.5*cm, f"Estado Geral: {vistoria.get('estado_geral')}")
+        c.drawString(2*cm, height - 8*cm, f"Responsável: {vistoria.get('responsavel_nome')}")
+        
+        if vistoria.get('km_veiculo'):
+            c.drawString(2*cm, height - 8.5*cm, f"Km: {vistoria.get('km_veiculo')}")
+        
+        # Observations
+        if vistoria.get('observacoes'):
+            c.setFont("Helvetica-Bold", 12)
+            c.drawString(2*cm, height - 10*cm, "Observações:")
+            c.setFont("Helvetica", 10)
+            c.drawString(2*cm, height - 10.5*cm, vistoria.get('observacoes'))
+        
+        c.save()
+        
+        pdf_url = f"/uploads/vistorias/relatorios/vistoria_{vistoria_id}.pdf"
+        
+        # Update vistoria with PDF URL
+        await db.vistorias.update_one(
+            {"id": vistoria_id},
+            {"$set": {"pdf_relatorio": pdf_url, "updated_at": datetime.now(timezone.utc)}}
+        )
+        
+        return {"message": "PDF generated successfully", "pdf_url": pdf_url}
+    
+    except Exception as e:
+        logger.error(f"Error generating PDF: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ==================== ADMIN SETTINGS ====================
 
 @api_router.get("/admin/settings")
