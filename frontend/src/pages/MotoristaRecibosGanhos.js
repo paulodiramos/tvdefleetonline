@@ -83,6 +83,35 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
     }
   };
 
+  const handleUploadComprovativo = async (relatorioId, file) => {
+    if (!file) return;
+    
+    setUploadingComprovativoId(relatorioId);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/relatorios-ganhos/${relatorioId}/upload-comprovativo`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      toast.success('Comprovativo enviado com sucesso!');
+      fetchRelatorios();
+    } catch (error) {
+      console.error('Error uploading comprovativo:', error);
+      toast.error('Erro ao enviar comprovativo');
+    } finally {
+      setUploadingComprovativoId(null);
+    }
+  };
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       'pendente_recibo': { label: 'Pendente Recibo', class: 'bg-yellow-100 text-yellow-800' },
