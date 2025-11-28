@@ -58,7 +58,7 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
     
     setUploadingId(relatorioId);
     const formData = new FormData();
-    formData.append('recibo', file);
+    formData.append('file', file);
 
     try {
       const token = localStorage.getItem('token');
