@@ -21,11 +21,14 @@ const ParceiroReports = ({ user, onLogout }) => {
 
   const fetchAllReports = async () => {
     try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      
       const [weekly, vehicles, motoristas, expenses] = await Promise.all([
-        axios.get(`${API}/reports/parceiro/semanal`),
-        axios.get(`${API}/reports/parceiro/por-veiculo`),
-        axios.get(`${API}/reports/parceiro/por-motorista`),
-        axios.get(`${API}/reports/parceiro/proximas-despesas`)
+        axios.get(`${API}/reports/parceiro/semanal`, config),
+        axios.get(`${API}/reports/parceiro/por-veiculo`, config),
+        axios.get(`${API}/reports/parceiro/por-motorista`, config),
+        axios.get(`${API}/reports/parceiro/proximas-despesas`, config)
       ]);
       
       setWeeklyReport(weekly.data);
@@ -33,6 +36,7 @@ const ParceiroReports = ({ user, onLogout }) => {
       setMotoristaReports(motoristas.data);
       setUpcomingExpenses(expenses.data);
     } catch (error) {
+      console.error('Error fetching reports:', error);
       toast.error('Erro ao carregar relatórios');
     } finally {
       setLoading(false);
