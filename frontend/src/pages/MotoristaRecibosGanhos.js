@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { DollarSign, FileText, Download, Calendar, TrendingUp, Upload, Eye } from 'lucide-react';
+import { DollarSign, FileText, Download, Calendar, TrendingUp, Upload, Eye, CheckCircle } from 'lucide-react';
 
 const MotoristaRecibosGanhos = ({ user, onLogout }) => {
   const [relatorios, setRelatorios] = useState([]);
