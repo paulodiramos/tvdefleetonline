@@ -81,6 +81,9 @@ const CriarContrato = ({ user, onLogout }) => {
     if (tipoContratoSelecionado && parceiroData) {
       const tipoConfig = parceiroData.contratos_tipos?.find(t => t.nome === tipoContratoSelecionado);
       if (tipoConfig) {
+        // Set template selecionado
+        setTemplateSelecionado(tipoContratoSelecionado);
+        
         // Pre-fill com valores do tipo de contrato
         setFormData(prev => ({
           ...prev,
@@ -93,6 +96,8 @@ const CriarContrato = ({ user, onLogout }) => {
         
         setTipoContrato(tipoConfig.tipo);
       }
+    } else {
+      setTemplateSelecionado('');
     }
   }, [tipoContratoSelecionado, parceiroData]);
 
