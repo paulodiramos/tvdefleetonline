@@ -74,6 +74,10 @@ const CriarContrato = ({ user, onLogout }) => {
       fetchParceiroData(parceiroSelecionado);
       fetchMotoristas(parceiroSelecionado);
       fetchVeiculos(parceiroSelecionado);
+      fetchTemplates(parceiroSelecionado);
+    } else {
+      setTemplates([]);
+      setTipoContratoSelecionado('');
     }
   }, [parceiroSelecionado]);
 
