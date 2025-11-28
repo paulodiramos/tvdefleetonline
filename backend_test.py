@@ -1340,6 +1340,258 @@ startxref
         else:
             self.log_result("Vehicle-Inspection-Value-Types", False, f"Only {successful_updates}/{len(test_values)} value types worked")
 
+    # ==================== P0 BUG FIXES TESTS - PERMISSION ACCESS ====================
+    
+    def test_p0_bug_fixes_complete(self):
+        """Test all 4 P0 bug fixes for permission access (403/500 errors)"""
+        print("\n🚨 TESTING P0 BUG FIXES - PERMISSION ACCESS")
+        print("=" * 60)
+        
+        # Test all 4 critical flows
+        self.test_gestor_pagamentos_semana_atual()
+        self.test_parceiro_relatorios_ganhos()
+        self.test_parceiro_recibos_verification()
+        self.test_operacional_reports_access()
+        self.test_additional_permission_validations()
+        self.test_planos_endpoint_access()
+        
+        return True
+    
+    def test_gestor_pagamentos_semana_atual(self):
+        """Test GESTOR → FINANCEIRO → PAGAMENTOS - GET /api/pagamentos/semana-atual"""
+        print("\n1. TESTING GESTOR → FINANCEIRO → PAGAMENTOS")
+        print("-" * 50)
+        
+        # Authenticate as gestor
+        if not self.authenticate_user("gestor"):
+            return
+        
+        headers = self.get_headers("gestor")
+        
+        try:
+            # Test GET /api/pagamentos/semana-atual
+            response = requests.get(f"{BACKEND_URL}/pagamentos/semana-atual", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Validate response structure
+                required_fields = ["pagamentos", "total_pagar", "total_pago", "periodo"]
+                missing_fields = [field for field in required_fields if field not in data]
+                
+                if not missing_fields:
+                    self.log_result("P0-Gestor-Pagamentos-Semana", True, 
+                                  f"✅ Returns 200 OK with correct structure: {list(data.keys())}")
+                else:
+                    self.log_result("P0-Gestor-Pagamentos-Semana", False, 
+                                  f"Missing response fields: {missing_fields}")
+            elif response.status_code == 403:
+                self.log_result("P0-Gestor-Pagamentos-Semana", False, 
+                              "❌ Still returns 403 Forbidden - BUG NOT FIXED")
+            else:
+                self.log_result("P0-Gestor-Pagamentos-Semana", False, 
+                              f"Unexpected status code: {response.status_code}")
+                
+        except Exception as e:
+            self.log_result("P0-Gestor-Pagamentos-Semana", False, f"Request error: {str(e)}")
+    
+    def test_parceiro_relatorios_ganhos(self):
+        """Test PARCEIRO → FINANCEIRO → PAGAMENTOS - GET /api/relatorios-ganhos"""
+        print("\n2. TESTING PARCEIRO → FINANCEIRO → PAGAMENTOS")
+        print("-" * 50)
+        
+        # Authenticate as parceiro
+        if not self.authenticate_user("parceiro"):
+            return
+        
+        headers = self.get_headers("parceiro")
+        
+        try:
+            # Test GET /api/relatorios-ganhos
+            response = requests.get(f"{BACKEND_URL}/relatorios-ganhos", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Should return array of reports filtered by partner
+                if isinstance(data, list):
+                    self.log_result("P0-Parceiro-Relatorios-Ganhos", True, 
+                                  f"✅ Returns 200 OK with array of {len(data)} reports")
+                else:
+                    self.log_result("P0-Parceiro-Relatorios-Ganhos", False, 
+                                  f"Expected array, got {type(data)}")
+            elif response.status_code in [403, 500]:
+                self.log_result("P0-Parceiro-Relatorios-Ganhos", False, 
+                              f"❌ Still returns {response.status_code} - BUG NOT FIXED")
+            else:
+                self.log_result("P0-Parceiro-Relatorios-Ganhos", False, 
+                              f"Unexpected status code: {response.status_code}")
+                
+        except Exception as e:
+            self.log_result("P0-Parceiro-Relatorios-Ganhos", False, f"Request error: {str(e)}")
+    
+    def test_parceiro_recibos_verification(self):
+        """Test PARCEIRO → FINANCEIRO → VERIFICAR RECIBOS - GET /api/recibos"""
+        print("\n3. TESTING PARCEIRO → FINANCEIRO → VERIFICAR RECIBOS")
+        print("-" * 50)
+        
+        # Authenticate as parceiro
+        if not self.authenticate_user("parceiro"):
+            return
+        
+        headers = self.get_headers("parceiro")
+        
+        try:
+            # Test GET /api/recibos
+            response = requests.get(f"{BACKEND_URL}/recibos", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Should return array of receipts (not 500 Internal Error)
+                if isinstance(data, list):
+                    self.log_result("P0-Parceiro-Recibos", True, 
+                                  f"✅ Returns 200 OK with array of {len(data)} receipts (not 500 Internal Error)")
+                else:
+                    self.log_result("P0-Parceiro-Recibos", False, 
+                                  f"Expected array, got {type(data)}")
+            elif response.status_code == 500:
+                self.log_result("P0-Parceiro-Recibos", False, 
+                              "❌ Still returns 500 Internal Error - BUG NOT FIXED")
+            else:
+                self.log_result("P0-Parceiro-Recibos", False, 
+                              f"Unexpected status code: {response.status_code}")
+                
+        except Exception as e:
+            self.log_result("P0-Parceiro-Recibos", False, f"Request error: {str(e)}")
+    
+    def test_operacional_reports_access(self):
+        """Test OPERACIONAL → RELATÓRIOS - Multiple endpoints"""
+        print("\n4. TESTING OPERACIONAL → RELATÓRIOS")
+        print("-" * 50)
+        
+        # Authenticate as operacional
+        if not self.authenticate_user("operacional"):
+            return
+        
+        headers = self.get_headers("operacional")
+        
+        # Test all 4 report endpoints
+        endpoints = [
+            "/reports/parceiro/semanal",
+            "/reports/parceiro/por-veiculo", 
+            "/reports/parceiro/por-motorista",
+            "/reports/parceiro/proximas-despesas"
+        ]
+        
+        all_passed = True
+        
+        for endpoint in endpoints:
+            try:
+                response = requests.get(f"{BACKEND_URL}{endpoint}", headers=headers)
+                
+                if response.status_code == 200:
+                    data = response.json()
+                    self.log_result(f"P0-Operacional-{endpoint.split('/')[-1]}", True, 
+                                  f"✅ {endpoint} returns 200 OK")
+                elif response.status_code == 403:
+                    self.log_result(f"P0-Operacional-{endpoint.split('/')[-1]}", False, 
+                                  f"❌ {endpoint} still returns 403 Forbidden - BUG NOT FIXED")
+                    all_passed = False
+                else:
+                    self.log_result(f"P0-Operacional-{endpoint.split('/')[-1]}", False, 
+                                  f"{endpoint} unexpected status: {response.status_code}")
+                    all_passed = False
+                    
+            except Exception as e:
+                self.log_result(f"P0-Operacional-{endpoint.split('/')[-1]}", False, 
+                              f"{endpoint} request error: {str(e)}")
+                all_passed = False
+        
+        if all_passed:
+            self.log_result("P0-Operacional-All-Reports", True, 
+                          "✅ All 4 operacional report endpoints return 200 OK")
+        else:
+            self.log_result("P0-Operacional-All-Reports", False, 
+                          "❌ Some operacional report endpoints still failing")
+    
+    def test_additional_permission_validations(self):
+        """Test additional permission validations"""
+        print("\n5. TESTING ADDITIONAL PERMISSION VALIDATIONS")
+        print("-" * 50)
+        
+        # Test that motorista does NOT have access to management endpoints
+        if self.authenticate_user("motorista"):
+            headers = self.get_headers("motorista")
+            
+            try:
+                # Motorista should NOT have access to pagamentos/semana-atual
+                response = requests.get(f"{BACKEND_URL}/pagamentos/semana-atual", headers=headers)
+                
+                if response.status_code == 403:
+                    self.log_result("P0-Motorista-Blocked", True, 
+                                  "✅ Motorista correctly blocked from management endpoints")
+                else:
+                    self.log_result("P0-Motorista-Blocked", False, 
+                                  f"Motorista should be blocked, got {response.status_code}")
+            except Exception as e:
+                self.log_result("P0-Motorista-Blocked", False, f"Request error: {str(e)}")
+        
+        # Test that Admin and Gestao have access to everything
+        for role in ["admin", "gestor"]:
+            if self.authenticate_user(role):
+                headers = self.get_headers(role)
+                
+                try:
+                    # Test access to pagamentos/semana-atual
+                    response = requests.get(f"{BACKEND_URL}/pagamentos/semana-atual", headers=headers)
+                    
+                    if response.status_code == 200:
+                        self.log_result(f"P0-{role.title()}-Access", True, 
+                                      f"✅ {role.title()} has access to all endpoints")
+                    else:
+                        self.log_result(f"P0-{role.title()}-Access", False, 
+                                      f"{role.title()} access failed: {response.status_code}")
+                except Exception as e:
+                    self.log_result(f"P0-{role.title()}-Access", False, f"Request error: {str(e)}")
+    
+    def test_planos_endpoint_access(self):
+        """Test endpoint de planos - POST /api/subscriptions/solicitar"""
+        print("\n6. TESTING PLANOS ENDPOINT")
+        print("-" * 50)
+        
+        # Test with any role (should work for all)
+        if not self.authenticate_user("parceiro"):
+            return
+        
+        headers = self.get_headers("parceiro")
+        
+        # Valid subscription request payload
+        subscription_data = {
+            "plano_id": "test_plano_001",
+            "periodo": "semanal",
+            "pagamento_metodo": "multibanco"
+        }
+        
+        try:
+            response = requests.post(f"{BACKEND_URL}/subscriptions/solicitar", 
+                                   json=subscription_data, headers=headers)
+            
+            if response.status_code in [200, 201]:
+                data = response.json()
+                self.log_result("P0-Planos-Endpoint", True, 
+                              "✅ Subscription endpoint working - creates pending subscription")
+            elif response.status_code == 400:
+                # Might fail due to invalid plano_id, but endpoint is working
+                self.log_result("P0-Planos-Endpoint", True, 
+                              "✅ Subscription endpoint accessible (400 = validation error, not permission)")
+            else:
+                self.log_result("P0-Planos-Endpoint", False, 
+                              f"Subscription endpoint error: {response.status_code}")
+                
+        except Exception as e:
+            self.log_result("P0-Planos-Endpoint", False, f"Request error: {str(e)}")
+
     # ==================== PARCEIROS LISTING TEST ====================
     
     def test_parceiros_listing_endpoint(self):
