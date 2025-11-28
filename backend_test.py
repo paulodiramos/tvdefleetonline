@@ -4206,15 +4206,51 @@ startxref
         print("\n" + "=" * 80)
         return failed == 0
 
+    def run_p0_bug_tests_only(self):
+        """Run only P0 bug fix tests as requested in review"""
+        print("🚨 TVDEFLEET P0 BUG FIXES TESTING SUITE")
+        print("=" * 80)
+        print("Testing 4 critical permission bugs (403/500 errors)")
+        print("URL:", BACKEND_URL.replace("/api", ""))
+        print("=" * 80)
+        
+        # Run P0 bug tests
+        self.test_p0_bug_fixes_complete()
+        
+        # Summary
+        print("\n" + "=" * 80)
+        print("P0 BUG FIXES TEST SUMMARY")
+        print("=" * 80)
+        
+        passed = sum(1 for r in self.test_results if r["success"])
+        failed = sum(1 for r in self.test_results if not r["success"])
+        
+        print(f"Total Tests: {len(self.test_results)}")
+        print(f"✅ Passed: {passed}")
+        print(f"❌ Failed: {failed}")
+        
+        if failed > 0:
+            print("\n🔍 FAILED TESTS:")
+            for result in self.test_results:
+                if not result["success"]:
+                    print(f"   ❌ {result['test']}: {result['message']}")
+                    if result.get("details"):
+                        print(f"      Details: {result['details']}")
+        else:
+            print("\n🎉 ALL P0 BUG FIXES WORKING CORRECTLY!")
+        
+        print("\n" + "=" * 80)
+        return failed == 0
+
 if __name__ == "__main__":
     tester = TVDEFleetTester()
     
-    # Run specific user management and partner dashboard tests as requested in review
-    success = tester.run_user_management_dashboard_tests_only()
+    # Run P0 bug fix tests as requested in Portuguese review
+    success = tester.run_p0_bug_tests_only()
     
     if success:
-        print("🎉 All user management and partner dashboard tests passed!")
+        print("🎉 All P0 bug fixes are working correctly!")
         exit(0)
     else:
-        print("💥 Some user management and partner dashboard tests failed!")
+        print("💥 Some P0 bug fixes are still failing!")
         exit(1)
