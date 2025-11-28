@@ -7777,6 +7777,65 @@ async def delete_plano_motorista(plano_id: str, current_user: Dict = Depends(get
     await db.planos_motorista.update_one({"id": plano_id}, {"$set": {"ativo": False}})
     return {"message": "Plano desativado com sucesso"}
 
+# Planos de Parceiro CRUD
+@api_router.get("/planos-parceiro")
+async def list_planos_parceiro(current_user: Dict = Depends(get_current_user)):
+    """List all active parceiro plans"""
+    try:
+        planos = await db.planos_parceiro.find({"ativo": True}, {"_id": 0}).to_list(100)
+        return planos
+    except Exception as e:
+        return []
+
+@api_router.post("/planos-parceiro")
+async def create_plano_parceiro(plano_data: dict, current_user: Dict = Depends(get_current_user)):
+    """Create new parceiro plan (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    plano = {
+        "id": str(uuid.uuid4()),
+        "nome": plano_data.get("nome"),
+        "descricao": plano_data.get("descricao", ""),
+        "preco_mensal": plano_data.get("preco_mensal", 0),
+        "features": plano_data.get("features", []),
+        "max_veiculos": plano_data.get("max_veiculos", 0),
+        "max_motoristas": plano_data.get("max_motoristas", 0),
+        "ativo": True,
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc)
+    }
+    
+    await db.planos_parceiro.insert_one(plano)
+    return plano
+
+@api_router.put("/planos-parceiro/{plano_id}")
+async def update_plano_parceiro(plano_id: str, plano_data: dict, current_user: Dict = Depends(get_current_user)):
+    """Update parceiro plan (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    plano = await db.planos_parceiro.find_one({"id": plano_id}, {"_id": 0})
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    
+    update_data = {k: v for k, v in plano_data.items() if k != "id"}
+    update_data["updated_at"] = datetime.now(timezone.utc)
+    
+    await db.planos_parceiro.update_one({"id": plano_id}, {"$set": update_data})
+    
+    updated_plano = await db.planos_parceiro.find_one({"id": plano_id}, {"_id": 0})
+    return updated_plano
+
+@api_router.delete("/planos-parceiro/{plano_id}")
+async def delete_plano_parceiro(plano_id: str, current_user: Dict = Depends(get_current_user)):
+    """Soft delete parceiro plan (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    await db.planos_parceiro.update_one({"id": plano_id}, {"$set": {"ativo": False}})
+    return {"message": "Plano desativado com sucesso"}
+
 @api_router.post("/motoristas/{motorista_id}/atribuir-plano")
 async def atribuir_plano_motorista(
     motorista_id: str,
