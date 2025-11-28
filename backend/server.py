@@ -5691,6 +5691,227 @@ async def get_proximas_datas_dashboard(current_user: Dict = Depends(get_current_
     dashboard_data.sort(key=lambda x: min([d["dias_restantes"] for d in x["datas"]]) if x["datas"] else 9999)
     
     return {
+
+# ==================== SISTEMA DE MÓDULOS E PLANOS ====================
+
+@api_router.get("/modulos")
+async def get_modulos_disponiveis(current_user: Dict = Depends(get_current_user)):
+    """Lista todos os módulos disponíveis no sistema"""
+    from models.modulo import MODULOS_SISTEMA
+    
+    modulos = []
+    for codigo, info in MODULOS_SISTEMA.items():
+        modulos.append({
+            "id": codigo,
+            "codigo": codigo,
+            "nome": info["nome"],
+            "descricao": info["descricao"],
+            "ordem": info["ordem"],
+            "ativo": True
+        })
+    
+    return sorted(modulos, key=lambda x: x["ordem"])
+
+
+@api_router.get("/planos")
+async def get_planos(current_user: Dict = Depends(get_current_user)):
+    """Lista todos os planos disponíveis"""
+    planos = await db.planos.find({"ativo": True}, {"_id": 0}).to_list(100)
+    return planos
+
+
+@api_router.post("/planos")
+async def criar_plano(plano_data: Dict[str, Any], current_user: Dict = Depends(get_current_user)):
+    """Criar novo plano (Admin apenas)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas admin pode criar planos")
+    
+    plano_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    plano = {
+        "id": plano_id,
+        "nome": plano_data["nome"],
+        "descricao": plano_data.get("descricao"),
+        "modulos": plano_data["modulos"],
+        "tipo_pagamento": plano_data.get("tipo_pagamento", "mensal"),
+        "preco_mensal": plano_data.get("preco_mensal"),
+        "preco_anual": plano_data.get("preco_anual"),
+        "preco_vitalicio": plano_data.get("preco_vitalicio"),
+        "ativo": True,
+        "destaque": plano_data.get("destaque", False),
+        "created_at": now,
+        "updated_at": now
+    }
+    
+    await db.planos.insert_one(plano)
+    return {"message": "Plano criado com sucesso", "plano_id": plano_id}
+
+
+@api_router.put("/planos/{plano_id}")
+async def atualizar_plano(
+    plano_id: str,
+    plano_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar plano existente (Admin apenas)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas admin pode atualizar planos")
+    
+    update_data = {
+        **plano_data,
+        "updated_at": datetime.now(timezone.utc)
+    }
+    
+    result = await db.planos.update_one({"id": plano_id}, {"$set": update_data})
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+    
+    return {"message": "Plano atualizado com sucesso"}
+
+
+@api_router.delete("/planos/{plano_id}")
+async def deletar_plano(plano_id: str, current_user: Dict = Depends(get_current_user)):
+    """Deletar plano (Admin apenas)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas admin pode deletar planos")
+    
+    # Soft delete - apenas marca como inativo
+    result = await db.planos.update_one(
+        {"id": plano_id},
+        {"$set": {"ativo": False, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Plano não encontrado")
+    
+    return {"message": "Plano desativado com sucesso"}
+
+
+@api_router.post("/users/{user_id}/atribuir-modulos")
+async def atribuir_modulos_usuario(
+    user_id: str,
+    atribuicao_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atribuir plano ou módulos individuais a um usuário"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    # Verificar se usuário existe
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    
+    atribuicao_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    # Calcular data_fim baseado no tipo de pagamento
+    data_fim = None
+    tipo_pagamento = atribuicao_data.get("tipo_pagamento")
+    
+    if tipo_pagamento == "mensal":
+        data_fim = now + timedelta(days=30)
+    elif tipo_pagamento == "anual":
+        data_fim = now + timedelta(days=365)
+    # vitalicio = None (sem data fim)
+    
+    atribuicao = {
+        "id": atribuicao_id,
+        "user_id": user_id,
+        "plano_id": atribuicao_data.get("plano_id"),
+        "modulos_ativos": atribuicao_data.get("modulos_ativos", []),
+        "tipo_pagamento": tipo_pagamento,
+        "valor_pago": atribuicao_data.get("valor_pago", 0),
+        "data_inicio": now,
+        "data_fim": data_fim,
+        "status": "ativo",
+        "renovacao_automatica": atribuicao_data.get("renovacao_automatica", False),
+        "created_at": now,
+        "updated_at": now,
+        "created_by": current_user["id"]
+    }
+    
+    # Remover atribuição anterior se existir
+    await db.planos_usuarios.delete_many({"user_id": user_id})
+    
+    # Inserir nova atribuição
+    await db.planos_usuarios.insert_one(atribuicao)
+    
+    return {
+        "message": "Módulos atribuídos com sucesso",
+        "atribuicao_id": atribuicao_id,
+        "data_fim": data_fim.isoformat() if data_fim else None
+    }
+
+
+@api_router.get("/users/{user_id}/modulos")
+async def get_modulos_usuario(user_id: str, current_user: Dict = Depends(get_current_user)):
+    """Obter módulos ativos de um usuário"""
+    # Usuário pode ver seus próprios módulos, ou admin/gestor podem ver de qualquer um
+    if current_user["id"] != user_id and current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    atribuicao = await db.planos_usuarios.find_one(
+        {"user_id": user_id, "status": "ativo"},
+        {"_id": 0}
+    )
+    
+    if not atribuicao:
+        return {"modulos_ativos": [], "plano": None}
+    
+    # Se tem plano, buscar módulos do plano
+    if atribuicao.get("plano_id"):
+        plano = await db.planos.find_one({"id": atribuicao["plano_id"]}, {"_id": 0})
+        if plano:
+            atribuicao["modulos_ativos"] = plano["modulos"]
+            atribuicao["plano"] = plano
+    
+    return atribuicao
+
+
+@api_router.get("/users/{user_id}/verificar-modulo/{modulo_codigo}")
+async def verificar_acesso_modulo(
+    user_id: str,
+    modulo_codigo: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Verificar se usuário tem acesso a um módulo específico"""
+    atribuicao = await db.planos_usuarios.find_one(
+        {"user_id": user_id, "status": "ativo"},
+        {"_id": 0}
+    )
+    
+    if not atribuicao:
+        return {"tem_acesso": False, "motivo": "Nenhum plano ativo"}
+    
+    # Verificar se expirou
+    if atribuicao.get("data_fim"):
+        data_fim = datetime.fromisoformat(atribuicao["data_fim"])
+        if data_fim < datetime.now(timezone.utc):
+            await db.planos_usuarios.update_one(
+                {"id": atribuicao["id"]},
+                {"$set": {"status": "expirado"}}
+            )
+            return {"tem_acesso": False, "motivo": "Plano expirado"}
+    
+    # Buscar módulos
+    modulos_ativos = atribuicao.get("modulos_ativos", [])
+    
+    if atribuicao.get("plano_id"):
+        plano = await db.planos.find_one({"id": atribuicao["plano_id"]}, {"_id": 0})
+        if plano:
+            modulos_ativos = plano["modulos"]
+    
+    tem_acesso = modulo_codigo in modulos_ativos
+    
+    return {
+        "tem_acesso": tem_acesso,
+        "motivo": "Acesso concedido" if tem_acesso else "Módulo não incluído no plano"
+    }
+
+
         "total_vehicles": len(dashboard_data),
         "dashboard": dashboard_data
     }
