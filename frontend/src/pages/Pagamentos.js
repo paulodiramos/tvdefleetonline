@@ -54,7 +54,10 @@ const Pagamentos = ({ user, onLogout }) => {
 
   const fetchMotoristas = async () => {
     try {
-      const response = await axios.get(`${API}/motoristas`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/motoristas`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setMotoristas(response.data);
     } catch (error) {
       console.error('Erro ao carregar motoristas');
