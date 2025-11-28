@@ -51,6 +51,7 @@ import MeusPlanos from "@/pages/MeusPlanos";
 import MeusRecibosGanhos from "@/pages/MeusRecibosGanhos";
 import VerificarRecibos from "@/pages/VerificarRecibos";
 import ValidacaoDocumentosMotorista from "@/pages/ValidacaoDocumentosMotorista";
+import Notificacoes from "@/pages/Notificacoes";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
