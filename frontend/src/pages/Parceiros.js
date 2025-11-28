@@ -18,6 +18,7 @@ const Parceiros = ({ user, onLogout }) => {
   const [motoristas, setMotoristas] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [contratos, setContratos] = useState([]);
+  const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showContractDialog, setShowContractDialog] = useState(false);
