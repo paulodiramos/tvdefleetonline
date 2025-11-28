@@ -732,7 +732,8 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                   )}
 
                   <Button type="submit" className="w-full">
-                    Gerar Contrato
+                    <FileText className="w-4 h-4 mr-2" />
+                    Criar Template
                   </Button>
                 </form>
               </DialogContent>
