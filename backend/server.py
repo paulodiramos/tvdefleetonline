@@ -5742,7 +5742,7 @@ async def create_vistoria(
             {"$set": {"proxima_vistoria": vistoria_data.get("proxima_vistoria")}}
         )
     
-    return {"message": "Vistoria created successfully", "vistoria_id": vistoria_id, "vistoria": vistoria}
+    return {"message": "Vistoria created successfully", "vistoria_id": vistoria_id}
 
 
 @api_router.get("/vehicles/{vehicle_id}/vistorias")
