@@ -333,6 +333,19 @@ const Pagamentos = ({ user, onLogout }) => {
           </div>
         )}
 
+        <FilterBar
+          filters={filters}
+          onFilterChange={handleFilterChange}
+          onClear={handleClearFilters}
+          options={filterOptions}
+        />
+
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-slate-600">
+            Mostrando {filteredPagamentos.length} de {pagamentos.length} pagamentos
+          </p>
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle>Lista de Pagamentos</CardTitle>
@@ -340,11 +353,11 @@ const Pagamentos = ({ user, onLogout }) => {
           <CardContent>
             {loading ? (
               <div className="text-center py-8 text-slate-500">A carregar...</div>
-            ) : pagamentos.length === 0 ? (
-              <div className="text-center py-8 text-slate-500">Nenhum pagamento registado</div>
+            ) : filteredPagamentos.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">Nenhum pagamento encontrado</div>
             ) : (
               <div className="space-y-4">
-                {pagamentos.map((pagamento) => (
+                {filteredPagamentos.map((pagamento) => (
                   <div key={pagamento.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-2">
