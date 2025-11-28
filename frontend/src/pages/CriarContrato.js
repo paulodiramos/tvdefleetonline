@@ -324,7 +324,13 @@ const CriarContrato = ({ user, onLogout }) => {
     if (contratoGerado?.pdf_url) {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`${API}${contratoGerado.pdf_url}`, {
+        // Check if pdf_url already contains full path or just the relative path
+        const pdfUrl = contratoGerado.pdf_url.startsWith('/api') 
+          ? contratoGerado.pdf_url 
+          : `${contratoGerado.pdf_url}`;
+        
+        const response = await axios.get(pdfUrl, {
+          baseURL: process.env.REACT_APP_BACKEND_URL,
           headers: { Authorization: `Bearer ${token}` },
           responseType: 'blob'
         });
@@ -337,6 +343,7 @@ const CriarContrato = ({ user, onLogout }) => {
         link.click();
         link.remove();
         window.URL.revokeObjectURL(url);
+        toast.success('Download iniciado!');
       } catch (error) {
         console.error('Error downloading PDF:', error);
         toast.error('Erro ao fazer download do PDF');
