@@ -587,8 +587,22 @@ const Motoristas = ({ user, onLogout }) => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {motoristas.map((motorista) => (
+          <>
+            <FilterBar
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onClear={handleClearFilters}
+              options={filterOptions}
+            />
+
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm text-slate-600">
+                Mostrando {filteredMotoristas.length} de {motoristas.length} motoristas
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredMotoristas.map((motorista) => (
               <Card key={motorista.id} className="card-hover" data-testid={`motorista-card-${motorista.id}`}>
                 <CardHeader>
                   <div className="flex items-start space-x-4">
