@@ -620,8 +620,9 @@ const Vehicles = ({ user, onLogout }) => {
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </Layout>
