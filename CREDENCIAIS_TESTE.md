@@ -58,7 +58,7 @@
 
 ### Login via Frontend
 ```
-1. Acesse: https://fleet-control-43.preview.emergentagent.com/login
+1. Acesse: https://fleet-bugs.preview.emergentagent.com/login
 2. Use qualquer credencial acima
 3. Navegue conforme as permissões do role
 ```
