@@ -16,11 +16,11 @@ from pathlib import Path
 # Get backend URL from frontend .env
 BACKEND_URL = "https://fleetrack-4.preview.emergentagent.com/api"
 
-# Test credentials (already seeded in DB)
+# Test credentials (from review request)
 TEST_CREDENTIALS = {
-    "admin": {"email": "admin@tvdefleet.com", "password": "admin123"},
+    "admin": {"email": "admin@tvdefleet.com", "password": "o72ocUHy"},
     "gestor": {"email": "gestor@tvdefleet.com", "password": "gestor123"},
-    "parceiro": {"email": "parceiro@tvdefleet.com", "password": "parceiro123"},
+    "parceiro": {"email": "parceiro@tvdefleet.com", "password": "UQ1B6DXU"},
     "motorista": {"email": "motorista@tvdefleet.com", "password": "motorista123"}
 }
 
