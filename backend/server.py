@@ -6297,15 +6297,18 @@ async def create_contrato_motorista(
     if current_user["role"] == "operacional":
         if not await check_feature_access(current_user, "criar_contratos"):
             raise HTTPException(status_code=403, detail="Operacional base não pode criar contratos")
-    elif current_user["role"] == "parceiro":
-        raise HTTPException(status_code=403, detail="Parceiro não pode criar contratos")
-    elif current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+    elif current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "parceiro"]:
         raise HTTPException(status_code=403, detail="Sem permissão")
     
     # Get template
     template = await db.templates_contrato.find_one({"id": contrato_data.template_id}, {"_id": 0})
     if not template:
         raise HTTPException(status_code=404, detail="Template não encontrado")
+    
+    # If parceiro, verify they can only create contracts for their own templates
+    if current_user["role"] == "parceiro":
+        if template["parceiro_id"] != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Parceiro só pode criar contratos com seus próprios templates")
     
     # Get motorista
     motorista = await db.motoristas.find_one({"id": contrato_data.motorista_id}, {"_id": 0})
