@@ -31,6 +31,7 @@ import Planos from "@/pages/Planos";
 import Configuracoes from "@/pages/Configuracoes";
 import VehicleData from "@/pages/VehicleData";
 import VehiclePhotos from "@/pages/VehiclePhotos";
+import VehicleVistorias from "@/pages/VehicleVistorias";
 import EditParceiro from "@/pages/EditParceiro";
 import RecibosPagamentos from "@/pages/RecibosPagamentos";
 import FichaVeiculo from "@/pages/FichaVeiculo";
