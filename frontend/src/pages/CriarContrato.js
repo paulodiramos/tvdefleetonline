@@ -417,10 +417,7 @@ const CriarContrato = ({ user, onLogout }) => {
                       <SelectContent>
                         {templates.map((template) => (
                           <SelectItem key={template.id} value={template.id}>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{template.nome_template}</span>
-                              <span className="text-xs text-slate-500">{template.tipo_contrato}</span>
-                            </div>
+                            {template.nome_template} - {template.tipo_contrato}
                           </SelectItem>
                         ))}
                       </SelectContent>
