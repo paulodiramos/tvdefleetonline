@@ -140,8 +140,8 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
     <Layout user={user} onLogout={onLogout}>
       <div className="max-w-7xl mx-auto space-y-6 p-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">Recibos e Ganhos</h1>
-          <p className="text-slate-600 mt-1">Histórico de recibos e relatórios de ganhos</p>
+          <h1 className="text-3xl font-bold text-slate-800">Ganhos</h1>
+          <p className="text-slate-600 mt-1">Histórico de ganhos e relatórios</p>
         </div>
 
         {/* Cards de Estatísticas */}
