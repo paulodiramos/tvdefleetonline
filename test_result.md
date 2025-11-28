@@ -1232,6 +1232,21 @@ backend:
           agent: "testing"
           comment: "✅ TESTADO COMPLETAMENTE: Todos os 6 endpoints de importação funcionando perfeitamente. EXISTENTES: POST /api/operacional/upload-csv-uber e POST /api/operacional/upload-csv-bolt retornam 200 OK com campos obrigatórios (registos_importados, total_pago/ganhos_liquidos, periodo, csv_salvo). NOVOS: POST /api/import/viaverde, /gps, /combustivel-eletrico, /combustivel-fossil todos acessíveis e validam formato de ficheiro corretamente. CONTROLO DE ACESSO: Feature access funcionando - parceiro recebe 403 Forbidden para endpoints que requerem upload_csv_ganhos. Logs confirmam: Uber/Bolt (200 OK), Via Verde/Combustível (400 Bad Request para formato inválido), GPS (200 OK), Controlo acesso (403 Forbidden)."
 
+  - task: "Contract PDF Generation - Critical Fix"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ ERRO CRÍTICO IDENTIFICADO: PDF generation failing with 'AttributeError: NoneType object has no attribute get' na linha 6423. Parceiro sendo buscado incorretamente na collection 'users' com role 'parceiro' em vez da collection 'parceiros'."
+        - working: true
+          agent: "testing"
+          comment: "✅ CORREÇÃO APLICADA E TESTADA: Corrigida linha 6423 no endpoint POST /api/contratos/{contrato_id}/gerar-pdf. Alterado de 'db.users.find_one({id: contrato[parceiro_id], role: parceiro})' para 'db.parceiros.find_one({id: contrato[parceiro_id]})'. PDF generation agora funcionando perfeitamente. Testado via API: retorna {message: 'PDF gerado com sucesso', pdf_url: '/uploads/contratos/contrato_*.pdf'}. Sistema de contratos completamente funcional."
+
 frontend:
   - task: "FichaVeiculo.js - Nova Tab Extintor"
     implemented: true
