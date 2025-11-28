@@ -801,7 +801,7 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
 
                   <Button type="submit" className="w-full">
                     <FileText className="w-4 h-4 mr-2" />
-                    Criar Template
+                    {editingTemplate ? 'Atualizar Template' : 'Criar Template'}
                   </Button>
                 </form>
               </DialogContent>
