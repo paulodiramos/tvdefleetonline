@@ -10000,14 +10000,15 @@ async def upload_comprovativo_pagamento(
         file_info = await process_uploaded_file(file, comprova_dir, file_id)
         
         # Update relatorio with comprovativo URL only
+        comprovativo_url = file_info.get("pdf_path") or file_info.get("original_path")
         update_data = {
-            "comprovativo_pagamento_url": file_info["saved_path"],
+            "comprovativo_pagamento_url": comprovativo_url,
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
         
         await db.relatorios_ganhos.update_one({"id": relatorio_id}, {"$set": update_data})
         
-        return {"message": "Payment proof uploaded successfully", "comprovativo_url": file_info["saved_path"]}
+        return {"message": "Payment proof uploaded successfully", "comprovativo_url": comprovativo_url}
         
     except Exception as e:
         logger.error(f"Error uploading payment proof: {e}")
