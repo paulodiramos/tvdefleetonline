@@ -1721,6 +1721,117 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" />
+              Confirmar Exclusão
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-slate-600">
+              Tem certeza que deseja deletar o template <strong>"{templateToDelete?.nome_template}"</strong>?
+            </p>
+            <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                ⚠️ <strong>Atenção:</strong> Esta ação não pode ser desfeita. Contratos já gerados não serão afetados.
+              </p>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteTemplate}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Deletar Template
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Dialog */}
+      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-5 h-5 text-blue-600" />
+              Preview do Template: {previewTemplate?.nome_template}
+            </DialogTitle>
+          </DialogHeader>
+          {previewTemplate && (
+            <div className="space-y-4">
+              {/* Template Info */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg">
+                <div>
+                  <span className="text-sm font-medium text-slate-600">Tipo:</span>
+                  <p className="text-sm text-slate-800">{previewTemplate.tipo_contrato}</p>
+                </div>
+                <div>
+                  <span className="text-sm font-medium text-slate-600">Periodicidade:</span>
+                  <p className="text-sm text-slate-800">{previewTemplate.periodicidade_padrao}</p>
+                </div>
+                {previewTemplate.valor_caucao && (
+                  <div>
+                    <span className="text-sm font-medium text-slate-600">Caução:</span>
+                    <p className="text-sm text-slate-800">
+                      €{previewTemplate.valor_caucao}
+                      {previewTemplate.numero_parcelas_caucao && ` (${previewTemplate.numero_parcelas_caucao}x)`}
+                    </p>
+                  </div>
+                )}
+                {previewTemplate.valor_epoca_alta && (
+                  <div>
+                    <span className="text-sm font-medium text-slate-600">Época Alta:</span>
+                    <p className="text-sm text-slate-800">€{previewTemplate.valor_epoca_alta}</p>
+                  </div>
+                )}
+                {previewTemplate.valor_epoca_baixa && (
+                  <div>
+                    <span className="text-sm font-medium text-slate-600">Época Baixa:</span>
+                    <p className="text-sm text-slate-800">€{previewTemplate.valor_epoca_baixa}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Template Text */}
+              <div>
+                <h3 className="text-sm font-semibold text-slate-700 mb-2">Texto do Contrato:</h3>
+                <div className="border rounded-lg p-4 max-h-[400px] overflow-y-auto bg-white">
+                  <pre className="text-sm text-slate-800 whitespace-pre-wrap font-mono">
+                    {previewTemplate.clausulas_texto || 'Sem texto de contrato definido'}
+                  </pre>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 justify-end pt-4 border-t">
+                <Button variant="outline" onClick={() => setShowPreviewDialog(false)}>
+                  Fechar
+                </Button>
+                <Button 
+                  onClick={() => {
+                    setShowPreviewDialog(false);
+                    handleEditTemplate(previewTemplate);
+                  }}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Editar Template
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
     </Layout>
   );
 };
