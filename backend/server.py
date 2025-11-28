@@ -4720,13 +4720,17 @@ async def get_vehicle_roi(vehicle_id: str, periodo: str = "mensal", current_user
 @api_router.get("/reports/dashboard")
 async def get_dashboard_stats(current_user: Dict = Depends(get_current_user)):
     query = {}
-    if current_user["role"] == UserRole.PARCEIRO:
-        query["owner_id"] = current_user["id"]
+    motorista_query = {}
+    
+    # Filter by role
+    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        query["parceiro_id"] = current_user["id"]
+        motorista_query["parceiro_atribuido"] = current_user["id"]
     
     total_vehicles = await db.vehicles.count_documents(query)
-    available_vehicles = await db.vehicles.count_documents({**query, "disponibilidade.status": "disponivel"})
-    total_motoristas = await db.motoristas.count_documents({})
-    pending_motoristas = await db.motoristas.count_documents({"approved": False})
+    available_vehicles = await db.vehicles.count_documents({**query, "status": "disponivel"})
+    total_motoristas = await db.motoristas.count_documents(motorista_query)
+    pending_motoristas = await db.motoristas.count_documents({**motorista_query, "approved": False})
     
     revenues = await db.revenues.find({}, {"_id": 0}).to_list(10000)
     expenses = await db.expenses.find({}, {"_id": 0}).to_list(10000)
