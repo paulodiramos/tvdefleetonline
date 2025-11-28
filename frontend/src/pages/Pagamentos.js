@@ -60,14 +60,17 @@ const Pagamentos = ({ user, onLogout }) => {
       });
       setMotoristas(response.data);
     } catch (error) {
-      console.error('Erro ao carregar motoristas');
+      console.error('Error fetching motoristas:', error);
     }
   };
 
   const handleAddPagamento = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API}/pagamentos`, newPagamento);
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/pagamentos`, newPagamento, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       toast.success('Pagamento criado! Aguardando recibo do motorista.');
       setShowAddDialog(false);
       fetchPagamentos();
@@ -80,6 +83,7 @@ const Pagamentos = ({ user, onLogout }) => {
         notas: ''
       });
     } catch (error) {
+      console.error('Error adding pagamento:', error);
       toast.error('Erro ao criar pagamento');
     }
   };
@@ -89,250 +93,237 @@ const Pagamentos = ({ user, onLogout }) => {
     formData.append('file', file);
 
     try {
+      const token = localStorage.getItem('token');
       const response = await axios.post(
         `${API}/pagamentos/${pagamentoId}/upload-documento`,
         formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } }
+        { 
+          headers: { 
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
+          } 
+        }
       );
       toast.success('Documento carregado e analisado com sucesso!');
       fetchPagamentos();
     } catch (error) {
+      console.error('Error uploading documento:', error);
       toast.error('Erro ao carregar documento');
     }
   };
 
   const handleMarcarPago = async (pagamentoId) => {
     try {
-      await axios.put(`${API}/pagamentos/${pagamentoId}/marcar-pago`);
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/pagamentos/${pagamentoId}/marcar-pago`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       toast.success('Pagamento marcado como pago!');
       fetchPagamentos();
     } catch (error) {
+      console.error('Error marking as paid:', error);
       toast.error('Erro ao marcar como pago');
     }
   };
 
   const getStatusBadge = (status) => {
-    const badges = {
-      pendente: { label: 'Pendente', color: 'bg-amber-100 text-amber-700' },
-      pago: { label: 'Pago', color: 'bg-emerald-100 text-emerald-700' },
-      rejeitado: { label: 'Rejeitado', color: 'bg-red-100 text-red-700' }
+    const statusMap = {
+      pendente: <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-300"><Clock className="w-3 h-3 mr-1" />Pendente</Badge>,
+      recibo_enviado: <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300"><FileText className="w-3 h-3 mr-1" />Recibo Enviado</Badge>,
+      aguardando_recibo: <Badge variant="outline" className="bg-orange-50 text-orange-700 border-orange-300"><AlertCircle className="w-3 h-3 mr-1" />Aguardando Recibo</Badge>,
+      pago: <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300"><CheckCircle className="w-3 h-3 mr-1" />Pago</Badge>
     };
-    const badge = badges[status] || badges.pendente;
-    return <Badge className={badge.color}>{badge.label}</Badge>;
+    return statusMap[status] || <Badge>{status}</Badge>;
   };
-
-  if (loading) {
-    return (
-      <Layout user={user} onLogout={onLogout}>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
-        </div>
-      </Layout>
-    );
-  }
 
   return (
     <Layout user={user} onLogout={onLogout}>
-      <div className="space-y-6" data-testid="pagamentos-page">
+      <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-4xl font-bold text-slate-800 mb-2">Pagamentos</h1>
-            <p className="text-slate-600">Gerir pagamentos a motoristas</p>
+            <h1 className="text-3xl font-bold">Pagamentos a Motoristas</h1>
+            <p className="text-slate-600 mt-1">Gerir pagamentos e recibos</p>
           </div>
           <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
             <DialogTrigger asChild>
-              <Button className="bg-emerald-600 hover:bg-emerald-700" data-testid="add-pagamento-button">
+              <Button>
                 <Plus className="w-4 h-4 mr-2" />
                 Novo Pagamento
               </Button>
             </DialogTrigger>
-            <DialogContent data-testid="add-pagamento-dialog">
+            <DialogContent className="max-w-md">
               <DialogHeader>
-                <DialogTitle>Criar Pagamento</DialogTitle>
+                <DialogTitle>Criar Novo Pagamento</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleAddPagamento} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Motorista *</Label>
-                  <Select value={newPagamento.motorista_id} onValueChange={(value) => setNewPagamento({...newPagamento, motorista_id: value})} required>
-                    <SelectTrigger data-testid="pagamento-motorista-select">
-                      <SelectValue placeholder="Selecionar motorista" />
+                <div>
+                  <Label>Motorista</Label>
+                  <Select 
+                    value={newPagamento.motorista_id} 
+                    onValueChange={(value) => setNewPagamento({...newPagamento, motorista_id: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um motorista" />
                     </SelectTrigger>
                     <SelectContent>
-                      {motoristas.map(m => (
-                        <SelectItem key={m.id} value={m.id}>{m.name} - {m.email}</SelectItem>
+                      {motoristas.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Valor (€) *</Label>
-                  <Input type="number" step="0.01" value={newPagamento.valor} onChange={(e) => setNewPagamento({...newPagamento, valor: parseFloat(e.target.value)})} required data-testid="pagamento-valor-input" />
+                <div>
+                  <Label>Valor (€)</Label>
+                  <Input 
+                    type="number" 
+                    step="0.01"
+                    value={newPagamento.valor}
+                    onChange={(e) => setNewPagamento({...newPagamento, valor: parseFloat(e.target.value)})}
+                    required
+                  />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Período Início *</Label>
-                    <Input type="date" value={newPagamento.periodo_inicio} onChange={(e) => setNewPagamento({...newPagamento, periodo_inicio: e.target.value})} required data-testid="pagamento-inicio-input" />
+                  <div>
+                    <Label>Período Início</Label>
+                    <Input 
+                      type="date"
+                      value={newPagamento.periodo_inicio}
+                      onChange={(e) => setNewPagamento({...newPagamento, periodo_inicio: e.target.value})}
+                      required
+                    />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Período Fim *</Label>
-                    <Input type="date" value={newPagamento.periodo_fim} onChange={(e) => setNewPagamento({...newPagamento, periodo_fim: e.target.value})} required data-testid="pagamento-fim-input" />
+                  <div>
+                    <Label>Período Fim</Label>
+                    <Input 
+                      type="date"
+                      value={newPagamento.periodo_fim}
+                      onChange={(e) => setNewPagamento({...newPagamento, periodo_fim: e.target.value})}
+                      required
+                    />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Tipo Documento *</Label>
-                  <Select value={newPagamento.tipo_documento} onValueChange={(value) => setNewPagamento({...newPagamento, tipo_documento: value})}>
-                    <SelectTrigger data-testid="pagamento-tipo-select">
+                <div>
+                  <Label>Tipo de Documento</Label>
+                  <Select 
+                    value={newPagamento.tipo_documento}
+                    onValueChange={(value) => setNewPagamento({...newPagamento, tipo_documento: value})}
+                  >
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="fatura">Fatura</SelectItem>
                       <SelectItem value="recibo_verde">Recibo Verde</SelectItem>
-                      <SelectItem value="outro">Outro</SelectItem>
+                      <SelectItem value="fatura">Fatura</SelectItem>
+                      <SelectItem value="recibo_simples">Recibo Simples</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label>Notas</Label>
-                  <Input value={newPagamento.notas} onChange={(e) => setNewPagamento({...newPagamento, notas: e.target.value})} placeholder="Observações..." data-testid="pagamento-notas-input" />
+                <div>
+                  <Label>Notas (opcional)</Label>
+                  <Input 
+                    value={newPagamento.notas}
+                    onChange={(e) => setNewPagamento({...newPagamento, notas: e.target.value})}
+                    placeholder="Notas adicionais"
+                  />
                 </div>
-                <Button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700" data-testid="submit-pagamento-button">
-                  Criar Pagamento
-                </Button>
+                <Button type="submit" className="w-full">Criar Pagamento</Button>
               </form>
             </DialogContent>
           </Dialog>
         </div>
 
-        {/* Summary Cards */}
         {summary && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Card className="card-hover">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-slate-600">Semana Atual</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-slate-500">{summary.periodo}</p>
-              </CardContent>
-            </Card>
-            <Card className="card-hover" data-testid="total-pagar-card">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-slate-600">Total a Pagar</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-2">
-                  <DollarSign className="w-5 h-5 text-amber-600" />
-                  <span className="text-3xl font-bold text-amber-600">€{summary.total_pagar.toFixed(2)}</span>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-yellow-100 rounded-lg">
+                    <Clock className="w-6 h-6 text-yellow-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-600">Total a Pagar</p>
+                    <p className="text-2xl font-bold">€{summary.total_pagar?.toFixed(2) || '0.00'}</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
-            <Card className="card-hover" data-testid="total-pago-card">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-slate-600">Total Pago</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-5 h-5 text-emerald-600" />
-                  <span className="text-3xl font-bold text-emerald-600">€{summary.total_pago.toFixed(2)}</span>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-green-100 rounded-lg">
+                    <CheckCircle className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-600">Total Pago</p>
+                    <p className="text-2xl font-bold">€{summary.total_pago?.toFixed(2) || '0.00'}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="p-3 bg-blue-100 rounded-lg">
+                    <DollarSign className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-600">Período</p>
+                    <p className="text-lg font-semibold">{summary.periodo || 'Semana Atual'}</p>
+                  </div>
                 </div>
               </CardContent>
             </Card>
           </div>
         )}
 
-        {/* Pagamentos List */}
         <Card>
           <CardHeader>
             <CardTitle>Lista de Pagamentos</CardTitle>
           </CardHeader>
           <CardContent>
-            {pagamentos.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
-                <FileText className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                <p>Nenhum pagamento nesta semana</p>
-              </div>
+            {loading ? (
+              <div className="text-center py-8 text-slate-500">A carregar...</div>
+            ) : pagamentos.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">Nenhum pagamento registado</div>
             ) : (
               <div className="space-y-4">
                 {pagamentos.map((pagamento) => (
-                  <div key={pagamento.id} className="p-4 bg-slate-50 rounded-lg border" data-testid={`pagamento-${pagamento.id}`}>
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <h4 className="font-semibold text-slate-800">{pagamento.motorista_nome}</h4>
-                          {getStatusBadge(pagamento.status)}
-                        </div>
-                        <p className="text-sm text-slate-600">Período: {new Date(pagamento.periodo_inicio).toLocaleDateString('pt-PT')} a {new Date(pagamento.periodo_fim).toLocaleDateString('pt-PT')}</p>
-                        <p className="text-sm text-slate-500 capitalize">Tipo: {pagamento.tipo_documento.replace('_', ' ')}</p>
-                        {pagamento.notas && (
-                          <p className="text-xs text-slate-500 mt-1">Notas: {pagamento.notas}</p>
-                        )}
+                  <div key={pagamento.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <p className="font-semibold">{pagamento.motorista_nome}</p>
+                        {getStatusBadge(pagamento.status)}
                       </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-blue-600">€{pagamento.valor.toFixed(2)}</p>
+                      <div className="text-sm text-slate-600 space-y-1">
+                        <p>Período: {pagamento.periodo_inicio} - {pagamento.periodo_fim}</p>
+                        <p>Valor: <span className="font-semibold text-slate-900">€{pagamento.valor?.toFixed(2)}</span></p>
+                        {pagamento.notas && <p>Notas: {pagamento.notas}</p>}
                       </div>
                     </div>
-
-                    {/* Document Upload Section */}
-                    <div className="pt-3 border-t border-slate-200 space-y-3">
-                      {!pagamento.documento_url ? (
-                        <div className="flex items-center space-x-2 text-sm text-amber-600">
-                          <Clock className="w-4 h-4" />
-                          <span>Aguardando recibo do motorista</span>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2 text-sm text-emerald-600">
-                            <CheckCircle className="w-4 h-4" />
-                            <span>Documento carregado e analisado</span>
-                          </div>
-                          {pagamento.analise_documento && (
-                            <div className="p-3 bg-blue-50 rounded text-xs space-y-1">
-                              <p><strong>Análise do Documento:</strong></p>
-                              <p>Tipo detectado: {pagamento.analise_documento.tipo_detectado}</p>
-                              <p>Valor detectado: €{pagamento.analise_documento.valor_detectado}</p>
-                              <p>Confiança: {(pagamento.analise_documento.confianca * 100).toFixed(0)}%</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      <div className="flex space-x-2">
-                        {pagamento.status === 'pendente' && pagamento.documento_url && (
-                          <Button 
-                            size="sm" 
-                            className="bg-emerald-600 hover:bg-emerald-700"
-                            onClick={() => handleMarcarPago(pagamento.id)}
-                            data-testid={`marcar-pago-${pagamento.id}`}
-                          >
-                            <CheckCircle className="w-4 h-4 mr-2" />
-                            Marcar como Pago
-                          </Button>
-                        )}
-                        {!pagamento.documento_url && (
-                          <label className="cursor-pointer">
-                            <input
-                              type="file"
-                              accept="image/*,.pdf"
-                              className="hidden"
-                              onChange={(e) => {
-                                const file = e.target.files[0];
-                                if (file) handleUploadDocumento(pagamento.id, file);
-                              }}
-                              data-testid={`upload-doc-${pagamento.id}`}
-                            />
-                            <Button size="sm" variant="outline" as="span">
+                    <div className="flex items-center space-x-2">
+                      {pagamento.status === 'aguardando_recibo' && (
+                        <label className="cursor-pointer">
+                          <input 
+                            type="file" 
+                            className="hidden" 
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            onChange={(e) => handleUploadDocumento(pagamento.id, e.target.files[0])}
+                          />
+                          <Button variant="outline" size="sm" asChild>
+                            <span>
                               <Upload className="w-4 h-4 mr-2" />
-                              Carregar Recibo
-                            </Button>
-                          </label>
-                        )}
-                      </div>
+                              Upload Recibo
+                            </span>
+                          </Button>
+                        </label>
+                      )}
+                      {pagamento.status === 'recibo_enviado' && (
+                        <Button onClick={() => handleMarcarPago(pagamento.id)} size="sm">
+                          <CheckCircle className="w-4 h-4 mr-2" />
+                          Marcar Pago
+                        </Button>
+                      )}
                     </div>
-
-                    {pagamento.status === 'pago' && pagamento.pago_em && (
-                      <div className="mt-3 pt-3 border-t border-emerald-200 bg-emerald-50 p-2 rounded text-sm text-emerald-700">
-                        Pago em {new Date(pagamento.pago_em).toLocaleDateString('pt-PT')} às {new Date(pagamento.pago_em).toLocaleTimeString('pt-PT')}
-                      </div>
-                    )}
                   </div>
                 ))}
               </div>
