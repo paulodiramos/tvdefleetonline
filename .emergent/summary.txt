@@ -1,161 +1,156 @@
 <analysis>**original_problem_statement:**
-The user's initial goal was a comprehensive fleet management system. The scope has significantly expanded to include a massive overhaul of the driver's portal and the introduction of several new, complex features.
+The user's initial goal was a comprehensive fleet management system. The scope has significantly expanded to include a massive overhaul of the driver's portal, a complete redesign of the admin's user management page, and the introduction of several new, complex features.
 
 The current project is divided into several phases based on the user's latest requests:
-*   **Phase 1 (Completed): Driver Profile Data Expansion.** A complete redesign of the driver's personal data page () to include an extensive list of fields: personal details, multiple document types (ID, license, criminal record) with front/back uploads and expiry dates, financial information (IBAN), tax details, emergency contacts, and personal accident insurance.
-*   **Phase 2 (Completed): Driver Navigation & UI.** A dedicated, role-based navigation menu for drivers. The main dashboard was also enhanced to show the status of weekly payment reports.
-*   **Phase 3: Messaging/Chat System.** Implement an internal messaging system allowing communication between all user roles (Admin, Gestor, Parceiro, Motorista).
-*   **Phase 4: Ticket System.** Implement a ticketing system for drivers to report issues with vehicles or their activity.
-*   **Phase 5: Vehicle Opportunities.** Create a page where drivers without an assigned vehicle can view available cars from all partners, see their conditions (rent, commission, sale), and express interest via the internal messaging system.
-*   **Phase 6: IFThenPay Integration.** Allow drivers to select and pay for subscription plans directly from their profile using IFThenPay.
+*   **Phase 1 (Completed): Driver Profile Data Expansion & Functionality.** Includes a vast number of fields, field-specific format validation (IBAN, NIF, etc.), a dirty check to prevent losing unsaved data, and the full implementation of saving/updating the profile.
+*   **Phase A (Completed): Document Validation & Locking.** A system where Admins/Managers can validate driver documents. After global approval, the driver's profile becomes non-editable, except for the IBAN and criminal record. A validation page was created for admins to view document images alongside the corresponding data fields and edit them if necessary.
+*   **Phase B (Completed): Admin/Driver Access & Downloads.** Implemented role-based access controls. Admins can access a detailed driver view from the user list. Drivers can download their own documents, contracts, and reports.
+*   **Phase C (Upcoming): Notification System.** System to send email/WhatsApp alerts for new messages, expiring documents, or pending receipts.
+*   **Phase 3 (Upcoming): Messaging/Chat System.** Implement an internal messaging system for all user roles.
+*   **Phase 4 (Upcoming): Ticket System.** Implement a ticketing system for drivers.
+*   **Phase 5 (Upcoming): Vehicle Opportunities.** Create a page for drivers to view and apply for available vehicles.
+*   **Phase 6 (Upcoming): IFThenPay Integration.** Implement subscription plan payments.
 
-A critical requirement is the implementation of a **document validation system**: once a driver uploads a document, it must be validated by an Admin, Manager, or Partner. After validation, the document and its associated data become non-editable by the driver, with the exception of the IBAN and criminal record. Any other changes would require a support ticket.
+**New User Requests:**
+1.  **UI Redesign:** A complete redesign of the admin's user management page () to be more modern and card-based.
+2.  **Partner Dashboard:** A new dashboard for partners to display critical vehicle maintenance dates (service, insurance, inspection, extinguisher).
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-The application now features a completely refactored driver experience.
--   **Backend ():** The  Pydantic model has been massively expanded to accommodate dozens of new fields for personal data, documents, and contacts. A new data structure, , has been added to the  model to track the validation status of each document. New endpoints have been added for driver plan management () and for admins/managers to validate documents (). Critical bugs in the driver registration and approval flow have been fixed, ensuring a driver profile is correctly created upon approval.
--   **Frontend (React):**
-    -   : The driver profile page has been completely rewritten. It now uses a tabbed interface with new, dedicated components: , , and .
-    -   : A large, complex component containing form fields for all the new data points. It includes logic to disable fields and file uploads based on  and the document's validation status fetched from the backend.
-    -   : Now provides a unique, role-specific navigation menu for logged-in drivers, and the main logo correctly links to the user's role-specific home page.
-    -   : Updated to fetch and display the status of the driver's weekly payment reports.
-    -   Placeholder pages for future features (Messages, Tickets, Opportunities) have been created and routed in .
+The application features a highly detailed driver portal () with extensive forms, input validation, and state management to handle unsaved changes. A comprehensive document validation system is in place, allowing admins to approve documents and lock the driver's profile from further edits. The backend () has been significantly expanded with new fields in the  model and new endpoints for document validation, downloads, and managing edit requests. The admin's user management page () is functional but is now slated for a complete redesign. Placeholder pages exist for future features like messaging and tickets. The system correctly shows drivers which documents are missing or pending validation on their dashboard and profile page.
 
 **Last working item**:
--   **Last item agent was working**: The agent just finished updating the  component to display the status of weekly reports and removed the Dashboard link from the driver's navigation menu as requested by the user.
--   **Status**: IN PROGRESS
--   **Agent Testing Done**: N
--   **Which testing method agent to use?**: Frontend testing agent. The agent needs to log in as a driver and verify that the dashboard correctly fetches and displays the status of any existing weekly reports. This will require ensuring test data for  exists for the test driver.
--   **User Testing Done**: N
+-   Last item agent was working: The agent was just about to begin the complete redesign of the admin's user management page () as requested by the user. The plan is to replace the existing table-based layout with a more modern, card-based interface and streamline the user actions (view details, change role, reset password) into a single, cohesive user flow.
+-   Status: NOT STARTED
+-   Agent Testing Done: N
+-   Which testing method agent to use? Frontend testing agent. Once the new UI is built, the agent should log in as an admin and verify the new card layout, ensure all user data is displayed correctly, and test the functionality within the new user detail view (changing roles, etc.).
+-   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   **Issue 1**: Testing of the Driver Dashboard () functionality. (Priority: P0)
--   **Issue 2**: The save functionality for the expanded driver profile is not implemented. (Priority: P1)
--   **Issue 3**: The original task of testing the Partner Payment page () was never completed. (Priority: P2)
+-   Issue 1: Redesign the admin's user management page (). (Priority: P0)
+-   Issue 2: Create a dashboard for partners with vehicle maintenance information. (Priority: P1)
+-   Issue 3: The original task of testing the Partner Payment page () was never completed. (Priority: P2)
 
 **Issues Detail**:
--   **Issue 1**:
-    -   **Attempted fixes**: The agent wrote the frontend code to fetch and display report statuses.
-    -   **Next debug checklist**:
-        1.  Ensure a test driver user exists.
-        2.  Ensure at least one  document exists in the database linked to that driver.
-        3.  Log in as the driver using the frontend testing agent.
-        4.  Verify the dashboard page () loads without errors.
-        5.  Confirm that cards representing the status of the weekly reports are displayed correctly.
-    -   **Why fix this issue and what will be achieved with the fix?**: This completes the latest user request and provides drivers with crucial visibility into their payment status.
-    -   **Status**: IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?**: Both
-    -   **Blocked on other issue**: None
+-   Issue 1:
+    -   Attempted fixes: None, this is a new feature request.
+    -   Next debug checklist:
+        1.  Modify  to fetch and display users in a card-based grid instead of a table.
+        2.  Consolidate the actions Ver Motorista, Validar Documentos, Alterar Role, and Senha into a single, streamlined detail view/modal that opens when a user card is clicked.
+        3.  The detail view should contain all the functionality that was previously spread across different buttons and dialogs.
+    -   Why fix this issue and what will be achieved with the fix? To modernize the UI/UX of the user management page according to the user's specific design request, making it cleaner and more intuitive.
+    -   Status: NOT STARTED
+    -   Is recurring issue? N
+    -   Should Test frontend/backend/both after fix? Frontend
+    -   Blocked on other issue: None
 
--   **Issue 2**:
-    -   **Attempted fixes**: The agent built the extensive frontend form in  and updated the backend model. However, the  function that gathers all the data and sends it to the  endpoint is incomplete.
-    -   **Next debug checklist**:
-        1.  Complete the  function in  to collect data from all form fields, including file uploads.
-        2.  Ensure the  endpoint in  correctly processes and saves all the new fields.
-        3.  Test the entire flow: fill out the form, save, refresh the page, and verify the data persists.
-    -   **Why fix this issue and what will be achieved with the fix?**: This will make the entire Phase 1 (Driver Profile Data Expansion) functional, allowing data to be saved.
-    -   **Status**: NOT STARTED
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?**: Both
-    -   **Blocked on other issue**: None
+-   Issue 2:
+    -   Attempted fixes: None, this is a new feature request.
+    -   Next debug checklist:
+        1.  Create a new  component.
+        2.  Update the partner's home page/layout to render this dashboard.
+        3.  The dashboard needs to fetch all vehicles assigned to the logged-in partner.
+        4.  This will likely require adding new date fields to the  model in  (e.g., , , , ).
+        5.  Display the information in clear, actionable cards on the partner's dashboard.
+    -   Why fix this issue and what will be achieved with the fix? This will provide partners with immediate visibility into critical, time-sensitive vehicle maintenance tasks, improving fleet management.
+    -   Status: NOT STARTED
+    -   Is recurring issue? N
+    -   Should Test frontend/backend/both after fix? Both
+    -   Blocked on other issue: None
 
--   **Issue 3**:
-    -   **Attempted fixes**: The agent identified that the frontend  was calling non-existent backend endpoints and created the correct ones (). However, the agent then moved to other tasks without creating the necessary test data () to test the complete workflow.
-    -   **Next debug checklist**:
-        1.  Create a weekly report for a test driver linked to a test partner.
+-   Issue 3:
+    -   Attempted fixes: The backend endpoints were created in a previous session, but no test data () was created to allow for frontend testing.
+    -   Next debug checklist:
+        1.  Create a test script or manually insert a  document for a test driver linked to a test partner.
         2.  Log in as the partner.
-        3.  Navigate to .
-        4.  Verify the report is listed.
-        5.  Test changing the status and uploading a payment proof file.
-    -   **Why fix this issue and what will be achieved with the fix?**: This completes a core feature of the payment workflow between partners and drivers.
-    -   **Status**: IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?**: Both
-    -   **Blocked on other issue**: None
+        3.  Navigate to the  page.
+        4.  Verify the report is listed and that the actions (change status, upload proof) work correctly.
+    -   Why fix this issue and what will be achieved with the fix? This completes a core feature of the payment workflow between partners and drivers.
+    -   Status: IN PROGRESS
+    -   Is recurring issue? N
+    -   Should Test frontend/backend/both after fix? Both
+    -   Blocked on other issue: None
 
 **In progress Task List**:
 -   None separate from the issues above.
 
 **Upcoming and Future Tasks**
--   **P0 - FASE 3: Messaging System**: Implement a real-time chat/inbox system for inter-role communication.
--   **P1 - FASE 4: Ticket System**: Build a support ticket system for drivers.
--   **P2 - FASE 5: Vehicle Opportunities Page**: Develop the UI and backend logic for drivers to browse and apply for available vehicles.
--   **P3 - FASE 6: IFThenPay Integration**: Implement the full payment flow for driver subscription plans using the IFThenPay integration playbook.
+-   **P0 - FASE C: Notification System**: Implement email/WhatsApp notifications for new messages, expiring documents, and pending receipts.
+-   **P1 - FASE 3: Messaging System**: Implement a real-time chat/inbox system for inter-role communication.
+-   **P2 - FASE 4: Ticket System**: Build a support ticket system for drivers.
+-   **P3 - FASE 5: Vehicle Opportunities Page**: Develop the UI and backend logic for drivers to browse and apply for available vehicles.
+-   **P4 - FASE 6: IFThenPay Integration**: Implement the full payment flow for driver subscription plans.
 
 **Completed work in this session**
--   **Critical Bug Fix**: Resolved the driver registration flow: drivers can now set their own password, and their profile is correctly created in the  collection upon admin approval.
--   **Critical Bug Fix**: Fixed the profile not found error for drivers on login by correcting the API call to fetch by ID instead of fetching all drivers.
--   **Feature Implemented**: Created a complete system for driver-specific subscription plans, including backend models, CRUD endpoints (), and an admin management page ().
--   **Feature Implemented**: Implemented a document validation system. Backend now tracks validation status, and the frontend UI disables editing of validated documents.
--   **UI/UX Overhaul**: Completely redesigned the driver's profile page () into a modern, tabbed interface with dedicated components.
--   **UI/UX Overhaul**: Implemented a role-specific navigation menu in  for drivers and fixed the main logo link to be role-aware.
--   **Bug Fix**: Fixed a 500 error on the  endpoint caused by a Pydantic model mismatch.
+-   **Driver Profile Save Functionality**: Implemented the complete  function in , allowing all new driver profile fields to be saved.
+-   **Input Validation & Formatting**: Added comprehensive frontend validation and input masks for fields like NIF, IBAN, Social Security, phone numbers, etc.
+-   **Unsaved Changes Warning**: Implemented a system that detects unsaved changes on the driver profile and prompts the user with a confirmation dialog before navigating away.
+-   **Document Approval Logic**: Created a robust system where an admin can globally approve a driver's documents, which then locks most profile fields from being edited by the driver.
+-   **Document Validation Page**: Built a dedicated page () for admins to view a driver's uploaded document images side-by-side with the corresponding data fields, and to edit that data directly for verification.
+-   **Document Download System**: Implemented endpoints and frontend buttons for drivers and admins to download uploaded documents (e.g., ID, license, contract).
+-   **Missing Documents Indicator**: Added a dynamic card to the driver's dashboard and profile that lists all required documents that are missing or not yet validated. The card correctly updates to show 0 documents missing when the profile is complete.
+-   **Admin User Details View**: Created a  component to provide admins with a centralized place to view/edit driver data from the user list page.
+-   **Bug Fix - User Page Crash**: Resolved a critical crash on the  page caused by a missing  icon import from .
+-   **Bug Fix - Incorrect Missing Docs Logic**: Corrected the logic to differentiate between a globally approved profile () and individually validated documents, ensuring the missing documents card is always accurate.
 
 **Earlier issues found/mentioned but not fixed**
--   **Issue 1**: The partner payment page () functionality was implemented but never fully tested due to a lack of test data. This task was abandoned mid-session.
-    -   **Debug checklist**: Create  test data, log in as a partner, and test the status change and file upload workflow on the  page.
-    -   **Why to solve this issue and what will be achieved with this?**: It's a core feature that closes the financial loop between drivers and partners.
-    -   **Should Test frontend/backend/both after fix**: Both
-    -   **Is recurring issue?** N
+-   **Issue 1**: The partner payment page () functionality was implemented but never fully tested due to a lack of test data. This task was abandoned in a previous session and remains pending.
+    -   Debug checklist: Create  test data, log in as a partner, and test the status change and file upload workflow on the  page.
+    -   Why to solve this issue and what will be achieved with this?: It's a core feature that closes the financial loop between drivers and partners.
+    -   Should Test frontend/backend/both after fix: Both
+    -   Is recurring issue? N
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend**: FastAPI, Pydantic (with complex nested models), MongoDB.
--   **Frontend**: React.js (with Hooks), Axios, , , Tailwind CSS.
--   **Core Logic**: Heavy reliance on role-based conditional rendering and logic on both frontend and backend. A new state management pattern for edit mode and validation status has been introduced on the driver profile.
+-   **Backend**: FastAPI, Pydantic, MongoDB.
+-   **Frontend**: React.js (with extensive use of Hooks: , ), Axios, , , Tailwind CSS.
+-   **Core Logic**: Complex conditional rendering and state management based on user role, document validation status (), global approval status (), and form edit mode ().
 
 **key DB schema**
--   **motoristas**: Massively expanded collection with dozens of new fields for personal info, documents (each as an object with , , etc.), contacts, and financial data. Includes a new nested object  to store the validation state of each document.
--   **planos_motorista** (new collection): Stores subscription plans specific to drivers, with fields for name, description, weekly/monthly prices, and features.
--   **assinaturas_motoristas** (new collection): To store driver subscriptions to plans.
+-   **motoristas**:
+    -   **New Fields Added**: , , , ,  (boolean). The model was expanded to include numerous fields for document numbers and expiry dates to be displayed on the validation page.
+-   **solicitacoes_alteracoes** (new collection):
+    -   Stores requests from drivers to change their locked profile data. Includes , , , , , .
 
 **All files**
 -   **Created**:
-    -   : Dashboard card view for drivers.
-    -   : The new, comprehensive form for all driver data.
-    -   : Component for viewing/selecting plans.
-    -   : Admin page to manage driver plans.
-    -   : Standalone page for drivers to manage their plan.
-    -   Multiple placeholder pages: , , , etc.
+    -   : The new page for admins/managers to validate driver documents by comparing images and data.
+    -   : A new dialog for admins on the  page to view/edit a driver's complete profile and documents.
+    -   : A utility script to create test drivers and associated data like weekly reports.
 -   **Updated/Refactored**:
-    -   : Major updates to  model, new models (, ), and new endpoints for plan management and document validation. Critical fixes to user approval logic.
-    -   : Completely rewritten to use the new component-based, tabbed layout.
-    -   : Major logic added for role-based navigation menus and home links.
-    -   : Added numerous new routes for the driver-specific pages.
-    -   : Fixed to allow drivers to set their own password.
-    -   : Logic updated to handle assignment of driver-specific plans.
+    -   : Major updates to the  model to add new fields. Added new endpoints for approving all documents, downloading documents, and managing change requests (). The permissions for the  endpoint were updated to allow drivers to edit their own profiles before approval.
+    -   : Huge overhaul. Added input validation, a dirty check for unsaved changes, download buttons, logic to disable fields based on approval status, and a card to display missing documents.
+    -   : Significantly modified to add a Ver Motorista button that opens the new . Fixed a critical crash. Slated for a full redesign.
+    -   : Updated to handle the new unsaved changes state from its child component.
+    -   : Logic updated to accurately display the list of missing or un-validated documents.
 
 **Critical Info for New Agent**
--   **Phased Development is Key**: The user has approved a multi-phase plan. The next agent must follow this plan, starting with the implementation of the Messaging System (Phase 3) after fixing pending issues.
--   **Document Validation Logic**: The logic for locking down fields based on  and validation status in  is critical and complex. It's the core of a major user requirement.
--   **Saving is Not Implemented**: The new expanded driver profile form  is UI-only. The agent must implement the  function to actually save the data to the backend.
--   **Abandoned Task**: The testing for the Partner Payment page () was left incomplete. This is technical debt that should be addressed.
+-   **New Top Priority**: The user's immediate focus has shifted to UI/UX improvements. The next agent MUST prioritize the redesign of the  page as described in Pending Issues before moving on to other features.
+-   **Complex Validation Logic**: The system for determining if a driver's profile is complete is now multi-faceted. A document is only considered done if it exists AND is marked as validated in the  object OR if the global  flag is true. This logic is used in both  and  and must be maintained.
+-   **Phased Plan is Flexible**: While a phased plan exists (Messaging, Tickets, etc.), the user is actively providing new high-priority requirements. The agent should be prepared to address these emergent requests, like the Partner Dashboard, after the current top-priority task is complete.
 
 **Last 5 User Messages and any pending user messages**
-1.  **Request**: logo dashboard... nao pode ser este... avancar para proxima fase - The logo link is wrong; move to the next phase. (Completed - Logo link fixed).
-2.  **Request**: todos os documentos terao de ser validados... nao podem ser mais editados... continuar - Implement document validation and lockdown. (Completed - Backend and frontend logic implemented).
-3.  **Request**: continuar - User approval to proceed with completing Phase 2. (Completed).
-4.  **Request**: adicionar menu planos , resto continuar - Add a Plans item to the driver menu. (Completed).
-5.  **Request**: menu dashboard remover pois dashboar faz logotipo, dashboard com informacao do estado do recibo continuar - Remove the Dashboard link from the menu and add receipt status to the dashboard itself. (Completed - This was the last action taken).
+1.  **User Request**: The  should see all of the driver's profile data on the validation page to compare with the uploaded documents. Specific fields were requested for each document type. **Status: Completed**.
+2.  **User Request**: On the driver's profile, indicate which documents are missing. On the admin side, add a field for internal notes (). The driver profile should also have a new Motorista tab with access to their documents. **Status: Completed**.
+3.  **User Feedback**: The Documentos em Falta card is not working correctly; it should list the specific missing documents. **Status: Completed**. The agent fixed it to show the list.
+4.  **User Feedback**: An error occurs when an admin tries to access the  page. **Status: Completed**. The agent identified and fixed a crash caused by a missing icon import.
+5.  **User Request**: Redesign the user list page for admins to be simpler and more visually appealing (card-based). Combine Ver Motorista and Validar actions. Add a dashboard for partners showing vehicle maintenance info. **Status: This is the current **.
 
 **Project Health Check:**
--   **Broken**: The saving mechanism on the new driver profile page ( -> ) is not implemented.
+-   **Broken**: The UI of the  page is considered outdated by the user and is the next target for a complete refactor.
 -   **Mocked**: None.
 
 **Testing status**
--   **Testing agent used after significant changes**: YES, frequently used to test login flows and page rendering.
+-   **Testing agent used after significant changes**: YES, extensively used to debug UI crashes, verify functionality, and confirm bug fixes.
 -   **Troubleshoot agent used after agent stuck in loop**: NO
--   **Test files created**: None saved.
+-   **Test files created**:  was created to manage test data.
 -   **Known regressions**: None.
 
 **Credentials to test flow:**
--   Credentials for all roles are available in . The  user is the primary one for testing the new features.
+-   Credentials for all roles (admin, gestor, parceiro, motorista) are available in . The user  has documents, while  is a newer test user who may not.
 
 **What agent forgot to execute**
--   The agent never implemented the  function in  to save the new driver data.
--   The agent never went back to create test data for and fully test the Partner Payment page () after fixing its backend endpoints early in the session.</analysis>
+-   The task to create test data for and fully test the Partner Payment page () from the previous fork has still not been completed.</analysis>
