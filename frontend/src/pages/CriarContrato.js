@@ -171,6 +171,19 @@ const CriarContrato = ({ user, onLogout }) => {
     }
   };
 
+  const fetchTemplates = async (parceiroId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/parceiros/${parceiroId}/templates-contrato`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTemplates(response.data || []);
+    } catch (error) {
+      console.log('No templates found for this parceiro');
+      setTemplates([]);
+    }
+  };
+
   const fetchMotoristas = async (parceiroId) => {
     try {
       const token = localStorage.getItem('token');
