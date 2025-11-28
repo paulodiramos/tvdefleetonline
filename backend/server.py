@@ -7034,58 +7034,7 @@ async def listar_csv_importados(
 
 # ==================== CONTRATOS ENDPOINTS ====================
 
-@api_router.post("/contratos/gerar")
-async def gerar_contrato(
-    parceiro_id: str = Form(...),
-    motorista_id: str = Form(...),
-    veiculo_id: str = Form(...),
-    current_user: Dict = Depends(get_current_user)
-):
-    """Generate contract PDF (Parceiro Executive feature)"""
-    # Check feature access
-    if not await check_feature_access(current_user, "contratos"):
-        raise HTTPException(
-            status_code=403,
-            detail="Upgrade para Parceiro Executive para emitir contratos"
-        )
-    
-    # Get data
-    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
-    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
-    veiculo = await db.vehicles.find_one({"id": veiculo_id}, {"_id": 0})
-    
-    if not parceiro or not motorista or not veiculo:
-        raise HTTPException(status_code=404, detail="Dados não encontrados")
-    
-    # Generate PDF
-    pdf_path = await generate_contrato_pdf(parceiro, motorista, veiculo)
-    
-    # Store contract record
-    contrato = {
-        "id": str(uuid.uuid4()),
-        "parceiro_id": parceiro_id,
-        "motorista_id": motorista_id,
-        "veiculo_id": veiculo_id,
-        "tipo_contrato": veiculo["tipo_contrato"]["tipo"],
-        "pdf_url": pdf_path,
-        "dados_contrato": {
-            "parceiro": parceiro.get("nome_empresa"),
-            "motorista": motorista.get("name"),
-            "veiculo": f"{veiculo.get('marca')} {veiculo.get('modelo')} - {veiculo.get('matricula')}"
-        },
-        "status": "gerado",
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "assinado_em": None
-    }
-    
-    await db.contratos.insert_one(contrato)
-    
-    return {
-        "success": True,
-        "contrato_id": contrato["id"],
-        "pdf_url": pdf_path,
-        "message": "Contrato gerado com sucesso"
-    }
+# REMOVIDO: Endpoint duplicado - usar o endpoint completo na linha 9149
 
 @api_router.get("/contratos")
 async def listar_contratos(
