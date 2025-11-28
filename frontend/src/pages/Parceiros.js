@@ -463,6 +463,53 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
     setShowContractDialog(true);
   };
 
+  const handleDuplicateTemplate = (template) => {
+    setEditingTemplate(null); // Não está editando, está criando novo
+    setContractForm({
+      tipo_contrato: template.tipo_contrato + '_copia',
+      texto_contrato: template.clausulas_texto || '',
+      caucao_texto: '',
+      caucao_total: template.valor_caucao || 300,
+      caucao_parcelas: template.numero_parcelas_caucao || 4,
+      data_inicio_epoca_alta: '',
+      data_fim_epoca_alta: '',
+      valor_epoca_alta: template.valor_epoca_alta || 300,
+      texto_epoca_alta: '',
+      data_inicio_epoca_baixa: '',
+      data_fim_epoca_baixa: '',
+      valor_epoca_baixa: template.valor_epoca_baixa || 200,
+      texto_epoca_baixa: ''
+    });
+    setShowContractDialog(true);
+    toast.info('Template duplicado. Modifique o tipo e salve como novo.');
+  };
+
+  const handleDeleteTemplate = async () => {
+    if (!templateToDelete) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/templates-contrato/${templateToDelete.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Template deletado com sucesso!');
+      setShowDeleteDialog(false);
+      setTemplateToDelete(null);
+      
+      // Refresh templates
+      handleSelectParceiro(selectedParceiro);
+    } catch (error) {
+      console.error('Error deleting template:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao deletar template');
+    }
+  };
+
+  const handlePreviewTemplate = (template) => {
+    setPreviewTemplate(template);
+    setShowPreviewDialog(true);
+  };
+
   const handleAddHorario = () => {
     if (horarioTemp.inicio && horarioTemp.fim) {
       const horarioStr = `${horarioTemp.inicio}-${horarioTemp.fim}`;
