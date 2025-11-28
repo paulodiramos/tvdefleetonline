@@ -216,18 +216,24 @@ const CriarContrato = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       
+      // Find template_id from parceiroData
+      const tipoConfig = parceiroData?.contratos_tipos?.find(t => t.nome === tipoContratoSelecionado);
+      if (!tipoConfig || !tipoConfig.id) {
+        toast.error('Template de contrato não encontrado');
+        setLoading(false);
+        return;
+      }
+      
       const payload = {
-        parceiro_id: parceiroSelecionado,
+        template_id: tipoConfig.id,
         motorista_id: motoristaSelecionado,
-        vehicle_id: veiculoSelecionado || null,
-        tipo_contrato: tipoContrato,
-        data_inicio: formData.data_inicio,
-        valor_semanal: parseFloat(formData.valor_aplicado) || 0,
-        comissao_percentual: formData.percentagem_motorista_aplicado ? parseFloat(formData.percentagem_motorista_aplicado) : null,
-        caucao_total: formData.valor_caucao_aplicado ? parseFloat(formData.valor_caucao_aplicado) : 0,
-        tem_caucao: !!formData.valor_caucao_aplicado,
-        caucao_parcelada: !!formData.numero_parcelas_caucao_aplicado,
-        caucao_parcelas: formData.numero_parcelas_caucao_aplicado ? parseInt(formData.numero_parcelas_caucao_aplicado) : null
+        veiculo_id: veiculoSelecionado || null,
+        periodicidade: formData.periodicidade || 'semanal',
+        valor_aplicado: parseFloat(formData.valor_aplicado) || 0,
+        valor_caucao_aplicado: formData.valor_caucao_aplicado ? parseFloat(formData.valor_caucao_aplicado) : 0,
+        numero_parcelas_caucao_aplicado: formData.numero_parcelas_caucao_aplicado ? parseInt(formData.numero_parcelas_caucao_aplicado) : null,
+        percentagem_motorista_aplicado: formData.percentagem_motorista_aplicado ? parseFloat(formData.percentagem_motorista_aplicado) : null,
+        percentagem_parceiro_aplicado: formData.percentagem_parceiro_aplicado ? parseFloat(formData.percentagem_parceiro_aplicado) : null
       };
 
       const response = await axios.post(`${API}/contratos`, payload, {
