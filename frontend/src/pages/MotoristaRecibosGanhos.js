@@ -86,6 +86,8 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
     const statusConfig = {
       'pendente_recibo': { label: 'Pendente Recibo', class: 'bg-yellow-100 text-yellow-800' },
       'recibo_enviado': { label: 'Recibo Enviado', class: 'bg-blue-100 text-blue-800' },
+      'recibo_emitido': { label: 'Recibo Enviado', class: 'bg-blue-100 text-blue-800' },
+      'aprovado_pagamento': { label: 'Aprovado', class: 'bg-green-100 text-green-800' },
       'aprovado': { label: 'Aprovado', class: 'bg-green-100 text-green-800' },
       'pago': { label: 'Pago', class: 'bg-emerald-100 text-emerald-800' },
       'rejeitado': { label: 'Rejeitado', class: 'bg-red-100 text-red-800' }
