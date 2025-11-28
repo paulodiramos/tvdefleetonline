@@ -204,9 +204,9 @@ const Vehicles = ({ user, onLogout }) => {
 
   const handleClearFilters = () => {
     setFilters({
-      parceiro: '',
-      status: '',
-      combustivel: '',
+      parceiro: 'all',
+      status: 'all',
+      combustivel: 'all',
       search: ''
     });
   };
