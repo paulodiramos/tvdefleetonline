@@ -8308,8 +8308,8 @@ async def verificar_recibo(
     data: Dict[str, Any],
     current_user: Dict = Depends(get_current_user)
 ):
-    """Admin/Gestor/Operacional verifica recibo"""
-    if current_user["role"] not in [UserRole.ADMIN, "gestao", "operacional"]:
+    """Admin/Gestor/Operacional/Parceiro verifica recibo"""
+    if current_user["role"] not in [UserRole.ADMIN, "gestao", "operacional", UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Permission denied")
     
     status = data.get("status", "verificado")
