@@ -735,8 +735,9 @@ const Motoristas = ({ user, onLogout }) => {
                   )}
                 </CardContent>
               </Card>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
 
         {/* Detail Dialog */}
