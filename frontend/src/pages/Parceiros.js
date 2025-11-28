@@ -348,22 +348,17 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
   // Minutas removed - now using Contrato e Tipos in EditParceiro
 
 
-  const handleCreateContract = async (e) => {
+  const handleCreateContractTemplate = async (e) => {
     e.preventDefault();
     
     // Validações
-    if (!contractForm.motorista_id) {
-      toast.error('Selecione um motorista');
-      return;
-    }
-    
-    if (!contractForm.vehicle_id && contractForm.tipo_contrato !== 'carro_proprio') {
-      toast.error('Selecione um veículo');
-      return;
-    }
-    
     if (!contractForm.texto_contrato) {
-      toast.error('Insira o texto do contrato');
+      toast.error('Insira o texto do template de contrato');
+      return;
+    }
+    
+    if (!contractForm.tipo_contrato) {
+      toast.error('Selecione o tipo de contrato');
       return;
     }
     
@@ -372,45 +367,33 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
       
       const payload = {
         parceiro_id: selectedParceiro.id,
-        motorista_id: contractForm.motorista_id,
-        vehicle_id: contractForm.tipo_contrato === 'carro_proprio' ? null : contractForm.vehicle_id,
-        data_inicio: new Date().toISOString().split('T')[0], // Data atual no formato YYYY-MM-DD
+        nome: contractForm.tipo_contrato,
         tipo_contrato: contractForm.tipo_contrato,
-        valor_semanal: contractForm.valor_semanal ? parseFloat(contractForm.valor_semanal) : 230.0,
-        comissao_percentual: contractForm.percentagem_comissao ? parseFloat(contractForm.percentagem_comissao) : null,
-        caucao_total: contractForm.caucao_total ? parseFloat(contractForm.caucao_total) : 300.0,
-        caucao_lavagem: 90.0,
-        tem_caucao: !!contractForm.caucao_total,
-        caucao_parcelada: !!contractForm.caucao_parcelas,
-        caucao_parcelas: contractForm.caucao_parcelas ? parseInt(contractForm.caucao_parcelas) : null,
-        caucao_texto: contractForm.caucao_texto || null,
-        tem_epoca: !!(contractForm.data_inicio_epoca_alta || contractForm.data_inicio_epoca_baixa),
-        data_inicio_epoca_alta: contractForm.data_inicio_epoca_alta || null,
-        data_fim_epoca_alta: contractForm.data_fim_epoca_alta || null,
-        valor_epoca_alta: contractForm.valor_epoca_alta ? parseFloat(contractForm.valor_epoca_alta) : null,
-        texto_epoca_alta: contractForm.texto_epoca_alta || null,
-        data_inicio_epoca_baixa: contractForm.data_inicio_epoca_baixa || null,
-        data_fim_epoca_baixa: contractForm.data_fim_epoca_baixa || null,
-        valor_epoca_baixa: contractForm.valor_epoca_baixa ? parseFloat(contractForm.valor_epoca_baixa) : null,
-        texto_epoca_baixa: contractForm.texto_epoca_baixa || null,
         template_texto: contractForm.texto_contrato,
-        condicoes_veiculo: null
+        valores: {
+          caucao_total: contractForm.caucao_total ? parseFloat(contractForm.caucao_total) : 300.0,
+          caucao_parcelas: contractForm.caucao_parcelas ? parseInt(contractForm.caucao_parcelas) : null,
+          caucao_texto: contractForm.caucao_texto || null,
+          data_inicio_epoca_alta: contractForm.data_inicio_epoca_alta || null,
+          data_fim_epoca_alta: contractForm.data_fim_epoca_alta || null,
+          valor_epoca_alta: contractForm.valor_epoca_alta ? parseFloat(contractForm.valor_epoca_alta) : null,
+          texto_epoca_alta: contractForm.texto_epoca_alta || null,
+          data_inicio_epoca_baixa: contractForm.data_inicio_epoca_baixa || null,
+          data_fim_epoca_baixa: contractForm.data_fim_epoca_baixa || null,
+          valor_epoca_baixa: contractForm.valor_epoca_baixa ? parseFloat(contractForm.valor_epoca_baixa) : null,
+          texto_epoca_baixa: contractForm.texto_epoca_baixa || null
+        },
+        ativo: true
       };
       
-      await axios.post(`${API}/contratos/gerar`, payload, {
+      await axios.post(`${API}/templates-contrato`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast.success('Contrato gerado com sucesso!');
+      toast.success('Template de contrato criado com sucesso!');
       setShowContractDialog(false);
       setContractForm({ 
-        motorista_id: '', 
-        vehicle_id: '', 
-        tipo_contrato: 'aluguer',
-        valor_semanal: '',
-        valor_slot: '',
-        percentagem_comissao: '',
-        horarios: [],
+        tipo_contrato: 'aluguer_sem_caucao',
         texto_contrato: '',
         caucao_texto: '',
         caucao_total: 300,
@@ -425,11 +408,11 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
         texto_epoca_baixa: ''
       });
       
-      // Refresh contratos
+      // Refresh templates/contratos
       handleSelectParceiro(selectedParceiro);
     } catch (error) {
-      console.error('Error creating contract:', error);
-      toast.error('Erro ao gerar contrato');
+      console.error('Error creating contract template:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao criar template de contrato');
     }
   };
 
