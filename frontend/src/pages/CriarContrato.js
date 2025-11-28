@@ -234,16 +234,15 @@ const CriarContrato = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       
-      // Find template_id from parceiroData
-      const tipoConfig = parceiroData?.contratos_tipos?.find(t => t.nome === tipoContratoSelecionado);
-      if (!tipoConfig || !tipoConfig.id) {
-        toast.error('Template de contrato não encontrado');
+      // O tipoContratoSelecionado já é o template_id
+      if (!tipoContratoSelecionado) {
+        toast.error('Selecione um template de contrato');
         setLoading(false);
         return;
       }
       
       const payload = {
-        template_id: tipoConfig.id,
+        template_id: tipoContratoSelecionado,
         motorista_id: motoristaSelecionado,
         veiculo_id: veiculoSelecionado || null,
         periodicidade: formData.periodicidade || 'semanal',
