@@ -25,7 +25,7 @@ const Layout = ({ user, onLogout, children }) => {
         { path: '/motorista/recibos', icon: Receipt, label: 'Recibos e Ganhos' },
         { path: '/motorista/perfil', icon: UserCircle, label: 'Perfil' },
         { path: '/motorista/envio-recibo', icon: Upload, label: 'Envio Recibo' },
-        { path: '/motorista/planos', icon: Package, label: 'Planos' },
+        { path: '/motorista/planos', icon: Package, label: 'Módulos' },
         { path: '/motorista/oportunidades', icon: Car, label: 'Oportunidades' },
         { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' },
         { path: '/motorista/tickets', icon: Settings, label: 'Tickets' }
