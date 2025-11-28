@@ -19,6 +19,11 @@ const Pagamentos = ({ user, onLogout }) => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [filters, setFilters] = useState({
+    motorista: 'all',
+    status: 'all',
+    search: ''
+  });
   const [newPagamento, setNewPagamento] = useState({
     motorista_id: '',
     valor: 0,
