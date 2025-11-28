@@ -50,7 +50,10 @@ const Profile = ({ user, onLogout }) => {
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`${API}/profile/update`, profileData);
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/profile/update`, profileData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       toast.success('Perfil atualizado com sucesso!');
       setEditMode(false);
       window.location.reload(); // Reload to update user data
