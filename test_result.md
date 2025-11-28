@@ -1002,6 +1002,54 @@ test_plan:
   new_document_validation_fields_testing: true
 
 backend:
+  - task: "User Management API - GET /api/users/all"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: GET /api/users/all funcionando perfeitamente para admin. Retorna estrutura com pending_users e registered_users. Dados completos para layout de cards: id, name, email, role, created_at. Testado com credenciais admin@tvdefleet.com/o72ocUHy. Endpoint acessível apenas para admin (conforme esperado)."
+
+  - task: "Partner Dashboard API - GET /api/parceiros/{parceiro_id}/alertas"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: GET /api/parceiros/{parceiro_id}/alertas funcionando perfeitamente para parceiro. Retorna estrutura completa: parceiro_id, configuracao, alertas (seguros, inspecoes, extintores, manutencoes), totais. Testado com credenciais parceiro@tvdefleet.com/UQ1B6DXU. Dados adequados para dashboard de alertas de manutenção."
+
+  - task: "Partner Dashboard API - GET /api/reports/dashboard"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: GET /api/reports/dashboard funcionando perfeitamente para parceiro. Retorna estatísticas completas: total_vehicles, available_vehicles, total_motoristas, pending_motoristas, total_receitas, total_despesas, roi. Dados adequados para cards de estatísticas no dashboard do parceiro."
+
+  - task: "User Management Actions - Role Change & User Operations"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Operações de gestão de utilizadores funcionando perfeitamente. PUT /api/users/{id}/approve (aprovação), PUT /api/users/{id}/set-role (alteração de role), DELETE /api/users/{id} (eliminação com proteção de auto-eliminação). Todas as ações necessárias para dialog 'Ver Detalhes' implementadas e funcionais."
+
   - task: "Sistema de Extintor - Campos expandidos"
     implemented: true
     working: true
