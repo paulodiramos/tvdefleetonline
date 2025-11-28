@@ -22,7 +22,7 @@ const FilterBar = ({ filters, onFilterChange, onClear, options = {} }) => {
                 <SelectValue placeholder={placeholder || `Selecionar ${label}`} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 {items && items.map((item) => (
                   <SelectItem key={item.value} value={item.value}>
                     {item.label}
