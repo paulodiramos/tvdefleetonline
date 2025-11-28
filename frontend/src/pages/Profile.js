@@ -34,9 +34,13 @@ const Profile = ({ user, onLogout }) => {
 
   const fetchPermissions = async () => {
     try {
-      const response = await axios.get(`${API}/profile/permissions`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/profile/permissions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setPermissions(response.data);
     } catch (error) {
+      console.error('Error fetching permissions:', error);
       toast.error('Erro ao carregar permissões');
     } finally {
       setLoading(false);
