@@ -272,7 +272,26 @@ const CriarContrato = ({ user, onLogout }) => {
       
     } catch (error) {
       console.error('Error creating contract:', error);
-      toast.error(error.response?.data?.detail || 'Erro ao criar contrato');
+      
+      // Handle validation errors (422 status)
+      let errorMessage = 'Erro ao criar contrato';
+      if (error.response?.data?.detail) {
+        const detail = error.response.data.detail;
+        
+        // If detail is an array of validation errors
+        if (Array.isArray(detail)) {
+          errorMessage = detail.map(err => {
+            const field = err.loc ? err.loc.join('.') : 'campo';
+            return `${field}: ${err.msg}`;
+          }).join(', ');
+        } else if (typeof detail === 'string') {
+          errorMessage = detail;
+        } else {
+          errorMessage = JSON.stringify(detail);
+        }
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
