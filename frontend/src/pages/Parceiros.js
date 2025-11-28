@@ -386,7 +386,7 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
         ativo: true
       };
       
-      await axios.post(`${API}/templates-contrato`, payload, {
+      await axios.post(`${API}/parceiros/${selectedParceiro.id}/templates-contrato`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
