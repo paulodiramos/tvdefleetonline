@@ -4748,7 +4748,7 @@ async def get_dashboard_stats(current_user: Dict = Depends(get_current_user)):
 
 @api_router.get("/reports/parceiro/semanal")
 async def get_parceiro_weekly_report(current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] != UserRole.PARCEIRO:
+    if current_user["role"] not in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Get vehicles do parceiro
