@@ -71,7 +71,7 @@ const VehicleVistorias = () => {
     { key: 'eletronicos', label: 'Eletrônicos' }
   ];
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       
@@ -92,11 +92,11 @@ const VehicleVistorias = () => {
       console.error('Error loading data:', error);
       setLoading(false);
     }
-  };
+  }, [vehicleId]);
 
   useEffect(() => {
     loadData();
-  }, [vehicleId]);
+  }, [loadData]);
 
   const handleCreateVistoria = async () => {
     try {
