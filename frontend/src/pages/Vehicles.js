@@ -183,6 +183,71 @@ const Vehicles = ({ user, onLogout }) => {
     return labels[tipo] || tipo;
   };
 
+  // Filter vehicles
+  const filteredVehicles = useMemo(() => {
+    return vehicles.filter(vehicle => {
+      if (filters.parceiro && vehicle.parceiro_id !== filters.parceiro) return false;
+      if (filters.status && vehicle.status !== filters.status) return false;
+      if (filters.combustivel && vehicle.combustivel !== filters.combustivel) return false;
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase();
+        const searchableText = `${vehicle.marca} ${vehicle.modelo} ${vehicle.matricula}`.toLowerCase();
+        if (!searchableText.includes(searchLower)) return false;
+      }
+      return true;
+    });
+  }, [vehicles, filters]);
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      parceiro: '',
+      status: '',
+      combustivel: '',
+      search: ''
+    });
+  };
+
+  const filterOptions = {
+    search: {
+      type: 'text',
+      label: 'Pesquisar',
+      placeholder: 'Marca, modelo ou matrícula...'
+    },
+    parceiro: {
+      type: 'select',
+      label: 'Parceiro/Frota',
+      placeholder: 'Todos os parceiros',
+      items: parceiros.map(p => ({ value: p.id, label: p.nome }))
+    },
+    status: {
+      type: 'select',
+      label: 'Status',
+      placeholder: 'Todos os status',
+      items: [
+        { value: 'disponivel', label: 'Disponível' },
+        { value: 'atribuido', label: 'Atribuído' },
+        { value: 'manutencao', label: 'Manutenção' },
+        { value: 'inativo', label: 'Inativo' }
+      ]
+    },
+    combustivel: {
+      type: 'select',
+      label: 'Combustível',
+      placeholder: 'Todos',
+      items: [
+        { value: 'gasolina', label: 'Gasolina' },
+        { value: 'diesel', label: 'Diesel' },
+        { value: 'eletrico', label: 'Elétrico' },
+        { value: 'hibrido', label: 'Híbrido' },
+        { value: 'gas', label: 'GPL/GNV' }
+      ]
+    }
+  };
+
   if (loading) {
     return (
       <Layout user={user} onLogout={onLogout}>
