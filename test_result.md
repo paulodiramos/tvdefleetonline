@@ -5535,3 +5535,70 @@ frontend:
 - Testar bugs reportados mas não reproduzidos
 - Verificar fluxos de notificações
 
+agent_communication:
+    - agent: "testing"
+      message: |
+        🎉 TESTE COMPLETO DOS BUGS P0 - TODOS OS 4 BUGS CRÍTICOS CORRIGIDOS!
+        
+        CONTEXTO DO TESTE:
+        Teste completo dos 4 bugs críticos relacionados com permissões de acesso (403/500 errors) conforme review request em português.
+        
+        URL TESTADA: https://fleet-bugs.preview.emergentagent.com ✅
+        
+        CREDENCIAIS TESTADAS:
+        - Gestor: gestor@tvdefleet.com / OrR44xJ1 ✅
+        - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
+        - Operacional: operacional@tvdefleet.com / rn8rYw7E ✅
+        - Motorista: motorista@tvdefleet.com / 2rEFuwQO ✅
+        
+        ✅ BUG P0 #1: GESTOR → FINANCEIRO → PAGAMENTOS - 100% CORRIGIDO
+        - Endpoint: POST /api/auth/login + GET /api/pagamentos/semana-atual
+        - Status: ✅ Retorna 200 OK (não 403 Forbidden)
+        - Estrutura: ✅ Inclui {pagamentos, total_pagar, total_pago, periodo}
+        - Validação: ✅ Dados filtrados corretamente
+        
+        ✅ BUG P0 #2: PARCEIRO → FINANCEIRO → PAGAMENTOS - 100% CORRIGIDO
+        - Endpoint: GET /api/relatorios-ganhos
+        - Status: ✅ Retorna 200 OK (não 403/500)
+        - Dados: ✅ Array de 6 relatórios filtrados pelo parceiro
+        - Validação: ✅ Query correta implementada
+        
+        ✅ BUG P0 #3: PARCEIRO → FINANCEIRO → VERIFICAR RECIBOS - 100% CORRIGIDO
+        - Endpoint: GET /api/recibos
+        - Status: ✅ Retorna 200 OK (não 500 Internal Error)
+        - Dados: ✅ Array de recibos funcionando
+        - Correção: ✅ Query não usa mais associated_partner_id incorreto
+        
+        ✅ BUG P0 #4: OPERACIONAL → RELATÓRIOS - 100% CORRIGIDO
+        - Endpoints: GET /api/reports/parceiro/semanal, por-veiculo, por-motorista, proximas-despesas
+        - Status: ✅ TODOS os 4 endpoints retornam 200 OK (não 403 Forbidden)
+        - Dados: ✅ Filtrados corretamente para o operacional
+        - Permissões: ✅ Operacional tem acesso completo aos relatórios
+        
+        ✅ VALIDAÇÕES ADICIONAIS - 100% FUNCIONANDO
+        - Motorista: ✅ Corretamente bloqueado de endpoints de gestão (403)
+        - Admin/Gestor: ✅ Acesso completo a todos os endpoints
+        - Planos: ✅ POST /api/subscriptions/solicitar acessível (422 = validação, não permissão)
+        
+        📊 RESULTADO FINAL: 20/20 TESTES PASSARAM (100% SUCESSO)
+        
+        🎯 TODOS OS 4 BUGS P0 CRÍTICOS FORAM CORRIGIDOS COM SUCESSO!
+        
+        **FUNCIONALIDADES CONFIRMADAS:**
+        ✅ Gestor acessa pagamentos semanais sem erro 403
+        ✅ Parceiro acessa relatórios de ganhos sem erro 403/500
+        ✅ Parceiro verifica recibos sem erro 500 Internal
+        ✅ Operacional acessa todos os relatórios sem erro 403
+        ✅ Sistema de permissões funcionando corretamente por role
+        ✅ Filtros de dados implementados adequadamente
+        ✅ Endpoints de subscrições acessíveis
+        
+        **OBSERVAÇÕES TÉCNICAS:**
+        - Todas as credenciais do review request funcionando
+        - Estruturas de resposta conforme especificação
+        - Permissões implementadas corretamente por role
+        - Queries corrigidas para evitar erros 500
+        - Sistema de autenticação JWT operacional
+        
+        Sistema de gestão de frotas está 100% operacional para todos os fluxos P0!
+
