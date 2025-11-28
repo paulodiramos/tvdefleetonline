@@ -120,18 +120,27 @@ const Usuarios = ({ user, onLogout }) => {
       return;
     }
 
-    // Verificar se o utilizador é motorista
-    if (selectedUser?.role !== 'motorista') {
-      toast.error('Apenas motoristas podem ter planos de motorista atribuídos');
+    // Verificar roles permitidos
+    const allowedRoles = ['motorista', 'parceiro', 'operacional', 'gestao'];
+    if (!allowedRoles.includes(selectedUser?.role)) {
+      toast.error('Este utilizador não pode ter planos atribuídos');
       return;
     }
 
     try {
       const token = localStorage.getItem('token');
       
-      // Usar endpoint específico para motoristas
+      // Usar endpoint apropriado conforme o role
+      let endpoint = '';
+      if (selectedUser.role === 'motorista') {
+        endpoint = `${API}/motoristas/${selectedUser.id}/atribuir-plano`;
+      } else {
+        // Para parceiro, operacional e gestor - usar endpoint genérico
+        endpoint = `${API}/users/${selectedUser.id}/atribuir-plano`;
+      }
+      
       await axios.post(
-        `${API}/motoristas/${selectedUser.id}/atribuir-plano`,
+        endpoint,
         { 
           plano_id: selectedPlanoId, 
           periodicidade: selectedPeriodicidade || 'mensal',
