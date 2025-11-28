@@ -404,28 +404,32 @@ const CriarContrato = ({ user, onLogout }) => {
                     </Select>
                   </div>
 
-                  {/* Tipo de Contrato */}
+                  {/* Template de Contrato */}
                   <div>
-                    <Label htmlFor="tipo-contrato">Tipo de Contrato *</Label>
+                    <Label htmlFor="template-contrato">Template de Contrato *</Label>
                     <Select 
                       value={tipoContratoSelecionado} 
                       onValueChange={setTipoContratoSelecionado}
-                      disabled={!parceiroSelecionado || !parceiroData?.contratos_tipos?.length}
+                      disabled={!parceiroSelecionado || templates.length === 0}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo de contrato" />
+                        <SelectValue placeholder="Selecione o template de contrato" />
                       </SelectTrigger>
                       <SelectContent>
-                        {parceiroData?.contratos_tipos?.map((tipo, idx) => (
-                          <SelectItem key={idx} value={tipo.nome}>
-                            {tipo.nome}
+                        {templates.map((template) => (
+                          <SelectItem key={template.id} value={template.id}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{template.nome_template}</span>
+                              <span className="text-xs text-slate-500">{template.tipo_contrato}</span>
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    {parceiroSelecionado && (!parceiroData?.contratos_tipos || parceiroData.contratos_tipos.length === 0) && (
-                      <p className="text-xs text-amber-600 mt-1">
-                        Este parceiro não tem tipos de contrato configurados. Configure em "Parceiros" → "Contrato e Tipos"
+                    {parceiroSelecionado && templates.length === 0 && (
+                      <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        Este parceiro não tem templates de contrato. Crie templates em "Parceiros" → Selecionar Parceiro → "Criar Template de Contrato"
                       </p>
                     )}
                   </div>
