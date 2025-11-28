@@ -39,6 +39,7 @@ const Layout = ({ user, onLogout, children }) => {
         { path: '/vehicles', icon: Car, label: 'Veículos' },
         { path: '/motoristas', icon: Users, label: 'Motoristas' },
         { path: '/pagamentos-parceiro', icon: CreditCard, label: 'Pagamentos' },
+        { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' },
         { path: '/criar-relatorio-semanal', icon: TrendingUp, label: 'Criar Relatório' }
       ];
     }
