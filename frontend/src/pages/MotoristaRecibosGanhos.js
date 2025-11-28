@@ -6,11 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { DollarSign, FileText, Download, Calendar, TrendingUp } from 'lucide-react';
+import { DollarSign, FileText, Download, Calendar, TrendingUp, Upload, Eye } from 'lucide-react';
 
 const MotoristaRecibosGanhos = ({ user, onLogout }) => {
   const [relatorios, setRelatorios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [uploadingId, setUploadingId] = useState(null);
   const [stats, setStats] = useState({
     totalGanhos: 0,
     totalRecibos: 0,
@@ -52,11 +53,40 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
     }
   };
 
+  const handleUploadRecibo = async (relatorioId, file) => {
+    if (!file) return;
+    
+    setUploadingId(relatorioId);
+    const formData = new FormData();
+    formData.append('recibo', file);
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/relatorios-ganhos/${relatorioId}/upload-recibo`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            Authorization: `Bearer ${token}`
+          }
+        }
+      );
+      toast.success('Recibo enviado com sucesso!');
+      fetchRelatorios();
+    } catch (error) {
+      console.error('Error uploading recibo:', error);
+      toast.error('Erro ao enviar recibo');
+    } finally {
+      setUploadingId(null);
+    }
+  };
+
   const getStatusBadge = (status) => {
     const statusConfig = {
-      'pendente': { label: 'Pendente', class: 'bg-yellow-100 text-yellow-800' },
-      'enviado': { label: 'Enviado', class: 'bg-blue-100 text-blue-800' },
-      'verificado': { label: 'Verificado', class: 'bg-green-100 text-green-800' },
+      'pendente_recibo': { label: 'Pendente Recibo', class: 'bg-yellow-100 text-yellow-800' },
+      'recibo_enviado': { label: 'Recibo Enviado', class: 'bg-blue-100 text-blue-800' },
+      'aprovado': { label: 'Aprovado', class: 'bg-green-100 text-green-800' },
       'pago': { label: 'Pago', class: 'bg-emerald-100 text-emerald-800' },
       'rejeitado': { label: 'Rejeitado', class: 'bg-red-100 text-red-800' }
     };
@@ -65,12 +95,32 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
     return <Badge className={config.class}>{config.label}</Badge>;
   };
 
-  const handleDownload = (relatorioUrl) => {
+  const handleDownload = async (relatorioUrl) => {
     if (!relatorioUrl) {
       toast.error('Recibo não disponível');
       return;
     }
-    window.open(`${API.replace('/api', '')}/${relatorioUrl}`, '_blank');
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(relatorioUrl, {
+        baseURL: process.env.REACT_APP_BACKEND_URL,
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `recibo_${Date.now()}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Download iniciado!');
+    } catch (error) {
+      console.error('Error downloading:', error);
+      toast.error('Erro ao fazer download');
+    }
   };
 
   if (loading) {
@@ -149,29 +199,56 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
                           <h3 className="font-semibold text-slate-800">
-                            {relatorio.tipo || 'Recibo'}
+                            Período: {relatorio.periodo_inicio} - {relatorio.periodo_fim}
                           </h3>
                           {getStatusBadge(relatorio.status)}
                         </div>
-                        <div className="grid md:grid-cols-3 gap-4 text-sm">
+                        <div className="grid md:grid-cols-4 gap-4 text-sm">
                           <div>
-                            <p className="text-slate-600">Valor</p>
+                            <p className="text-slate-600">Valor Total</p>
                             <p className="font-semibold text-green-600">€{(relatorio.valor_total || 0).toFixed(2)}</p>
                           </div>
                           <div>
-                            <p className="text-slate-600">Data</p>
-                            <p className="font-semibold">
-                              {new Date(relatorio.data_relatorio || relatorio.created_at).toLocaleDateString('pt-PT')}
-                            </p>
+                            <p className="text-slate-600">Valor Líquido</p>
+                            <p className="font-semibold text-blue-600">€{(relatorio.valor_liquido || 0).toFixed(2)}</p>
                           </div>
                           <div>
-                            <p className="text-slate-600">Mês Referência</p>
-                            <p className="font-semibold">{relatorio.mes || '-'}</p>
+                            <p className="text-slate-600">Uber</p>
+                            <p className="font-semibold">€{(relatorio.detalhes?.uber || 0).toFixed(2)}</p>
+                          </div>
+                          <div>
+                            <p className="text-slate-600">Bolt</p>
+                            <p className="font-semibold">€{(relatorio.detalhes?.bolt || 0).toFixed(2)}</p>
                           </div>
                         </div>
+                        {relatorio.notas && (
+                          <div className="mt-2">
+                            <p className="text-xs text-slate-500">Notas: {relatorio.notas}</p>
+                          </div>
+                        )}
                       </div>
-                      <div className="ml-4">
-                        {relatorio.recibo_url ? (
+                      <div className="ml-4 flex flex-col space-y-2">
+                        {relatorio.status === 'pendente_recibo' ? (
+                          <label className="cursor-pointer">
+                            <input
+                              type="file"
+                              className="hidden"
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={(e) => handleUploadRecibo(relatorio.id, e.target.files[0])}
+                              disabled={uploadingId === relatorio.id}
+                            />
+                            <Button
+                              size="sm"
+                              disabled={uploadingId === relatorio.id}
+                              asChild
+                            >
+                              <span>
+                                <Upload className="w-4 h-4 mr-2" />
+                                {uploadingId === relatorio.id ? 'Enviando...' : 'Enviar Recibo'}
+                              </span>
+                            </Button>
+                          </label>
+                        ) : relatorio.recibo_url ? (
                           <Button
                             size="sm"
                             variant="outline"
