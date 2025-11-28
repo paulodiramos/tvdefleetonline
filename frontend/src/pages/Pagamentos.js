@@ -34,7 +34,10 @@ const Pagamentos = ({ user, onLogout }) => {
 
   const fetchPagamentos = async () => {
     try {
-      const response = await axios.get(`${API}/pagamentos/semana-atual`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/pagamentos/semana-atual`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setPagamentos(response.data.pagamentos);
       setSummary({
         total_pagar: response.data.total_pagar,
@@ -42,6 +45,7 @@ const Pagamentos = ({ user, onLogout }) => {
         periodo: response.data.periodo
       });
     } catch (error) {
+      console.error('Error fetching pagamentos:', error);
       toast.error('Erro ao carregar pagamentos');
     } finally {
       setLoading(false);
