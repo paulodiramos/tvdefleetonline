@@ -5632,8 +5632,8 @@ async def get_proximas_datas_dashboard(current_user: Dict = Depends(get_current_
         }
         
         # Próxima inspeção
-        inspection = vehicle.get("inspection", {})
-        if inspection.get("proxima_inspecao"):
+        inspection = vehicle.get("inspection", {}) or {}
+        if inspection and inspection.get("proxima_inspecao"):
             data_inspecao = datetime.fromisoformat(inspection.get("proxima_inspecao")).date()
             dias_restantes = (data_inspecao - today).days
             proximas_datas["datas"].append({
