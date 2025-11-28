@@ -1135,7 +1135,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "User Management & Partner Dashboard Testing - COMPLETED"
+    - "P0 Bug Fixes Testing - COMPLETED"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -1152,6 +1152,8 @@ test_plan:
   fase_b_all_scenarios_working: true
   new_document_validation_fields_testing: true
   user_management_dashboard_testing_completed: true
+  p0_bug_fixes_testing_completed: true
+  p0_permission_bugs_all_fixed: true
 
 backend:
   - task: "P0 Bug Fix - Gestor Pagamentos Semana Atual"
