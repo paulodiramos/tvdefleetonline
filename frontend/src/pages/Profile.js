@@ -348,16 +348,15 @@ const Profile = ({ user, onLogout }) => {
                       <div className="p-4 bg-slate-50 rounded-lg">
                         <div className="flex items-center space-x-2 mb-2">
                           <Shield className="w-5 h-5 text-emerald-600" />
-                          <span className="font-semibold">Perfil: {getRoleLabel(permissions.role)}</span>
+                          <span className="font-semibold">Perfil: {getRoleLabel(user.role)}</span>
                         </div>
-                        <p className="text-sm text-slate-600">{permissions.permissions.description}</p>
                       </div>
                       
                       <div className="space-y-2">
                         <Label className="text-slate-700 font-semibold">Capacidades:</Label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                          {Object.entries(permissions.permissions).map(([key, value]) => {
-                            if (key === 'description') return null;
+                          {Object.entries(permissions).map(([key, value]) => {
+                            if (key === 'description' || key === 'por_tipo') return null;
                             const label = key.replace('can_', '').replace(/_/g, ' ');
                             return (
                               <div key={key} className="flex items-center space-x-2 p-2 bg-white rounded border">
