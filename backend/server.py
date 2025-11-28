@@ -9501,11 +9501,12 @@ async def list_relatorios_ganhos(current_user: Dict = Depends(get_current_user))
         # Filter based on role
         if current_user["role"] == UserRole.MOTORISTA:
             query["motorista_id"] = current_user["id"]
-        elif current_user["role"] == UserRole.PARCEIRO:
-            # Get motoristas do parceiro
+        elif current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+            # Get motoristas do parceiro/operacional
             motoristas = await db.motoristas.find({"parceiro_atribuido": current_user["id"]}, {"_id": 0, "id": 1}).to_list(100)
             motorista_ids = [m["id"] for m in motoristas]
             query["motorista_id"] = {"$in": motorista_ids}
+        # Admin and Gestao can see all reports
         
         relatorios = await db.relatorios_ganhos.find(query, {"_id": 0}).sort("created_at", -1).to_list(200)
         return relatorios
