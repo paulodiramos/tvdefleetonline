@@ -10010,6 +10010,44 @@ async def upload_comprovativo_pagamento(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@api_router.get("/relatorios-ganhos/{relatorio_id}/comprovativo/download")
+async def download_comprovativo_pagamento(
+    relatorio_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Download payment proof"""
+    relatorio = await db.relatorios_ganhos.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Report not found")
+    
+    # Check authorization
+    is_authorized = current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL, UserRole.PARCEIRO]
+    
+    if current_user["role"] == UserRole.PARCEIRO:
+        motorista = await db.motoristas.find_one({"id": relatorio["motorista_id"]}, {"_id": 0})
+        is_authorized = motorista and motorista.get("parceiro_atribuido") == current_user["id"]
+    
+    if not is_authorized:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    comprovativo_url = relatorio.get("comprovativo_pagamento_url")
+    if not comprovativo_url:
+        raise HTTPException(status_code=404, detail="Payment proof not found")
+    
+    # Construct file path
+    file_path = UPLOAD_DIR / comprovativo_url.replace("/uploads/", "")
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Payment proof file not found")
+    
+    return FileResponse(
+        path=file_path,
+        media_type="application/pdf",
+        filename=file_path.name
+    )
+
+
+
 # ==================== CSV TEMPLATE DOWNLOADS ====================
 
 @api_router.get("/templates/csv/{template_name}")
