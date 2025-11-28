@@ -82,28 +82,29 @@ const CriarContrato = ({ user, onLogout }) => {
   }, [parceiroSelecionado]);
 
   useEffect(() => {
-    if (tipoContratoSelecionado && parceiroData) {
-      const tipoConfig = parceiroData.contratos_tipos?.find(t => t.nome === tipoContratoSelecionado);
-      if (tipoConfig) {
+    if (tipoContratoSelecionado && templates.length > 0) {
+      const template = templates.find(t => t.id === tipoContratoSelecionado);
+      if (template) {
         // Set template selecionado
-        setTemplateSelecionado(tipoContratoSelecionado);
+        setTemplateSelecionado(template.id);
         
-        // Pre-fill com valores do tipo de contrato
+        // Pre-fill com valores do template
         setFormData(prev => ({
           ...prev,
-          periodicidade: tipoConfig.valores.periodicidade || 'semanal',
-          valor_aplicado: tipoConfig.valores.valor_aluguer || '',
-          valor_caucao_aplicado: tipoConfig.valores.valor_caucao || '',
-          percentagem_motorista_aplicado: tipoConfig.valores.comissao_motorista || '',
-          percentagem_parceiro_aplicado: tipoConfig.valores.comissao_parceiro || ''
+          periodicidade: template.periodicidade_padrao || 'semanal',
+          valor_aplicado: template.valor_base || '',
+          valor_caucao_aplicado: template.valor_caucao || '',
+          numero_parcelas_caucao_aplicado: template.numero_parcelas_caucao || '',
+          percentagem_motorista_aplicado: template.percentagem_motorista || '',
+          percentagem_parceiro_aplicado: template.percentagem_parceiro || ''
         }));
         
-        setTipoContrato(tipoConfig.tipo);
+        setTipoContrato(template.tipo_contrato);
       }
     } else {
       setTemplateSelecionado('');
     }
-  }, [tipoContratoSelecionado, parceiroData]);
+  }, [tipoContratoSelecionado, templates]);
 
   useEffect(() => {
     if (veiculoSelecionado && veiculoSelecionado !== null) {
