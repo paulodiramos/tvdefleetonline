@@ -93,7 +93,7 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${API}/relatorios-ganhos/${relatorioId}/upload-comprovativo`,
+        `${API}/relatorios-ganhos/${relatorioId}/comprovativo`,
         formData,
         {
           headers: {
