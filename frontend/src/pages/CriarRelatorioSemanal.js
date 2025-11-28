@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Plus, Trash2, FileText, DollarSign, TrendingUp, TrendingDown, Save, Send } from 'lucide-react';
+import { Plus, Trash2, FileText, DollarSign, TrendingUp, TrendingDown, Save, Send, AlertCircle } from 'lucide-react';
 
 const CriarRelatorioSemanal = ({ user, onLogout }) => {
   const [motoristas, setMotoristas] = useState([]);
