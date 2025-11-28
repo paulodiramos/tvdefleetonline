@@ -366,24 +366,24 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
       const token = localStorage.getItem('token');
       
       const payload = {
-        parceiro_id: selectedParceiro.id,
-        nome: contractForm.tipo_contrato,
+        nome_template: contractForm.tipo_contrato,
         tipo_contrato: contractForm.tipo_contrato,
-        template_texto: contractForm.texto_contrato,
-        valores: {
-          caucao_total: contractForm.caucao_total ? parseFloat(contractForm.caucao_total) : 300.0,
-          caucao_parcelas: contractForm.caucao_parcelas ? parseInt(contractForm.caucao_parcelas) : null,
-          caucao_texto: contractForm.caucao_texto || null,
-          data_inicio_epoca_alta: contractForm.data_inicio_epoca_alta || null,
-          data_fim_epoca_alta: contractForm.data_fim_epoca_alta || null,
-          valor_epoca_alta: contractForm.valor_epoca_alta ? parseFloat(contractForm.valor_epoca_alta) : null,
-          texto_epoca_alta: contractForm.texto_epoca_alta || null,
-          data_inicio_epoca_baixa: contractForm.data_inicio_epoca_baixa || null,
-          data_fim_epoca_baixa: contractForm.data_fim_epoca_baixa || null,
-          valor_epoca_baixa: contractForm.valor_epoca_baixa ? parseFloat(contractForm.valor_epoca_baixa) : null,
-          texto_epoca_baixa: contractForm.texto_epoca_baixa || null
-        },
-        ativo: true
+        periodicidade_padrao: "semanal",
+        valor_base: null,
+        valor_caucao: contractForm.caucao_total ? parseFloat(contractForm.caucao_total) : null,
+        numero_parcelas_caucao: contractForm.caucao_parcelas ? parseInt(contractForm.caucao_parcelas) : null,
+        valor_epoca_alta: contractForm.valor_epoca_alta ? parseFloat(contractForm.valor_epoca_alta) : null,
+        valor_epoca_baixa: contractForm.valor_epoca_baixa ? parseFloat(contractForm.valor_epoca_baixa) : null,
+        percentagem_motorista: null,
+        percentagem_parceiro: null,
+        combustivel_incluido: false,
+        regime_trabalho: null,
+        valor_compra_veiculo: null,
+        numero_semanas_compra: null,
+        com_slot: false,
+        extra_seguro: false,
+        valor_extra_seguro: null,
+        clausulas_texto: contractForm.texto_contrato
       };
       
       await axios.post(`${API}/parceiros/${selectedParceiro.id}/templates-contrato`, payload, {
