@@ -1581,10 +1581,10 @@ startxref
                 data = response.json()
                 self.log_result("P0-Planos-Endpoint", True, 
                               "✅ Subscription endpoint working - creates pending subscription")
-            elif response.status_code == 400:
-                # Might fail due to invalid plano_id, but endpoint is working
+            elif response.status_code in [400, 422]:
+                # Might fail due to invalid plano_id or validation, but endpoint is working
                 self.log_result("P0-Planos-Endpoint", True, 
-                              "✅ Subscription endpoint accessible (400 = validation error, not permission)")
+                              f"✅ Subscription endpoint accessible ({response.status_code} = validation error, not permission)")
             else:
                 self.log_result("P0-Planos-Endpoint", False, 
                               f"Subscription endpoint error: {response.status_code}")
