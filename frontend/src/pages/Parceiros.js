@@ -127,6 +127,17 @@ const Parceiros = ({ user, onLogout }) => {
       });
       const parceiroContratos = contratosRes.data.filter(c => c.parceiro_id === parceiro.id);
       setContratos(parceiroContratos);
+
+      // Fetch templates do parceiro
+      try {
+        const templatesRes = await axios.get(`${API}/parceiros/${parceiro.id}/templates-contrato`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setTemplates(templatesRes.data || []);
+      } catch (err) {
+        console.log('No templates found for this parceiro');
+        setTemplates([]);
+      }
       
     } catch (error) {
       console.error('Error fetching parceiro data:', error);
