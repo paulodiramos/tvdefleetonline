@@ -5691,6 +5691,9 @@ async def get_proximas_datas_dashboard(current_user: Dict = Depends(get_current_
     dashboard_data.sort(key=lambda x: min([d["dias_restantes"] for d in x["datas"]]) if x["datas"] else 9999)
     
     return {
+        "dashboard_data": dashboard_data,
+        "total_vehicles": len(dashboard_data)
+    }
 
 # ==================== SISTEMA DE MÓDULOS E PLANOS ====================
 
