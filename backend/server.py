@@ -9855,6 +9855,10 @@ async def startup_event():
     asyncio.create_task(check_alerts_periodically())
     logger.info("Background alert checker started")
     
+    # Start background task for notifications
+    asyncio.create_task(check_notifications_periodically())
+    logger.info("Background notification checker started")
+    
     # Start scheduler for automatic sync
     scheduler.start()
     logger.info("Scheduler started for automatic platform sync")
