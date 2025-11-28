@@ -238,7 +238,12 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
             ) : (
               <div className="space-y-3">
                 {relatorios.map((relatorio) => (
-                  <div key={relatorio.id} className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
+                  <div 
+                    key={relatorio.id} 
+                    className={`border rounded-lg p-4 hover:bg-slate-50 transition-colors ${
+                      highlightId === relatorio.id ? 'ring-2 ring-blue-500 bg-blue-50' : ''
+                    }`}
+                  >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
