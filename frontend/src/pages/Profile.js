@@ -76,9 +76,12 @@ const Profile = ({ user, onLogout }) => {
     }
 
     try {
+      const token = localStorage.getItem('token');
       await axios.post(`${API}/profile/change-password`, {
-        old_password: passwordData.old_password,
+        current_password: passwordData.old_password,
         new_password: passwordData.new_password
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Senha alterada com sucesso!');
       setPasswordData({ old_password: '', new_password: '', confirm_password: '' });
