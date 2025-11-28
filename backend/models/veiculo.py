@@ -123,6 +123,38 @@ class VehicleCreate(BaseModel):
     parceiro_id: str
 
 
+class VehicleVistoria(BaseModel):
+    """Vehicle vistoria/inspection record"""
+    id: str
+    veiculo_id: str
+    data_vistoria: datetime
+    tipo: str  # "entrada", "saida", "periodica", "danos"
+    km_veiculo: Optional[int] = None
+    responsavel_nome: Optional[str] = None
+    responsavel_id: Optional[str] = None
+    observacoes: Optional[str] = None
+    estado_geral: Optional[str] = "bom"  # "excelente", "bom", "razoavel", "mau"
+    fotos: List[str] = []
+    itens_verificados: Dict[str, Any] = {}  # checklist items
+    danos_encontrados: List[Dict[str, Any]] = []
+    pdf_relatorio: Optional[str] = None
+    assinatura_responsavel: Optional[str] = None
+    assinatura_motorista: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class VistoriaCreate(BaseModel):
+    """Model for creating a new vistoria"""
+    veiculo_id: str
+    data_vistoria: Optional[datetime] = None
+    tipo: str = "periodica"
+    km_veiculo: Optional[int] = None
+    observacoes: Optional[str] = None
+    estado_geral: str = "bom"
+    itens_verificados: Dict[str, Any] = {}
+
+
 class Vehicle(BaseModel):
     """Complete vehicle model"""
     model_config = ConfigDict(extra="ignore")
@@ -153,6 +185,7 @@ class Vehicle(BaseModel):
     extintor: Optional[VehicleExtinguisher] = None
     inspecoes: List[VehicleInspection] = []
     inspection: Optional[VehicleInspection] = None
+    proxima_vistoria: Optional[datetime] = None
     disponibilidade: VehicleAvailability
     km_atual: Optional[int] = None
     km_aviso_manutencao: int = 5000
