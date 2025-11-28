@@ -522,67 +522,85 @@ const Usuarios = ({ user, onLogout }) => {
                   return true;
                 })
                 .map((regUser) => (
-                <Card key={regUser.id} className="hover:shadow-md transition-shadow border-2">
-                  <CardContent className="pt-6">
-                    {/* User Header */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
-                          {regUser.name?.charAt(0)?.toUpperCase() || '?'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-slate-800 truncate">{regUser.name}</h3>
-                          <p className="text-xs text-slate-500 truncate">{regUser.email}</p>
-                        </div>
-                      </div>
+                <div
+                  key={regUser.id}
+                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
+                  onClick={() => {
+                    setViewingUser(regUser);
+                    setShowDetailsDialog(true);
+                  }}
+                >
+                  {/* Left: Avatar + Info */}
+                  <div className="flex items-center space-x-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold flex-shrink-0">
+                      {regUser.name?.charAt(0)?.toUpperCase() || '?'}
                     </div>
-
-                    {/* User Info */}
-                    <div className="space-y-2 mb-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-600">Role:</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-slate-800 truncate">{regUser.name}</span>
                         <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(
+                          className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(
                             regUser.role
                           )}`}
                         >
                           {getRoleLabel(regUser.role)}
                         </span>
-                      </div>
-                      {regUser.status === 'blocked' && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-slate-600">Status:</span>
-                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        {regUser.status === 'blocked' && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                             <Lock className="w-3 h-3 mr-1" />
                             Bloqueado
                           </span>
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-600">Telefone:</span>
-                        <span className="text-xs text-slate-800">{regUser.phone || 'N/A'}</span>
+                        )}
                       </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-slate-600">Registo:</span>
-                        <span className="text-xs text-slate-800">{formatDate(regUser.created_at)}</span>
+                      <div className="flex items-center gap-4 text-sm text-slate-600 mt-0.5">
+                        <span className="flex items-center gap-1">
+                          <Mail className="w-3 h-3" />
+                          {regUser.email}
+                        </span>
+                        {regUser.phone && (
+                          <span className="flex items-center gap-1">
+                            <Phone className="w-3 h-3" />
+                            {regUser.phone}
+                          </span>
+                        )}
                       </div>
                     </div>
+                  </div>
 
-                    {/* Action Button */}
-                    <Button
-                      className="w-full"
-                      variant="outline"
-                      onClick={() => {
-                        setViewingUser(regUser);
-                        setShowDetailsDialog(true);
-                      }}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      Ver Detalhes
-                    </Button>
-                  </CardContent>
-                </Card>
+                  {/* Right: Action */}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setViewingUser(regUser);
+                      setShowDetailsDialog(true);
+                    }}
+                  >
+                    <Eye className="w-4 h-4" />
+                  </Button>
+                </div>
               ))}
+              
+              {registeredUsers
+                .filter(regUser => {
+                  if (roleFilter !== 'todos' && regUser.role !== roleFilter) {
+                    return false;
+                  }
+                  if (searchTerm) {
+                    const search = searchTerm.toLowerCase();
+                    return (
+                      regUser.name?.toLowerCase().includes(search) ||
+                      regUser.email?.toLowerCase().includes(search) ||
+                      regUser.phone?.toLowerCase().includes(search)
+                    );
+                  }
+                  return true;
+                }).length === 0 && (
+                <div className="text-center py-8 text-slate-500">
+                  Nenhum utilizador encontrado
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
