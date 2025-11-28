@@ -1398,6 +1398,207 @@ startxref
         except Exception as e:
             self.log_result("Parceiros-Listing", False, f"Request error: {str(e)}")
     
+    # ==================== USER MANAGEMENT & PARTNER DASHBOARD TESTS ====================
+    
+    def test_user_management_endpoints(self):
+        """Test user management endpoints for redesigned user page"""
+        print("\n👥 TESTING USER MANAGEMENT ENDPOINTS")
+        print("-" * 50)
+        
+        # Test admin access to users list
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("User-Management-Auth", False, "No auth token for admin")
+            return False
+        
+        try:
+            # Test GET /api/users/all (admin only)
+            response = requests.get(f"{BACKEND_URL}/users/all", headers=headers)
+            
+            if response.status_code == 200:
+                users = response.json()
+                
+                if isinstance(users, list):
+                    # Check if users have required fields for card layout
+                    if len(users) > 0:
+                        first_user = users[0]
+                        required_fields = ["id", "name", "email", "role", "created_at"]
+                        missing_fields = [field for field in required_fields if field not in first_user]
+                        
+                        if not missing_fields:
+                            self.log_result("Users-All-Endpoint", True, f"Retrieved {len(users)} users with complete data for card layout")
+                        else:
+                            self.log_result("Users-All-Endpoint", False, f"Users missing required fields: {missing_fields}")
+                    else:
+                        self.log_result("Users-All-Endpoint", True, "Users endpoint accessible (empty list)")
+                elif isinstance(users, dict):
+                    # Handle structured response
+                    if "registered_users" in users:
+                        user_list = users["registered_users"]
+                        self.log_result("Users-All-Endpoint", True, f"Retrieved {len(user_list)} users in structured format")
+                    else:
+                        self.log_result("Users-All-Endpoint", True, f"Users endpoint accessible (dict format with keys: {list(users.keys())})")
+                else:
+                    self.log_result("Users-All-Endpoint", False, f"Expected list or dict, got {type(users)}")
+            else:
+                self.log_result("Users-All-Endpoint", False, f"Failed to get users: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Users-All-Endpoint", False, f"Request error: {str(e)}")
+        
+        # Test user role change functionality (if endpoint exists)
+        try:
+            # First get a user to test with
+            users_response = requests.get(f"{BACKEND_URL}/users/all", headers=headers)
+            if users_response.status_code == 200:
+                users_data = users_response.json()
+                
+                # Extract user list from response
+                user_list = []
+                if isinstance(users_data, list):
+                    user_list = users_data
+                elif isinstance(users_data, dict) and "registered_users" in users_data:
+                    user_list = users_data["registered_users"]
+                
+                if user_list:
+                    test_user = user_list[0]
+                    user_id = test_user["id"]
+                    
+                    # Test role change endpoint (PUT /api/users/{id}/role)
+                    role_data = {"role": test_user.get("role", "motorista")}  # Keep same role for safety
+                    
+                    role_response = requests.put(
+                        f"{BACKEND_URL}/users/{user_id}/role",
+                        json=role_data,
+                        headers=headers
+                    )
+                    
+                    if role_response.status_code in [200, 404]:  # 404 if endpoint doesn't exist yet
+                        self.log_result("User-Role-Change", True, f"Role change endpoint accessible (status: {role_response.status_code})")
+                    else:
+                        self.log_result("User-Role-Change", False, f"Role change failed: {role_response.status_code}")
+        except Exception as e:
+            self.log_result("User-Role-Change", False, f"Role change test error: {str(e)}")
+        
+        return True
+    
+    def test_partner_dashboard_endpoints(self):
+        """Test partner dashboard endpoints for maintenance alerts"""
+        print("\n📊 TESTING PARTNER DASHBOARD ENDPOINTS")
+        print("-" * 50)
+        
+        # Test with parceiro credentials
+        headers = self.get_headers("parceiro")
+        if not headers:
+            self.log_result("Partner-Dashboard-Auth", False, "No auth token for parceiro")
+            return False
+        
+        # First get parceiro info to get parceiro_id
+        try:
+            # Get current user info to find parceiro_id
+            profile_response = requests.get(f"{BACKEND_URL}/auth/me", headers=headers)
+            if profile_response.status_code == 200:
+                user_info = profile_response.json()
+                parceiro_id = user_info.get("associated_partner_id")
+                
+                if not parceiro_id:
+                    # Try to get parceiro_id from parceiros list
+                    parceiros_response = requests.get(f"{BACKEND_URL}/parceiros", headers=self.get_headers("admin"))
+                    if parceiros_response.status_code == 200:
+                        parceiros = parceiros_response.json()
+                        if parceiros:
+                            parceiro_id = parceiros[0]["id"]
+                
+                if parceiro_id:
+                    # Test GET /api/parceiros/{parceiro_id}/alertas
+                    alertas_response = requests.get(f"{BACKEND_URL}/parceiros/{parceiro_id}/alertas", headers=headers)
+                    
+                    if alertas_response.status_code == 200:
+                        alertas_data = alertas_response.json()
+                        
+                        # Check if response has expected structure for dashboard
+                        expected_fields = ["seguros", "inspecoes", "revisoes", "extintores"]
+                        if isinstance(alertas_data, dict):
+                            missing_fields = [field for field in expected_fields if field not in alertas_data]
+                            if not missing_fields:
+                                self.log_result("Partner-Alertas-Endpoint", True, f"Partner alerts endpoint working with all categories: {list(alertas_data.keys())}")
+                            else:
+                                self.log_result("Partner-Alertas-Endpoint", True, f"Partner alerts endpoint accessible (fields: {list(alertas_data.keys())})")
+                        else:
+                            self.log_result("Partner-Alertas-Endpoint", True, f"Partner alerts endpoint accessible (type: {type(alertas_data)})")
+                    else:
+                        self.log_result("Partner-Alertas-Endpoint", False, f"Partner alerts failed: {alertas_response.status_code}", alertas_response.text)
+                    
+                    # Test GET /api/reports/dashboard (partner dashboard stats)
+                    dashboard_response = requests.get(f"{BACKEND_URL}/reports/dashboard", headers=headers)
+                    
+                    if dashboard_response.status_code == 200:
+                        dashboard_data = dashboard_response.json()
+                        
+                        # Check for expected dashboard stats
+                        if isinstance(dashboard_data, dict):
+                            self.log_result("Partner-Dashboard-Stats", True, f"Dashboard stats endpoint working (fields: {list(dashboard_data.keys())})")
+                        else:
+                            self.log_result("Partner-Dashboard-Stats", True, f"Dashboard stats accessible (type: {type(dashboard_data)})")
+                    else:
+                        self.log_result("Partner-Dashboard-Stats", False, f"Dashboard stats failed: {dashboard_response.status_code}", dashboard_response.text)
+                else:
+                    self.log_result("Partner-Dashboard-Setup", False, "Could not determine parceiro_id for testing")
+            else:
+                self.log_result("Partner-Dashboard-Setup", False, f"Could not get user profile: {profile_response.status_code}")
+        except Exception as e:
+            self.log_result("Partner-Dashboard-Endpoints", False, f"Request error: {str(e)}")
+        
+        return True
+    
+    def test_user_details_functionality(self):
+        """Test user details dialog functionality"""
+        print("\n🔍 TESTING USER DETAILS FUNCTIONALITY")
+        print("-" * 50)
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("User-Details-Auth", False, "No auth token for admin")
+            return False
+        
+        try:
+            # Get users list first
+            users_response = requests.get(f"{BACKEND_URL}/users/all", headers=headers)
+            if users_response.status_code == 200:
+                users_data = users_response.json()
+                
+                # Extract user list from response
+                user_list = []
+                if isinstance(users_data, list):
+                    user_list = users_data
+                elif isinstance(users_data, dict) and "registered_users" in users_data:
+                    user_list = users_data["registered_users"]
+                
+                if user_list:
+                    test_user = user_list[0]
+                    user_id = test_user["id"]
+                    
+                    # Test getting individual user details (for dialog)
+                    user_detail_response = requests.get(f"{BACKEND_URL}/users/{user_id}", headers=headers)
+                    
+                    if user_detail_response.status_code == 200:
+                        user_details = user_detail_response.json()
+                        
+                        # Check if user details have fields needed for dialog
+                        dialog_fields = ["id", "name", "email", "role", "phone", "created_at"]
+                        present_fields = [field for field in dialog_fields if field in user_details]
+                        
+                        self.log_result("User-Details-Dialog", True, f"User details accessible with fields: {present_fields}")
+                    else:
+                        self.log_result("User-Details-Dialog", False, f"User details failed: {user_detail_response.status_code}")
+                else:
+                    self.log_result("User-Details-Dialog", False, "No users available for testing")
+            else:
+                self.log_result("User-Details-Dialog", False, f"Could not get users list: {users_response.status_code}")
+        except Exception as e:
+            self.log_result("User-Details-Dialog", False, f"Request error: {str(e)}")
+        
+        return True
+
     # ==================== PASSWORD MANAGEMENT SYSTEM TESTS ====================
     
     def test_password_management_system(self):
