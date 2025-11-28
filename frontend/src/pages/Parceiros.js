@@ -539,7 +539,27 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
               <h1 className="text-3xl font-bold">{selectedParceiro.nome_empresa || selectedParceiro.name || selectedParceiro.email}</h1>
               <p className="text-slate-600">Gerir contratos e motoristas</p>
             </div>
-            <Dialog open={showContractDialog} onOpenChange={setShowContractDialog}>
+            <Dialog open={showContractDialog} onOpenChange={(open) => {
+              setShowContractDialog(open);
+              if (!open) {
+                setEditingTemplate(null);
+                setContractForm({ 
+                  tipo_contrato: 'aluguer_sem_caucao',
+                  texto_contrato: '',
+                  caucao_texto: '',
+                  caucao_total: 300,
+                  caucao_parcelas: 4,
+                  data_inicio_epoca_alta: '',
+                  data_fim_epoca_alta: '',
+                  valor_epoca_alta: 300,
+                  texto_epoca_alta: '',
+                  data_inicio_epoca_baixa: '',
+                  data_fim_epoca_baixa: '',
+                  valor_epoca_baixa: 200,
+                  texto_epoca_baixa: ''
+                });
+              }
+            }}>
               <DialogTrigger asChild>
                 <Button className="bg-emerald-600 hover:bg-emerald-700">
                   <Plus className="w-4 h-4 mr-2" />
@@ -548,9 +568,14 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Criar Template de Contrato</DialogTitle>
+                  <DialogTitle>
+                    {editingTemplate ? 'Editar Template de Contrato' : 'Criar Template de Contrato'}
+                  </DialogTitle>
                   <p className="text-sm text-slate-500">
-                    Crie um template base que poderá ser usado depois para gerar contratos com motoristas e veículos específicos
+                    {editingTemplate 
+                      ? 'Modifique o template de contrato conforme necessário'
+                      : 'Crie um template base que poderá ser usado depois para gerar contratos com motoristas e veículos específicos'
+                    }
                   </p>
                 </DialogHeader>
                 <form onSubmit={handleCreateContractTemplate} className="space-y-4 max-h-[70vh] overflow-y-auto">
