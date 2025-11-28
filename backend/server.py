@@ -5008,7 +5008,7 @@ async def marcar_pagamento_pago(pagamento_id: str, current_user: Dict = Depends(
 
 @api_router.get("/pagamentos/semana-atual")
 async def get_pagamentos_semana(current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] != UserRole.PARCEIRO:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     from datetime import datetime, timedelta
@@ -5018,10 +5018,16 @@ async def get_pagamentos_semana(current_user: Dict = Depends(get_current_user)):
     start_week = (today - timedelta(days=today.weekday())).strftime('%Y-%m-%d')
     end_week = (today + timedelta(days=6-today.weekday())).strftime('%Y-%m-%d')
     
-    pagamentos = await db.pagamentos.find({
-        "parceiro_id": current_user["id"],
+    # Build query based on role
+    query = {
         "periodo_fim": {"$gte": start_week, "$lte": end_week}
-    }, {"_id": 0}).to_list(1000)
+    }
+    
+    # Filter by parceiro_id only for parceiro and operacional
+    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        query["parceiro_id"] = current_user["id"]
+    
+    pagamentos = await db.pagamentos.find(query, {"_id": 0}).to_list(1000)
     
     for p in pagamentos:
         if isinstance(p.get("created_at"), str):
