@@ -42,6 +42,11 @@ const MeusPlanos = ({ user, onLogout }) => {
   };
 
   const handleSolicitarPlano = async () => {
+    if (!selectedPlano) {
+      toast.error('Selecione um plano');
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(`${API}/subscriptions/solicitar`, {
