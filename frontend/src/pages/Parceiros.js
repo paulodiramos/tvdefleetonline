@@ -500,14 +500,17 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
               <DialogTrigger asChild>
                 <Button className="bg-emerald-600 hover:bg-emerald-700">
                   <Plus className="w-4 h-4 mr-2" />
-                  Criar Contrato
+                  Criar Template de Contrato
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>Criar Novo Contrato</DialogTitle>
+                  <DialogTitle>Criar Template de Contrato</DialogTitle>
+                  <p className="text-sm text-slate-500">
+                    Crie um template base que poderá ser usado depois para gerar contratos com motoristas e veículos específicos
+                  </p>
                 </DialogHeader>
-                <form onSubmit={handleCreateContract} className="space-y-4 max-h-[70vh] overflow-y-auto">
+                <form onSubmit={handleCreateContractTemplate} className="space-y-4 max-h-[70vh] overflow-y-auto">
                   <div>
                     <Label htmlFor="tipo_contrato">Tipo de Contrato *</Label>
                     <select
