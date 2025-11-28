@@ -1013,33 +1013,51 @@ const Usuarios = ({ user, onLogout }) => {
               </p>
             </div>
 
-            {selectedUser?.role !== 'motorista' && (
-              <div className="bg-yellow-50 border border-yellow-200 p-3 rounded">
-                <p className="text-xs text-yellow-800">
-                  ⚠️ Apenas utilizadores com perfil <strong>Motorista</strong> podem ter planos de motorista atribuídos.
+            {/* Info sobre tipos de planos */}
+            {selectedUser && ['parceiro', 'operacional', 'gestao'].includes(selectedUser.role) && (
+              <div className="bg-blue-50 border border-blue-200 p-3 rounded">
+                <p className="text-xs text-blue-800">
+                  ℹ️ <strong>{getRoleLabel(selectedUser.role)}</strong> pode ter plano de parceiro atribuído. Operacional e Gestor têm funcionalidades baseadas no plano.
                 </p>
               </div>
             )}
 
-            {selectedUser?.role === 'motorista' && (
+            {/* Select de planos */}
+            {selectedUser && ['motorista', 'parceiro', 'operacional', 'gestao'].includes(selectedUser.role) && (
               <>
                 <div>
-                  <Label htmlFor="plano">Selecionar Plano de Motorista</Label>
+                  <Label htmlFor="plano">
+                    {selectedUser.role === 'motorista' ? 'Selecionar Plano de Motorista' : 'Selecionar Plano de Parceiro'}
+                  </Label>
                   <Select value={selectedPlanoId} onValueChange={setSelectedPlanoId}>
                     <SelectTrigger>
                       <SelectValue placeholder="Escolha um plano" />
                     </SelectTrigger>
                     <SelectContent>
-                      {planos.length === 0 ? (
-                        <div className="p-2 text-center text-sm text-slate-500">
-                          Nenhum plano de motorista disponível
-                        </div>
+                      {selectedUser.role === 'motorista' ? (
+                        planos.motorista?.length === 0 ? (
+                          <div className="p-2 text-center text-sm text-slate-500">
+                            Nenhum plano de motorista disponível
+                          </div>
+                        ) : (
+                          planos.motorista?.map((plano) => (
+                            <SelectItem key={plano.id} value={plano.id}>
+                              {plano.nome} - Semanal: €{plano.preco_semanal?.toFixed(2) || '0.00'} | Mensal: €{plano.preco_mensal?.toFixed(2) || '0.00'}
+                            </SelectItem>
+                          ))
+                        )
                       ) : (
-                        planos.map((plano) => (
-                          <SelectItem key={plano.id} value={plano.id}>
-                            {plano.nome} - Semanal: €{plano.preco_semanal?.toFixed(2) || '0.00'} | Mensal: €{plano.preco_mensal?.toFixed(2) || '0.00'}
-                          </SelectItem>
-                        ))
+                        planos.parceiro?.length === 0 ? (
+                          <div className="p-2 text-center text-sm text-slate-500">
+                            Nenhum plano de parceiro disponível
+                          </div>
+                        ) : (
+                          planos.parceiro?.map((plano) => (
+                            <SelectItem key={plano.id} value={plano.id}>
+                              {plano.nome} - €{plano.preco_mensal?.toFixed(2) || '0.00'}/mês
+                            </SelectItem>
+                          ))
+                        )
                       )}
                     </SelectContent>
                   </Select>
