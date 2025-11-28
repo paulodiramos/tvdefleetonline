@@ -9778,8 +9778,9 @@ async def download_csv_template(template_name: str, current_user: Dict = Depends
         filename=template_files[template_name]
     )
 
-# Include authentication router (new modular structure)
+# Include modular routers (new structure)
 app.include_router(auth_router, prefix="/api")
+app.include_router(motoristas_router, prefix="/api")
 
 # Include main API router (legacy routes - to be migrated)
 app.include_router(api_router)
