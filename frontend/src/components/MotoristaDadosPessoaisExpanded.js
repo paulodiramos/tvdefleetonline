@@ -483,7 +483,7 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
             </div>
 
             {/* Relatórios de Ganhos */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between border-b pb-3">
               <div className="flex items-center space-x-3">
                 <FileText className="w-5 h-5 text-slate-600" />
                 <div>
@@ -501,6 +501,39 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
                 Ver Relatórios
               </Button>
             </div>
+
+            {/* Documentos Aprovados */}
+            {documentosAprovados && (
+              <div className="pt-3">
+                <p className="text-sm font-semibold text-slate-700 mb-3">Documentos Aprovados:</p>
+                <div className="space-y-2">
+                  {[
+                    { type: 'documento_identificacao_frente', label: 'CC Frente' },
+                    { type: 'documento_identificacao_verso', label: 'CC Verso' },
+                    { type: 'comprovativo_morada', label: 'Comprovativo Morada' },
+                    { type: 'carta_conducao_frente', label: 'Carta Frente' },
+                    { type: 'carta_conducao_verso', label: 'Carta Verso' },
+                    { type: 'licenca_tvde', label: 'Licença TVDE' },
+                    { type: 'registo_criminal', label: 'Registo Criminal' },
+                    { type: 'comprovativo_iban', label: 'Comprovativo IBAN' },
+                    { type: 'comprovativo_seguro', label: 'Comprovativo Seguro' }
+                  ].map(doc => (
+                    motoristaData?.documents?.[doc.type] && (
+                      <Button
+                        key={doc.type}
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDownloadDocumento(doc.type)}
+                        className="w-full justify-start text-slate-700 hover:bg-slate-50"
+                      >
+                        <Download className="w-4 h-4 mr-2" />
+                        {doc.label}
+                      </Button>
+                    )
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
