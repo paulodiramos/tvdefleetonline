@@ -95,11 +95,20 @@ const Usuarios = ({ user, onLogout }) => {
   const fetchPlanos = async () => {
     try {
       const token = localStorage.getItem('token');
-      // Buscar planos de MOTORISTA apenas
-      const response = await axios.get(`${API}/planos-motorista`, {
-        headers: { Authorization: `Bearer ${token}` }
+      // Buscar ambos planos de motorista e parceiro
+      const [motoristaPlanosRes, parceiroPlanosRes] = await Promise.all([
+        axios.get(`${API}/planos-motorista`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }),
+        axios.get(`${API}/planos-parceiro`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => ({ data: [] })) // Fallback se não existir
+      ]);
+      
+      setPlanos({
+        motorista: motoristaPlanosRes.data || [],
+        parceiro: parceiroPlanosRes.data || []
       });
-      setPlanos(response.data);
     } catch (error) {
       console.error('Error fetching plans:', error);
     }
