@@ -260,7 +260,8 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
                         )}
                       </div>
                       <div className="ml-4 flex flex-col space-y-2">
-                        {relatorio.status === 'pendente_recibo' ? (
+                        {/* Recibo */}
+                        {relatorio.status === 'pendente_recibo' && user.role === 'motorista' ? (
                           <label className="cursor-pointer">
                             <input
                               type="file"
@@ -286,12 +287,57 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
                             variant="outline"
                             onClick={() => handleDownload(relatorio.recibo_url)}
                           >
-                            <Download className="w-4 h-4 mr-2" />
-                            Download
+                            <Eye className="w-4 h-4 mr-2" />
+                            Ver Recibo
                           </Button>
-                        ) : (
-                          <Button size="sm" variant="ghost" disabled>
-                            Sem ficheiro
+                        ) : null}
+                        
+                        {/* Comprovativo de Pagamento - só admin/gestor/parceiro/operacional */}
+                        {(user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro' || user.role === 'operacional') && (
+                          <>
+                            {(relatorio.status === 'recibo_enviado' || relatorio.status === 'recibo_emitido' || relatorio.status === 'aprovado_pagamento') && !relatorio.comprovativo_pagamento_url ? (
+                              <label className="cursor-pointer">
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  accept=".pdf,.jpg,.jpeg,.png"
+                                  onChange={(e) => handleUploadComprovativo(relatorio.id, e.target.files[0])}
+                                  disabled={uploadingComprovativoId === relatorio.id}
+                                />
+                                <Button
+                                  size="sm"
+                                  variant="secondary"
+                                  disabled={uploadingComprovativoId === relatorio.id}
+                                  asChild
+                                >
+                                  <span>
+                                    <Upload className="w-4 h-4 mr-2" />
+                                    {uploadingComprovativoId === relatorio.id ? 'Enviando...' : 'Upload Comprovativo'}
+                                  </span>
+                                </Button>
+                              </label>
+                            ) : relatorio.comprovativo_pagamento_url ? (
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => handleDownload(relatorio.comprovativo_pagamento_url)}
+                              >
+                                <Download className="w-4 h-4 mr-2" />
+                                Comprovativo
+                              </Button>
+                            ) : null}
+                          </>
+                        )}
+                        
+                        {/* Motorista pode ver comprovativo se existir */}
+                        {user.role === 'motorista' && relatorio.comprovativo_pagamento_url && (
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => handleDownload(relatorio.comprovativo_pagamento_url)}
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Comprovativo
                           </Button>
                         )}
                       </div>
