@@ -186,9 +186,9 @@ const Vehicles = ({ user, onLogout }) => {
   // Filter vehicles
   const filteredVehicles = useMemo(() => {
     return vehicles.filter(vehicle => {
-      if (filters.parceiro && vehicle.parceiro_id !== filters.parceiro) return false;
-      if (filters.status && vehicle.status !== filters.status) return false;
-      if (filters.combustivel && vehicle.combustivel !== filters.combustivel) return false;
+      if (filters.parceiro && filters.parceiro !== 'all' && vehicle.parceiro_id !== filters.parceiro) return false;
+      if (filters.status && filters.status !== 'all' && vehicle.status !== filters.status) return false;
+      if (filters.combustivel && filters.combustivel !== 'all' && vehicle.combustivel !== filters.combustivel) return false;
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         const searchableText = `${vehicle.marca} ${vehicle.modelo} ${vehicle.matricula}`.toLowerCase();
