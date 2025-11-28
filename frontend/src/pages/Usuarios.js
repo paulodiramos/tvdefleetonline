@@ -617,9 +617,9 @@ const Usuarios = ({ user, onLogout }) => {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* User Details Dialog */}
+      {/* User Details Dialog - Enhanced */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               <Eye className="w-5 h-5" />
@@ -628,137 +628,200 @@ const Usuarios = ({ user, onLogout }) => {
           </DialogHeader>
           {viewingUser && (
             <div className="space-y-6">
+              {/* User Header with Avatar */}
+              <div className="flex items-center space-x-4 p-4 bg-gradient-to-r from-blue-50 to-slate-50 rounded-lg">
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-2xl">
+                  {viewingUser.name?.charAt(0)?.toUpperCase() || '?'}
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-slate-800">{viewingUser.name}</h2>
+                  <p className="text-sm text-slate-600">{viewingUser.email}</p>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(viewingUser.role)}`}>
+                      {getRoleLabel(viewingUser.role)}
+                    </span>
+                    {viewingUser.status === 'blocked' && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                        <Lock className="w-3 h-3 mr-1" />
+                        Bloqueado
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               {/* Personal Info */}
               <div>
-                <h3 className="text-lg font-semibold text-slate-800 mb-4">Informação Pessoal</h3>
-                <div className="grid grid-cols-2 gap-4">
+                <h3 className="text-base font-semibold text-slate-800 mb-3 flex items-center">
+                  <UserCircle className="w-4 h-4 mr-2" />
+                  Informação Pessoal
+                </h3>
+                <div className="grid grid-cols-2 gap-3 bg-slate-50 p-4 rounded-lg">
                   <div>
-                    <label className="text-sm text-slate-500">Nome</label>
-                    <p className="font-medium text-slate-800">{viewingUser.name || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm text-slate-500 flex items-center space-x-1">
-                      <Mail className="w-3 h-3" />
-                      <span>Email</span>
-                    </label>
-                    <p className="font-medium text-slate-800">{viewingUser.email || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm text-slate-500 flex items-center space-x-1">
+                    <label className="text-xs text-slate-500 flex items-center space-x-1">
                       <Phone className="w-3 h-3" />
                       <span>Telefone</span>
                     </label>
-                    <p className="font-medium text-slate-800">{viewingUser.phone || 'N/A'}</p>
+                    <p className="font-medium text-slate-800 text-sm">{viewingUser.phone || 'N/A'}</p>
                   </div>
                   <div>
-                    <label className="text-sm text-slate-500 flex items-center space-x-1">
+                    <label className="text-xs text-slate-500 flex items-center space-x-1">
                       <Calendar className="w-3 h-3" />
                       <span>Data de Registo</span>
                     </label>
-                    <p className="font-medium text-slate-800">{formatDate(viewingUser.created_at)}</p>
+                    <p className="font-medium text-slate-800 text-sm">{formatDate(viewingUser.created_at)}</p>
                   </div>
+                  {viewingUser.nif && (
+                    <div>
+                      <label className="text-xs text-slate-500">NIF</label>
+                      <p className="font-medium text-slate-800 text-sm">{viewingUser.nif}</p>
+                    </div>
+                  )}
+                  {viewingUser.morada && (
+                    <div className="col-span-2">
+                      <label className="text-xs text-slate-500">Morada</label>
+                      <p className="font-medium text-slate-800 text-sm">{viewingUser.morada}</p>
+                    </div>
+                  )}
+                  {viewingUser.empresa && (
+                    <div>
+                      <label className="text-xs text-slate-500 flex items-center space-x-1">
+                        <Building className="w-3 h-3" />
+                        <span>Empresa</span>
+                      </label>
+                      <p className="font-medium text-slate-800 text-sm">{viewingUser.empresa}</p>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Role Info */}
+              {/* Quick Actions Grid */}
               <div>
-                <h3 className="text-lg font-semibold text-slate-800 mb-4">Informação de Acesso</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm text-slate-500">Role Solicitada</label>
-                    <div className="mt-1">
-                      <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getRoleBadgeColor(viewingUser.role)}`}>
-                        {getRoleLabel(viewingUser.role)}
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm text-slate-500">Status</label>
-                    <div className="mt-1">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-800">
-                        <Clock className="w-3 h-3 mr-1" />
-                        Pendente
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Additional Info (if motorista or parceiro) */}
-              {(viewingUser.role === 'motorista' || viewingUser.role === 'parceiro') && (
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4">Informação Adicional</h3>
-                  <div className="bg-slate-50 p-4 rounded-lg space-y-2">
-                    {viewingUser.nif && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-slate-600">NIF:</span>
-                        <span className="text-sm font-medium text-slate-800">{viewingUser.nif}</span>
-                      </div>
-                    )}
-                    {viewingUser.morada && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-slate-600">Morada:</span>
-                        <span className="text-sm font-medium text-slate-800">{viewingUser.morada}</span>
-                      </div>
-                    )}
-                    {viewingUser.empresa && (
-                      <div className="flex justify-between">
-                        <span className="text-sm text-slate-600 flex items-center space-x-1">
-                          <Building className="w-3 h-3" />
-                          <span>Empresa:</span>
-                        </span>
-                        <span className="text-sm font-medium text-slate-800">{viewingUser.empresa}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex justify-between pt-4 border-t">
-                <div className="flex space-x-3">
+                <h3 className="text-base font-semibold text-slate-800 mb-3">Ações Rápidas</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Change Role */}
                   <Button
                     variant="outline"
-                    onClick={() => setShowDetailsDialog(false)}
+                    className="h-auto py-3 flex flex-col items-center space-y-1"
+                    onClick={() => {
+                      setShowDetailsDialog(false);
+                      openChangeRoleDialog(viewingUser);
+                    }}
                   >
-                    Fechar
+                    <UserCheck className="w-5 h-5" />
+                    <span className="text-xs">Alterar Role</span>
                   </Button>
-                  {viewingUser.role === 'motorista' && (
+
+                  {/* Reset Password */}
+                  {viewingUser.id !== user.id && (
                     <Button
                       variant="outline"
-                      className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                      className="h-auto py-3 flex flex-col items-center space-y-1"
                       onClick={() => {
                         setShowDetailsDialog(false);
-                        navigate(`/validacao-documentos/${viewingUser.id}`);
+                        openPasswordDialog(viewingUser);
                       }}
                     >
-                      <Shield className="w-4 h-4 mr-2" />
-                      Validar Documentos
+                      <Key className="w-5 h-5" />
+                      <span className="text-xs">Alterar Senha</span>
+                    </Button>
+                  )}
+
+                  {/* Assign Plan */}
+                  {viewingUser.id !== user.id && (
+                    <Button
+                      variant="outline"
+                      className="h-auto py-3 flex flex-col items-center space-y-1"
+                      onClick={() => {
+                        setShowDetailsDialog(false);
+                        setSelectedUser(viewingUser);
+                        setSelectedPlanoId('');
+                        setShowPlanoDialog(true);
+                      }}
+                    >
+                      <Package className="w-5 h-5" />
+                      <span className="text-xs">Atribuir Plano</span>
+                    </Button>
+                  )}
+
+                  {/* Block/Unblock */}
+                  {viewingUser.id !== user.id && (
+                    <Button
+                      variant="outline"
+                      className="h-auto py-3 flex flex-col items-center space-y-1"
+                      onClick={() => {
+                        handleBlockUser(viewingUser.id, viewingUser.status);
+                        setShowDetailsDialog(false);
+                      }}
+                    >
+                      {viewingUser.status === 'blocked' ? (
+                        <>
+                          <Unlock className="w-5 h-5" />
+                          <span className="text-xs">Desbloquear</span>
+                        </>
+                      ) : (
+                        <>
+                          <Lock className="w-5 h-5" />
+                          <span className="text-xs">Bloquear</span>
+                        </>
+                      )}
+                    </Button>
+                  )}
+
+                  {/* Motorista Actions */}
+                  {viewingUser.role === 'motorista' && (
+                    <>
+                      <Button
+                        variant="outline"
+                        className="h-auto py-3 flex flex-col items-center space-y-1 border-blue-500 text-blue-600 hover:bg-blue-50"
+                        onClick={() => {
+                          setShowDetailsDialog(false);
+                          setSelectedMotoristaId(viewingUser.id);
+                          setShowMotoristaDialog(true);
+                        }}
+                      >
+                        <UserCircle className="w-5 h-5" />
+                        <span className="text-xs">Ver Motorista</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="h-auto py-3 flex flex-col items-center space-y-1 border-green-500 text-green-600 hover:bg-green-50"
+                        onClick={() => {
+                          setShowDetailsDialog(false);
+                          navigate(`/validacao-documentos/${viewingUser.id}`);
+                        }}
+                      >
+                        <Shield className="w-5 h-5" />
+                        <span className="text-xs">Validar Docs</span>
+                      </Button>
+                    </>
+                  )}
+
+                  {/* Delete */}
+                  {viewingUser.id !== user.id && (
+                    <Button
+                      variant="outline"
+                      className="h-auto py-3 flex flex-col items-center space-y-1 border-red-500 text-red-600 hover:bg-red-50"
+                      onClick={() => {
+                        setShowDetailsDialog(false);
+                        openDeleteDialog(viewingUser);
+                      }}
+                    >
+                      <Trash2 className="w-5 h-5" />
+                      <span className="text-xs">Eliminar</span>
                     </Button>
                   )}
                 </div>
-                <div className="flex space-x-3">
-                  <Button
-                    variant="destructive"
-                    onClick={() => {
-                      setShowDetailsDialog(false);
-                      openDeleteDialog(viewingUser);
-                    }}
-                  >
-                    <UserX className="w-4 h-4 mr-1" />
-                    Rejeitar
-                  </Button>
-                  <Button
-                    className="bg-blue-600 hover:bg-blue-700"
-                    onClick={() => {
-                      setShowDetailsDialog(false);
-                      openApproveDialog(viewingUser);
-                    }}
-                  >
-                    <UserCheck className="w-4 h-4 mr-1" />
-                    Aprovar
-                  </Button>
-                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="flex justify-end pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDetailsDialog(false)}
+                >
+                  Fechar
+                </Button>
               </div>
             </div>
           )}
