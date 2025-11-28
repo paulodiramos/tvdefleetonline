@@ -66,7 +66,8 @@ const MeusPlanos = ({ user, onLogout }) => {
       alert(`Pagamento ${pagamento.metodo}\n\nEntidade: ${pagamento.entidade}\nReferência: ${pagamento.referencia}\nValor: €${pagamento.valor.toFixed(2)}`);
     } catch (error) {
       console.error('Error requesting subscription:', error);
-      toast.error('Erro ao solicitar plano');
+      const errorMsg = error.response?.data?.detail || error.message || 'Erro ao solicitar plano';
+      toast.error(errorMsg);
     }
   };
 
