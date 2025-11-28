@@ -6420,7 +6420,7 @@ async def gerar_pdf_contrato(
         raise HTTPException(status_code=404, detail="Contrato não encontrado")
     
     # Get related data
-    parceiro = await db.users.find_one({"id": contrato["parceiro_id"], "role": "parceiro"}, {"_id": 0})
+    parceiro = await db.parceiros.find_one({"id": contrato["parceiro_id"]}, {"_id": 0})
     motorista = await db.motoristas.find_one({"id": contrato["motorista_id"]}, {"_id": 0})
     veiculo = None
     if contrato.get("veiculo_id"):
