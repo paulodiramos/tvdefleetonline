@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import NotificationBell from '@/components/NotificationBell';
 
 const Layout = ({ user, onLogout, children }) => {
   const location = useLocation();
