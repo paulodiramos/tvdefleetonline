@@ -311,6 +311,12 @@ function App() {
             }
           />
           <Route
+            path="/vehicles/:vehicleId/vistorias"
+            element={
+              user ? <VehicleVistorias user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/edit-parceiro"
             element={
               user ? <EditParceiro user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
