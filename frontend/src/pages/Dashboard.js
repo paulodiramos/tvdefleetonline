@@ -101,6 +101,15 @@ const Dashboard = ({ user, onLogout }) => {
     }
   };
 
+  const fetchParceiros = async () => {
+    try {
+      const response = await axios.get(`${API}/public/parceiros`);
+      setParceiros(response.data || []);
+    } catch (error) {
+      console.error('Error fetching parceiros', error);
+    }
+  };
+
   const handleResolverAlerta = async (alertaId) => {
     try {
       const token = localStorage.getItem('token');
