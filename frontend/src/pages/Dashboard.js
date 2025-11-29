@@ -44,8 +44,13 @@ const Dashboard = ({ user, onLogout }) => {
   // Modal states
   const [segurosModalOpen, setSegurosModalOpen] = useState(false);
   const [inspecoesModalOpen, setInspecoesModalOpen] = useState(false);
+  const [vistoriasModalOpen, setVistoriasModalOpen] = useState(false);
   const [revisoesModalOpen, setRevisoesModalOpen] = useState(false);
   const [extintoresModalOpen, setExtintoresModalOpen] = useState(false);
+  
+  // Filtro de parceiro (Admin/Gestor only)
+  const [parceiros, setParceiros] = useState([]);
+  const [selectedParceiro, setSelectedParceiro] = useState('todos');
 
   useEffect(() => {
     fetchStats();
