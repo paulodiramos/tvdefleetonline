@@ -55,6 +55,27 @@ const DashboardDateFilter = ({ onFilterChange, defaultPeriod = 'todos' }) => {
     onFilterChange({ tipo: 'semana', dataInicio: inicio, dataFim: fim });
   };
 
+  const aplicarSemanaPassada = () => {
+    const today = new Date();
+    const dayOfWeek = today.getDay();
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    
+    // Get current week's Monday, then subtract 7 days
+    const monday = new Date(today);
+    monday.setDate(today.getDate() + mondayOffset - 7);
+    
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    
+    const inicio = monday.toISOString().split('T')[0];
+    const fim = sunday.toISOString().split('T')[0];
+    
+    setDataInicio(inicio);
+    setDataFim(fim);
+    setPeriodo('semana_passada');
+    onFilterChange({ tipo: 'semana_passada', dataInicio: inicio, dataFim: fim });
+  };
+
   const handlePeriodoChange = (value) => {
     setPeriodo(value);
     
