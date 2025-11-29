@@ -140,61 +140,7 @@ const Dashboard = ({ user, onLogout }) => {
           defaultPeriod="todos"
         />
 
-        <Card className="hidden">
-          <CardHeader>
-            <CardTitle className="text-lg">Período de Análise (Antigo)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="md:col-span-2">
-                <Label htmlFor="periodo_tipo">Tipo de Período</Label>
-                <select
-                  id="periodo_tipo"
-                  value={periodoTipo}
-                  onChange={(e) => {
-                    setPeriodoTipo(e.target.value);
-                    if (e.target.value !== 'personalizado') {
-                      setDataInicio('');
-                      setDataFim('');
-                    }
-                  }}
-                  className="w-full p-2 border rounded-md"
-                >
-                  <option value="mes_atual">Mês Atual</option>
-                  <option value="semanal">Última Semana</option>
-                  <option value="trimestral">Último Trimestre</option>
-                  <option value="semestral">Último Semestre</option>
-                  <option value="anual">Último Ano</option>
-                  <option value="personalizado">Período Personalizado</option>
-                </select>
-              </div>
-              
-              {periodoTipo === 'personalizado' && (
-                <>
-                  <div>
-                    <Label htmlFor="data_inicio">Data Início</Label>
-                    <Input
-                      id="data_inicio"
-                      type="date"
-                      value={dataInicio}
-                      onChange={(e) => setDataInicio(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="data_fim">Data Fim</Label>
-                    <Input
-                      id="data_fim"
-                      type="date"
-                      value={dataFim}
-                      onChange={(e) => setDataFim(e.target.value)}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
+        {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
             title="Total Veículos"
