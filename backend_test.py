@@ -4223,6 +4223,52 @@ startxref
         except Exception as e:
             self.log_result("Partner-List-Revenues", False, f"Request error: {str(e)}")
 
+    # ==================== REVIEW REQUEST TEST RUNNER ====================
+    
+    def run_review_request_tests(self):
+        """Run specific tests for the Portuguese review request"""
+        print("🎯 STARTING TVDEFLEET REVIEW REQUEST TESTING")
+        print("=" * 80)
+        print("Testing specific functionalities requested in Portuguese review:")
+        print("1. Dashboard - Filtro de Semana Passada")
+        print("2. Motorista - Recibos e Downloads") 
+        print("3. Parceiro - Upload de Comprovativo")
+        print("4. Backend - Endpoint de Comprovativo")
+        print("=" * 80)
+        
+        # Authenticate all users first
+        print("\n🔐 AUTHENTICATING USERS")
+        print("-" * 40)
+        for role in ["admin", "motorista", "parceiro"]:
+            self.authenticate_user(role)
+        
+        # Run Review Request Specific Tests
+        print("\n🎯 REVIEW REQUEST TESTS")
+        print("=" * 50)
+        self.test_dashboard_semana_passada_filter()
+        self.test_motorista_recibos_ganhos_endpoints()
+        self.test_recibo_status_button_logic()
+        self.test_parceiro_upload_comprovativo()
+        self.test_comprovativo_endpoint_multipart()
+        self.test_comprovativo_file_storage()
+        
+        # Print summary
+        self.print_summary()
+        return self.get_test_summary()
+    
+    def get_test_summary(self):
+        """Get test results summary as dict"""
+        passed = sum(1 for result in self.test_results if result["success"])
+        failed = len(self.test_results) - passed
+        
+        return {
+            "total": len(self.test_results),
+            "passed": passed,
+            "failed": failed,
+            "success_rate": (passed / len(self.test_results) * 100) if self.test_results else 0,
+            "failed_tests": [result for result in self.test_results if not result["success"]]
+        }
+
     # ==================== MAIN TEST RUNNER ====================
     
     def run_all_tests(self):
