@@ -3427,7 +3427,7 @@ async def download_motorista_contrato(
     current_user: Dict = Depends(get_current_user)
 ):
     """Download contract of motorista (Admin/Gestor/Parceiro/Operacional/Motorista)"""
-    logger.info(f"[CONTRACT] Iniciando download de contrato para motorista_id: {motorista_id}")
+    print(f"[CONTRACT] Iniciando download de contrato para motorista_id: {motorista_id}", flush=True)
     
     motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
     if not motorista:
