@@ -57,6 +57,20 @@ const VehicleVistorias = ({ user, onLogout }) => {
     itens_verificados: {},
     proxima_vistoria: ''
   });
+  
+  // Estado para danos
+  const [showDanosModal, setShowDanosModal] = useState(false);
+  const [currentDanos, setCurrentDanos] = useState([]);
+  const [danosForm, setDanosForm] = useState({
+    descricao: '',
+    localizacao: '',
+    gravidade: 'leve',
+    custo_estimado: '',
+    responsavel: 'motorista',
+    motorista_id: '',
+    motorista_nome: ''
+  });
+  const [motoristas, setMotoristas] = useState([]);
 
   const checklistItems = [
     { key: 'pneus', label: 'Pneus' },
