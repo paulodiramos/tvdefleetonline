@@ -1399,14 +1399,16 @@ startxref
             
             relatorio_data = {
                 "motorista_id": motorista_id,
-                "semana": "2025-W04",
                 "periodo_inicio": "2025-01-20",
                 "periodo_fim": "2025-01-26",
-                "ganhos_uber": 200.0,
-                "ganhos_bolt": 150.0,
-                "combustivel": 60.0,
-                "via_verde": 15.0,
-                "valor_liquido": 275.0
+                "valor_total": 275.0,
+                "detalhes": {
+                    "ganhos_uber": 200.0,
+                    "ganhos_bolt": 150.0,
+                    "combustivel": 60.0,
+                    "via_verde": 15.0
+                },
+                "notas": "Teste endpoint comprovativo"
             }
             
             create_response = requests.post(f"{BACKEND_URL}/relatorios-ganhos", json=relatorio_data, headers=headers)
