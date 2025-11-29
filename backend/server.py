@@ -10218,16 +10218,19 @@ async def upload_comprovativo_pagamento(
         file_id = f"comprovativo_{relatorio_id}_{uuid.uuid4()}"
         file_info = await process_uploaded_file(file, comprova_dir, file_id)
         
-        # Update relatorio with comprovativo URL only
+        # Update relatorio with comprovativo URL and change status to liquidado
         comprovativo_url = file_info.get("pdf_path") or file_info.get("original_path")
         update_data = {
             "comprovativo_pagamento_url": comprovativo_url,
+            "status": "liquidado",  # Automatically set to liquidado when comprovativo is uploaded
+            "pago_em": datetime.now(timezone.utc).isoformat(),
+            "pago_por": current_user["id"],
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
         
         await db.relatorios_ganhos.update_one({"id": relatorio_id}, {"$set": update_data})
         
-        return {"message": "Payment proof uploaded successfully", "comprovativo_url": comprovativo_url}
+        return {"message": "Payment proof uploaded successfully - Status changed to liquidado", "comprovativo_url": comprovativo_url}
         
     except Exception as e:
         logger.error(f"Error uploading payment proof: {e}")
