@@ -3533,6 +3533,11 @@ async def download_motorista_contrato_v2(
         filename=f"contrato_{motorista['name']}.pdf"
     )
 
+@api_router.get("/test-reload")
+async def test_reload_endpoint():
+    """Test endpoint to verify hot reload works - VERSION 3"""
+    return {"status": "working", "version": "3", "message": "Hot reload is functioning correctly"}
+
 @api_router.get("/relatorios-ganhos/{relatorio_id}/download")
 async def download_relatorio_recibo(
     relatorio_id: str,
