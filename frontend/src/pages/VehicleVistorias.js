@@ -689,6 +689,123 @@ const VehicleVistorias = ({ user, onLogout }) => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Add Dano Modal */}
+        <Dialog open={showDanosModal} onOpenChange={setShowDanosModal}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Adicionar Dano</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div>
+                <Label>Descrição do Dano *</Label>
+                <Textarea
+                  value={danosForm.descricao}
+                  onChange={(e) => setDanosForm({...danosForm, descricao: e.target.value})}
+                  placeholder="Descreva o dano encontrado..."
+                  rows={3}
+                />
+              </div>
+              
+              <div>
+                <Label>Localização *</Label>
+                <Input
+                  value={danosForm.localizacao}
+                  onChange={(e) => setDanosForm({...danosForm, localizacao: e.target.value})}
+                  placeholder="Ex: Para-choques dianteiro, Porta traseira direita..."
+                />
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Gravidade</Label>
+                  <Select
+                    value={danosForm.gravidade}
+                    onValueChange={(value) => setDanosForm({...danosForm, gravidade: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="leve">Leve</SelectItem>
+                      <SelectItem value="moderado">Moderado</SelectItem>
+                      <SelectItem value="grave">Grave</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label>Custo Estimado (€)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={danosForm.custo_estimado}
+                    onChange={(e) => setDanosForm({...danosForm, custo_estimado: e.target.value})}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Responsável</Label>
+                  <Select
+                    value={danosForm.responsavel}
+                    onValueChange={(value) => setDanosForm({...danosForm, responsavel: value})}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="motorista">Motorista</SelectItem>
+                      <SelectItem value="terceiros">Terceiros</SelectItem>
+                      <SelectItem value="desgaste">Desgaste Natural</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {danosForm.responsavel === 'motorista' && (
+                  <div>
+                    <Label>Motorista</Label>
+                    <Select
+                      value={danosForm.motorista_id}
+                      onValueChange={(value) => {
+                        const motorista = motoristas.find(m => m.id === value);
+                        setDanosForm({
+                          ...danosForm, 
+                          motorista_id: value,
+                          motorista_nome: motorista?.name || ''
+                        });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecionar motorista" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {motoristas.map(m => (
+                          <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDanosModal(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={() => {
+                handleAddDano();
+                setShowDanosModal(false);
+              }}>
+                Adicionar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
