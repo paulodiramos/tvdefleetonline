@@ -311,7 +311,6 @@ const PagamentosParceiro = ({ user, onLogout }) => {
                             setSelectedPagamento(pagamento);
                             setShowUploadModal(true);
                           }}
-                          disabled={pagamento.status === 'liquidado'}
                         >
                           <Upload className="w-4 h-4 mr-2" />
                           Adicionar Comprovativo
