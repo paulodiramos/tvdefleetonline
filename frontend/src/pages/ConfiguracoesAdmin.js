@@ -14,11 +14,15 @@ const ConfiguracoesAdmin = ({ user, onLogout }) => {
   const [saving, setSaving] = useState(false);
   const [configData, setConfigData] = useState({
     condicoes_gerais: '',
-    politica_privacidade: ''
+    politica_privacidade: '',
+    email_comunicacoes: '',
+    whatsapp_comunicacoes: ''
   });
   const [originalData, setOriginalData] = useState({
     condicoes_gerais: '',
-    politica_privacidade: ''
+    politica_privacidade: '',
+    email_comunicacoes: '',
+    whatsapp_comunicacoes: ''
   });
 
   useEffect(() => {
