@@ -150,9 +150,31 @@ const Dashboard = ({ user, onLogout }) => {
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="space-y-6" data-testid="dashboard-page">
-        <div>
-          <h1 className="text-4xl font-bold text-slate-800 mb-2">Dashboard</h1>
-          <p className="text-slate-600">Bem-vindo, {user.name}</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-4xl font-bold text-slate-800 mb-2">Dashboard</h1>
+            <p className="text-slate-600">Bem-vindo, {user.name}</p>
+          </div>
+          
+          {/* Filtro de Parceiro - Only for Admin/Gestor */}
+          {(user.role === 'admin' || user.role === 'gestao') && (
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="parceiro-filter" className="text-sm font-medium text-slate-700">Parceiro:</Label>
+              <select
+                id="parceiro-filter"
+                value={selectedParceiro}
+                onChange={(e) => setSelectedParceiro(e.target.value)}
+                className="border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="todos">Todos os Parceiros</option>
+                {parceiros.map((parceiro) => (
+                  <option key={parceiro.id} value={parceiro.id}>
+                    {parceiro.name || parceiro.nome_empresa}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Filtros de Período */}
