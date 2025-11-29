@@ -3453,7 +3453,12 @@ async def download_motorista_contrato(
     
     # Find contract for this motorista
     contrato = await db.contratos.find_one({"motorista_id": motorista_id}, {"_id": 0})
+    logger.info(f"[CONTRACT] Contrato encontrado: {contrato is not None}")
+    if contrato:
+        logger.info(f"[CONTRACT] contrato_assinado: {contrato.get('contrato_assinado')}")
+    
     if not contrato or not contrato.get("contrato_assinado"):
+        logger.warning(f"[CONTRACT] Contrato não encontrado ou sem arquivo assinado")
         raise HTTPException(status_code=404, detail="Contract not found")
     
     # Get contract path
