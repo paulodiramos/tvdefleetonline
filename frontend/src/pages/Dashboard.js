@@ -645,6 +645,54 @@ const Dashboard = ({ user, onLogout }) => {
         </DialogContent>
       </Dialog>
 
+      {/* Modal de Vistorias */}
+      <Dialog open={vistoriasModalOpen} onOpenChange={setVistoriasModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <CheckCircle className="w-5 h-5 text-indigo-600" />
+              <span>Próximas Vistorias</span>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            {proximasDatas
+              .filter(v => v.datas.some(d => d.tipo === 'Vistoria'))
+              .map((vehicle, idx) => {
+                const vistoriaData = vehicle.datas.find(d => d.tipo === 'Vistoria');
+                return (
+                  <div key={idx} className="border rounded-lg p-4 bg-indigo-50">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold text-slate-800">{vehicle.marca} {vehicle.modelo}</p>
+                        <p className="text-sm text-slate-600">Matrícula: <span className="font-medium">{vehicle.matricula}</span></p>
+                        <p className="text-sm text-slate-600">Parceiro: <span className="font-medium">{vehicle.parceiro_nome}</span></p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-indigo-700">
+                          {vistoriaData && new Date(vistoriaData.data).toLocaleDateString('pt-PT')}
+                        </p>
+                        {vistoriaData && (
+                          <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                            vistoriaData.dias_restantes < 0 ? 'bg-red-200 text-red-800' :
+                            vistoriaData.urgente ? 'bg-orange-200 text-orange-800' : 
+                            'bg-indigo-200 text-indigo-800'
+                          }`}>
+                            {vistoriaData.dias_restantes < 0 ? `${Math.abs(vistoriaData.dias_restantes)}d atraso` : 
+                             `${vistoriaData.dias_restantes} dias`}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Vistoria')).length === 0 && (
+              <p className="text-center text-slate-500 py-8">Nenhuma vistoria agendada</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Modal de Revisões */}
       <Dialog open={revisoesModalOpen} onOpenChange={setRevisoesModalOpen}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
