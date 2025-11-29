@@ -533,6 +533,56 @@ const VehicleVistorias = ({ user, onLogout }) => {
                   onChange={(e) => setFormData({...formData, proxima_vistoria: e.target.value})}
                 />
               </div>
+              
+              {/* Danos Section */}
+              <div className="border-t pt-4">
+                <div className="flex justify-between items-center mb-3">
+                  <Label className="text-lg font-semibold">Danos Encontrados ({currentDanos.length})</Label>
+                  <Button 
+                    size="sm" 
+                    onClick={() => {
+                      loadMotoristas();
+                      setShowDanosModal(true);
+                    }}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Dano
+                  </Button>
+                </div>
+                
+                {currentDanos.length > 0 && (
+                  <div className="space-y-2">
+                    {currentDanos.map((dano, idx) => (
+                      <div key={idx} className="border rounded-lg p-3 bg-slate-50">
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <p className="font-medium text-sm">{dano.descricao}</p>
+                            <p className="text-xs text-slate-600">Local: {dano.localizacao}</p>
+                            <div className="flex gap-2 mt-1">
+                              <Badge variant={dano.gravidade === 'grave' ? 'destructive' : 'secondary'}>
+                                {dano.gravidade}
+                              </Badge>
+                              <span className="text-sm text-slate-600">
+                                Custo: €{dano.custo_estimado?.toFixed(2) || '0.00'}
+                              </span>
+                            </div>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleRemoveDano(idx)}
+                          >
+                            <Trash2 className="w-4 h-4 text-red-600" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="text-right font-semibold">
+                      Total: €{currentDanos.reduce((sum, d) => sum + (d.custo_estimado || 0), 0).toFixed(2)}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             <DialogFooter>
