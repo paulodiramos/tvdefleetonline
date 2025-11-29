@@ -60,10 +60,18 @@ const Dashboard = ({ user, onLogout }) => {
 
   useEffect(() => {
     // Fetch parceiros if user is admin or gestao
-    if (user.role === 'admin' || user.role === 'gestao') {
-      fetchParceiros();
-    }
-  }, []);
+    const loadParceiros = async () => {
+      if (user.role === 'admin' || user.role === 'gestao') {
+        try {
+          const response = await axios.get(`${API}/public/parceiros`);
+          setParceiros(response.data || []);
+        } catch (error) {
+          console.error('Error fetching parceiros', error);
+        }
+      }
+    };
+    loadParceiros();
+  }, [user.role]);
 
   const fetchStats = async () => {
     try {
