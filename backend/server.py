@@ -6663,8 +6663,7 @@ async def update_textos_legais(config_data: ConfiguracaoUpdate, current_user: Di
 
 @api_router.put("/admin/config/comunicacoes")
 async def update_comunicacoes(
-    email_comunicacoes: str = None,
-    whatsapp_comunicacoes: str = None,
+    request_data: Dict,
     current_user: Dict = Depends(get_current_user)
 ):
     """Admin only: Update communication settings (email and WhatsApp)"""
@@ -6676,11 +6675,11 @@ async def update_comunicacoes(
         "updated_by": current_user["id"]
     }
     
-    if email_comunicacoes is not None:
-        update_data["email_comunicacoes"] = email_comunicacoes
+    if "email_comunicacoes" in request_data:
+        update_data["email_comunicacoes"] = request_data["email_comunicacoes"]
     
-    if whatsapp_comunicacoes is not None:
-        update_data["whatsapp_comunicacoes"] = whatsapp_comunicacoes
+    if "whatsapp_comunicacoes" in request_data:
+        update_data["whatsapp_comunicacoes"] = request_data["whatsapp_comunicacoes"]
     
     await db.configuracoes.update_one(
         {"id": "config_sistema"},
