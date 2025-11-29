@@ -243,6 +243,37 @@ const Dashboard = ({ user, onLogout }) => {
                 )}
               </div>
 
+              {/* Próximas Vistorias */}
+              <div className="bg-indigo-50 border-2 border-indigo-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setVistoriasModalOpen(true)}>
+                <div className="flex items-center justify-between mb-2">
+                  <CheckCircle className="w-6 h-6 text-indigo-600" />
+                  <span className="text-xs font-semibold bg-indigo-200 text-indigo-800 px-2 py-1 rounded">
+                    {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Vistoria')).length}
+                  </span>
+                </div>
+                <p className="text-sm font-semibold text-slate-700 mb-1">Próximas Vistorias</p>
+                {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Vistoria')).slice(0, 1).map((vehicle, idx) => {
+                  const vistoriaData = vehicle.datas.find(d => d.tipo === 'Vistoria');
+                  return (
+                    <div key={idx} className="text-xs text-slate-600">
+                      <p className="font-medium truncate">{vehicle.matricula}</p>
+                      <p className="text-indigo-700 font-semibold">
+                        {vistoriaData && new Date(vistoriaData.data).toLocaleDateString('pt-PT')}
+                      </p>
+                      {vistoriaData && (
+                        <p className={`text-xs ${vistoriaData.urgente ? 'text-red-600' : 'text-slate-500'}`}>
+                          {vistoriaData.dias_restantes < 0 ? `${Math.abs(vistoriaData.dias_restantes)}d atraso` : 
+                           `em ${vistoriaData.dias_restantes} dias`}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
+                {proximasDatas.filter(v => v.datas.some(d => d.tipo === 'Vistoria')).length === 0 && (
+                  <p className="text-xs text-slate-500">Nenhuma agendada</p>
+                )}
+              </div>
+
               {/* Próximas Revisões */}
               <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow" onClick={() => setRevisoesModalOpen(true)}>
                 <div className="flex items-center justify-between mb-2">
