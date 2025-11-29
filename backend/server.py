@@ -6086,6 +6086,142 @@ async def upload_vistoria_foto(
 @api_router.post("/vehicles/{vehicle_id}/vistorias/{vistoria_id}/gerar-pdf")
 async def gerar_pdf_vistoria(
     vehicle_id: str,
+
+
+@api_router.post("/vehicles/{vehicle_id}/agendar-vistoria")
+async def agendar_vistoria(
+    vehicle_id: str,
+    agendamento_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Agendar vistoria para um veículo"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verify vehicle exists
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    agendamento_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    # Parse data_agendamento
+    data_agendamento = agendamento_data.get("data_agendamento")
+    if isinstance(data_agendamento, str):
+        data_agendamento = datetime.fromisoformat(data_agendamento.replace('Z', '+00:00'))
+    
+    # Calcular próxima vistoria automática se recorrente
+    proxima_auto = None
+    recorrencia = agendamento_data.get("recorrencia")
+    if recorrencia and data_agendamento:
+        if recorrencia == "mensal":
+            proxima_auto = data_agendamento + timedelta(days=30)
+        elif recorrencia == "trimestral":
+            proxima_auto = data_agendamento + timedelta(days=90)
+        elif recorrencia == "semestral":
+            proxima_auto = data_agendamento + timedelta(days=180)
+        elif recorrencia == "anual":
+            proxima_auto = data_agendamento + timedelta(days=365)
+    
+    agendamento = {
+        "id": agendamento_id,
+        "veiculo_id": vehicle_id,
+        "data_agendamento": data_agendamento,
+        "recorrencia": recorrencia,
+        "proxima_vistoria_auto": proxima_auto,
+        "tipo": agendamento_data.get("tipo", "periodica"),
+        "observacoes": agendamento_data.get("observacoes"),
+        "notificar_antes_dias": agendamento_data.get("notificar_antes_dias", 7),
+        "status": "agendada",
+        "created_at": now,
+        "created_by": current_user["id"]
+    }
+    
+    await db.vistorias_agendadas.insert_one(agendamento)
+    
+    # Atualizar veículo com próxima vistoria
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"proxima_vistoria": data_agendamento}}
+    )
+    
+    return {
+        "message": "Vistoria agendada com sucesso",
+        "agendamento_id": agendamento_id,
+        "proxima_vistoria_auto": proxima_auto.isoformat() if proxima_auto else None
+    }
+
+
+@api_router.get("/vehicles/{vehicle_id}/agendamentos-vistoria")
+async def get_agendamentos_vistoria(
+    vehicle_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Listar agendamentos de vistoria de um veículo"""
+    agendamentos = await db.vistorias_agendadas.find(
+        {"veiculo_id": vehicle_id},
+        {"_id": 0}
+    ).sort("data_agendamento", -1).to_list(50)
+    
+    return agendamentos
+
+
+@api_router.post("/vehicles/{vehicle_id}/vistorias/{vistoria_id}/adicionar-dano")
+async def adicionar_dano_vistoria(
+    vehicle_id: str,
+    vistoria_id: str,
+    dano_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Adicionar dano identificado em vistoria"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    dano_id = str(uuid.uuid4())
+    dano = {
+        "id": dano_id,
+        "descricao": dano_data["descricao"],
+        "localizacao": dano_data["localizacao"],
+        "gravidade": dano_data.get("gravidade", "moderado"),
+        "fotos": dano_data.get("fotos", []),
+        "custo_estimado": dano_data.get("custo_estimado"),
+        "custo_real": dano_data.get("custo_real"),
+        "responsavel": dano_data.get("responsavel"),
+        "motorista_id": dano_data.get("motorista_id"),
+        "motorista_nome": dano_data.get("motorista_nome"),
+        "reparado": False,
+        "data_reparacao": None,
+        "created_at": datetime.now(timezone.utc)
+    }
+    
+    # Adicionar dano à vistoria
+    result = await db.vistorias.update_one(
+        {"id": vistoria_id, "veiculo_id": vehicle_id},
+        {
+            "$push": {"danos_encontrados": dano},
+            "$set": {"updated_at": datetime.now(timezone.utc)}
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Vistoria not found")
+    
+    # Recalcular custo total
+    vistoria = await db.vistorias.find_one({"id": vistoria_id}, {"_id": 0})
+    if vistoria:
+        custo_total = sum(
+            d.get("custo_real") or d.get("custo_estimado") or 0
+            for d in vistoria.get("danos_encontrados", [])
+        )
+        await db.vistorias.update_one(
+            {"id": vistoria_id},
+            {"$set": {"custo_total_danos": custo_total}}
+        )
+    
+    return {"message": "Dano adicionado com sucesso", "dano_id": dano_id}
+
+
     vistoria_id: str,
     current_user: Dict = Depends(get_current_user)
 ):
