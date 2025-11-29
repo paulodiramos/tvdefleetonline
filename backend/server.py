@@ -3454,10 +3454,11 @@ async def download_motorista_contrato(
     contract_path_str = contrato["contrato_assinado"].replace("/uploads/", str(UPLOAD_DIR) + "/")
     contract_path = Path(contract_path_str)
     
-    print(f"[DEBUG] Contrato assinado no DB: {contrato['contrato_assinado']}")
-    print(f"[DEBUG] UPLOAD_DIR: {UPLOAD_DIR}")
-    print(f"[DEBUG] Contract path calculado: {contract_path}")
-    print(f"[DEBUG] Arquivo existe? {contract_path.exists()}")
+    logger.info(f"[CONTRACT DOWNLOAD] Motorista ID: {motorista_id}")
+    logger.info(f"[CONTRACT DOWNLOAD] Contrato assinado no DB: {contrato['contrato_assinado']}")
+    logger.info(f"[CONTRACT DOWNLOAD] UPLOAD_DIR: {UPLOAD_DIR}")
+    logger.info(f"[CONTRACT DOWNLOAD] Contract path calculado: {contract_path}")
+    logger.info(f"[CONTRACT DOWNLOAD] Arquivo existe? {contract_path.exists()}")
     
     if not contract_path.exists():
         raise HTTPException(status_code=404, detail="Contract file not found")
