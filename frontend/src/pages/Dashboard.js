@@ -17,9 +17,7 @@ const Dashboard = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   
   // Filtros de data
-  const [periodoTipo, setPeriodoTipo] = useState('mes_atual'); // mes_atual, semanal, trimestral, semestral, anual, personalizado
-  const [dataInicio, setDataInicio] = useState('');
-  const [dataFim, setDataFim] = useState('');
+  const [filtroData, setFiltroData] = useState({ tipo: 'todos', dataInicio: '', dataFim: '' });
   
   // Modal states
   const [segurosModalOpen, setSegurosModalOpen] = useState(false);
