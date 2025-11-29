@@ -4628,12 +4628,12 @@ startxref
 if __name__ == "__main__":
     tester = TVDEFleetTester()
     
-    # Run P0 bug fix tests as requested in Portuguese review
-    success = tester.run_p0_bug_tests_only()
+    # Run review request tests as requested in Portuguese review
+    summary = tester.run_review_request_tests()
     
-    if success:
-        print("🎉 All P0 bug fixes are working correctly!")
+    if summary["failed"] == 0:
+        print("🎉 All review request tests are working correctly!")
         exit(0)
     else:
-        print("💥 Some P0 bug fixes are still failing!")
+        print(f"💥 {summary['failed']} out of {summary['total']} tests are failing!")
         exit(1)
