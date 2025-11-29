@@ -4268,6 +4268,30 @@ startxref
             "success_rate": (passed / len(self.test_results) * 100) if self.test_results else 0,
             "failed_tests": [result for result in self.test_results if not result["success"]]
         }
+    
+    def print_summary(self):
+        """Print test results summary"""
+        print("\n" + "=" * 80)
+        print("📊 TEST RESULTS SUMMARY")
+        print("=" * 80)
+        
+        passed = sum(1 for result in self.test_results if result["success"])
+        failed = len(self.test_results) - passed
+        
+        print(f"✅ PASSED: {passed}")
+        print(f"❌ FAILED: {failed}")
+        print(f"📊 TOTAL:  {len(self.test_results)}")
+        
+        if failed > 0:
+            print(f"\n❌ FAILED TESTS:")
+            print("-" * 40)
+            for result in self.test_results:
+                if not result["success"]:
+                    print(f"   • {result['test']}: {result['message']}")
+        
+        print("\n" + "=" * 80)
+        
+        return passed, failed
 
     # ==================== MAIN TEST RUNNER ====================
     
