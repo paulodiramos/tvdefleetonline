@@ -56,12 +56,14 @@ const Dashboard = ({ user, onLogout }) => {
     fetchStats();
     fetchAlertas();
     fetchProximasDatas();
+  }, [filtroData, selectedParceiro]);
+
+  useEffect(() => {
     // Fetch parceiros if user is admin or gestao
     if (user.role === 'admin' || user.role === 'gestao') {
       fetchParceiros();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtroData, selectedParceiro]);
+  }, []);
 
   const fetchStats = async () => {
     try {
