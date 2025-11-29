@@ -116,13 +116,21 @@ const VehicleVistorias = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       
+      // Include danos in the request
+      const vistoriaData = {
+        ...formData,
+        danos_encontrados: currentDanos,
+        custo_total_danos: currentDanos.reduce((sum, d) => sum + (d.custo_estimado || 0), 0)
+      };
+      
       await axios.post(
         `${API_URL}/api/vehicles/${vehicleId}/vistorias`,
-        formData,
+        vistoriaData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       setShowCreateModal(false);
+      setCurrentDanos([]);
       loadData();
       
       // Reset form
