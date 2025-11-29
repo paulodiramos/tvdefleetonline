@@ -1395,7 +1395,7 @@ startxref
             return
         
         try:
-            # Create a test pagamento first
+            # Create a test relatorio-ganhos first (this is what the comprovativo endpoint works with)
             motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
             if motoristas_response.status_code != 200 or not motoristas_response.json():
                 self.log_result("Comprovativo-Endpoint", False, "No motoristas available for test")
@@ -1403,22 +1403,25 @@ startxref
             
             motorista_id = motoristas_response.json()[0]["id"]
             
-            pagamento_data = {
+            relatorio_data = {
                 "motorista_id": motorista_id,
-                "valor": 300.0,
-                "periodo_inicio": "2025-01-08",
-                "periodo_fim": "2025-01-14",
-                "tipo_documento": "fatura",
-                "notas": "Teste endpoint comprovativo"
+                "semana": "2025-W04",
+                "periodo_inicio": "2025-01-20",
+                "periodo_fim": "2025-01-26",
+                "ganhos_uber": 200.0,
+                "ganhos_bolt": 150.0,
+                "combustivel": 60.0,
+                "via_verde": 15.0,
+                "valor_liquido": 275.0
             }
             
-            create_response = requests.post(f"{BACKEND_URL}/pagamentos", json=pagamento_data, headers=headers)
+            create_response = requests.post(f"{BACKEND_URL}/relatorios-ganhos", json=relatorio_data, headers=headers)
             
             if create_response.status_code != 200:
-                self.log_result("Comprovativo-Endpoint", False, "Could not create test pagamento")
+                self.log_result("Comprovativo-Endpoint", False, f"Could not create test relatorio: {create_response.status_code}")
                 return
             
-            pagamento_id = create_response.json()["id"]
+            relatorio_id = create_response.json()["id"]
             
             # Test the comprovativo endpoint with multipart/form-data
             test_file = self.create_test_pdf()
@@ -1427,9 +1430,9 @@ startxref
                 'file': ('comprovativo_teste.pdf', test_file, 'application/pdf')
             }
             
-            # Test POST /api/pagamentos/{id}/comprovativo
+            # Test POST /api/relatorios-ganhos/{id}/comprovativo
             response = requests.post(
-                f"{BACKEND_URL}/pagamentos/{pagamento_id}/comprovativo",
+                f"{BACKEND_URL}/relatorios-ganhos/{relatorio_id}/comprovativo",
                 files=files,
                 headers=headers
             )
@@ -1438,19 +1441,19 @@ startxref
                 result = response.json()
                 
                 # Verify response structure
-                expected_fields = ["message", "file_path", "status"]
+                expected_fields = ["message", "comprovativo_url"]
                 has_expected_fields = any(field in result for field in expected_fields)
                 
                 if has_expected_fields:
                     # Check if file was saved in correct directory
-                    file_path = result.get("file_path", "")
+                    comprovativo_url = result.get("comprovativo_url", "")
                     
-                    if "/uploads/comprovativos/" in file_path or "comprovativos" in file_path:
+                    if "comprovativos" in comprovativo_url or "uploads" in comprovativo_url:
                         self.log_result("Comprovativo-Endpoint", True, 
                                       f"Comprovativo endpoint working correctly: {result}")
                     else:
                         self.log_result("Comprovativo-Endpoint", False, 
-                                      f"File not saved in correct directory: {file_path}")
+                                      f"File not saved in correct directory: {comprovativo_url}")
                 else:
                     self.log_result("Comprovativo-Endpoint", False, 
                                   f"Response missing expected fields: {result}")
