@@ -123,11 +123,30 @@ class VehicleCreate(BaseModel):
     parceiro_id: str
 
 
+class DanoVeiculo(BaseModel):
+    """Dano identificado em vistoria"""
+    descricao: str
+    localizacao: str
+    gravidade: str  # "leve", "moderado", "grave"
+    fotos: List[str] = []
+    custo_estimado: Optional[float] = None
+    custo_real: Optional[float] = None
+    responsavel: Optional[str] = None  # "motorista", "terceiros", "desgaste"
+    motorista_id: Optional[str] = None
+    motorista_nome: Optional[str] = None
+    reparado: bool = False
+    data_reparacao: Optional[datetime] = None
+
+
 class VehicleVistoria(BaseModel):
     """Vehicle vistoria/inspection record"""
     id: str
     veiculo_id: str
     data_vistoria: datetime
+    agendada: bool = False  # Se foi agendada antecipadamente
+    data_agendamento: Optional[datetime] = None
+    recorrencia: Optional[str] = None  # "mensal", "trimestral", "semestral", "anual"
+    proxima_vistoria_auto: Optional[datetime] = None
     tipo: str  # "entrada", "saida", "periodica", "danos"
     km_veiculo: Optional[int] = None
     responsavel_nome: Optional[str] = None
@@ -136,10 +155,13 @@ class VehicleVistoria(BaseModel):
     estado_geral: Optional[str] = "bom"  # "excelente", "bom", "razoavel", "mau"
     fotos: List[str] = []
     itens_verificados: Dict[str, Any] = {}  # checklist items
-    danos_encontrados: List[Dict[str, Any]] = []
+    danos_encontrados: List[DanoVeiculo] = []
+    custo_total_danos: Optional[float] = None
     pdf_relatorio: Optional[str] = None
     assinatura_responsavel: Optional[str] = None
     assinatura_motorista: Optional[str] = None
+    motorista_associado_id: Optional[str] = None
+    motorista_associado_nome: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
