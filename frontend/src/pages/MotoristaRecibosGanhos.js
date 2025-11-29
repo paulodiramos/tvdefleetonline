@@ -283,6 +283,18 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
                         )}
                       </div>
                       <div className="ml-4 flex flex-col space-y-2">
+                        {/* Download Relatório PDF */}
+                        {relatorio.relatorio_pdf_url && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownload(relatorio.relatorio_pdf_url)}
+                          >
+                            <Download className="w-4 h-4 mr-2" />
+                            Relatório PDF
+                          </Button>
+                        )}
+                        
                         {/* Recibo */}
                         {user.role === 'motorista' && (relatorio.status === 'pendente_recibo' || relatorio.status === 'recibo_enviado' || relatorio.status === 'recibo_emitido') ? (
                           <label className="cursor-pointer">
