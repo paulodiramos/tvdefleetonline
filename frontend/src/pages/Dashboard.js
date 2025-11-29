@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { TrendingUp, TrendingDown, AlertCircle, Calendar, Car, Users, DollarSign, Wrench, AlertTriangle, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, Calendar, Car, Users, DollarSign, Wrench, AlertTriangle, CheckCircle, XCircle, Eye, EyeOff, X, Shield, ClipboardCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
 // StatCard component moved outside to avoid re-render issues
