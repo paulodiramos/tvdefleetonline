@@ -8,7 +8,29 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { TrendingUp, TrendingDown, Car, Users, DollarSign, AlertCircle, AlertTriangle, CheckCircle, X, Calendar, Shield, ClipboardCheck, Wrench } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertCircle, Calendar, Car, Users, DollarSign, Wrench, AlertTriangle, CheckCircle, XCircle, Eye, EyeOff } from 'lucide-react';
+import { toast } from 'sonner';
+
+// StatCard component moved outside to avoid re-render issues
+const StatCard = ({ title, value, icon: Icon, trend, trendValue, color }) => (
+  <Card className="card-hover" data-testid={`stat-card-${title.toLowerCase().replace(/\s/g, '-')}`}>
+    <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <CardTitle className="text-sm font-medium text-slate-600">{title}</CardTitle>
+      <div className={`p-2 rounded-lg ${color}`}>
+        <Icon className="w-5 h-5 text-white" />
+      </div>
+    </CardHeader>
+    <CardContent>
+      <div className="text-3xl font-bold text-slate-800">{value}</div>
+      {trend && (
+        <div className={`flex items-center mt-2 text-sm ${trend === 'up' ? 'text-blue-600' : 'text-red-600'}`}>
+          {trend === 'up' ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
+          <span>{trendValue}</span>
+        </div>
+      )}
+    </CardContent>
+  </Card>
+);
 
 const Dashboard = ({ user, onLogout }) => {
   const [stats, setStats] = useState(null);
