@@ -295,8 +295,8 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
                           </Button>
                         )}
                         
-                        {/* Recibo */}
-                        {user.role === 'motorista' && (relatorio.status === 'pendente_recibo' || relatorio.status === 'recibo_enviado' || relatorio.status === 'recibo_emitido') ? (
+                        {/* Recibo - Upload apenas se pendente ou recibo enviado (antes de pago) */}
+                        {user.role === 'motorista' && (relatorio.status === 'pendente_recibo' || relatorio.status === 'recibo_enviado') ? (
                           <label className="cursor-pointer">
                             <input
                               type="file"
