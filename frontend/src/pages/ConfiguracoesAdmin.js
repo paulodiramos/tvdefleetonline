@@ -103,6 +103,32 @@ const ConfiguracoesAdmin = ({ user, onLogout }) => {
     toast.info('Alterações descartadas');
   };
 
+  const handleSaveComunicacoes = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/admin/config/comunicacoes`,
+        { 
+          email_comunicacoes: configData.email_comunicacoes,
+          whatsapp_comunicacoes: configData.whatsapp_comunicacoes
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setOriginalData({ 
+        ...originalData, 
+        email_comunicacoes: configData.email_comunicacoes,
+        whatsapp_comunicacoes: configData.whatsapp_comunicacoes
+      });
+      toast.success('Configurações de comunicação guardadas com sucesso!');
+    } catch (error) {
+      console.error('Error saving comunicacoes:', error);
+      toast.error('Erro ao guardar configurações de comunicação');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (user?.role !== 'admin') {
     return (
       <Layout user={user} onLogout={onLogout}>
