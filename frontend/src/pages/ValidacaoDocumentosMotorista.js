@@ -806,6 +806,7 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
                       
                       {/* Botões de Ação */}
                       <div className="flex space-x-2">
+                        {/* Todos podem fazer download */}
                         <Button
                           size="sm"
                           variant="outline"
@@ -816,34 +817,39 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
                           Descarregar
                         </Button>
                         
-                        {!isValidado ? (
+                        {/* Apenas Admin, Gestor e Operacional podem aprovar/rejeitar */}
+                        {(user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional') && (
                           <>
-                            <Button
-                              size="sm"
-                              onClick={() => handleValidateDocument(docType, true)}
-                              className="bg-green-600 hover:bg-green-700 text-white"
-                            >
-                              <CheckCircle className="w-4 h-4 mr-2" />
-                              Aprovar
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleValidateDocument(docType, false)}
-                            >
-                              <XCircle className="w-4 h-4 mr-2" />
-                              Rejeitar
-                            </Button>
+                            {!isValidado ? (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleValidateDocument(docType, true)}
+                                  className="bg-green-600 hover:bg-green-700 text-white"
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-2" />
+                                  Aprovar
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleValidateDocument(docType, false)}
+                                >
+                                  <XCircle className="w-4 h-4 mr-2" />
+                                  Rejeitar
+                                </Button>
+                              </>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="border-red-500 text-red-600 hover:bg-red-50"
+                                onClick={() => handleValidateDocument(docType, false)}
+                              >
+                                Revogar Aprovação
+                              </Button>
+                            )}
                           </>
-                        ) : (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-red-500 text-red-600 hover:bg-red-50"
-                            onClick={() => handleValidateDocument(docType, false)}
-                          >
-                            Revogar Aprovação
-                          </Button>
                         )}
                       </div>
                     </div>
