@@ -3473,7 +3473,11 @@ async def download_motorista_contrato(
     
     if not contract_path.exists():
         print(f"[CONTRACT DOWNLOAD] ERRO: Arquivo não existe!", flush=True)
-        raise HTTPException(status_code=404, detail="Contract file not found")
+        # Debug: Include path in error message
+        raise HTTPException(
+            status_code=404, 
+            detail=f"Contract file not found. Path: {contract_path} | DB path: {contrato['contrato_assinado']}"
+        )
     
     return FileResponse(
         path=contract_path,
