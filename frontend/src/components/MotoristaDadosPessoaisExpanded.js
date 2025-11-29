@@ -335,9 +335,11 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
     } catch (error) {
       console.error('Error downloading contract:', error);
       if (error.response?.status === 404) {
-        toast.error('Contrato não encontrado');
+        toast.info('Ainda não tem contrato assinado. Entre em contato com o seu parceiro.');
+      } else if (error.response?.status === 403) {
+        toast.error('Não autorizado a descarregar este contrato');
       } else {
-        toast.error('Erro ao descarregar contrato');
+        toast.error('Erro ao descarregar contrato. Tente novamente mais tarde.');
       }
     }
   };
