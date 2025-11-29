@@ -296,13 +296,16 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
             <Button variant="outline" onClick={() => navigate('/usuarios')}>
               Voltar
             </Button>
-            <Button
-              onClick={handleAprovarTodosDocumentos}
-              disabled={processingApproval || motorista.documentos_aprovados}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              {motorista.documentos_aprovados ? '✅ Documentos Aprovados' : 'Aprovar Todos os Documentos'}
-            </Button>
+            {/* Apenas Admin, Gestor e Operacional podem aprovar documentos */}
+            {(user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional') && (
+              <Button
+                onClick={handleAprovarTodosDocumentos}
+                disabled={processingApproval || motorista.documentos_aprovados}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {motorista.documentos_aprovados ? '✅ Documentos Aprovados' : 'Aprovar Todos os Documentos'}
+              </Button>
+            )}
           </div>
         </div>
 
