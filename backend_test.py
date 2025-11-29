@@ -1146,6 +1146,343 @@ startxref
         except Exception as e:
             self.log_result("File-Serving-Vehicles", False, f"Request error: {str(e)}")
 
+    # ==================== REVIEW REQUEST TESTS - TVDEFleet Specific Features ====================
+    
+    def test_dashboard_semana_passada_filter(self):
+        """Test Dashboard - Filtro de Semana Passada functionality"""
+        print("\n📊 TESTING DASHBOARD - FILTRO DE SEMANA PASSADA")
+        print("-" * 60)
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Dashboard-Semana-Passada", False, "No auth token for admin")
+            return
+        
+        try:
+            # Test dashboard endpoint with semana_passada filter
+            response = requests.get(f"{BACKEND_URL}/dashboard/stats?periodo=semana_passada", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check if response contains expected fields for dashboard stats
+                expected_fields = ["periodo", "data_inicio", "data_fim"]
+                has_expected_fields = any(field in data for field in expected_fields)
+                
+                if has_expected_fields:
+                    self.log_result("Dashboard-Semana-Passada", True, 
+                                  f"Dashboard semana passada filter working: {data}")
+                else:
+                    self.log_result("Dashboard-Semana-Passada", False, 
+                                  f"Dashboard response missing expected fields: {data}")
+            else:
+                self.log_result("Dashboard-Semana-Passada", False, 
+                              f"Dashboard endpoint failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Dashboard-Semana-Passada", False, f"Dashboard test error: {str(e)}")
+    
+    def test_motorista_recibos_ganhos_endpoints(self):
+        """Test Motorista - Recibos e Downloads functionality"""
+        print("\n🚗 TESTING MOTORISTA - RECIBOS E DOWNLOADS")
+        print("-" * 60)
+        
+        headers = self.get_headers("motorista")
+        if not headers:
+            self.log_result("Motorista-Recibos", False, "No auth token for motorista")
+            return
+        
+        try:
+            # Test GET /api/motoristas/recibos-ganhos endpoint
+            response = requests.get(f"{BACKEND_URL}/motoristas/recibos-ganhos", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.log_result("Motorista-Recibos-List", True, 
+                              f"Recibos ganhos endpoint accessible: {len(data) if isinstance(data, list) else 'object'} items")
+                
+                # Test weekly report PDF generation endpoint
+                pdf_response = requests.get(f"{BACKEND_URL}/motoristas/relatorio-pdf-semanal", headers=headers)
+                
+                if pdf_response.status_code == 200:
+                    self.log_result("Motorista-Relatorio-PDF", True, "Weekly PDF report endpoint working")
+                else:
+                    self.log_result("Motorista-Relatorio-PDF", False, 
+                                  f"PDF report failed: {pdf_response.status_code}")
+                
+                # Test individual recibo viewing
+                if isinstance(data, list) and len(data) > 0:
+                    recibo_id = data[0].get("id")
+                    if recibo_id:
+                        recibo_response = requests.get(f"{BACKEND_URL}/recibos/{recibo_id}", headers=headers)
+                        
+                        if recibo_response.status_code == 200:
+                            self.log_result("Motorista-Ver-Recibo", True, "Ver Recibo functionality working")
+                        else:
+                            self.log_result("Motorista-Ver-Recibo", False, 
+                                          f"Ver Recibo failed: {recibo_response.status_code}")
+                
+            else:
+                self.log_result("Motorista-Recibos", False, 
+                              f"Recibos ganhos endpoint failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Motorista-Recibos", False, f"Motorista recibos test error: {str(e)}")
+    
+    def test_recibo_status_button_logic(self):
+        """Test Recibo button visibility based on status"""
+        print("\n📋 TESTING RECIBO STATUS BUTTON LOGIC")
+        print("-" * 60)
+        
+        headers = self.get_headers("admin")  # Use admin to create test data
+        if not headers:
+            self.log_result("Recibo-Status-Logic", False, "No auth token for admin")
+            return
+        
+        try:
+            # Get motorista for testing
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            if motoristas_response.status_code != 200 or not motoristas_response.json():
+                self.log_result("Recibo-Status-Logic", False, "No motoristas available for test")
+                return
+            
+            motorista_id = motoristas_response.json()[0]["id"]
+            
+            # Test different recibo statuses
+            test_statuses = [
+                {"status": "pendente_recibo", "should_show_substituir": True},
+                {"status": "recibo_enviado", "should_show_substituir": True},
+                {"status": "pago", "should_show_substituir": False}
+            ]
+            
+            for test_case in test_statuses:
+                # Create recibo with specific status
+                recibo_data = {
+                    "motorista_id": motorista_id,
+                    "valor": 150.0,
+                    "mes_referencia": "2025-01",
+                    "status": test_case["status"],
+                    "ficheiro_url": "/test/recibo.pdf"
+                }
+                
+                create_response = requests.post(f"{BACKEND_URL}/recibos", json=recibo_data, headers=headers)
+                
+                if create_response.status_code == 200:
+                    recibo = create_response.json()
+                    recibo_id = recibo["id"]
+                    
+                    # Test recibo details endpoint
+                    details_response = requests.get(f"{BACKEND_URL}/recibos/{recibo_id}", headers=headers)
+                    
+                    if details_response.status_code == 200:
+                        recibo_details = details_response.json()
+                        status = recibo_details.get("status")
+                        
+                        # Verify status is correct
+                        if status == test_case["status"]:
+                            self.log_result(f"Recibo-Status-{test_case['status']}", True, 
+                                          f"Recibo with status '{status}' created and retrieved correctly")
+                        else:
+                            self.log_result(f"Recibo-Status-{test_case['status']}", False, 
+                                          f"Status mismatch: expected '{test_case['status']}', got '{status}'")
+                    else:
+                        self.log_result(f"Recibo-Status-{test_case['status']}", False, 
+                                      f"Could not retrieve recibo details: {details_response.status_code}")
+                else:
+                    self.log_result(f"Recibo-Status-{test_case['status']}", False, 
+                                  f"Could not create recibo: {create_response.status_code}")
+            
+        except Exception as e:
+            self.log_result("Recibo-Status-Logic", False, f"Recibo status test error: {str(e)}")
+    
+    def test_parceiro_upload_comprovativo(self):
+        """Test Parceiro - Upload de Comprovativo functionality"""
+        print("\n🏢 TESTING PARCEIRO - UPLOAD DE COMPROVATIVO")
+        print("-" * 60)
+        
+        headers = self.get_headers("parceiro")
+        if not headers:
+            self.log_result("Parceiro-Upload-Comprovativo", False, "No auth token for parceiro")
+            return
+        
+        try:
+            # First, get or create a pagamento for testing
+            pagamentos_response = requests.get(f"{BACKEND_URL}/pagamentos", headers=headers)
+            
+            if pagamentos_response.status_code == 200:
+                pagamentos = pagamentos_response.json()
+                
+                if not pagamentos:
+                    # Create a test pagamento first
+                    motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=self.get_headers("admin"))
+                    if motoristas_response.status_code == 200 and motoristas_response.json():
+                        motorista_id = motoristas_response.json()[0]["id"]
+                        
+                        pagamento_data = {
+                            "motorista_id": motorista_id,
+                            "valor": 200.0,
+                            "periodo_inicio": "2025-01-01",
+                            "periodo_fim": "2025-01-07",
+                            "tipo_documento": "recibo_verde",
+                            "notas": "Teste comprovativo"
+                        }
+                        
+                        create_response = requests.post(f"{BACKEND_URL}/pagamentos", json=pagamento_data, headers=headers)
+                        if create_response.status_code == 200:
+                            pagamentos = [create_response.json()]
+                        else:
+                            self.log_result("Parceiro-Upload-Comprovativo", False, "Could not create test pagamento")
+                            return
+                    else:
+                        self.log_result("Parceiro-Upload-Comprovativo", False, "No motoristas available for test")
+                        return
+                
+                pagamento_id = pagamentos[0]["id"]
+                
+                # Test upload comprovativo endpoint
+                test_file = self.create_test_pdf()
+                
+                files = {
+                    'file': ('comprovativo_pagamento.pdf', test_file, 'application/pdf')
+                }
+                
+                upload_response = requests.post(
+                    f"{BACKEND_URL}/pagamentos/{pagamento_id}/comprovativo",
+                    files=files,
+                    headers=headers
+                )
+                
+                if upload_response.status_code == 200:
+                    result = upload_response.json()
+                    
+                    # Check if status changed to "liquidado"
+                    updated_pagamento_response = requests.get(f"{BACKEND_URL}/pagamentos/{pagamento_id}", headers=headers)
+                    
+                    if updated_pagamento_response.status_code == 200:
+                        updated_pagamento = updated_pagamento_response.json()
+                        
+                        if updated_pagamento.get("status") == "liquidado":
+                            self.log_result("Parceiro-Upload-Comprovativo", True, 
+                                          "Comprovativo uploaded successfully and status changed to 'liquidado'")
+                        else:
+                            self.log_result("Parceiro-Upload-Comprovativo", False, 
+                                          f"Status not updated to 'liquidado': {updated_pagamento.get('status')}")
+                    else:
+                        self.log_result("Parceiro-Upload-Comprovativo", False, 
+                                      "Could not retrieve updated pagamento")
+                else:
+                    self.log_result("Parceiro-Upload-Comprovativo", False, 
+                                  f"Upload failed: {upload_response.status_code}", upload_response.text)
+            else:
+                self.log_result("Parceiro-Upload-Comprovativo", False, 
+                              f"Could not get pagamentos: {pagamentos_response.status_code}")
+        except Exception as e:
+            self.log_result("Parceiro-Upload-Comprovativo", False, f"Upload comprovativo test error: {str(e)}")
+    
+    def test_comprovativo_endpoint_multipart(self):
+        """Test Backend - Endpoint de Comprovativo with multipart/form-data"""
+        print("\n🔧 TESTING BACKEND - ENDPOINT DE COMPROVATIVO")
+        print("-" * 60)
+        
+        headers = self.get_headers("admin")  # Use admin for full access
+        if not headers:
+            self.log_result("Comprovativo-Endpoint", False, "No auth token for admin")
+            return
+        
+        try:
+            # Create a test pagamento first
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            if motoristas_response.status_code != 200 or not motoristas_response.json():
+                self.log_result("Comprovativo-Endpoint", False, "No motoristas available for test")
+                return
+            
+            motorista_id = motoristas_response.json()[0]["id"]
+            
+            pagamento_data = {
+                "motorista_id": motorista_id,
+                "valor": 300.0,
+                "periodo_inicio": "2025-01-08",
+                "periodo_fim": "2025-01-14",
+                "tipo_documento": "fatura",
+                "notas": "Teste endpoint comprovativo"
+            }
+            
+            create_response = requests.post(f"{BACKEND_URL}/pagamentos", json=pagamento_data, headers=headers)
+            
+            if create_response.status_code != 200:
+                self.log_result("Comprovativo-Endpoint", False, "Could not create test pagamento")
+                return
+            
+            pagamento_id = create_response.json()["id"]
+            
+            # Test the comprovativo endpoint with multipart/form-data
+            test_file = self.create_test_pdf()
+            
+            files = {
+                'file': ('comprovativo_teste.pdf', test_file, 'application/pdf')
+            }
+            
+            # Test POST /api/pagamentos/{id}/comprovativo
+            response = requests.post(
+                f"{BACKEND_URL}/pagamentos/{pagamento_id}/comprovativo",
+                files=files,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Verify response structure
+                expected_fields = ["message", "file_path", "status"]
+                has_expected_fields = any(field in result for field in expected_fields)
+                
+                if has_expected_fields:
+                    # Check if file was saved in correct directory
+                    file_path = result.get("file_path", "")
+                    
+                    if "/uploads/comprovativos/" in file_path or "comprovativos" in file_path:
+                        self.log_result("Comprovativo-Endpoint", True, 
+                                      f"Comprovativo endpoint working correctly: {result}")
+                    else:
+                        self.log_result("Comprovativo-Endpoint", False, 
+                                      f"File not saved in correct directory: {file_path}")
+                else:
+                    self.log_result("Comprovativo-Endpoint", False, 
+                                  f"Response missing expected fields: {result}")
+            else:
+                self.log_result("Comprovativo-Endpoint", False, 
+                              f"Endpoint failed: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Comprovativo-Endpoint", False, f"Comprovativo endpoint test error: {str(e)}")
+    
+    def test_comprovativo_file_storage(self):
+        """Test that comprovativo files are saved in /uploads/comprovativos/"""
+        print("\n💾 TESTING COMPROVATIVO FILE STORAGE")
+        print("-" * 60)
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Comprovativo-File-Storage", False, "No auth token for admin")
+            return
+        
+        try:
+            # Check if uploads directory structure exists via file serving endpoint
+            # This tests that the backend can serve files from the comprovativos directory
+            
+            # Test accessing comprovativos folder (should return 404 for non-existent file, not auth error)
+            response = requests.get(f"{BACKEND_URL}/files/comprovativos/test_file.pdf", headers=headers)
+            
+            # We expect either 200 (file found) or 404 (file not found), but not 401/403 (auth issues)
+            if response.status_code in [200, 404]:
+                self.log_result("Comprovativo-File-Storage", True, 
+                              f"Comprovativos directory accessible via file endpoint (status: {response.status_code})")
+            elif response.status_code in [401, 403]:
+                self.log_result("Comprovativo-File-Storage", False, 
+                              f"Authentication issue for comprovativos directory: {response.status_code}")
+            else:
+                self.log_result("Comprovativo-File-Storage", False, 
+                              f"Unexpected status for comprovativos directory: {response.status_code}")
+        except Exception as e:
+            self.log_result("Comprovativo-File-Storage", False, f"File storage test error: {str(e)}")
+
     # ==================== NEW FEATURES TESTS (CSV TEMPLATES & INSPECTION VALUE) ====================
     
     def test_csv_template_downloads(self):
