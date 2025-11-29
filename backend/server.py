@@ -3485,6 +3485,54 @@ async def download_motorista_contrato(
         filename=f"contrato_{motorista['name']}.pdf"
     )
 
+@api_router.get("/motoristas/{motorista_id}/contrato/download-v2")
+async def download_motorista_contrato_v2(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """NEW VERSION - Download contract of motorista"""
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista not found")
+    
+    # Check authorization
+    is_assigned = False
+    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        is_assigned = motorista.get("parceiro_atribuido") == current_user["id"]
+    
+    is_authorized = (
+        current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO] or
+        is_assigned or
+        (current_user["role"] == UserRole.MOTORISTA and current_user["email"] == motorista.get("email"))
+    )
+    
+    if not is_authorized:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Find contract
+    contrato = await db.contratos.find_one({"motorista_id": motorista_id}, {"_id": 0})
+    if not contrato or not contrato.get("contrato_assinado"):
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    # Build path correctly
+    contract_db_path = contrato["contrato_assinado"]
+    if contract_db_path.startswith("/uploads/"):
+        contract_path = Path("/app/backend/uploads" + contract_db_path[8:])
+    else:
+        contract_path = Path(contract_db_path)
+    
+    if not contract_path.exists():
+        raise HTTPException(
+            status_code=404, 
+            detail=f"File not found at: {contract_path}"
+        )
+    
+    return FileResponse(
+        path=contract_path,
+        media_type="application/pdf",
+        filename=f"contrato_{motorista['name']}.pdf"
+    )
+
 @api_router.get("/relatorios-ganhos/{relatorio_id}/download")
 async def download_relatorio_recibo(
     relatorio_id: str,
