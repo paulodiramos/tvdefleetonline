@@ -118,26 +118,7 @@ const Dashboard = ({ user, onLogout }) => {
     }
   };
 
-  const StatCard = ({ title, value, icon: Icon, trend, trendValue, color }) => (
-    <Card className="card-hover" data-testid={`stat-card-${title.toLowerCase().replace(/\s/g, '-')}`}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-slate-600">{title}</CardTitle>
-        <div className={`p-2 rounded-lg ${color}`}>
-          <Icon className="w-5 h-5 text-white" />
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="text-3xl font-bold text-slate-800">{value}</div>
-        {trend && (
-          <div className={`flex items-center mt-2 text-sm ${trend === 'up' ? 'text-blue-600' : 'text-red-600'}`}>
-            {trend === 'up' ? <TrendingUp className="w-4 h-4 mr-1" /> : <TrendingDown className="w-4 h-4 mr-1" />}
-            <span>{trendValue}</span>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-
+  
   if (loading) {
     return (
       <Layout user={user} onLogout={onLogout}>
