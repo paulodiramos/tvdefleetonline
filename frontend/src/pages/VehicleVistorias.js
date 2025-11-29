@@ -188,6 +188,49 @@ const VehicleVistorias = ({ user, onLogout }) => {
       alert('Erro ao gerar PDF');
     }
   };
+  
+  const handleAddDano = () => {
+    if (!danosForm.descricao || !danosForm.localizacao) {
+      alert('Por favor, preencha descrição e localização');
+      return;
+    }
+    
+    const novoDano = {
+      ...danosForm,
+      custo_estimado: parseFloat(danosForm.custo_estimado) || 0,
+      fotos: [],
+      reparado: false
+    };
+    
+    setCurrentDanos([...currentDanos, novoDano]);
+    
+    // Reset form
+    setDanosForm({
+      descricao: '',
+      localizacao: '',
+      gravidade: 'leve',
+      custo_estimado: '',
+      responsavel: 'motorista',
+      motorista_id: '',
+      motorista_nome: ''
+    });
+  };
+  
+  const handleRemoveDano = (index) => {
+    setCurrentDanos(currentDanos.filter((_, i) => i !== index));
+  };
+  
+  const loadMotoristas = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/motoristas`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMotoristas(response.data);
+    } catch (error) {
+      console.error('Error loading motoristas:', error);
+    }
+  };
 
   const handleChecklistChange = (key, value) => {
     setFormData(prev => ({
