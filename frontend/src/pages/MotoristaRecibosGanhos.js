@@ -163,7 +163,13 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
       toast.success('Download iniciado!');
     } catch (error) {
       console.error('Error downloading:', error);
-      toast.error('Erro ao fazer download');
+      if (error.response?.status === 404) {
+        toast.error('Recibo não encontrado no servidor. Por favor, contacte o suporte.');
+      } else if (error.response?.status === 403) {
+        toast.error('Não autorizado a ver este recibo');
+      } else {
+        toast.error('Erro ao fazer download. Tente novamente mais tarde.');
+      }
     }
   };
 
