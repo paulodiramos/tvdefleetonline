@@ -6266,10 +6266,6 @@ async def adicionar_dano_vistoria(
     return {"message": "Dano adicionado com sucesso", "dano_id": dano_id}
 
 
-    vistoria_id: str,
-    current_user: Dict = Depends(get_current_user)
-):
-    """Generate PDF report for a vistoria"""
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
