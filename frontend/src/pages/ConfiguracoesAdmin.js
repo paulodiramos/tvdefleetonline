@@ -257,6 +257,78 @@ const ConfiguracoesAdmin = ({ user, onLogout }) => {
                   </Button>
                 </div>
               </TabsContent>
+
+              {/* Comunicações Tab */}
+              <TabsContent value="comunicacoes" className="space-y-4">
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="email_comunicacoes" className="text-lg font-semibold">
+                      Email para Comunicações
+                    </Label>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Este email será usado para enviar relatórios semanais e notificações aos motoristas e parceiros
+                    </p>
+                    <input
+                      id="email_comunicacoes"
+                      type="email"
+                      className="w-full p-3 border rounded-md text-sm"
+                      placeholder="comunicacoes@empresa.com"
+                      value={configData.email_comunicacoes}
+                      onChange={(e) => setConfigData({ ...configData, email_comunicacoes: e.target.value })}
+                      disabled={loading || saving}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="whatsapp_comunicacoes" className="text-lg font-semibold">
+                      WhatsApp para Comunicações
+                    </Label>
+                    <p className="text-sm text-slate-600 mb-3">
+                      Número de telefone (com código do país) para enviar mensagens via WhatsApp
+                    </p>
+                    <input
+                      id="whatsapp_comunicacoes"
+                      type="tel"
+                      className="w-full p-3 border rounded-md text-sm"
+                      placeholder="+351912345678"
+                      value={configData.whatsapp_comunicacoes}
+                      onChange={(e) => setConfigData({ ...configData, whatsapp_comunicacoes: e.target.value })}
+                      disabled={loading || saving}
+                    />
+                    <p className="text-xs text-slate-500 mt-1">
+                      Formato: +[código país][número] (ex: +351912345678)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setConfigData({ 
+                      ...configData, 
+                      email_comunicacoes: originalData.email_comunicacoes,
+                      whatsapp_comunicacoes: originalData.whatsapp_comunicacoes
+                    })}
+                    disabled={loading || saving || 
+                      (configData.email_comunicacoes === originalData.email_comunicacoes && 
+                       configData.whatsapp_comunicacoes === originalData.whatsapp_comunicacoes)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    className="bg-blue-600 hover:bg-blue-700 flex items-center space-x-2"
+                    onClick={handleSaveComunicacoes}
+                    disabled={loading || saving || 
+                      (configData.email_comunicacoes === originalData.email_comunicacoes && 
+                       configData.whatsapp_comunicacoes === originalData.whatsapp_comunicacoes)}
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>Guardar Comunicações</span>
+                  </Button>
+                </div>
+              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
