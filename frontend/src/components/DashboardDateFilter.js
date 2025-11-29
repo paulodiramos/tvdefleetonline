@@ -89,6 +89,9 @@ const DashboardDateFilter = ({ onFilterChange, defaultPeriod = 'todos' }) => {
       case 'semana':
         aplicarSemanaAtual();
         return;
+      case 'semana_passada':
+        aplicarSemanaPassada();
+        return;
       case 'mes':
         inicio = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
         fim = new Date(today.getFullYear(), today.getMonth() + 1, 0).toISOString().split('T')[0];
