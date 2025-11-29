@@ -165,7 +165,7 @@ const ConfiguracoesAdmin = ({ user, onLogout }) => {
         <Card>
           <CardContent className="p-6">
             <Tabs defaultValue="terms" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
+              <TabsList className="grid w-full grid-cols-3 mb-6">
                 <TabsTrigger value="terms" className="flex items-center space-x-2">
                   <FileText className="w-4 h-4" />
                   <span>Termos e Condições</span>
@@ -173,6 +173,10 @@ const ConfiguracoesAdmin = ({ user, onLogout }) => {
                 <TabsTrigger value="privacy" className="flex items-center space-x-2">
                   <Shield className="w-4 h-4" />
                   <span>Política de Privacidade</span>
+                </TabsTrigger>
+                <TabsTrigger value="comunicacoes" className="flex items-center space-x-2">
+                  <FileText className="w-4 h-4" />
+                  <span>Comunicações</span>
                 </TabsTrigger>
               </TabsList>
 
