@@ -3431,7 +3431,7 @@ async def download_motorista_contrato(
     
     motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
     if not motorista:
-        logger.warning(f"[CONTRACT] Motorista não encontrado: {motorista_id}")
+        print(f"[CONTRACT] Motorista não encontrado: {motorista_id}", flush=True)
         raise HTTPException(status_code=404, detail="Motorista not found")
     
     # Check authorization
@@ -3446,19 +3446,19 @@ async def download_motorista_contrato(
     )
     
     if not is_authorized:
-        logger.warning(f"[CONTRACT] Não autorizado: {current_user['role']}")
+        print(f"[CONTRACT] Não autorizado: {current_user['role']}", flush=True)
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    logger.info(f"[CONTRACT] Autorização OK. Buscando contrato na DB...")
+    print(f"[CONTRACT] Autorização OK. Buscando contrato na DB...", flush=True)
     
     # Find contract for this motorista
     contrato = await db.contratos.find_one({"motorista_id": motorista_id}, {"_id": 0})
-    logger.info(f"[CONTRACT] Contrato encontrado: {contrato is not None}")
+    print(f"[CONTRACT] Contrato encontrado: {contrato is not None}", flush=True)
     if contrato:
-        logger.info(f"[CONTRACT] contrato_assinado: {contrato.get('contrato_assinado')}")
+        print(f"[CONTRACT] contrato_assinado: {contrato.get('contrato_assinado')}", flush=True)
     
     if not contrato or not contrato.get("contrato_assinado"):
-        logger.warning(f"[CONTRACT] Contrato não encontrado ou sem arquivo assinado")
+        print(f"[CONTRACT] Contrato não encontrado ou sem arquivo assinado", flush=True)
         raise HTTPException(status_code=404, detail="Contract not found")
     
     # Get contract path
