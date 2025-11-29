@@ -222,7 +222,7 @@ async def check_recibos_pendentes(db):
                 titulo="📄 Recibo Pendente",
                 mensagem=f"Tem um recibo pendente de envio referente ao período {relatorio.get('periodo_inicio')} - {relatorio.get('periodo_fim')}.",
                 prioridade="normal",
-                link="/pagamentos",
+                link="/recibos-ganhos",
                 metadata={"relatorio_id": relatorio["id"]},
                 enviar_email=False
             )
