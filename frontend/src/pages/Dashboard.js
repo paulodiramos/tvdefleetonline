@@ -60,6 +60,7 @@ const Dashboard = ({ user, onLogout }) => {
     if (user.role === 'admin' || user.role === 'gestao') {
       fetchParceiros();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtroData, selectedParceiro]);
 
   const fetchStats = async () => {
