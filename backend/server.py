@@ -3533,10 +3533,51 @@ async def download_motorista_contrato_v2(
         filename=f"contrato_{motorista['name']}.pdf"
     )
 
-@api_router.get("/test-reload")
-async def test_reload_endpoint():
-    """Test endpoint to verify hot reload works - VERSION 3"""
-    return {"status": "working", "version": "3", "message": "Hot reload is functioning correctly"}
+@api_router.post("/pagamentos/{pagamento_id}/comprovativo")
+async def upload_pagamento_comprovativo(
+    pagamento_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload payment proof/comprovativo (Parceiro/Admin/Gestor)"""
+    # Authorization check
+    if current_user["role"] not in [UserRole.PARCEIRO, UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Find payment
+    pagamento = await db.pagamentos.find_one({"id": pagamento_id}, {"_id": 0})
+    if not pagamento:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    
+    # For parceiro, check if payment belongs to them
+    if current_user["role"] == UserRole.PARCEIRO:
+        if pagamento.get("parceiro_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Save file
+    file_ext = file.filename.split('.')[-1]
+    filename = f"comprovativo_pag_{pagamento_id}_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.{file_ext}"
+    file_path = UPLOAD_DIR / "comprovativos" / filename
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+    
+    with open(file_path, "wb") as f:
+        content = await file.read()
+        f.write(content)
+    
+    # Update payment with comprovativo path
+    saved_path = f"/uploads/comprovativos/{filename}"
+    await db.pagamentos.update_one(
+        {"id": pagamento_id},
+        {
+            "$set": {
+                "comprovativo_pagamento_url": saved_path,
+                "status": "liquidado",
+                "updated_at": datetime.utcnow().isoformat()
+            }
+        }
+    )
+    
+    return {"message": "Comprovativo uploaded successfully", "path": saved_path}
 
 @api_router.get("/relatorios-ganhos/{relatorio_id}/download")
 async def download_relatorio_recibo(
