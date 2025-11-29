@@ -56,7 +56,11 @@ const Dashboard = ({ user, onLogout }) => {
     fetchStats();
     fetchAlertas();
     fetchProximasDatas();
-  }, [filtroData]);
+    // Fetch parceiros if user is admin or gestao
+    if (user.role === 'admin' || user.role === 'gestao') {
+      fetchParceiros();
+    }
+  }, [filtroData, selectedParceiro]);
 
   const fetchStats = async () => {
     try {
