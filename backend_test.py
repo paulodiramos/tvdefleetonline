@@ -1419,7 +1419,7 @@ startxref
                 self.log_result("Comprovativo-Endpoint", False, f"Could not create test relatorio: {create_response.status_code}")
                 return
             
-            relatorio_id = create_response.json()["id"]
+            relatorio_id = create_response.json()["relatorio_id"]
             
             # Test the comprovativo endpoint with multipart/form-data
             test_file = self.create_test_pdf()
