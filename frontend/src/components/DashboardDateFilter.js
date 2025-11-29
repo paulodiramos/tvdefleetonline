@@ -138,6 +138,7 @@ const DashboardDateFilter = ({ onFilterChange, defaultPeriod = 'todos' }) => {
               <SelectItem value="todos">Todos</SelectItem>
               <SelectItem value="hoje">Hoje</SelectItem>
               <SelectItem value="semana">Semana Atual</SelectItem>
+              <SelectItem value="semana_passada">Semana Passada</SelectItem>
               <SelectItem value="mes">Mês Atual</SelectItem>
               <SelectItem value="ano">Ano Atual</SelectItem>
               <SelectItem value="personalizado">Personalizado</SelectItem>
