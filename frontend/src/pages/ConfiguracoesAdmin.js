@@ -37,11 +37,15 @@ const ConfiguracoesAdmin = ({ user, onLogout }) => {
       });
       setConfigData({
         condicoes_gerais: response.data.condicoes_gerais || '',
-        politica_privacidade: response.data.politica_privacidade || ''
+        politica_privacidade: response.data.politica_privacidade || '',
+        email_comunicacoes: response.data.email_comunicacoes || '',
+        whatsapp_comunicacoes: response.data.whatsapp_comunicacoes || ''
       });
       setOriginalData({
         condicoes_gerais: response.data.condicoes_gerais || '',
-        politica_privacidade: response.data.politica_privacidade || ''
+        politica_privacidade: response.data.politica_privacidade || '',
+        email_comunicacoes: response.data.email_comunicacoes || '',
+        whatsapp_comunicacoes: response.data.whatsapp_comunicacoes || ''
       });
     } catch (error) {
       console.error('Error fetching config:', error);
