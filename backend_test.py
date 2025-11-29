@@ -1307,40 +1307,43 @@ startxref
             return
         
         try:
-            # First, get or create a pagamento for testing
-            pagamentos_response = requests.get(f"{BACKEND_URL}/pagamentos", headers=headers)
+            # First, get or create a relatorio-ganhos for testing (this is what parceiros work with)
+            relatorios_response = requests.get(f"{BACKEND_URL}/relatorios-ganhos", headers=headers)
             
-            if pagamentos_response.status_code == 200:
-                pagamentos = pagamentos_response.json()
+            if relatorios_response.status_code == 200:
+                relatorios = relatorios_response.json()
                 
-                if not pagamentos:
-                    # Create a test pagamento first
+                if not relatorios:
+                    # Create a test relatorio-ganhos first
                     motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=self.get_headers("admin"))
                     if motoristas_response.status_code == 200 and motoristas_response.json():
                         motorista_id = motoristas_response.json()[0]["id"]
                         
-                        pagamento_data = {
+                        relatorio_data = {
                             "motorista_id": motorista_id,
-                            "valor": 200.0,
-                            "periodo_inicio": "2025-01-01",
-                            "periodo_fim": "2025-01-07",
-                            "tipo_documento": "recibo_verde",
-                            "notas": "Teste comprovativo"
+                            "semana": "2025-W03",
+                            "periodo_inicio": "2025-01-13",
+                            "periodo_fim": "2025-01-19",
+                            "ganhos_uber": 150.0,
+                            "ganhos_bolt": 100.0,
+                            "combustivel": 50.0,
+                            "via_verde": 10.0,
+                            "valor_liquido": 190.0
                         }
                         
-                        create_response = requests.post(f"{BACKEND_URL}/pagamentos", json=pagamento_data, headers=headers)
+                        create_response = requests.post(f"{BACKEND_URL}/relatorios-ganhos", json=relatorio_data, headers=headers)
                         if create_response.status_code == 200:
-                            pagamentos = [create_response.json()]
+                            relatorios = [create_response.json()]
                         else:
-                            self.log_result("Parceiro-Upload-Comprovativo", False, "Could not create test pagamento")
+                            self.log_result("Parceiro-Upload-Comprovativo", False, f"Could not create test relatorio: {create_response.status_code}")
                             return
                     else:
                         self.log_result("Parceiro-Upload-Comprovativo", False, "No motoristas available for test")
                         return
                 
-                pagamento_id = pagamentos[0]["id"]
+                relatorio_id = relatorios[0]["id"]
                 
-                # Test upload comprovativo endpoint
+                # Test upload comprovativo endpoint for relatorios-ganhos
                 test_file = self.create_test_pdf()
                 
                 files = {
@@ -1348,7 +1351,7 @@ startxref
                 }
                 
                 upload_response = requests.post(
-                    f"{BACKEND_URL}/pagamentos/{pagamento_id}/comprovativo",
+                    f"{BACKEND_URL}/relatorios-ganhos/{relatorio_id}/comprovativo",
                     files=files,
                     headers=headers
                 )
@@ -1357,26 +1360,27 @@ startxref
                     result = upload_response.json()
                     
                     # Check if status changed to "liquidado"
-                    updated_pagamento_response = requests.get(f"{BACKEND_URL}/pagamentos/{pagamento_id}", headers=headers)
+                    updated_relatorio_response = requests.get(f"{BACKEND_URL}/relatorios-ganhos", headers=headers)
                     
-                    if updated_pagamento_response.status_code == 200:
-                        updated_pagamento = updated_pagamento_response.json()
+                    if updated_relatorio_response.status_code == 200:
+                        updated_relatorios = updated_relatorio_response.json()
+                        updated_relatorio = next((r for r in updated_relatorios if r["id"] == relatorio_id), None)
                         
-                        if updated_pagamento.get("status") == "liquidado":
+                        if updated_relatorio and updated_relatorio.get("status") == "liquidado":
                             self.log_result("Parceiro-Upload-Comprovativo", True, 
                                           "Comprovativo uploaded successfully and status changed to 'liquidado'")
                         else:
                             self.log_result("Parceiro-Upload-Comprovativo", False, 
-                                          f"Status not updated to 'liquidado': {updated_pagamento.get('status')}")
+                                          f"Status not updated to 'liquidado': {updated_relatorio.get('status') if updated_relatorio else 'not found'}")
                     else:
                         self.log_result("Parceiro-Upload-Comprovativo", False, 
-                                      "Could not retrieve updated pagamento")
+                                      "Could not retrieve updated relatorio")
                 else:
                     self.log_result("Parceiro-Upload-Comprovativo", False, 
                                   f"Upload failed: {upload_response.status_code}", upload_response.text)
             else:
                 self.log_result("Parceiro-Upload-Comprovativo", False, 
-                              f"Could not get pagamentos: {pagamentos_response.status_code}")
+                              f"Could not get relatorios-ganhos: {relatorios_response.status_code}")
         except Exception as e:
             self.log_result("Parceiro-Upload-Comprovativo", False, f"Upload comprovativo test error: {str(e)}")
     
