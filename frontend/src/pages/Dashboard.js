@@ -135,9 +135,14 @@ const Dashboard = ({ user, onLogout }) => {
         </div>
 
         {/* Filtros de Período */}
-        <Card>
+        <DashboardDateFilter 
+          onFilterChange={setFiltroData}
+          defaultPeriod="todos"
+        />
+
+        <Card className="hidden">
           <CardHeader>
-            <CardTitle className="text-lg">Período de Análise</CardTitle>
+            <CardTitle className="text-lg">Período de Análise (Antigo)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
