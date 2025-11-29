@@ -29,7 +29,7 @@ const Dashboard = ({ user, onLogout }) => {
     fetchStats();
     fetchAlertas();
     fetchProximasDatas();
-  }, [periodoTipo, dataInicio, dataFim]);
+  }, [filtroData]);
 
   const fetchStats = async () => {
     try {
