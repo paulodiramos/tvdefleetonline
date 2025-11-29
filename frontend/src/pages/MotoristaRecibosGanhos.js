@@ -284,7 +284,7 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
                       </div>
                       <div className="ml-4 flex flex-col space-y-2">
                         {/* Recibo */}
-                        {relatorio.status === 'pendente_recibo' && user.role === 'motorista' ? (
+                        {user.role === 'motorista' && (relatorio.status === 'pendente_recibo' || relatorio.status === 'recibo_enviado' || relatorio.status === 'recibo_emitido') ? (
                           <label className="cursor-pointer">
                             <input
                               type="file"
@@ -300,11 +300,13 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
                             >
                               <span>
                                 <Upload className="w-4 h-4 mr-2" />
-                                {uploadingId === relatorio.id ? 'Enviando...' : 'Enviar Recibo'}
+                                {uploadingId === relatorio.id ? 'Enviando...' : (relatorio.recibo_url ? 'Substituir Recibo' : 'Enviar Recibo')}
                               </span>
                             </Button>
                           </label>
-                        ) : relatorio.recibo_url ? (
+                        ) : null}
+                        
+                        {relatorio.recibo_url ? (
                           <Button
                             size="sm"
                             variant="outline"
