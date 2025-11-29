@@ -6086,6 +6086,50 @@ async def upload_vistoria_foto(
 @api_router.post("/vehicles/{vehicle_id}/vistorias/{vistoria_id}/gerar-pdf")
 async def gerar_pdf_vistoria(
     vehicle_id: str,
+    vistoria_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Generate PDF report for a vistoria"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vistoria = await db.vistorias.find_one({"id": vistoria_id, "veiculo_id": vehicle_id}, {"_id": 0})
+    if not vistoria:
+        raise HTTPException(status_code=404, detail="Vistoria not found")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.units import cm
+        
+        pdf_dir = UPLOAD_DIR / "vistorias" / "relatorios"
+        pdf_dir.mkdir(parents=True, exist_ok=True)
+        pdf_path = pdf_dir / f"vistoria_{vistoria_id}.pdf"
+        
+        c = canvas.Canvas(str(pdf_path), pagesize=A4)
+        width, height = A4
+        
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(2*cm, height - 2*cm, "RELATÓRIO DE VISTORIA")
+        
+        c.setFont("Helvetica", 10)
+        c.drawString(2*cm, height - 4*cm, f"Veículo: {vehicle.get('marca')} {vehicle.get('modelo')} - {vehicle.get('matricula')}")
+        c.drawString(2*cm, height - 4.5*cm, f"Data: {vistoria.get('data_vistoria')}")
+        c.drawString(2*cm, height - 5*cm, f"Estado: {vistoria.get('estado_geral')}")
+        
+        c.save()
+        
+        pdf_url = f"/uploads/vistorias/relatorios/vistoria_{vistoria_id}.pdf"
+        await db.vistorias.update_one({"id": vistoria_id}, {"$set": {"pdf_relatorio": pdf_url}})
+        
+        return {"message": "PDF generated", "pdf_url": pdf_url}
+    except Exception as e:
+        logger.error(f"Error generating PDF: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_router.post("/vehicles/{vehicle_id}/agendar-vistoria")
