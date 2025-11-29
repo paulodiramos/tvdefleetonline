@@ -6661,6 +6661,35 @@ async def update_textos_legais(config_data: ConfiguracaoUpdate, current_user: Di
     
     return {"message": "Textos legais atualizados com sucesso", "data": update_data}
 
+@api_router.put("/admin/config/comunicacoes")
+async def update_comunicacoes(
+    email_comunicacoes: str = None,
+    whatsapp_comunicacoes: str = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Admin only: Update communication settings (email and WhatsApp)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized - Admin only")
+    
+    update_data = {
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_by": current_user["id"]
+    }
+    
+    if email_comunicacoes is not None:
+        update_data["email_comunicacoes"] = email_comunicacoes
+    
+    if whatsapp_comunicacoes is not None:
+        update_data["whatsapp_comunicacoes"] = whatsapp_comunicacoes
+    
+    await db.configuracoes.update_one(
+        {"id": "config_sistema"},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    return {"message": "Configurações de comunicação atualizadas com sucesso", "data": update_data}
+
 # ==================== SUBSCRIPTION/PLANOS ENDPOINTS ====================
 
 @api_router.post("/admin/planos", response_model=PlanoAssinatura)
