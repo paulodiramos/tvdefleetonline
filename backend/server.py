@@ -3427,8 +3427,11 @@ async def download_motorista_contrato(
     current_user: Dict = Depends(get_current_user)
 ):
     """Download contract of motorista (Admin/Gestor/Parceiro/Operacional/Motorista)"""
+    logger.info(f"[CONTRACT] Iniciando download de contrato para motorista_id: {motorista_id}")
+    
     motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
     if not motorista:
+        logger.warning(f"[CONTRACT] Motorista não encontrado: {motorista_id}")
         raise HTTPException(status_code=404, detail="Motorista not found")
     
     # Check authorization
@@ -3443,7 +3446,10 @@ async def download_motorista_contrato(
     )
     
     if not is_authorized:
+        logger.warning(f"[CONTRACT] Não autorizado: {current_user['role']}")
         raise HTTPException(status_code=403, detail="Not authorized")
+    
+    logger.info(f"[CONTRACT] Autorização OK. Buscando contrato na DB...")
     
     # Find contract for this motorista
     contrato = await db.contratos.find_one({"motorista_id": motorista_id}, {"_id": 0})
