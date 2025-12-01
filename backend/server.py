@@ -6690,6 +6690,49 @@ async def update_comunicacoes(
     
     return {"message": "Configurações de comunicação atualizadas com sucesso", "data": update_data}
 
+@api_router.put("/admin/config/integracoes")
+async def update_integracoes(
+    request_data: Dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Admin only: Update integration credentials (IFThenPay and Moloni)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized - Admin only")
+    
+    update_data = {
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_by": current_user["id"]
+    }
+    
+    # IFThenPay credentials
+    if "ifthenpay_entity" in request_data:
+        update_data["ifthenpay_entity"] = request_data["ifthenpay_entity"]
+    
+    if "ifthenpay_subentity" in request_data:
+        update_data["ifthenpay_subentity"] = request_data["ifthenpay_subentity"]
+    
+    if "ifthenpay_api_key" in request_data:
+        update_data["ifthenpay_api_key"] = request_data["ifthenpay_api_key"]
+    
+    # Moloni credentials
+    if "moloni_client_id" in request_data:
+        update_data["moloni_client_id"] = request_data["moloni_client_id"]
+    
+    if "moloni_client_secret" in request_data:
+        update_data["moloni_client_secret"] = request_data["moloni_client_secret"]
+    
+    if "moloni_company_id" in request_data:
+        update_data["moloni_company_id"] = request_data["moloni_company_id"]
+    
+    await db.configuracoes.update_one(
+        {"id": "config_sistema"},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    return {"message": "Credenciais de integração atualizadas com sucesso", "data": update_data}
+
+
 # ==================== SUBSCRIPTION/PLANOS ENDPOINTS ====================
 
 @api_router.post("/admin/planos", response_model=PlanoAssinatura)
