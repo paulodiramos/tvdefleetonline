@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { FileText, Shield, Save } from 'lucide-react';
+import { FileText, Shield, Save, Key } from 'lucide-react';
 
 const ConfiguracoesAdmin = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
