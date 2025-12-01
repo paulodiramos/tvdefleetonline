@@ -3616,6 +3616,145 @@ async def download_relatorio_recibo(
         filename=f"recibo_{relatorio_id}.pdf"
     )
 
+@api_router.get("/relatorios-ganhos/{relatorio_id}/download-relatorio-pdf")
+async def download_relatorio_semanal_pdf(
+    relatorio_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Generate and download weekly earnings report PDF"""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.lib.units import cm
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+    from io import BytesIO
+    
+    # Fetch report
+    relatorio = await db.relatorios_ganhos.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    
+    # Check authorization
+    is_authorized = (
+        current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL, UserRole.PARCEIRO] or
+        (current_user["role"] == UserRole.MOTORISTA and current_user["id"] == relatorio["motorista_id"])
+    )
+    
+    if not is_authorized:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Get motorista details
+    motorista = await db.users.find_one({"id": relatorio["motorista_id"]}, {"_id": 0})
+    motorista_nome = motorista.get("name", "N/A") if motorista else "N/A"
+    
+    # Create PDF in memory
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=2*cm, bottomMargin=2*cm)
+    elements = []
+    styles = getSampleStyleSheet()
+    
+    # Custom styles
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        textColor=colors.HexColor('#1e40af'),
+        spaceAfter=30,
+        alignment=TA_CENTER
+    )
+    
+    header_style = ParagraphStyle(
+        'CustomHeader',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=colors.HexColor('#334155'),
+        spaceAfter=12
+    )
+    
+    # Title
+    elements.append(Paragraph("TVDEFleet - Relatório Semanal de Ganhos", title_style))
+    elements.append(Spacer(1, 0.5*cm))
+    
+    # Motorista info
+    motorista_data = [
+        ["Motorista:", motorista_nome],
+        ["Período:", f"{relatorio.get('periodo_inicio', 'N/A')} a {relatorio.get('periodo_fim', 'N/A')}"],
+        ["Data de Geração:", datetime.now(timezone.utc).strftime("%d/%m/%Y %H:%M")],
+        ["Status:", relatorio.get('status', 'N/A')]
+    ]
+    
+    motorista_table = Table(motorista_data, colWidths=[5*cm, 10*cm])
+    motorista_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#f1f5f9')),
+        ('TEXTCOLOR', (0, 0), (-1, -1), colors.HexColor('#334155')),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (1, 0), (1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(motorista_table)
+    elements.append(Spacer(1, 1*cm))
+    
+    # Earnings Summary
+    elements.append(Paragraph("Resumo de Ganhos", header_style))
+    
+    detalhes = relatorio.get('detalhes', {})
+    earnings_data = [
+        ["Descrição", "Valor"],
+        ["Ganhos Uber", f"€{detalhes.get('uber', 0):.2f}"],
+        ["Ganhos Bolt", f"€{detalhes.get('bolt', 0):.2f}"],
+        ["Outros Ganhos", f"€{detalhes.get('outros', 0):.2f}"],
+        ["", ""],
+        ["Valor Total Bruto", f"€{relatorio.get('valor_total', 0):.2f}"],
+        ["(-) Descontos/Comissões", f"€{(relatorio.get('valor_total', 0) - relatorio.get('valor_liquido', 0)):.2f}"],
+        ["Valor Líquido", f"€{relatorio.get('valor_liquido', 0):.2f}"]
+    ]
+    
+    earnings_table = Table(earnings_data, colWidths=[10*cm, 5*cm])
+    earnings_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e40af')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#dcfce7')),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(earnings_table)
+    elements.append(Spacer(1, 1*cm))
+    
+    # Notes section
+    if relatorio.get('notas'):
+        elements.append(Paragraph("Notas", header_style))
+        elements.append(Paragraph(relatorio['notas'], styles['Normal']))
+        elements.append(Spacer(1, 1*cm))
+    
+    # Footer
+    footer_text = f"<para align='center'><font size='8' color='#64748b'>Este documento foi gerado automaticamente pelo sistema TVDEFleet em {datetime.now(timezone.utc).strftime('%d/%m/%Y às %H:%M UTC')}</font></para>"
+    elements.append(Spacer(1, 2*cm))
+    elements.append(Paragraph(footer_text, styles['Normal']))
+    
+    # Build PDF
+    doc.build(elements)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=relatorio_semanal_{relatorio_id}.pdf"}
+    )
+
+
 @api_router.post("/solicitacoes-alteracao")
 async def criar_solicitacao_alteracao(
     data: Dict[str, Any],
