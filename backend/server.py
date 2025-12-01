@@ -1,6 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File, Form
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -6676,7 +6676,7 @@ async def get_exemplos_contratos():
 async def download_exemplo_contrato(tipo: str):
     """Download contract example file"""
     import os
-    from fastapi.responses import FileResponse
+    from fastapi.responses import FileResponse, StreamingResponse
     
     arquivos = {
         "aluguer": "/app/exemplo_contrato_aluguer.txt",
@@ -8253,7 +8253,7 @@ async def get_alertas_stats(current_user: Dict = Depends(get_current_user)):
     }
 
 # ==================== FILE SERVING ENDPOINT ====================
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 
 @api_router.get("/files/{folder}/{filename:path}")
 async def serve_file(folder: str, filename: str, current_user: Dict = Depends(get_current_user)):
