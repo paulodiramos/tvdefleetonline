@@ -93,6 +93,26 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
     }
   };
 
+  const handleDeleteDocument = async (docType) => {
+    if (!window.confirm(`Tem certeza que deseja eliminar o documento "${docType}"? Esta ação não pode ser desfeita.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(
+        `${API}/motoristas/${motoristaId}/documentos/${docType}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success('Documento eliminado com sucesso!');
+      fetchMotoristaData();
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao eliminar documento');
+    }
+  };
+
   const handleAprovarTodosDocumentos = async () => {
     if (!window.confirm('Tem certeza que deseja aprovar TODOS os documentos? Após aprovação, o motorista só poderá editar Registo Criminal e IBAN.')) {
       return;
