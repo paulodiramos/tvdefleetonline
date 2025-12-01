@@ -6011,3 +6011,52 @@ agent_communication:
         
         Sistema de filtros avançados está 100% operacional e pronto para produção!
 
+
+---
+
+## 🎯 Teste: Tab Integrações nas Configurações Admin
+**Data:** 2025-12-01
+**Testado por:** Agente Fork
+**Status:** ✅ SUCESSO
+
+### Funcionalidade Implementada:
+Novo tab "Integrações" nas Configurações Admin para gestão de credenciais de integrações externas.
+
+### Testes Realizados:
+
+#### 1. Backend API
+- ✅ Endpoint `PUT /api/admin/config/integracoes` criado e funcional
+- ✅ Credenciais guardadas corretamente na colecção `configuracoes`
+- ✅ Endpoint `GET /api/config/textos-legais` retorna credenciais guardadas
+
+#### 2. Frontend UI
+- ✅ Tab "Integrações" aparece nas Configurações Admin
+- ✅ Layout responsivo com 2 secções: IFThenPay e Moloni
+- ✅ Campos IFThenPay: Entidade, Sub-Entidade, API Key (type=password)
+- ✅ Campos Moloni: Client ID, Client Secret (type=password), Company ID
+- ✅ Valores carregados automaticamente do backend
+- ✅ Botões "Cancelar" e "Guardar Credenciais" funcionais
+- ✅ Nota informativa sobre onde obter as credenciais
+
+### Credenciais de Teste Guardadas:
+```json
+{
+  "ifthenpay_entity": "10559",
+  "ifthenpay_subentity": "999",
+  "ifthenpay_api_key": "test_key_123",
+  "moloni_client_id": "test_client",
+  "moloni_client_secret": "test_secret",
+  "moloni_company_id": "123456"
+}
+```
+
+### Screenshots Capturados:
+- Tab Integrações no estado inicial
+- Secção IFThenPay com campos preenchidos
+- Secção Moloni com campos preenchidos
+- Botão Guardar Credenciais
+
+**Conclusão:** ✅ Funcionalidade 100% operacional. O admin pode agora guardar credenciais de integrações que serão usadas após a aplicação estar online.
+
+---
+
