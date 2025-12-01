@@ -16,13 +16,25 @@ const ConfiguracoesAdmin = ({ user, onLogout }) => {
     condicoes_gerais: '',
     politica_privacidade: '',
     email_comunicacoes: '',
-    whatsapp_comunicacoes: ''
+    whatsapp_comunicacoes: '',
+    ifthenpay_entity: '',
+    ifthenpay_subentity: '',
+    ifthenpay_api_key: '',
+    moloni_client_id: '',
+    moloni_client_secret: '',
+    moloni_company_id: ''
   });
   const [originalData, setOriginalData] = useState({
     condicoes_gerais: '',
     politica_privacidade: '',
     email_comunicacoes: '',
-    whatsapp_comunicacoes: ''
+    whatsapp_comunicacoes: '',
+    ifthenpay_entity: '',
+    ifthenpay_subentity: '',
+    ifthenpay_api_key: '',
+    moloni_client_id: '',
+    moloni_client_secret: '',
+    moloni_company_id: ''
   });
 
   useEffect(() => {
