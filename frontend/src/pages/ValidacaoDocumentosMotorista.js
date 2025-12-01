@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { CheckCircle, XCircle, Download, FileText, AlertCircle, Shield, CreditCard } from 'lucide-react';
+import { CheckCircle, XCircle, Download, FileText, AlertCircle, Shield, CreditCard, Trash2 } from 'lucide-react';
 
 const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
   const { motoristaId } = useParams();
