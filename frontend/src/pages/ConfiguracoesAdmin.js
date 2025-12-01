@@ -153,6 +153,40 @@ const ConfiguracoesAdmin = ({ user, onLogout }) => {
     }
   };
 
+  const handleSaveIntegracoes = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/admin/config/integracoes`,
+        { 
+          ifthenpay_entity: configData.ifthenpay_entity,
+          ifthenpay_subentity: configData.ifthenpay_subentity,
+          ifthenpay_api_key: configData.ifthenpay_api_key,
+          moloni_client_id: configData.moloni_client_id,
+          moloni_client_secret: configData.moloni_client_secret,
+          moloni_company_id: configData.moloni_company_id
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setOriginalData({ 
+        ...originalData, 
+        ifthenpay_entity: configData.ifthenpay_entity,
+        ifthenpay_subentity: configData.ifthenpay_subentity,
+        ifthenpay_api_key: configData.ifthenpay_api_key,
+        moloni_client_id: configData.moloni_client_id,
+        moloni_client_secret: configData.moloni_client_secret,
+        moloni_company_id: configData.moloni_company_id
+      });
+      toast.success('Credenciais de integração guardadas com sucesso!');
+    } catch (error) {
+      console.error('Error saving integracoes:', error);
+      toast.error('Erro ao guardar credenciais de integração');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (user?.role !== 'admin') {
     return (
       <Layout user={user} onLogout={onLogout}>
