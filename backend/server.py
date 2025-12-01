@@ -3203,6 +3203,55 @@ async def validar_documento(
         "validacao": validacao
     }
 
+@api_router.delete("/motoristas/{motorista_id}/documentos/{doc_type}")
+async def delete_documento(
+    motorista_id: str,
+    doc_type: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Delete document (Admin, Gestor, Operacional only)"""
+    # Check permissions - only Admin, Gestor, Operacional can delete documents
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+        raise HTTPException(status_code=403, detail="Não autorizado - Apenas Admin, Gestor ou Operacional")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Check if document exists
+    if not motorista.get("documents", {}).get(doc_type):
+        raise HTTPException(status_code=404, detail="Documento não encontrado")
+    
+    # Delete physical file if exists
+    doc_url = motorista["documents"].get(doc_type)
+    if doc_url:
+        try:
+            file_path = Path(doc_url.replace("/uploads/", str(UPLOAD_DIR) + "/"))
+            if file_path.exists():
+                file_path.unlink()
+        except Exception as e:
+            # Log error but continue with database deletion
+            print(f"Warning: Could not delete physical file: {e}")
+    
+    # Remove document from database
+    update_doc = {"$unset": {f"documents.{doc_type}": ""}}
+    
+    # Also remove validation data if exists
+    if motorista.get("documents_validacao", {}).get(doc_type):
+        update_doc["$unset"][f"documents_validacao.{doc_type}"] = ""
+    
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        update_doc
+    )
+    
+    return {
+        "message": f"Documento '{doc_type}' eliminado com sucesso",
+        "deleted_by": current_user["id"],
+        "deleted_at": datetime.now(timezone.utc).isoformat()
+    }
+
+
 @api_router.get("/motoristas", response_model=List[Motorista])
 async def get_motoristas(current_user: Dict = Depends(get_current_user)):
     motoristas = await db.motoristas.find({}, {"_id": 0}).to_list(1000)
