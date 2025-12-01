@@ -391,6 +391,182 @@ const ConfiguracoesAdmin = ({ user, onLogout }) => {
                   </Button>
                 </div>
               </TabsContent>
+
+              {/* Integrações Tab */}
+              <TabsContent value="integracoes" className="space-y-6">
+                {/* IFThenPay Section */}
+                <div className="border-b pb-6">
+                  <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center space-x-2">
+                    <Key className="w-5 h-5 text-blue-600" />
+                    <span>IFThenPay (Gateway de Pagamentos)</span>
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="ifthenpay_entity" className="text-sm font-semibold">
+                        Entidade
+                      </Label>
+                      <p className="text-xs text-slate-600 mb-2">
+                        Código da entidade Multibanco fornecido pelo IFThenPay
+                      </p>
+                      <input
+                        id="ifthenpay_entity"
+                        type="text"
+                        className="w-full p-3 border rounded-md text-sm"
+                        placeholder="Ex: 10559"
+                        value={configData.ifthenpay_entity}
+                        onChange={(e) => setConfigData({ ...configData, ifthenpay_entity: e.target.value })}
+                        disabled={loading || saving}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="ifthenpay_subentity" className="text-sm font-semibold">
+                        Sub-Entidade
+                      </Label>
+                      <p className="text-xs text-slate-600 mb-2">
+                        Código da sub-entidade (se aplicável)
+                      </p>
+                      <input
+                        id="ifthenpay_subentity"
+                        type="text"
+                        className="w-full p-3 border rounded-md text-sm"
+                        placeholder="Ex: 999"
+                        value={configData.ifthenpay_subentity}
+                        onChange={(e) => setConfigData({ ...configData, ifthenpay_subentity: e.target.value })}
+                        disabled={loading || saving}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="ifthenpay_api_key" className="text-sm font-semibold">
+                        API Key
+                      </Label>
+                      <p className="text-xs text-slate-600 mb-2">
+                        Chave de API para autenticação (disponível no backoffice IFThenPay)
+                      </p>
+                      <input
+                        id="ifthenpay_api_key"
+                        type="password"
+                        className="w-full p-3 border rounded-md text-sm font-mono"
+                        placeholder="Insira a API Key do IFThenPay"
+                        value={configData.ifthenpay_api_key}
+                        onChange={(e) => setConfigData({ ...configData, ifthenpay_api_key: e.target.value })}
+                        disabled={loading || saving}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Moloni Section */}
+                <div className="pb-6">
+                  <h3 className="text-xl font-bold text-slate-800 mb-4 flex items-center space-x-2">
+                    <FileText className="w-5 h-5 text-green-600" />
+                    <span>Moloni (Emissão de Faturas)</span>
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="moloni_client_id" className="text-sm font-semibold">
+                        Client ID
+                      </Label>
+                      <p className="text-xs text-slate-600 mb-2">
+                        Identificador do cliente na API Moloni
+                      </p>
+                      <input
+                        id="moloni_client_id"
+                        type="text"
+                        className="w-full p-3 border rounded-md text-sm font-mono"
+                        placeholder="Insira o Client ID do Moloni"
+                        value={configData.moloni_client_id}
+                        onChange={(e) => setConfigData({ ...configData, moloni_client_id: e.target.value })}
+                        disabled={loading || saving}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="moloni_client_secret" className="text-sm font-semibold">
+                        Client Secret
+                      </Label>
+                      <p className="text-xs text-slate-600 mb-2">
+                        Chave secreta de autenticação na API Moloni
+                      </p>
+                      <input
+                        id="moloni_client_secret"
+                        type="password"
+                        className="w-full p-3 border rounded-md text-sm font-mono"
+                        placeholder="Insira o Client Secret do Moloni"
+                        value={configData.moloni_client_secret}
+                        onChange={(e) => setConfigData({ ...configData, moloni_client_secret: e.target.value })}
+                        disabled={loading || saving}
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="moloni_company_id" className="text-sm font-semibold">
+                        Company ID
+                      </Label>
+                      <p className="text-xs text-slate-600 mb-2">
+                        ID da empresa no sistema Moloni
+                      </p>
+                      <input
+                        id="moloni_company_id"
+                        type="text"
+                        className="w-full p-3 border rounded-md text-sm"
+                        placeholder="Ex: 123456"
+                        value={configData.moloni_company_id}
+                        onChange={(e) => setConfigData({ ...configData, moloni_company_id: e.target.value })}
+                        disabled={loading || saving}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+                  <p className="text-sm text-blue-800">
+                    <strong>ℹ️ Nota:</strong> Estas credenciais são necessárias para ativar as integrações de pagamentos e faturação. 
+                    Pode obter estas informações nos respetivos backoffices do IFThenPay e Moloni.
+                  </p>
+                </div>
+
+                <div className="flex justify-end space-x-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setConfigData({ 
+                      ...configData, 
+                      ifthenpay_entity: originalData.ifthenpay_entity,
+                      ifthenpay_subentity: originalData.ifthenpay_subentity,
+                      ifthenpay_api_key: originalData.ifthenpay_api_key,
+                      moloni_client_id: originalData.moloni_client_id,
+                      moloni_client_secret: originalData.moloni_client_secret,
+                      moloni_company_id: originalData.moloni_company_id
+                    })}
+                    disabled={loading || saving || 
+                      (configData.ifthenpay_entity === originalData.ifthenpay_entity && 
+                       configData.ifthenpay_subentity === originalData.ifthenpay_subentity &&
+                       configData.ifthenpay_api_key === originalData.ifthenpay_api_key &&
+                       configData.moloni_client_id === originalData.moloni_client_id &&
+                       configData.moloni_client_secret === originalData.moloni_client_secret &&
+                       configData.moloni_company_id === originalData.moloni_company_id)}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    className="bg-blue-600 hover:bg-blue-700 flex items-center space-x-2"
+                    onClick={handleSaveIntegracoes}
+                    disabled={loading || saving || 
+                      (configData.ifthenpay_entity === originalData.ifthenpay_entity && 
+                       configData.ifthenpay_subentity === originalData.ifthenpay_subentity &&
+                       configData.ifthenpay_api_key === originalData.ifthenpay_api_key &&
+                       configData.moloni_client_id === originalData.moloni_client_id &&
+                       configData.moloni_client_secret === originalData.moloni_client_secret &&
+                       configData.moloni_company_id === originalData.moloni_company_id)}
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>Guardar Credenciais</span>
+                  </Button>
+                </div>
+              </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
