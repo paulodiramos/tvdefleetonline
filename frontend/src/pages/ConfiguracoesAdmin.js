@@ -51,13 +51,25 @@ const ConfiguracoesAdmin = ({ user, onLogout }) => {
         condicoes_gerais: response.data.condicoes_gerais || '',
         politica_privacidade: response.data.politica_privacidade || '',
         email_comunicacoes: response.data.email_comunicacoes || '',
-        whatsapp_comunicacoes: response.data.whatsapp_comunicacoes || ''
+        whatsapp_comunicacoes: response.data.whatsapp_comunicacoes || '',
+        ifthenpay_entity: response.data.ifthenpay_entity || '',
+        ifthenpay_subentity: response.data.ifthenpay_subentity || '',
+        ifthenpay_api_key: response.data.ifthenpay_api_key || '',
+        moloni_client_id: response.data.moloni_client_id || '',
+        moloni_client_secret: response.data.moloni_client_secret || '',
+        moloni_company_id: response.data.moloni_company_id || ''
       });
       setOriginalData({
         condicoes_gerais: response.data.condicoes_gerais || '',
         politica_privacidade: response.data.politica_privacidade || '',
         email_comunicacoes: response.data.email_comunicacoes || '',
-        whatsapp_comunicacoes: response.data.whatsapp_comunicacoes || ''
+        whatsapp_comunicacoes: response.data.whatsapp_comunicacoes || '',
+        ifthenpay_entity: response.data.ifthenpay_entity || '',
+        ifthenpay_subentity: response.data.ifthenpay_subentity || '',
+        ifthenpay_api_key: response.data.ifthenpay_api_key || '',
+        moloni_client_id: response.data.moloni_client_id || '',
+        moloni_client_secret: response.data.moloni_client_secret || '',
+        moloni_company_id: response.data.moloni_company_id || ''
       });
     } catch (error) {
       console.error('Error fetching config:', error);
