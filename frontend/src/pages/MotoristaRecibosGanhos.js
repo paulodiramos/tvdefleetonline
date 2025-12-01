@@ -139,6 +139,38 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
     return <Badge className={config.class}>{config.label}</Badge>;
   };
 
+  const handleDownloadRelatorioPDF = async (relatorioId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API}/relatorios-ganhos/${relatorioId}/download-relatorio-pdf`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `relatorio_semanal_${relatorioId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Relatório PDF descarregado com sucesso!');
+    } catch (error) {
+      console.error('Error downloading relatório:', error);
+      if (error.response?.status === 404) {
+        toast.error('Relatório não encontrado');
+      } else if (error.response?.status === 403) {
+        toast.error('Não autorizado');
+      } else {
+        toast.error('Erro ao fazer download do relatório');
+      }
+    }
+  };
+
   const handleDownload = async (relatorioUrl) => {
     if (!relatorioUrl) {
       toast.error('Recibo não disponível');
