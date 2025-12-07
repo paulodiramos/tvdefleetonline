@@ -3300,8 +3300,12 @@ async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Find or create default free plan (preco_mensal = 0)
-    plano_base = await db.planos_motorista.find_one({"preco_mensal": 0, "ativo": True}, {"_id": 0})
+    # Find or create default free plan in the new unified system
+    plano_base = await db.planos_sistema.find_one({
+        "preco_mensal": 0, 
+        "ativo": True, 
+        "tipo_usuario": "motorista"
+    }, {"_id": 0})
     
     if not plano_base:
         # Create default free plan if it doesn't exist
@@ -3310,18 +3314,19 @@ async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_
             "nome": "Base Gratuito",
             "descricao": "Plano base gratuito para todos os motoristas",
             "preco_mensal": 0,
-            "features": [
-                "Acesso ao dashboard básico",
-                "Upload de documentos",
-                "Visualização de contratos",
-                "Gestão de perfil"
+            "tipo_usuario": "motorista",
+            "modulos": [
+                "dashboard_ganhos",
+                "gestao_documentos"
             ],
-            "max_funcionalidades": 4,
             "ativo": True,
-            "created_at": datetime.now(timezone.utc),
-            "updated_at": datetime.now(timezone.utc)
+            "permite_trial": False,
+            "dias_trial": 0,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.planos_motorista.insert_one(plano_base)
+        await db.planos_sistema.insert_one(plano_base)
+        logger.info(f"Created default free plan for motorista: {plano_base['id']}")
     
     # Check if motorista profile exists
     motorista_exists = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
