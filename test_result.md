@@ -6095,6 +6095,104 @@ agent_communication:
         
         Sistema de filtros avançados está 100% operacional e pronto para produção!
 
+    - agent: "testing"
+      message: |
+        🎯 TESTE COMPLETO DO SISTEMA UNIFICADO DE PLANOS - RESULTADOS FINAIS
+        
+        CONTEXTO DO TESTE:
+        Teste completo do Sistema Unificado de Planos conforme review request, validando todos os 5 endpoints especificados e cenários de teste.
+        
+        CREDENCIAIS TESTADAS:
+        - Admin: admin@tvdefleet.com / o72ocUHy ✅
+        
+        URL: https://fleetmanager-16.preview.emergentagent.com/api ✅
+        
+        DATABASE: tvdefleet_db ✅
+        COLLECTIONS: planos_sistema, motoristas, users ✅
+        
+        ✅ ENDPOINT 1: GET /api/planos-sistema - 100% FUNCIONANDO
+        - Status: ✅ Retorna 200 OK
+        - Dados: ✅ Lista de planos do sistema unificado (25+ planos encontrados)
+        - Segurança: ✅ Acesso restrito a Admin apenas
+        - Estrutura: ✅ Campos obrigatórios presentes (id, nome, tipo_usuario, preco_mensal, ativo)
+        
+        ✅ ENDPOINT 2: POST /api/planos-sistema - 100% FUNCIONANDO
+        - Status: ✅ Criação bem-sucedida para todos os tipos de usuário
+        - Tipos testados: ✅ motorista, parceiro, operacional, gestao (4/4 criados)
+        - Persistência: ✅ Planos salvos corretamente na collection planos_sistema
+        - Campos: ✅ Todos os campos obrigatórios e opcionais funcionando
+        - Validação: ✅ Estrutura de resposta correta com timestamps
+        
+        ✅ ENDPOINT 3: PUT /api/planos-sistema/{plano_id} - 100% FUNCIONANDO
+        - Status: ✅ Atualização bem-sucedida
+        - Campos testados: ✅ nome, descrição, preco_mensal, modulos, permite_trial, dias_trial
+        - Persistência: ✅ Alterações verificadas através de nova consulta GET
+        - Integridade: ✅ Dados atualizados corretamente na base de dados
+        
+        ✅ ENDPOINT 4: DELETE /api/planos-sistema/{plano_id} - 100% FUNCIONANDO
+        - Status: ✅ Soft delete implementado corretamente
+        - Comportamento: ✅ Plano marcado como ativo=False (não removido)
+        - Integridade: ✅ Dados históricos preservados
+        - Verificação: ✅ Plano desativado confirmado na base de dados
+        
+        ✅ CENÁRIO 1: CRIAÇÃO DE PLANOS POR TIPO DE USUÁRIO - 100% FUNCIONANDO
+        - Motorista: ✅ Plano Base (preco_mensal=0) criado
+        - Parceiro: ✅ Plano Premium (preco_mensal=50) criado
+        - Operacional: ✅ Plano Operacional (preco_mensal=75) criado
+        - Gestão: ✅ Plano Gestão (preco_mensal=100) criado
+        
+        ✅ CENÁRIO 2: PERSISTÊNCIA NA BASE DE DADOS - 100% FUNCIONANDO
+        - Collection: ✅ planos_sistema utilizada corretamente
+        - Campos: ✅ Todos os campos persistidos (nome, descrição, preco_mensal, tipo_usuario, modulos, ativo, permite_trial, dias_trial)
+        - Integridade: ✅ Dados verificados através de consultas independentes
+        
+        ✅ CENÁRIO 3: ATUALIZAÇÃO DE PLANOS - 100% FUNCIONANDO
+        - Modificação: ✅ Campos atualizados com sucesso
+        - Verificação: ✅ Alterações persistidas na base de dados
+        
+        ✅ CENÁRIO 4: DESATIVAÇÃO DE PLANOS - 100% FUNCIONANDO
+        - Soft Delete: ✅ ativo=False implementado corretamente
+        - Preservação: ✅ Dados históricos mantidos
+        
+        ✅ CENÁRIO 5: PLANOS BASE GRATUITOS DISPONÍVEIS - 100% FUNCIONANDO
+        - Disponibilidade: ✅ 5 planos gratuitos para motoristas encontrados
+        - Critérios: ✅ preco_mensal=0, tipo_usuario='motorista', ativo=true
+        - Exemplo: ✅ 'Plano Base Gratuito' (ID: 8dc0b67f-2e5e-4926-aeda-e5abd0615478)
+        
+        ❌ ENDPOINT 5: PUT /api/motoristas/{motorista_id}/approve - ISSUE CRÍTICO IDENTIFICADO
+        - Status: ✅ Aprovação de motorista funcionando (approved=true)
+        - Problema: ❌ Plano não atribuído automaticamente (plano_id=null)
+        - Causa Raiz: ❌ Endpoint busca em 'planos_motorista' mas sistema unificado usa 'planos_sistema'
+        - Linha Problemática: ❌ server.py:3304 - db.planos_motorista.find_one() deveria ser db.planos_sistema.find_one()
+        - Correção Necessária: ❌ Atualizar query para incluir tipo_usuario='motorista'
+        
+        📊 RESULTADO FINAL: 15/16 TESTES PASSARAM (93.75% SUCESSO)
+        
+        🎯 SISTEMA UNIFICADO DE PLANOS ESTÁ 93.75% FUNCIONAL!
+        
+        **FUNCIONALIDADES CONFIRMADAS:**
+        ✅ GET /api/planos-sistema - Lista todos os planos
+        ✅ POST /api/planos-sistema - Cria planos para cada tipo de usuário
+        ✅ PUT /api/planos-sistema/{plano_id} - Atualiza planos
+        ✅ DELETE /api/planos-sistema/{plano_id} - Desativa planos (soft delete)
+        ✅ Persistência correta na collection planos_sistema
+        ✅ Planos base gratuitos disponíveis para motoristas
+        ✅ Todos os cenários de teste funcionando
+        
+        **ISSUE CRÍTICO IDENTIFICADO:**
+        ❌ Aprovação de motorista não atribui plano automaticamente
+        ❌ Endpoint de aprovação usa collection errada (planos_motorista vs planos_sistema)
+        ❌ Correção necessária na linha 3304 do server.py
+        
+        **CORREÇÃO RECOMENDADA:**
+        Alterar linha 3304 de:
+        `plano_base = await db.planos_motorista.find_one({"preco_mensal": 0, "ativo": True}, {"_id": 0})`
+        
+        Para:
+        `plano_base = await db.planos_sistema.find_one({"preco_mensal": 0, "tipo_usuario": "motorista", "ativo": True}, {"_id": 0})`
+        
+        Sistema unificado de planos está quase 100% operacional - apenas 1 correção necessária!
+
 
 ---
 
