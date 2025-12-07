@@ -216,6 +216,52 @@ const DashboardParceiroTab = ({ parceiroId }) => {
         </Card>
       </div>
 
+      {/* Estatísticas Financeiras */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-green-200 bg-green-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-green-700 font-medium">Receitas Totais</p>
+                <p className="text-3xl font-bold text-green-900">€{stats.receitas_totais.toFixed(2)}</p>
+                <p className="text-xs text-green-600 mt-1">Mensal</p>
+              </div>
+              <DollarSign className="w-10 h-10 text-green-600 opacity-50" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-red-700 font-medium">Despesas Totais</p>
+                <p className="text-3xl font-bold text-red-900">€{stats.despesas_totais.toFixed(2)}</p>
+                <p className="text-xs text-red-600 mt-1">Acumuladas</p>
+              </div>
+              <TrendingDown className="w-10 h-10 text-red-600 opacity-50" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className={`border-2 ${stats.roi >= 0 ? 'border-blue-300 bg-blue-50' : 'border-orange-300 bg-orange-50'}`}>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className={`text-sm font-medium ${stats.roi >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>ROI (Return on Investment)</p>
+                <p className={`text-3xl font-bold ${stats.roi >= 0 ? 'text-blue-900' : 'text-orange-900'}`}>
+                  {stats.roi >= 0 ? '+' : ''}{stats.roi.toFixed(1)}%
+                </p>
+                <p className={`text-xs mt-1 ${stats.roi >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                  Lucro: €{(stats.receitas_totais - stats.despesas_totais).toFixed(2)}
+                </p>
+              </div>
+              <Percent className={`w-10 h-10 opacity-50 ${stats.roi >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Alertas e Avisos */}
       <Card>
         <CardHeader>
