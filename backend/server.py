@@ -3254,13 +3254,30 @@ async def delete_documento(
 
 @api_router.get("/motoristas", response_model=List[Motorista])
 async def get_motoristas(current_user: Dict = Depends(get_current_user)):
-    motoristas = await db.motoristas.find({}, {"_id": 0}).to_list(1000)
-    for m in motoristas:
-        if isinstance(m["created_at"], str):
-            m["created_at"] = datetime.fromisoformat(m["created_at"])
-        if m.get("approved_at") and isinstance(m["approved_at"], str):
-            m["approved_at"] = datetime.fromisoformat(m["approved_at"])
-    return motoristas
+    try:
+        motoristas = await db.motoristas.find({}, {"_id": 0}).to_list(1000)
+        for m in motoristas:
+            # Handle created_at
+            if m.get("created_at"):
+                if isinstance(m["created_at"], str):
+                    try:
+                        m["created_at"] = datetime.fromisoformat(m["created_at"])
+                    except ValueError:
+                        m["created_at"] = datetime.now(timezone.utc)
+            else:
+                m["created_at"] = datetime.now(timezone.utc)
+            
+            # Handle approved_at
+            if m.get("approved_at") and isinstance(m["approved_at"], str):
+                try:
+                    m["approved_at"] = datetime.fromisoformat(m["approved_at"])
+                except ValueError:
+                    m["approved_at"] = None
+        
+        return motoristas
+    except Exception as e:
+        logger.error(f"Error fetching motoristas: {e}")
+        raise HTTPException(status_code=500, detail=f"Error fetching motoristas: {str(e)}")
 
 @api_router.get("/motoristas/{motorista_id}")
 async def get_motorista_by_id(motorista_id: str, current_user: Dict = Depends(get_current_user)):
