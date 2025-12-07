@@ -360,6 +360,12 @@ function App() {
             }
           />
           <Route
+            path="/configuracao-planos"
+            element={
+              user ? <ConfiguracaoPlanos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/meus-planos"
             element={
               user ? <MeusPlanos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
