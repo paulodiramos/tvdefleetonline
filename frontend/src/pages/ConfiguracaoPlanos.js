@@ -156,7 +156,7 @@ const ConfiguracaoPlanos = ({ user, onLogout }) => {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API}/planos-sistema/${planoId}`, {
+      await axios.delete(`${API}/api/planos-sistema/${planoId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Plano desativado!');
