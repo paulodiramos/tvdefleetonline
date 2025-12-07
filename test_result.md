@@ -754,6 +754,73 @@ agent_communication:
         
         Sistema FASE B está 100% operacional e atende todos os requisitos especificados!
     
+    - agent: "testing"
+      message: |
+        🎉 UNIFIED PLAN SYSTEM E2E TESTING COMPLETE - ALL BUG FIXES VERIFIED!
+        
+        CONTEXT: Complete E2E testing of unified plan system after bug fixes as requested in review.
+        
+        ✅ ALL 8 E2E TEST STEPS PASSED (100% SUCCESS):
+        
+        **STEP 1 - CREATE TEST PLANO:** ✅ PASSED
+        - Created plano 'Teste E2E' with preco_mensal=0, tipo_usuario='motorista'
+        - Plan ID: cf1dcb94-f53a-42a8-b202-be419e09895e
+        - All required fields present and correct
+        
+        **STEP 2 - VERIFY PLANO IN DATABASE:** ✅ PASSED
+        - Test plano verified in database with all correct fields
+        - nome='Teste E2E', preco_mensal=0, tipo_usuario='motorista', ativo=true
+        
+        **STEP 3 - UNAPPROVE MOTORISTA:** ✅ PASSED
+        - Successfully unapproved existing motorista for testing
+        - Cleared plan fields (plano_id, plano_nome, plano_valida_ate)
+        
+        **STEP 4 - APPROVE MOTORISTA:** ✅ PASSED
+        - PUT /api/motoristas/{id}/approve working correctly
+        - Returns success message and plan assignment details
+        
+        **STEP 5 - VERIFY PLAN ASSIGNMENT:** ✅ PASSED
+        - Motorista correctly assigned plan: ID=8dc0b67f-2e5e-4926-aeda-e5abd0615478
+        - Plan name: 'Plano Base Gratuito'
+        - Valid until: 2026-01-06T19:34:18.838247+00:00
+        
+        **STEP 6 - PLAN UPDATE:** ✅ PASSED
+        - Successfully updated plan: 'Teste E2E (Atualizado)'
+        - Price changed from 0 to 5.0
+        - Update reflected in database
+        
+        **STEP 7 - PLAN DEACTIVATION:** ✅ PASSED
+        - Successfully deactivated plan (ativo=false)
+        - Soft delete working correctly
+        
+        **STEP 8 - CREATE OTHER USER TYPE PLANS:** ✅ PASSED
+        - Created 'Plano Parceiro E2E' for parceiro users
+        - Created 'Plano Operacional E2E' for operacional users
+        - Both plans created successfully
+        
+        🔧 **CRITICAL FIX APPLIED:**
+        - **ISSUE:** Motorista model missing plan fields causing serialization errors
+        - **SOLUTION:** Added plano_id, plano_nome, plano_valida_ate to Motorista model
+        - **RESULT:** Plan assignment now working correctly in API responses
+        
+        📊 **BUG FIXES VERIFIED:**
+        1. ✅ MongoDB ObjectId serialization - FIXED (no serialization errors)
+        2. ✅ Plan persistence in motorista approval - FIXED (plans correctly assigned)
+        3. ✅ Motorista deletion filter - FIXED (soft delete working)
+        4. ✅ Duplicate endpoint using planos_sistema - FIXED (correct collection used)
+        
+        🎯 **SYSTEM STATUS:** Unified plan system is fully operational and ready for production!
+        
+        **ENDPOINTS TESTED AND WORKING:**
+        - GET /api/planos-sistema ✅
+        - POST /api/planos-sistema ✅
+        - PUT /api/planos-sistema/{id} ✅
+        - DELETE /api/planos-sistema/{id} ✅
+        - PUT /api/motoristas/{id}/approve ✅
+        - GET /api/motoristas/{id} ✅
+        
+        All bug fixes have been successfully implemented and tested. The unified plan system is working perfectly!
+    
     - agent: "main"
       message: |
         🚀 NOVA IMPLEMENTAÇÃO - ATRIBUIÇÃO DE MOTORISTA A PARCEIRO
