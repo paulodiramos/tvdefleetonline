@@ -6060,3 +6060,56 @@ Novo tab "Integrações" nas Configurações Admin para gestão de credenciais d
 
 ---
 
+
+---
+
+## 🎯 Teste: Funcionalidade Eliminar Parceiro (Admin Only)
+**Data:** 2025-12-01
+**Testado por:** Agente Fork
+**Status:** ✅ SUCESSO
+
+### Funcionalidade Implementada:
+Botão "Eliminar Parceiro" no perfil de parceiros, visível apenas para Admin.
+
+### Testes Realizados:
+
+#### 1. Frontend - Admin
+- ✅ Botão "Eliminar Parceiro" visível em vermelho
+- ✅ Posicionamento correto (ao lado do botão "Guardar Configurações")
+- ✅ Confirmação dupla antes de eliminar:
+  - Prompt com aviso de que a ação é irreversível
+  - Exige digitação de "ELIMINAR" para confirmar
+- ✅ Toast de sucesso após eliminação
+- ✅ Redirect para /parceiros após 2 segundos
+
+#### 2. Frontend - Gestor (Não Admin)
+- ✅ Botão "Eliminar Parceiro" OCULTO
+- ✅ Apenas botão "Guardar Configurações" visível
+- ✅ Controlo de acesso funcionando corretamente
+
+#### 3. Backend API
+- ✅ Endpoint `DELETE /api/parceiros/{parceiro_id}` criado
+- ✅ Permissões restritas a Admin apenas
+- ✅ Lógica de eliminação implementada:
+  - Remove parceiro da base de dados
+  - Desassocia todos os veículos (parceiro_id → null)
+  - Desassocia todos os motoristas (parceiro_atribuido → null)
+  - Remove conta de utilizador se existir
+- ✅ Retorna estatísticas da eliminação
+
+### Exemplo de Resposta do Backend:
+```json
+{
+  "message": "Parceiro 'Nome Empresa' eliminado com sucesso",
+  "parceiro_id": "parceiro-123",
+  "vehicles_unassigned": 5,
+  "motoristas_unassigned": 3,
+  "deleted_by": "admin-001",
+  "deleted_at": "2025-12-01T16:30:00Z"
+}
+```
+
+**Conclusão:** ✅ Funcionalidade 100% operacional com segurança adequada (Admin only).
+
+---
+
