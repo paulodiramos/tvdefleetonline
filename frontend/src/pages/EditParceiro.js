@@ -102,20 +102,19 @@ const EditParceiro = ({ user, onLogout }) => {
     const parceiro = parceiros.find(p => p.id === selectedParceiro);
     const parceiroName = parceiro?.nome_empresa || parceiro?.name || 'este parceiro';
 
-    if (!window.confirm(
+    const confirmation = window.prompt(
       `⚠️ ATENÇÃO: Tem certeza que deseja ELIMINAR o parceiro "${parceiroName}"?\n\n` +
       `Esta ação irá:\n` +
       `• Remover permanentemente o parceiro\n` +
       `• Desassociar todos os veículos e motoristas\n` +
       `• Esta ação NÃO pode ser desfeita!\n\n` +
-      `Digite "ELIMINAR" para confirmar.`
-    )) {
-      return;
-    }
+      `Digite "ELIMINAR" para confirmar:`
+    );
 
-    const confirmation = window.prompt('Digite "ELIMINAR" para confirmar a exclusão:');
     if (confirmation !== 'ELIMINAR') {
-      setMessage({ type: 'error', text: 'Eliminação cancelada. Confirmação incorreta.' });
+      if (confirmation !== null) {
+        toast.error('Eliminação cancelada. Confirmação incorreta.');
+      }
       return;
     }
 
@@ -125,7 +124,7 @@ const EditParceiro = ({ user, onLogout }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      setMessage({ type: 'success', text: `Parceiro "${parceiroName}" eliminado com sucesso!` });
+      toast.success(`Parceiro "${parceiroName}" eliminado com sucesso!`);
       setSelectedParceiro(null);
       setParceiroData(null);
       fetchParceiros();
@@ -135,10 +134,7 @@ const EditParceiro = ({ user, onLogout }) => {
         navigate('/parceiros');
       }, 2000);
     } catch (error) {
-      setMessage({
-        type: 'error',
-        text: error.response?.data?.detail || 'Erro ao eliminar parceiro'
-      });
+      toast.error(error.response?.data?.detail || 'Erro ao eliminar parceiro');
     }
   };
 
