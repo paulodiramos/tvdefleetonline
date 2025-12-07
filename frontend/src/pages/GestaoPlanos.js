@@ -68,7 +68,7 @@ const GestaoPlanos = ({ user, onLogout }) => {
   const fetchPlanos = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/planos`, {
+      const response = await axios.get(`${API}/planos-parceiro`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPlanos(response.data);
