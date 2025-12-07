@@ -27,6 +27,9 @@ const Motoristas = ({ user, onLogout }) => {
   const [editForm, setEditForm] = useState({});
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [showAtribuirDialog, setShowAtribuirDialog] = useState(false);
+  const [showEscolherPlanoDialog, setShowEscolherPlanoDialog] = useState(false);
+  const [planosDisponiveis, setPlanosDisponiveis] = useState([]);
+  const [planoSelecionado, setPlanoSelecionado] = useState(null);
   const [atribuicaoData, setAtribuicaoData] = useState({
     motorista_id: '',
     parceiro_id: '',
