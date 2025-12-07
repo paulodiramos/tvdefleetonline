@@ -299,6 +299,41 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
     toast.success('Exemplo de cláusula de época baixa carregado!');
   };
 
+
+  const handleDeleteParceiroFromProfile = async (parceiro) => {
+    const parceiroName = parceiro?.nome_empresa || parceiro?.name || 'este parceiro';
+
+    const confirmation = window.prompt(
+      `⚠️ ATENÇÃO: Tem certeza que deseja ELIMINAR o parceiro "${parceiroName}"?\n\n` +
+      `Esta ação irá:\n` +
+      `• Remover permanentemente o parceiro\n` +
+      `• Desassociar todos os veículos e motoristas\n` +
+      `• Esta ação NÃO pode ser desfeita!\n\n` +
+      `Digite "ELIMINAR" para confirmar:`
+    );
+
+    if (confirmation !== 'ELIMINAR') {
+      if (confirmation !== null) {
+        toast.error('Eliminação cancelada. Confirmação incorreta.');
+      }
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/parceiros/${parceiro.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success(`Parceiro "${parceiroName}" eliminado com sucesso!`);
+      setShowProfileDialog(false);
+      setProfileParceiro(null);
+      fetchParceiros();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao eliminar parceiro');
+    }
+  };
+
   const handleEditParceiro = async (e) => {
     e.preventDefault();
     try {
