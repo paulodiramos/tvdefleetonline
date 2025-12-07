@@ -128,12 +128,12 @@ const GestaoPlanos = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       
       if (editingPlano) {
-        await axios.put(`${API}/planos/${editingPlano.id}`, planoForm, {
+        await axios.put(`${API}/planos-parceiro/${editingPlano.id}`, planoForm, {
           headers: { Authorization: `Bearer ${token}` }
         });
         toast.success('Plano atualizado com sucesso!');
       } else {
-        await axios.post(`${API}/planos`, planoForm, {
+        await axios.post(`${API}/planos-parceiro`, planoForm, {
           headers: { Authorization: `Bearer ${token}` }
         });
         toast.success('Plano criado com sucesso!');
