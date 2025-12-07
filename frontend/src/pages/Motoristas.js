@@ -120,6 +120,61 @@ const Motoristas = ({ user, onLogout }) => {
       toast.error('Erro ao aprovar motorista');
     }
   };
+  const fetchPlanosDisponiveis = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/planos-motorista`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setPlanosDisponiveis(response.data.filter(p => p.ativo));
+    } catch (error) {
+      console.error('Error fetching plans:', error);
+      toast.error('Erro ao carregar planos');
+    }
+  };
+
+  const handleAtribuirPlano = async () => {
+    if (!planoSelecionado) {
+      toast.error('Selecione um plano');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/motoristas/${selectedMotorista.id}`,
+        {
+          plano_id: planoSelecionado.id,
+          plano_nome: planoSelecionado.nome,
+          plano_features: {
+            features: planoSelecionado.features,
+            preco_mensal: planoSelecionado.preco_mensal
+          }
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success('Plano atribuído com sucesso!');
+      setShowEscolherPlanoDialog(false);
+      setPlanoSelecionado(null);
+      fetchMotoristas();
+      
+      // Update selected motorista
+      const updatedMotorista = {
+        ...selectedMotorista,
+        plano_id: planoSelecionado.id,
+        plano_nome: planoSelecionado.nome,
+        plano_features: {
+          features: planoSelecionado.features,
+          preco_mensal: planoSelecionado.preco_mensal
+        }
+      };
+      setSelectedMotorista(updatedMotorista);
+    } catch (error) {
+      console.error('Error assigning plan:', error);
+      toast.error('Erro ao atribuir plano');
+    }
+  };
 
   const handleAddMotorista = async (e) => {
     e.preventDefault();
