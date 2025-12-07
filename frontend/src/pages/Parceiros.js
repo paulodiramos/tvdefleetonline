@@ -1331,12 +1331,111 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                 )}
               </div>
 
+              {/* Configuração de Período (Admin/Gestor) */}
+              {planoSelecionadoAdmin && (user.role === 'admin' || user.role === 'gestao') && (
+                <div className="p-6 bg-blue-50 border-2 border-blue-300 rounded-lg space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-bold text-lg text-blue-900">Configurar Período de Validade</h4>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => setPlanoSelecionadoAdmin(null)}
+                    >
+                      <XCircle className="w-4 h-4" />
+                    </Button>
+                  </div>
+
+                  <div className="p-3 bg-white rounded border">
+                    <p className="font-semibold text-sm text-slate-700">Plano Selecionado:</p>
+                    <p className="text-blue-600 font-bold">{planoSelecionadoAdmin.nome}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Tipo de Período</Label>
+                      <select
+                        className="w-full p-2 border rounded mt-1"
+                        value={periodoValidadePlano.tipo}
+                        onChange={(e) => {
+                          const tipo = e.target.value;
+                          const hoje = new Date();
+                          let dataFim = new Date(hoje);
+                          
+                          switch(tipo) {
+                            case 'mensal': dataFim.setMonth(dataFim.getMonth() + 1); break;
+                            case 'trimestral': dataFim.setMonth(dataFim.getMonth() + 3); break;
+                            case 'semestral': dataFim.setMonth(dataFim.getMonth() + 6); break;
+                            case 'anual': dataFim.setFullYear(dataFim.getFullYear() + 1); break;
+                            case 'permanente': dataFim = null; break;
+                            default: dataFim.setMonth(dataFim.getMonth() + 1);
+                          }
+                          
+                          setPeriodoValidadePlano({
+                            ...periodoValidadePlano,
+                            tipo,
+                            data_fim: dataFim ? dataFim.toISOString().split('T')[0] : ''
+                          });
+                        }}
+                      >
+                        <option value="mensal">1 Mês (Teste)</option>
+                        <option value="trimestral">3 Meses</option>
+                        <option value="semestral">6 Meses</option>
+                        <option value="anual">1 Ano</option>
+                        <option value="permanente">Permanente</option>
+                        <option value="personalizado">Personalizado</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <Label>Data de Início</Label>
+                      <Input
+                        type="date"
+                        value={periodoValidadePlano.data_inicio}
+                        onChange={(e) => setPeriodoValidadePlano({...periodoValidadePlano, data_inicio: e.target.value})}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    {periodoValidadePlano.tipo !== 'permanente' && (
+                      <div>
+                        <Label>Data de Fim</Label>
+                        <Input
+                          type="date"
+                          value={periodoValidadePlano.data_fim}
+                          onChange={(e) => setPeriodoValidadePlano({...periodoValidadePlano, data_fim: e.target.value})}
+                          className="mt-1"
+                          disabled={periodoValidadePlano.tipo !== 'personalizado'}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex space-x-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => setPlanoSelecionadoAdmin(null)}
+                      className="flex-1"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      className="bg-green-600 hover:bg-green-700 flex-1"
+                      onClick={() => handleAtribuirPlanoAdmin(selectedParceiroForPlano.id, planoSelecionadoAdmin.id)}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Confirmar Atribuição
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-end pt-4 border-t">
                 <Button
                   variant="outline"
                   onClick={() => {
                     setShowPlanosDialog(false);
                     setSelectedParceiroForPlano(null);
+                    setPlanoSelecionadoAdmin(null);
                   }}
                 >
                   Fechar
