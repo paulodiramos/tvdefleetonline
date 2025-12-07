@@ -399,9 +399,54 @@ const Vehicles = ({ user, onLogout }) => {
                         </div>
 
                         {newVehicle.tipo_contrato.tipo === 'aluguer' && (
-                          <div className="space-y-2">
-                            <Label>Valor Aluguer (€/dia) *</Label>
-                            <Input type="number" step="0.01" value={newVehicle.tipo_contrato.valor_aluguer} onChange={(e) => setNewVehicle({...newVehicle, tipo_contrato: {...newVehicle.tipo_contrato, valor_aluguer: parseFloat(e.target.value)}})} required data-testid="vehicle-valor-aluguer-input" />
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label>Valor Aluguer Semanal (€) *</Label>
+                              <Input 
+                                type="number" 
+                                step="0.01" 
+                                placeholder="Valor por semana"
+                                onChange={(e) => {
+                                  const valorSemanal = parseFloat(e.target.value) || 0;
+                                  const valorDiario = valorSemanal / 7;
+                                  setNewVehicle({
+                                    ...newVehicle, 
+                                    tipo_contrato: {
+                                      ...newVehicle.tipo_contrato, 
+                                      valor_aluguer: valorDiario,
+                                      valor_aluguer_semanal: valorSemanal
+                                    }
+                                  });
+                                }}
+                                value={newVehicle.tipo_contrato.valor_aluguer_semanal || (newVehicle.tipo_contrato.valor_aluguer * 7).toFixed(2)}
+                                data-testid="vehicle-valor-aluguer-semanal-input" 
+                              />
+                              <p className="text-xs text-slate-500">Insira o valor semanal</p>
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Valor Aluguer Diário (€) *</Label>
+                              <Input 
+                                type="number" 
+                                step="0.01" 
+                                value={newVehicle.tipo_contrato.valor_aluguer ? newVehicle.tipo_contrato.valor_aluguer.toFixed(2) : '0.00'} 
+                                onChange={(e) => {
+                                  const valorDiario = parseFloat(e.target.value) || 0;
+                                  const valorSemanal = valorDiario * 7;
+                                  setNewVehicle({
+                                    ...newVehicle, 
+                                    tipo_contrato: {
+                                      ...newVehicle.tipo_contrato, 
+                                      valor_aluguer: valorDiario,
+                                      valor_aluguer_semanal: valorSemanal
+                                    }
+                                  });
+                                }}
+                                required 
+                                data-testid="vehicle-valor-aluguer-input"
+                                className="bg-blue-50"
+                              />
+                              <p className="text-xs text-blue-600 font-medium">Calculado automaticamente</p>
+                            </div>
                           </div>
                         )}
 
