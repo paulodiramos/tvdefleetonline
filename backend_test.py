@@ -1382,9 +1382,42 @@ startxref
             
             motoristas = motoristas_response.json()
             
+            # If no motoristas exist, create one for testing
             if not motoristas:
-                self.log_result("Motorista-Approval-Plan-Assignment", False, "No motoristas available for test")
-                return
+                self.log_result("Motorista-Create-For-Test", True, "No motoristas found, creating test motorista")
+                
+                # Create a test motorista
+                motorista_data = {
+                    "email": "test.motorista@tvdefleet.com",
+                    "password": "testpass123",
+                    "name": "Test Motorista",
+                    "phone": "911234567",
+                    "morada_completa": "Rua Teste 123",
+                    "codigo_postal": "1000-100",
+                    "data_nascimento": "1990-01-01",
+                    "nacionalidade": "Portuguesa",
+                    "tipo_documento": "CC",
+                    "numero_documento": "12345678",
+                    "validade_documento": "2030-01-01",
+                    "nif": "123456789",
+                    "carta_conducao_numero": "PT123456",
+                    "carta_conducao_validade": "2030-01-01",
+                    "licenca_tvde_numero": "TVDE123456",
+                    "licenca_tvde_validade": "2030-01-01",
+                    "regime": "aluguer",
+                    "whatsapp": "911234567",
+                    "tipo_pagamento": "recibo_verde"
+                }
+                
+                create_response = requests.post(f"{BACKEND_URL}/motoristas", json=motorista_data, headers=headers)
+                
+                if create_response.status_code == 200:
+                    created_motorista = create_response.json()
+                    motoristas = [created_motorista]
+                    self.log_result("Motorista-Create-For-Test", True, f"Test motorista created: {created_motorista.get('name')}")
+                else:
+                    self.log_result("Motorista-Approval-Plan-Assignment", False, f"Could not create test motorista: {create_response.status_code}")
+                    return
             
             # Find an unapproved motorista or use the first one
             motorista_to_approve = None
