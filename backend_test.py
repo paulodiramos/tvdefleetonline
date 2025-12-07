@@ -1546,6 +1546,45 @@ startxref
                               f"Could not create test plan: {create_response.status_code}")
         except Exception as e:
             self.log_result("Plan-Database-Persistence", False, f"Request error: {str(e)}")
+    
+    def test_free_base_plans_available(self):
+        """Test that free base plans are available in unified system for motorista approval"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Free-Base-Plans-Available", False, "No auth token for admin")
+            return
+        
+        try:
+            # Get all plans from unified system
+            planos_response = requests.get(f"{BACKEND_URL}/planos-sistema", headers=headers)
+            
+            if planos_response.status_code == 200:
+                planos = planos_response.json()
+                
+                # Find free motorista plans
+                free_motorista_plans = [
+                    p for p in planos 
+                    if p.get('preco_mensal', 0) == 0 
+                    and p.get('tipo_usuario') == 'motorista' 
+                    and p.get('ativo', False)
+                ]
+                
+                if free_motorista_plans:
+                    self.log_result("Free-Base-Plans-Available", True, 
+                                  f"Found {len(free_motorista_plans)} free base plans for motoristas in unified system")
+                    
+                    # Log details of the first free plan
+                    first_plan = free_motorista_plans[0]
+                    self.log_result("Free-Base-Plan-Details", True, 
+                                  f"Example free plan: {first_plan.get('nome')} (ID: {first_plan.get('id')})")
+                else:
+                    self.log_result("Free-Base-Plans-Available", False, 
+                                  "No free base plans found for motoristas in unified system")
+            else:
+                self.log_result("Free-Base-Plans-Available", False, 
+                              f"Could not retrieve plans: {planos_response.status_code}")
+        except Exception as e:
+            self.log_result("Free-Base-Plans-Available", False, f"Request error: {str(e)}")
 
     # ==================== REVIEW REQUEST TESTS - TVDEFleet Specific Features ====================
     
