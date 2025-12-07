@@ -1611,6 +1611,356 @@ startxref
         except Exception as e:
             self.log_result("Free-Base-Plans-Available", False, f"Request error: {str(e)}")
 
+    # ==================== E2E UNIFIED PLAN SYSTEM TESTS ====================
+    
+    def test_e2e_create_test_plano_motorista(self):
+        """E2E Step 1: Create test plano for motoristas (nome='Teste E2E', preco_mensal=0, tipo_usuario='motorista')"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("E2E-Create-Test-Plano", False, "No auth token for admin")
+            return None
+        
+        # Create the specific test plano from review request
+        test_plano_data = {
+            "nome": "Teste E2E",
+            "descricao": "Plano de teste E2E para motoristas",
+            "preco_mensal": 0,
+            "tipo_usuario": "motorista",
+            "modulos": ["dashboard", "documentos"],
+            "ativo": True,
+            "permite_trial": False
+        }
+        
+        try:
+            response = requests.post(f"{BACKEND_URL}/planos-sistema", json=test_plano_data, headers=headers)
+            
+            if response.status_code == 200:
+                result = response.json()
+                self.test_plano_id = result["id"]  # Store for later tests
+                
+                # Verify all required fields
+                required_fields = ["id", "nome", "preco_mensal", "tipo_usuario", "ativo", "created_at"]
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if not missing_fields and result["nome"] == "Teste E2E" and result["preco_mensal"] == 0:
+                    self.log_result("E2E-Create-Test-Plano", True, 
+                                  f"Test plano created successfully: ID={result['id']}, Nome='{result['nome']}'")
+                    return result
+                else:
+                    self.log_result("E2E-Create-Test-Plano", False, 
+                                  f"Missing fields or incorrect data: {missing_fields}")
+                    return None
+            else:
+                self.log_result("E2E-Create-Test-Plano", False, 
+                              f"Failed to create test plano: {response.status_code}", response.text)
+                return None
+        except Exception as e:
+            self.log_result("E2E-Create-Test-Plano", False, f"Request error: {str(e)}")
+            return None
+    
+    def test_e2e_verify_plano_in_database(self):
+        """E2E Step 2: Verify plano is in database with all fields"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("E2E-Verify-Plano-Database", False, "No auth token for admin")
+            return
+        
+        if not hasattr(self, 'test_plano_id'):
+            self.log_result("E2E-Verify-Plano-Database", False, "No test plano ID available")
+            return
+        
+        try:
+            # Get all planos and find our test plano
+            response = requests.get(f"{BACKEND_URL}/planos-sistema", headers=headers)
+            
+            if response.status_code == 200:
+                planos = response.json()
+                test_plano = next((p for p in planos if p.get("id") == self.test_plano_id), None)
+                
+                if test_plano:
+                    # Verify all expected fields are present and correct
+                    expected_fields = {
+                        "nome": "Teste E2E",
+                        "preco_mensal": 0,
+                        "tipo_usuario": "motorista",
+                        "ativo": True
+                    }
+                    
+                    all_correct = True
+                    for field, expected_value in expected_fields.items():
+                        if test_plano.get(field) != expected_value:
+                            all_correct = False
+                            self.log_result("E2E-Verify-Plano-Database", False, 
+                                          f"Field {field}: expected {expected_value}, got {test_plano.get(field)}")
+                            return
+                    
+                    if all_correct:
+                        self.log_result("E2E-Verify-Plano-Database", True, 
+                                      "Test plano verified in database with all correct fields")
+                else:
+                    self.log_result("E2E-Verify-Plano-Database", False, 
+                                  f"Test plano with ID {self.test_plano_id} not found in database")
+            else:
+                self.log_result("E2E-Verify-Plano-Database", False, 
+                              f"Failed to get planos: {response.status_code}")
+        except Exception as e:
+            self.log_result("E2E-Verify-Plano-Database", False, f"Request error: {str(e)}")
+    
+    def test_e2e_motorista_approval_with_plan_assignment(self):
+        """E2E Step 3-5: Create/unapprove motorista, approve via API, verify plan assignment"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("E2E-Motorista-Approval", False, "No auth token for admin")
+            return
+        
+        try:
+            # Step 3: Get existing motoristas or create one
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            
+            if motoristas_response.status_code == 200:
+                motoristas = motoristas_response.json()
+                
+                if motoristas:
+                    # Use existing motorista and unapprove it first
+                    test_motorista = motoristas[0]
+                    motorista_id = test_motorista["id"]
+                    
+                    # Unapprove the motorista first
+                    unapprove_data = {"approved": False, "plano_id": None, "plano_nome": None, "plano_valida_ate": None}
+                    unapprove_response = requests.put(f"{BACKEND_URL}/motoristas/{motorista_id}", 
+                                                    json=unapprove_data, headers=headers)
+                    
+                    if unapprove_response.status_code == 200:
+                        self.log_result("E2E-Motorista-Unapprove", True, 
+                                      f"Motorista {test_motorista.get('name')} unapproved for testing")
+                    else:
+                        self.log_result("E2E-Motorista-Unapprove", False, 
+                                      f"Failed to unapprove motorista: {unapprove_response.status_code}")
+                        return
+                else:
+                    # Create a test motorista
+                    motorista_data = {
+                        "email": "teste.e2e@tvdefleet.com",
+                        "password": "testpass123",
+                        "name": "Motorista Teste E2E",
+                        "phone": "911111111",
+                        "morada_completa": "Rua Teste E2E 123",
+                        "codigo_postal": "1000-100",
+                        "data_nascimento": "1990-01-01",
+                        "nacionalidade": "Portuguesa",
+                        "tipo_documento": "CC",
+                        "numero_documento": "12345678",
+                        "validade_documento": "2030-01-01",
+                        "nif": "123456789",
+                        "carta_conducao_numero": "PT123456",
+                        "carta_conducao_validade": "2030-01-01",
+                        "licenca_tvde_numero": "TVDE123456",
+                        "licenca_tvde_validade": "2030-01-01",
+                        "regime": "aluguer",
+                        "whatsapp": "911111111",
+                        "tipo_pagamento": "recibo_verde"
+                    }
+                    
+                    create_response = requests.post(f"{BACKEND_URL}/motoristas/register", 
+                                                  json=motorista_data, headers=headers)
+                    
+                    if create_response.status_code == 200:
+                        test_motorista = create_response.json()
+                        motorista_id = test_motorista["id"]
+                        self.log_result("E2E-Motorista-Create", True, 
+                                      f"Test motorista created: {test_motorista.get('name')}")
+                    else:
+                        self.log_result("E2E-Motorista-Create", False, 
+                                      f"Failed to create test motorista: {create_response.status_code}")
+                        return
+                
+                # Step 4: Approve motorista via PUT /api/motoristas/{id}/approve
+                approve_response = requests.put(f"{BACKEND_URL}/motoristas/{motorista_id}/approve", 
+                                              headers=headers)
+                
+                if approve_response.status_code == 200:
+                    approval_result = approve_response.json()
+                    self.log_result("E2E-Motorista-Approve", True, 
+                                  f"Motorista approved successfully: {approval_result.get('message')}")
+                    
+                    # Step 5: Verify motorista has plano_id, plano_nome, plano_valida_ate
+                    verify_response = requests.get(f"{BACKEND_URL}/motoristas/{motorista_id}", headers=headers)
+                    
+                    if verify_response.status_code == 200:
+                        updated_motorista = verify_response.json()
+                        
+                        # Check if plan fields are assigned
+                        plano_id = updated_motorista.get("plano_id")
+                        plano_nome = updated_motorista.get("plano_nome")
+                        plano_valida_ate = updated_motorista.get("plano_valida_ate")
+                        
+                        if plano_id and plano_nome and plano_valida_ate:
+                            self.log_result("E2E-Plan-Assignment-Verify", True, 
+                                          f"Plan correctly assigned: ID={plano_id}, Nome='{plano_nome}', Valida_ate={plano_valida_ate}")
+                            
+                            # Store motorista_id for cleanup
+                            self.test_motorista_id = motorista_id
+                        else:
+                            self.log_result("E2E-Plan-Assignment-Verify", False, 
+                                          f"Plan fields missing: plano_id={plano_id}, plano_nome={plano_nome}, plano_valida_ate={plano_valida_ate}")
+                    else:
+                        self.log_result("E2E-Plan-Assignment-Verify", False, 
+                                      f"Failed to get updated motorista: {verify_response.status_code}")
+                else:
+                    self.log_result("E2E-Motorista-Approve", False, 
+                                  f"Failed to approve motorista: {approve_response.status_code}", approve_response.text)
+            else:
+                self.log_result("E2E-Motorista-Approval", False, 
+                              f"Failed to get motoristas: {motoristas_response.status_code}")
+        except Exception as e:
+            self.log_result("E2E-Motorista-Approval", False, f"Request error: {str(e)}")
+    
+    def test_e2e_plan_update(self):
+        """E2E Step 6: Test plan update"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("E2E-Plan-Update", False, "No auth token for admin")
+            return
+        
+        if not hasattr(self, 'test_plano_id'):
+            self.log_result("E2E-Plan-Update", False, "No test plano ID available")
+            return
+        
+        # Update the test plano
+        update_data = {
+            "nome": "Teste E2E (Atualizado)",
+            "descricao": "Plano de teste E2E atualizado",
+            "preco_mensal": 5.0,  # Change price
+            "tipo_usuario": "motorista",
+            "modulos": ["dashboard", "documentos", "relatorios"],  # Add module
+            "ativo": True,
+            "permite_trial": True,  # Enable trial
+            "dias_trial": 15
+        }
+        
+        try:
+            response = requests.put(f"{BACKEND_URL}/planos-sistema/{self.test_plano_id}", 
+                                  json=update_data, headers=headers)
+            
+            if response.status_code == 200:
+                # Verify the update by fetching the plan
+                verify_response = requests.get(f"{BACKEND_URL}/planos-sistema", headers=headers)
+                
+                if verify_response.status_code == 200:
+                    planos = verify_response.json()
+                    updated_plano = next((p for p in planos if p.get("id") == self.test_plano_id), None)
+                    
+                    if updated_plano and updated_plano.get("nome") == "Teste E2E (Atualizado)":
+                        self.log_result("E2E-Plan-Update", True, 
+                                      f"Plan updated successfully: {updated_plano['nome']}, Price: {updated_plano.get('preco_mensal')}")
+                    else:
+                        self.log_result("E2E-Plan-Update", False, 
+                                      "Plan update not reflected in database")
+                else:
+                    self.log_result("E2E-Plan-Update", False, 
+                                  f"Failed to verify update: {verify_response.status_code}")
+            else:
+                self.log_result("E2E-Plan-Update", False, 
+                              f"Failed to update plan: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("E2E-Plan-Update", False, f"Request error: {str(e)}")
+    
+    def test_e2e_plan_deactivation(self):
+        """E2E Step 7: Test plan deactivation"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("E2E-Plan-Deactivation", False, "No auth token for admin")
+            return
+        
+        if not hasattr(self, 'test_plano_id'):
+            self.log_result("E2E-Plan-Deactivation", False, "No test plano ID available")
+            return
+        
+        try:
+            # Deactivate the plan
+            response = requests.delete(f"{BACKEND_URL}/planos-sistema/{self.test_plano_id}", headers=headers)
+            
+            if response.status_code == 200:
+                # Verify deactivation by checking the plan status
+                verify_response = requests.get(f"{BACKEND_URL}/planos-sistema", headers=headers)
+                
+                if verify_response.status_code == 200:
+                    planos = verify_response.json()
+                    deactivated_plano = next((p for p in planos if p.get("id") == self.test_plano_id), None)
+                    
+                    if deactivated_plano and deactivated_plano.get("ativo") == False:
+                        self.log_result("E2E-Plan-Deactivation", True, 
+                                      "Plan successfully deactivated (ativo=False)")
+                    elif not deactivated_plano:
+                        # Plan might be filtered out if only active plans are returned
+                        self.log_result("E2E-Plan-Deactivation", True, 
+                                      "Plan deactivated (not visible in active plans list)")
+                    else:
+                        self.log_result("E2E-Plan-Deactivation", False, 
+                                      f"Plan not properly deactivated: ativo={deactivated_plano.get('ativo')}")
+                else:
+                    self.log_result("E2E-Plan-Deactivation", False, 
+                                  f"Failed to verify deactivation: {verify_response.status_code}")
+            else:
+                self.log_result("E2E-Plan-Deactivation", False, 
+                              f"Failed to deactivate plan: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("E2E-Plan-Deactivation", False, f"Request error: {str(e)}")
+    
+    def test_e2e_create_plans_other_user_types(self):
+        """E2E Step 8: Create plans for other user types (parceiro, operacional)"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("E2E-Create-Other-Plans", False, "No auth token for admin")
+            return
+        
+        # Create plans for other user types
+        other_plans = [
+            {
+                "nome": "Plano Parceiro E2E",
+                "descricao": "Plano de teste E2E para parceiros",
+                "preco_mensal": 25.0,
+                "tipo_usuario": "parceiro",
+                "modulos": ["gestao_frota", "relatorios"],
+                "ativo": True,
+                "permite_trial": True,
+                "dias_trial": 30
+            },
+            {
+                "nome": "Plano Operacional E2E",
+                "descricao": "Plano de teste E2E para operacionais",
+                "preco_mensal": 50.0,
+                "tipo_usuario": "operacional",
+                "modulos": ["gestao_completa", "alertas", "manutencoes"],
+                "ativo": True,
+                "permite_trial": False
+            }
+        ]
+        
+        created_count = 0
+        
+        for plan_data in other_plans:
+            try:
+                response = requests.post(f"{BACKEND_URL}/planos-sistema", json=plan_data, headers=headers)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    created_count += 1
+                    self.log_result(f"E2E-Create-{plan_data['tipo_usuario']}-Plan", True, 
+                                  f"Plan created: {result['nome']} (ID: {result['id']})")
+                else:
+                    self.log_result(f"E2E-Create-{plan_data['tipo_usuario']}-Plan", False, 
+                                  f"Failed to create plan: {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result(f"E2E-Create-{plan_data['tipo_usuario']}-Plan", False, f"Request error: {str(e)}")
+        
+        if created_count == len(other_plans):
+            self.log_result("E2E-Create-Other-Plans", True, 
+                          f"All {len(other_plans)} additional user type plans created successfully")
+        else:
+            self.log_result("E2E-Create-Other-Plans", False, 
+                          f"Only {created_count}/{len(other_plans)} additional plans created")
+
     # ==================== REVIEW REQUEST TESTS - TVDEFleet Specific Features ====================
     
     def test_dashboard_semana_passada_filter(self):
