@@ -1314,9 +1314,15 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                           
                           <Button
                             className="ml-4 bg-blue-600 hover:bg-blue-700"
-                            onClick={() => handleSolicitarPlano(selectedParceiroForPlano.id, plano.id)}
+                            onClick={() => {
+                              if (user.role === 'admin' || user.role === 'gestao') {
+                                setPlanoSelecionadoAdmin(plano);
+                              } else {
+                                handleSolicitarPlano(selectedParceiroForPlano.id, plano.id);
+                              }
+                            }}
                           >
-                            Solicitar este Plano
+                            {user.role === 'admin' || user.role === 'gestao' ? 'Atribuir Plano' : 'Solicitar este Plano'}
                           </Button>
                         </div>
                       </CardContent>
