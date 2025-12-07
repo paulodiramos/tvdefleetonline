@@ -1672,50 +1672,65 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
               </Card>
 
               {/* Action Button */}
-              <div className="flex justify-end space-x-3 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowProfileDialog(false)}
-                >
-                  Fechar
-                </Button>
-                {!profileParceiro.plano_id && (
+              <div className="flex justify-between items-center pt-4 border-t">
+                {/* Botão Eliminar Parceiro - Apenas Admin - à esquerda */}
+                {user.role === 'admin' && (
                   <Button
-                    variant="outline"
-                    className="border-blue-500 text-blue-600 hover:bg-blue-50"
-                    onClick={() => {
-                      setSelectedParceiroForPlano(profileParceiro);
-                      setShowProfileDialog(false);
-                      fetchPlanos();
-                      setShowPlanosDialog(true);
-                    }}
+                    variant="destructive"
+                    className="bg-red-600 hover:bg-red-700"
+                    onClick={() => handleDeleteParceiroFromProfile(profileParceiro)}
                   >
-                    <Award className="w-4 h-4 mr-2" />
-                    Escolher Plano
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Eliminar Parceiro
                   </Button>
                 )}
-                {(user.role === 'admin' || user.role === 'gestao') && (
+                
+                {/* Outros botões à direita */}
+                <div className={`flex ${user.role === 'admin' ? '' : 'w-full justify-end'} space-x-3`}>
                   <Button
                     variant="outline"
+                    onClick={() => setShowProfileDialog(false)}
+                  >
+                    Fechar
+                  </Button>
+                  {!profileParceiro.plano_id && (
+                    <Button
+                      variant="outline"
+                      className="border-blue-500 text-blue-600 hover:bg-blue-50"
+                      onClick={() => {
+                        setSelectedParceiroForPlano(profileParceiro);
+                        setShowProfileDialog(false);
+                        fetchPlanos();
+                        setShowPlanosDialog(true);
+                      }}
+                    >
+                      <Award className="w-4 h-4 mr-2" />
+                      Escolher Plano
+                    </Button>
+                  )}
+                  {(user.role === 'admin' || user.role === 'gestao') && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setEditingParceiro({...profileParceiro});
+                        setShowProfileDialog(false);
+                        setShowEditDialog(true);
+                      }}
+                    >
+                      <Edit className="w-4 h-4 mr-2" />
+                      Editar Perfil
+                    </Button>
+                  )}
+                  <Button
                     onClick={() => {
-                      setEditingParceiro({...profileParceiro});
                       setShowProfileDialog(false);
-                      setShowEditDialog(true);
+                      handleSelectParceiro(profileParceiro);
                     }}
                   >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Editar Perfil
+                    <FileText className="w-4 h-4 mr-2" />
+                    Ver Contratos
                   </Button>
-                )}
-                <Button
-                  onClick={() => {
-                    setShowProfileDialog(false);
-                    handleSelectParceiro(profileParceiro);
-                  }}
-                >
-                  <FileText className="w-4 h-4 mr-2" />
-                  Ver Contratos
-                </Button>
+                </div>
               </div>
             </div>
           )}
