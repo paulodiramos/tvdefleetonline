@@ -5622,6 +5622,90 @@ agent_communication:
         
         Sistema BACKEND está 100% operacional para as páginas de gestão de utilizadores e dashboard de parceiro!
 
+  - task: "Sistema Unificado de Planos - GET /api/planos-sistema"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Endpoint GET /api/planos-sistema funcionando perfeitamente. Retorna lista de planos do sistema unificado. Testado com admin@tvdefleet.com/o72ocUHy. Encontrados múltiplos planos no sistema (25+ planos). Endpoint acessível apenas para Admin (role-based access control funcionando)."
+
+  - task: "Sistema Unificado de Planos - POST /api/planos-sistema"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Endpoint POST /api/planos-sistema funcionando perfeitamente. Criação de planos para todos os tipos de usuário testada com sucesso: 1) Plano Base Motorista (preco_mensal=0, tipo_usuario=motorista), 2) Plano Premium Parceiro (preco_mensal=50, tipo_usuario=parceiro), 3) Plano Operacional (preco_mensal=75, tipo_usuario=operacional), 4) Plano Gestão (preco_mensal=100, tipo_usuario=gestao). Todos os campos obrigatórios (id, nome, tipo_usuario, preco_mensal, ativo, created_at) presentes na resposta. Planos persistidos corretamente na collection planos_sistema."
+
+  - task: "Sistema Unificado de Planos - PUT /api/planos-sistema/{plano_id}"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Endpoint PUT /api/planos-sistema/{plano_id} funcionando perfeitamente. Atualização de planos testada com sucesso. Campos atualizados: nome (adicionado '(Atualizado)'), descrição, preco_mensal (+10), modulos (adicionado 'novo_modulo'), permite_trial=true, dias_trial=45. Alterações persistidas corretamente na base de dados e verificadas através de nova consulta GET."
+
+  - task: "Sistema Unificado de Planos - DELETE /api/planos-sistema/{plano_id}"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Endpoint DELETE /api/planos-sistema/{plano_id} funcionando perfeitamente. Implementa soft delete corretamente (ativo=False). Plano criado especificamente para teste de deleção foi desativado com sucesso. Verificação confirmou que plano foi marcado como inativo na base de dados, mantendo integridade dos dados históricos."
+
+  - task: "Sistema Unificado de Planos - Persistência na Base de Dados"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Persistência de dados na collection planos_sistema funcionando perfeitamente. Plano de teste criado com dados específicos (nome='Teste Persistência DB', preco_mensal=99.99, tipo_usuario='parceiro', modulos=['modulo1','modulo2','modulo3'], permite_trial=true, dias_trial=60). Todos os campos persistidos corretamente e verificados através de nova consulta. Integridade dos dados mantida."
+
+  - task: "Sistema Unificado de Planos - Planos Base Gratuitos Disponíveis"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO: Sistema possui planos base gratuitos para motoristas. Encontrados 5 planos gratuitos (preco_mensal=0) para tipo_usuario='motorista' e ativo=true no sistema unificado. Exemplo: 'Plano Base Gratuito' (ID: 8dc0b67f-2e5e-4926-aeda-e5abd0615478). Planos disponíveis para atribuição automática durante aprovação de motoristas."
+
+  - task: "PUT /api/motoristas/{motorista_id}/approve - Auto-assign base plan"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ ISSUE CRÍTICO IDENTIFICADO: Motorista aprovado mas plano não atribuído automaticamente. PROBLEMA: Endpoint de aprovação está procurando planos na collection 'planos_motorista' mas o sistema unificado usa 'planos_sistema'. TESTE REALIZADO: Motorista criado e aprovado com sucesso (approved=true), mas campo plano_id permanece null. CAUSA RAIZ: Linha 3304 do server.py busca em 'db.planos_motorista.find_one({\"preco_mensal\": 0, \"ativo\": True})' mas deveria buscar em 'db.planos_sistema.find_one({\"preco_mensal\": 0, \"tipo_usuario\": \"motorista\", \"ativo\": True})'. CORREÇÃO NECESSÁRIA: Atualizar endpoint de aprovação para usar sistema unificado de planos."
+
 
 
 frontend:
