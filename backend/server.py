@@ -3300,14 +3300,44 @@ async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
+    # Find or create default free plan
+    plano_base = await db.planos_motorista.find_one({"nome": "Base Gratuito", "ativo": True}, {"_id": 0})
+    
+    if not plano_base:
+        # Create default free plan if it doesn't exist
+        plano_base = {
+            "id": str(uuid.uuid4()),
+            "nome": "Base Gratuito",
+            "descricao": "Plano base gratuito para todos os motoristas",
+            "preco_mensal": 0,
+            "features": [
+                "Acesso ao dashboard básico",
+                "Upload de documentos",
+                "Visualização de contratos",
+                "Gestão de perfil"
+            ],
+            "max_funcionalidades": 4,
+            "ativo": True,
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc)
+        }
+        await db.planos_motorista.insert_one(plano_base)
+    
     # Check if motorista profile exists
     motorista_exists = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
     
     if motorista_exists:
-        # Update existing motorista
+        # Update existing motorista with approval and base plan
         await db.motoristas.update_one(
             {"id": motorista_id},
-            {"$set": {"approved": True, "approved_by": current_user["id"], "approved_at": datetime.now(timezone.utc).isoformat()}}
+            {"$set": {
+                "approved": True, 
+                "approved_by": current_user["id"], 
+                "approved_at": datetime.now(timezone.utc).isoformat(),
+                "plano_id": plano_base["id"],
+                "plano_nome": plano_base["nome"],
+                "plano_features": {"features": plano_base["features"], "preco_mensal": plano_base["preco_mensal"]}
+            }}
         )
     else:
         # Create motorista profile if it doesn't exist
@@ -3318,7 +3348,7 @@ async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_
         if user.get("role") != "motorista":
             raise HTTPException(status_code=400, detail="User is not a motorista")
         
-        # Create motorista profile from user data
+        # Create motorista profile from user data with base plan
         motorista_profile = {
             "id": motorista_id,
             "name": user.get("name"),
@@ -3340,9 +3370,9 @@ async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_
             "contrato_id": None,
             "contacto_emergencia": {},
             "dados_bancarios": {},
-            "plano_id": None,
-            "plano_nome": None,
-            "plano_features": {},
+            "plano_id": plano_base["id"],
+            "plano_nome": plano_base["nome"],
+            "plano_features": {"features": plano_base["features"], "preco_mensal": plano_base["preco_mensal"]},
             "created_at": user.get("created_at", datetime.now(timezone.utc).isoformat()),
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
