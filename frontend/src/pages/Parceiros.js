@@ -36,6 +36,13 @@ const Parceiros = ({ user, onLogout }) => {
   const [showPlanosDialog, setShowPlanosDialog] = useState(false);
   const [planos, setPlanos] = useState([]);
   const [selectedParceiroForPlano, setSelectedParceiroForPlano] = useState(null);
+  const [planoSelecionadoAdmin, setPlanoSelecionadoAdmin] = useState(null);
+  const [periodoValidadePlano, setPeriodoValidadePlano] = useState({
+    tipo: 'mensal', // mensal, trimestral, semestral, anual, permanente
+    data_inicio: new Date().toISOString().split('T')[0],
+    data_fim: '',
+    meses: 1
+  });
   const [newParceiro, setNewParceiro] = useState({
     name: '',
     email: '',
