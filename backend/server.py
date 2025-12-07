@@ -3384,7 +3384,14 @@ async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_
         {"$set": {"approved": True}}
     )
     
-    return {"message": "Motorista approved"}
+    return {
+        "message": "Motorista approved",
+        "plano_atribuido": {
+            "id": plano_base["id"],
+            "nome": plano_base["nome"],
+            "preco_mensal": plano_base["preco_mensal"]
+        }
+    }
 
 @api_router.put("/motoristas/{motorista_id}")
 async def update_motorista(
