@@ -5537,6 +5537,59 @@ async def update_parceiro(
     
     return {"message": "Parceiro updated successfully"}
 
+@api_router.delete("/parceiros/{parceiro_id}")
+async def delete_parceiro(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Delete parceiro (Admin only)
+    
+    This will:
+    - Remove the parceiro from the database
+    - Unassign all vehicles associated with this parceiro
+    - Unassign all motoristas associated with this parceiro
+    """
+    # Only admin can delete parceiros
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas Admin pode eliminar parceiros")
+    
+    # Check if parceiro exists
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    # Unassign all vehicles from this parceiro
+    vehicles_result = await db.vehicles.update_many(
+        {"parceiro_id": parceiro_id},
+        {"$set": {"parceiro_id": None, "parceiro_nome": None}}
+    )
+    
+    # Unassign all motoristas from this parceiro
+    motoristas_result = await db.motoristas.update_many(
+        {"parceiro_atribuido": parceiro_id},
+        {"$set": {"parceiro_atribuido": None}}
+    )
+    
+    # Also update users collection if parceiro has a user account
+    if parceiro.get("user_id"):
+        await db.users.delete_one({"id": parceiro["user_id"]})
+    
+    # Delete the parceiro
+    delete_result = await db.parceiros.delete_one({"id": parceiro_id})
+    
+    if delete_result.deleted_count == 0:
+        raise HTTPException(status_code=500, detail="Erro ao eliminar parceiro")
+    
+    return {
+        "message": f"Parceiro '{parceiro.get('nome_empresa', 'N/A')}' eliminado com sucesso",
+        "parceiro_id": parceiro_id,
+        "vehicles_unassigned": vehicles_result.modified_count,
+        "motoristas_unassigned": motoristas_result.modified_count,
+        "deleted_by": current_user["id"],
+        "deleted_at": datetime.now(timezone.utc).isoformat()
+    }
+
+
 @api_router.get("/parceiros/{parceiro_id}/alertas")
 async def get_parceiro_alertas(parceiro_id: str, current_user: Dict = Depends(get_current_user)):
     """
