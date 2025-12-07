@@ -5087,6 +5087,7 @@ startxref
         print("=" * 50)
         self.test_unified_plan_system()
         self.test_plan_persistence_in_database()
+        self.test_free_base_plans_available()
         
         # Print summary
         self.print_summary()
