@@ -323,6 +323,10 @@ const Motoristas = ({ user, onLogout }) => {
       
       toast.success('Motorista excluído com sucesso!');
       setShowDetailDialog(false);
+      setSelectedMotorista(null);
+      
+      // Add delay before refreshing to ensure backend completes deletion
+      await new Promise(resolve => setTimeout(resolve, 500));
       fetchMotoristas();
     } catch (error) {
       toast.error('Erro ao excluir motorista');
