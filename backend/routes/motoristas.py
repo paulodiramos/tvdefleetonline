@@ -137,8 +137,12 @@ async def approve_motorista(
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista not found")
     
-    # Find or create default free plan (preco_mensal = 0)
-    plano_base = await db.planos_motorista.find_one({"preco_mensal": 0, "ativo": True}, {"_id": 0})
+    # Find or create default free plan in the new unified system
+    plano_base = await db.planos_sistema.find_one({
+        "preco_mensal": 0, 
+        "ativo": True, 
+        "tipo_usuario": "motorista"
+    }, {"_id": 0})
     
     if not plano_base:
         # Create default free plan if it doesn't exist
@@ -147,37 +151,51 @@ async def approve_motorista(
             "nome": "Base Gratuito",
             "descricao": "Plano base gratuito para todos os motoristas",
             "preco_mensal": 0,
-            "features": [
-                "Acesso ao dashboard básico",
-                "Upload de documentos",
-                "Visualização de contratos",
-                "Gestão de perfil"
+            "tipo_usuario": "motorista",
+            "modulos": [
+                "dashboard_ganhos",
+                "gestao_documentos"
             ],
-            "max_funcionalidades": 4,
             "ativo": True,
-            "created_at": datetime.now(timezone.utc),
-            "updated_at": datetime.now(timezone.utc)
+            "permite_trial": False,
+            "dias_trial": 0,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
         }
-        await db.planos_motorista.insert_one(plano_base)
+        await db.planos_sistema.insert_one(plano_base)
+        logger.info(f"Created default free plan for motorista: {plano_base['id']}")
+    
+    # Calculate expiry date (30 days from now)
+    from datetime import timedelta
+    plano_valida_ate = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
     
     # Update motorista with approval and base plan
-    await db.motoristas.update_one(
+    logger.info(f"Updating motorista {motorista_id} with plan {plano_base['id']}")
+    result = await db.motoristas.update_one(
         {"id": motorista_id}, 
         {"$set": {
             "approved": True,
             "plano_id": plano_base["id"],
             "plano_nome": plano_base["nome"],
-            "plano_features": {"features": plano_base["features"], "preco_mensal": plano_base["preco_mensal"]}
+            "plano_valida_ate": plano_valida_ate,
+            "updated_at": datetime.now(timezone.utc).isoformat()
         }}
     )
+    logger.info(f"Motorista update result: matched={result.matched_count}, modified={result.modified_count}")
+    
     await db.users.update_one({"id": motorista_id}, {"$set": {"approved": True}})
+    
+    # Verify the update
+    updated_motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    logger.info(f"Motorista after update: plano_id={updated_motorista.get('plano_id')}, plano_nome={updated_motorista.get('plano_nome')}")
     
     return {
         "message": "Motorista approved successfully",
         "plano_atribuido": {
             "id": plano_base["id"],
             "nome": plano_base["nome"],
-            "preco_mensal": plano_base["preco_mensal"]
+            "preco_mensal": plano_base["preco_mensal"],
+            "plano_valida_ate": plano_valida_ate
         }
     }
 
