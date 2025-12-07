@@ -13,7 +13,10 @@ const DashboardParceiroTab = ({ parceiroId }) => {
     motoristas_total: 0,
     motoristas_ativos: 0,
     contratos_ativos: 0,
-    contratos_total: 0
+    contratos_total: 0,
+    receitas_totais: 0,
+    despesas_totais: 0,
+    roi: 0
   });
   const [alertas, setAlertas] = useState({
     seguros_vencer: [],
