@@ -3384,11 +3384,12 @@ async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_
             "dados_bancarios": {},
             "plano_id": plano_base["id"],
             "plano_nome": plano_base["nome"],
-            "plano_features": {"features": plano_base["features"], "preco_mensal": plano_base["preco_mensal"]},
+            "plano_valida_ate": plano_valida_ate,
             "created_at": user.get("created_at", datetime.now(timezone.utc).isoformat()),
             "updated_at": datetime.now(timezone.utc).isoformat()
         }
         await db.motoristas.insert_one(motorista_profile)
+        logger.info(f"Created motorista profile for {motorista_id} with plan {plano_base['id']}")
     
     # Always update user approval status
     await db.users.update_one(
