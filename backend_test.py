@@ -1409,7 +1409,7 @@ startxref
                     "tipo_pagamento": "recibo_verde"
                 }
                 
-                create_response = requests.post(f"{BACKEND_URL}/motoristas", json=motorista_data, headers=headers)
+                create_response = requests.post(f"{BACKEND_URL}/motoristas/register", json=motorista_data, headers=headers)
                 
                 if create_response.status_code == 200:
                     created_motorista = create_response.json()
