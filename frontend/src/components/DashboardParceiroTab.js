@@ -48,11 +48,39 @@ const DashboardParceiroTab = ({ parceiroId }) => {
       });
       const parceiroMotoristas = motoristasRes.data.filter(m => m.parceiro_atribuido === parceiroId);
       
-      // Fetch contratos
+      // Fetch contratos e calculate financial stats
       try {
         const contratosRes = await axios.get(`${API}/contratos?parceiro_id=${parceiroId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        
+        // Fetch despesas
+        let despesasTotal = 0;
+        try {
+          const despesasRes = await axios.get(`${API}/parceiros/${parceiroId}/despesas`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          despesasTotal = despesasRes.data.reduce((sum, d) => sum + (d.valor || 0), 0);
+        } catch (err) {
+          console.log('No despesas found');
+        }
+        
+        // Calculate receitas from contratos ativos
+        const contratosAtivos = contratosRes.data.filter(c => c.status === 'ativo');
+        let receitasTotal = 0;
+        
+        contratosAtivos.forEach(contrato => {
+          // Calculate monthly income from each contract
+          const valorAluguer = contrato.valor_aluguer_mes || 0;
+          const valorComissao = contrato.percentagem_comissao 
+            ? (contrato.receita_media_semanal || 0) * (contrato.percentagem_comissao / 100) 
+            : 0;
+          
+          receitasTotal += (valorAluguer + valorComissao);
+        });
+        
+        // Calculate ROI
+        const roi = despesasTotal > 0 ? ((receitasTotal - despesasTotal) / despesasTotal) * 100 : 0;
         
         // Calculate stats
         const statsData = {
@@ -60,8 +88,11 @@ const DashboardParceiroTab = ({ parceiroId }) => {
           veiculos_ativos: parceiroVehicles.filter(v => v.status === 'atribuido' || v.status === 'disponivel').length,
           motoristas_total: parceiroMotoristas.length,
           motoristas_ativos: parceiroMotoristas.filter(m => m.approved).length,
-          contratos_ativos: contratosRes.data.filter(c => c.status === 'ativo').length,
-          contratos_total: contratosRes.data.length
+          contratos_ativos: contratosAtivos.length,
+          contratos_total: contratosRes.data.length,
+          receitas_totais: receitasTotal,
+          despesas_totais: despesasTotal,
+          roi: roi
         };
         setStats(statsData);
       } catch (err) {
@@ -72,7 +103,10 @@ const DashboardParceiroTab = ({ parceiroId }) => {
           motoristas_total: parceiroMotoristas.length,
           motoristas_ativos: parceiroMotoristas.filter(m => m.approved).length,
           contratos_ativos: 0,
-          contratos_total: 0
+          contratos_total: 0,
+          receitas_totais: 0,
+          despesas_totais: 0,
+          roi: 0
         };
         setStats(statsData);
       }
