@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Building, Users, Car, Save, ArrowLeft, FileText, BarChart3 } from 'lucide-react';
+import { Building, Users, Car, Save, ArrowLeft, FileText, BarChart3, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DashboardParceiroTab from '@/components/DashboardParceiroTab';
 import ContratosParceiroTab from '@/components/ContratosParceiroTab';
