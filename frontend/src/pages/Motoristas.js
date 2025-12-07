@@ -1492,53 +1492,7 @@ const Motoristas = ({ user, onLogout }) => {
                       </div>
                     </div>
 
-                    {/* Plano Section */}
-                    <div className="pt-4 border-t">
-                      <div className="flex items-center justify-between mb-3">
-                        <Label className="text-lg font-semibold">Plano de Subscrição</Label>
-                        {(user.role === 'admin' || user.role === 'gestao') && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              setShowEscolherPlanoDialog(true);
-                            }}
-                          >
-                            <Package className="w-4 h-4 mr-2" />
-                            Atribuir Plano
-                          </Button>
-                        )}
-                      </div>
-                      
-                      {selectedMotorista.plano_nome ? (
-                        <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-semibold text-green-900">{selectedMotorista.plano_nome}</p>
-                              <p className="text-sm text-green-700 mt-1">
-                                €{selectedMotorista.plano_features?.preco_mensal || 0}/mês
-                              </p>
-                            </div>
-                            <Badge className="bg-green-600 text-white">Ativo</Badge>
-                          </div>
-                          {selectedMotorista.plano_features?.features && (
-                            <div className="mt-3 pt-3 border-t border-green-300">
-                              <p className="text-xs text-green-700 font-medium mb-2">Funcionalidades:</p>
-                              <ul className="text-xs text-green-600 space-y-1">
-                                {selectedMotorista.plano_features.features.slice(0, 3).map((feature, idx) => (
-                                  <li key={idx}>✓ {feature}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg text-center">
-                          <Package className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                          <p className="text-sm text-slate-600">Nenhum plano atribuído</p>
-                        </div>
-                      )}
-                    </div>
+                    {/* Planos removidos temporariamente para período experimental */}
                   </TabsContent>
                 </Tabs>
               </div>
