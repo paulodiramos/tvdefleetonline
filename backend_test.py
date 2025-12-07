@@ -1452,7 +1452,7 @@ startxref
                         self.log_result("Motorista-Approval-Plan-Assignment", True, 
                                       f"Motorista approved and base plan assigned: {plan_name} (ID: {updated_motorista.get('plano_id')})")
                         
-                        # Verify the plan exists in planos_motorista collection
+                        # Verify the plan exists and is free
                         plano_id = updated_motorista.get("plano_id")
                         if plano_id:
                             # Check if it's a free base plan (preco_mensal = 0)
@@ -1465,6 +1465,11 @@ startxref
                             else:
                                 self.log_result("Motorista-Base-Plan-Free", False, 
                                               f"Base plan is not free: preco_mensal = {preco_mensal}")
+                    elif is_approved and not has_plan:
+                        # ISSUE IDENTIFIED: Motorista approved but no plan assigned
+                        # This suggests the approval endpoint is not finding/creating a free base plan
+                        self.log_result("Motorista-Approval-Plan-Assignment", False, 
+                                      f"ISSUE: Motorista approved but no plan assigned. Current implementation may be looking in wrong collection (planos_motorista vs planos_sistema)")
                     else:
                         self.log_result("Motorista-Approval-Plan-Assignment", False, 
                                       f"Approval failed: approved={is_approved}, has_plan={has_plan}")
