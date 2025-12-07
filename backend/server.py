@@ -3328,12 +3328,17 @@ async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_
         await db.planos_sistema.insert_one(plano_base)
         logger.info(f"Created default free plan for motorista: {plano_base['id']}")
     
+    # Calculate expiry date (30 days from now)
+    from datetime import timedelta
+    plano_valida_ate = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+    
     # Check if motorista profile exists
     motorista_exists = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
     
     if motorista_exists:
         # Update existing motorista with approval and base plan
-        await db.motoristas.update_one(
+        logger.info(f"Updating motorista {motorista_id} with plan {plano_base['id']}")
+        result = await db.motoristas.update_one(
             {"id": motorista_id},
             {"$set": {
                 "approved": True, 
@@ -3341,9 +3346,11 @@ async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_
                 "approved_at": datetime.now(timezone.utc).isoformat(),
                 "plano_id": plano_base["id"],
                 "plano_nome": plano_base["nome"],
-                "plano_features": {"features": plano_base["features"], "preco_mensal": plano_base["preco_mensal"]}
+                "plano_valida_ate": plano_valida_ate,
+                "updated_at": datetime.now(timezone.utc).isoformat()
             }}
         )
+        logger.info(f"Motorista update result: matched={result.matched_count}, modified={result.modified_count}")
     else:
         # Create motorista profile if it doesn't exist
         user = await db.users.find_one({"id": motorista_id}, {"_id": 0})
