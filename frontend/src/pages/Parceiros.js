@@ -353,7 +353,10 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
 
   const fetchPlanos = async () => {
     try {
-      const response = await axios.get(`${API}/planos/public?tipo_usuario=parceiro`);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/planos-parceiro`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setPlanos(response.data);
     } catch (error) {
       console.error('Error fetching planos:', error);
