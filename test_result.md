@@ -625,6 +625,21 @@ agent_communication:
         
         🎯 TODAS AS NOVAS FUNCIONALIDADES TESTADAS E FUNCIONANDO PERFEITAMENTE!
         Sistema TVDEFleet expandido está completamente operacional e pronto para produção!
+
+  - task: "Unified Plan System E2E Testing"
+    implemented: true
+    working: true
+    file: "backend/server.py, backend/routes/motoristas.py, backend/models/motorista.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Bug fixes applied: MongoDB ObjectId serialization, plan persistence in motorista approval, motorista deletion filter, duplicate endpoint updated to use planos_sistema"
+        - working: true
+          agent: "testing"
+          comment: "✅ E2E TESTING COMPLETE: All 8 steps of unified plan system tested successfully. 1) Created test plano 'Teste E2E' with preco_mensal=0 ✅ 2) Verified plano in database with all fields ✅ 3) Unapproved existing motorista ✅ 4) Approved motorista via PUT /api/motoristas/{id}/approve ✅ 5) Verified motorista has plano_id, plano_nome, plano_valida_ate correctly assigned ✅ 6) Updated plan successfully ✅ 7) Deactivated plan successfully ✅ 8) Created plans for parceiro and operacional user types ✅. CRITICAL FIX APPLIED: Added plano_id, plano_nome, plano_valida_ate fields to Motorista model in models/motorista.py to fix serialization issue. All plan system endpoints working correctly: GET /api/planos-sistema, POST /api/planos-sistema, PUT /api/planos-sistema/{id}, DELETE /api/planos-sistema/{id}. Motorista approval correctly assigns base plan from planos_sistema collection."
     
     - agent: "testing"
       message: |
