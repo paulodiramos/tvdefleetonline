@@ -95,6 +95,52 @@ const EditParceiro = ({ user, onLogout }) => {
     }
   };
 
+  const handleDeleteParceiro = async () => {
+    if (!selectedParceiro) return;
+
+    const parceiro = parceiros.find(p => p.id === selectedParceiro);
+    const parceiroName = parceiro?.nome_empresa || parceiro?.name || 'este parceiro';
+
+    if (!window.confirm(
+      `⚠️ ATENÇÃO: Tem certeza que deseja ELIMINAR o parceiro "${parceiroName}"?\n\n` +
+      `Esta ação irá:\n` +
+      `• Remover permanentemente o parceiro\n` +
+      `• Desassociar todos os veículos e motoristas\n` +
+      `• Esta ação NÃO pode ser desfeita!\n\n` +
+      `Digite "ELIMINAR" para confirmar.`
+    )) {
+      return;
+    }
+
+    const confirmation = window.prompt('Digite "ELIMINAR" para confirmar a exclusão:');
+    if (confirmation !== 'ELIMINAR') {
+      setMessage({ type: 'error', text: 'Eliminação cancelada. Confirmação incorreta.' });
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/parceiros/${selectedParceiro}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setMessage({ type: 'success', text: `Parceiro "${parceiroName}" eliminado com sucesso!` });
+      setSelectedParceiro(null);
+      setParceiroData(null);
+      fetchParceiros();
+      
+      // Redirect after 2 seconds
+      setTimeout(() => {
+        navigate('/parceiros');
+      }, 2000);
+    } catch (error) {
+      setMessage({
+        type: 'error',
+        text: error.response?.data?.detail || 'Erro ao eliminar parceiro'
+      });
+    }
+  };
+
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="space-y-6">
