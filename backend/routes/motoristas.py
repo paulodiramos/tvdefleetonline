@@ -83,7 +83,8 @@ async def register_motorista(motorista_data: MotoristaCreate):
 @router.get("/motoristas", response_model=List[Motorista])
 async def get_motoristas(current_user: Dict = Depends(get_current_user)):
     """Get all motoristas (filtered by role)"""
-    query = {}
+    # Base query: exclude deleted motoristas
+    query = {"deleted": {"$ne": True}}
     
     if current_user["role"] == UserRole.PARCEIRO:
         query["parceiro_atribuido"] = current_user["id"]
