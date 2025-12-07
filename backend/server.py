@@ -3300,8 +3300,8 @@ async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Find or create default free plan
-    plano_base = await db.planos_motorista.find_one({"nome": "Base Gratuito", "ativo": True}, {"_id": 0})
+    # Find or create default free plan (preco_mensal = 0)
+    plano_base = await db.planos_motorista.find_one({"preco_mensal": 0, "ativo": True}, {"_id": 0})
     
     if not plano_base:
         # Create default free plan if it doesn't exist
