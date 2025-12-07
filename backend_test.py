@@ -1148,6 +1148,31 @@ startxref
 
     # ==================== UNIFIED PLAN SYSTEM TESTS ====================
     
+    def test_unified_plan_system_e2e(self):
+        """Test complete E2E unified plan system after bug fixes"""
+        print("\n🎯 TESTING UNIFIED PLAN SYSTEM E2E - POST BUG FIXES")
+        print("-" * 70)
+        print("Testing scenario from review request:")
+        print("1. Create test plano for motoristas")
+        print("2. Verify plano is in database with all fields")
+        print("3. Create or unapprove existing motorista")
+        print("4. Approve motorista via PUT /api/motoristas/{id}/approve")
+        print("5. Verify motorista has plano_id, plano_nome, plano_valida_ate")
+        print("6. Test plan update")
+        print("7. Test plan deactivation")
+        print("8. Create plans for other user types")
+        print("-" * 70)
+        
+        # Execute E2E test scenario
+        self.test_e2e_create_test_plano_motorista()
+        self.test_e2e_verify_plano_in_database()
+        self.test_e2e_motorista_approval_with_plan_assignment()
+        self.test_e2e_plan_update()
+        self.test_e2e_plan_deactivation()
+        self.test_e2e_create_plans_other_user_types()
+        
+        return True
+    
     def test_unified_plan_system(self):
         """Test complete unified plan system (Sistema Unificado de Planos)"""
         print("\n🎯 TESTING UNIFIED PLAN SYSTEM (SISTEMA UNIFICADO DE PLANOS)")
