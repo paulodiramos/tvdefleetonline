@@ -3397,12 +3397,17 @@ async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_
         {"$set": {"approved": True}}
     )
     
+    # Verify the update
+    updated_motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    logger.info(f"Motorista after update: plano_id={updated_motorista.get('plano_id')}, plano_nome={updated_motorista.get('plano_nome')}")
+    
     return {
-        "message": "Motorista approved",
+        "message": "Motorista approved successfully",
         "plano_atribuido": {
             "id": plano_base["id"],
             "nome": plano_base["nome"],
-            "preco_mensal": plano_base["preco_mensal"]
+            "preco_mensal": plano_base["preco_mensal"],
+            "plano_valida_ate": plano_valida_ate
         }
     }
 
