@@ -8914,6 +8914,71 @@ async def delete_plano_motorista(plano_id: str, current_user: Dict = Depends(get
     return {"message": "Plano desativado com sucesso"}
 
 # Planos de Parceiro CRUD
+
+# Sistema Unificado de Planos
+@api_router.get("/planos-sistema")
+async def list_planos_sistema(current_user: Dict = Depends(get_current_user)):
+    """List all plans in unified system (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    planos = await db.planos_sistema.find({}, {"_id": 0}).to_list(1000)
+    return planos
+
+@api_router.post("/planos-sistema")
+async def create_plano_sistema(plano_data: Dict, current_user: Dict = Depends(get_current_user)):
+    """Create new plan in unified system (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    plano = {
+        "id": str(uuid.uuid4()),
+        "nome": plano_data["nome"],
+        "descricao": plano_data.get("descricao", ""),
+        "preco_mensal": plano_data.get("preco_mensal", 0),
+        "tipo_usuario": plano_data["tipo_usuario"],  # motorista, parceiro, operacional, gestao
+        "modulos": plano_data.get("modulos", []),
+        "ativo": plano_data.get("ativo", True),
+        "permite_trial": plano_data.get("permite_trial", False),
+        "dias_trial": plano_data.get("dias_trial", 30),
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc)
+    }
+    
+    await db.planos_sistema.insert_one(plano)
+    return plano
+
+@api_router.put("/planos-sistema/{plano_id}")
+async def update_plano_sistema(plano_id: str, plano_data: Dict, current_user: Dict = Depends(get_current_user)):
+    """Update plan in unified system (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    update_data = {
+        "nome": plano_data["nome"],
+        "descricao": plano_data.get("descricao", ""),
+        "preco_mensal": plano_data.get("preco_mensal", 0),
+        "tipo_usuario": plano_data["tipo_usuario"],
+        "modulos": plano_data.get("modulos", []),
+        "ativo": plano_data.get("ativo", True),
+        "permite_trial": plano_data.get("permite_trial", False),
+        "dias_trial": plano_data.get("dias_trial", 30),
+        "updated_at": datetime.now(timezone.utc)
+    }
+    
+    await db.planos_sistema.update_one({"id": plano_id}, {"$set": update_data})
+    return {"message": "Plano atualizado com sucesso"}
+
+@api_router.delete("/planos-sistema/{plano_id}")
+async def delete_plano_sistema(plano_id: str, current_user: Dict = Depends(get_current_user)):
+    """Deactivate plan in unified system (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    await db.planos_sistema.update_one({"id": plano_id}, {"$set": {"ativo": False}})
+    return {"message": "Plano desativado com sucesso"}
+
+
 @api_router.get("/planos-parceiro")
 async def list_planos_parceiro(current_user: Dict = Depends(get_current_user)):
     """List all active parceiro plans"""
