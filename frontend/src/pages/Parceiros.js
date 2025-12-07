@@ -388,6 +388,40 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
     }
   };
 
+  const handleAtribuirPlanoAdmin = async (parceiroId, planoId) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Get plano details
+      const planoDetails = planos.find(p => p.id === planoId);
+      
+      await axios.put(`${API}/parceiros/${parceiroId}`, {
+        plano_id: planoId,
+        plano_nome: planoDetails.nome,
+        plano_data_inicio: periodoValidadePlano.data_inicio,
+        plano_data_fim: periodoValidadePlano.tipo === 'permanente' ? null : periodoValidadePlano.data_fim,
+        plano_tipo_periodo: periodoValidadePlano.tipo
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success(`Plano "${planoDetails.nome}" atribuído com sucesso!`);
+      setShowPlanosDialog(false);
+      setSelectedParceiroForPlano(null);
+      setPlanoSelecionadoAdmin(null);
+      setPeriodoValidadePlano({
+        tipo: 'mensal',
+        data_inicio: new Date().toISOString().split('T')[0],
+        data_fim: '',
+        meses: 1
+      });
+      fetchParceiros();
+    } catch (error) {
+      console.error('Error assigning plan:', error);
+      toast.error('Erro ao atribuir plano');
+    }
+  };
+
   const handleAprovarPlano = async (parceiroId) => {
     try {
       const token = localStorage.getItem('token');
