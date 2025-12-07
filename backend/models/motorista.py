@@ -160,6 +160,11 @@ class Motorista(BaseModel):
     documentos_aprovados: bool = False
     observacoes_internas: Optional[str] = None
     
+    # Plan Assignment (Unified Plan System)
+    plano_id: Optional[str] = None
+    plano_nome: Optional[str] = None
+    plano_valida_ate: Optional[str] = None
+    
     # System
     approved: bool = False
     senha_provisoria: bool = False
