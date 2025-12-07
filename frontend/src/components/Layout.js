@@ -186,15 +186,9 @@ const Layout = ({ user, onLogout, children }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/gestao-planos" className="flex items-center space-x-2 cursor-pointer">
+                        <Link to="/configuracao-planos" className="flex items-center space-x-2 cursor-pointer">
                           <Package className="w-4 h-4" />
-                          <span>Planos Parceiros</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/gestao-planos-motorista" className="flex items-center space-x-2 cursor-pointer">
-                          <Package className="w-4 h-4" />
-                          <span>Planos Motoristas</span>
+                          <span>Configuração de Planos</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
