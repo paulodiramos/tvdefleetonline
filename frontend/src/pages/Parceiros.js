@@ -1731,21 +1731,7 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                   >
                     Fechar
                   </Button>
-                  {!profileParceiro.plano_id && (
-                    <Button
-                      variant="outline"
-                      className="border-blue-500 text-blue-600 hover:bg-blue-50"
-                      onClick={() => {
-                        setSelectedParceiroForPlano(profileParceiro);
-                        setShowProfileDialog(false);
-                        fetchPlanos();
-                        setShowPlanosDialog(true);
-                      }}
-                    >
-                      <Award className="w-4 h-4 mr-2" />
-                      Escolher Plano
-                    </Button>
-                  )}
+                  {/* Botão Escolher Plano removido temporariamente para período experimental */}
                   {(user.role === 'admin' || user.role === 'gestao') && (
                     <Button
                       variant="outline"
