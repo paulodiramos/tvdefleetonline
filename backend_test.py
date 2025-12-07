@@ -1146,6 +1146,369 @@ startxref
         except Exception as e:
             self.log_result("File-Serving-Vehicles", False, f"Request error: {str(e)}")
 
+    # ==================== UNIFIED PLAN SYSTEM TESTS ====================
+    
+    def test_unified_plan_system(self):
+        """Test complete unified plan system (Sistema Unificado de Planos)"""
+        print("\n🎯 TESTING UNIFIED PLAN SYSTEM (SISTEMA UNIFICADO DE PLANOS)")
+        print("-" * 70)
+        
+        # Test all plan system endpoints
+        self.test_list_planos_sistema()
+        self.test_create_planos_sistema()
+        self.test_update_planos_sistema()
+        self.test_delete_planos_sistema()
+        self.test_motorista_approval_with_plan_assignment()
+        
+        return True
+    
+    def test_list_planos_sistema(self):
+        """Test GET /api/planos-sistema endpoint"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("List-Planos-Sistema", False, "No auth token for admin")
+            return
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/planos-sistema", headers=headers)
+            
+            if response.status_code == 200:
+                planos = response.json()
+                self.log_result("List-Planos-Sistema", True, f"Successfully retrieved {len(planos)} planos from unified system")
+                return planos
+            else:
+                self.log_result("List-Planos-Sistema", False, f"Failed to get planos: {response.status_code}", response.text)
+                return []
+        except Exception as e:
+            self.log_result("List-Planos-Sistema", False, f"Request error: {str(e)}")
+            return []
+    
+    def test_create_planos_sistema(self):
+        """Test POST /api/planos-sistema - Create plans for each user type"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Create-Planos-Sistema", False, "No auth token for admin")
+            return []
+        
+        # Test data for each user type
+        plan_types = [
+            {
+                "nome": "Plano Base Motorista",
+                "descricao": "Plano básico para motoristas",
+                "preco_mensal": 0,
+                "tipo_usuario": "motorista",
+                "modulos": ["dashboard", "documentos", "perfil"],
+                "ativo": True,
+                "permite_trial": False
+            },
+            {
+                "nome": "Plano Premium Parceiro",
+                "descricao": "Plano premium para parceiros",
+                "preco_mensal": 50.0,
+                "tipo_usuario": "parceiro",
+                "modulos": ["gestao_frota", "relatorios", "financeiro"],
+                "ativo": True,
+                "permite_trial": True,
+                "dias_trial": 30
+            },
+            {
+                "nome": "Plano Operacional",
+                "descricao": "Plano para operacionais",
+                "preco_mensal": 75.0,
+                "tipo_usuario": "operacional",
+                "modulos": ["gestao_completa", "alertas", "manutencoes"],
+                "ativo": True,
+                "permite_trial": False
+            },
+            {
+                "nome": "Plano Gestão",
+                "descricao": "Plano para gestores",
+                "preco_mensal": 100.0,
+                "tipo_usuario": "gestao",
+                "modulos": ["dashboard_avancado", "analytics", "multi_parceiros"],
+                "ativo": True,
+                "permite_trial": True,
+                "dias_trial": 15
+            }
+        ]
+        
+        created_plans = []
+        
+        for plan_data in plan_types:
+            try:
+                response = requests.post(f"{BACKEND_URL}/planos-sistema", json=plan_data, headers=headers)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    created_plans.append(result)
+                    
+                    # Verify all required fields are present
+                    required_fields = ["id", "nome", "tipo_usuario", "preco_mensal", "ativo", "created_at"]
+                    missing_fields = [field for field in required_fields if field not in result]
+                    
+                    if not missing_fields:
+                        self.log_result(f"Create-Plan-{plan_data['tipo_usuario']}", True, 
+                                      f"Plan created successfully: {result['nome']} (ID: {result['id']})")
+                    else:
+                        self.log_result(f"Create-Plan-{plan_data['tipo_usuario']}", False, 
+                                      f"Missing fields in response: {missing_fields}")
+                else:
+                    self.log_result(f"Create-Plan-{plan_data['tipo_usuario']}", False, 
+                                  f"Failed to create plan: {response.status_code}", response.text)
+            except Exception as e:
+                self.log_result(f"Create-Plan-{plan_data['tipo_usuario']}", False, f"Request error: {str(e)}")
+        
+        if len(created_plans) == len(plan_types):
+            self.log_result("Create-Planos-Sistema", True, f"All {len(plan_types)} plan types created successfully")
+        else:
+            self.log_result("Create-Planos-Sistema", False, f"Only {len(created_plans)}/{len(plan_types)} plans created")
+        
+        return created_plans
+    
+    def test_update_planos_sistema(self):
+        """Test PUT /api/planos-sistema/{plano_id} - Update a plan"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Update-Planos-Sistema", False, "No auth token for admin")
+            return
+        
+        # First get existing plans
+        planos = self.test_list_planos_sistema()
+        
+        if not planos:
+            self.log_result("Update-Planos-Sistema", False, "No plans available to update")
+            return
+        
+        # Update the first plan
+        plano_to_update = planos[0]
+        plano_id = plano_to_update["id"]
+        
+        update_data = {
+            "nome": plano_to_update["nome"] + " (Atualizado)",
+            "descricao": "Descrição atualizada via teste",
+            "preco_mensal": plano_to_update.get("preco_mensal", 0) + 10,
+            "tipo_usuario": plano_to_update["tipo_usuario"],
+            "modulos": plano_to_update.get("modulos", []) + ["novo_modulo"],
+            "ativo": True,
+            "permite_trial": True,
+            "dias_trial": 45
+        }
+        
+        try:
+            response = requests.put(f"{BACKEND_URL}/planos-sistema/{plano_id}", json=update_data, headers=headers)
+            
+            if response.status_code == 200:
+                # Verify the update by fetching the plan again
+                updated_planos = self.test_list_planos_sistema()
+                updated_plano = next((p for p in updated_planos if p["id"] == plano_id), None)
+                
+                if updated_plano and updated_plano["nome"] == update_data["nome"]:
+                    self.log_result("Update-Planos-Sistema", True, 
+                                  f"Plan updated successfully: {updated_plano['nome']}")
+                else:
+                    self.log_result("Update-Planos-Sistema", False, "Plan update not reflected in database")
+            else:
+                self.log_result("Update-Planos-Sistema", False, 
+                              f"Failed to update plan: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Update-Planos-Sistema", False, f"Request error: {str(e)}")
+    
+    def test_delete_planos_sistema(self):
+        """Test DELETE /api/planos-sistema/{plano_id} - Deactivate a plan (soft delete)"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Delete-Planos-Sistema", False, "No auth token for admin")
+            return
+        
+        # First create a test plan to delete
+        test_plan_data = {
+            "nome": "Plano Para Deletar",
+            "descricao": "Plano criado apenas para teste de deleção",
+            "preco_mensal": 25.0,
+            "tipo_usuario": "motorista",
+            "modulos": ["teste"],
+            "ativo": True
+        }
+        
+        try:
+            # Create the plan
+            create_response = requests.post(f"{BACKEND_URL}/planos-sistema", json=test_plan_data, headers=headers)
+            
+            if create_response.status_code != 200:
+                self.log_result("Delete-Planos-Sistema", False, "Could not create test plan for deletion")
+                return
+            
+            created_plan = create_response.json()
+            plano_id = created_plan["id"]
+            
+            # Now delete (deactivate) the plan
+            delete_response = requests.delete(f"{BACKEND_URL}/planos-sistema/{plano_id}", headers=headers)
+            
+            if delete_response.status_code == 200:
+                # Verify the plan is deactivated (ativo=False)
+                planos = self.test_list_planos_sistema()
+                deactivated_plan = next((p for p in planos if p["id"] == plano_id), None)
+                
+                if deactivated_plan and deactivated_plan.get("ativo") == False:
+                    self.log_result("Delete-Planos-Sistema", True, 
+                                  "Plan successfully deactivated (soft delete with ativo=False)")
+                elif not deactivated_plan:
+                    # Plan might be filtered out if only active plans are returned
+                    self.log_result("Delete-Planos-Sistema", True, 
+                                  "Plan deactivated (not visible in active plans list)")
+                else:
+                    self.log_result("Delete-Planos-Sistema", False, 
+                                  f"Plan not properly deactivated: ativo={deactivated_plan.get('ativo')}")
+            else:
+                self.log_result("Delete-Planos-Sistema", False, 
+                              f"Failed to delete plan: {delete_response.status_code}", delete_response.text)
+        except Exception as e:
+            self.log_result("Delete-Planos-Sistema", False, f"Request error: {str(e)}")
+    
+    def test_motorista_approval_with_plan_assignment(self):
+        """Test PUT /api/motoristas/{motorista_id}/approve - Auto-assign base plan"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Motorista-Approval-Plan-Assignment", False, "No auth token for admin")
+            return
+        
+        try:
+            # First get list of motoristas
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            
+            if motoristas_response.status_code != 200:
+                self.log_result("Motorista-Approval-Plan-Assignment", False, "Could not get motoristas list")
+                return
+            
+            motoristas = motoristas_response.json()
+            
+            if not motoristas:
+                self.log_result("Motorista-Approval-Plan-Assignment", False, "No motoristas available for test")
+                return
+            
+            # Find an unapproved motorista or use the first one
+            motorista_to_approve = None
+            for motorista in motoristas:
+                if not motorista.get("approved", False):
+                    motorista_to_approve = motorista
+                    break
+            
+            if not motorista_to_approve:
+                # Use first motorista (might already be approved, but we can test the endpoint)
+                motorista_to_approve = motoristas[0]
+            
+            motorista_id = motorista_to_approve["id"]
+            
+            # Approve the motorista
+            approve_response = requests.put(f"{BACKEND_URL}/motoristas/{motorista_id}/approve", headers=headers)
+            
+            if approve_response.status_code == 200:
+                result = approve_response.json()
+                
+                # Verify the motorista is now approved and has a plan assigned
+                updated_motorista_response = requests.get(f"{BACKEND_URL}/motoristas/{motorista_id}", headers=headers)
+                
+                if updated_motorista_response.status_code == 200:
+                    updated_motorista = updated_motorista_response.json()
+                    
+                    is_approved = updated_motorista.get("approved", False)
+                    has_plan = updated_motorista.get("plano_id") is not None
+                    plan_name = updated_motorista.get("plano_nome", "")
+                    
+                    if is_approved and has_plan:
+                        self.log_result("Motorista-Approval-Plan-Assignment", True, 
+                                      f"Motorista approved and base plan assigned: {plan_name} (ID: {updated_motorista.get('plano_id')})")
+                        
+                        # Verify the plan exists in planos_motorista collection
+                        plano_id = updated_motorista.get("plano_id")
+                        if plano_id:
+                            # Check if it's a free base plan (preco_mensal = 0)
+                            plan_features = updated_motorista.get("plano_features", {})
+                            preco_mensal = plan_features.get("preco_mensal", -1)
+                            
+                            if preco_mensal == 0:
+                                self.log_result("Motorista-Base-Plan-Free", True, 
+                                              "Base plan is free (preco_mensal = 0) as expected")
+                            else:
+                                self.log_result("Motorista-Base-Plan-Free", False, 
+                                              f"Base plan is not free: preco_mensal = {preco_mensal}")
+                    else:
+                        self.log_result("Motorista-Approval-Plan-Assignment", False, 
+                                      f"Approval failed: approved={is_approved}, has_plan={has_plan}")
+                else:
+                    self.log_result("Motorista-Approval-Plan-Assignment", False, 
+                                  "Could not retrieve updated motorista data")
+            else:
+                self.log_result("Motorista-Approval-Plan-Assignment", False, 
+                              f"Approval failed: {approve_response.status_code}", approve_response.text)
+        except Exception as e:
+            self.log_result("Motorista-Approval-Plan-Assignment", False, f"Request error: {str(e)}")
+    
+    def test_plan_persistence_in_database(self):
+        """Test that plans are correctly persisted in database"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Plan-Database-Persistence", False, "No auth token for admin")
+            return
+        
+        try:
+            # Create a test plan with specific data
+            test_plan = {
+                "nome": "Teste Persistência DB",
+                "descricao": "Plano para testar persistência na base de dados",
+                "preco_mensal": 99.99,
+                "tipo_usuario": "parceiro",
+                "modulos": ["modulo1", "modulo2", "modulo3"],
+                "ativo": True,
+                "permite_trial": True,
+                "dias_trial": 60
+            }
+            
+            # Create the plan
+            create_response = requests.post(f"{BACKEND_URL}/planos-sistema", json=test_plan, headers=headers)
+            
+            if create_response.status_code == 200:
+                created_plan = create_response.json()
+                plano_id = created_plan["id"]
+                
+                # Retrieve the plan again to verify persistence
+                planos_response = requests.get(f"{BACKEND_URL}/planos-sistema", headers=headers)
+                
+                if planos_response.status_code == 200:
+                    all_planos = planos_response.json()
+                    persisted_plan = next((p for p in all_planos if p["id"] == plano_id), None)
+                    
+                    if persisted_plan:
+                        # Verify all fields are correctly persisted
+                        fields_match = (
+                            persisted_plan["nome"] == test_plan["nome"] and
+                            persisted_plan["descricao"] == test_plan["descricao"] and
+                            persisted_plan["preco_mensal"] == test_plan["preco_mensal"] and
+                            persisted_plan["tipo_usuario"] == test_plan["tipo_usuario"] and
+                            persisted_plan["modulos"] == test_plan["modulos"] and
+                            persisted_plan["ativo"] == test_plan["ativo"] and
+                            persisted_plan["permite_trial"] == test_plan["permite_trial"] and
+                            persisted_plan["dias_trial"] == test_plan["dias_trial"]
+                        )
+                        
+                        if fields_match:
+                            self.log_result("Plan-Database-Persistence", True, 
+                                          "Plan correctly persisted in database with all fields intact")
+                        else:
+                            self.log_result("Plan-Database-Persistence", False, 
+                                          "Plan persisted but some fields don't match original data")
+                    else:
+                        self.log_result("Plan-Database-Persistence", False, 
+                                      "Plan not found in database after creation")
+                else:
+                    self.log_result("Plan-Database-Persistence", False, 
+                                  "Could not retrieve plans to verify persistence")
+            else:
+                self.log_result("Plan-Database-Persistence", False, 
+                              f"Could not create test plan: {create_response.status_code}")
+        except Exception as e:
+            self.log_result("Plan-Database-Persistence", False, f"Request error: {str(e)}")
+
     # ==================== REVIEW REQUEST TESTS - TVDEFleet Specific Features ====================
     
     def test_dashboard_semana_passada_filter(self):
