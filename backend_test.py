@@ -5503,6 +5503,11 @@ startxref
         self.test_plan_persistence_in_database()
         self.test_free_base_plans_available()
         
+        # Run E2E Tests from Review Request
+        print("\n🎯 E2E UNIFIED PLAN SYSTEM TESTS (POST BUG FIXES)")
+        print("=" * 60)
+        self.test_unified_plan_system_e2e()
+        
         # Print summary
         self.print_summary()
         return self.get_test_summary()
