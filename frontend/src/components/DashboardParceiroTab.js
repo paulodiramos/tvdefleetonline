@@ -3,7 +3,7 @@ import axios from 'axios';
 import { API } from '@/App';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, CheckCircle, Clock, Car, FileText, Calendar, TrendingUp } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, Car, FileText, Calendar, TrendingUp, DollarSign, TrendingDown, Percent } from 'lucide-react';
 
 const DashboardParceiroTab = ({ parceiroId }) => {
   const [loading, setLoading] = useState(true);
