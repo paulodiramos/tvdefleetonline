@@ -8931,8 +8931,9 @@ async def create_plano_sistema(plano_data: Dict, current_user: Dict = Depends(ge
     if current_user["role"] != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Admin only")
     
+    plano_id = str(uuid.uuid4())
     plano = {
-        "id": str(uuid.uuid4()),
+        "id": plano_id,
         "nome": plano_data["nome"],
         "descricao": plano_data.get("descricao", ""),
         "preco_mensal": plano_data.get("preco_mensal", 0),
@@ -8941,12 +8942,15 @@ async def create_plano_sistema(plano_data: Dict, current_user: Dict = Depends(ge
         "ativo": plano_data.get("ativo", True),
         "permite_trial": plano_data.get("permite_trial", False),
         "dias_trial": plano_data.get("dias_trial", 30),
-        "created_at": datetime.now(timezone.utc),
-        "updated_at": datetime.now(timezone.utc)
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
     await db.planos_sistema.insert_one(plano)
-    return plano
+    
+    # Retornar sem o _id do MongoDB
+    created_plano = await db.planos_sistema.find_one({"id": plano_id}, {"_id": 0})
+    return created_plano
 
 @api_router.put("/planos-sistema/{plano_id}")
 async def update_plano_sistema(plano_id: str, plano_data: Dict, current_user: Dict = Depends(get_current_user)):
