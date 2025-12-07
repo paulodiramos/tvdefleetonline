@@ -425,10 +425,25 @@ const EditParceiro = ({ user, onLogout }) => {
                       <p className="text-xs text-slate-500 mt-1">Alertar X km antes da revisão</p>
                     </div>
                   </div>
-                  <Button type="submit">
-                    <Save className="w-4 h-4 mr-2" />
-                    Guardar Configurações
-                  </Button>
+                  <div className="flex items-center justify-between">
+                    <Button type="submit">
+                      <Save className="w-4 h-4 mr-2" />
+                      Guardar Configurações
+                    </Button>
+                    
+                    {/* Botão Eliminar - Apenas para Admin */}
+                    {user?.role === 'admin' && (
+                      <Button 
+                        type="button"
+                        variant="destructive"
+                        onClick={handleDeleteParceiro}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Eliminar Parceiro
+                      </Button>
+                    )}
+                  </div>
                 </form>
               </CardContent>
             </Card>
