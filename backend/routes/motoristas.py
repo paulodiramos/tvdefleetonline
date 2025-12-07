@@ -129,7 +129,7 @@ async def approve_motorista(
     motorista_id: str,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Approve motorista account"""
+    """Approve motorista account and assign base plan"""
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
@@ -137,10 +137,49 @@ async def approve_motorista(
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista not found")
     
-    await db.motoristas.update_one({"id": motorista_id}, {"$set": {"approved": True}})
+    # Find or create default free plan (preco_mensal = 0)
+    plano_base = await db.planos_motorista.find_one({"preco_mensal": 0, "ativo": True}, {"_id": 0})
+    
+    if not plano_base:
+        # Create default free plan if it doesn't exist
+        plano_base = {
+            "id": str(uuid.uuid4()),
+            "nome": "Base Gratuito",
+            "descricao": "Plano base gratuito para todos os motoristas",
+            "preco_mensal": 0,
+            "features": [
+                "Acesso ao dashboard básico",
+                "Upload de documentos",
+                "Visualização de contratos",
+                "Gestão de perfil"
+            ],
+            "max_funcionalidades": 4,
+            "ativo": True,
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc)
+        }
+        await db.planos_motorista.insert_one(plano_base)
+    
+    # Update motorista with approval and base plan
+    await db.motoristas.update_one(
+        {"id": motorista_id}, 
+        {"$set": {
+            "approved": True,
+            "plano_id": plano_base["id"],
+            "plano_nome": plano_base["nome"],
+            "plano_features": {"features": plano_base["features"], "preco_mensal": plano_base["preco_mensal"]}
+        }}
+    )
     await db.users.update_one({"id": motorista_id}, {"$set": {"approved": True}})
     
-    return {"message": "Motorista approved successfully"}
+    return {
+        "message": "Motorista approved successfully",
+        "plano_atribuido": {
+            "id": plano_base["id"],
+            "nome": plano_base["nome"],
+            "preco_mensal": plano_base["preco_mensal"]
+        }
+    }
 
 
 @router.put("/motoristas/{motorista_id}")
