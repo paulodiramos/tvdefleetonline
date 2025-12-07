@@ -5027,14 +5027,41 @@ startxref
         print("\n" + "=" * 80)
         return failed == 0
 
+    def run_unified_plan_system_tests_only(self):
+        """Run only unified plan system tests as requested in review"""
+        print("🎯 STARTING UNIFIED PLAN SYSTEM TESTING")
+        print("=" * 80)
+        print("Testing Sistema Unificado de Planos:")
+        print("1. GET /api/planos-sistema - List all plans")
+        print("2. POST /api/planos-sistema - Create plans for each user type")
+        print("3. PUT /api/planos-sistema/{plano_id} - Update a plan")
+        print("4. DELETE /api/planos-sistema/{plano_id} - Deactivate a plan")
+        print("5. PUT /api/motoristas/{motorista_id}/approve - Auto-assign base plan")
+        print("=" * 80)
+        
+        # Authenticate admin user
+        print("\n🔐 AUTHENTICATING ADMIN USER")
+        print("-" * 40)
+        self.authenticate_user("admin")
+        
+        # Run Unified Plan System Tests
+        print("\n🎯 UNIFIED PLAN SYSTEM TESTS")
+        print("=" * 50)
+        self.test_unified_plan_system()
+        self.test_plan_persistence_in_database()
+        
+        # Print summary
+        self.print_summary()
+        return self.get_test_summary()
+
 if __name__ == "__main__":
     tester = TVDEFleetTester()
     
-    # Run review request tests as requested in Portuguese review
-    summary = tester.run_review_request_tests()
+    # Run unified plan system tests as requested in review
+    summary = tester.run_unified_plan_system_tests_only()
     
     if summary["failed"] == 0:
-        print("🎉 All review request tests are working correctly!")
+        print("🎉 All unified plan system tests are working correctly!")
         exit(0)
     else:
         print(f"💥 {summary['failed']} out of {summary['total']} tests are failing!")
