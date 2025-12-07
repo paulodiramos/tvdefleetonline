@@ -346,10 +346,24 @@ function App() {
               user ? <ValidacaoDocumentosMotorista user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
-          {/* Rotas de planos removidas temporariamente para período experimental */}
-          {/* <Route path="/gestao-planos" element={user ? <GestaoPlanos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} /> */}
-          {/* <Route path="/gestao-planos-motorista" element={user ? <GestaoPlanosMotorista user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} /> */}
-          {/* <Route path="/meus-planos" element={user ? <MeusPlanos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} /> */}
+          <Route
+            path="/gestao-planos"
+            element={
+              user ? <GestaoPlanos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/gestao-planos-motorista"
+            element={
+              user ? <GestaoPlanosMotorista user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/meus-planos"
+            element={
+              user ? <MeusPlanos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
           <Route
             path="/meus-recibos-ganhos"
             element={
