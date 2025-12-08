@@ -85,9 +85,17 @@ const ConfiguracaoComunicacoes = ({ user, onLogout }) => {
   const handleSaveEmail = async (e) => {
     e.preventDefault();
     
-    if (!emailConfig.api_key || !emailConfig.sender_email) {
-      toast.error('Por favor preencha todos os campos obrigatórios');
-      return;
+    // Validação baseada no provider
+    if (emailConfig.provider === 'sendgrid') {
+      if (!emailConfig.api_key || !emailConfig.sender_email) {
+        toast.error('Por favor preencha API Key e Email Remetente');
+        return;
+      }
+    } else if (emailConfig.provider === 'smtp') {
+      if (!emailConfig.smtp_host || !emailConfig.smtp_user || !emailConfig.smtp_password || !emailConfig.sender_email) {
+        toast.error('Por favor preencha todos os campos SMTP obrigatórios');
+        return;
+      }
     }
     
     try {
