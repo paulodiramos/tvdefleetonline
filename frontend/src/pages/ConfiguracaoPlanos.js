@@ -80,6 +80,7 @@ const ConfiguracaoPlanos = ({ user, onLogout }) => {
     nome: '',
     descricao: '',
     preco_mensal: 0,
+    taxa_iva: 23,
     tipo_usuario: 'motorista',
     modulos: [],
     ativo: true,
