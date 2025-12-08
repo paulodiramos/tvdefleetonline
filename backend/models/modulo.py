@@ -116,12 +116,12 @@ MODULOS_SISTEMA = {
     "gestao_motoristas": {
         "nome": "Gestão de Motoristas",
         "descricao": "Gerenciamento completo de motoristas",
-        "ordem": 15
+        "ordem": 14
     },
     "gestao_pagamentos": {
         "nome": "Gestão de Pagamentos",
         "descricao": "Sistema de pagamentos e recibos",
-        "ordem": 16
+        "ordem": 15
     },
     "gestao_eventos_veiculo": {
         "nome": "Gestão de Eventos de Veículos",
