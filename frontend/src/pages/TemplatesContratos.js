@@ -30,7 +30,7 @@ const TemplatesContratos = ({ user, onLogout }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/api/templates-contratos`, {
+      const response = await axios.get(`${API}/templates-contratos`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setTemplates(response.data);
@@ -51,7 +51,7 @@ const TemplatesContratos = ({ user, onLogout }) => {
       if (editingTemplate) {
         // Update existing template
         await axios.put(
-          `${API}/api/templates-contratos/${editingTemplate.id}`,
+          `${API}/templates-contratos/${editingTemplate.id}`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -59,7 +59,7 @@ const TemplatesContratos = ({ user, onLogout }) => {
       } else {
         // Create new template
         await axios.post(
-          `${API}/api/templates-contratos`,
+          `${API}/templates-contratos`,
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -91,7 +91,7 @@ const TemplatesContratos = ({ user, onLogout }) => {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API}/api/templates-contratos/${templateId}`, {
+      await axios.delete(`${API}/templates-contratos/${templateId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Template excluído com sucesso!');
