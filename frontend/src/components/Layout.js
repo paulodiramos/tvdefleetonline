@@ -29,8 +29,8 @@ const Layout = ({ user, onLogout, children }) => {
       ];
     }
 
-    // For parceiro/operacional role: Replace dashboard with reports, add payments with financeiro submenu
-    if (user.role === 'parceiro' || user.role === 'operacional') {
+    // For parceiro role: Replace dashboard with reports, add payments with financeiro submenu
+    if (user.role === 'parceiro') {
       return [
         { path: '/relatorios', icon: FileText, label: 'Relatórios' },
         { path: '/vehicles', icon: Car, label: 'Veículos' },
