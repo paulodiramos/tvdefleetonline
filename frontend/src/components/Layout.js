@@ -246,6 +246,12 @@ const Layout = ({ user, onLogout, children }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link to="/configuracao-comunicacoes" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <Mail className="w-4 h-4" />
+                          <span>Config. Email/WhatsApp</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to="/configuracoes-admin" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <FileText className="w-4 h-4" />
                           <span>Termos & Privacidade</span>
