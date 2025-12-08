@@ -127,7 +127,6 @@ const UsuariosNovo = ({ user, onLogout }) => {
     const colors = {
       admin: 'bg-red-100 text-red-800',
       gestao: 'bg-blue-100 text-blue-800',
-      operacional: 'bg-purple-100 text-purple-800',
       parceiro: 'bg-green-100 text-green-800',
       motorista: 'bg-amber-100 text-amber-800'
     };
