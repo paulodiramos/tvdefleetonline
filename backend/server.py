@@ -6701,6 +6701,67 @@ async def atribuir_modulos_usuario(
     }
 
 
+@api_router.post("/users/{user_id}/modulos")
+async def update_modulos_usuario(
+    user_id: str,
+    modulos_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar módulos ativos de um usuário (Admin/Gestor)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    # Verificar se usuário existe
+    user = await db.users.find_one({"id": user_id}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    
+    modulos_ativos = modulos_data.get("modulos_ativos", [])
+    
+    # Verificar se existe atribuição ativa
+    atribuicao = await db.planos_usuarios.find_one(
+        {"user_id": user_id, "status": "ativo"},
+        {"_id": 0}
+    )
+    
+    if atribuicao:
+        # Atualizar módulos na atribuição existente
+        await db.planos_usuarios.update_one(
+            {"id": atribuicao["id"]},
+            {
+                "$set": {
+                    "modulos_ativos": modulos_ativos,
+                    "updated_at": datetime.now(timezone.utc)
+                }
+            }
+        )
+    else:
+        # Criar nova atribuição apenas com módulos
+        atribuicao_id = str(uuid.uuid4())
+        now = datetime.now(timezone.utc)
+        
+        nova_atribuicao = {
+            "id": atribuicao_id,
+            "user_id": user_id,
+            "plano_id": None,
+            "modulos_ativos": modulos_ativos,
+            "tipo_pagamento": "vitalicio",
+            "valor_pago": 0,
+            "data_inicio": now,
+            "data_fim": None,
+            "status": "ativo",
+            "renovacao_automatica": False,
+            "created_at": now,
+            "updated_at": now,
+            "created_by": current_user["id"]
+        }
+        
+        await db.planos_usuarios.insert_one(nova_atribuicao)
+    
+    logger.info(f"Módulos atualizados para user {user_id} por {current_user['email']}")
+    return {"message": "Módulos atualizados com sucesso", "modulos_ativos": modulos_ativos}
+
+
 @api_router.get("/users/{user_id}/modulos")
 async def get_modulos_usuario(user_id: str, current_user: Dict = Depends(get_current_user)):
     """Obter módulos ativos de um usuário"""
