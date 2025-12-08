@@ -7472,13 +7472,8 @@ async def update_template_contrato(
     current_user: Dict = Depends(get_current_user)
 ):
     """Update a contract template"""
-    # Check permissions
-    if current_user["role"] == "operacional":
-        if not await check_feature_access(current_user, "criar_contratos"):
-            raise HTTPException(status_code=403, detail="Sem permissão")
-    elif current_user["role"] == "parceiro":
-        raise HTTPException(status_code=403, detail="Parceiro não pode editar templates")
-    elif current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+    # Check permissions - apenas admin e gestor podem editar templates
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Sem permissão")
     
     # Validações
