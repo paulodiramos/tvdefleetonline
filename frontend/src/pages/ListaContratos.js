@@ -26,7 +26,7 @@ const ListaContratos = ({ user, onLogout }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/api/contratos`, {
+      const response = await axios.get(`${API}/contratos`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setContratos(response.data);
