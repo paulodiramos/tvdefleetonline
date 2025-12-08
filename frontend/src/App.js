@@ -207,6 +207,12 @@ function App() {
             }
           />
           <Route
+            path="/lista-contratos"
+            element={
+              user ? <ListaContratos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/criar-contrato"
             element={
               user ? <CriarContrato user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
