@@ -415,10 +415,16 @@ const Vistorias = ({ user, onLogout }) => {
             </p>
           </div>
           
-          <Button onClick={() => setShowCreateDialog(true)} className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Nova Vistoria
-          </Button>
+          <div className="flex space-x-3">
+            <Button onClick={() => setShowAgendarDialog(true)} variant="outline">
+              <Calendar className="w-4 h-4 mr-2" />
+              Agendar Vistoria
+            </Button>
+            <Button onClick={() => setShowCreateDialog(true)} className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Realizar Vistoria
+            </Button>
+          </div>
         </div>
 
         {/* Filtros */}
