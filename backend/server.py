@@ -11496,6 +11496,308 @@ async def check_notifications_periodically():
 
 # CSV template endpoint moved to correct location before app.include_router
 
+# ==================== DOCUMENTO VALIDATION SYSTEM ====================
+
+class DocumentoUpload(BaseModel):
+    tipo_documento: str
+    user_id: str
+    role: str
+
+class DocumentoAprovacao(BaseModel):
+    aprovado: bool
+    observacoes: Optional[str] = None
+
+DOCUMENTOS_MOTORISTA = [
+    "carta_conducao",
+    "identificacao",  # CC, Passaporte ou Título Residência
+    "licenca_tvde",
+    "registo_criminal",
+    "comprovativo_morada"
+]
+
+DOCUMENTOS_PARCEIRO = [
+    "certidao_comercial"
+]
+
+DOCUMENTOS_DIR = UPLOAD_DIR / "documentos_validacao"
+DOCUMENTOS_DIR.mkdir(exist_ok=True)
+
+@api_router.post("/documentos/upload")
+async def upload_documento(
+    file: UploadFile = File(...),
+    tipo_documento: str = Form(...),
+    user_id: str = Form(...),
+    role: str = Form(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload de documento para validação (com conversão automática para PDF)"""
+    try:
+        # Validar tipo de documento
+        if role == "motorista" and tipo_documento not in DOCUMENTOS_MOTORISTA:
+            raise HTTPException(status_code=400, detail="Tipo de documento inválido para motorista")
+        if role == "parceiro" and tipo_documento not in DOCUMENTOS_PARCEIRO:
+            raise HTTPException(status_code=400, detail="Tipo de documento inválido para parceiro")
+        
+        # Criar diretório para o utilizador se não existir
+        user_docs_dir = DOCUMENTOS_DIR / user_id
+        user_docs_dir.mkdir(exist_ok=True)
+        
+        # Salvar arquivo temporário
+        file_extension = Path(file.filename).suffix.lower()
+        temp_file_path = user_docs_dir / f"{tipo_documento}_temp{file_extension}"
+        
+        with open(temp_file_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+        
+        # Converter para PDF se for imagem
+        final_file_path = user_docs_dir / f"{tipo_documento}.pdf"
+        
+        if file_extension in ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif']:
+            # Converter imagem para PDF
+            await convert_image_to_pdf(temp_file_path, final_file_path)
+            temp_file_path.unlink()  # Remover arquivo temporário
+        elif file_extension == '.pdf':
+            # Renomear para o nome final
+            temp_file_path.rename(final_file_path)
+        else:
+            temp_file_path.unlink()
+            raise HTTPException(status_code=400, detail="Formato de arquivo não suportado. Use PDF ou imagens.")
+        
+        # Salvar no banco de dados
+        documento = {
+            "id": str(uuid.uuid4()),
+            "user_id": user_id,
+            "role": role,
+            "tipo_documento": tipo_documento,
+            "file_path": str(final_file_path),
+            "filename": file.filename,
+            "status": "pendente",
+            "observacoes": None,
+            "data_upload": datetime.now(timezone.utc).isoformat(),
+            "data_aprovacao": None,
+            "aprovado_por": None,
+            "pode_alterar": tipo_documento == "registo_criminal"  # Registo criminal pode ser alterado livremente
+        }
+        
+        # Verificar se já existe documento deste tipo
+        existing = await db.documentos_validacao.find_one({"user_id": user_id, "tipo_documento": tipo_documento})
+        
+        if existing:
+            # Atualizar documento existente
+            await db.documentos_validacao.update_one(
+                {"user_id": user_id, "tipo_documento": tipo_documento},
+                {"$set": documento}
+            )
+        else:
+            # Inserir novo documento
+            await db.documentos_validacao.insert_one(documento)
+        
+        logger.info(f"Documento {tipo_documento} carregado para utilizador {user_id}")
+        
+        return {
+            "message": "Documento carregado com sucesso",
+            "documento_id": documento["id"],
+            "tipo_documento": tipo_documento
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao fazer upload de documento: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/documentos/pendentes")
+async def get_documentos_pendentes(current_user: Dict = Depends(get_current_user)):
+    """Listar todos os utilizadores com documentos pendentes de aprovação (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    try:
+        # Buscar todos os documentos pendentes
+        documentos_pendentes = await db.documentos_validacao.find(
+            {"status": "pendente"},
+            {"_id": 0}
+        ).to_list(length=None)
+        
+        # Agrupar por utilizador
+        users_pendentes = {}
+        for doc in documentos_pendentes:
+            user_id = doc["user_id"]
+            if user_id not in users_pendentes:
+                # Buscar informações do utilizador
+                user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+                if user:
+                    users_pendentes[user_id] = {
+                        "user": user,
+                        "documentos": []
+                    }
+            
+            if user_id in users_pendentes:
+                users_pendentes[user_id]["documentos"].append(doc)
+        
+        return list(users_pendentes.values())
+        
+    except Exception as e:
+        logger.error(f"Erro ao listar documentos pendentes: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/documentos/user/{user_id}")
+async def get_documentos_user(user_id: str, current_user: Dict = Depends(get_current_user)):
+    """Listar documentos de um utilizador específico"""
+    # Admin pode ver todos, utilizador só pode ver os próprios
+    if current_user["role"] != UserRole.ADMIN and current_user["id"] != user_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    try:
+        documentos = await db.documentos_validacao.find(
+            {"user_id": user_id},
+            {"_id": 0}
+        ).to_list(length=None)
+        
+        return documentos
+        
+    except Exception as e:
+        logger.error(f"Erro ao listar documentos do utilizador: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/documentos/{documento_id}/download")
+async def download_documento(documento_id: str, current_user: Dict = Depends(get_current_user)):
+    """Download de documento (Admin, Parceiro ou Gestor)"""
+    if current_user["role"] not in [UserRole.ADMIN, "parceiro", "gestao"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    try:
+        documento = await db.documentos_validacao.find_one({"id": documento_id}, {"_id": 0})
+        
+        if not documento:
+            raise HTTPException(status_code=404, detail="Documento não encontrado")
+        
+        file_path = Path(documento["file_path"])
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Arquivo não encontrado no servidor")
+        
+        return FileResponse(
+            path=file_path,
+            filename=f"{documento['tipo_documento']}.pdf",
+            media_type="application/pdf"
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao fazer download de documento: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/documentos/{documento_id}/aprovar")
+async def aprovar_documento(
+    documento_id: str,
+    aprovacao: DocumentoAprovacao,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Aprovar ou rejeitar documento individual (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    try:
+        documento = await db.documentos_validacao.find_one({"id": documento_id}, {"_id": 0})
+        
+        if not documento:
+            raise HTTPException(status_code=404, detail="Documento não encontrado")
+        
+        # Atualizar status do documento
+        update_data = {
+            "status": "aprovado" if aprovacao.aprovado else "rejeitado",
+            "observacoes": aprovacao.observacoes,
+            "data_aprovacao": datetime.now(timezone.utc).isoformat(),
+            "aprovado_por": current_user["id"]
+        }
+        
+        await db.documentos_validacao.update_one(
+            {"id": documento_id},
+            {"$set": update_data}
+        )
+        
+        logger.info(f"Documento {documento_id} {'aprovado' if aprovacao.aprovado else 'rejeitado'} por {current_user['id']}")
+        
+        # Se rejeitado, enviar email com observações (implementar depois)
+        if not aprovacao.aprovado:
+            # TODO: Enviar email de notificação
+            pass
+        
+        return {
+            "message": f"Documento {'aprovado' if aprovacao.aprovado else 'rejeitado'} com sucesso",
+            "documento_id": documento_id
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao aprovar documento: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.put("/documentos/user/{user_id}/aprovar-todos")
+async def aprovar_todos_documentos(
+    user_id: str,
+    aprovacao: DocumentoAprovacao,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Aprovar ou rejeitar todos os documentos de um utilizador (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    try:
+        # Buscar todos os documentos pendentes do utilizador
+        documentos = await db.documentos_validacao.find(
+            {"user_id": user_id, "status": "pendente"},
+            {"_id": 0}
+        ).to_list(length=None)
+        
+        if not documentos:
+            raise HTTPException(status_code=404, detail="Nenhum documento pendente encontrado")
+        
+        # Atualizar todos os documentos
+        update_data = {
+            "status": "aprovado" if aprovacao.aprovado else "rejeitado",
+            "observacoes": aprovacao.observacoes,
+            "data_aprovacao": datetime.now(timezone.utc).isoformat(),
+            "aprovado_por": current_user["id"]
+        }
+        
+        await db.documentos_validacao.update_many(
+            {"user_id": user_id, "status": "pendente"},
+            {"$set": update_data}
+        )
+        
+        # Se aprovado, atribuir plano base gratuito
+        if aprovacao.aprovado:
+            user = await db.users.find_one({"id": user_id}, {"_id": 0})
+            
+            if user:
+                # Buscar plano base gratuito correspondente ao role
+                plano_base = await db.planos_sistema.find_one({
+                    "tipo_usuario": user["role"],
+                    "preco_mensal": 0,
+                    "ativo": True
+                }, {"_id": 0})
+                
+                if plano_base:
+                    # Atribuir plano ao utilizador
+                    await db.users.update_one(
+                        {"id": user_id},
+                        {"$set": {"plano_id": plano_base["id"]}}
+                    )
+                    
+                    logger.info(f"Plano base '{plano_base['nome']}' atribuído ao utilizador {user_id}")
+        
+        logger.info(f"Todos os documentos do utilizador {user_id} foram {'aprovados' if aprovacao.aprovado else 'rejeitados'}")
+        
+        return {
+            "message": f"Todos os documentos {'aprovados' if aprovacao.aprovado else 'rejeitados'} com sucesso",
+            "documentos_afetados": len(documentos)
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao aprovar todos os documentos: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.on_event("startup")
 async def startup_event():
     """Run startup tasks"""
