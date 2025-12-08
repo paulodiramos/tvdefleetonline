@@ -178,6 +178,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
   useEffect(() => {
     fetchVehicleData();
     fetchCategorias();
+    if (user.role === 'parceiro') {
+      checkModuloEventos();
+    }
   }, [vehicleId]);
 
   const fetchCategorias = async () => {
@@ -194,6 +197,20 @@ const FichaVeiculo = ({ user, onLogout }) => {
       // Use defaults if API fails
       setCategoriasUber(['UberX', 'Share', 'Electric', 'Black', 'Comfort', 'XL', 'XXL', 'Pet', 'Package']);
       setCategoriasBolt(['Economy', 'Comfort', 'Executive', 'XL', 'Green', 'XXL', 'Motorista Privado', 'Pet']);
+    }
+  };
+
+  const checkModuloEventos = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API}/users/${user.id}/verificar-modulo/gestao_eventos_veiculo`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setHasModuloEventos(response.data.tem_acesso || false);
+    } catch (error) {
+      console.error('Error checking module:', error);
+      setHasModuloEventos(false);
     }
   };
 
