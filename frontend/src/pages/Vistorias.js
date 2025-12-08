@@ -60,6 +60,14 @@ const Vistorias = ({ user, onLogout }) => {
   
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [generatingPDF, setGeneratingPDF] = useState(false);
+  const [vistoriasAgendadas, setVistoriasAgendadas] = useState([]);
+  const [showAgendarDialog, setShowAgendarDialog] = useState(false);
+  const [agendamentoForm, setAgendamentoForm] = useState({
+    veiculo_id: '',
+    data_agendada: '',
+    tipo_vistoria: 'periodica',
+    notas: ''
+  });
 
   useEffect(() => {
     fetchVehicles();
