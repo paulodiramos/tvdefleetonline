@@ -5797,6 +5797,9 @@ async def get_parceiros(current_user: Dict = Depends(get_current_user)):
     query = {}
     if current_user["role"] == UserRole.GESTAO:
         query["gestor_associado_id"] = current_user["id"]
+    elif current_user["role"] == "parceiro":
+        # Parceiro só vê ele próprio
+        query["id"] = current_user["id"]
     elif current_user["role"] not in [UserRole.ADMIN]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
