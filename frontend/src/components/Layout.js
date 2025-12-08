@@ -53,15 +53,7 @@ const Layout = ({ user, onLogout, children }) => {
     // For parceiro role: Replace dashboard with reports, add payments with financeiro submenu
     if (user.role === 'parceiro') {
       return [
-        { 
-          label: 'Relatórios', 
-          icon: FileText,
-          submenu: [
-            { path: '/criar-relatorio-semanal', label: 'Criar Relatório' },
-            { path: '/sincronizacao-auto', label: 'Sync Auto' },
-            { path: '/upload-csv', label: 'Upload CSV' }
-          ]
-        },
+        { path: '/relatorios', icon: FileText, label: 'Relatórios' },
         { path: '/vehicles', icon: Car, label: 'Veículos' },
         { path: '/motoristas', icon: Users, label: 'Motoristas' },
         { 
