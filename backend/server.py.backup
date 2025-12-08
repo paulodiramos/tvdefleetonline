@@ -11441,6 +11441,61 @@ app.include_router(mensagens_router, prefix="/api")
 app.include_router(ifthenpay_router)
 
 # Include main API router (legacy routes - to be migrated)
+app.include_router(api_router)
+
+# Mount static files for uploads (PDFs, documents, etc.)
+app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_credentials=True,
+    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Background task for checking alerts
+import asyncio
+from typing import AsyncGenerator
+
+async def check_alerts_periodically():
+    """Background task to check alerts every 6 hours"""
+    while True:
+        try:
+            logger.info("Running periodic alert check...")
+            await check_and_create_alerts()
+            logger.info("Alert check completed successfully")
+        except Exception as e:
+            logger.error(f"Error during periodic alert check: {e}")
+        
+        # Wait 6 hours before next check
+        await asyncio.sleep(6 * 60 * 60)
+
+
+async def check_notifications_periodically():
+    """Background task to check and create notifications every 12 hours"""
+    from utils.notificacoes import check_documentos_expirando, check_recibos_pendentes
+    
+    while True:
+        try:
+            logger.info("Running periodic notification check...")
+            await check_documentos_expirando(db)
+            await check_recibos_pendentes(db)
+            logger.info("Notification check completed successfully")
+        except Exception as e:
+            logger.error(f"Error during periodic notification check: {e}")
+        
+        # Wait 12 hours before next check
+        await asyncio.sleep(12 * 60 * 60)
+
+# CSV template endpoint moved to correct location before app.include_router
+
 # ==================== DOCUMENTO VALIDATION SYSTEM ====================
 
 class DocumentoUpload(BaseModel):
@@ -11742,60 +11797,6 @@ async def aprovar_todos_documentos(
     except Exception as e:
         logger.error(f"Erro ao aprovar todos os documentos: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
-
-app.include_router(api_router)
-
-# Mount static files for uploads (PDFs, documents, etc.)
-app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-# Background task for checking alerts
-import asyncio
-from typing import AsyncGenerator
-
-async def check_alerts_periodically():
-    """Background task to check alerts every 6 hours"""
-    while True:
-        try:
-            logger.info("Running periodic alert check...")
-            await check_and_create_alerts()
-            logger.info("Alert check completed successfully")
-        except Exception as e:
-            logger.error(f"Error during periodic alert check: {e}")
-        
-        # Wait 6 hours before next check
-        await asyncio.sleep(6 * 60 * 60)
-
-
-async def check_notifications_periodically():
-    """Background task to check and create notifications every 12 hours"""
-    from utils.notificacoes import check_documentos_expirando, check_recibos_pendentes
-    
-    while True:
-        try:
-            logger.info("Running periodic notification check...")
-            await check_documentos_expirando(db)
-            await check_recibos_pendentes(db)
-            logger.info("Notification check completed successfully")
-        except Exception as e:
-            logger.error(f"Error during periodic notification check: {e}")
-        
-        # Wait 12 hours before next check
-        await asyncio.sleep(12 * 60 * 60)
 
 @app.on_event("startup")
 async def startup_event():
