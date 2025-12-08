@@ -490,21 +490,29 @@ const CriarContrato = ({ user, onLogout }) => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  {/* Parceiro */}
+                  {/* Parceiro - Fixo para parceiro logado */}
                   <div>
                     <Label htmlFor="parceiro">Parceiro *</Label>
-                    <Select value={parceiroSelecionado} onValueChange={setParceiroSelecionado}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o parceiro" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {parceiros.map(p => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.nome_empresa || p.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {user.role === 'parceiro' ? (
+                      <div className="flex h-10 w-full items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm">
+                        <span className="text-slate-700">
+                          {parceiros.length > 0 ? (parceiros[0].nome_empresa || parceiros[0].name) : 'A carregar...'}
+                        </span>
+                      </div>
+                    ) : (
+                      <Select value={parceiroSelecionado} onValueChange={setParceiroSelecionado}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o parceiro" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {parceiros.map(p => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.nome_empresa || p.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
 
                   {/* Template de Contrato */}
