@@ -39,6 +39,7 @@ import RecibosPagamentos from "@/pages/RecibosPagamentos";
 import FichaVeiculo from "@/pages/FichaVeiculo";
 import Usuarios from "@/pages/Usuarios";
 import Pendentes from "@/pages/Pendentes";
+import Relatorios from "@/pages/Relatorios";
 import PublicHome from "@/pages/PublicHome";
 import RegistoMotorista from "@/pages/RegistoMotorista";
 import MudarSenhaObrigatorioModal from "@/components/MudarSenhaObrigatorioModal";
