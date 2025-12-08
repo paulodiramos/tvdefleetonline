@@ -790,7 +790,7 @@ const Vistorias = ({ user, onLogout }) => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(vistoria.pdf_relatorio, '_blank')}
+                        onClick={() => handleDownloadPDF(vistoria.veiculo_id, vistoria.id)}
                       >
                         <Download className="w-3 h-3 mr-1" />
                         PDF
@@ -799,11 +799,23 @@ const Vistorias = ({ user, onLogout }) => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleGeneratePDF(vistoria.id)}
+                        onClick={() => handleGeneratePDF(vistoria.veiculo_id, vistoria.id)}
                         disabled={generatingPDF}
                       >
                         <FileText className="w-3 h-3 mr-1" />
                         Gerar
+                      </Button>
+                    )}
+                    
+                    {vistoria.status === 'fechada' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEnviarEmail(vistoria.veiculo_id, vistoria.id)}
+                        disabled={generatingPDF}
+                        title="Enviar PDF por email"
+                      >
+                        <Send className="w-3 h-3" />
                       </Button>
                     )}
                   </div>
