@@ -78,12 +78,12 @@ const Layout = ({ user, onLogout, children }) => {
 
     // Default items for admin, gestao (Dashboard removed - logo handles that)
     const items = [
-      { path: '/vehicles', icon: Car, label: 'Veículos' },
       { path: '/motoristas', icon: Users, label: 'Motoristas' },
-      { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' },
+      { path: '/vehicles', icon: Car, label: 'Veículos' },
+      { path: '/contratos', icon: FileText, label: 'Contratos' },
       { 
         label: 'Relatórios', 
-        icon: FileText,
+        icon: TrendingUp,
         submenu: [
           { path: '/criar-relatorio-semanal', label: 'Criar Relatório' },
           { path: '/sincronizacao-auto', label: 'Sync Auto' },
@@ -97,7 +97,8 @@ const Layout = ({ user, onLogout, children }) => {
           { path: '/pagamentos', label: 'Pagamentos a Motoristas' },
           { path: '/verificar-recibos', label: 'Verificar Recibos' }
         ]
-      }
+      },
+      { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' }
     ];
 
     // Add Parceiros for admin and gestao
