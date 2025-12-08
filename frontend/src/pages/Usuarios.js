@@ -1226,6 +1226,87 @@ const Usuarios = ({ user, onLogout }) => {
         motoristaId={selectedMotoristaId}
         userRole={user.role}
       />
+
+      {/* Gerir Parceiros Dialog */}
+      <Dialog open={showParceirosDialog} onOpenChange={setShowParceirosDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Gerir Parceiros do Gestor</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm text-slate-600 mb-2">
+                Gestor: <strong>{selectedGestor?.name}</strong>
+              </p>
+              <p className="text-xs text-slate-500">
+                Email: <strong>{selectedGestor?.email}</strong>
+              </p>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 p-3 rounded">
+              <p className="text-xs text-blue-800">
+                ℹ️ Selecione os parceiros que este gestor pode aceder e gerir. O gestor poderá ver e adicionar motoristas/veículos aos parceiros selecionados.
+              </p>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium mb-2 block">
+                Parceiros Disponíveis ({parceiros.length})
+              </Label>
+              <div className="border rounded-lg divide-y max-h-96 overflow-y-auto">
+                {parceiros.length === 0 ? (
+                  <div className="p-4 text-center text-sm text-slate-500">
+                    Nenhum parceiro disponível
+                  </div>
+                ) : (
+                  parceiros.map((parceiro) => (
+                    <label
+                      key={parceiro.id}
+                      className="flex items-center p-3 hover:bg-slate-50 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedParceiros.includes(parceiro.id)}
+                        onChange={() => toggleParceiro(parceiro.id)}
+                        className="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                      />
+                      <div className="ml-3 flex-1">
+                        <p className="text-sm font-medium text-slate-900">
+                          {parceiro.nome_empresa || parceiro.contacto_principal?.nome || 'Sem nome'}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          Email: {parceiro.email || 'N/A'}
+                        </p>
+                        {parceiro.total_vehicles > 0 && (
+                          <p className="text-xs text-slate-500">
+                            Veículos: {parceiro.total_vehicles}
+                          </p>
+                        )}
+                      </div>
+                    </label>
+                  ))
+                )}
+              </div>
+            </div>
+
+            <div className="bg-slate-50 p-3 rounded">
+              <p className="text-sm font-medium text-slate-700">
+                Selecionados: <strong>{selectedParceiros.length}</strong> parceiros
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowParceirosDialog(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleAtribuirParceiros}>
+                <Users className="w-4 h-4 mr-2" />
+                Atribuir Parceiros
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
