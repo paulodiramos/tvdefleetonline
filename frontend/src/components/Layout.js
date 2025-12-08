@@ -172,7 +172,7 @@ const Layout = ({ user, onLogout, children }) => {
                     className="hidden md:flex items-center space-x-2"
                     data-testid="profile-dropdown"
                   >
-                    <span className="text-sm font-medium text-slate-800">{user.name || user.email?.split('@')[0] || 'Utilizador'}</span>
+                    <span className="text-sm font-medium text-slate-800">Painel de Controlo</span>
                     <ChevronDown className="w-4 h-4 text-slate-600" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -189,12 +189,6 @@ const Layout = ({ user, onLogout, children }) => {
                         <Link to="/pendentes" className="flex items-center space-x-2 cursor-pointer">
                           <ClipboardCheck className="w-4 h-4" />
                           <span>Pendentes</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/vehicle-data" className="flex items-center space-x-2 cursor-pointer">
-                          <Database className="w-4 h-4" />
-                          <span>Dados de Veículos</span>
                         </Link>
                       </DropdownMenuItem>
                       
