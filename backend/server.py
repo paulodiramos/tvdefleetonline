@@ -12422,15 +12422,16 @@ async def save_email_config(
     config_data: Dict[str, Any],
     current_user: Dict = Depends(get_current_user)
 ):
-    """Save email (SendGrid) configuration (Admin only)"""
+    """Save email (SendGrid or SMTP) configuration (Admin only)"""
     if current_user["role"] != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Only admins can configure communications")
     
     try:
+        provider = config_data.get("provider", "sendgrid")
+        
         config = {
             "tipo": "email_comunicacoes",
-            "provider": config_data.get("provider", "sendgrid"),
-            "api_key": config_data.get("api_key"),
+            "provider": provider,
             "sender_email": config_data.get("sender_email"),
             "sender_name": config_data.get("sender_name", "TVDEFleet"),
             "enabled": config_data.get("enabled", False),
@@ -12438,13 +12439,23 @@ async def save_email_config(
             "updated_by": current_user["id"]
         }
         
+        # Add provider-specific fields
+        if provider == "sendgrid":
+            config["api_key"] = config_data.get("api_key")
+        elif provider == "smtp":
+            config["smtp_host"] = config_data.get("smtp_host")
+            config["smtp_port"] = config_data.get("smtp_port", 587)
+            config["smtp_user"] = config_data.get("smtp_user")
+            config["smtp_password"] = config_data.get("smtp_password")
+            config["smtp_use_tls"] = config_data.get("smtp_use_tls", True)
+        
         await db.configuracoes_sistema.update_one(
             {"tipo": "email_comunicacoes"},
             {"$set": config},
             upsert=True
         )
         
-        logger.info(f"Email configuration saved by {current_user['email']}")
+        logger.info(f"Email configuration ({provider}) saved by {current_user['email']}")
         return {"message": "Email configuration saved successfully"}
         
     except Exception as e:
