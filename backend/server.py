@@ -7407,11 +7407,7 @@ async def get_templates_contrato(
     """Get all contract templates for a parceiro"""
     # Check permissions
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
-        if current_user["role"] == "operacional":
-            # Check if has premium
-            if not await check_feature_access(current_user, "criar_contratos"):
-                raise HTTPException(status_code=403, detail="Operacional base não pode ver templates")
-        elif current_user["id"] != parceiro_id:
+        if current_user["id"] != parceiro_id:
             raise HTTPException(status_code=403, detail="Sem permissão")
     
     templates = await db.templates_contrato.find({"parceiro_id": parceiro_id}, {"_id": 0}).to_list(length=None)
