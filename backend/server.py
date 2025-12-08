@@ -9173,11 +9173,14 @@ async def create_plano_sistema(plano_data: Dict, current_user: Dict = Depends(ge
         "nome": plano_data["nome"],
         "descricao": plano_data.get("descricao", ""),
         "preco_mensal": plano_data.get("preco_mensal", 0),
-        "tipo_usuario": plano_data["tipo_usuario"],  # motorista, parceiro, operacional, gestao
+        "tipo_usuario": plano_data["tipo_usuario"],  # motorista, parceiro
         "modulos": plano_data.get("modulos", []),
         "ativo": plano_data.get("ativo", True),
         "permite_trial": plano_data.get("permite_trial", False),
         "dias_trial": plano_data.get("dias_trial", 30),
+        "desconto_promocao": plano_data.get("desconto_promocao", 0),  # % de desconto
+        "data_inicio_promocao": plano_data.get("data_inicio_promocao"),  # ISO string
+        "data_fim_promocao": plano_data.get("data_fim_promocao"),  # ISO string
         "created_at": datetime.now(timezone.utc).isoformat(),
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
