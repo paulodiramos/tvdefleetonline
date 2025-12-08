@@ -1221,9 +1221,11 @@ startxref
             # Test 3: Get operacional user and verify plan fields
             users_response = requests.get(f"{BACKEND_URL}/users/all", headers=headers)
             if users_response.status_code == 200:
-                users = users_response.json()
-                operacional_users = [u for u in users if u.get("role") == "operacional"]
-                gestao_users = [u for u in users if u.get("role") == "gestao"]
+                users_data = users_response.json()
+                # Combine pending and registered users
+                all_users = users_data.get("registered_users", []) + users_data.get("pending_users", [])
+                operacional_users = [u for u in all_users if u.get("role") == "operacional"]
+                gestao_users = [u for u in all_users if u.get("role") == "gestao"]
                 
                 operacional_with_plans = sum(1 for u in operacional_users 
                                            if u.get("plano_id") and u.get("plano_nome") and u.get("plano_valida_ate"))
