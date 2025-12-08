@@ -6791,6 +6791,7 @@ async def create_vistoria(
     vistoria = {
         "id": vistoria_id,
         "veiculo_id": vehicle_id,
+        "parceiro_id": vistoria_data.get("parceiro_id"),
         "data_vistoria": vistoria_data.get("data_vistoria", now.isoformat()),
         "tipo": vistoria_data.get("tipo", "periodica"),
         "km_veiculo": vistoria_data.get("km_veiculo"),
