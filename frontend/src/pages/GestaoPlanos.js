@@ -14,7 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { 
-  Package, Plus, Edit, Trash2, Check, X, Info, Search, DollarSign
+  Package, Plus, Edit, Trash2, Check, X, Info, Search, DollarSign, UserPlus
 } from 'lucide-react';
 
 const GestaoPlanos = ({ user, onLogout }) => {
@@ -46,6 +46,8 @@ const GestaoPlanos = ({ user, onLogout }) => {
     preco_anual_sem_iva: 0,
     preco_anual_com_iva: 0,
     desconto_anual: 0,
+    opcao_recibos_motorista: false,
+    preco_recibo_por_motorista: 0,
     ativo: true,
     tipo_usuario: 'parceiro'
   });
@@ -92,7 +94,6 @@ const GestaoPlanos = ({ user, onLogout }) => {
     if (plano) {
       setEditingPlano(plano);
       
-      // Extrair preços da estrutura
       const precos = plano.precos || {};
       
       setPlanoForm({
@@ -117,6 +118,8 @@ const GestaoPlanos = ({ user, onLogout }) => {
         preco_anual_sem_iva: precos.anual?.preco_sem_iva || 0,
         preco_anual_com_iva: precos.anual?.preco_com_iva || 0,
         desconto_anual: precos.anual?.desconto_percentual || 0,
+        opcao_recibos_motorista: plano.opcao_recibos_motorista || false,
+        preco_recibo_por_motorista: plano.preco_recibo_por_motorista || 0,
         ativo: plano.ativo !== false,
         tipo_usuario: plano.tipo_usuario || 'parceiro'
       });
@@ -144,6 +147,8 @@ const GestaoPlanos = ({ user, onLogout }) => {
         preco_anual_sem_iva: 0,
         preco_anual_com_iva: 0,
         desconto_anual: 0,
+        opcao_recibos_motorista: false,
+        preco_recibo_por_motorista: 0,
         ativo: true,
         tipo_usuario: 'parceiro'
       });
@@ -281,10 +286,10 @@ const GestaoPlanos = ({ user, onLogout }) => {
             <div className="flex items-start gap-3">
               <Info className="w-5 h-5 text-blue-600 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-blue-900 mb-1">Tipos de Cobrança:</h3>
+                <h3 className="font-semibold text-blue-900 mb-1">Tipos de Planos:</h3>
                 <ul className="text-sm text-blue-800 space-y-1">
-                  <li><strong>Por Veículo:</strong> Cobrado por cada veículo gerido</li>
-                  <li><strong>Fixo com Limite:</strong> Valor fixo com limite de veículos</li>
+                  <li><strong>Parceiro:</strong> Por Veículo ou Fixo com Limite + Opção extra de recibos por motorista</li>
+                  <li><strong>Motorista:</strong> Preço fixo com módulos personalizados</li>
                 </ul>
               </div>
             </div>
@@ -333,6 +338,11 @@ const GestaoPlanos = ({ user, onLogout }) => {
                         <Badge variant={plano.ativo ? "default" : "secondary"}>
                           {plano.ativo ? 'Ativo' : 'Inativo'}
                         </Badge>
+                        {plano.opcao_recibos_motorista && (
+                          <Badge variant="outline" className="text-xs">
+                            + Recibos
+                          </Badge>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -343,10 +353,12 @@ const GestaoPlanos = ({ user, onLogout }) => {
                   </p>
 
                   <div className="space-y-3 mb-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">Cobrança:</span>
-                      <span className="font-medium">{getTipoCobrancaLabel(plano.tipo_cobranca)}</span>
-                    </div>
+                    {plano.tipo_usuario === 'parceiro' && plano.tipo_cobranca && (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-600">Cobrança:</span>
+                        <span className="font-medium">{getTipoCobrancaLabel(plano.tipo_cobranca)}</span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-600">Preço:</span>
                       <span className="font-bold text-lg text-blue-600">
@@ -439,47 +451,117 @@ const GestaoPlanos = ({ user, onLogout }) => {
                 />
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="tipo_cobranca">Tipo de Cobrança *</Label>
-                  <Select
-                    value={planoForm.tipo_cobranca}
-                    onValueChange={(value) => setPlanoForm({ ...planoForm, tipo_cobranca: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="por_veiculo">Por Veículo</SelectItem>
-                      <SelectItem value="fixo">Fixo com Limite</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              {/* Configurações específicas para Parceiro */}
+              {planoForm.tipo_usuario === 'parceiro' && (
+                <>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label htmlFor="tipo_cobranca">Tipo de Cobrança *</Label>
+                      <Select
+                        value={planoForm.tipo_cobranca}
+                        onValueChange={(value) => setPlanoForm({ ...planoForm, tipo_cobranca: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="por_veiculo">Por Veículo</SelectItem>
+                          <SelectItem value="fixo">Fixo com Limite</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                <div>
-                  <Label htmlFor="limite_veiculos">Limite de Veículos</Label>
-                  <Input
-                    id="limite_veiculos"
-                    type="number"
-                    value={planoForm.limite_veiculos || ''}
-                    onChange={(e) => setPlanoForm({ 
-                      ...planoForm, 
-                      limite_veiculos: e.target.value ? parseInt(e.target.value) : null 
-                    })}
-                    placeholder={planoForm.tipo_cobranca === 'fixo' ? 'Obrigatório' : 'Opcional'}
-                  />
-                </div>
+                    <div>
+                      <Label htmlFor="limite_veiculos">Limite de Veículos</Label>
+                      <Input
+                        id="limite_veiculos"
+                        type="number"
+                        value={planoForm.limite_veiculos || ''}
+                        onChange={(e) => setPlanoForm({ 
+                          ...planoForm, 
+                          limite_veiculos: e.target.value ? parseInt(e.target.value) : null 
+                        })}
+                        placeholder={planoForm.tipo_cobranca === 'fixo' ? 'Obrigatório' : 'Opcional'}
+                      />
+                    </div>
 
-                <div>
-                  <Label htmlFor="taxa_iva">Taxa IVA (%)</Label>
-                  <Input
-                    id="taxa_iva"
-                    type="number"
-                    value={planoForm.taxa_iva}
-                    onChange={(e) => setPlanoForm({ ...planoForm, taxa_iva: parseFloat(e.target.value) })}
-                  />
+                    <div>
+                      <Label htmlFor="taxa_iva">Taxa IVA (%)</Label>
+                      <Input
+                        id="taxa_iva"
+                        type="number"
+                        value={planoForm.taxa_iva}
+                        onChange={(e) => setPlanoForm({ ...planoForm, taxa_iva: parseFloat(e.target.value) })}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Opção Extra: Envio de Recibos por Motorista */}
+                  <Card className="border-orange-200 bg-orange-50">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start gap-3">
+                        <UserPlus className="w-5 h-5 text-orange-600 mt-0.5" />
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <Label htmlFor="opcao_recibos" className="text-base font-semibold text-orange-900">
+                              Opção Extra: Envio de Recibos por Motorista
+                            </Label>
+                            <Checkbox
+                              id="opcao_recibos"
+                              checked={planoForm.opcao_recibos_motorista}
+                              onCheckedChange={(checked) => setPlanoForm({ 
+                                ...planoForm, 
+                                opcao_recibos_motorista: checked,
+                                preco_recibo_por_motorista: checked ? planoForm.preco_recibo_por_motorista : 0
+                              })}
+                            />
+                          </div>
+                          <p className="text-sm text-orange-800 mb-3">
+                            Cobrar valor adicional por motorista que envia recibos
+                          </p>
+                          {planoForm.opcao_recibos_motorista && (
+                            <div className="grid grid-cols-2 gap-3">
+                              <div>
+                                <Label className="text-sm">Preço por Motorista (€)</Label>
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  value={planoForm.preco_recibo_por_motorista}
+                                  onChange={(e) => setPlanoForm({ 
+                                    ...planoForm, 
+                                    preco_recibo_por_motorista: parseFloat(e.target.value) || 0 
+                                  })}
+                                  placeholder="Ex: 5.00"
+                                />
+                              </div>
+                              <div className="flex items-end">
+                                <p className="text-xs text-orange-700">
+                                  Este valor será multiplicado pelo número de motoristas que enviam recibos
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </>
+              )}
+
+              {/* Apenas Taxa IVA para motoristas */}
+              {planoForm.tipo_usuario === 'motorista' && (
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <Label htmlFor="taxa_iva">Taxa IVA (%)</Label>
+                    <Input
+                      id="taxa_iva"
+                      type="number"
+                      value={planoForm.taxa_iva}
+                      onChange={(e) => setPlanoForm({ ...planoForm, taxa_iva: parseFloat(e.target.value) })}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div>
                 <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
