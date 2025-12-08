@@ -40,7 +40,7 @@ class EmailService:
         plain_content: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Send email using SendGrid
+        Send email using SendGrid or SMTP
         Returns: {"success": bool, "message_id": str, "error": str}
         """
         try:
@@ -52,6 +52,30 @@ class EmailService:
                     "error": "Email service is not configured or disabled"
                 }
             
+            provider = config.get("provider", "sendgrid")
+            
+            if provider == "smtp":
+                return await self._send_via_smtp(to_email, subject, html_content, plain_content, config)
+            else:
+                return await self._send_via_sendgrid(to_email, subject, html_content, plain_content, config)
+        
+        except Exception as e:
+            logger.error(f"Error sending email: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    async def _send_via_sendgrid(
+        self,
+        to_email: str,
+        subject: str,
+        html_content: str,
+        plain_content: Optional[str],
+        config: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Send email via SendGrid"""
+        try:
             api_key = config.get("api_key")
             sender_email = config.get("sender_email")
             sender_name = config.get("sender_name", "TVDEFleet")
@@ -59,7 +83,7 @@ class EmailService:
             if not api_key or not sender_email:
                 return {
                     "success": False,
-                    "error": "Email configuration is incomplete"
+                    "error": "SendGrid configuration is incomplete"
                 }
             
             # Create SendGrid message
@@ -78,7 +102,7 @@ class EmailService:
             response = sg.send(message)
             
             if response.status_code in [200, 201, 202]:
-                logger.info(f"Email sent successfully to {to_email}")
+                logger.info(f"Email sent successfully to {to_email} via SendGrid")
                 return {
                     "success": True,
                     "message_id": response.headers.get('X-Message-Id'),
@@ -92,7 +116,69 @@ class EmailService:
                 }
         
         except Exception as e:
-            logger.error(f"Error sending email: {e}")
+            logger.error(f"Error sending email via SendGrid: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    async def _send_via_smtp(
+        self,
+        to_email: str,
+        subject: str,
+        html_content: str,
+        plain_content: Optional[str],
+        config: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Send email via SMTP"""
+        try:
+            smtp_host = config.get("smtp_host")
+            smtp_port = config.get("smtp_port", 587)
+            smtp_user = config.get("smtp_user")
+            smtp_password = config.get("smtp_password")
+            sender_email = config.get("sender_email")
+            sender_name = config.get("sender_name", "TVDEFleet")
+            use_tls = config.get("smtp_use_tls", True)
+            
+            if not all([smtp_host, smtp_user, smtp_password, sender_email]):
+                return {
+                    "success": False,
+                    "error": "SMTP configuration is incomplete"
+                }
+            
+            # Create message
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = subject
+            msg['From'] = f"{sender_name} <{sender_email}>"
+            msg['To'] = to_email
+            
+            # Add plain text and HTML parts
+            if plain_content:
+                part1 = MIMEText(plain_content, 'plain')
+                msg.attach(part1)
+            
+            part2 = MIMEText(html_content, 'html')
+            msg.attach(part2)
+            
+            # Send email
+            if use_tls:
+                server = smtplib.SMTP(smtp_host, smtp_port)
+                server.starttls()
+            else:
+                server = smtplib.SMTP_SSL(smtp_host, smtp_port)
+            
+            server.login(smtp_user, smtp_password)
+            server.sendmail(sender_email, to_email, msg.as_string())
+            server.quit()
+            
+            logger.info(f"Email sent successfully to {to_email} via SMTP")
+            return {
+                "success": True,
+                "provider": "smtp"
+            }
+        
+        except Exception as e:
+            logger.error(f"Error sending email via SMTP: {e}")
             return {
                 "success": False,
                 "error": str(e)
