@@ -22,7 +22,8 @@ const MoloniConfig = ({ motorista_id, isOwnProfile }) => {
     username: '',
     password: '',
     company_id: '',
-    custo_mensal_extra: 10.00
+    custo_mensal_extra: 10.00,
+    modulo_disponivel: false
   });
 
   useEffect(() => {
@@ -109,30 +110,60 @@ const MoloniConfig = ({ motorista_id, isOwnProfile }) => {
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Alert Explicativo */}
-        <Alert>
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            <p className="font-semibold mb-2">Como funciona:</p>
-            <ul className="text-sm space-y-1 ml-4 list-disc">
-              <li>Ative a auto-faturação para emitir faturas automaticamente ao parceiro</li>
-              <li>Custo extra mensal: €{config.custo_mensal_extra}</li>
-              <li>Faturas são geradas quando relatórios são emitidos</li>
-              <li>Precisa de conta Moloni ativa com API configurada</li>
-            </ul>
-          </AlertDescription>
-        </Alert>
+        {/* Alert Explicativo ou Aviso de Módulo Indisponível */}
+        {!config.modulo_disponivel ? (
+          <Alert className="bg-amber-50 border-amber-300">
+            <AlertCircle className="h-4 w-4 text-amber-600" />
+            <AlertDescription>
+              <p className="font-semibold mb-2 text-amber-900">⚠️ Módulo não disponível no seu plano</p>
+              <div className="text-sm text-amber-800 space-y-2">
+                <p>
+                  O módulo de Auto-Faturação Moloni não está incluído no seu plano atual.
+                </p>
+                <p>
+                  <strong>Para ativar este módulo:</strong>
+                </p>
+                <ul className="ml-4 list-disc space-y-1">
+                  <li>Contacte o administrador ou gestor da plataforma</li>
+                  <li>Solicite upgrade para um plano que inclua "moloni_auto_faturacao"</li>
+                  <li>Após upgrade, poderá configurar suas credenciais Moloni</li>
+                </ul>
+                <p className="mt-2 text-xs">
+                  Custo estimado do módulo: €{config.custo_mensal_extra}/mês (adicional ao plano)
+                </p>
+              </div>
+            </AlertDescription>
+          </Alert>
+        ) : (
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              <p className="font-semibold mb-2">Como funciona:</p>
+              <ul className="text-sm space-y-1 ml-4 list-disc">
+                <li>Ative a auto-faturação para emitir faturas automaticamente ao parceiro</li>
+                <li>Custo extra mensal: €{config.custo_mensal_extra}</li>
+                <li>Faturas são geradas quando relatórios são emitidos</li>
+                <li>Precisa de conta Moloni ativa com API configurada</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Toggle Ativar */}
-        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+        <div className={`flex items-center justify-between p-4 rounded-lg ${!config.modulo_disponivel ? 'bg-slate-100 opacity-60' : 'bg-slate-50'}`}>
           <div className="flex-1">
             <Label htmlFor="moloni-active" className="text-base font-semibold">
               Ativar Auto-Faturação
+              {!config.modulo_disponivel && (
+                <span className="ml-2 text-xs text-amber-600 font-normal">(Requer módulo no plano)</span>
+              )}
             </Label>
             <p className="text-sm text-slate-600 mt-1">
               {config.ativo 
                 ? `Ativo desde ${config.data_ativacao ? new Date(config.data_ativacao).toLocaleDateString('pt-PT') : 'N/A'}`
-                : 'Sistema desativado'
+                : !config.modulo_disponivel
+                  ? 'Módulo não disponível no plano'
+                  : 'Sistema desativado'
               }
             </p>
           </div>
@@ -140,6 +171,7 @@ const MoloniConfig = ({ motorista_id, isOwnProfile }) => {
             id="moloni-active"
             checked={config.ativo}
             onCheckedChange={(checked) => setConfig({...config, ativo: checked})}
+            disabled={!config.modulo_disponivel}
           />
         </div>
 
@@ -158,7 +190,7 @@ const MoloniConfig = ({ motorista_id, isOwnProfile }) => {
                 value={config.client_id}
                 onChange={(e) => setConfig({...config, client_id: e.target.value})}
                 placeholder="Ex: abc123..."
-                disabled={!config.ativo}
+                disabled={!config.ativo || !config.modulo_disponivel}
               />
             </div>
 
@@ -170,7 +202,7 @@ const MoloniConfig = ({ motorista_id, isOwnProfile }) => {
                 value={config.client_secret}
                 onChange={(e) => setConfig({...config, client_secret: e.target.value})}
                 placeholder={config.client_secret_masked || "Ex: xyz789..."}
-                disabled={!config.ativo}
+                disabled={!config.ativo || !config.modulo_disponivel}
               />
               {config.client_secret_masked && (
                 <p className="text-xs text-slate-500 mt-1">
@@ -187,7 +219,7 @@ const MoloniConfig = ({ motorista_id, isOwnProfile }) => {
                 value={config.username}
                 onChange={(e) => setConfig({...config, username: e.target.value})}
                 placeholder="Seu username Moloni"
-                disabled={!config.ativo}
+                disabled={!config.ativo || !config.modulo_disponivel}
               />
             </div>
 
@@ -199,7 +231,7 @@ const MoloniConfig = ({ motorista_id, isOwnProfile }) => {
                 value={config.password}
                 onChange={(e) => setConfig({...config, password: e.target.value})}
                 placeholder="Sua senha Moloni"
-                disabled={!config.ativo}
+                disabled={!config.ativo || !config.modulo_disponivel}
               />
             </div>
 
@@ -211,7 +243,7 @@ const MoloniConfig = ({ motorista_id, isOwnProfile }) => {
                 value={config.company_id}
                 onChange={(e) => setConfig({...config, company_id: e.target.value})}
                 placeholder="ID da empresa no Moloni"
-                disabled={!config.ativo}
+                disabled={!config.ativo || !config.modulo_disponivel}
               />
               <p className="text-xs text-slate-500 mt-1">
                 Encontre o Company ID no painel Moloni em Configurações &gt; API
@@ -249,7 +281,7 @@ const MoloniConfig = ({ motorista_id, isOwnProfile }) => {
         <div className="flex items-center space-x-3 pt-4">
           <Button 
             onClick={handleSave} 
-            disabled={saving || !config.ativo}
+            disabled={saving || !config.ativo || !config.modulo_disponivel}
             className="flex-1"
           >
             {saving ? (
@@ -265,7 +297,7 @@ const MoloniConfig = ({ motorista_id, isOwnProfile }) => {
           <Button 
             onClick={handleTest} 
             variant="outline"
-            disabled={testing || !config.ativo || !config.client_id}
+            disabled={testing || !config.ativo || !config.client_id || !config.modulo_disponivel}
           >
             {testing ? (
               <>
