@@ -53,7 +53,15 @@ const Layout = ({ user, onLogout, children }) => {
     // For parceiro role: Replace dashboard with reports, add payments with financeiro submenu
     if (user.role === 'parceiro') {
       return [
-        { path: '/relatorios', icon: FileText, label: 'Relatórios' },
+        { 
+          label: 'Relatórios', 
+          icon: FileText,
+          submenu: [
+            { path: '/criar-relatorio-semanal', label: 'Criar Relatório' },
+            { path: '/sincronizacao-auto', label: 'Sync Auto' },
+            { path: '/upload-csv', label: 'Upload CSV' }
+          ]
+        },
         { path: '/vehicles', icon: Car, label: 'Veículos' },
         { path: '/motoristas', icon: Users, label: 'Motoristas' },
         { 
@@ -64,8 +72,7 @@ const Layout = ({ user, onLogout, children }) => {
             { path: '/verificar-recibos', label: 'Verificar Recibos' }
           ]
         },
-        { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' },
-        { path: '/criar-relatorio-semanal', icon: TrendingUp, label: 'Criar Relatório' }
+        { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' }
       ];
     }
 
