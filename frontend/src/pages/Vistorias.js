@@ -320,19 +320,72 @@ const Vistorias = ({ user, onLogout }) => {
       return;
     }
 
+    // Confirmação antes de fechar vistoria
+    if (status === 'fechada') {
+      const confirmar = window.confirm('Tem certeza que deseja finalizar esta vistoria? Após finalizada não poderá ser editada.');
+      if (!confirmar) return;
+    }
+
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
       
+      // Criar vistoria com status
+      const vistoriaData = {
+        ...vistoriaForm,
+        status: status
+      };
+      
       const response = await axios.post(
         `${API}/vehicles/${vistoriaForm.veiculo_id}/vistorias`,
-        vistoriaForm,
+        vistoriaData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      toast.success('Vistoria criada com sucesso!');
+      const vistoriaId = response.data.vistoria_id;
+
+      // Upload de fotos se houver
+      if (fotosVistoria.length > 0) {
+        for (const foto of fotosVistoria) {
+          const formData = new FormData();
+          formData.append('file', foto.file);
+
+          await axios.post(
+            `${API}/vehicles/${vistoriaForm.veiculo_id}/vistorias/${vistoriaId}/upload-foto`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+              }
+            }
+          );
+        }
+      }
+
+      // Se veio de uma vistoria agendada, remover da agenda
+      if (agendaIdAtual) {
+        try {
+          await axios.delete(
+            `${API}/vehicles/${vistoriaForm.veiculo_id}/agenda/${agendaIdAtual}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+        } catch (err) {
+          console.error('Erro ao remover agenda:', err);
+        }
+      }
+
+      const mensagem = status === 'fechada' 
+        ? 'Vistoria finalizada com sucesso!' 
+        : 'Vistoria guardada como rascunho!';
+      
+      toast.success(mensagem);
       setShowCreateDialog(false);
-      aplicarFiltros(); // Recarregar todas as vistorias
+      
+      // Recarregar dados
+      await fetchVehicles();
+      await fetchVistoriasAgendadas();
+      aplicarFiltros();
       
       // Reset form
       setVistoriaForm({
