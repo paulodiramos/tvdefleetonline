@@ -491,7 +491,6 @@ const Configuracoes = ({ user, onLogout }) => {
 
         {/* Content */}
         <div>
-          {activeTab === 'planos' && renderPlanos()}
           {activeTab === 'email' && renderEmailConfig()}
           {activeTab === 'outras' && renderOutrasConfiguracoes()}
         </div>
