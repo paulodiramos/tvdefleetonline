@@ -5503,6 +5503,22 @@ async def create_parceiro(parceiro_data: ParceiroCreate, current_user: Dict = De
     if current_user["role"] == UserRole.GESTAO:
         parceiro_dict["gestor_associado_id"] = current_user["id"]
     
+    # Assign base free plan for parceiro
+    plano_base = await db.planos_sistema.find_one({
+        "preco_mensal": 0, 
+        "ativo": True, 
+        "tipo_usuario": "parceiro"
+    }, {"_id": 0})
+    
+    if plano_base:
+        from datetime import timedelta
+        plano_valida_ate = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+        parceiro_dict["plano_id"] = plano_base["id"]
+        parceiro_dict["plano_nome"] = plano_base["nome"]
+        parceiro_dict["plano_valida_ate"] = plano_valida_ate
+        parceiro_dict["plano_status"] = "ativo"
+        logger.info(f"Assigned base plan {plano_base['id']} to new parceiro")
+    
     await db.parceiros.insert_one(parceiro_dict)
     
     # Create user account for parceiro
