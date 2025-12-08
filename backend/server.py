@@ -9637,12 +9637,41 @@ async def atribuir_plano_manual(
     # Update user subscription_id
     await db.users.update_one(
         {"id": user_id},
-        {"$set": {"subscription_id": subscription_dict["id"]}}
+        {"$set": {
+            "subscription_id": subscription_dict["id"],
+            "plano_id": plano_id,
+            "plano_nome": plano["nome"],
+            "plano_valida_ate": data_expiracao.isoformat()
+        }}
     )
     
+    # Update specific collection based on user type
+    if plano_type == "motorista":
+        await db.motoristas.update_one(
+            {"id": user_id},
+            {"$set": {
+                "plano_id": plano_id,
+                "plano_nome": plano["nome"],
+                "plano_valida_ate": data_expiracao.isoformat()
+            }}
+        )
+    elif plano_type == "parceiro":
+        await db.parceiros.update_one(
+            {"id": user_id},
+            {"$set": {
+                "plano_id": plano_id,
+                "plano_nome": plano["nome"],
+                "plano_valida_ate": data_expiracao.isoformat(),
+                "plano_status": "ativo"
+            }}
+        )
+    
+    logger.info(f"Admin {current_user['id']} atribuiu plano {plano['nome']} ao user {user_id}")
+    
     return {
-        "message": f"Plan assigned successfully for {duracao_dias} days",
-        "subscription_id": subscription_dict["id"]
+        "message": f"Plano atribuído com sucesso por {duracao_dias} dias",
+        "subscription_id": subscription_dict["id"],
+        "plano_nome": plano["nome"]
     }
 
 @api_router.post("/webhooks/ifthen_pay-callback")
