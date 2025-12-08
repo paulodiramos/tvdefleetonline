@@ -117,21 +117,6 @@ const Layout = ({ user, onLogout, children }) => {
       });
     }
 
-    // Add Criar Relatório Semanal for admin and gestao
-    if (user.role === 'admin' || user.role === 'gestao') {
-      items.push({ path: '/criar-relatorio-semanal', icon: TrendingUp, label: 'Criar Relatório' });
-    }
-
-    // Add Sincronização Auto apenas para admin
-    if (user.role === 'admin') {
-      items.push({ path: '/sincronizacao-auto', icon: Zap, label: 'Sync Auto' });
-    }
-
-    // Add Upload CSV for admin and gestao
-    if (user.role === 'admin' || user.role === 'gestao') {
-      items.push({ path: '/upload-csv', icon: Upload, label: 'Upload CSV' });
-    }
-
     return items;
   };
 
