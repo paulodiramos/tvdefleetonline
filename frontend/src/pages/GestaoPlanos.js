@@ -135,14 +135,14 @@ const GestaoPlanos = ({ user, onLogout }) => {
       
       if (editingPlano) {
         await axios.put(
-          `${API}/api/planos/${editingPlano.id}`,
+          `${API}/planos/${editingPlano.id}`,
           planoForm,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         toast.success('Plano atualizado com sucesso');
       } else {
         await axios.post(
-          `${API}/api/planos`,
+          `${API}/planos`,
           planoForm,
           { headers: { Authorization: `Bearer ${token}` } }
         );
