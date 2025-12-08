@@ -247,7 +247,7 @@ const Layout = ({ user, onLogout, children }) => {
                           <span>Perfil</span>
                         </Link>
                       </DropdownMenuItem>
-                      {(user.role === 'parceiro' || user.role === 'operacional') && (
+                      {user.role === 'parceiro' && (
                         <DropdownMenuItem asChild>
                           <Link to="/meus-planos" className="flex items-center space-x-2 cursor-pointer">
                             <Package className="w-4 h-4" />
