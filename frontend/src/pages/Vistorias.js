@@ -17,12 +17,21 @@ import {
 
 const Vistorias = ({ user, onLogout }) => {
   const [vehicles, setVehicles] = useState([]);
+  const [parceiros, setParceiros] = useState([]);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [vistorias, setVistorias] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [selectedVistoria, setSelectedVistoria] = useState(null);
+  
+  // Filtros
+  const [filtros, setFiltros] = useState({
+    parceiro_id: 'todos',
+    estado: 'todas', // 'todas', 'realizadas', 'por_realizar'
+    data_inicio: '',
+    data_fim: ''
+  });
   
   const [vistoriaForm, setVistoriaForm] = useState({
     data_vistoria: new Date().toISOString().split('T')[0],
