@@ -38,6 +38,7 @@ import FichaVeiculo from "@/pages/FichaVeiculo";
 import Usuarios from "@/pages/Usuarios";
 import PublicHome from "@/pages/PublicHome";
 import RegistoMotorista from "@/pages/RegistoMotorista";
+import MudarSenhaObrigatorioModal from "@/components/MudarSenhaObrigatorioModal";
 import RegistoParceiro from "@/pages/RegistoParceiro";
 import VeiculosPublico from "@/pages/VeiculosPublico";
 import ServicosPublico from "@/pages/ServicosPublico";
