@@ -2373,7 +2373,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                           <div className="flex items-center justify-between p-3 bg-white rounded border border-amber-200">
                             <div>
                               <Label htmlFor="verificacao_danos">Verificação de Danos</Label>
-                              <p className="text-xs text-slate-500">Ativar verificação de danos pelo gestor/operacional</p>
+                              <p className="text-xs text-slate-500">Ativar verificação de danos pelo gestor</p>
                             </div>
                             <Switch
                               id="verificacao_danos"
