@@ -650,7 +650,35 @@ const Vistorias = ({ user, onLogout }) => {
                   </div>
                 )}
 
+                {selectedVistoria.fotos && selectedVistoria.fotos.length > 0 && (
+                  <div>
+                    <p className="text-slate-600 font-semibold mb-2">
+                      Fotos ({selectedVistoria.fotos.length}):
+                    </p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {selectedVistoria.fotos.map((foto, idx) => (
+                        <img
+                          key={idx}
+                          src={foto}
+                          alt={`Vistoria foto ${idx + 1}`}
+                          className="w-full h-24 object-cover rounded border border-slate-200 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => window.open(foto, '_blank')}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="flex space-x-2 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleUploadPhoto(selectedVistoria.id)}
+                    disabled={uploadingPhoto}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Adicionar Fotos
+                  </Button>
+                  
                   {selectedVistoria.pdf_relatorio ? (
                     <Button
                       onClick={() => window.open(selectedVistoria.pdf_relatorio, '_blank')}
