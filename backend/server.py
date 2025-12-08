@@ -9252,25 +9252,43 @@ async def delete_plano_sistema(plano_id: str, current_user: Dict = Depends(get_c
     if current_user["role"] != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Admin only")
     
-    # Verificar se plano está em uso
+    # Contar quantos utilizadores têm este plano
     motoristas_com_plano = await db.motoristas.count_documents({"plano_id": plano_id})
     parceiros_com_plano = await db.parceiros.count_documents({"plano_id": plano_id})
+    users_com_plano = await db.users.count_documents({"plano_id": plano_id})
     
-    if motoristas_com_plano > 0 or parceiros_com_plano > 0:
-        return {
-            "message": "Plano não pode ser eliminado pois está em uso",
-            "em_uso": True,
-            "motoristas": motoristas_com_plano,
-            "parceiros": parceiros_com_plano
-        }
+    # Remover o plano de todos os utilizadores antes de eliminar
+    if motoristas_com_plano > 0:
+        await db.motoristas.update_many(
+            {"plano_id": plano_id},
+            {"$unset": {"plano_id": ""}}
+        )
     
+    if parceiros_com_plano > 0:
+        await db.parceiros.update_many(
+            {"plano_id": plano_id},
+            {"$unset": {"plano_id": ""}}
+        )
+    
+    if users_com_plano > 0:
+        await db.users.update_many(
+            {"plano_id": plano_id},
+            {"$unset": {"plano_id": ""}}
+        )
+    
+    # Eliminar o plano permanentemente
     result = await db.planos_sistema.delete_one({"id": plano_id})
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Plano não encontrado")
     
-    logger.info(f"Admin {current_user['id']} eliminou plano {plano_id}")
-    return {"message": "Plano eliminado com sucesso"}
+    total_affected = motoristas_com_plano + parceiros_com_plano + users_com_plano
+    logger.info(f"Admin {current_user['id']} eliminou plano {plano_id} e removeu de {total_affected} utilizadores")
+    
+    return {
+        "message": "Plano eliminado com sucesso",
+        "utilizadores_afetados": total_affected
+    }
 
 
 @api_router.get("/planos-parceiro")
