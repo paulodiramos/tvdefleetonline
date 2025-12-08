@@ -50,6 +50,10 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
 
   useEffect(() => {
     fetchParceiros();
+    // Se for parceiro, buscar dados do dashboard
+    if (user.role === 'parceiro') {
+      fetchDashboardStats();
+    }
   }, []);
 
   useEffect(() => {
