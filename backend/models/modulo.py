@@ -48,154 +48,163 @@ class PlanoUsuario(BaseModel):
 
 # Módulos disponíveis no sistema
 MODULOS_SISTEMA = {
-    "upload_csv_ganhos": {
-        "nome": "Upload CSV Ganhos",
-        "descricao": "Importar ganhos Uber e Bolt via CSV",
-        "ordem": 1
-    },
-    "combustivel_manual": {
-        "nome": "Combustível Manual",
-        "descricao": "Registro manual de despesas de combustível",
-        "ordem": 2
-    },
-    "viaverde_manual": {
-        "nome": "Via Verde Manual",
-        "descricao": "Registro manual de despesas Via Verde",
-        "ordem": 3
-    },
-    "upload_csv_km": {
-        "nome": "Upload CSV KM",
-        "descricao": "Importar quilometragem via CSV",
-        "ordem": 4
-    },
+    # ============ MÓDULOS PARA PARCEIROS ============
     "gestao_veiculos": {
         "nome": "Gestão de Veículos",
         "descricao": "Gerenciamento completo de veículos",
-        "ordem": 5
-    },
-    "gestao_manutencoes": {
-        "nome": "Gestão de Manutenções",
-        "descricao": "Controle de manutenções e revisões",
-        "ordem": 6
-    },
-    "gestao_seguros": {
-        "nome": "Gestão de Seguros",
-        "descricao": "Gerenciamento de apólices e sinistros",
-        "ordem": 7
-    },
-    "integracoes_fornecedores": {
-        "nome": "Integrações Fornecedores",
-        "descricao": "Integração com fornecedores externos",
-        "ordem": 8
-    },
-    "relatorios": {
-        "nome": "Relatórios",
-        "descricao": "Relatórios e análises detalhadas",
-        "ordem": 9
-    },
-    "gestao_contas": {
-        "nome": "Gestão de Contas",
-        "descricao": "Gerenciamento de contas e usuários",
-        "ordem": 10
-    },
-    "gestao_manutencao": {
-        "nome": "Gestão de Manutenção",
-        "descricao": "Sistema avançado de manutenção",
-        "ordem": 11
-    },
-    "financeiro": {
-        "nome": "Financeiro",
-        "descricao": "Módulo financeiro completo",
-        "ordem": 12
-    },
-    "upload_csv": {
-        "nome": "Upload CSV",
-        "descricao": "Upload genérico de arquivos CSV",
-        "ordem": 13
+        "tipo_usuario": "parceiro",
+        "ordem": 1
     },
     "gestao_motoristas": {
         "nome": "Gestão de Motoristas",
         "descricao": "Gerenciamento completo de motoristas",
-        "ordem": 14
-    },
-    "gestao_pagamentos": {
-        "nome": "Gestão de Pagamentos",
-        "descricao": "Sistema de pagamentos e recibos",
-        "ordem": 15
+        "tipo_usuario": "parceiro",
+        "ordem": 2
     },
     "gestao_eventos_veiculo": {
         "nome": "Gestão de Eventos de Veículos",
         "descricao": "Editar e gerir eventos na agenda do veículo",
-        "ordem": 16
+        "tipo_usuario": "parceiro",
+        "ordem": 3
     },
     "vistorias_veiculos": {
         "nome": "Vistorias de Veículos",
         "descricao": "Sistema completo de vistorias e inspeções",
-        "ordem": 17
+        "tipo_usuario": "parceiro",
+        "ordem": 4
+    },
+    "gestao_manutencoes": {
+        "nome": "Gestão de Manutenções",
+        "descricao": "Controle de manutenções e revisões",
+        "tipo_usuario": "parceiro",
+        "ordem": 5
+    },
+    "gestao_seguros": {
+        "nome": "Gestão de Seguros",
+        "descricao": "Gerenciamento de apólices e sinistros",
+        "tipo_usuario": "parceiro",
+        "ordem": 6
+    },
+    "gestao_pagamentos": {
+        "nome": "Gestão de Pagamentos",
+        "descricao": "Sistema de pagamentos e recibos a motoristas",
+        "tipo_usuario": "parceiro",
+        "ordem": 7
     },
     "importar_csv": {
         "nome": "Importar CSV",
         "descricao": "Importação de dados via CSV (ganhos, KM, etc.)",
-        "ordem": 18
+        "tipo_usuario": "parceiro",
+        "ordem": 8
     },
     "sincronizacao_automatica": {
         "nome": "Sincronização Automática",
         "descricao": "Sincronização automática com plataformas (Uber/Bolt)",
-        "ordem": 19
+        "tipo_usuario": "parceiro",
+        "ordem": 9
+    },
+    "relatorios": {
+        "nome": "Relatórios Avançados",
+        "descricao": "Relatórios e análises detalhadas da frota",
+        "tipo_usuario": "parceiro",
+        "ordem": 10
+    },
+    "financeiro": {
+        "nome": "Módulo Financeiro",
+        "descricao": "Gestão financeira completa",
+        "tipo_usuario": "parceiro",
+        "ordem": 11
     },
     "envio_email": {
         "nome": "Envio de Email",
         "descricao": "Módulo de envio de emails e notificações",
-        "ordem": 20
+        "tipo_usuario": "parceiro",
+        "ordem": 12
     },
     "envio_whatsapp": {
         "nome": "Envio de WhatsApp",
         "descricao": "Envio de mensagens via WhatsApp",
-        "ordem": 21
+        "tipo_usuario": "parceiro",
+        "ordem": 13
     },
     "avisos_documentos": {
         "nome": "Avisos de Documentos",
         "descricao": "Alertas automáticos de documentos fora de prazo",
-        "ordem": 22
+        "tipo_usuario": "parceiro",
+        "ordem": 14
     },
     "avisos_revisoes": {
         "nome": "Avisos de Revisões",
         "descricao": "Alertas de veículos próximos da revisão",
-        "ordem": 23
+        "tipo_usuario": "parceiro",
+        "ordem": 15
     },
+    "gestao_contratos": {
+        "nome": "Gestão de Contratos",
+        "descricao": "Criar e gerir contratos com motoristas",
+        "tipo_usuario": "parceiro",
+        "ordem": 16
+    },
+    "integracao_moloni": {
+        "nome": "Integração Moloni",
+        "descricao": "Faturação automática com Moloni",
+        "tipo_usuario": "parceiro",
+        "ordem": 17
+    },
+    
+    # ============ MÓDULOS PARA MOTORISTAS ============
     "dashboard_ganhos": {
         "nome": "Dashboard de Ganhos",
-        "descricao": "Visualização detalhada de ganhos e estatísticas (Motorista)",
-        "ordem": 24
+        "descricao": "Visualização detalhada de ganhos e estatísticas",
+        "tipo_usuario": "motorista",
+        "ordem": 1
     },
     "gestao_documentos_pessoais": {
         "nome": "Gestão de Documentos Pessoais",
-        "descricao": "Upload e gestão de documentos pessoais (Motorista)",
-        "ordem": 25
+        "descricao": "Upload e gestão de documentos pessoais",
+        "tipo_usuario": "motorista",
+        "ordem": 2
     },
     "envio_recibos": {
         "nome": "Envio de Recibos",
-        "descricao": "Enviar recibos de ganhos para aprovação (Motorista)",
-        "ordem": 26
+        "descricao": "Enviar recibos de ganhos para aprovação",
+        "tipo_usuario": "motorista",
+        "ordem": 3
     },
     "relatorios_performance": {
         "nome": "Relatórios de Performance",
-        "descricao": "Relatórios detalhados de performance e produtividade (Motorista)",
-        "ordem": 27
+        "descricao": "Relatórios detalhados de performance e produtividade",
+        "tipo_usuario": "motorista",
+        "ordem": 4
     },
     "alertas_personalizados": {
         "nome": "Alertas Personalizados",
-        "descricao": "Sistema de alertas customizados (Motorista)",
-        "ordem": 28
+        "descricao": "Sistema de alertas customizados",
+        "tipo_usuario": "motorista",
+        "ordem": 5
     },
     "historico_financeiro": {
         "nome": "Histórico Financeiro",
-        "descricao": "Acesso completo ao histórico financeiro (Motorista)",
-        "ordem": 29
+        "descricao": "Acesso completo ao histórico financeiro",
+        "tipo_usuario": "motorista",
+        "ordem": 6
+    },
+    "oportunidades_veiculo": {
+        "nome": "Oportunidades de Veículo",
+        "descricao": "Visualizar veículos disponíveis para conduzir",
+        "tipo_usuario": "motorista",
+        "ordem": 7
+    },
+    "chat_parceiro": {
+        "nome": "Chat com Parceiro",
+        "descricao": "Comunicação direta com o parceiro",
+        "tipo_usuario": "motorista",
+        "ordem": 8
     },
     "suporte_prioritario": {
         "nome": "Suporte Prioritário",
         "descricao": "Atendimento prioritário e suporte dedicado",
-        "ordem": 30
+        "tipo_usuario": "motorista",
+        "ordem": 9
     }
 }
