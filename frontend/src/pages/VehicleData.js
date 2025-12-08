@@ -72,16 +72,6 @@ const VehicleData = ({ user, onLogout }) => {
         });
         setParceiros(parceirosRes.data);
       }
-      
-      // Operacional vê apenas seus veículos
-      if (user.role === 'operacional') {
-        const vehiclesRes = await axios.get(`${API}/vehicles`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        // Filtrar apenas veículos do operacional
-        const myVehicles = vehiclesRes.data.filter(v => v.parceiro_id === user.id);
-        setVehicles(myVehicles);
-      }
     } catch (error) {
       console.error('Error fetching data', error);
     } finally {
