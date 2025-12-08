@@ -209,7 +209,6 @@ const Configuracoes = ({ user, onLogout }) => {
                   className="w-full p-2 border rounded-md"
                 >
                   <option value="parceiro">Parceiro (cobrança por veículo)</option>
-                  <option value="operacional">Operacional (cobrança por motorista)</option>
                 </select>
               </div>
 
