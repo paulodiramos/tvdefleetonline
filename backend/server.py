@@ -8271,7 +8271,33 @@ async def atribuir_plano_parceiro(
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Parceiro not found")
     
-    return {"message": "Plan assigned successfully", "plano_id": plano_id}
+    # Criar/atualizar registro em planos_usuarios para controle de módulos
+    now = datetime.now(timezone.utc)
+    atribuicao_id = str(uuid.uuid4())
+    
+    # Remover atribuição anterior se existir
+    await db.planos_usuarios.delete_many({"user_id": parceiro_id})
+    
+    # Criar nova atribuição
+    atribuicao = {
+        "id": atribuicao_id,
+        "user_id": parceiro_id,
+        "plano_id": plano_id,
+        "modulos_ativos": plano.get("modulos", []),
+        "tipo_pagamento": "mensal",
+        "valor_pago": plano.get("valor_mensal", 0),
+        "data_inicio": now,
+        "data_fim": None,  # Sem data de fim por padrão
+        "status": "ativo",
+        "renovacao_automatica": True,
+        "created_at": now,
+        "updated_at": now,
+        "created_by": current_user["id"]
+    }
+    
+    await db.planos_usuarios.insert_one(atribuicao)
+    
+    return {"message": "Plan assigned successfully", "plano_id": plano_id, "atribuicao_id": atribuicao_id}
 
 # ==================== ENDPOINTS DE CONTRATOS ====================
 
