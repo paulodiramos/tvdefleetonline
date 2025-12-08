@@ -375,7 +375,6 @@ const Usuarios = ({ user, onLogout }) => {
     const colors = {
       admin: 'bg-purple-100 text-purple-800',
       gestao: 'bg-blue-100 text-blue-800',
-      operacional: 'bg-green-100 text-green-800',
       parceiro: 'bg-yellow-100 text-yellow-800',
       motorista: 'bg-gray-100 text-gray-800',
     };
@@ -386,7 +385,6 @@ const Usuarios = ({ user, onLogout }) => {
     const labels = {
       admin: 'Admin',
       gestao: 'Gestor',
-      operacional: 'Operacional',
       parceiro: 'Parceiro',
       motorista: 'Motorista',
     };
