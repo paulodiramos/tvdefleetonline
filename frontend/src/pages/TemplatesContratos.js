@@ -267,8 +267,13 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
           </CardContent>
         </Card>
       </div>
-    </Layout>
   );
+
+  return showLayout ? (
+    <Layout user={user} onLogout={onLogout}>
+      {content}
+    </Layout>
+  ) : content;
 };
 
 export default TemplatesContratos;
