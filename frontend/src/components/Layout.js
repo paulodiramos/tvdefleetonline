@@ -1,13 +1,16 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Truck, LayoutDashboard, Car, Users, DollarSign, LogOut, Menu, X, Building, UserCircle, FileText, CreditCard, Upload, Settings, Database, Shield, ChevronDown, Zap, TrendingUp, Package, Receipt, MessageSquare, Plug, Bell, ClipboardCheck } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import axios from 'axios';
+import { API } from '@/App';
 import NotificationBell from '@/components/NotificationBell';
 
 const Layout = ({ user, onLogout, children }) => {
