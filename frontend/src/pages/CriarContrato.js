@@ -836,24 +836,36 @@ const CriarContrato = ({ user, onLogout }) => {
                     <CardContent className="space-y-3">
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="perc_motorista">% Motorista *</Label>
+                          <Label htmlFor="perc_motorista">
+                            % Motorista *
+                            {veiculoTemCondicoesPredefinidas && !permitirAlterarCondicoes && (
+                              <span className="text-xs text-amber-600 ml-2">(Pré-definido pelo veículo)</span>
+                            )}
+                          </Label>
                           <Input
                             id="perc_motorista"
                             type="number"
                             step="0.01"
                             value={formData.percentagem_motorista_aplicado}
                             onChange={(e) => setFormData({...formData, percentagem_motorista_aplicado: e.target.value})}
+                            disabled={veiculoTemCondicoesPredefinidas && !permitirAlterarCondicoes}
                             required
                           />
                         </div>
                         <div>
-                          <Label htmlFor="perc_parceiro">% Parceiro *</Label>
+                          <Label htmlFor="perc_parceiro">
+                            % Parceiro *
+                            {veiculoTemCondicoesPredefinidas && !permitirAlterarCondicoes && (
+                              <span className="text-xs text-amber-600 ml-2">(Pré-definido pelo veículo)</span>
+                            )}
+                          </Label>
                           <Input
                             id="perc_parceiro"
                             type="number"
                             step="0.01"
                             value={formData.percentagem_parceiro_aplicado}
                             onChange={(e) => setFormData({...formData, percentagem_parceiro_aplicado: e.target.value})}
+                            disabled={veiculoTemCondicoesPredefinidas && !permitirAlterarCondicoes}
                             required
                           />
                         </div>
