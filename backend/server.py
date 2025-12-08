@@ -7103,11 +7103,41 @@ async def get_vehicle_agenda(
             and item.get("status") != "cancelada"
         ]
         
-        return {
-            "vehicle_id": vehicle_id,
-            "matricula": vehicle.get("matricula"),
-            "agenda": agenda_vistorias
-        }
+        return agenda
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching vehicle agenda: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.delete("/vehicles/{vehicle_id}/agenda/{agenda_id}")
+async def delete_agenda_item(
+    vehicle_id: str,
+    agenda_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Delete an agenda item from vehicle schedule"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    try:
+        vehicle = await db.vehicles.find_one({"id": vehicle_id})
+        if not vehicle:
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+        
+        # Remove agenda item
+        result = await db.vehicles.update_one(
+            {"id": vehicle_id},
+            {"$pull": {"agenda": {"id": agenda_id}}}
+        )
+        
+        if result.modified_count == 0:
+            raise HTTPException(status_code=404, detail="Agenda item not found")
+        
+        logger.info(f"Agenda item {agenda_id} removed from vehicle {vehicle_id}")
+        return {"message": "Agenda item removed successfully", "agenda_id": agenda_id}
         
     except HTTPException:
         raise
