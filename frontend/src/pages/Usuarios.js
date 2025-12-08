@@ -95,22 +95,21 @@ const Usuarios = ({ user, onLogout }) => {
   const fetchPlanos = async () => {
     try {
       const token = localStorage.getItem('token');
-      // Buscar ambos planos de motorista e parceiro
-      const [motoristaPlanosRes, parceiroPlanosRes] = await Promise.all([
-        axios.get(`${API}/planos-motorista`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }),
-        axios.get(`${API}/planos-parceiro`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).catch(() => ({ data: [] })) // Fallback se não existir
-      ]);
+      // Buscar planos do sistema unificado
+      const response = await axios.get(`${API}/api/planos-sistema`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
+      const todosPlanos = response.data || [];
+      
+      // Separar por tipo
       setPlanos({
-        motorista: motoristaPlanosRes.data || [],
-        parceiro: parceiroPlanosRes.data || []
+        motorista: todosPlanos.filter(p => p.tipo_usuario === 'motorista' && p.ativo),
+        parceiro: todosPlanos.filter(p => p.tipo_usuario === 'parceiro' && p.ativo)
       });
     } catch (error) {
       console.error('Error fetching plans:', error);
+      toast.error('Erro ao carregar planos');
     }
   };
 
