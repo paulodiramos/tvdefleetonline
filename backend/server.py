@@ -3431,6 +3431,47 @@ async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_
         }
     }
 
+@api_router.put("/motoristas/{motorista_id}/atribuir-parceiro")
+async def atribuir_motorista_a_parceiro(
+    motorista_id: str,
+    parceiro_data: Dict[str, str],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Admin atribui motorista inscrito a um parceiro"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas Admin pode atribuir motoristas a parceiros")
+    
+    parceiro_id = parceiro_data.get("parceiro_id")
+    if not parceiro_id:
+        raise HTTPException(status_code=400, detail="parceiro_id é obrigatório")
+    
+    # Verificar se parceiro existe
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    # Verificar se motorista existe
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Atribuir motorista ao parceiro
+    result = await db.motoristas.update_one(
+        {"id": motorista_id},
+        {"$set": {
+            "parceiro_atribuido": parceiro_id,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    logger.info(f"Admin {current_user['id']} atribuiu motorista {motorista_id} ao parceiro {parceiro_id}")
+    
+    return {
+        "message": "Motorista atribuído ao parceiro com sucesso",
+        "motorista_id": motorista_id,
+        "parceiro_id": parceiro_id
+    }
+
 @api_router.put("/motoristas/{motorista_id}")
 async def update_motorista(
     motorista_id: str, 
