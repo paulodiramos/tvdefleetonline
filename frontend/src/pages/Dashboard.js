@@ -57,7 +57,19 @@ const Dashboard = ({ user, onLogout }) => {
     fetchStats();
     fetchAlertas();
     fetchProximasDatas();
+    fetchPlanoAtivo();
   }, [filtroData, selectedParceiro]);
+
+  const fetchPlanoAtivo = async () => {
+    // Buscar plano ativo do usuário
+    if (user.plano_id) {
+      setPlanoAtivo({
+        nome: user.plano_nome,
+        plano_id: user.plano_id,
+        valida_ate: user.plano_valida_ate
+      });
+    }
+  };
 
   useEffect(() => {
     // Fetch parceiros if user is admin or gestao
