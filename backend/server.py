@@ -9210,10 +9210,16 @@ async def update_plano_sistema(plano_id: str, plano_data: Dict, current_user: Di
     if current_user["role"] != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Admin only")
     
+    preco_sem_iva = plano_data.get("preco_mensal", 0)
+    taxa_iva = plano_data.get("taxa_iva", 23)
+    preco_com_iva = preco_sem_iva * (1 + taxa_iva / 100)
+    
     update_data = {
         "nome": plano_data["nome"],
         "descricao": plano_data.get("descricao", ""),
-        "preco_mensal": plano_data.get("preco_mensal", 0),
+        "preco_mensal": preco_sem_iva,
+        "preco_mensal_com_iva": round(preco_com_iva, 2),
+        "taxa_iva": taxa_iva,
         "tipo_usuario": plano_data["tipo_usuario"],
         "modulos": plano_data.get("modulos", []),
         "ativo": plano_data.get("ativo", True),
