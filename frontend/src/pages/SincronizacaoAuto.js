@@ -334,7 +334,9 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
                       <span className="text-green-600 text-lg">€</span>
                     </div>
                   </div>
-                  <p className="text-2xl font-bold text-slate-800">€0.00</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    €{dashboardStats.ganhos.toFixed(2)}
+                  </p>
                   <p className="text-xs text-slate-500 mt-1">Esta semana</p>
                 </div>
 
@@ -346,7 +348,9 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
                       <span className="text-red-600 text-lg">€</span>
                     </div>
                   </div>
-                  <p className="text-2xl font-bold text-slate-800">€0.00</p>
+                  <p className="text-2xl font-bold text-slate-800">
+                    €{dashboardStats.despesas.toFixed(2)}
+                  </p>
                   <p className="text-xs text-slate-500 mt-1">Esta semana</p>
                 </div>
 
@@ -358,7 +362,9 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
                       <span className="text-blue-600 text-lg">€</span>
                     </div>
                   </div>
-                  <p className="text-2xl font-bold text-blue-600">€0.00</p>
+                  <p className={`text-2xl font-bold ${dashboardStats.saldo >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                    €{dashboardStats.saldo.toFixed(2)}
+                  </p>
                   <p className="text-xs text-slate-500 mt-1">Esta semana</p>
                 </div>
               </div>
