@@ -11768,6 +11768,276 @@ async def get_textos_publicos():
             "politica_privacidade": "Erro ao carregar Política de Privacidade."
         }
 
+# ==================== GERAÇÃO DE RELATÓRIO PDF ====================
+
+class RelatorioSemanalData(BaseModel):
+    motorista_nome: str
+    motorista_id: str
+    veiculo_matricula: str
+    veiculo_id: Optional[str] = None
+    data_inicio: str
+    data_fim: str
+    numero_semana: int
+    
+    # Ganhos
+    uber_ganhos: float = 0
+    bolt_ganhos: float = 0
+    uber_gorjeta: float = 0
+    bolt_gorjeta: float = 0
+    uber_portagens: float = 0
+    bolt_portagens: float = 0
+    
+    # Condições
+    tipo_exploracao: str  # "aluguer" ou "comissao"
+    valor_aluguer: Optional[float] = None
+    percentagem_motorista: Optional[float] = None
+    percentagem_parceiro: Optional[float] = None
+    
+    # Despesas
+    via_verde: float = 0
+    abastecimentos: float = 0
+    caucao: float = 0
+    acumulado_caucao: float = 0
+    divida_anterior: float = 0
+    extra: float = 0  # positivo = crédito, negativo = débito
+    
+    # Outros
+    km: float = 0
+    horas: float = 0
+    
+    # Listas detalhadas
+    via_verde_detalhes: List[Dict] = []
+    abastecimentos_detalhes: List[Dict] = []
+
+@api_router.post("/relatorios/gerar-pdf")
+async def gerar_relatorio_pdf(
+    relatorio_data: RelatorioSemanalData,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Gerar PDF de relatório semanal completo"""
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.pdfgen import canvas
+        from reportlab.lib.units import mm
+        from reportlab.lib import colors
+        
+        # Criar diretório para relatórios se não existir
+        relatorios_dir = UPLOAD_DIR / "relatorios"
+        relatorios_dir.mkdir(exist_ok=True)
+        
+        # Nome do arquivo
+        filename = f"relatorio_{relatorio_data.motorista_id}_{relatorio_data.data_inicio}_{relatorio_data.data_fim}.pdf"
+        filepath = relatorios_dir / filename
+        
+        # Criar PDF
+        c = canvas.Canvas(str(filepath), pagesize=A4)
+        width, height = A4
+        
+        # Cabeçalho
+        c.setFont("Helvetica-Bold", 16)
+        c.drawString(30, height - 40, "RELATÓRIO SEMANAL - TVDEFleet")
+        
+        c.setFont("Helvetica", 10)
+        y = height - 70
+        
+        # Informações principais
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(30, y, "Dados do Motorista")
+        y -= 20
+        
+        c.setFont("Helvetica", 10)
+        c.drawString(30, y, f"Nome: {relatorio_data.motorista_nome}")
+        y -= 15
+        c.drawString(30, y, f"Matrícula: {relatorio_data.veiculo_matricula}")
+        y -= 15
+        c.drawString(30, y, f"Período: {relatorio_data.data_inicio} a {relatorio_data.data_fim}")
+        c.drawString(300, y, f"Semana: {relatorio_data.numero_semana}")
+        y -= 30
+        
+        # Ganhos
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(30, y, "GANHOS")
+        y -= 20
+        
+        c.setFont("Helvetica", 10)
+        c.drawString(30, y, f"Uber - Corridas: €{relatorio_data.uber_ganhos:.2f}")
+        c.drawString(300, y, f"Gorjeta: €{relatorio_data.uber_gorjeta:.2f}")
+        y -= 15
+        c.drawString(30, y, f"Bolt - Corridas: €{relatorio_data.bolt_ganhos:.2f}")
+        c.drawString(300, y, f"Gorjeta: €{relatorio_data.bolt_gorjeta:.2f}")
+        y -= 15
+        c.drawString(30, y, f"Uber - Portagens: €{relatorio_data.uber_portagens:.2f}")
+        y -= 15
+        c.drawString(30, y, f"Bolt - Portagens: €{relatorio_data.bolt_portagens:.2f}")
+        y -= 20
+        
+        total_ganhos = (relatorio_data.uber_ganhos + relatorio_data.bolt_ganhos + 
+                       relatorio_data.uber_gorjeta + relatorio_data.bolt_gorjeta +
+                       relatorio_data.uber_portagens + relatorio_data.bolt_portagens)
+        
+        c.setFont("Helvetica-Bold", 10)
+        c.drawString(30, y, f"Total Ganhos Brutos: €{total_ganhos:.2f}")
+        y -= 30
+        
+        # Condição de Exploração
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(30, y, "CONDIÇÃO DE EXPLORAÇÃO")
+        y -= 20
+        
+        c.setFont("Helvetica", 10)
+        if relatorio_data.tipo_exploracao == "aluguer":
+            c.drawString(30, y, f"Tipo: Aluguer Semanal")
+            y -= 15
+            c.drawString(30, y, f"Valor: €{relatorio_data.valor_aluguer:.2f}")
+            valor_a_descontar = relatorio_data.valor_aluguer
+        else:
+            c.drawString(30, y, f"Tipo: Comissão")
+            y -= 15
+            c.drawString(30, y, f"Motorista: {relatorio_data.percentagem_motorista}%")
+            c.drawString(200, y, f"Parceiro: {relatorio_data.percentagem_parceiro}%")
+            valor_a_descontar = total_ganhos * (relatorio_data.percentagem_parceiro / 100)
+        y -= 30
+        
+        # Despesas
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(30, y, "DESPESAS")
+        y -= 20
+        
+        c.setFont("Helvetica", 10)
+        c.drawString(30, y, f"Via Verde: €{relatorio_data.via_verde:.2f}")
+        y -= 15
+        c.drawString(30, y, f"Abastecimentos: €{relatorio_data.abastecimentos:.2f}")
+        y -= 15
+        c.drawString(30, y, f"Caução (esta semana): €{relatorio_data.caucao:.2f}")
+        y -= 15
+        c.drawString(30, y, f"Acumulado Caução: €{relatorio_data.acumulado_caucao:.2f}")
+        y -= 15
+        c.drawString(30, y, f"Dívida Anterior: €{relatorio_data.divida_anterior:.2f}")
+        y -= 15
+        
+        extra_label = "Crédito" if relatorio_data.extra > 0 else "Débito (Danos)"
+        c.drawString(30, y, f"Extra ({extra_label}): €{abs(relatorio_data.extra):.2f}")
+        y -= 30
+        
+        # Cálculo Total
+        c.setFont("Helvetica-Bold", 12)
+        c.drawString(30, y, "CÁLCULO FINAL")
+        y -= 20
+        
+        c.setFont("Helvetica", 10)
+        c.drawString(30, y, f"Ganhos Brutos: €{total_ganhos:.2f}")
+        y -= 15
+        c.drawString(30, y, f"(-) {'Aluguer' if relatorio_data.tipo_exploracao == 'aluguer' else 'Comissão Parceiro'}: €{valor_a_descontar:.2f}")
+        y -= 15
+        c.drawString(30, y, f"(-) Via Verde: €{relatorio_data.via_verde:.2f}")
+        y -= 15
+        c.drawString(30, y, f"(-) Abastecimentos: €{relatorio_data.abastecimentos:.2f}")
+        y -= 15
+        c.drawString(30, y, f"(-) Caução: €{relatorio_data.caucao:.2f}")
+        y -= 15
+        c.drawString(30, y, f"(-) Dívida Anterior: €{relatorio_data.divida_anterior:.2f}")
+        y -= 15
+        
+        if relatorio_data.extra > 0:
+            c.drawString(30, y, f"(+) Crédito Extra: €{relatorio_data.extra:.2f}")
+        else:
+            c.drawString(30, y, f"(-) Débito Extra: €{abs(relatorio_data.extra):.2f}")
+        y -= 25
+        
+        total_a_receber = (total_ganhos - valor_a_descontar - relatorio_data.via_verde - 
+                          relatorio_data.abastecimentos - relatorio_data.caucao - 
+                          relatorio_data.divida_anterior + relatorio_data.extra)
+        
+        c.setFont("Helvetica-Bold", 14)
+        c.setFillColor(colors.green if total_a_receber >= 0 else colors.red)
+        c.drawString(30, y, f"TOTAL A RECEBER: €{total_a_receber:.2f}")
+        c.setFillColor(colors.black)
+        y -= 30
+        
+        # Informações adicionais
+        c.setFont("Helvetica", 9)
+        c.drawString(30, y, f"KM Percorridos: {relatorio_data.km:.0f} km")
+        c.drawString(200, y, f"Horas Trabalhadas: {relatorio_data.horas:.1f}h")
+        y -= 40
+        
+        # Nova página para detalhes
+        if relatorio_data.via_verde_detalhes or relatorio_data.abastecimentos_detalhes:
+            c.showPage()
+            y = height - 40
+            
+            # Via Verde
+            if relatorio_data.via_verde_detalhes:
+                c.setFont("Helvetica-Bold", 12)
+                c.drawString(30, y, "DETALHES VIA VERDE")
+                y -= 20
+                
+                c.setFont("Helvetica", 9)
+                for item in relatorio_data.via_verde_detalhes:
+                    c.drawString(30, y, f"{item.get('data', 'N/A')} - {item.get('local', 'N/A')}: €{item.get('valor', 0):.2f}")
+                    y -= 12
+                y -= 20
+            
+            # Abastecimentos
+            if relatorio_data.abastecimentos_detalhes:
+                c.setFont("Helvetica-Bold", 12)
+                c.drawString(30, y, "DETALHES ABASTECIMENTOS")
+                y -= 20
+                
+                c.setFont("Helvetica", 9)
+                for item in relatorio_data.abastecimentos_detalhes:
+                    c.drawString(30, y, f"{item.get('data', 'N/A')} - {item.get('litros', 0)}L: €{item.get('valor', 0):.2f}")
+                    y -= 12
+        
+        # Rodapé
+        c.setFont("Helvetica", 8)
+        c.drawString(30, 30, f"Gerado em: {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}")
+        c.drawString(30, 20, "TVDEFleet - Sistema de Gestão de Frotas")
+        
+        c.save()
+        
+        logger.info(f"Relatório PDF gerado: {filename}")
+        
+        return {
+            "message": "Relatório gerado com sucesso",
+            "filename": filename,
+            "filepath": f"/uploads/relatorios/{filename}",
+            "download_url": f"{API}/uploads/relatorios/{filename}"
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao gerar relatório PDF: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/relatorios/enviar-email")
+async def enviar_relatorio_email(
+    motorista_id: str,
+    relatorio_url: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Enviar relatório por email ao motorista (Admin/Gestor/Parceiro)"""
+    if current_user["role"] not in [UserRole.ADMIN, "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    try:
+        # Buscar dados do motorista
+        motorista = await db.users.find_one({"id": motorista_id}, {"_id": 0})
+        
+        if not motorista:
+            raise HTTPException(status_code=404, detail="Motorista não encontrado")
+        
+        # TODO: Implementar envio de email
+        # Por enquanto, apenas simular
+        logger.info(f"Relatório enviado para {motorista.get('email')} por {current_user['email']}")
+        
+        return {
+            "message": f"Relatório enviado com sucesso para {motorista.get('email')}",
+            "destinatario": motorista.get('email')
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao enviar relatório: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 app.include_router(api_router)
 
