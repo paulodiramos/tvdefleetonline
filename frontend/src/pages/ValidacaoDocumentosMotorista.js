@@ -317,7 +317,7 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
               Voltar
             </Button>
             {/* Apenas Admin, Gestor e Operacional podem aprovar documentos */}
-            {(user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional') && (
+            {(user.role === 'admin' || user.role === 'gestao') && (
               <Button
                 onClick={handleAprovarTodosDocumentos}
                 disabled={processingApproval || motorista.documentos_aprovados}
@@ -838,7 +838,7 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
                         </Button>
                         
                         {/* Segunda linha: Ações admin/gestor/operacional */}
-                        {(user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional') && (
+                        {(user.role === 'admin' || user.role === 'gestao') && (
                           <div className="flex space-x-2">
                             {!isValidado ? (
                               <>

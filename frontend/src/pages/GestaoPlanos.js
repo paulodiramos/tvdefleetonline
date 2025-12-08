@@ -28,7 +28,7 @@ const FEATURES_DISPONIVEIS = [
 const PERFIS_DISPONIVEIS = [
   { id: 'admin', nome: 'Admin' },
   { id: 'parceiro', nome: 'Parceiro' },
-  { id: 'operacional', nome: 'Operacional' },
+  
   { id: 'gestao', nome: 'Gestor' }
 ];
 

@@ -266,7 +266,7 @@ const Vehicles = ({ user, onLogout }) => {
             <h1 className="text-4xl font-bold text-slate-800 mb-2">Veículos</h1>
             <p className="text-slate-600">Gerir frota de veículos</p>
           </div>
-          {(user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro' || user.role === 'operacional') && (
+          {(user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') && (
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
               <DialogTrigger asChild>
                 <Button className="bg-emerald-600 hover:bg-emerald-700" data-testid="add-vehicle-button">
@@ -657,7 +657,7 @@ const Vehicles = ({ user, onLogout }) => {
                       <FileText className="w-4 h-4 mr-1" />
                       Ver Ficha
                     </Button>
-                    {(user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional') && (
+                    {(user.role === 'admin' || user.role === 'gestao') && (
                       <Button variant="outline" size="sm" className="text-red-600 hover:bg-red-50" onClick={() => handleDeleteVehicle(vehicle.id)} data-testid={`delete-vehicle-${vehicle.id}`}>
                         <Trash2 className="w-4 h-4" />
                       </Button>

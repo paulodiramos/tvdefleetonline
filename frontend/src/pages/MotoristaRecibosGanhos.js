@@ -360,7 +360,7 @@ const MotoristaRecibosGanhos = ({ user, onLogout }) => {
                         ) : null}
                         
                         {/* Comprovativo de Pagamento - só admin/gestor/parceiro/operacional */}
-                        {(user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro' || user.role === 'operacional') && (
+                        {(user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') && (
                           <>
                             {(relatorio.status === 'recibo_enviado' || relatorio.status === 'recibo_emitido' || relatorio.status === 'aprovado_pagamento') && !relatorio.comprovativo_pagamento_url ? (
                               <label className="cursor-pointer">

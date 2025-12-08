@@ -197,9 +197,9 @@ const RecibosPagamentos = ({ user, onLogout }) => {
     );
   };
 
-  const canCreateRelatorio = user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional';
-  const canApprovePayment = user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional' || user.role === 'parceiro';
-  const canMarkPaid = user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional' || user.role === 'parceiro';
+  const canCreateRelatorio = user.role === 'admin' || user.role === 'gestao';
+  const canApprovePayment = user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro';
+  const canMarkPaid = user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro';
 
   if (loading) return <Layout user={user} onLogout={onLogout}><div>Carregando...</div></Layout>;
 

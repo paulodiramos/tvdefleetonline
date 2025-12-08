@@ -219,7 +219,7 @@ const Profile = ({ user, onLogout }) => {
                             data-testid="profile-phone-input"
                           />
                         </div>
-                        {(user.role === 'parceiro' || user.role === 'operacional' || user.role === 'gestao') && (
+                        {(user.role === 'parceiro' || user.role === 'gestao') && (
                           <>
                             <div className="space-y-2">
                               <Label htmlFor="empresa">Empresa</Label>

@@ -1356,7 +1356,7 @@ const Motoristas = ({ user, onLogout }) => {
                       )}
 
                       {/* Atribuição de Veículo */}
-                      {(user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional') && (
+                      {(user.role === 'admin' || user.role === 'gestao') && (
                         <div>
                           <Label>Veículo Atribuído</Label>
                           {isEditing ? (
