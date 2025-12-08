@@ -29,6 +29,8 @@ import Pagamentos from "@/pages/Pagamentos";
 import UploadCSV from "@/pages/UploadCSV";
 import Planos from "@/pages/Planos";
 import Configuracoes from "@/pages/Configuracoes";
+import Integracoes from "@/pages/Integracoes";
+import Comunicacoes from "@/pages/Comunicacoes";
 import VehicleData from "@/pages/VehicleData";
 import VehiclePhotos from "@/pages/VehiclePhotos";
 import VehicleVistorias from "@/pages/VehicleVistorias";
