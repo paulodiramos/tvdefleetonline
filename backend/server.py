@@ -12398,6 +12398,232 @@ async def gerar_relatorio_pdf(
         from reportlab.pdfgen import canvas
         from reportlab.lib.units import mm
         from reportlab.lib import colors
+
+
+# ============================================================================
+# COMUNICAÇÕES - EMAIL & WHATSAPP CONFIGURATION
+# ============================================================================
+
+@api_router.post("/configuracoes/comunicacoes/email")
+async def save_email_config(
+    config_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Save email (SendGrid) configuration (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can configure communications")
+    
+    try:
+        config = {
+            "tipo": "email_comunicacoes",
+            "provider": config_data.get("provider", "sendgrid"),
+            "api_key": config_data.get("api_key"),
+            "sender_email": config_data.get("sender_email"),
+            "sender_name": config_data.get("sender_name", "TVDEFleet"),
+            "enabled": config_data.get("enabled", False),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_by": current_user["id"]
+        }
+        
+        await db.configuracoes_sistema.update_one(
+            {"tipo": "email_comunicacoes"},
+            {"$set": config},
+            upsert=True
+        )
+        
+        logger.info(f"Email configuration saved by {current_user['email']}")
+        return {"message": "Email configuration saved successfully"}
+        
+    except Exception as e:
+        logger.error(f"Error saving email config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/configuracoes/comunicacoes/email")
+async def get_email_config(current_user: Dict = Depends(get_current_user)):
+    """Get email configuration (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can view communications config")
+    
+    try:
+        config = await db.configuracoes_sistema.find_one(
+            {"tipo": "email_comunicacoes"},
+            {"_id": 0}
+        )
+        
+        if not config:
+            return {
+                "provider": "sendgrid",
+                "api_key": "",
+                "sender_email": "",
+                "sender_name": "TVDEFleet",
+                "enabled": False
+            }
+        
+        return config
+        
+    except Exception as e:
+        logger.error(f"Error fetching email config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.patch("/configuracoes/comunicacoes/email")
+async def update_email_status(
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Update email service status (enable/disable)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can modify communications config")
+    
+    try:
+        enabled = data.get("enabled", False)
+        
+        await db.configuracoes_sistema.update_one(
+            {"tipo": "email_comunicacoes"},
+            {
+                "$set": {
+                    "enabled": enabled,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+            }
+        )
+        
+        logger.info(f"Email service {'enabled' if enabled else 'disabled'} by {current_user['email']}")
+        return {"message": f"Email service {'enabled' if enabled else 'disabled'} successfully"}
+        
+    except Exception as e:
+        logger.error(f"Error updating email status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/configuracoes/comunicacoes/email/test")
+async def test_email_config(
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Send test email to verify configuration"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can test email config")
+    
+    try:
+        from services.email_service import EmailService
+        
+        email_service = EmailService(db)
+        recipient = data.get("recipient")
+        
+        if not recipient:
+            raise HTTPException(status_code=400, detail="Recipient email is required")
+        
+        # Send test email
+        result = await email_service.send_email(
+            to_email=recipient,
+            subject="🔔 Teste de Configuração - TVDEFleet",
+            html_content="""
+            <html>
+            <head>
+                <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                    .header { background-color: #2563eb; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+                    .content { background-color: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+                    .success-box { background-color: #ecfdf5; border-left: 4px solid #10b981; padding: 15px; margin: 20px 0; }
+                    .footer { background-color: #f3f4f6; padding: 15px; text-align: center; font-size: 12px; color: #6b7280; border-radius: 0 0 8px 8px; }
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>✅ Email de Teste</h1>
+                    </div>
+                    <div class="content">
+                        <p>Olá,</p>
+                        <p>Este é um email de teste do sistema TVDEFleet.</p>
+                        
+                        <div class="success-box">
+                            <strong>✅ Configuração SendGrid OK!</strong><br>
+                            Se recebeu este email, significa que a configuração está correta e funcional.
+                        </div>
+                        
+                        <p>O sistema está pronto para enviar notificações automáticas.</p>
+                    </div>
+                    <div class="footer">
+                        <p>Esta é uma mensagem de teste automática.</p>
+                        <p>&copy; 2024 TVDEFleet - Sistema de Gestão de Frotas</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error testing email: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/configuracoes/comunicacoes/whatsapp")
+async def get_whatsapp_config(current_user: Dict = Depends(get_current_user)):
+    """Get WhatsApp configuration (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can view communications config")
+    
+    try:
+        config = await db.configuracoes_sistema.find_one(
+            {"tipo": "whatsapp_comunicacoes"},
+            {"_id": 0}
+        )
+        
+        if not config:
+            return {
+                "provider": "baileys",
+                "enabled": False,
+                "connected": False
+            }
+        
+        return config
+        
+    except Exception as e:
+        logger.error(f"Error fetching WhatsApp config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/notificacoes/send")
+async def send_notification(
+    notification_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Send notification via email (Admin, Gestao, Parceiro)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    try:
+        from services.email_service import EmailService
+        
+        email_service = EmailService(db)
+        
+        to_email = notification_data.get("to_email")
+        notification_type = notification_data.get("type")
+        data = notification_data.get("data", {})
+        
+        if not to_email or not notification_type:
+            raise HTTPException(status_code=400, detail="to_email and type are required")
+        
+        result = await email_service.send_notification(
+            to_email=to_email,
+            notification_type=notification_type,
+            data=data
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error sending notification: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
         
         # Criar diretório para relatórios se não existir
         relatorios_dir = UPLOAD_DIR / "relatorios"
