@@ -2318,14 +2318,6 @@ const FichaVeiculo = ({ user, onLogout }) => {
                         <p className="text-xs text-amber-700 mb-4">
                           Configure quantos dias/km antes você quer ser alertado sobre vencimentos e manutenções
                         </p>
-
-                        {!canEditAlertas && user.role === 'operacional' && (
-                          <div className="mb-4 p-3 bg-orange-100 border border-orange-300 rounded-lg">
-                            <p className="text-sm text-orange-800">
-                              ⚠️ Você precisa do <strong>Plano de Alertas</strong> ativo para editar estas configurações. Contacte o administrador.
-                            </p>
-                          </div>
-                        )}
                         
                         <div className="space-y-4">
                           <div className="grid grid-cols-2 gap-4">
