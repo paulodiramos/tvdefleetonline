@@ -544,6 +544,8 @@ class Parceiro(BaseModel):
     seguro_acidentes_trabalho: Optional[str] = None
     licenca_tvde: Optional[str] = None
     plano_id: Optional[str] = None
+    plano_nome: Optional[str] = None
+    plano_valida_ate: Optional[str] = None
     plano_status: str = "pendente"  # "pendente", "ativo", "suspenso"
     gestor_associado_id: Optional[str] = None
     total_vehicles: int = 0
