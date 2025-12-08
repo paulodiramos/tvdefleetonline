@@ -36,14 +36,6 @@ const MODULOS_DISPONIVEIS = {
     'financeiro',
     'sincronizacao_automatica',
     'upload_csv'
-  ],
-  gestao: [
-    'relatorios_completos',
-    'gestao_total',
-    'aprovacoes',
-    'financeiro_total',
-    'analytics_gestao',
-    'exportacao_dados'
   ]
 };
 
