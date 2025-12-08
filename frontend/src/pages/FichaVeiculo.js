@@ -1742,30 +1742,33 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-3 gap-3">
-                    {['green', 'comfort', 'exec', 'pet', 'xl'].map((cat) => (
-                      <div key={cat} className="flex items-center space-x-2">
-                        {canEdit && editMode ? (
-                          <input
-                            type="checkbox"
-                            id={`uber_${cat}`}
-                            checked={infoForm.categorias_uber[cat] || false}
-                            onChange={(e) => setInfoForm({
-                              ...infoForm,
-                              categorias_uber: {...infoForm.categorias_uber, [cat]: e.target.checked}
-                            })}
-                            className="w-4 h-4"
-                          />
-                        ) : (
-                          <input
-                            type="checkbox"
-                            checked={vehicle.categorias_uber?.[cat] || false}
-                            disabled
-                            className="w-4 h-4"
-                          />
-                        )}
-                        <Label htmlFor={`uber_${cat}`} className="capitalize">{cat === 'exec' ? 'Exec' : cat === 'xl' ? 'XL' : cat.charAt(0).toUpperCase() + cat.slice(1)}</Label>
-                      </div>
-                    ))}
+                    {categoriasUber.map((cat) => {
+                      const catKey = cat.toLowerCase().replace(/\s+/g, '_');
+                      return (
+                        <div key={catKey} className="flex items-center space-x-2">
+                          {canEdit && editMode ? (
+                            <input
+                              type="checkbox"
+                              id={`uber_${catKey}`}
+                              checked={infoForm.categorias_uber[catKey] || false}
+                              onChange={(e) => setInfoForm({
+                                ...infoForm,
+                                categorias_uber: {...infoForm.categorias_uber, [catKey]: e.target.checked}
+                              })}
+                              className="w-4 h-4"
+                            />
+                          ) : (
+                            <input
+                              type="checkbox"
+                              checked={vehicle.categorias_uber?.[catKey] || false}
+                              disabled
+                              className="w-4 h-4"
+                            />
+                          )}
+                          <Label htmlFor={`uber_${catKey}`}>{cat}</Label>
+                        </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
