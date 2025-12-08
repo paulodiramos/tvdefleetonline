@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Building, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Building, ArrowLeft, CheckCircle, FileText, AlertCircle } from 'lucide-react';
 
 const RegistoParceiro = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [certidaoComercial, setCertidaoComercial] = useState(null);
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
