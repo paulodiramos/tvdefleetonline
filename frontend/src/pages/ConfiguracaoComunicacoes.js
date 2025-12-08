@@ -448,15 +448,49 @@ const ConfiguracaoComunicacoes = ({ user, onLogout }) => {
                 </form>
 
                 {/* Info Box */}
-                <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <h4 className="font-semibold text-blue-900 mb-2">ℹ️ Como obter credenciais SendGrid:</h4>
-                  <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
-                    <li>Acesse <a href="https://sendgrid.com" target="_blank" rel="noopener noreferrer" className="underline">sendgrid.com</a> e crie uma conta</li>
-                    <li>Vá para Settings → API Keys</li>
-                    <li>Crie uma nova API key com permissão "Full Access"</li>
-                    <li>Verifique seu domínio ou email remetente em Settings → Sender Authentication</li>
-                  </ol>
-                </div>
+                {emailConfig.provider === 'sendgrid' ? (
+                  <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <h4 className="font-semibold text-blue-900 mb-2">ℹ️ Como obter credenciais SendGrid:</h4>
+                    <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+                      <li>Acesse <a href="https://sendgrid.com" target="_blank" rel="noopener noreferrer" className="underline">sendgrid.com</a> e crie uma conta</li>
+                      <li>Vá para Settings → API Keys</li>
+                      <li>Crie uma nova API key com permissão "Full Access"</li>
+                      <li>Verifique seu domínio ou email remetente em Settings → Sender Authentication</li>
+                    </ol>
+                  </div>
+                ) : (
+                  <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <h4 className="font-semibold text-green-900 mb-2">ℹ️ Configurar SMTP:</h4>
+                    
+                    <div className="text-sm text-green-800 space-y-3 mt-3">
+                      <div>
+                        <strong>📧 Gmail:</strong>
+                        <ul className="list-disc list-inside ml-4 mt-1">
+                          <li>Host: smtp.gmail.com | Port: 587</li>
+                          <li>Ative "Verificação em 2 etapas" na conta Google</li>
+                          <li>Gere uma "Senha de App" em: Conta Google → Segurança → Senhas de app</li>
+                          <li>Use essa senha (16 caracteres) no campo Password</li>
+                        </ul>
+                      </div>
+                      
+                      <div>
+                        <strong>📧 Outlook/Hotmail:</strong>
+                        <ul className="list-disc list-inside ml-4 mt-1">
+                          <li>Host: smtp-mail.outlook.com | Port: 587</li>
+                          <li>Use seu email e senha normais</li>
+                        </ul>
+                      </div>
+                      
+                      <div>
+                        <strong>🖥️ Servidor Próprio:</strong>
+                        <ul className="list-disc list-inside ml-4 mt-1">
+                          <li>Obtenha as credenciais com seu provedor de hospedagem</li>
+                          <li>Verifique a porta correta (587 TLS ou 465 SSL)</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
