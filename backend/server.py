@@ -8312,6 +8312,67 @@ async def atribuir_plano_parceiro(
     
     return {"message": "Plan assigned successfully", "plano_id": plano_id, "atribuicao_id": atribuicao_id}
 
+
+@api_router.post("/admin/motoristas/{motorista_id}/atribuir-plano")
+async def atribuir_plano_motorista(
+    motorista_id: str,
+    plano_data: Dict[str, str],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Admin: Assign subscription plan to motorista"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    plano_id = plano_data.get("plano_id")
+    if not plano_id:
+        raise HTTPException(status_code=400, detail="plano_id required")
+    
+    # Check if plano exists
+    plano = await db.planos.find_one({"id": plano_id}, {"_id": 0})
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plan not found")
+    
+    # Update motorista
+    result = await db.users.update_one(
+        {"id": motorista_id, "role": "motorista"},
+        {"$set": {
+            "plano_id": plano_id,
+            "plano_status": "ativo",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Motorista not found")
+    
+    # Criar/atualizar registro em planos_usuarios para controle de módulos
+    now = datetime.now(timezone.utc)
+    atribuicao_id = str(uuid.uuid4())
+    
+    # Remover atribuição anterior se existir
+    await db.planos_usuarios.delete_many({"user_id": motorista_id})
+    
+    # Criar nova atribuição
+    atribuicao = {
+        "id": atribuicao_id,
+        "user_id": motorista_id,
+        "plano_id": plano_id,
+        "modulos_ativos": plano.get("modulos", []),
+        "tipo_pagamento": "mensal",
+        "valor_pago": plano.get("preco", 0),
+        "data_inicio": now,
+        "data_fim": None,
+        "status": "ativo",
+        "renovacao_automatica": True,
+        "created_at": now,
+        "updated_at": now,
+        "created_by": current_user["id"]
+    }
+    
+    await db.planos_usuarios.insert_one(atribuicao)
+    
+    return {"message": "Plan assigned successfully to motorista", "plano_id": plano_id, "atribuicao_id": atribuicao_id}
+
 # ==================== ENDPOINTS DE CONTRATOS ====================
 
 @api_router.get("/parceiros/{parceiro_id}/templates-contrato")
