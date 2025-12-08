@@ -474,18 +474,7 @@ function App() {
               user ? <GestaoPlanos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
-          <Route
-            path="/gestao-planos-motorista"
-            element={
-              user ? <GestaoPlanosMotorista user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-            }
-          />
-          <Route
-            path="/configuracao-planos"
-            element={
-              user ? <ConfiguracaoPlanos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-            }
-          />
+          {/* Rotas antigas removidas - agora tudo unificado em /gestao-planos e /planos-parceiros */}
           <Route
             path="/meus-planos"
             element={
