@@ -238,7 +238,7 @@ function App() {
             path="/planos-parceiros"
             element={
               user && user.role === 'admin' ? (
-                <GestaoPlanosParceiros user={user} onLogout={handleLogout} />
+                <GestaoPlanos user={user} onLogout={handleLogout} />
               ) : (
                 <Navigate to="/dashboard" />
               )
