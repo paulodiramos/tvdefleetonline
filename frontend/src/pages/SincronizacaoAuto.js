@@ -213,6 +213,40 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
     }
   };
 
+  const handleSincronizarManual = async () => {
+    if (!selectedParceiro && user.role === 'parceiro') {
+      // Para parceiros, usar o próprio ID
+      const parceiroId = user.id;
+      setSyncing({ ...syncing, 'manual': true });
+      
+      try {
+        const token = localStorage.getItem('token');
+        // Sincronizar todas as plataformas configuradas
+        const promises = plataformas.map(async (plataforma) => {
+          const cred = credenciais.find(c => c.plataforma === plataforma.id);
+          if (cred) {
+            return axios.post(`${API}/sincronizar/${parceiroId}/${plataforma.id}`, {}, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+          }
+        });
+        
+        await Promise.all(promises.filter(p => p !== undefined));
+        
+        toast.success('Sincronização manual concluída!');
+        fetchLogs();
+        fetchCredenciais();
+        fetchDashboardStats(); // Atualizar stats
+      } catch (error) {
+        toast.error(error.response?.data?.detail || 'Erro ao sincronizar');
+      } finally {
+        setSyncing({ ...syncing, 'manual': false });
+      }
+    } else {
+      toast.error('Não foi possível sincronizar');
+    }
+  };
+
   const getPlatformCred = (platformId) => {
     return credenciais.find(c => c.plataforma === platformId);
   };
