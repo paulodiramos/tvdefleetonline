@@ -9384,7 +9384,7 @@ async def atribuir_plano_motorista(
             {"$set": {
                 "plano_id": plano_id,
                 "plano_nome": plano["nome"],
-                "plano_features": plano["features"],
+                "plano_modulos": plano.get("modulos", []),
                 "plano_valida_ate": data_fim.isoformat(),
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }}
