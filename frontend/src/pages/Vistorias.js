@@ -63,6 +63,8 @@ const Vistorias = ({ user, onLogout }) => {
   const [generatingPDF, setGeneratingPDF] = useState(false);
   const [vistoriasAgendadas, setVistoriasAgendadas] = useState([]);
   const [showAgendarDialog, setShowAgendarDialog] = useState(false);
+  const [fotosVistoria, setFotosVistoria] = useState([]);
+  const [agendaIdAtual, setAgendaIdAtual] = useState(null);
   const [agendamentoForm, setAgendamentoForm] = useState({
     veiculo_id: '',
     parceiro_id: '',
