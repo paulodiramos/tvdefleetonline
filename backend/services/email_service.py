@@ -1,9 +1,12 @@
 """
-Email Service using SendGrid
+Email Service using SendGrid or SMTP
 Handles email notifications and transactional emails
 """
 
 import logging
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from typing import Dict, Any, Optional
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail, Email, To, Content
