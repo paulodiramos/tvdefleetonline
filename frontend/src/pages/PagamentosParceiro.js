@@ -22,6 +22,15 @@ const PagamentosParceiro = ({ user, onLogout }) => {
   const [selectedRelatorio, setSelectedRelatorio] = useState(null);
   const [novoEstado, setNovoEstado] = useState('');
 
+  // Função para calcular número da semana
+  const getWeekNumber = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+    const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+    return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+  };
+
   useEffect(() => {
     fetchPagamentos();
   }, []);
