@@ -618,6 +618,12 @@ const Usuarios = ({ user, onLogout }) => {
                         >
                           {getRoleLabel(regUser.role)}
                         </span>
+                        {regUser.plano_nome && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            <Package className="w-3 h-3 mr-1" />
+                            {regUser.plano_nome}
+                          </span>
+                        )}
                         {regUser.status === 'blocked' && (
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                             <Lock className="w-3 h-3 mr-1" />
