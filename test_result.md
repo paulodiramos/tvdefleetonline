@@ -6456,3 +6456,70 @@ Botão "Eliminar Parceiro" no perfil de parceiros, visível apenas para Admin.
 
 ---
 
+
+---
+
+## 🎯 Teste: Seletor de Parceiro em Vistorias + Atualização de Lista
+**Data:** 2025-12-08
+**Testado por:** Agente Fork (E1)
+**Status:** ✅ SUCESSO COMPLETO
+
+### Funcionalidades Implementadas:
+
+#### 1. Backend - Suporte para `parceiro_id`
+- ✅ Endpoint `POST /vehicles/{id}/agendar-vistoria` atualizado para aceitar `parceiro_id`
+- ✅ Endpoint `POST /vehicles/{id}/vistorias` atualizado para aceitar `parceiro_id`
+- ✅ Campo `parceiro_id` guardado corretamente na base de dados
+
+#### 2. Frontend - Seletor de Parceiro
+- ✅ Seletor "Parceiro (Opcional)" adicionado ao modal de agendamento
+- ✅ Seletor "Parceiro (Opcional)" adicionado ao modal de realização de vistoria
+- ✅ Filtro de veículos por parceiro selecionado funcional
+- ✅ Campo `parceiro_id` incluído no estado dos formulários
+- ✅ Valores enviados corretamente ao backend
+
+#### 3. Bug Fix - Lista de Agendamentos Não Atualiza
+**Problema Identificado:**
+- Função `fetchVistoriasAgendadas()` era chamada antes de `vehicles` ser populado
+- API retornava array direto mas código esperava objeto com propriedade `.agenda`
+
+**Correções Aplicadas:**
+- ✅ Movido `fetchVistoriasAgendadas()` para useEffect que depende de `vehicles`
+- ✅ Corrigida lógica de parsing do array retornado pela API
+- ✅ Adicionado filtro para exibir apenas vistorias com `tipo='vistoria'` e `status='agendada'`
+- ✅ Adicionado `await fetchVehicles()` antes de `fetchVistoriasAgendadas()` no submit
+
+### Testes Realizados:
+
+#### 1. Teste de API (Backend)
+```bash
+✅ POST /vehicles/{id}/agendar-vistoria com parceiro_id → Sucesso
+✅ Campo parceiro_id guardado corretamente na agenda
+✅ GET /vehicles/{id}/agenda retorna vistorias agendadas
+```
+
+#### 2. Teste de UI (Frontend)
+- ✅ Login como Admin (admin@tvdefleet.com)
+- ✅ Navegação para /vistorias
+- ✅ Card "Vistorias Agendadas (2)" visível com fundo amber
+- ✅ 2 vistorias agendadas listadas corretamente
+- ✅ Matrícula do veículo exibida em cada item (AB-12-CD)
+- ✅ Seletor "Parceiro (Opcional)" presente no modal de agendamento
+- ✅ 19 opções de parceiros disponíveis no seletor
+- ✅ Seletor "Parceiro (Opcional)" presente no modal de realização
+- ✅ Filtro de veículos por parceiro funcional
+
+### Arquivos Modificados:
+- `/app/backend/server.py` (linhas 7048-7059, 6791-6810)
+- `/app/frontend/src/pages/Vistorias.js` (múltiplas seções)
+
+### Resultado Final:
+**✅ 100% FUNCIONAL** - Ambas as tarefas concluídas com sucesso:
+1. Seletor de parceiro implementado em ambos os formulários (agendamento e realização)
+2. Lista de agendamentos atualiza corretamente após novo agendamento
+
+**Próximas tarefas conforme handoff summary:**
+- Implementar download e envio de email do PDF da vistoria
+- Vincular categorias dinâmicas à UI de veículos
+- Teste ponta-a-ponta da faturação Moloni
+
