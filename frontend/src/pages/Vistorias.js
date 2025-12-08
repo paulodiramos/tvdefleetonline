@@ -147,32 +147,47 @@ const Vistorias = ({ user, onLogout }) => {
     }
   };
 
-  const handleUploadPhoto = async (vistoriaId, file) => {
-    try {
-      setUploadingPhoto(true);
-      const token = localStorage.getItem('token');
-      const formData = new FormData();
-      formData.append('file', file);
+  const handleUploadPhoto = async (vistoriaId) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    
+    input.onchange = async (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length === 0) return;
+      
+      try {
+        setUploadingPhoto(true);
+        const token = localStorage.getItem('token');
+        
+        for (const file of files) {
+          const formData = new FormData();
+          formData.append('file', file);
 
-      await axios.post(
-        `${API}/vehicles/${selectedVehicle.id}/vistorias/${vistoriaId}/upload-foto`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
+          await axios.post(
+            `${API}/vehicles/${selectedVehicle.id}/vistorias/${vistoriaId}/upload-foto`,
+            formData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'multipart/form-data'
+              }
+            }
+          );
         }
-      );
 
-      toast.success('Foto enviada com sucesso!');
-      fetchVistorias(selectedVehicle.id);
-    } catch (error) {
-      console.error('Error uploading photo:', error);
-      toast.error('Erro ao enviar foto');
-    } finally {
-      setUploadingPhoto(false);
-    }
+        toast.success(`${files.length} foto(s) enviada(s) com sucesso!`);
+        fetchVistorias(selectedVehicle.id);
+      } catch (error) {
+        console.error('Error uploading photo:', error);
+        toast.error('Erro ao enviar foto');
+      } finally {
+        setUploadingPhoto(false);
+      }
+    };
+    
+    input.click();
   };
 
   const handleGeneratePDF = async (vistoriaId) => {
