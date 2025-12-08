@@ -49,10 +49,12 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
   ];
 
   useEffect(() => {
-    fetchParceiros();
-    // Se for parceiro, buscar dados do dashboard
+    // Se for parceiro, definir automaticamente como selectedParceiro
     if (user.role === 'parceiro') {
+      setSelectedParceiro({ id: user.id, nome_empresa: user.name });
       fetchDashboardStats();
+    } else {
+      fetchParceiros();
     }
   }, []);
 
