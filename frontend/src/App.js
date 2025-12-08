@@ -81,6 +81,11 @@ function App() {
     try {
       const response = await axios.get(`${API}/auth/me`);
       setUser(response.data);
+      
+      // Verificar se precisa mudar senha
+      if (response.data.senha_provisoria) {
+        setShowMudarSenha(true);
+      }
     } catch (error) {
       console.error("Failed to fetch user", error);
       localStorage.removeItem("token");
