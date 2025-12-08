@@ -2889,12 +2889,12 @@ async def register(user_data: UserCreate):
     user_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     user_dict["approved"] = user_data.role == UserRole.ADMIN
     
-    # Assign base free plan based on role
-    if user_data.role in ["operacional", "gestao"]:
+    # Assign base free plan for gestao
+    if user_data.role == "gestao":
         plano_base = await db.planos_sistema.find_one({
             "preco_mensal": 0, 
             "ativo": True, 
-            "tipo_usuario": user_data.role
+            "tipo_usuario": "gestao"
         }, {"_id": 0})
         
         if plano_base:
@@ -2903,7 +2903,7 @@ async def register(user_data: UserCreate):
             user_dict["plano_id"] = plano_base["id"]
             user_dict["plano_nome"] = plano_base["nome"]
             user_dict["plano_valida_ate"] = plano_valida_ate
-            logger.info(f"Assigned base plan {plano_base['id']} to new {user_data.role}")
+            logger.info(f"Assigned base plan {plano_base['id']} to new gestor")
     
     await db.users.insert_one(user_dict)
     
