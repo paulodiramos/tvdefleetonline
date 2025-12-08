@@ -6799,6 +6799,7 @@ async def create_vistoria(
         "responsavel_id": current_user.get("id"),
         "observacoes": vistoria_data.get("observacoes"),
         "estado_geral": vistoria_data.get("estado_geral", "bom"),
+        "status": vistoria_data.get("status", "fechada"),  # aberta | fechada
         "fotos": vistoria_data.get("fotos", []),
         "itens_verificados": vistoria_data.get("itens_verificados", {}),
         "danos_encontrados": vistoria_data.get("danos_encontrados", []),
