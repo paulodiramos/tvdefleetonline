@@ -195,8 +195,7 @@ const ConfiguracaoPlanos = ({ user, onLogout }) => {
 
   const planosPorTipo = {
     motorista: planos.filter(p => p.tipo_usuario === 'motorista'),
-    parceiro: planos.filter(p => p.tipo_usuario === 'parceiro'),
-    gestao: planos.filter(p => p.tipo_usuario === 'gestao')
+    parceiro: planos.filter(p => p.tipo_usuario === 'parceiro')
   };
 
   return (
