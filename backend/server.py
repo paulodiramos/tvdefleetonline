@@ -5373,11 +5373,18 @@ async def get_dashboard_stats(current_user: Dict = Depends(get_current_user)):
     total_motoristas = await db.motoristas.count_documents(motorista_query)
     pending_motoristas = await db.motoristas.count_documents({**motorista_query, "approved": False})
     
-    revenues = await db.revenues.find({}, {"_id": 0}).to_list(10000)
-    expenses = await db.expenses.find({}, {"_id": 0}).to_list(10000)
+    # Filter revenues and expenses by parceiro's vehicles
+    if current_user["role"] in [UserRole.PARCEIRO]:
+        vehicles = await db.vehicles.find({"parceiro_id": current_user["id"]}, {"_id": 0, "id": 1}).to_list(10000)
+        vehicle_ids = [v["id"] for v in vehicles]
+        revenues = await db.revenues.find({"vehicle_id": {"$in": vehicle_ids}}, {"_id": 0}).to_list(10000)
+        expenses = await db.expenses.find({"vehicle_id": {"$in": vehicle_ids}}, {"_id": 0}).to_list(10000)
+    else:
+        revenues = await db.revenues.find({}, {"_id": 0}).to_list(10000)
+        expenses = await db.expenses.find({}, {"_id": 0}).to_list(10000)
     
-    total_receitas = sum([r["valor"] for r in revenues])
-    total_despesas = sum([e["valor"] for e in expenses])
+    total_receitas = sum([r.get("valor", 0) for r in revenues])
+    total_despesas = sum([e.get("valor", 0) for e in expenses])
     
     return {
         "total_vehicles": total_vehicles,
