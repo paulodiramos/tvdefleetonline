@@ -9220,11 +9220,17 @@ async def update_plano_sistema(plano_id: str, plano_data: Dict, current_user: Di
     taxa_iva = plano_data.get("taxa_iva", 23)
     preco_com_iva = preco_sem_iva * (1 + taxa_iva / 100)
     
+    # Calcular preço semanal automaticamente
+    preco_semanal = preco_sem_iva / 4.33
+    preco_semanal_com_iva = preco_com_iva / 4.33
+    
     update_data = {
         "nome": plano_data["nome"],
         "descricao": plano_data.get("descricao", ""),
         "preco_mensal": preco_sem_iva,
         "preco_mensal_com_iva": round(preco_com_iva, 2),
+        "preco_semanal": round(preco_semanal, 2),
+        "preco_semanal_com_iva": round(preco_semanal_com_iva, 2),
         "taxa_iva": taxa_iva,
         "tipo_usuario": plano_data["tipo_usuario"],
         "modulos": plano_data.get("modulos", []),
