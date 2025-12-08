@@ -108,7 +108,7 @@ const PerfilMotorista = ({ user, onLogout }) => {
     <Layout user={user} onLogout={onLogout}>
       <div className="max-w-7xl mx-auto space-y-6 p-6">
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="dashboard">
               <TrendingUp className="w-4 h-4 mr-2" />
               Dashboard
@@ -120,6 +120,10 @@ const PerfilMotorista = ({ user, onLogout }) => {
             <TabsTrigger value="planos">
               <Package className="w-4 h-4 mr-2" />
               Meus Planos
+            </TabsTrigger>
+            <TabsTrigger value="faturacao">
+              <FileText className="w-4 h-4 mr-2" />
+              Auto-Faturação
             </TabsTrigger>
           </TabsList>
 
