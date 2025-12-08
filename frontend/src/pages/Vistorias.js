@@ -358,6 +358,28 @@ const Vistorias = ({ user, onLogout }) => {
                     </div>
                   )}
 
+                  {vistoria.fotos && vistoria.fotos.length > 0 && (
+                    <div className="mt-3 pt-3 border-t">
+                      <p className="text-xs text-slate-600 mb-2">
+                        📷 {vistoria.fotos.length} foto(s)
+                      </p>
+                      <div className="grid grid-cols-3 gap-1">
+                        {vistoria.fotos.slice(0, 3).map((foto, idx) => (
+                          <img
+                            key={idx}
+                            src={foto}
+                            alt={`Vistoria foto ${idx + 1}`}
+                            className="w-full h-16 object-cover rounded cursor-pointer hover:opacity-80"
+                            onClick={() => window.open(foto, '_blank')}
+                          />
+                        ))}
+                      </div>
+                      {vistoria.fotos.length > 3 && (
+                        <p className="text-xs text-slate-500 mt-1">+{vistoria.fotos.length - 3} mais</p>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex space-x-2 pt-3">
                     <Button
                       variant="outline"
@@ -372,11 +394,20 @@ const Vistorias = ({ user, onLogout }) => {
                       Ver
                     </Button>
                     
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleUploadPhoto(vistoria.id)}
+                      disabled={uploadingPhoto}
+                      title="Adicionar fotos"
+                    >
+                      <Upload className="w-3 h-3" />
+                    </Button>
+                    
                     {vistoria.pdf_relatorio ? (
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1"
                         onClick={() => window.open(vistoria.pdf_relatorio, '_blank')}
                       >
                         <Download className="w-3 h-3 mr-1" />
@@ -386,7 +417,6 @@ const Vistorias = ({ user, onLogout }) => {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="flex-1"
                         onClick={() => handleGeneratePDF(vistoria.id)}
                         disabled={generatingPDF}
                       >
