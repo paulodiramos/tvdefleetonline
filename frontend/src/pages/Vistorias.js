@@ -1090,6 +1090,56 @@ const Vistorias = ({ user, onLogout }) => {
                 ))}
               </div>
 
+              {/* Upload de Fotos */}
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <Label className="text-base font-semibold">Fotos da Vistoria</Label>
+                  <label htmlFor="foto-upload" className="cursor-pointer">
+                    <Button type="button" variant="outline" size="sm" asChild>
+                      <span>
+                        <Upload className="w-3 h-3 mr-1" />
+                        Adicionar Fotos
+                      </span>
+                    </Button>
+                  </label>
+                  <input
+                    id="foto-upload"
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleUploadFotoModal}
+                    className="hidden"
+                  />
+                </div>
+                
+                {fotosVistoria.length > 0 && (
+                  <div className="grid grid-cols-3 gap-3 mb-3">
+                    {fotosVistoria.map((foto, idx) => (
+                      <div key={idx} className="relative">
+                        <img
+                          src={foto.preview}
+                          alt={`Foto ${idx + 1}`}
+                          className="w-full h-24 object-cover rounded border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeFotoModal(idx)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                        <p className="text-xs text-slate-500 mt-1 truncate">{foto.name}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {fotosVistoria.length === 0 && (
+                  <p className="text-sm text-slate-500 text-center py-4 border-2 border-dashed rounded">
+                    Nenhuma foto adicionada. Clique em "Adicionar Fotos" para incluir imagens.
+                  </p>
+                )}
+              </div>
+
               {/* Observações */}
               <div>
                 <Label>Observações</Label>
@@ -1105,13 +1155,31 @@ const Vistorias = ({ user, onLogout }) => {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setShowCreateDialog(false)}
+                  onClick={() => {
+                    setShowCreateDialog(false);
+                    setFotosVistoria([]);
+                    setAgendaIdAtual(null);
+                  }}
                   className="flex-1"
                 >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={loading} className="flex-1">
-                  {loading ? 'Criando...' : 'Criar Vistoria'}
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={(e) => handleCreateVistoria(e, 'aberta')}
+                  disabled={loading}
+                  className="flex-1 border-yellow-500 text-yellow-700 hover:bg-yellow-50"
+                >
+                  {loading ? 'Guardando...' : 'Guardar Rascunho'}
+                </Button>
+                <Button 
+                  type="submit" 
+                  onClick={(e) => handleCreateVistoria(e, 'fechada')}
+                  disabled={loading} 
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                >
+                  {loading ? 'Finalizando...' : 'Finalizar Vistoria'}
                 </Button>
               </div>
             </form>
