@@ -9343,7 +9343,7 @@ async def atribuir_plano_motorista(
                 "plano_id": plano_id,
                 "plano_nome": plano["nome"],
                 "plano_features": plano["features"],
-                "plano_periodicidade": periodicidade,
+                "plano_valida_ate": data_fim.isoformat(),
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }}
         )
