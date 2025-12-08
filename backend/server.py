@@ -3240,7 +3240,7 @@ async def validar_documento(
 ):
     """Validar documento (Admin, Gestor, Operacional, Parceiro)"""
     # Verificar permissões
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL, UserRole.PARCEIRO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
@@ -3285,7 +3285,7 @@ async def delete_documento(
 ):
     """Delete document (Admin, Gestor, Operacional only)"""
     # Check permissions - only Admin, Gestor, Operacional can delete documents
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Não autorizado - Apenas Admin, Gestor ou Operacional")
     
     motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
@@ -3637,7 +3637,7 @@ async def update_motorista(
     
     # Check if parceiro/operacional is assigned to this motorista
     is_assigned = False
-    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] in [UserRole.PARCEIRO]:
         # Check if current user is the assigned parceiro
         is_assigned = motorista.get("parceiro_atribuido") == current_user["id"]
     
@@ -3722,7 +3722,7 @@ async def aprovar_todos_documentos(
     
     # Check if parceiro/operacional is assigned
     is_assigned = False
-    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] in [UserRole.PARCEIRO]:
         is_assigned = motorista.get("parceiro_atribuido") == current_user["id"]
     
     is_authorized = (
@@ -3770,7 +3770,7 @@ async def download_motorista_documento(
     
     # Check authorization
     is_assigned = False
-    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] in [UserRole.PARCEIRO]:
         is_assigned = motorista.get("parceiro_atribuido") == current_user["id"]
     
     is_authorized = (
@@ -3814,7 +3814,7 @@ async def download_motorista_contrato(
     
     # Check authorization
     is_assigned = False
-    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] in [UserRole.PARCEIRO]:
         is_assigned = motorista.get("parceiro_atribuido") == current_user["id"]
     
     is_authorized = (
@@ -3875,7 +3875,7 @@ async def download_motorista_contrato_v2(
     
     # Check authorization
     is_assigned = False
-    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] in [UserRole.PARCEIRO]:
         is_assigned = motorista.get("parceiro_atribuido") == current_user["id"]
     
     is_authorized = (
@@ -3919,7 +3919,7 @@ async def upload_pagamento_comprovativo(
 ):
     """Upload payment proof/comprovativo (Parceiro/Admin/Gestor)"""
     # Authorization check
-    if current_user["role"] not in [UserRole.PARCEIRO, UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.PARCEIRO, UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Find payment
@@ -4014,7 +4014,7 @@ async def download_relatorio_semanal_pdf(
     
     # Check authorization
     is_authorized = (
-        current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL, UserRole.PARCEIRO] or
+        current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO] or
         (current_user["role"] == UserRole.MOTORISTA and current_user["id"] == relatorio["motorista_id"])
     )
     
@@ -4192,7 +4192,7 @@ async def responder_solicitacao(
     current_user: Dict = Depends(get_current_user)
 ):
     """Responder solicitação de alteração (Admin/Gestor/Parceiro/Operacional)"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     solicitacao = await db.solicitacoes_alteracao.find_one({"id": solicitacao_id}, {"_id": 0})
@@ -4290,7 +4290,7 @@ async def upload_motorista_documento(
 
 @api_router.post("/vehicles", response_model=Vehicle)
 async def create_vehicle(vehicle_data: VehicleCreate, current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle_dict = vehicle_data.model_dump()
@@ -4316,7 +4316,7 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: Dict = Depen
     }
     
     # Set parceiro_id from current user if parceiro/operacional
-    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] in [UserRole.PARCEIRO]:
         vehicle_dict["parceiro_id"] = current_user["id"]
     
     await db.vehicles.insert_one(vehicle_dict)
@@ -4402,7 +4402,7 @@ async def get_vehicle(vehicle_id: str, current_user: Dict = Depends(get_current_
 
 @api_router.put("/vehicles/{vehicle_id}")
 async def update_vehicle(vehicle_id: str, updates: Dict[str, Any], current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Auto-add to agenda when dates are filled
@@ -4492,7 +4492,7 @@ async def add_vehicle_agenda(
     current_user: Dict = Depends(get_current_user)
 ):
     """Add event to vehicle agenda"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Check if vehicle exists
@@ -4535,7 +4535,7 @@ async def update_vehicle_agenda(
     current_user: Dict = Depends(get_current_user)
 ):
     """Update event in vehicle agenda"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
@@ -4564,7 +4564,7 @@ async def delete_vehicle_agenda(
     current_user: Dict = Depends(get_current_user)
 ):
     """Delete event from vehicle agenda"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
@@ -4635,7 +4635,7 @@ async def add_historico_entry(
     current_user: Dict = Depends(get_current_user)
 ):
     """Add editable history entry to vehicle"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     entry = {
@@ -4664,7 +4664,7 @@ async def update_historico_entry(
     current_user: Dict = Depends(get_current_user)
 ):
     """Update editable history entry"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Get vehicle
@@ -4697,7 +4697,7 @@ async def delete_historico_entry(
     current_user: Dict = Depends(get_current_user)
 ):
     """Delete editable history entry"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     await db.vehicles.update_one(
@@ -4771,7 +4771,7 @@ async def atribuir_motorista_vehicle(
     current_user: Dict = Depends(get_current_user)
 ):
     """Atribuir motorista a um veículo"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     motorista_id = data.get("motorista_id")
@@ -4818,7 +4818,7 @@ async def upload_seguro_document(
     current_user: Dict = Depends(get_current_user)
 ):
     """Upload insurance documents (carta verde, condições, fatura)"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Create directory
@@ -4866,7 +4866,7 @@ async def upload_inspecao_document(
     current_user: Dict = Depends(get_current_user)
 ):
     """Upload inspection document"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Create directory
@@ -4899,7 +4899,7 @@ async def upload_extintor_document(
     current_user: Dict = Depends(get_current_user)
 ):
     """Upload fire extinguisher certificate"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Create directory
@@ -4934,7 +4934,7 @@ async def upload_vehicle_photo(
     current_user: Dict = Depends(get_current_user)
 ):
     """Upload vehicle photo (max 3)"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
@@ -4971,7 +4971,7 @@ async def delete_vehicle_photo(
     current_user: Dict = Depends(get_current_user)
 ):
     """Delete vehicle photo by index"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
@@ -5001,7 +5001,7 @@ async def upload_carta_verde(
     current_user: Dict = Depends(get_current_user)
 ):
     """Upload carta verde document"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
@@ -5030,7 +5030,7 @@ async def upload_condicoes(
     current_user: Dict = Depends(get_current_user)
 ):
     """Upload condições document"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
@@ -5059,7 +5059,7 @@ async def upload_recibo_seguro(
     current_user: Dict = Depends(get_current_user)
 ):
     """Upload recibo de pagamento do seguro"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
@@ -5088,7 +5088,7 @@ async def upload_documento_inspecao(
     current_user: Dict = Depends(get_current_user)
 ):
     """Upload documento/certificado da inspeção"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
@@ -5117,7 +5117,7 @@ async def update_vehicle_km(
     current_user: Dict = Depends(get_current_user)
 ):
     """Update vehicle KM (can be automatic from GPS)"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     km_atual = data.get("km_atual")
@@ -5141,7 +5141,7 @@ async def update_vehicle_status(
     current_user: Dict = Depends(get_current_user)
 ):
     """Atualizar status do veículo"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     status = data.get("status")
@@ -5273,7 +5273,7 @@ async def create_partner_expense(
     current_user: Dict = Depends(get_current_user)
 ):
     """Create a manual expense entry for a partner"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Unauthorized")
     
     expense_dict = expense_data.model_dump()
@@ -5309,7 +5309,7 @@ async def create_partner_revenue(
     current_user: Dict = Depends(get_current_user)
 ):
     """Create a manual revenue entry for a partner"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Unauthorized")
     
     revenue_dict = revenue_data.model_dump()
@@ -5364,7 +5364,7 @@ async def get_dashboard_stats(current_user: Dict = Depends(get_current_user)):
     motorista_query = {}
     
     # Filter by role
-    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] in [UserRole.PARCEIRO]:
         query["parceiro_id"] = current_user["id"]
         motorista_query["parceiro_atribuido"] = current_user["id"]
     
@@ -5393,7 +5393,7 @@ async def get_dashboard_stats(current_user: Dict = Depends(get_current_user)):
 
 @api_router.get("/reports/parceiro/semanal")
 async def get_parceiro_weekly_report(current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] not in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Get vehicles do parceiro
@@ -5430,7 +5430,7 @@ async def get_parceiro_weekly_report(current_user: Dict = Depends(get_current_us
 
 @api_router.get("/reports/parceiro/por-veiculo")
 async def get_parceiro_vehicle_report(current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] not in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicles = await db.vehicles.find({"parceiro_id": current_user["id"]}, {"_id": 0}).to_list(1000)
@@ -5457,7 +5457,7 @@ async def get_parceiro_vehicle_report(current_user: Dict = Depends(get_current_u
 
 @api_router.get("/reports/parceiro/por-motorista")
 async def get_parceiro_motorista_report(current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] not in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Get vehicles do parceiro
@@ -5500,7 +5500,7 @@ async def get_parceiro_motorista_report(current_user: Dict = Depends(get_current
 
 @api_router.get("/reports/parceiro/proximas-despesas")
 async def get_parceiro_upcoming_expenses(current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] not in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     from datetime import datetime, timedelta
@@ -5653,7 +5653,7 @@ async def marcar_pagamento_pago(pagamento_id: str, current_user: Dict = Depends(
 
 @api_router.get("/pagamentos/semana-atual")
 async def get_pagamentos_semana(current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     from datetime import datetime, timedelta
@@ -5669,7 +5669,7 @@ async def get_pagamentos_semana(current_user: Dict = Depends(get_current_user)):
     }
     
     # Filter by parceiro_id only for parceiro and operacional
-    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] in [UserRole.PARCEIRO]:
         query["parceiro_id"] = current_user["id"]
     
     pagamentos = await db.pagamentos.find(query, {"_id": 0}).to_list(1000)
@@ -6272,7 +6272,7 @@ async def update_vehicle_intervention(
     current_user: Dict = Depends(get_current_user)
 ):
     """Update intervention status"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
@@ -6634,7 +6634,7 @@ async def create_vistoria(
     current_user: Dict = Depends(get_current_user)
 ):
     """Create a new vehicle vistoria/inspection"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Verify vehicle exists
@@ -6684,7 +6684,7 @@ async def get_vehicle_vistorias(
     current_user: Dict = Depends(get_current_user)
 ):
     """Get all vistorias for a vehicle"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL, UserRole.MOTORISTA]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.MOTORISTA]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vistorias = await db.vistorias.find(
@@ -6721,7 +6721,7 @@ async def update_vistoria(
     current_user: Dict = Depends(get_current_user)
 ):
     """Update a vistoria"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     update_data["updated_at"] = datetime.now(timezone.utc)
@@ -6763,7 +6763,7 @@ async def upload_vistoria_foto(
     current_user: Dict = Depends(get_current_user)
 ):
     """Upload a photo for a vistoria"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Verify vistoria exists
@@ -6800,7 +6800,7 @@ async def gerar_pdf_vistoria(
     current_user: Dict = Depends(get_current_user)
 ):
     """Generate PDF report for a vistoria"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vistoria = await db.vistorias.find_one({"id": vistoria_id, "veiculo_id": vehicle_id}, {"_id": 0})
@@ -6849,7 +6849,7 @@ async def agendar_vistoria(
     current_user: Dict = Depends(get_current_user)
 ):
     """Agendar vistoria para um veículo"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Verify vehicle exists
@@ -6929,7 +6929,7 @@ async def adicionar_dano_vistoria(
     current_user: Dict = Depends(get_current_user)
 ):
     """Adicionar dano identificado em vistoria"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     dano_id = str(uuid.uuid4())
@@ -6976,7 +6976,7 @@ async def adicionar_dano_vistoria(
     return {"message": "Dano adicionado com sucesso", "dano_id": dano_id}
 
 
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Get vistoria and vehicle data
@@ -7155,7 +7155,7 @@ async def download_exemplo_contrato(tipo: str):
 @api_router.get("/parceiros/{parceiro_id}/minutas")
 async def get_minutas_parceiro(parceiro_id: str, current_user: Dict = Depends(get_current_user)):
     """Get all contract templates for a parceiro"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     minutas = await db.minutas_contrato.find({"parceiro_id": parceiro_id}, {"_id": 0}).to_list(length=None)
@@ -7164,7 +7164,7 @@ async def get_minutas_parceiro(parceiro_id: str, current_user: Dict = Depends(ge
 @api_router.post("/parceiros/{parceiro_id}/minutas")
 async def create_minuta(parceiro_id: str, minuta_data: MinutaContratoCreate, current_user: Dict = Depends(get_current_user)):
     """Create new contract template for parceiro"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     minuta_dict = minuta_data.model_dump()
@@ -7182,7 +7182,7 @@ async def create_minuta(parceiro_id: str, minuta_data: MinutaContratoCreate, cur
 @api_router.put("/minutas/{minuta_id}")
 async def update_minuta(minuta_id: str, updates: Dict[str, Any], current_user: Dict = Depends(get_current_user)):
     """Update contract template"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     updates["updated_at"] = datetime.now(timezone.utc).isoformat()
@@ -9825,7 +9825,7 @@ async def get_all_recibos(
         query = {}
         
         # Se for parceiro ou operacional, só vê seus recibos
-        if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        if current_user["role"] in [UserRole.PARCEIRO]:
             # Get motoristas associated with this parceiro/operacional
             motoristas = await db.motoristas.find({"parceiro_atribuido": current_user["id"]}, {"_id": 0, "id": 1}).to_list(100)
             motorista_ids = [m["id"] for m in motoristas]
@@ -10985,7 +10985,7 @@ async def download_contrato(contrato_id: str, current_user: Dict = Depends(get_c
 @api_router.post("/relatorios-ganhos")
 async def criar_relatorio_ganhos(relatorio_data: RelatorioGanhosCreate, current_user: Dict = Depends(get_current_user)):
     """Create earnings report for a driver (Admin, Gestor, Operacional only)"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     try:
@@ -11039,7 +11039,7 @@ async def list_relatorios_ganhos(current_user: Dict = Depends(get_current_user))
         # Filter based on role
         if current_user["role"] == UserRole.MOTORISTA:
             query["motorista_id"] = current_user["id"]
-        elif current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+        elif current_user["role"] in [UserRole.PARCEIRO]:
             # Get motoristas do parceiro/operacional
             motoristas = await db.motoristas.find({"parceiro_atribuido": current_user["id"]}, {"_id": 0, "id": 1}).to_list(100)
             motorista_ids = [m["id"] for m in motoristas]
@@ -11095,7 +11095,7 @@ async def upload_recibo(
 @api_router.post("/relatorios-ganhos/{relatorio_id}/aprovar-pagamento")
 async def aprovar_pagamento(relatorio_id: str, current_user: Dict = Depends(get_current_user)):
     """Approve payment (Admin, Gestor, Operacional, Parceiro)"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL, UserRole.PARCEIRO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     relatorio = await db.relatorios_ganhos.find_one({"id": relatorio_id}, {"_id": 0})
@@ -11120,7 +11120,7 @@ async def aprovar_pagamento(relatorio_id: str, current_user: Dict = Depends(get_
 @api_router.post("/relatorios-ganhos/{relatorio_id}/gerar-recibo")
 async def gerar_recibo_semanal(relatorio_id: str, current_user: Dict = Depends(get_current_user)):
     """Generate weekly receipt PDF (Admin, Gestor, Operacional)"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     relatorio = await db.relatorios_ganhos.find_one({"id": relatorio_id}, {"_id": 0})
@@ -11167,7 +11167,7 @@ async def marcar_pago(
     current_user: Dict = Depends(get_current_user)
 ):
     """Mark as paid with payment proof (Admin, Gestor, Operacional, Parceiro)"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL, UserRole.PARCEIRO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     relatorio = await db.relatorios_ganhos.find_one({"id": relatorio_id}, {"_id": 0})
@@ -11211,7 +11211,7 @@ async def alterar_estado_relatorio(
     current_user: Dict = Depends(get_current_user)
 ):
     """Change report status (Admin, Gestor, Operacional, Parceiro)"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL, UserRole.PARCEIRO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     relatorio = await db.relatorios_ganhos.find_one({"id": relatorio_id}, {"_id": 0})
@@ -11255,7 +11255,7 @@ async def upload_comprovativo_pagamento(
     current_user: Dict = Depends(get_current_user)
 ):
     """Upload payment proof (Admin, Gestor, Operacional, Parceiro)"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL, UserRole.PARCEIRO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     relatorio = await db.relatorios_ganhos.find_one({"id": relatorio_id}, {"_id": 0})
@@ -11307,7 +11307,7 @@ async def download_comprovativo_pagamento(
         raise HTTPException(status_code=404, detail="Report not found")
     
     # Check authorization
-    is_authorized = current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO, UserRole.OPERACIONAL, UserRole.PARCEIRO]
+    is_authorized = current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]
     
     if current_user["role"] == UserRole.PARCEIRO:
         motorista = await db.motoristas.find_one({"id": relatorio["motorista_id"]}, {"_id": 0})
