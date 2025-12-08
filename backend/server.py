@@ -3073,18 +3073,10 @@ async def get_user_permissions(current_user: Dict = Depends(get_current_user)):
             "can_manage_parceiros": False,
             "can_view_all_reports": False,
             "can_configure_system": False,
-            "description": "Gestão de frota atribuída e motoristas associados"
-        },
-        UserRole.OPERACIONAL: {
-            "can_manage_users": False,
-            "can_manage_all_vehicles": False,
-            "can_manage_all_motoristas": False,
-            "can_manage_parceiros": False,
-            "can_view_all_reports": False,
-            "can_configure_system": False,
-            "can_manage_own_fleet": True,
-            "can_set_service_levels": True,
-            "description": "Gestão operacional de frota própria com níveis de serviço"
+            "can_create_motoristas": True,
+            "can_manage_own_vehicles": True,
+            "can_manage_own_motoristas": True,
+            "description": "Gestão dos seus veículos e motoristas"
         },
         UserRole.MOTORISTA: {
             "can_manage_users": False,
