@@ -786,7 +786,7 @@ const Motoristas = ({ user, onLogout }) => {
                     >
                       Ver Detalhes
                     </Button>
-                    {!motorista.approved && (user.role === 'admin' || user.role === 'gestor_associado' || user.role === 'parceiro_associado') && (
+                    {!motorista.approved && (user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') && (
                       <Button 
                         size="sm" 
                         className="bg-blue-600 hover:bg-blue-700"
