@@ -217,36 +217,45 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
   };
 
   const handleSincronizarManual = async () => {
-    if (!selectedParceiro && user.role === 'parceiro') {
-      // Para parceiros, usar o próprio ID
-      const parceiroId = user.id;
-      setSyncing({ ...syncing, 'manual': true });
-      
-      try {
-        const token = localStorage.getItem('token');
-        // Sincronizar todas as plataformas configuradas
-        const promises = plataformas.map(async (plataforma) => {
-          const cred = credenciais.find(c => c.plataforma === plataforma.id);
-          if (cred) {
-            return axios.post(`${API}/sincronizar/${parceiroId}/${plataforma.id}`, {}, {
+    const parceiroId = selectedParceiro?.id || user.id;
+    
+    if (!parceiroId) {
+      toast.error('Parceiro não identificado');
+      return;
+    }
+    
+    setSyncing({ ...syncing, 'manual': true });
+    
+    try {
+      const token = localStorage.getItem('token');
+      // Sincronizar todas as plataformas configuradas
+      const promises = plataformas.map(async (plataforma) => {
+        const cred = credenciais.find(c => c.plataforma === plataforma.id);
+        if (cred) {
+          try {
+            return await axios.post(`${API}/sincronizar/${parceiroId}/${plataforma.id}`, {}, {
               headers: { Authorization: `Bearer ${token}` }
             });
+          } catch (err) {
+            console.error(`Erro ao sincronizar ${plataforma.name}:`, err);
+            return null;
           }
-        });
-        
-        await Promise.all(promises.filter(p => p !== undefined));
-        
-        toast.success('Sincronização manual concluída!');
-        fetchLogs();
-        fetchCredenciais();
+        }
+        return null;
+      });
+      
+      await Promise.all(promises.filter(p => p !== null));
+      
+      toast.success('Sincronização manual concluída!');
+      fetchLogs();
+      fetchCredenciais();
+      if (user.role === 'parceiro') {
         fetchDashboardStats(); // Atualizar stats
-      } catch (error) {
-        toast.error(error.response?.data?.detail || 'Erro ao sincronizar');
-      } finally {
-        setSyncing({ ...syncing, 'manual': false });
       }
-    } else {
-      toast.error('Não foi possível sincronizar');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao sincronizar');
+    } finally {
+      setSyncing({ ...syncing, 'manual': false });
     }
   };
 
