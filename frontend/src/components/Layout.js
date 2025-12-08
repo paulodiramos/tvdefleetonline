@@ -123,6 +123,10 @@ const Layout = ({ user, onLogout, children }) => {
       items.splice(2, 0, { path: '/parceiros', icon: Building, label: 'Parceiros' });
     }
 
+    if (user.role === 'admin') {
+      items.splice(3, 0, { path: '/utilizadores', icon: Users, label: 'Utilizadores' });
+    }
+
     return items;
   };
 
