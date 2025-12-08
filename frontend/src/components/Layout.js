@@ -121,18 +121,6 @@ const Layout = ({ user, onLogout, children }) => {
       items.splice(2, 0, { path: '/parceiros', icon: Building, label: 'Parceiros' });
     }
 
-    // Add Contratos submenu for admin and gestao
-    if (user.role === 'admin' || user.role === 'gestao') {
-      items.push({ 
-        label: 'Contratos', 
-        icon: FileText, 
-        submenu: [
-          { path: '/contratos', label: 'Lista de Contratos' },
-          { path: '/criar-contrato', label: 'Gerar Contrato' }
-        ]
-      });
-    }
-
     return items;
   };
 
