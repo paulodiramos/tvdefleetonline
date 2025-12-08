@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { FileText, Check, X, AlertCircle, Mail, MessageSquare, CreditCard } from 'lucide-react';
+import { FileText, Check, X, AlertCircle, Mail, MessageSquare, CreditCard, Cloud } from 'lucide-react';
 
 const Integracoes = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(false);
