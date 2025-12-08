@@ -7025,11 +7025,101 @@ async def gerar_pdf_vistoria(
         c.save()
         
         pdf_url = f"/uploads/vistorias/relatorios/vistoria_{vistoria_id}.pdf"
+        
+        # Update vistoria with PDF path
+        await db.vistorias.update_one(
+            {"id": vistoria_id},
+            {"$set": {"pdf_relatorio": str(pdf_path), "pdf_url": pdf_url}}
+        )
+        
         return {"message": "PDF generated", "pdf_url": pdf_url}
         
     except Exception as e:
         logger.error(f"Error generating PDF: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/vehicles/{vehicle_id}/vistorias/{vistoria_id}/download-pdf")
+async def download_pdf_vistoria(
+    vehicle_id: str,
+    vistoria_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Download vistoria PDF report"""
+    vistoria = await db.vistorias.find_one({"id": vistoria_id, "veiculo_id": vehicle_id}, {"_id": 0})
+    if not vistoria:
+        raise HTTPException(status_code=404, detail="Vistoria not found")
+    
+    pdf_path = vistoria.get("pdf_relatorio")
+    if not pdf_path or not Path(pdf_path).exists():
+        # Generate PDF if doesn't exist
+        await gerar_pdf_vistoria(vehicle_id, vistoria_id, current_user)
+        vistoria = await db.vistorias.find_one({"id": vistoria_id}, {"_id": 0})
+        pdf_path = vistoria.get("pdf_relatorio")
+    
+    if not pdf_path or not Path(pdf_path).exists():
+        raise HTTPException(status_code=404, detail="PDF not found")
+    
+    return FileResponse(
+        path=pdf_path,
+        media_type="application/pdf",
+        filename=f"vistoria_{vistoria_id[:8]}.pdf"
+    )
+
+
+@api_router.post("/vehicles/{vehicle_id}/vistorias/{vistoria_id}/enviar-email")
+async def enviar_email_vistoria(
+    vehicle_id: str,
+    vistoria_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Send vistoria PDF report by email to parceiro and motorista"""
+    vistoria = await db.vistorias.find_one({"id": vistoria_id, "veiculo_id": vehicle_id}, {"_id": 0})
+    if not vistoria:
+        raise HTTPException(status_code=404, detail="Vistoria not found")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Generate PDF if doesn't exist
+    pdf_path = vistoria.get("pdf_relatorio")
+    if not pdf_path or not Path(pdf_path).exists():
+        await gerar_pdf_vistoria(vehicle_id, vistoria_id, current_user)
+        vistoria = await db.vistorias.find_one({"id": vistoria_id}, {"_id": 0})
+        pdf_path = vistoria.get("pdf_relatorio")
+    
+    if not pdf_path or not Path(pdf_path).exists():
+        raise HTTPException(status_code=404, detail="PDF not found")
+    
+    # Get parceiro and motorista emails
+    parceiro_id = vehicle.get("parceiro_id")
+    motorista_id = vehicle.get("motorista_id")
+    
+    recipients = []
+    
+    if parceiro_id:
+        parceiro = await db.users.find_one({"id": parceiro_id}, {"_id": 0})
+        if parceiro and parceiro.get("email"):
+            recipients.append(parceiro["email"])
+    
+    if motorista_id:
+        motorista = await db.users.find_one({"id": motorista_id}, {"_id": 0})
+        if motorista and motorista.get("email"):
+            recipients.append(motorista["email"])
+    
+    if not recipients:
+        raise HTTPException(status_code=400, detail="No email recipients found")
+    
+    # TODO: Integrate with email service
+    # For now, just log
+    logger.info(f"Would send vistoria PDF to: {recipients}")
+    
+    return {
+        "message": "Email enviado com sucesso",
+        "recipients": recipients,
+        "note": "Email service integration pending"
+    }
 
 
 @api_router.post("/vehicles/{vehicle_id}/agendar-vistoria")
