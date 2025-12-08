@@ -54,6 +54,7 @@ const Layout = ({ user, onLogout, children }) => {
       return [
         { path: '/motoristas', icon: Users, label: 'Motoristas' },
         { path: '/vehicles', icon: Car, label: 'Veículos' },
+        { path: '/vistorias', icon: ClipboardCheck, label: 'Vistorias' },
         { 
           label: 'Contratos', 
           icon: FileText,
