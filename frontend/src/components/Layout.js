@@ -81,7 +81,14 @@ const Layout = ({ user, onLogout, children }) => {
     const items = [
       { path: '/motoristas', icon: Users, label: 'Motoristas' },
       { path: '/vehicles', icon: Car, label: 'Veículos' },
-      { path: '/contratos', icon: FileText, label: 'Contratos' },
+      { 
+        label: 'Contratos', 
+        icon: FileText,
+        submenu: [
+          { path: '/criar-contrato', label: 'Criar Contrato' },
+          { path: '/lista-contratos', label: 'Lista de Contratos' }
+        ]
+      },
       { 
         label: 'Relatórios', 
         icon: TrendingUp,
