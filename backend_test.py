@@ -1289,7 +1289,6 @@ startxref
                               f"Failed to create parceiro: {parceiro_response.status_code}")
             
             # Test 2: Create new Operacional user and verify plan is assigned
-            import time
             operacional_data = {
                 "email": f"autoplan.operacional.{int(time.time())}@test.com",
                 "password": "testpass123",
