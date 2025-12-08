@@ -320,6 +320,18 @@ function App() {
             }
           />
           <Route
+            path="/integracoes"
+            element={
+              user ? <Integracoes user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
+            path="/comunicacoes"
+            element={
+              user ? <Comunicacoes user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/vehicle-data"
             element={
               user ? <VehicleData user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
