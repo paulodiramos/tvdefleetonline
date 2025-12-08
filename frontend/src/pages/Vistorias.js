@@ -813,7 +813,7 @@ const Vistorias = ({ user, onLogout }) => {
                 >
                   <option value="">Selecione um veículo</option>
                   {vehicles
-                    .filter(v => !vistoriaForm.parceiro_filter || v.parceiro_id === vistoriaForm.parceiro_filter)
+                    .filter(v => !vistoriaForm.parceiro_id || v.parceiro_id === vistoriaForm.parceiro_id)
                     .map((vehicle) => (
                       <option key={vehicle.id} value={vehicle.id}>
                         {vehicle.matricula} - {vehicle.marca} {vehicle.modelo}
