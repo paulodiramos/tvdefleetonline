@@ -12479,6 +12479,11 @@ async def get_email_config(current_user: Dict = Depends(get_current_user)):
             return {
                 "provider": "sendgrid",
                 "api_key": "",
+                "smtp_host": "",
+                "smtp_port": 587,
+                "smtp_user": "",
+                "smtp_password": "",
+                "smtp_use_tls": True,
                 "sender_email": "",
                 "sender_name": "TVDEFleet",
                 "enabled": False
