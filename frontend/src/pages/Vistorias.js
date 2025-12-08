@@ -34,6 +34,7 @@ const Vistorias = ({ user, onLogout }) => {
   });
   
   const [vistoriaForm, setVistoriaForm] = useState({
+    veiculo_id: '',
     data_vistoria: new Date().toISOString().split('T')[0],
     tipo: 'periodica',
     km_veiculo: '',
