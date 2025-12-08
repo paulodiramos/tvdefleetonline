@@ -41,6 +41,29 @@ const RegistoMotorista = () => {
       [e.target.name]: e.target.value
     });
   };
+  
+  const handleFileChange = (e, tipoDocumento) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validar tipo de arquivo
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+      if (!validTypes.includes(file.type)) {
+        toast.error('Formato inválido. Use PDF ou imagens (JPG, PNG, WEBP)');
+        return;
+      }
+      
+      // Validar tamanho (máx 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('Arquivo muito grande. Máximo 10MB');
+        return;
+      }
+      
+      setDocumentos({
+        ...documentos,
+        [tipoDocumento]: file
+      });
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -56,9 +79,25 @@ const RegistoMotorista = () => {
       return;
     }
     
+    // Validar documentos obrigatórios
+    const docsObrigatorios = ['carta_conducao', 'licenca_tvde', 'registo_criminal', 'comprovativo_morada'];
+    const docsFaltando = docsObrigatorios.filter(doc => !documentos[doc]);
+    
+    if (docsFaltando.length > 0) {
+      toast.error('Por favor, carregue todos os documentos obrigatórios');
+      return;
+    }
+    
+    // Validar pelo menos 1 documento de identificação
+    if (!documentos.identificacao) {
+      toast.error('Por favor, carregue um documento de identificação (CC, Passaporte ou Título de Residência)');
+      return;
+    }
+    
     setLoading(true);
 
     try {
+      // 1. Registar utilizador
       const { confirmPassword, ...registoData } = formData;
       const finalData = {
         ...registoData,
@@ -66,10 +105,31 @@ const RegistoMotorista = () => {
         approved: false
       };
 
-      await axios.post(`${API}/auth/register`, finalData);
+      const response = await axios.post(`${API}/auth/register`, finalData);
+      const userId = response.data.user_id || response.data.id;
+      
+      // 2. Upload de documentos
+      const token = localStorage.getItem('token');
+      
+      for (const [tipoDoc, file] of Object.entries(documentos)) {
+        if (file) {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('tipo_documento', tipoDoc);
+          formData.append('user_id', userId);
+          formData.append('role', 'motorista');
+          
+          await axios.post(`${API}/api/documentos/upload`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data',
+              Authorization: token ? `Bearer ${token}` : ''
+            }
+          });
+        }
+      }
       
       setSuccess(true);
-      toast.success('Registo enviado com sucesso!');
+      toast.success('Registo e documentos enviados com sucesso!');
     } catch (error) {
       console.error('Erro no registo:', error);
       toast.error(error.response?.data?.detail || 'Erro ao registar. Tente novamente.');
