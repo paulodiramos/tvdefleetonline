@@ -1268,9 +1268,12 @@ startxref
                 "codigo_postal": "1000-999",
                 "localidade": "Lisboa",
                 "nome_manager": "Manager Auto Plan",
+                "email_manager": f"manager.autoplan.{int(time.time())}@test.com",
+                "email_empresa": f"empresa.autoplan.{int(time.time())}@test.com",
                 "telefone": "211999888",
                 "telemovel": "911999888",
                 "email": f"autoplan.parceiro.{int(time.time())}@test.com",
+                "certidao_permanente": "123456789012",
                 "codigo_certidao_comercial": "AUTO123",
                 "validade_certidao_comercial": "2025-12-31"
             }
