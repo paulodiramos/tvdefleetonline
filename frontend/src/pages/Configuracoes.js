@@ -466,17 +466,6 @@ const Configuracoes = ({ user, onLogout }) => {
         {/* Tabs */}
         <div className="flex space-x-2 border-b">
           <button
-            onClick={() => setActiveTab('planos')}
-            className={`px-4 py-2 font-semibold ${
-              activeTab === 'planos'
-                ? 'border-b-2 border-blue-600 text-blue-600'
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
-            <Euro className="w-4 h-4 inline mr-2" />
-            Planos de Assinatura
-          </button>
-          <button
             onClick={() => setActiveTab('email')}
             className={`px-4 py-2 font-semibold ${
               activeTab === 'email'
