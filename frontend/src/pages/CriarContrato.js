@@ -42,6 +42,10 @@ const CriarContrato = ({ user, onLogout }) => {
   
   const [loading, setLoading] = useState(false);
   const [contratoGerado, setContratoGerado] = useState(null);
+  
+  const [permitirAlterarCondicoes, setPermitirAlterarCondicoes] = useState(false);
+  const [showConfirmacaoAlteracao, setShowConfirmacaoAlteracao] = useState(false);
+  const [veiculoTemCondicoesPredefinidas, setVeiculoTemCondicoesPredefinidas] = useState(false);
 
   // Form data para valores editáveis
   const [formData, setFormData] = useState({
