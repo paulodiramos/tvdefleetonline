@@ -316,6 +316,47 @@ const RegistoParceiro = () => {
                 <p className="text-xs text-slate-500 mt-1">Formato: xxxx-xxxx-xxxx (12 dígitos)</p>
               </div>
 
+              {/* Upload de Certidão Comercial */}
+              <div className="border-t pt-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-lg font-semibold">Documento Obrigatório</h3>
+                </div>
+                
+                <div>
+                  <Label htmlFor="certidao_comercial" className="flex items-center justify-between">
+                    <span>Certidão Comercial (PDF ou Imagem) *</span>
+                    {certidaoComercial && (
+                      <span className="text-xs text-green-600 font-medium">✓ Carregado</span>
+                    )}
+                  </Label>
+                  <Input
+                    id="certidao_comercial"
+                    type="file"
+                    accept="image/*,.pdf"
+                    onChange={handleFileChange}
+                    required
+                    className="mt-1"
+                  />
+                  {certidaoComercial && (
+                    <p className="text-xs text-slate-500 mt-1">{certidaoComercial.name}</p>
+                  )}
+                  <p className="text-xs text-slate-500 mt-1">
+                    Carregue a certidão comercial da empresa em PDF ou imagem. Será automaticamente convertido para PDF.
+                  </p>
+                </div>
+
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4">
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5" />
+                    <p className="text-xs text-yellow-800">
+                      <strong>Importante:</strong> A certidão comercial é obrigatória para validar a sua empresa. 
+                      Pode carregar uma imagem (JPG, PNG) ou PDF.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div className="border-t pt-6">
                 <h3 className="text-lg font-semibold mb-4">Informações da Frota</h3>
                 <div className="grid md:grid-cols-3 gap-4">
