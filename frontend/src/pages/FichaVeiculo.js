@@ -176,7 +176,25 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
   useEffect(() => {
     fetchVehicleData();
+    fetchCategorias();
   }, [vehicleId]);
+
+  const fetchCategorias = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/configuracoes/categorias-plataformas`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setCategoriasUber(response.data.uber || []);
+      setCategoriasBolt(response.data.bolt || []);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      // Use defaults if API fails
+      setCategoriasUber(['UberX', 'Share', 'Electric', 'Black', 'Comfort', 'XL', 'XXL', 'Pet', 'Package']);
+      setCategoriasBolt(['Economy', 'Comfort', 'Executive', 'XL', 'Green', 'XXL', 'Motorista Privado', 'Pet']);
+    }
+  };
 
   // Enter edit mode and store original data
   const handleEnterEditMode = () => {
