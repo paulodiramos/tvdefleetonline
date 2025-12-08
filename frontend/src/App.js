@@ -34,6 +34,7 @@ import Comunicacoes from "@/pages/Comunicacoes";
 import VehicleData from "@/pages/VehicleData";
 import VehiclePhotos from "@/pages/VehiclePhotos";
 import VehicleVistorias from "@/pages/VehicleVistorias";
+import Vistorias from "@/pages/Vistorias";
 import EditParceiro from "@/pages/EditParceiro";
 import RecibosPagamentos from "@/pages/RecibosPagamentos";
 import FichaVeiculo from "@/pages/FichaVeiculo";
