@@ -3315,9 +3315,106 @@ async def get_motorista_by_id(motorista_id: str, current_user: Dict = Depends(ge
         logger.error(f"Error fetching motorista {motorista_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.post("/parceiros/{parceiro_id}/motoristas")
+async def parceiro_criar_motorista(
+    parceiro_id: str,
+    motorista_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Parceiro cria motorista com senha provisória"""
+    # Apenas Parceiro (próprio) ou Gestor (com acesso) ou Admin podem criar
+    if current_user["role"] == UserRole.PARCEIRO:
+        if current_user["id"] != parceiro_id:
+            raise HTTPException(status_code=403, detail="Parceiro só pode criar motoristas para si próprio")
+    elif current_user["role"] == UserRole.GESTAO:
+        # Verificar se gestor tem acesso a este parceiro
+        parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+        if not parceiro or parceiro.get("gestor_associado_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Gestor não tem acesso a este parceiro")
+    elif current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    # Verificar se email já existe
+    existing = await db.users.find_one({"email": motorista_data.get("email")})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email já registado")
+    
+    # Gerar senha provisória (últimos 9 dígitos do telefone)
+    phone = motorista_data.get("phone", "").replace(" ", "").replace("+351", "")
+    senha_provisoria = phone[-9:] if len(phone) >= 9 else f"{phone}123"
+    
+    # Criar user
+    user_id = str(uuid.uuid4())
+    user_dict = {
+        "id": user_id,
+        "email": motorista_data.get("email"),
+        "name": motorista_data.get("name"),
+        "role": UserRole.MOTORISTA,
+        "password": hash_password(senha_provisoria),
+        "phone": motorista_data.get("phone", ""),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "approved": True  # Criado por parceiro, já aprovado
+    }
+    await db.users.insert_one(user_dict)
+    
+    # Criar perfil motorista
+    motorista_dict = {
+        "id": user_id,
+        "name": motorista_data.get("name"),
+        "email": motorista_data.get("email"),
+        "phone": motorista_data.get("phone", ""),
+        "whatsapp": motorista_data.get("whatsapp", motorista_data.get("phone", "")),
+        "nif": motorista_data.get("nif", ""),
+        "data_nascimento": motorista_data.get("data_nascimento", ""),
+        "nacionalidade": motorista_data.get("nacionalidade", "Portuguesa"),
+        "morada_completa": motorista_data.get("morada_completa", ""),
+        "codigo_postal": motorista_data.get("codigo_postal", ""),
+        "carta_conducao_numero": motorista_data.get("carta_conducao_numero", ""),
+        "carta_conducao_validade": motorista_data.get("carta_conducao_validade", ""),
+        "licenca_tvde_numero": motorista_data.get("licenca_tvde_numero", ""),
+        "licenca_tvde_validade": motorista_data.get("licenca_tvde_validade", ""),
+        "regime": motorista_data.get("regime", ""),
+        "tipo_pagamento": motorista_data.get("tipo_pagamento", ""),
+        "id_cartao_frota_combustivel": f"FROTA-{str(uuid.uuid4())[:8].upper()}",
+        "parceiro_atribuido": parceiro_id,
+        "approved": True,
+        "senha_provisoria": True,  # IMPORTANTE: Forçar mudança de senha
+        "documents": {},
+        "contacto_emergencia": {},
+        "dados_bancarios": {},
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Atribuir plano base
+    plano_base = await db.planos_sistema.find_one({
+        "preco_mensal": 0, 
+        "ativo": True, 
+        "tipo_usuario": "motorista"
+    }, {"_id": 0})
+    
+    if plano_base:
+        from datetime import timedelta
+        plano_valida_ate = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+        motorista_dict["plano_id"] = plano_base["id"]
+        motorista_dict["plano_nome"] = plano_base["nome"]
+        motorista_dict["plano_valida_ate"] = plano_valida_ate
+    
+    await db.motoristas.insert_one(motorista_dict)
+    
+    logger.info(f"Parceiro {parceiro_id} criou motorista {user_id} com senha provisória")
+    
+    return {
+        "message": "Motorista criado com sucesso",
+        "motorista_id": user_id,
+        "email": motorista_data.get("email"),
+        "senha_provisoria": senha_provisoria,
+        "deve_mudar_senha": True
+    }
+
 @api_router.put("/motoristas/{motorista_id}/approve")
 async def approve_motorista(motorista_id: str, current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Find or create default free plan in the new unified system
