@@ -7807,11 +7807,21 @@ async def get_contratos(
     # Check permissions
     if current_user["role"] == "parceiro":
         query["parceiro_id"] = current_user["id"]
-    elif current_user["role"] == "operacional":
-        if not await check_feature_access(current_user, "visualizar_contratos"):
-            raise HTTPException(status_code=403, detail="Sem permissão")
     
     contratos = await db.contratos_motorista.find(query, {"_id": 0}).to_list(length=None)
+    
+    # Populate motorista and vehicle names
+    for contrato in contratos:
+        if contrato.get("motorista_id"):
+            motorista = await db.users.find_one({"id": contrato["motorista_id"]}, {"_id": 0, "name": 1})
+            if motorista:
+                contrato["motorista_nome"] = motorista.get("name", "N/A")
+        
+        if contrato.get("veiculo_id"):
+            veiculo = await db.vehicles.find_one({"id": contrato["veiculo_id"]}, {"_id": 0, "matricula": 1})
+            if veiculo:
+                contrato["veiculo_matricula"] = veiculo.get("matricula", "N/A")
+    
     return contratos
 
 @api_router.get("/contratos/{contrato_id}")
