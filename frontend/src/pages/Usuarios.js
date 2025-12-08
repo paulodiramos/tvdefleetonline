@@ -118,6 +118,57 @@ const Usuarios = ({ user, onLogout }) => {
     }
   };
 
+  const fetchParceiros = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/parceiros`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setParceiros(response.data || []);
+    } catch (error) {
+      console.error('Error fetching parceiros:', error);
+    }
+  };
+
+  const handleOpenParceirosDialog = async (gestor) => {
+    setSelectedGestor(gestor);
+    
+    // Buscar parceiros já atribuídos ao gestor
+    const parceirosAtribuidos = gestor.parceiros_atribuidos || [];
+    setSelectedParceiros(parceirosAtribuidos);
+    setShowParceirosDialog(true);
+  };
+
+  const handleAtribuirParceiros = async () => {
+    if (!selectedGestor) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/gestores/${selectedGestor.id}/atribuir-parceiros`,
+        { parceiros_ids: selectedParceiros },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success(`${selectedParceiros.length} parceiros atribuídos ao gestor com sucesso!`);
+      setShowParceirosDialog(false);
+      fetchUsers();
+    } catch (error) {
+      console.error('Error assigning parceiros:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao atribuir parceiros');
+    }
+  };
+
+  const toggleParceiro = (parceiroId) => {
+    setSelectedParceiros(prev => {
+      if (prev.includes(parceiroId)) {
+        return prev.filter(id => id !== parceiroId);
+      } else {
+        return [...prev, parceiroId];
+      }
+    });
+  };
+
   const handleAtribuirPlano = async () => {
     if (!selectedPlanoId) {
       toast.error('Selecione um plano');
