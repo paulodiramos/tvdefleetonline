@@ -98,6 +98,17 @@ function App() {
     localStorage.setItem("token", token);
     axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
     setUser(userData);
+    
+    // Verificar se precisa mudar senha
+    if (userData.senha_provisoria) {
+      setShowMudarSenha(true);
+    }
+  };
+
+  const handleSenhaChanged = async () => {
+    // Recarregar usuário após mudança de senha
+    setShowMudarSenha(false);
+    await fetchCurrentUser();
   };
 
   const handleLogout = () => {
