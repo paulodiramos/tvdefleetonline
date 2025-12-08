@@ -32,6 +32,7 @@ import Configuracoes from "@/pages/Configuracoes";
 import Integracoes from "@/pages/Integracoes";
 import Comunicacoes from "@/pages/Comunicacoes";
 import ConfiguracaoComunicacoes from "@/pages/ConfiguracaoComunicacoes";
+import ConfiguracaoCategorias from "@/pages/ConfiguracaoCategorias";
 import VehicleData from "@/pages/VehicleData";
 import VehiclePhotos from "@/pages/VehiclePhotos";
 import VehicleVistorias from "@/pages/VehicleVistorias";
