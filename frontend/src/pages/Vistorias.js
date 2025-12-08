@@ -466,19 +466,19 @@ const Vistorias = ({ user, onLogout }) => {
     input.click();
   };
 
-  const handleGeneratePDF = async (vistoriaId) => {
+  const handleGeneratePDF = async (vehicleId, vistoriaId) => {
     try {
       setGeneratingPDF(true);
       const token = localStorage.getItem('token');
 
       const response = await axios.post(
-        `${API}/vehicles/${selectedVehicle.id}/vistorias/${vistoriaId}/gerar-pdf`,
+        `${API}/vehicles/${vehicleId}/vistorias/${vistoriaId}/gerar-pdf`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       toast.success('PDF gerado com sucesso!');
-      fetchVistorias(selectedVehicle.id);
+      aplicarFiltros(); // Reload list
       
       // Download PDF
       if (response.data.pdf_url) {
@@ -487,6 +487,39 @@ const Vistorias = ({ user, onLogout }) => {
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Erro ao gerar PDF');
+    } finally {
+      setGeneratingPDF(false);
+    }
+  };
+
+  const handleDownloadPDF = async (vehicleId, vistoriaId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const url = `${API}/vehicles/${vehicleId}/vistorias/${vistoriaId}/download-pdf`;
+      
+      window.open(url + `?token=${token}`, '_blank');
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      toast.error('Erro ao baixar PDF');
+    }
+  };
+
+  const handleEnviarEmail = async (vehicleId, vistoriaId) => {
+    try {
+      setGeneratingPDF(true);
+      const token = localStorage.getItem('token');
+
+      await axios.post(
+        `${API}/vehicles/${vehicleId}/vistorias/${vistoriaId}/enviar-email`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success('Email enviado com sucesso para parceiro e motorista!');
+    } catch (error) {
+      console.error('Error sending email:', error);
+      const errorMsg = error.response?.data?.detail || 'Erro ao enviar email';
+      toast.error(errorMsg);
     } finally {
       setGeneratingPDF(false);
     }
