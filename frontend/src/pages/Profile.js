@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { User as UserIcon, Lock, Shield, Edit, Save, X } from 'lucide-react';
+import MoloniConfig from '@/components/MoloniConfig';
 
 const Profile = ({ user, onLogout }) => {
   const [permissions, setPermissions] = useState(null);
