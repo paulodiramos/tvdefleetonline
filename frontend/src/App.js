@@ -354,6 +354,12 @@ function App() {
             }
           />
           <Route
+            path="/configuracao-comunicacoes"
+            element={
+              user && user.role === 'admin' ? <ConfiguracaoComunicacoes user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
             path="/vehicle-data"
             element={
               user ? <VehicleData user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
