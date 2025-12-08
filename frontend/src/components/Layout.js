@@ -125,6 +125,7 @@ const Layout = ({ user, onLogout, children }) => {
 
     if (user.role === 'admin') {
       items.splice(3, 0, { path: '/utilizadores', icon: Users, label: 'Utilizadores' });
+      items.splice(4, 0, { path: '/planos-parceiros', icon: Package, label: 'Planos' });
     }
 
     return items;
