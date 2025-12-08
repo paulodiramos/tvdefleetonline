@@ -145,9 +145,9 @@ MODULOS_SISTEMA = {
         "tipo_usuario": "parceiro",
         "ordem": 16
     },
-    "integracao_moloni": {
-        "nome": "Integração Moloni",
-        "descricao": "Faturação automática com Moloni",
+    "historico_veiculo": {
+        "nome": "Histórico de Veículo",
+        "descricao": "Visualizar histórico completo de eventos e manutenções do veículo",
         "tipo_usuario": "parceiro",
         "ordem": 17
     },
