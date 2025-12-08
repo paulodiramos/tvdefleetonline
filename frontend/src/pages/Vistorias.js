@@ -163,7 +163,7 @@ const Vistorias = ({ user, onLogout }) => {
   const handleCreateVistoria = async (e) => {
     e.preventDefault();
     
-    if (!selectedVehicle) {
+    if (!vistoriaForm.veiculo_id) {
       toast.error('Selecione um veículo');
       return;
     }
@@ -173,17 +173,18 @@ const Vistorias = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       
       const response = await axios.post(
-        `${API}/vehicles/${selectedVehicle.id}/vistorias`,
+        `${API}/vehicles/${vistoriaForm.veiculo_id}/vistorias`,
         vistoriaForm,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       toast.success('Vistoria criada com sucesso!');
       setShowCreateDialog(false);
-      fetchVistorias(selectedVehicle.id);
+      aplicarFiltros(); // Recarregar todas as vistorias
       
       // Reset form
       setVistoriaForm({
+        veiculo_id: '',
         data_vistoria: new Date().toISOString().split('T')[0],
         tipo: 'periodica',
         km_veiculo: '',
