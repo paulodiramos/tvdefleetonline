@@ -12398,6 +12398,13 @@ async def gerar_relatorio_pdf(
         from reportlab.pdfgen import canvas
         from reportlab.lib.units import mm
         from reportlab.lib import colors
+        
+        # TODO: Implement PDF generation logic
+        return {"message": "PDF generation not implemented yet"}
+    
+    except Exception as e:
+        logger.error(f"Error generating PDF: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============================================================================
