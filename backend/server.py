@@ -6935,7 +6935,7 @@ async def gerar_pdf_vistoria(
     vistoria_id: str,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Generate PDF report for a vistoria"""
+    """Generate comprehensive PDF report for a vistoria"""
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
@@ -6951,6 +6951,7 @@ async def gerar_pdf_vistoria(
         from reportlab.lib.pagesizes import A4
         from reportlab.pdfgen import canvas
         from reportlab.lib.units import cm
+        from reportlab.lib.colors import HexColor, black
         
         pdf_dir = UPLOAD_DIR / "vistorias" / "relatorios"
         pdf_dir.mkdir(parents=True, exist_ok=True)
@@ -6959,20 +6960,191 @@ async def gerar_pdf_vistoria(
         c = canvas.Canvas(str(pdf_path), pagesize=A4)
         width, height = A4
         
-        c.setFont("Helvetica-Bold", 16)
+        # Header
+        c.setFillColor(HexColor('#1e40af'))
+        c.rect(0, height - 3*cm, width, 3*cm, fill=True, stroke=False)
+        
+        c.setFillColor(HexColor('#ffffff'))
+        c.setFont("Helvetica-Bold", 20)
         c.drawString(2*cm, height - 2*cm, "RELATÓRIO DE VISTORIA")
+        c.setFont("Helvetica", 12)
+        c.drawString(2*cm, height - 2.6*cm, f"Vistoria ID: {vistoria_id[:8]}")
+        
+        # Reset color
+        c.setFillColor(black)
+        
+        y_position = height - 4.5*cm
+        
+        # Vehicle Information Section
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(2*cm, y_position, "Informações do Veículo")
+        y_position -= 0.8*cm
         
         c.setFont("Helvetica", 10)
-        c.drawString(2*cm, height - 4*cm, f"Veículo: {vehicle.get('marca')} {vehicle.get('modelo')} - {vehicle.get('matricula')}")
-        c.drawString(2*cm, height - 4.5*cm, f"Data: {vistoria.get('data_vistoria')}")
-        c.drawString(2*cm, height - 5*cm, f"Estado: {vistoria.get('estado_geral')}")
+        c.drawString(2*cm, y_position, f"Marca/Modelo: {vehicle.get('marca', 'N/A')} {vehicle.get('modelo', 'N/A')}")
+        y_position -= 0.5*cm
+        c.drawString(2*cm, y_position, f"Matrícula: {vehicle.get('matricula', 'N/A')}")
+        y_position -= 0.5*cm
+        c.drawString(2*cm, y_position, f"Ano: {vehicle.get('ano', 'N/A')}")
+        y_position -= 0.5*cm
+        c.drawString(2*cm, y_position, f"Cor: {vehicle.get('cor', 'N/A')}")
+        y_position -= 1*cm
+        
+        # Inspection Details Section
+        c.setFont("Helvetica-Bold", 14)
+        c.drawString(2*cm, y_position, "Detalhes da Vistoria")
+        y_position -= 0.8*cm
+        
+        c.setFont("Helvetica", 10)
+        data_vistoria = vistoria.get('data_vistoria', '')
+        if isinstance(data_vistoria, str):
+            try:
+                dt = datetime.fromisoformat(data_vistoria.replace('Z', '+00:00'))
+                data_vistoria_fmt = dt.strftime('%d/%m/%Y %H:%M')
+            except:
+                data_vistoria_fmt = data_vistoria
+        else:
+            data_vistoria_fmt = str(data_vistoria)
+        
+        c.drawString(2*cm, y_position, f"Data da Vistoria: {data_vistoria_fmt}")
+        y_position -= 0.5*cm
+        c.drawString(2*cm, y_position, f"Tipo: {vistoria.get('tipo', 'N/A').capitalize()}")
+        y_position -= 0.5*cm
+        c.drawString(2*cm, y_position, f"KM do Veículo: {vistoria.get('km_veiculo', 'N/A')}")
+        y_position -= 0.5*cm
+        c.drawString(2*cm, y_position, f"Responsável: {vistoria.get('responsavel_nome', 'N/A')}")
+        y_position -= 0.5*cm
+        
+        # Estado Geral
+        estado_geral = vistoria.get('estado_geral', 'bom')
+        estado_color = HexColor('#10b981') if estado_geral == 'bom' else HexColor('#ef4444') if estado_geral == 'mau' else HexColor('#f59e0b')
+        c.setFillColor(estado_color)
+        c.drawString(2*cm, y_position, f"Estado Geral: {estado_geral.upper()}")
+        c.setFillColor(black)
+        y_position -= 1*cm
+        
+        # Itens Verificados Section
+        if vistoria.get('itens_verificados'):
+            c.setFont("Helvetica-Bold", 14)
+            c.drawString(2*cm, y_position, "Itens Verificados")
+            y_position -= 0.8*cm
+            
+            c.setFont("Helvetica", 10)
+            itens = vistoria.get('itens_verificados', {})
+            for key, value in itens.items():
+                if y_position < 3*cm:
+                    c.showPage()
+                    y_position = height - 2*cm
+                
+                status_symbol = "✓" if value else "✗"
+                status_color = HexColor('#10b981') if value else HexColor('#ef4444')
+                c.setFillColor(status_color)
+                c.drawString(2*cm, y_position, f"{status_symbol} {key.replace('_', ' ').title()}")
+                c.setFillColor(black)
+                y_position -= 0.5*cm
+            
+            y_position -= 0.5*cm
+        
+        # Danos Encontrados Section
+        if vistoria.get('danos_encontrados') and len(vistoria['danos_encontrados']) > 0:
+            c.setFont("Helvetica-Bold", 14)
+            c.setFillColor(HexColor('#ef4444'))
+            c.drawString(2*cm, y_position, "Danos Encontrados")
+            c.setFillColor(black)
+            y_position -= 0.8*cm
+            
+            c.setFont("Helvetica", 10)
+            for idx, dano in enumerate(vistoria['danos_encontrados'], 1):
+                if y_position < 3*cm:
+                    c.showPage()
+                    y_position = height - 2*cm
+                
+                c.drawString(2*cm, y_position, f"{idx}. {dano.get('descricao', 'N/A')}")
+                y_position -= 0.4*cm
+                c.drawString(2.5*cm, y_position, f"Localização: {dano.get('localizacao', 'N/A')}")
+                y_position -= 0.4*cm
+                c.drawString(2.5*cm, y_position, f"Gravidade: {dano.get('gravidade', 'N/A')}")
+                y_position -= 0.7*cm
+        
+        # Observações Section
+        if vistoria.get('observacoes'):
+            if y_position < 5*cm:
+                c.showPage()
+                y_position = height - 2*cm
+            
+            c.setFont("Helvetica-Bold", 14)
+            c.drawString(2*cm, y_position, "Observações")
+            y_position -= 0.8*cm
+            
+            c.setFont("Helvetica", 10)
+            # Wrap text
+            obs_text = vistoria.get('observacoes', '')
+            text_object = c.beginText(2*cm, y_position)
+            text_object.setFont("Helvetica", 10)
+            
+            # Simple text wrapping
+            max_width = width - 4*cm
+            words = obs_text.split(' ')
+            current_line = ""
+            
+            for word in words:
+                test_line = current_line + word + " "
+                if c.stringWidth(test_line, "Helvetica", 10) < max_width:
+                    current_line = test_line
+                else:
+                    text_object.textLine(current_line)
+                    current_line = word + " "
+            
+            if current_line:
+                text_object.textLine(current_line)
+            
+            c.drawText(text_object)
+        
+        # Footer
+        c.setFont("Helvetica", 8)
+        c.setFillColor(HexColor('#64748b'))
+        c.drawString(2*cm, 1.5*cm, f"Gerado em: {datetime.now(timezone.utc).strftime('%d/%m/%Y às %H:%M')}")
+        c.drawString(2*cm, 1*cm, "TVDEFleet - Sistema de Gestão de Frotas")
         
         c.save()
         
         pdf_url = f"/uploads/vistorias/relatorios/vistoria_{vistoria_id}.pdf"
-        await db.vistorias.update_one({"id": vistoria_id}, {"$set": {"pdf_relatorio": pdf_url}})
+        await db.vistorias.update_one(
+            {"id": vistoria_id}, 
+            {
+                "$set": {
+                    "pdf_relatorio": pdf_url,
+                    "updated_at": datetime.now(timezone.utc)
+                }
+            }
+        )
         
-        return {"message": "PDF generated", "pdf_url": pdf_url}
+        # Add to vehicle history
+        await db.vehicles.update_one(
+            {"id": vehicle_id},
+            {
+                "$push": {
+                    "historico_editavel": {
+                        "id": str(uuid.uuid4()),
+                        "tipo": "vistoria",
+                        "titulo": f"Vistoria {vistoria.get('tipo', 'periódica')}",
+                        "descricao": f"Estado geral: {vistoria.get('estado_geral', 'N/A')}",
+                        "data": vistoria.get('data_vistoria'),
+                        "vistoria_id": vistoria_id,
+                        "pdf_url": pdf_url,
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    }
+                }
+            }
+        )
+        
+        logger.info(f"PDF generated for vistoria {vistoria_id} and added to vehicle history")
+        
+        return {
+            "message": "PDF generated successfully and added to vehicle history",
+            "pdf_url": pdf_url,
+            "vistoria_id": vistoria_id
+        }
     except Exception as e:
         logger.error(f"Error generating PDF: {e}")
         raise HTTPException(status_code=500, detail=str(e))
