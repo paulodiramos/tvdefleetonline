@@ -388,25 +388,25 @@ const ConfiguracaoPlanos = ({ user, onLogout }) => {
                       <div>
                         <p className="font-semibold text-blue-900">Mensal:</p>
                         <p className="text-blue-800">
-                          Sem IVA: €{planoForm.preco_mensal.toFixed(2)}
+                          Sem IVA: €{(planoForm.preco_mensal || 0).toFixed(2)}
                         </p>
                         <p className="text-blue-800">
-                          IVA ({planoForm.taxa_iva}%): €{(planoForm.preco_mensal * planoForm.taxa_iva / 100).toFixed(2)}
+                          IVA ({planoForm.taxa_iva || 23}%): €{((planoForm.preco_mensal || 0) * (planoForm.taxa_iva || 23) / 100).toFixed(2)}
                         </p>
                         <p className="text-lg font-bold text-blue-900">
-                          Com IVA: €{(planoForm.preco_mensal * (1 + planoForm.taxa_iva / 100)).toFixed(2)}
+                          Com IVA: €{((planoForm.preco_mensal || 0) * (1 + (planoForm.taxa_iva || 23) / 100)).toFixed(2)}
                         </p>
                       </div>
                       <div>
                         <p className="font-semibold text-blue-900">Semanal:</p>
                         <p className="text-blue-800">
-                          Sem IVA: €{(planoForm.preco_mensal / 4.33).toFixed(2)}
+                          Sem IVA: €{((planoForm.preco_mensal || 0) / 4.33).toFixed(2)}
                         </p>
                         <p className="text-blue-800">
-                          IVA ({planoForm.taxa_iva}%): €{(planoForm.preco_mensal / 4.33 * planoForm.taxa_iva / 100).toFixed(2)}
+                          IVA ({planoForm.taxa_iva || 23}%): €{((planoForm.preco_mensal || 0) / 4.33 * (planoForm.taxa_iva || 23) / 100).toFixed(2)}
                         </p>
                         <p className="text-lg font-bold text-blue-900">
-                          Com IVA: €{(planoForm.preco_mensal * (1 + planoForm.taxa_iva / 100) / 4.33).toFixed(2)}
+                          Com IVA: €{((planoForm.preco_mensal || 0) * (1 + (planoForm.taxa_iva || 23) / 100) / 4.33).toFixed(2)}
                         </p>
                       </div>
                     </div>
