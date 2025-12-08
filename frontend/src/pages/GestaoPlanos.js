@@ -11,10 +11,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { 
-  Package, Plus, Edit, Trash2, Check, X, DollarSign,
-  Car, Users, Shield, Info, Search
+  Package, Plus, Edit, Trash2, Check, X, Info, Search, DollarSign
 } from 'lucide-react';
 
 const GestaoPlanos = ({ user, onLogout }) => {
@@ -28,19 +28,37 @@ const GestaoPlanos = ({ user, onLogout }) => {
     nome: '',
     descricao: '',
     modulos: [],
-    preco: 0,
-    periodicidade: 'mensal',
-    tipo_cobranca: 'fixo',
+    tipo_cobranca: 'por_veiculo',
     limite_veiculos: null,
-    limite_motoristas: null,
+    taxa_iva: 23,
+    preco_semanal_sem_iva: 0,
+    preco_semanal_com_iva: 0,
+    desconto_semanal: 0,
+    preco_mensal_sem_iva: 0,
+    preco_mensal_com_iva: 0,
+    desconto_mensal: 0,
+    preco_trimestral_sem_iva: 0,
+    preco_trimestral_com_iva: 0,
+    desconto_trimestral: 0,
+    preco_semestral_sem_iva: 0,
+    preco_semestral_com_iva: 0,
+    desconto_semestral: 0,
+    preco_anual_sem_iva: 0,
+    preco_anual_com_iva: 0,
+    desconto_anual: 0,
     ativo: true,
     tipo_usuario: 'parceiro'
   });
 
   useEffect(() => {
     fetchPlanos();
-    fetchModulos();
   }, []);
+
+  useEffect(() => {
+    if (planoForm.tipo_usuario) {
+      fetchModulos(planoForm.tipo_usuario);
+    }
+  }, [planoForm.tipo_usuario]);
 
   const fetchPlanos = async () => {
     try {
@@ -57,10 +75,10 @@ const GestaoPlanos = ({ user, onLogout }) => {
     }
   };
 
-  const fetchModulos = async () => {
+  const fetchModulos = async (tipoUsuario) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/modulos`, {
+      const response = await axios.get(`${API}/modulos?tipo_usuario=${tipoUsuario}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setModulos(response.data);
@@ -73,15 +91,32 @@ const GestaoPlanos = ({ user, onLogout }) => {
   const handleOpenModal = (plano = null) => {
     if (plano) {
       setEditingPlano(plano);
+      
+      // Extrair preços da estrutura
+      const precos = plano.precos || {};
+      
       setPlanoForm({
         nome: plano.nome,
         descricao: plano.descricao || '',
         modulos: plano.modulos || [],
-        preco: plano.preco || 0,
-        periodicidade: plano.periodicidade || 'mensal',
-        tipo_cobranca: plano.tipo_cobranca || 'fixo',
+        tipo_cobranca: plano.tipo_cobranca || 'por_veiculo',
         limite_veiculos: plano.limite_veiculos || null,
-        limite_motoristas: plano.limite_motoristas || null,
+        taxa_iva: plano.taxa_iva || 23,
+        preco_semanal_sem_iva: precos.semanal?.preco_sem_iva || 0,
+        preco_semanal_com_iva: precos.semanal?.preco_com_iva || 0,
+        desconto_semanal: precos.semanal?.desconto_percentual || 0,
+        preco_mensal_sem_iva: precos.mensal?.preco_sem_iva || 0,
+        preco_mensal_com_iva: precos.mensal?.preco_com_iva || 0,
+        desconto_mensal: precos.mensal?.desconto_percentual || 0,
+        preco_trimestral_sem_iva: precos.trimestral?.preco_sem_iva || 0,
+        preco_trimestral_com_iva: precos.trimestral?.preco_com_iva || 0,
+        desconto_trimestral: precos.trimestral?.desconto_percentual || 0,
+        preco_semestral_sem_iva: precos.semestral?.preco_sem_iva || 0,
+        preco_semestral_com_iva: precos.semestral?.preco_com_iva || 0,
+        desconto_semestral: precos.semestral?.desconto_percentual || 0,
+        preco_anual_sem_iva: precos.anual?.preco_sem_iva || 0,
+        preco_anual_com_iva: precos.anual?.preco_com_iva || 0,
+        desconto_anual: precos.anual?.desconto_percentual || 0,
         ativo: plano.ativo !== false,
         tipo_usuario: plano.tipo_usuario || 'parceiro'
       });
@@ -91,11 +126,24 @@ const GestaoPlanos = ({ user, onLogout }) => {
         nome: '',
         descricao: '',
         modulos: [],
-        preco: 0,
-        periodicidade: 'mensal',
-        tipo_cobranca: 'fixo',
+        tipo_cobranca: 'por_veiculo',
         limite_veiculos: null,
-        limite_motoristas: null,
+        taxa_iva: 23,
+        preco_semanal_sem_iva: 0,
+        preco_semanal_com_iva: 0,
+        desconto_semanal: 0,
+        preco_mensal_sem_iva: 0,
+        preco_mensal_com_iva: 0,
+        desconto_mensal: 0,
+        preco_trimestral_sem_iva: 0,
+        preco_trimestral_com_iva: 0,
+        desconto_trimestral: 0,
+        preco_semestral_sem_iva: 0,
+        preco_semestral_com_iva: 0,
+        desconto_semestral: 0,
+        preco_anual_sem_iva: 0,
+        preco_anual_com_iva: 0,
+        desconto_anual: 0,
         ativo: true,
         tipo_usuario: 'parceiro'
       });
@@ -115,6 +163,10 @@ const GestaoPlanos = ({ user, onLogout }) => {
         ? prev.modulos.filter(m => m !== codigoModulo)
         : [...prev.modulos, codigoModulo]
     }));
+  };
+
+  const calcularComIVA = (semIva, taxa) => {
+    return (parseFloat(semIva) * (1 + parseFloat(taxa) / 100)).toFixed(2);
   };
 
   const handleSubmit = async (e) => {
@@ -183,8 +235,7 @@ const GestaoPlanos = ({ user, onLogout }) => {
   const getTipoCobrancaLabel = (tipo) => {
     const labels = {
       'por_veiculo': 'Por Veículo',
-      'por_motorista': 'Por Motorista',
-      'fixo': 'Valor Fixo'
+      'fixo': 'Fixo com Limite'
     };
     return labels[tipo] || tipo;
   };
@@ -197,10 +248,18 @@ const GestaoPlanos = ({ user, onLogout }) => {
     return tipo === 'motorista' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800';
   };
 
+  const getPrecoDisplay = (plano) => {
+    if (!plano.precos) return 'N/A';
+    const mensal = plano.precos.mensal;
+    if (mensal && mensal.preco_com_iva > 0) {
+      return `${mensal.preco_com_iva}€/mês`;
+    }
+    return 'Configurar preços';
+  };
+
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
@@ -217,24 +276,21 @@ const GestaoPlanos = ({ user, onLogout }) => {
           </Button>
         </div>
 
-        {/* Info Card */}
         <Card className="mb-6 border-blue-200 bg-blue-50">
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
               <Info className="w-5 h-5 text-blue-600 mt-0.5" />
               <div>
-                <h3 className="font-semibold text-blue-900 mb-1">Tipos de Cobrança Disponíveis:</h3>
+                <h3 className="font-semibold text-blue-900 mb-1">Tipos de Cobrança:</h3>
                 <ul className="text-sm text-blue-800 space-y-1">
                   <li><strong>Por Veículo:</strong> Cobrado por cada veículo gerido</li>
-                  <li><strong>Por Motorista:</strong> Cobrado por cada motorista registado</li>
-                  <li><strong>Valor Fixo:</strong> Valor mensal fixo com limite de veículos/motoristas</li>
+                  <li><strong>Fixo com Limite:</strong> Valor fixo com limite de veículos</li>
                 </ul>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Search */}
         <div className="mb-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -247,7 +303,6 @@ const GestaoPlanos = ({ user, onLogout }) => {
           </div>
         </div>
 
-        {/* Plans Grid */}
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -295,8 +350,7 @@ const GestaoPlanos = ({ user, onLogout }) => {
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-slate-600">Preço:</span>
                       <span className="font-bold text-lg text-blue-600">
-                        {plano.preco}€
-                        <span className="text-sm text-slate-500">/{plano.periodicidade}</span>
+                        {getPrecoDisplay(plano)}
                       </span>
                     </div>
                   </div>
@@ -305,17 +359,9 @@ const GestaoPlanos = ({ user, onLogout }) => {
                     <p className="text-sm font-medium text-slate-700 mb-2">
                       Módulos Incluídos:
                     </p>
-                    <div className="flex flex-wrap gap-1">
-                      {plano.modulos && plano.modulos.length > 0 ? (
-                        <>
-                          <Badge variant="outline" className="text-xs">
-                            {plano.modulos.length} módulos
-                          </Badge>
-                        </>
-                      ) : (
-                        <span className="text-xs text-slate-500">Nenhum módulo</span>
-                      )}
-                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {plano.modulos?.length || 0} módulos
+                    </Badge>
                   </div>
 
                   <div className="flex gap-2 mt-4">
@@ -344,9 +390,8 @@ const GestaoPlanos = ({ user, onLogout }) => {
           </div>
         )}
 
-        {/* Modal */}
         <Dialog open={showModal} onOpenChange={setShowModal}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingPlano ? 'Editar Plano' : 'Criar Novo Plano'}
@@ -354,7 +399,6 @@ const GestaoPlanos = ({ user, onLogout }) => {
             </DialogHeader>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Basic Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="nome">Nome do Plano *</Label>
@@ -371,7 +415,7 @@ const GestaoPlanos = ({ user, onLogout }) => {
                   <Label htmlFor="tipo_usuario">Tipo de Utilizador *</Label>
                   <Select
                     value={planoForm.tipo_usuario}
-                    onValueChange={(value) => setPlanoForm({ ...planoForm, tipo_usuario: value })}
+                    onValueChange={(value) => setPlanoForm({ ...planoForm, tipo_usuario: value, modulos: [] })}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -395,7 +439,6 @@ const GestaoPlanos = ({ user, onLogout }) => {
                 />
               </div>
 
-              {/* Pricing */}
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label htmlFor="tipo_cobranca">Tipo de Cobrança *</Label>
@@ -407,76 +450,99 @@ const GestaoPlanos = ({ user, onLogout }) => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="fixo">Valor Fixo</SelectItem>
                       <SelectItem value="por_veiculo">Por Veículo</SelectItem>
-                      <SelectItem value="por_motorista">Por Motorista</SelectItem>
+                      <SelectItem value="fixo">Fixo com Limite</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
-                  <Label htmlFor="preco">Preço (€) *</Label>
+                  <Label htmlFor="limite_veiculos">Limite de Veículos</Label>
                   <Input
-                    id="preco"
+                    id="limite_veiculos"
                     type="number"
-                    step="0.01"
-                    value={planoForm.preco}
-                    onChange={(e) => setPlanoForm({ ...planoForm, preco: parseFloat(e.target.value) })}
-                    required
+                    value={planoForm.limite_veiculos || ''}
+                    onChange={(e) => setPlanoForm({ 
+                      ...planoForm, 
+                      limite_veiculos: e.target.value ? parseInt(e.target.value) : null 
+                    })}
+                    placeholder={planoForm.tipo_cobranca === 'fixo' ? 'Obrigatório' : 'Opcional'}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="periodicidade">Periodicidade *</Label>
-                  <Select
-                    value={planoForm.periodicidade}
-                    onValueChange={(value) => setPlanoForm({ ...planoForm, periodicidade: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mensal">Mensal</SelectItem>
-                      <SelectItem value="anual">Anual</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="taxa_iva">Taxa IVA (%)</Label>
+                  <Input
+                    id="taxa_iva"
+                    type="number"
+                    value={planoForm.taxa_iva}
+                    onChange={(e) => setPlanoForm({ ...planoForm, taxa_iva: parseFloat(e.target.value) })}
+                  />
                 </div>
               </div>
 
-              {/* Limits (only for fixo) */}
-              {planoForm.tipo_cobranca === 'fixo' && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="limite_veiculos">Limite de Veículos</Label>
-                    <Input
-                      id="limite_veiculos"
-                      type="number"
-                      value={planoForm.limite_veiculos || ''}
-                      onChange={(e) => setPlanoForm({ 
-                        ...planoForm, 
-                        limite_veiculos: e.target.value ? parseInt(e.target.value) : null 
-                      })}
-                      placeholder="Ilimitado"
-                    />
-                  </div>
+              <div>
+                <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                  <DollarSign className="w-5 h-5" />
+                  Preços por Periodicidade
+                </h3>
+                <Tabs defaultValue="mensal" className="w-full">
+                  <TabsList className="grid w-full grid-cols-5">
+                    <TabsTrigger value="semanal">Semanal</TabsTrigger>
+                    <TabsTrigger value="mensal">Mensal</TabsTrigger>
+                    <TabsTrigger value="trimestral">Trimestral</TabsTrigger>
+                    <TabsTrigger value="semestral">Semestral</TabsTrigger>
+                    <TabsTrigger value="anual">Anual</TabsTrigger>
+                  </TabsList>
 
-                  <div>
-                    <Label htmlFor="limite_motoristas">Limite de Motoristas</Label>
-                    <Input
-                      id="limite_motoristas"
-                      type="number"
-                      value={planoForm.limite_motoristas || ''}
-                      onChange={(e) => setPlanoForm({ 
-                        ...planoForm, 
-                        limite_motoristas: e.target.value ? parseInt(e.target.value) : null 
-                      })}
-                      placeholder="Ilimitado"
-                    />
-                  </div>
-                </div>
-              )}
+                  {['semanal', 'mensal', 'trimestral', 'semestral', 'anual'].map((periodo) => (
+                    <TabsContent key={periodo} value={periodo} className="space-y-4">
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <Label>Preço sem IVA (€)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={planoForm[`preco_${periodo}_sem_iva`]}
+                            onChange={(e) => {
+                              const semIva = parseFloat(e.target.value) || 0;
+                              const comIva = calcularComIVA(semIva, planoForm.taxa_iva);
+                              setPlanoForm({ 
+                                ...planoForm, 
+                                [`preco_${periodo}_sem_iva`]: semIva,
+                                [`preco_${periodo}_com_iva`]: parseFloat(comIva)
+                              });
+                            }}
+                          />
+                        </div>
+                        <div>
+                          <Label>Preço com IVA (€)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={planoForm[`preco_${periodo}_com_iva`]}
+                            readOnly
+                            className="bg-slate-100"
+                          />
+                        </div>
+                        <div>
+                          <Label>Desconto (%)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            value={planoForm[`desconto_${periodo}`]}
+                            onChange={(e) => setPlanoForm({ 
+                              ...planoForm, 
+                              [`desconto_${periodo}`]: parseFloat(e.target.value) || 0 
+                            })}
+                          />
+                        </div>
+                      </div>
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              </div>
 
-              {/* Modules Selection */}
               <div>
                 <Label className="text-base font-semibold mb-3 block">
                   Módulos Incluídos * ({planoForm.modulos.length} selecionados)
@@ -510,7 +576,6 @@ const GestaoPlanos = ({ user, onLogout }) => {
                 </div>
               </div>
 
-              {/* Status */}
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="ativo"
@@ -522,7 +587,6 @@ const GestaoPlanos = ({ user, onLogout }) => {
                 </Label>
               </div>
 
-              {/* Actions */}
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button type="button" variant="outline" onClick={handleCloseModal}>
                   <X className="w-4 h-4 mr-2" />
