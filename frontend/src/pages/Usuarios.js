@@ -867,8 +867,8 @@ const Usuarios = ({ user, onLogout }) => {
                     </Button>
                   )}
 
-                  {/* Assign Plan */}
-                  {viewingUser.id !== user.id && (
+                  {/* Assign Plan - Apenas para Motorista e Parceiro */}
+                  {viewingUser.id !== user.id && ['motorista', 'parceiro'].includes(viewingUser.role) && (
                     <Button
                       variant="outline"
                       className="h-auto py-3 flex flex-col items-center space-y-1"
@@ -881,6 +881,21 @@ const Usuarios = ({ user, onLogout }) => {
                     >
                       <Package className="w-5 h-5" />
                       <span className="text-xs">Atribuir Plano</span>
+                    </Button>
+                  )}
+
+                  {/* Gerir Parceiros - Apenas para Gestor */}
+                  {viewingUser.id !== user.id && viewingUser.role === 'gestao' && (
+                    <Button
+                      variant="outline"
+                      className="h-auto py-3 flex flex-col items-center space-y-1 border-purple-500 text-purple-600 hover:bg-purple-50"
+                      onClick={() => {
+                        setShowDetailsDialog(false);
+                        handleOpenParceirosDialog(viewingUser);
+                      }}
+                    >
+                      <Users className="w-5 h-5" />
+                      <span className="text-xs">Gerir Parceiros</span>
                     </Button>
                   )}
 
