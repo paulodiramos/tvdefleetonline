@@ -62,7 +62,6 @@ const LABELS_MODULOS = {
   upload_csv: 'Upload CSV',
   validacao_documentos: 'Validação de Documentos',
   aprovacao_recibos: 'Aprovação de Recibos',
-  dashboard_operacional: 'Dashboard Operacional',
   relatorios_completos: 'Relatórios Completos',
   gestao_total: 'Gestão Total',
   aprovacoes: 'Aprovações',
