@@ -119,8 +119,8 @@ const Usuarios = ({ user, onLogout }) => {
       return;
     }
 
-    // Verificar roles permitidos
-    const allowedRoles = ['motorista', 'parceiro', 'operacional', 'gestao'];
+    // Verificar roles permitidos - Apenas motorista e parceiro têm planos
+    const allowedRoles = ['motorista', 'parceiro'];
     if (!allowedRoles.includes(selectedUser?.role)) {
       toast.error('Este utilizador não pode ter planos atribuídos');
       return;
