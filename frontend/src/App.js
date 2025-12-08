@@ -50,6 +50,7 @@ import RegistoParceiro from "@/pages/RegistoParceiro";
 import VeiculosPublico from "@/pages/VeiculosPublico";
 import ServicosPublico from "@/pages/ServicosPublico";
 import Contratos from "@/pages/Contratos";
+import ContratosComTabs from "@/pages/ContratosComTabs";
 import ListaContratos from "@/pages/ListaContratos";
 import CriarContrato from "@/pages/CriarContrato";
 import ConfiguracoesAdmin from "@/pages/ConfiguracoesAdmin";
