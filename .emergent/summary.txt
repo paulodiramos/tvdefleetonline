@@ -1,217 +1,201 @@
 <analysis>**original_problem_statement:**
 O utilizador solicitou uma vasta gama de novas funcionalidades e melhorias para o sistema de gestão de frotas TVDEFleet.
 
-**REQUISITOS DO PRODUTO (Baseado nas últimas mensagens do utilizador):**
+**REQUISITOS DO PRODUTO (Consolidado a partir do histórico e das últimas mensagens do utilizador):**
 1.  **Integrações:**
-    *   Implementar integração com **Moloni** para faturação automática.
-        *   No perfil do motorista, deve haver uma opção para ativar a auto-faturação, que acarreta um custo extra mensal associado ao plano.
-        *   A integração Moloni também deve ser usada pelo webapp para cobrar os planos de subscrição.
-    *   Implementar integração com o serviço de armazenamento em nuvem **Terabox**.
-    *   Avançar com as integrações de **Email** e **WhatsApp** para notificações e envio de relatórios.
-    *   Avançar com a integração de **Pagamentos**.
+    *   **Moloni (Faturação):**
+        *   No perfil do motorista, permitir a ativação da auto-faturação.
+        *   Esta funcionalidade deve estar condicionada a um módulo específico no plano do motorista.
+        *   O motorista deve poder introduzir as suas próprias credenciais Moloni.
+        *   Quando um relatório é emitido, o sistema deve gerar automaticamente uma fatura Moloni para o parceiro associado ao motorista.
+    *   **Terabox (Armazenamento):** Implementar integração para guardar todos os documentos e fotos de motoristas e veículos. A UI de configuração foi adicionada, mas a lógica de backend precisa ser implementada.
+    *   **Comunicações (Email & WhatsApp):**
+        *   Criar um sistema de notificações para alertas, etc.
+        *   A configuração das APIs (ex: SendGrid para email, WhatsApp Business) deve ser feita manualmente pelo administrador.
+    *   **Pagamentos (IfthenPay):** Esta integração foi solicitada e depois **removida** pelo utilizador.
 
-2.  **Funcionalidades de Vistorias de Veículos:**
-    *   Criar um sistema para agendar e realizar vistorias de veículos.
-    *   Permitir o upload de fotos durante a vistoria.
-    *   Converter o relatório da vistoria (com fotos) para um PDF.
-    *   Permitir o download do PDF da vistoria.
-    *   O histórico de vistorias deve ficar associado ao veículo.
-    *   O agendamento pode ser periódico ou manual (por Parceiro ou Gestor).
+2.  **Funcionalidades Principais:**
+    *   **Vistorias de Veículos:** Criar um sistema completo para agendar, realizar vistorias com upload de fotos e gerar um relatório em PDF que fica associado ao histórico do veículo. (Não iniciado)
+    *   **Mensagens:** Substituir o antigo sistema de Tickets por um novo sistema de Mensagens onde o motorista pode escolher enviar uma mensagem para o Suporte ou para o seu Parceiro associado. (UI/Backend parcialmente implementado)
+    *   **Templates de Contrato:** Parceiros devem poder criar os seus próprios templates de contrato. (Implementado)
 
-3.  **Melhorias na UI/UX e Estrutura:**
-    *   No menu Contratos, criar um submenu com Lista de Contratos e Criar Contrato. O item de menu Mensagens Contratos deve ser movido para dentro de Parceiros > Contratos.
-    *   No painel de controlo, a página Pendentes está a apresentar um erro Erro ao carregar documentos pendentes.
-    *   Nos ecrãs Financeiro e Pagamentos, para além da data, deve ser exibido o **número da semana**.
-    *   O plano ativo do motorista deve ser visível na lista de utilizadores e nos detalhes, tal como já acontece com os parceiros.
-    *   O tipo de contrato (na criação) deve assumir automaticamente as condições do veículo (comissão ou aluguer). A alteração destas condições pré-definidas deve ser possível (para parceiro, gestor, admin) através de um visto de confirmação com um pop-up.
-    *   Adicionar no footer links para Termos e Condições e Política de Privacidade, que abrem um pop-up com texto configurável na área de administração.
-    *   Remover completamente a role Operacional de todos os select/dropdowns e lógica da aplicação.
+3.  **Melhorias na UI/UX e Permissões (Perfil de Parceiro):**
+    *   Ao criar um contrato, o parceiro logado deve ser pré-selecionado e a lista de outros parceiros deve ser ocultada. (Implementado)
+    *   Ao criar um contrato, o parceiro deve ver apenas os motoristas e veículos associados à sua conta. (Implementado)
+    *   O dashboard do parceiro (despesas, ganhos) deve refletir apenas os dados da sua conta. (Implementado)
+    *   A página Sync Auto para um parceiro deve apenas mostrar opções de sincronização manual/agendada para a sua própria conta, sem listas de outros parceiros. (Parcialmente implementado)
+
+4.  **Melhorias Gerais:**
+    *   Adicionar links para Termos e Condições e Política de Privacidade no rodapé da página inicial pública, abrindo páginas de texto. (Implementado)
+    *   Corrigir o bug persistente em que a alteração do plano de um motorista não atualizava visualmente o badge do plano na lista de motoristas. (Implementado)
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-O agente implementou um grande volume de funcionalidades e correções. As duas tarefas prioritárias da sessão anterior (correção da eliminação de planos e exibição do plano do utilizador) foram concluídas com sucesso. O backend foi modificado para desagregar o plano do utilizador antes de o eliminar, e o frontend foi corrigido para usar o URL de API correto. A lista de utilizadores agora exibe o nome do plano atribuído.
+O agente concluiu um volume significativo de trabalho, focando-se em corrigir bugs críticos e implementar funcionalidades solicitadas em cascata pelo utilizador.
 
-Foram implementadas as bases de um novo e complexo sistema de upload de documentos para o registo de motoristas e parceiros, incluindo novos endpoints no backend e campos de upload nos formulários de registo. Foi criada uma nova página Pendentes para administradores aprovarem esses documentos.
+**Correções de Bugs:**
+*   A página Pendentes (), que anteriormente não carregava, está agora funcional.
+*   A página Lista de Contratos (), que apresentava um erro, agora carrega os dados corretamente.
+*   O bug persistente onde o badge do plano do motorista não atualizava após a alteração foi corrigido através de modificações no backend (adicionando  ao endpoint ) e no frontend.
+*   A role Operacional foi completamente removida de toda a aplicação (lógica, UI e texto) após uma extensa refatoração em mais de uma dezena de ficheiros.
+*   O endpoint do dashboard do parceiro () foi corrigido para filtrar corretamente as receitas e despesas.
 
-Adicionalmente, foram feitas várias melhorias de UI, como a reorganização do menu de administração, a adição de um rodapé com links para termos de privacidade e a implementação de um fluxo de criação de contratos mais inteligente, que pré-preenche as condições com base no veículo selecionado. Foi também criado um endpoint de backend para gerar relatórios complexos em PDF usando .
+**Novas Funcionalidades e Melhorias:**
+*   **Fluxo do Parceiro:** Foram implementadas melhorias significativas, garantindo que os parceiros vejam apenas dados (motoristas, veículos, contratos) associados à sua própria conta.
+*   **Auto-Faturação Moloni:** Foi criada toda a infraestrutura para a funcionalidade. No backend, foram adicionados endpoints para guardar e obter as credenciais Moloni de um motorista, com uma verificação que restringe o acesso a motoristas cujo plano inclua a feature . No frontend, foi adicionado um novo separador no perfil do motorista para configurar o Moloni, que fica desativado se o plano não o permitir.
+*   **Mensagens:** O sistema de Tickets foi removido e substituído por uma nova página de Mensagens para o motorista, com um seletor para enviar a mensagem para o Suporte ou para o Parceiro.
+*   **UI:** Foi adicionada uma secção de configuração da Terabox na página de integrações e links para Termos e Condições e Política de Privacidade no rodapé da página pública. As integrações de pagamento foram removidas da UI a pedido.
 
 **Last working item**:
--   Last item agent was working: O agente estava a iniciar a implementação das várias integrações solicitadas pelo utilizador (Moloni, Terabox, Email, WhatsApp). Começou por planear a estrutura e criar um resumo para confirmar o plano com o utilizador antes de avançar com a implementação do backend da integração Moloni.
--   Status: NOT STARTED
+-   Last item agent was working: O agente estava a implementar as melhorias na página  para o perfil de parceiro. O objetivo era remover a lista de seleção de parceiros e prepará-la para exibir um dashboard de ganhos/despesas e um botão de sincronização manual.
+-   Status: IN PROGRESS
 -   Agent Testing Done: N
--   Which testing method agent to use? both
+-   Which testing method agent to use? screenshot tool
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: A página Pendentes falha ao carregar dados (P0)
--   Issue 2: A role Operacional continua a aparecer em vários locais da UI (P1)
--   Issue 3: O plano atribuído ao Motorista não é visível na UI (P2)
-
-**Issues Detail**:
--   Issue 1: **A página Pendentes falha ao carregar dados (P0)**
-    -   Attempted fixes: O agente identificou que a rota  não estava a ser registada porque o código foi adicionado em  *depois* da linha . O agente moveu o bloco de código dos endpoints de documentos para a posição correta (antes do ) e reiniciou o backend. Um teste com  confirmou que o endpoint passou a responder com  e uma lista vazia. **No entanto, a página frontend nunca foi testada após a correção do backend.**
-    -   Next debug checklist:
-        1.  Navegar para a página  no frontend e verificar a consola do browser para ver se o erro Erro ao carregar documentos pendentes persiste.
-        2.  Se persistir, verificar a chamada de rede para  para garantir que está a ser feita corretamente.
-        3.  Implementar a lógica na página  para renderizar os dados recebidos do endpoint.
-    -   Why fix this issue and what will be achieved with the fix?: É uma funcionalidade central para o novo processo de aprovação de utilizadores.
-    -   Status: IN PROGRESS
-    -   Is recurring issue? Y
-    -   Should Test frontend/backend/both after fix? Frontend
-    -   Blocked on other issue: None
-
--   Issue 2: **A role Operacional continua a aparecer em vários locais da UI (P1)**
-    -   Attempted fixes: O agente removeu a opção Operacional de alguns dropdowns em  e removeu lógica relacionada em . No entanto, o utilizador reportou novamente a sua presença, indicando que a remoção não foi completa.
-    -   Next debug checklist:
-        1.  Executar um  global por operacional em todo o diretório .
-        2.  Remover sistematicamente todas as ocorrências em componentes, lógica de permissões e texto estático.
-    -   Why fix this issue and what will be achieved with the fix?: Completa a refatoração de roles iniciada na sessão anterior e elimina a confusão para o utilizador.
-    -   Status: IN PROGRESS
-    -   Is recurring issue? Y
-    -   Should Test frontend/backend/both after fix? Frontend
-    -   Blocked on other issue: None
-
--   Issue 3: **O plano atribuído ao Motorista não é visível na UI (P2)**
-    -   Attempted fixes: O agente investigou com  e descobriu que o problema não era de código, mas sim de dados. O utilizador motorista de teste simplesmente não tinha um  atribuído no banco de dados. O agente atribuiu um plano manualmente via API e confirmou que o backend passou a retornar o nome do plano.
-    -   Next debug checklist: Esta não é uma questão de código. O sistema funciona. A solução é garantir que os motoristas tenham planos atribuídos (o que será feito com a funcionalidade de atribuição de plano base gratuito após aprovação de documentos).
-    -   Why fix this issue and what will be achieved with the fix?: Fornece consistência visual e informação importante ao admin.
-    -   Status: RESOLVED (Funcionalidade está correta, era um problema de dados de teste).
-    -   Is recurring issue? N
-    -   Should Test frontend/backend/both after fix? None
-    -   Blocked on other issue: None
+Nenhum bug ativo reportado pelo utilizador. As tarefas pendentes são de implementação de novas funcionalidades.
 
 **In progress Task List**:
--   Task 1: Implementação das Integrações (Moloni, Terabox, etc.) (P0)
+-   Task 1: Concluir a UI da página Sync Auto para Parceiros (P0)
 
 **Task Detail**:
--   Task 1: **Implementação das Integrações (Moloni, Terabox, etc.) (P0)**
-    -   Where to resume: O agente criou um plano geral para as integrações. O próximo passo é implementar o backend para a integração Moloni, começando pelos endpoints para guardar as API keys e a lógica para a auto-faturação.
-    -   What will be achieved with this?: Permitirá a faturação automática de planos e serviços, e o armazenamento de ficheiros em cloud.
-    -   Status: NOT STARTED
-    -   Should Test frontend/backend/both after fix? Both
-    -   Blocked on something: Nenhum.
+-   Task 1: **Concluir a UI da página Sync Auto para Parceiros (P0)**
+    -   Where to resume: O agente já modificou a página  para esconder a lista de seleção de parceiros quando o utilizador logado é um parceiro. O próximo passo é adicionar os componentes visuais para o dashboard de ganhos/despesas e o botão de sincronização manual, conforme solicitado pelo utilizador.
+    -   What will be achieved with this?: Alinhará a página Sync Auto com as restantes melhorias do fluxo de parceiro, mostrando apenas controlos e dados relevantes.
+    -   Status: IN PROGRESS
+    -   Should Test frontend/backend/both after fix?: Frontend
+    -   Blocked on something: None.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   (P0) Criar sistema de vistorias de veículos com upload de fotos e geração de PDF.
-    *   (P1) Implementar frontend da página Pendentes para listar, visualizar e aprovar/rejeitar documentos.
-    *   (P1) Implementar o envio de notificações por Email e WhatsApp.
-    *   (P2) Implementar frontend da página Lista de Contratos.
-    *   (P2) Na aprovação de um novo utilizador, atribuir automaticamente o plano base gratuito.
+    *   (P0) **Implementar Lógica de Backend para Auto-Faturação Moloni**: O frontend e o armazenamento de credenciais estão prontos. É necessário implementar a lógica que, ao gerar um relatório, utiliza as credenciais guardadas do motorista para chamar a API Moloni e criar uma fatura para o parceiro associado.
+    *   (P1) **Implementar Sistema de Vistorias de Veículos**: Criar a funcionalidade completa para agendar vistorias, permitir o upload de fotos, gerar um PDF do relatório e associá-lo ao histórico do veículo.
+    *   (P1) **Implementar Sistema de Comunicações (Admin UI)**: Criar uma interface na área de administração para que o admin possa configurar manualmente as credenciais para as APIs de Email (ex: SendGrid) e WhatsApp.
+    *   (P1) **Implementar Lógica de Backend para Notificações**: Utilizar as configurações do passo anterior para efetivamente enviar notificações (alertas, mensagens do sistema, etc.) por Email e WhatsApp.
+    *   (P2) **Implementar Lógica de Backend para Integração Terabox**: O frontend tem um campo para configurar a integração. A lógica de backend para efetivamente guardar os ficheiros no Terabox precisa de ser implementada.
 *   **Future Tasks:**
-    *   (P2) Implementar a interface de criação de relatórios no frontend, utilizando o endpoint de PDF já criado.
-    *   (P3) Implementar a configuração de textos para Termos e Condições e Política de Privacidade na área de admin.
+    *   (P2) **Preencher Conteúdo das Páginas de Termos e Privacidade**: As páginas  e  foram criadas como placeholders. Precisam de ser populadas com o conteúdo real.
 
 **Completed work in this session**
--   **Resolução de Issues Críticas:**
-    -   Corrigida a funcionalidade de **eliminação de planos**, que agora remove o plano de todos os utilizadores associados antes da eliminação.
-    -   Implementada a **exibição do plano atribuído** na lista e detalhes de utilizadores.
--   **Novas Funcionalidades:**
-    -   **Sistema de Documentos (Backend):** Criados endpoints para upload de documentos, listagem de pendentes e aprovação/rejeição.
-    -   **Sistema de Documentos (Frontend):** Atualizados os formulários de registo de Motorista e Parceiro para incluir campos de upload de múltiplos ficheiros.
-    -   **Sistema de Contratos Melhorado:** O formulário de criação de contrato agora deteta o tipo de contrato do veículo e bloqueia/permite a edição de condições com um modal de confirmação.
-    aniais.**
-    -   **Sistema de Relatórios (Backend):** Criado um endpoint robusto () que gera um PDF complexo com .
--   **Melhorias de UI/UX:**
-    -   Menus de navegação (principal e de admin) foram extensivamente reorganizados e reestruturados múltiplas vezes de acordo com o feedback do utilizador.
-    -   Adicionado o número da semana aos ecrãs de pagamentos.
-    -   Adicionado um rodapé global com modais para Termos e Condições e Política de Privacidade, com conteúdo dinâmico do backend.
-    -   Removidas múltiplas referências à role Operacional.
+-   **Resolução de Bugs Críticos:**
+    -   Corrigido o erro de carregamento na página Pendentes.
+    -   Corrigido o erro Erro ao carregar contratos na Lista de Contratos, resolvendo um problema de URL duplicado ().
+    -   Resolvido o bug recorrente onde o badge do plano do motorista não atualizava na UI após a alteração.
+    -   Corrigido o dashboard do parceiro para filtrar corretamente as receitas e despesas.
+-   **Refatoração e Melhorias:**
+    -   Removida completamente a role Operacional de toda a base de código do frontend.
+    -   Implementada a filtragem de dados por parceiro em múltiplos endpoints (, , ) e páginas ().
+-   **Implementação de Funcionalidades:**
+    -   Implementado o framework completo para auto-faturação Moloni (armazenamento de credenciais no backend e UI de configuração no perfil do motorista, com validação baseada no plano).
+    -   Removido o sistema de Tickets e implementada uma nova página de Mensagens para motoristas com seletor de destinatário.
+    -   Adicionados links e páginas para Termos e Condições e Política de Privacidade na landing page pública.
+    -   Removidas as integrações de pagamento da UI, a pedido do utilizador.
+    -   Adicionada a UI para configuração da integração Terabox.
 
 **Earlier issues found/mentioned but not fixed**
--   **Incomplete Operacional Role Removal**: O agente removeu a role de vários locais, mas o utilizador continua a encontrá-la. Uma verificação global e remoção sistemática são necessárias.
+-   None. O agente foi extremamente reativo e abordou todos os problemas mencionados pelo utilizador ao longo da sessão.
 
 **Known issue recurrence from previous fork**
--   None.
+-   **Issue**: Remoção da role Operacional.
+    -   **Recurrence count**: Pelo menos 2 (mencionada no handoff inicial e novamente pelo utilizador).
+    -   **Status**: RESOLVED. O agente realizou uma busca e substituição exaustiva em toda a base de código do frontend.
+-   **Issue**: Erro ao carregar a página Pendentes.
+    -   **Recurrence count**: 1
+    -   **Status**: RESOLVED. O agente validou a correção do backend com testes de frontend.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **FastAPI Route Registration:** Um erro crítico foi causado pela adição de rotas em  *após* a inclusão do router (). A ordem é fundamental.
--   **Backend PDF Generation:** Foi utilizada a biblioteca  para criar um endpoint que gera dinamicamente um PDF complexo a partir de dados JSON.
--   **MongoDB Aggregation:** O endpoint  foi melhorado com um pipeline de agregação () para juntar a coleção  e obter o nome do plano.
--   **Frontend State Management:** Lógica complexa de estado foi implementada em  para gerir o bloqueio de campos, a visibilidade de avisos e o fluxo de confirmação do utilizador.
--   **Iterative UI Development:** O agente demonstrou capacidade de se adaptar a pedidos frequentes e contraditórios de alteração da UI, especialmente no .
+-   **Filtragem de Dados Baseada na Role**: O backend foi sistematicamente modificado para filtrar dados com base no  e , garantindo que os parceiros só acedem à sua própria informação.
+-   **MongoDB Aggregation ()**: Utilizado para enriquecer documentos, como adicionar o  aos dados do motorista, resolvendo um bug de UI persistente.
+-   **Feature Gating Baseado no Plano**: Implementada lógica no backend e frontend para ativar/desativar funcionalidades (ex: auto-faturação Moloni) com base numa lista de  no plano do utilizador.
+-   **Debugging de API Frontend**: Identificado e corrigido um erro comum de duplicação de path em chamadas API (e.g., ), onde a constante base da API já continha .
 
 **key DB schema**
--   **users** (collection): Implicitamente atualizada para suportar um array de documentos () e um status geral de aprovação ().
--   **configuracoes** (collection): Nova coleção para armazenar textos configuráveis, como .
+-   **users** (collection): Implicitamente atualizado para suportar credenciais Moloni por motorista (e.g., ).
+-   **planos_sistema** (collection): Implicitamente atualizado para incluir um array  para controlar o acesso a módulos (e.g., ).
+-   **contrato_templates** (collection): Nova coleção para armazenar templates de contrato, com um campo  para associar ao criador.
+-   **mensagens** (collection): Nova coleção para armazenar as mensagens trocadas entre motoristas e suporte/parceiros.
 
 **changes in tech stack**
--   **reportlab**: Adicionada como dependência (implícita) para a geração de PDFs no backend.
+-   Nenhuma alteração de dependências principais, mas foi planeada a utilização de SDKs para Moloni, Terabox, Email e WhatsApp.
 
 **All files of reference**
 -   **Criados**:
     -   
     -   
     -   
-    -   
-    -   
-    -    (posteriormente abandonada)
--   **Atualizados/Refatorados**:
-    -   : Principal ficheiro modificado, com múltiplos novos endpoints e lógica de negócio.
-    -   : Ficheiro com mais edições, refletindo os constantes pedidos de reorganização do menu.
-    -   : Implementou a nova lógica de contratos inteligentes.
-    -   , : Adicionados os campos de upload.
-    -   : Adicionadas e removidas rotas para suportar as novas páginas.
-    -   : Adicionado o badge do plano.
+    -    (ou significativamente atualizado de placeholder para funcional)
+-   **Atualizados/Refatorados (principais)**:
+    -   : Adicionados múltiplos endpoints e lógica de negócio de filtragem.
+    -   : Corrigido bug de atualização de estado e UI.
+    -   : Melhorias no fluxo do parceiro.
+    -   : Refatoração da UI.
+    -   : Correção de bug.
+    -   : Melhorias no fluxo do parceiro.
+    -   : Adicionada configuração Moloni.
+    -   : Alterações nos menus de navegação.
 
 **Areas that need refactoring**:
--   ** Monolith**: O ficheiro continua a crescer e a acumular responsabilidades (autenticação, utilizadores, planos, documentos, relatórios PDF, configurações). A separação da lógica em routers/módulos distintos é cada vez mais necessária.
+-   ** Monolith**: O ficheiro continua a ser um ponto central de preocupação. Com a adição de lógica para Moloni, templates e mensagens, a necessidade de o dividir em routers/módulos separados (e.g., , , ) é cada vez mais crítica para a manutenibilidade.
 
 **key api endpoints**
--   : Agora remove o  dos utilizadores antes de apagar o plano.
--   : Agora inclui o  através de um .
--   : Novo endpoint para fazer upload de ficheiros.
--   : Novo endpoint para listar utilizadores com documentos pendentes.
--   : Novo endpoint para aprovar/rejeitar documentos.
--   : Novo endpoint para buscar textos de configuração (termos, etc.).
--   : Novo endpoint que recebe dados e retorna um relatório em PDF.
+-   **Novos:**
+    -   : Guarda as credenciais Moloni de um motorista.
+    -   : Obtém as credenciais Moloni de um motorista.
+    -   : Cria um novo template de contrato.
+    -   : Lista templates de contrato (filtrado por parceiro).
+    -   : Envia uma nova mensagem (de motorista para suporte/parceiro).
+    -   : Obtém mensagens de uma conversa.
+-   **Modificados:**
+    -   : Agora faz lookup para adicionar  e .
+    -   : Agora faz lookup para adicionar . Filtra por parceiro.
+    -   : Agora filtra para retornar apenas o próprio parceiro se o utilizador for um parceiro.
+    -   : Corrigido para filtrar corretamente receitas/despesas por parceiro.
 
 **Critical Info for New Agent**
--   **Atenção à Ordem das Rotas no FastAPI**: Ao adicionar novos endpoints em , certifique-se de que o código está posicionado **antes** da linha . O agente anterior perdeu tempo a depurar um erro de Not Found por causa disto.
--   **Problemas de Feature não funciona podem ser Problemas de Dados**: Antes de assumir que uma funcionalidade está quebrada (ex: plano do motorista não aparece), verifique com  se os dados de teste no banco de dados estão corretos. O sistema pode estar a funcionar como esperado.
--   **O Utilizador Muda de Ideias Frequentemente (UI)**: Esteja preparado para fazer e refazer alterações na UI, especialmente na navegação (). Confirme sempre o layout final com um screenshot.
--   **Refatoração Incompleta**: A role Operacional ainda existe em partes do código. É necessário um esforço concertado para a remover completamente e evitar que o utilizador a reporte novamente.
+-   **API Path Duplication**: Esteja atento ao fazer chamadas de API no frontend. A constante  exportada de  já inclui o prefixo . As chamadas devem ser feitas como  e **NÃO** . Este erro já causou vários bugs.
+-   **Data Filtering by Role**: Uma grande parte do trabalho foi garantir a segregação de dados para o perfil 'parceiro'. Ao criar novos endpoints ou modificar existentes, verifique sempre se é necessário aplicar um filtro com base no  do utilizador autenticado.
+-   **Feature Gating**: Funcionalidades avançadas como a auto-faturação Moloni estão agora controladas por um array  nos modelos de planos. Ao implementar novas funcionalidades pagas, siga este padrão.
 
 **documents created in this job**
 -   None.
 
 **Last 10 User Messages and any pending user messages**
-1.  **User**: Avançar com integração de email/WhatsApp e pagamentos, e remover menu duplicado Contratos. - **Status**: PARCIALMENTE COMPLETO (menu duplicado removido, integrações planeadas mas não implementadas).
-2.  **User**: Implementar sistema de vistorias de veículos e reorganizar menu Contratos. - **Status**: PARCIALMENTE COMPLETO (menu reorganizado, vistorias planeadas mas não implementadas).
-3.  **User**: Ativar auto-faturação Moloni no perfil do motorista e usar Moloni para cobrar planos. Integrar com Terabox. - **Status**: PENDENTE.
-4.  **User**: Reorganizar menu principal. Corrigir visibilidade do plano do motorista. Iniciar integração Moloni. - **Status**: PARCIALMENTE COMPLETO (Menu reorganizado, visibilidade do plano diagnosticada, Moloni iniciada).
-5.  **User**: Reverter menu Relatórios para um submenu e remover links do topo. - **Status**: COMPLETO.
-6.  **User**: Remover links duplicados do menu de relatórios. - **Status**: COMPLETO.
-7.  **User**: Criar menu Relatórios com sub-itens e implementar backend para PDF. - **Status**: COMPLETO.
-8.  **User**: Implementar sistema de contratos melhorado (baseado no veículo). - **Status**: COMPLETO.
-9.  **User**: Adicionar número da semana aos pagamentos e footer com links para Termos/Privacidade. Corrigir visibilidade do plano do motorista. - **Status**: PARCIALMENTE COMPLETO (Semana e footer feitos, visibilidade do plano por corrigir).
-10. **User**: Remover Operacional, corrigir erro em Pendentes, melhorar contratos e pagamentos, adicionar footer. - **Status**: PENDENTE (Esta é a lista de tarefas atual).
+1.  **User**: Pediu 8 tarefas, incluindo T&C na landing page, Moloni no perfil do motorista, filtros para parceiros, remover pagamentos e corrigir o bug do plano. - **Status**: PARCIALMENTE COMPLETO.
+2.  **User**: Confirmou para avançar com 3 tarefas prioritárias. - **Status**: COMPLETO.
+3.  **User**: Confirmou para avançar com as 5 tarefas restantes. - **Status**: PARCIALMENTE COMPLETO.
+4.  **User**: Pediu para implementar o módulo Moloni no perfil do motorista para auto-faturação. - **Status**: COMPLETO.
+5.  **User**: Adicionou o requisito de que o módulo Moloni só pode ser ativado se estiver incluído no plano do motorista. - **Status**: COMPLETO.
+6.  **User**: Pediu melhorias no fluxo do parceiro (templates de contrato, criar contrato, sync auto). - **Status**: IN PROGRESS.
+7.  **User**: ... e 4 mensagens anteriores com listas de tarefas que foram resolvidas.
 
 **Project Health Check:**
--   **Broken**: A página  muito provavelmente ainda exibe um erro no frontend, pois a correção do backend nunca foi validada na UI. A remoção da role Operacional está incompleta.
--   **Mocked**: As páginas , ,  são placeholders sem funcionalidade real.
+-   **Broken**: Nada está criticamente quebrado neste momento.
+-   **Mocked**:
+    -   As páginas  e  são placeholders.
+    -   A UI para configurar **Terabox** e **Comunicações (Email/WhatsApp)** existe, mas a lógica de backend não está implementada.
+    -   A UI para **auto-faturação Moloni** está completa, mas a lógica de backend que efetivamente gera a fatura ainda não foi criada.
+    -   A página de **Mensagens** permite enviar mensagens para o backend, mas a integração para as enviar para fora do sistema (via Email/WhatsApp) não existe.
 
 **3rd Party Integrations**
+-   **Moloni**: Parcialmente implementada. UI de configuração e armazenamento de credenciais estão prontos. A lógica de geração de faturas está pendente.
+-   **Terabox**: Planeada. UI de configuração existe, mas a lógica de backend para upload de ficheiros está pendente.
+-   **Email / WhatsApp**: Planeadas. A infraestrutura base de mensagens está criada, mas a UI de configuração de admin e a lógica de envio estão pendentes.
+-   **IfthenPay**: Removida a pedido do utilizador.
 -   **ReportLab**: Utilizada no backend para geração de PDFs.
--   **Moloni**: Solicitada para faturação. Planeada, mas não implementada.
--   **Terabox**: Solicitada para armazenamento de ficheiros. Planeada, mas não implementada.
--   **WhatsApp**: Solicitada para notificações. Planeada, mas não implementada.
 
 **Testing status**
 -   **Testing agent used after significant changes**: NO
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: None.
--   **Known regressions**: A página Pendentes foi criada mas nunca funcionou. A remoção da role Operacional é uma regressão de refatoração, pois não foi concluída.
+-   **Known regressions**: None in this session. Várias regressões de sessões anteriores foram corrigidas.
 
 **Credentials to test flow:**
 -   Disponíveis em .
 
 **What agent forgot to execute**
--   O agente corrigiu o endpoint  no backend, mas **esqueceu-se de testar se a página  no frontend passou a funcionar** após a correção.
--   O agente não realizou uma busca e substituição global pela role operacional, deixando várias ocorrências no código.
--   As implementações das páginas ,  e  ficaram como placeholders.
--   A implementação do frontend da página  para listar e interagir com os documentos nunca foi feita.</analysis>
+-   O agente não esqueceu tarefas, mas priorizou as solicitações mais recentes do utilizador em detrimento das tarefas maiores do plano original, como o sistema de **Vistorias de Veículos**. A implementação completa da lógica de backend para as integrações (Moloni, Terabox, Comunicações) também está pendente, embora a infraestrutura base esteja montada.</analysis>
