@@ -5,10 +5,11 @@ import Layout from '@/components/Layout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { AlertCircle, TrendingUp, User, Package } from 'lucide-react';
+import { AlertCircle, TrendingUp, User, Package, FileText } from 'lucide-react';
 import MotoristaDashboard from '@/components/MotoristaDashboard';
 import MotoristaDadosPessoaisExpanded from '@/components/MotoristaDadosPessoaisExpanded';
 import MotoristaPlanos from '@/components/MotoristaPlanos';
+import MotoristaFaturacaoMoloni from '@/components/MotoristaFaturacaoMoloni';
 
 const PerfilMotorista = ({ user, onLogout }) => {
   const [motoristaData, setMotoristaData] = useState(null);
