@@ -6591,17 +6591,25 @@ async def get_proximas_datas_dashboard(current_user: Dict = Depends(get_current_
 # ==================== SISTEMA DE MÓDULOS E PLANOS ====================
 
 @api_router.get("/modulos")
-async def get_modulos_disponiveis(current_user: Dict = Depends(get_current_user)):
-    """Lista todos os módulos disponíveis no sistema"""
+async def get_modulos_disponiveis(
+    tipo_usuario: Optional[str] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Lista todos os módulos disponíveis no sistema, com filtro opcional por tipo de usuário"""
     from models.modulo import MODULOS_SISTEMA
     
     modulos = []
     for codigo, info in MODULOS_SISTEMA.items():
+        # Filtrar por tipo de usuário se especificado
+        if tipo_usuario and info.get("tipo_usuario") != tipo_usuario:
+            continue
+            
         modulos.append({
             "id": codigo,
             "codigo": codigo,
             "nome": info["nome"],
             "descricao": info["descricao"],
+            "tipo_usuario": info.get("tipo_usuario", "parceiro"),
             "ordem": info["ordem"],
             "ativo": True
         })
