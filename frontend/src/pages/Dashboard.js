@@ -525,7 +525,7 @@ const Dashboard = ({ user, onLogout }) => {
           </Card>
         )}
 
-        {/* Alertas Section - Only for Admin, Gestor, Operacional */}
+        {/* Alertas Section - Only for Admin, Gestor */}
         {(user.role === 'admin' || user.role === 'gestao') && alertas.length > 0 && (
           <Card className="border-red-200 bg-red-50" data-testid="alertas-card">
             <CardHeader>

@@ -24,7 +24,7 @@ const MotoristaMensagens = ({ user, onLogout }) => {
                 <strong>Funcionalidades Previstas:</strong>
               </p>
               <ul className="text-xs text-blue-700 mt-2 space-y-1 text-left">
-                <li>• Chat com Admin, Gestor, Operacional</li>
+                <li>• Chat com Admin, Gestor</li>
                 <li>• Mensagens com Parceiro associado</li>
                 <li>• Histórico de conversas</li>
                 <li>• Notificações de novas mensagens</li>

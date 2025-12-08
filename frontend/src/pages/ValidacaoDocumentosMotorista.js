@@ -316,7 +316,7 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
             <Button variant="outline" onClick={() => navigate('/usuarios')}>
               Voltar
             </Button>
-            {/* Apenas Admin, Gestor e Operacional podem aprovar documentos */}
+            {/* Apenas Admin e Gestor podem aprovar documentos */}
             {(user.role === 'admin' || user.role === 'gestao') && (
               <Button
                 onClick={handleAprovarTodosDocumentos}
@@ -716,7 +716,7 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Notas Internas / Observações</CardTitle>
-                <p className="text-sm text-slate-600 mt-1">Observações visíveis apenas para Admin/Gestor/Parceiro/Operacional</p>
+                <p className="text-sm text-slate-600 mt-1">Observações visíveis apenas para Admin/Gestor/Parceiro</p>
               </div>
               {!editingObservacoes && (
                 <Button 
@@ -837,7 +837,7 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
                           Descarregar
                         </Button>
                         
-                        {/* Segunda linha: Ações admin/gestor/operacional */}
+                        {/* Segunda linha: Ações admin/gestor */}
                         {(user.role === 'admin' || user.role === 'gestao') && (
                           <div className="flex space-x-2">
                             {!isValidado ? (
@@ -870,7 +870,7 @@ const ValidacaoDocumentosMotorista = ({ user, onLogout }) => {
                                 Revogar Aprovação
                               </Button>
                             )}
-                            {/* Botão Eliminar - Sempre visível para admin/gestor/operacional */}
+                            {/* Botão Eliminar - Sempre visível para admin/gestor */}
                             <Button
                               size="sm"
                               variant="outline"
