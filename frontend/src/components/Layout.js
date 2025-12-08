@@ -17,6 +17,24 @@ const Layout = ({ user, onLogout, children }) => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [showTermosModal, setShowTermosModal] = useState(false);
+  const [showPrivacidadeModal, setShowPrivacidadeModal] = useState(false);
+  const [termosText, setTermosText] = useState('');
+  const [privacidadeText, setPrivacidadeText] = useState('');
+
+  useEffect(() => {
+    fetchTextos();
+  }, []);
+
+  const fetchTextos = async () => {
+    try {
+      const response = await axios.get(`${API}/api/configuracoes/textos`);
+      setTermosText(response.data.termos_condicoes || 'Termos e Condições não configurados.');
+      setPrivacidadeText(response.data.politica_privacidade || 'Política de Privacidade não configurada.');
+    } catch (error) {
+      console.error('Error fetching textos:', error);
+    }
+  };
 
   const isActive = (path) => location.pathname === path;
 
