@@ -45,8 +45,7 @@ const Layout = ({ user, onLogout, children }) => {
       return [
         { path: '/motorista/recibos', icon: Receipt, label: 'Ganhos' },
         { path: '/motorista/oportunidades', icon: Car, label: 'Oportunidades' },
-        { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' },
-        { path: '/motorista/tickets', icon: Settings, label: 'Tickets' }
+        { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' }
       ];
     }
 
