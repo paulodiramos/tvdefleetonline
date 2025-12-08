@@ -483,9 +483,8 @@ async def check_and_create_alerts():
 
 class UserRole:
     ADMIN = "admin"
-    GESTAO = "gestao"  # Gestor Associado - pode gerir múltiplos parceiros
-    PARCEIRO = "parceiro"
-    OPERACIONAL = "operacional"  # Parceiro com gestão de frota própria
+    GESTAO = "gestao"  # Gestor - pode gerir múltiplos parceiros atribuídos pelo Admin
+    PARCEIRO = "parceiro"  # Pode gerir veículos e motoristas
     MOTORISTA = "motorista"
 
 # User Profile Models
