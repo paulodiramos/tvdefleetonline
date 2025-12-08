@@ -11743,6 +11743,31 @@ async def aprovar_todos_documentos(
         logger.error(f"Erro ao aprovar todos os documentos: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ==================== ENDPOINT PÚBLICO PARA TEXTOS ====================
+
+@api_router.get("/configuracoes/textos")
+async def get_textos_publicos():
+    """Obter textos de Termos e Privacidade (público)"""
+    try:
+        config = await db.configuracoes_sistema.find_one({}, {"_id": 0})
+        
+        if not config:
+            return {
+                "termos_condicoes": "Termos e Condições não configurados.",
+                "politica_privacidade": "Política de Privacidade não configurada."
+            }
+        
+        return {
+            "termos_condicoes": config.get("termos_condicoes", "Termos e Condições não configurados."),
+            "politica_privacidade": config.get("politica_privacidade", "Política de Privacidade não configurada.")
+        }
+    except Exception as e:
+        logger.error(f"Erro ao buscar textos: {e}")
+        return {
+            "termos_condicoes": "Erro ao carregar Termos e Condições.",
+            "politica_privacidade": "Erro ao carregar Política de Privacidade."
+        }
+
 
 app.include_router(api_router)
 
