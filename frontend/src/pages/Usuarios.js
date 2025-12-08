@@ -786,6 +786,12 @@ const Usuarios = ({ user, onLogout }) => {
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getRoleBadgeColor(viewingUser.role)}`}>
                       {getRoleLabel(viewingUser.role)}
                     </span>
+                    {viewingUser.plano_nome && (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        <Package className="w-3 h-3 mr-1" />
+                        {viewingUser.plano_nome}
+                      </span>
+                    )}
                     {viewingUser.status === 'blocked' && (
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
                         <Lock className="w-3 h-3 mr-1" />
