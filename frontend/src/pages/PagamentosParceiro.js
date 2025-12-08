@@ -257,6 +257,11 @@ const PagamentosParceiro = ({ user, onLogout }) => {
                           <p className="text-2xl font-bold text-slate-800">€{pagamento.valor?.toFixed(2)}</p>
                           <p className="text-xs text-slate-500">
                             Vencimento: {pagamento.data_vencimento ? new Date(pagamento.data_vencimento).toLocaleDateString('pt-PT') : 'N/A'}
+                            {pagamento.data_vencimento && (
+                              <span className="ml-2 bg-slate-100 px-1.5 py-0.5 rounded">
+                                Sem. {getWeekNumber(pagamento.data_vencimento)}
+                              </span>
+                            )}
                           </p>
                         </div>
                         {getStatusBadge(pagamento.status)}
