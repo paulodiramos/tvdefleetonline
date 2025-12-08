@@ -1297,7 +1297,7 @@ startxref
                 "phone": "911888999"
             }
             
-            user_response = requests.post(f"{BACKEND_URL}/users", json=operacional_data, headers=headers)
+            user_response = requests.post(f"{BACKEND_URL}/auth/register", json=operacional_data, headers=headers)
             if user_response.status_code == 200:
                 user = user_response.json()
                 if (user.get("plano_id") and 
