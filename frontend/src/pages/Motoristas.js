@@ -512,7 +512,7 @@ const Motoristas = ({ user, onLogout }) => {
             <h1 className="text-4xl font-bold text-slate-800 mb-2">Motoristas</h1>
             <p className="text-slate-600">Gerir motoristas e aprovações</p>
           </div>
-          {(user.role === 'admin' || user.role === 'gestor_associado' || user.role === 'parceiro_associado') && (
+          {(user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') && (
             <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
               <DialogTrigger asChild>
                 <Button className="bg-blue-600 hover:bg-blue-700" data-testid="add-motorista-button">
