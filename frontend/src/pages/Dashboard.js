@@ -198,6 +198,33 @@ const Dashboard = ({ user, onLogout }) => {
           defaultPeriod="todos"
         />
 
+        {/* Plano Ativo */}
+        {planoAtivo && (
+          <Card className="border-blue-200 bg-blue-50">
+            <CardHeader>
+              <CardTitle className="flex items-center text-blue-900">
+                <Shield className="w-5 h-5 mr-2" />
+                Plano Ativo
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-2xl font-bold text-blue-900">{planoAtivo.nome}</p>
+                  {planoAtivo.valida_ate && (
+                    <p className="text-sm text-blue-700 mt-1">
+                      Válido até: {new Date(planoAtivo.valida_ate).toLocaleDateString('pt-PT')}
+                    </p>
+                  )}
+                </div>
+                <div className="bg-green-100 px-4 py-2 rounded-lg">
+                  <p className="text-sm font-semibold text-green-800">ATIVO</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
