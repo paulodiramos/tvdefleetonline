@@ -7939,6 +7939,97 @@ async def delete_template_contrato(
     await db.templates_contratos.delete_one({"id": template_id})
     return {"message": "Template excluído com sucesso"}
 
+# ==================== MENSAGENS (MOTORISTA) ====================
+
+@api_router.get("/mensagens/motorista")
+async def get_mensagens_motorista(
+    destinatario: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get messages between motorista and destinatario (suporte or parceiro)"""
+    if current_user["role"] != "motorista":
+        raise HTTPException(status_code=403, detail="Apenas motoristas podem acessar")
+    
+    try:
+        if destinatario == "suporte":
+            # Mensagens com admin/gestao (suporte)
+            query = {
+                "$or": [
+                    {
+                        "remetente_id": current_user["id"],
+                        "tipo_destinatario": "suporte"
+                    },
+                    {
+                        "destinatario_id": current_user["id"],
+                        "tipo_remetente": "suporte"
+                    }
+                ]
+            }
+        elif destinatario == "parceiro":
+            # Buscar parceiro do motorista
+            motorista = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "parceiro_atribuido": 1})
+            if not motorista or not motorista.get("parceiro_atribuido"):
+                return []  # Sem parceiro atribuído
+            
+            parceiro_id = motorista["parceiro_atribuido"]
+            query = {
+                "$or": [
+                    {
+                        "remetente_id": current_user["id"],
+                        "destinatario_id": parceiro_id
+                    },
+                    {
+                        "remetente_id": parceiro_id,
+                        "destinatario_id": current_user["id"]
+                    }
+                ]
+            }
+        else:
+            raise HTTPException(status_code=400, detail="Destinatário inválido")
+        
+        mensagens = await db.mensagens.find(query, {"_id": 0}).sort("created_at", 1).to_list(1000)
+        return mensagens
+        
+    except Exception as e:
+        logger.error(f"Error fetching messages: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.post("/mensagens")
+async def enviar_mensagem(
+    mensagem_data: Dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Send a message"""
+    try:
+        tipo_destinatario = mensagem_data.get("tipo_destinatario")
+        texto = mensagem_data.get("texto")
+        
+        if not texto or not tipo_destinatario:
+            raise HTTPException(status_code=400, detail="Texto e tipo_destinatario são obrigatórios")
+        
+        mensagem = {
+            "id": str(uuid4()),
+            "remetente_id": current_user["id"],
+            "remetente_nome": current_user.get("name", ""),
+            "tipo_destinatario": tipo_destinatario,
+            "texto": texto,
+            "lida": False,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Se for para parceiro, adicionar destinatario_id
+        if tipo_destinatario == "parceiro" and current_user["role"] == "motorista":
+            motorista = await db.users.find_one({"id": current_user["id"]}, {"_id": 0, "parceiro_atribuido": 1})
+            if motorista and motorista.get("parceiro_atribuido"):
+                mensagem["destinatario_id"] = motorista["parceiro_atribuido"]
+        
+        await db.mensagens.insert_one(mensagem)
+        return {"message": "Mensagem enviada com sucesso", "id": mensagem["id"]}
+        
+    except Exception as e:
+        logger.error(f"Error sending message: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.post("/contratos/{contrato_id}/gerar-pdf")
 async def gerar_pdf_contrato(
     contrato_id: str,
