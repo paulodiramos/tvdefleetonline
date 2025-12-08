@@ -413,6 +413,8 @@ const Vistorias = ({ user, onLogout }) => {
         },
         danos_encontrados: []
       });
+      setFotosVistoria([]);
+      setAgendaIdAtual(null);
     } catch (error) {
       console.error('Error creating vistoria:', error);
       toast.error(error.response?.data?.detail || 'Erro ao criar vistoria');
