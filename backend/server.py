@@ -8593,7 +8593,7 @@ async def approve_user(
         raise HTTPException(status_code=403, detail="Admin only")
     
     new_role = approval_data.get("role")
-    valid_roles = ["motorista", "operacional", "gestao", "parceiro", "admin"]
+    valid_roles = ["motorista", "gestao", "parceiro", "admin"]
     
     if new_role and new_role not in valid_roles:
         raise HTTPException(status_code=400, detail="Invalid role")
