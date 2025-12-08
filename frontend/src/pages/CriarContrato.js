@@ -583,6 +583,58 @@ const CriarContrato = ({ user, onLogout }) => {
                   </div>
                 </div>
 
+                {/* Aviso quando veículo tem condições pré-definidas */}
+                {veiculoTemCondicoesPredefinidas && veiculoSelecionado && (
+                  <Alert className="mt-4 border-amber-200 bg-amber-50">
+                    <AlertTriangle className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="text-amber-800">
+                      <p className="font-semibold mb-2">Este veículo tem condições pré-definidas</p>
+                      <p className="text-sm mb-3">
+                        Tipo: <span className="font-semibold">{veiculoData?.tipo_contrato?.tipo || veiculoData?.tipo_exploracao}</span>
+                        {veiculoData?.tipo_contrato?.tipo === 'comissao' && (
+                          <span className="ml-2">
+                            (Motorista: {veiculoData.tipo_contrato.comissao_motorista}% / 
+                            Parceiro: {veiculoData.tipo_contrato.comissao_parceiro}%)
+                          </span>
+                        )}
+                        {veiculoData?.tipo_contrato?.tipo === 'aluguer' && (
+                          <span className="ml-2">
+                            (Valor: €{veiculoData.tipo_contrato.valor_aluguer})
+                          </span>
+                        )}
+                      </p>
+                      
+                      <div className="flex items-center space-x-2 mt-3">
+                        <Checkbox 
+                          id="permitir-alterar"
+                          checked={permitirAlterarCondicoes}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setShowConfirmacaoAlteracao(true);
+                            } else {
+                              setPermitirAlterarCondicoes(false);
+                            }
+                          }}
+                        />
+                        <Label 
+                          htmlFor="permitir-alterar" 
+                          className="text-sm font-medium cursor-pointer flex items-center"
+                        >
+                          <Edit className="w-4 h-4 mr-1" />
+                          Alterar condições para este contrato
+                        </Label>
+                      </div>
+                      
+                      {!permitirAlterarCondicoes && (
+                        <p className="text-xs text-amber-700 mt-2">
+                          As condições do veículo serão aplicadas automaticamente. 
+                          Marque a opção acima se desejar alterar.
+                        </p>
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 {/* Tipo de Contrato (exibido após seleção) */}
                 {tipoContrato && (
                   <div className="mt-4 p-4 bg-blue-50 rounded-lg">
