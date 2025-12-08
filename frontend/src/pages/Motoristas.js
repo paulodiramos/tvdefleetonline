@@ -707,6 +707,14 @@ const Motoristas = ({ user, onLogout }) => {
                           </Badge>
                         )}
                         
+                        {/* Plano Badge */}
+                        {motorista.plano_nome && (
+                          <Badge className="bg-purple-100 text-purple-800">
+                            <Package className="w-3 h-3 mr-1" />
+                            {motorista.plano_nome}
+                          </Badge>
+                        )}
+                        
                         {/* Status Badge */}
                         {motorista.status_motorista === 'ativo' && (
                           <Badge className="bg-green-100 text-green-700">
