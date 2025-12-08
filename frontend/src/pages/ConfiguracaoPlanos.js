@@ -84,7 +84,10 @@ const ConfiguracaoPlanos = ({ user, onLogout }) => {
     modulos: [],
     ativo: true,
     permite_trial: true,
-    dias_trial: 30
+    dias_trial: 30,
+    desconto_promocao: 0,
+    data_inicio_promocao: '',
+    data_fim_promocao: ''
   });
 
   useEffect(() => {
