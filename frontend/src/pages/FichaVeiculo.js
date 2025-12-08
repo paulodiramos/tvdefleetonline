@@ -63,6 +63,8 @@ const FichaVeiculo = ({ user, onLogout }) => {
   const [isAgendaModalOpen, setIsAgendaModalOpen] = useState(false);
   const [isIntervencaoModalOpen, setIsIntervencaoModalOpen] = useState(false);
   const [editingIntervencao, setEditingIntervencao] = useState(null);
+  const [categoriasUber, setCategoriasUber] = useState([]);
+  const [categoriasBolt, setCategoriasBolt] = useState([]);
 
   const [extintorForm, setExtintorForm] = useState({
     numeracao: '',
