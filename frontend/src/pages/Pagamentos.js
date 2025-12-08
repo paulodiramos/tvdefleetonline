@@ -374,7 +374,14 @@ const Pagamentos = ({ user, onLogout }) => {
                         {getStatusBadge(pagamento.status)}
                       </div>
                       <div className="text-sm text-slate-600 space-y-1">
-                        <p>Período: {pagamento.periodo_inicio} - {pagamento.periodo_fim}</p>
+                        <p>
+                          Período: {pagamento.periodo_inicio} - {pagamento.periodo_fim}
+                          {pagamento.periodo_inicio && (
+                            <span className="ml-2 text-xs bg-slate-100 px-2 py-0.5 rounded">
+                              Semana {getWeekNumber(pagamento.periodo_inicio)}
+                            </span>
+                          )}
+                        </p>
                         <p>Valor: <span className="font-semibold text-slate-900">€{pagamento.valor?.toFixed(2)}</span></p>
                         {pagamento.notas && <p>Notas: {pagamento.notas}</p>}
                       </div>
