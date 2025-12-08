@@ -469,7 +469,17 @@ const Vistorias = ({ user, onLogout }) => {
                         )}
                       </div>
                     </div>
-                    <Badge className="bg-amber-100 text-amber-800">Agendada</Badge>
+                    <div className="flex items-center space-x-2">
+                      <Badge className="bg-amber-100 text-amber-800">Agendada</Badge>
+                      <Button 
+                        size="sm"
+                        onClick={() => handleRealizarAgendada(agenda)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Realizar
+                      </Button>
+                    </div>
                   </div>
                 ))}
               </div>
