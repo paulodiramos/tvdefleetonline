@@ -155,10 +155,14 @@ const Vistorias = ({ user, onLogout }) => {
       
       toast.success('Vistoria agendada com sucesso!');
       setShowAgendarDialog(false);
-      fetchVistoriasAgendadas();
+      
+      // Recarregar veículos e depois as agendas
+      await fetchVehicles();
+      await fetchVistoriasAgendadas();
       
       setAgendamentoForm({
         veiculo_id: '',
+        parceiro_id: '',
         data_agendada: '',
         tipo_vistoria: 'periodica',
         notas: ''
