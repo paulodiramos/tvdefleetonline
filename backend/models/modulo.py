@@ -113,11 +113,6 @@ MODULOS_SISTEMA = {
         "descricao": "Upload genérico de arquivos CSV",
         "ordem": 13
     },
-    "sincronizacao_automatica": {
-        "nome": "Sincronização Automática",
-        "descricao": "Sincronização automática de dados",
-        "ordem": 14
-    },
     "gestao_motoristas": {
         "nome": "Gestão de Motoristas",
         "descricao": "Gerenciamento completo de motoristas",
