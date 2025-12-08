@@ -9301,15 +9301,9 @@ async def atribuir_plano_motorista(
         if not motorista:
             raise HTTPException(status_code=404, detail="Motorista not found")
         
-        # Calculate price based on periodicidade
-        if periodicidade == "semanal":
-            preco_pago = plano["preco_semanal"]
-            duracao_dias = 7
-        else:  # mensal
-            preco_base = plano["preco_mensal"]
-            desconto = plano.get("desconto_mensal_percentagem", 0)
-            preco_pago = preco_base * (1 - desconto / 100) if desconto > 0 else preco_base
-            duracao_dias = 30
+        # Calculate price and duration (unified system uses only monthly)
+        preco_pago = plano["preco_mensal"]
+        duracao_dias = 30  # Sistema unificado usa apenas mensal
         
         # Cancel any existing active subscription
         await db.motorista_plano_assinaturas.update_many(
