@@ -239,8 +239,13 @@ const ListaContratos = ({ user, onLogout, showLayout = true }) => {
           </div>
         )}
       </div>
-    </Layout>
   );
+
+  return showLayout ? (
+    <Layout user={user} onLogout={onLogout}>
+      {content}
+    </Layout>
+  ) : content;
 };
 
 export default ListaContratos;
