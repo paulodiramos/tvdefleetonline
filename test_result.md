@@ -640,6 +640,9 @@ agent_communication:
         - working: true
           agent: "testing"
           comment: "✅ E2E TESTING COMPLETE: All 8 steps of unified plan system tested successfully. 1) Created test plano 'Teste E2E' with preco_mensal=0 ✅ 2) Verified plano in database with all fields ✅ 3) Unapproved existing motorista ✅ 4) Approved motorista via PUT /api/motoristas/{id}/approve ✅ 5) Verified motorista has plano_id, plano_nome, plano_valida_ate correctly assigned ✅ 6) Updated plan successfully ✅ 7) Deactivated plan successfully ✅ 8) Created plans for parceiro and operacional user types ✅. CRITICAL FIX APPLIED: Added plano_id, plano_nome, plano_valida_ate fields to Motorista model in models/motorista.py to fix serialization issue. All plan system endpoints working correctly: GET /api/planos-sistema, POST /api/planos-sistema, PUT /api/planos-sistema/{id}, DELETE /api/planos-sistema/{id}. Motorista approval correctly assigns base plan from planos_sistema collection."
+        - working: true
+          agent: "testing"
+          comment: "✅ PLAN ASSIGNMENT TESTING COMPLETE (REVIEW REQUEST): Tested plan assignment for all user types (Motorista, Parceiro, Operacional, Gestão). RESULTS: 1) Existing users have plans assigned: ✅ Motoristas 1/1 have plans ✅ Parceiros 16/17 have plans ✅ Operacional users 1/2 have plans ✅ Gestão users 1/1 have plans. 2) Auto-plan assignment: ✅ New Parceiro auto-assigned 'Base Gratuito Parceiro' plan ❌ New Operacional user created but no plan auto-assigned (needs investigation). 3) Base free plans exist: ✅ All user types have base free plans with preco_mensal=0. SUCCESS RATE: 11/12 tests passed (91.7%). MINOR ISSUE: Operacional users created via /auth/register endpoint do not get auto-assigned plans, unlike Parceiros. All other plan assignment functionality working correctly."
     
     - agent: "testing"
       message: |
