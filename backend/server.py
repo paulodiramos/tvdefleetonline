@@ -12604,6 +12604,31 @@ async def send_notification(
 ):
     """Send notification via email (Admin, Gestao, Parceiro)"""
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    try:
+        from services.email_service import EmailService
+        
+        email_service = EmailService(db)
+        
+        to_email = notification_data.get("to_email")
+        notification_type = notification_data.get("type")
+        data = notification_data.get("data", {})
+        
+        if not to_email or not notification_type:
+            raise HTTPException(status_code=400, detail="to_email and type are required")
+        
+        result = await email_service.send_notification(
+            to_email=to_email,
+            notification_type=notification_type,
+            data=data
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error sending notification: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============================================================================
