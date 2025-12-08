@@ -6846,6 +6846,18 @@ async def verificar_acesso_modulo(
     )
     
     if not atribuicao:
+        # Fallback: Verificar se o usuário tem plano_id diretamente na coleção users
+        user = await db.users.find_one({"id": user_id}, {"_id": 0})
+        if user and user.get("plano_id") and user.get("plano_status") == "ativo":
+            plano = await db.planos.find_one({"id": user["plano_id"]}, {"_id": 0})
+            if plano:
+                modulos_ativos = plano.get("modulos", [])
+                tem_acesso = modulo_codigo in modulos_ativos
+                return {
+                    "tem_acesso": tem_acesso,
+                    "motivo": "Acesso concedido" if tem_acesso else "Módulo não incluído no plano"
+                }
+        
         return {"tem_acesso": False, "motivo": "Nenhum plano ativo"}
     
     # Verificar se expirou
@@ -6864,7 +6876,7 @@ async def verificar_acesso_modulo(
     if atribuicao.get("plano_id"):
         plano = await db.planos.find_one({"id": atribuicao["plano_id"]}, {"_id": 0})
         if plano:
-            modulos_ativos = plano["modulos"]
+            modulos_ativos = plano.get("modulos", [])
     
     tem_acesso = modulo_codigo in modulos_ativos
     
