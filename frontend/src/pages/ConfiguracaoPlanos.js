@@ -247,7 +247,7 @@ const ConfiguracaoPlanos = ({ user, onLogout }) => {
                                   <Badge className="bg-yellow-100 text-yellow-800">-{plano.desconto_promocao}%</Badge>
                                 )}
                               </CardTitle>
-                              <div className="mt-2">
+                              <div className="mt-2 space-y-1">
                                 {plano.desconto_promocao > 0 ? (
                                   <div>
                                     <p className="text-lg text-slate-400 line-through">
@@ -263,9 +263,17 @@ const ConfiguracaoPlanos = ({ user, onLogout }) => {
                                     )}
                                   </div>
                                 ) : (
-                                  <p className="text-2xl font-bold text-blue-600">
-                                    €{plano.preco_mensal.toFixed(2)}/mês
-                                  </p>
+                                  <div>
+                                    <p className="text-sm text-slate-600">
+                                      Sem IVA: <strong>€{plano.preco_mensal.toFixed(2)}</strong>
+                                    </p>
+                                    <p className="text-2xl font-bold text-blue-600">
+                                      €{(plano.preco_mensal_com_iva || plano.preco_mensal * 1.23).toFixed(2)}/mês
+                                    </p>
+                                    <p className="text-xs text-slate-500">
+                                      (IVA {plano.taxa_iva || 23}% incluído)
+                                    </p>
+                                  </div>
                                 )}
                               </div>
                             </div>
