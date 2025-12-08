@@ -568,7 +568,6 @@ const Usuarios = ({ user, onLogout }) => {
                     <SelectItem value="motorista">Motorista</SelectItem>
                     <SelectItem value="parceiro">Parceiro</SelectItem>
                     <SelectItem value="gestao">Gestor</SelectItem>
-                    <SelectItem value="operacional">Operacional</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
                   </SelectContent>
                 </Select>
