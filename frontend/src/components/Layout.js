@@ -53,17 +53,18 @@ const Layout = ({ user, onLogout, children }) => {
     // For parceiro role: Replace dashboard with reports, add payments with financeiro submenu
     if (user.role === 'parceiro') {
       return [
+        { path: '/motoristas', icon: Users, label: 'Motoristas' },
+        { path: '/vehicles', icon: Car, label: 'Veículos' },
+        { path: '/contratos', icon: FileText, label: 'Contratos' },
         { 
           label: 'Relatórios', 
-          icon: FileText,
+          icon: TrendingUp,
           submenu: [
             { path: '/criar-relatorio-semanal', label: 'Criar Relatório' },
             { path: '/sincronizacao-auto', label: 'Sync Auto' },
             { path: '/upload-csv', label: 'Upload CSV' }
           ]
         },
-        { path: '/vehicles', icon: Car, label: 'Veículos' },
-        { path: '/motoristas', icon: Users, label: 'Motoristas' },
         { 
           label: 'Financeiro', 
           icon: DollarSign,
