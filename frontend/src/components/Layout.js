@@ -186,15 +186,9 @@ const Layout = ({ user, onLogout, children }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/configuracao-planos" className="flex items-center space-x-2 cursor-pointer">
-                          <Package className="w-4 h-4" />
-                          <span>Configuração de Planos</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/verificar-recibos" className="flex items-center space-x-2 cursor-pointer">
-                          <Receipt className="w-4 h-4" />
-                          <span>Verificar Recibos</span>
+                        <Link to="/pendentes" className="flex items-center space-x-2 cursor-pointer">
+                          <ClipboardCheck className="w-4 h-4" />
+                          <span>Pendentes</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
@@ -203,18 +197,39 @@ const Layout = ({ user, onLogout, children }) => {
                           <span>Dados de Veículos</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/configuracoes" className="flex items-center space-x-2 cursor-pointer">
-                          <Settings className="w-4 h-4" />
+                      
+                      {/* Submenu Configurações */}
+                      <div className="px-2 py-1.5">
+                        <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
+                          <Settings className="w-3 h-3" />
                           <span>Configurações</span>
+                        </div>
+                      </div>
+                      <DropdownMenuItem asChild>
+                        <Link to="/configuracao-planos" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <Package className="w-4 h-4" />
+                          <span>Planos</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/configuracoes-admin" className="flex items-center space-x-2 cursor-pointer">
+                        <Link to="/integracoes" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <Plug className="w-4 h-4" />
+                          <span>Integrações</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/comunicacoes" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <Bell className="w-4 h-4" />
+                          <span>Comunicações</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/configuracoes-admin" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <FileText className="w-4 h-4" />
                           <span>Termos & Privacidade</span>
                         </Link>
                       </DropdownMenuItem>
+                      
                       <DropdownMenuItem asChild>
                         <Link to="/profile" className="flex items-center space-x-2 cursor-pointer">
                           <UserCircle className="w-4 h-4" />
