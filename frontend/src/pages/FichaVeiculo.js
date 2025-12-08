@@ -1780,30 +1780,33 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-3 gap-3">
-                    {['economy', 'comfort', 'exec', 'pet', 'xl'].map((cat) => (
-                      <div key={cat} className="flex items-center space-x-2">
-                        {canEdit && editMode ? (
-                          <input
-                            type="checkbox"
-                            id={`bolt_${cat}`}
-                            checked={infoForm.categorias_bolt[cat] || false}
-                            onChange={(e) => setInfoForm({
-                              ...infoForm,
-                              categorias_bolt: {...infoForm.categorias_bolt, [cat]: e.target.checked}
-                            })}
-                            className="w-4 h-4"
-                          />
-                        ) : (
-                          <input
-                            type="checkbox"
-                            checked={vehicle.categorias_bolt?.[cat] || false}
-                            disabled
-                            className="w-4 h-4"
-                          />
-                        )}
-                        <Label htmlFor={`bolt_${cat}`} className="capitalize">{cat === 'exec' ? 'Exec' : cat === 'xl' ? 'XL' : cat.charAt(0).toUpperCase() + cat.slice(1)}</Label>
-                      </div>
-                    ))}
+                    {categoriasBolt.map((cat) => {
+                      const catKey = cat.toLowerCase().replace(/\s+/g, '_');
+                      return (
+                        <div key={catKey} className="flex items-center space-x-2">
+                          {canEdit && editMode ? (
+                            <input
+                              type="checkbox"
+                              id={`bolt_${catKey}`}
+                              checked={infoForm.categorias_bolt[catKey] || false}
+                              onChange={(e) => setInfoForm({
+                                ...infoForm,
+                                categorias_bolt: {...infoForm.categorias_bolt, [catKey]: e.target.checked}
+                              })}
+                              className="w-4 h-4"
+                            />
+                          ) : (
+                            <input
+                              type="checkbox"
+                              checked={vehicle.categorias_bolt?.[catKey] || false}
+                              disabled
+                              className="w-4 h-4"
+                            />
+                          )}
+                          <Label htmlFor={`bolt_${catKey}`}>{cat}</Label>
+                        </div>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
