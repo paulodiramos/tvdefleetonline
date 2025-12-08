@@ -59,6 +59,7 @@ const Layout = ({ user, onLogout, children }) => {
           label: 'Contratos', 
           icon: FileText,
           submenu: [
+            { path: '/templates-contratos', label: 'Templates de Contratos' },
             { path: '/criar-contrato', label: 'Criar Contrato' },
             { path: '/lista-contratos', label: 'Lista de Contratos' }
           ]
