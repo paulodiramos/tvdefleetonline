@@ -37,18 +37,6 @@ const MODULOS_DISPONIVEIS = {
     'sincronizacao_automatica',
     'upload_csv'
   ],
-  operacional: [
-    'relatorios',
-    'gestao_seguros',
-    'gestao_contas',
-    'gestao_pagamentos',
-    'gestao_manutencao',
-    'gestao_motoristas',
-    'gestao_veiculos',
-    'validacao_documentos',
-    'aprovacao_recibos',
-    'dashboard_operacional'
-  ],
   gestao: [
     'relatorios_completos',
     'gestao_total',
