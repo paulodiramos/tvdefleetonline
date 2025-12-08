@@ -5994,6 +5994,47 @@ async def get_parceiros(current_user: Dict = Depends(get_current_user)):
     
     return parceiros
 
+
+@api_router.get("/parceiros/{parceiro_id}/estatisticas")
+async def get_parceiro_estatisticas(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter estatísticas do parceiro (motoristas, veículos, etc)"""
+    # Verificar permissão
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        if current_user["role"] == "parceiro" and current_user["id"] != parceiro_id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Contar motoristas
+    total_motoristas = await db.users.count_documents({
+        "role": "motorista",
+        "parceiro_id": parceiro_id
+    })
+    
+    # Contar veículos
+    total_veiculos = await db.vehicles.count_documents({
+        "parceiro_id": parceiro_id
+    })
+    
+    # Contar contratos
+    total_contratos = await db.contratos.count_documents({
+        "parceiro_id": parceiro_id
+    })
+    
+    # Contar vistorias
+    total_vistorias = await db.vistorias.count_documents({
+        "parceiro_id": parceiro_id
+    })
+    
+    return {
+        "parceiro_id": parceiro_id,
+        "total_motoristas": total_motoristas,
+        "total_veiculos": total_veiculos,
+        "total_contratos": total_contratos,
+        "total_vistorias": total_vistorias
+    }
+
 @api_router.get("/parceiros/{parceiro_id}")
 async def get_parceiro(parceiro_id: str, current_user: Dict = Depends(get_current_user)):
     """Get specific parceiro by ID"""
