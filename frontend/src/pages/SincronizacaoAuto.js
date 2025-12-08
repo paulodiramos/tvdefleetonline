@@ -78,6 +78,26 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
     }
   };
 
+  const fetchDashboardStats = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/reports/parceiro/semanal`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      const ganhos = response.data.total_receitas || 0;
+      const despesas = response.data.total_despesas || 0;
+      
+      setDashboardStats({
+        ganhos: ganhos,
+        despesas: despesas,
+        saldo: ganhos - despesas
+      });
+    } catch (error) {
+      console.error('Error fetching dashboard stats:', error);
+    }
+  };
+
   const fetchCredenciais = async () => {
     if (!selectedParceiro) return;
     try {
