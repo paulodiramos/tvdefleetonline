@@ -186,6 +186,11 @@ const CriarContrato = ({ user, onLogout }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setParceiros(response.data);
+      
+      // Se for parceiro, pré-selecionar automaticamente
+      if (user.role === 'parceiro' && response.data.length > 0) {
+        setParceiroSelecionado(response.data[0].id);
+      }
     } catch (error) {
       console.error('Error fetching parceiros:', error);
       toast.error('Erro ao carregar parceiros');
