@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Car, ArrowLeft, CheckCircle } from 'lucide-react';
+import { Car, ArrowLeft, CheckCircle, Upload, FileText, AlertCircle } from 'lucide-react';
 
 const RegistoMotorista = () => {
   const navigate = useNavigate();
@@ -25,6 +25,14 @@ const RegistoMotorista = () => {
     codigo_postal: '',
     password: '',
     confirmPassword: ''
+  });
+  
+  const [documentos, setDocumentos] = useState({
+    carta_conducao: null,
+    identificacao: null,
+    licenca_tvde: null,
+    registo_criminal: null,
+    comprovativo_morada: null
   });
 
   const handleChange = (e) => {
