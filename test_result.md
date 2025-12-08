@@ -6523,3 +6523,66 @@ Botão "Eliminar Parceiro" no perfil de parceiros, visível apenas para Admin.
 - Vincular categorias dinâmicas à UI de veículos
 - Teste ponta-a-ponta da faturação Moloni
 
+
+---
+
+## 🎯 Teste: Melhorias no Sistema de Vistorias
+**Data:** 2025-12-08  
+**Testado por:** Agente Fork (E1)
+**Status:** ✅ SUCESSO COMPLETO
+
+### Funcionalidades Implementadas:
+
+#### 1. ✅ Converter Vistoria Agendada em Vistoria Realizada
+**Frontend:**
+- Botão "Realizar" (verde) adicionado em cada vistoria agendada
+- Ao clicar, modal de vistoria abre pré-preenchido com:
+  - Veículo da vistoria agendada
+  - Data atual
+  - Tipo de vistoria do agendamento
+  - Observações/notas do agendamento
+- Após criar vistoria, item é removido da agenda automaticamente
+
+**Backend:**
+- Endpoint DELETE `/vehicles/{id}/agenda/{agenda_id}` criado
+- Remove item da agenda após conversão em vistoria
+
+#### 2. ✅ Upload de Fotos no Modal de Vistoria
+**Implementação:**
+- Seção "Fotos da Vistoria" adicionada ao modal
+- Botão "Adicionar Fotos" permite upload múltiplo
+- Preview de fotos com miniatura
+- Botão "X" para remover fotos antes de submeter
+- Fotos são enviadas automaticamente após criação da vistoria
+- Mensagem informativa quando não há fotos
+
+#### 3. ✅ Sistema de Abrir/Fechar Vistoria
+**Três Botões de Ação:**
+1. **Cancelar** (cinza) - Fecha modal sem salvar, limpa fotos
+2. **Guardar Rascunho** (amarelo) - Salva vistoria com status="aberta"
+   - Permite edição futura
+   - Não pede confirmação
+3. **Finalizar Vistoria** (verde) - Salva com status="fechada"
+   - Pede confirmação antes de finalizar
+   - Após fechada, não pode ser editada
+
+**Backend:**
+- Campo `status` adicionado ao modelo de vistoria: "aberta" | "fechada"
+- Endpoint de criação aceita e guarda o status
+
+### Teste Realizado:
+- ✅ 4 botões "Realizar" encontrados nas vistorias agendadas
+- ✅ Modal abre com dados pré-preenchidos corretos
+- ✅ Seção "Fotos da Vistoria" presente e funcional
+- ✅ Botão "Adicionar Fotos" presente
+- ✅ Três botões de ação presentes com cores corretas:
+  - Cancelar (cinza)
+  - Guardar Rascunho (amarelo)
+  - Finalizar Vistoria (verde)
+
+### Arquivos Modificados:
+- `/app/frontend/src/pages/Vistorias.js` (múltiplas seções)
+- `/app/backend/server.py` (endpoint DELETE agenda, campo status)
+
+**Resultado:** ✅ 100% Funcional
+
