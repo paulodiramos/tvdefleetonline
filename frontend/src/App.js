@@ -61,6 +61,7 @@ import VerificarRecibos from "@/pages/VerificarRecibos";
 import ValidacaoDocumentosMotorista from "@/pages/ValidacaoDocumentosMotorista";
 import Notificacoes from "@/pages/Notificacoes";
 import Mensagens from "@/pages/Mensagens";
+import TemplatesContratos from "@/pages/TemplatesContratos";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
