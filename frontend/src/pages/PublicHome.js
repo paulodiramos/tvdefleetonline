@@ -564,8 +564,25 @@ const PublicHome = () => {
               </ul>
             </div>
           </div>
-          <div className="border-t border-slate-800 mt-8 pt-8 text-center text-slate-400">
-            <p>&copy; 2025 TVDEFleet. Todos os direitos reservados.</p>
+          <div className="border-t border-slate-800 mt-8 pt-8">
+            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-slate-400">
+              <p>&copy; 2025 TVDEFleet. Todos os direitos reservados.</p>
+              <div className="flex space-x-6 text-sm">
+                <button 
+                  onClick={() => window.open('/termos', '_blank')}
+                  className="hover:text-white transition"
+                >
+                  Termos e Condições
+                </button>
+                <span>|</span>
+                <button 
+                  onClick={() => window.open('/privacidade', '_blank')}
+                  className="hover:text-white transition"
+                >
+                  Política de Privacidade
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </footer>
