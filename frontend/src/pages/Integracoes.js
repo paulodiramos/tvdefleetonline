@@ -45,43 +45,6 @@ const Integracoes = ({ user, onLogout }) => {
     }
   };
 
-  const handleSaveMoloni = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${API}/api/integracoes/moloni`,
-        configuracoes.moloni,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success('Configurações Moloni salvas com sucesso!');
-      fetchConfiguracoes();
-    } catch (error) {
-      console.error('Error saving Moloni:', error);
-      toast.error(error.response?.data?.detail || 'Erro ao salvar configurações');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleTestMoloni = async () => {
-    setLoading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API}/api/integracoes/moloni/test`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      toast.success(response.data.message || 'Conexão Moloni testada com sucesso!');
-    } catch (error) {
-      console.error('Error testing Moloni:', error);
-      toast.error(error.response?.data?.detail || 'Erro ao testar conexão');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="space-y-6">
