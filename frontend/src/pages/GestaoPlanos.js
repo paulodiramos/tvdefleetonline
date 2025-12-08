@@ -45,7 +45,7 @@ const GestaoPlanos = ({ user, onLogout }) => {
   const fetchPlanos = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/api/planos`, {
+      const response = await axios.get(`${API}/planos`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPlanos(response.data);
@@ -60,7 +60,7 @@ const GestaoPlanos = ({ user, onLogout }) => {
   const fetchModulos = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/api/modulos`, {
+      const response = await axios.get(`${API}/modulos`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setModulos(response.data);
