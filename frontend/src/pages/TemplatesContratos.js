@@ -108,9 +108,8 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
     setFormData({ nome: '', descricao: '', texto_template: '' });
   };
 
-  return (
-    <Layout user={user} onLogout={onLogout}>
-      <div className="space-y-6">
+  const content = (
+    <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Templates de Contratos</h1>
