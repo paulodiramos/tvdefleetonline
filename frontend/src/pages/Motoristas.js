@@ -179,8 +179,30 @@ const Motoristas = ({ user, onLogout }) => {
   const handleAddMotorista = async (e) => {
     e.preventDefault();
     try {
-      await axios.post(`${API}/motoristas/register`, newMotorista);
-      toast.success('Motorista adicionado! Senha provisória: últimos 9 dígitos do telefone');
+      const token = localStorage.getItem('token');
+      let response;
+      
+      // Parceiro e Gestor usam endpoint específico que cria com senha provisória
+      if (user.role === 'parceiro' || user.role === 'gestao') {
+        response = await axios.post(
+          `${API}/parceiros/${user.id}/motoristas`,
+          newMotorista,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        // Mostrar a senha provisória gerada
+        if (response.data.senha_provisoria) {
+          toast.success(
+            `Motorista criado! Senha provisória: ${response.data.senha_provisoria}`,
+            { duration: 10000 }
+          );
+        }
+      } else {
+        // Admin usa endpoint público de registro
+        response = await axios.post(`${API}/motoristas/register`, newMotorista);
+        toast.success('Motorista adicionado! Senha provisória: últimos 9 dígitos do telefone');
+      }
+      
       setShowAddDialog(false);
       fetchMotoristas();
       setNewMotorista({
