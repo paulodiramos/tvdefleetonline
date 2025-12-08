@@ -17,16 +17,6 @@ const AVAILABLE_FEATURES = {
     { id: 'manutencoes', label: 'Gestão de Manutenções' },
     { id: 'contas', label: 'Gestão de Contas' },
     { id: 'contratos', label: 'Emissão de Contratos' }
-  ],
-  operacional: [
-    { id: 'upload_csv_ganhos', label: 'Upload CSV Ganhos (Uber/Bolt)' },
-    { id: 'combustivel_manual', label: 'Inserção Manual Combustível' },
-    { id: 'viaverde_manual', label: 'Inserção Manual Via Verde' },
-    { id: 'upload_csv_km', label: 'Upload CSV de KM' },
-    { id: 'gestao_veiculos', label: 'Gestão de Veículos' },
-    { id: 'gestao_manutencoes', label: 'Gestão de Manutenções' },
-    { id: 'gestao_seguros', label: 'Gestão de Seguros' },
-    { id: 'integracoes_fornecedores', label: 'Integrações Automáticas Fornecedores' }
   ]
 };
 
