@@ -349,25 +349,65 @@ const Vistorias = ({ user, onLogout }) => {
           </Button>
         </div>
 
-        {/* Vehicle Selector */}
+        {/* Filtros */}
         <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex items-center space-x-4">
-              <Label className="text-base font-semibold min-w-[120px]">Veículo:</Label>
-              <select
-                className="flex-1 p-2 border rounded-md"
-                value={selectedVehicle?.id || ''}
-                onChange={(e) => {
-                  const vehicle = vehicles.find(v => v.id === e.target.value);
-                  setSelectedVehicle(vehicle);
-                }}
-              >
-                {vehicles.map((vehicle) => (
-                  <option key={vehicle.id} value={vehicle.id}>
-                    {vehicle.marca} {vehicle.modelo} - {vehicle.matricula}
-                  </option>
-                ))}
-              </select>
+          <CardHeader>
+            <CardTitle className="text-lg">Filtros</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Filtro Parceiro (Admin/Gestão) */}
+              {(user.role === 'admin' || user.role === 'gestao') && (
+                <div>
+                  <Label>Parceiro</Label>
+                  <select
+                    className="w-full p-2 border rounded-md mt-1"
+                    value={filtros.parceiro_id}
+                    onChange={(e) => setFiltros({ ...filtros, parceiro_id: e.target.value })}
+                  >
+                    <option value="todos">Todos os Parceiros</option>
+                    {parceiros.map((p) => (
+                      <option key={p.id} value={p.id}>{p.nome_empresa}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
+              {/* Filtro Estado */}
+              <div>
+                <Label>Estado</Label>
+                <select
+                  className="w-full p-2 border rounded-md mt-1"
+                  value={filtros.estado}
+                  onChange={(e) => setFiltros({ ...filtros, estado: e.target.value })}
+                >
+                  <option value="todas">Todas as Vistorias</option>
+                  <option value="realizadas">Realizadas (com PDF)</option>
+                  <option value="por_realizar">Por Realizar</option>
+                </select>
+              </div>
+              
+              {/* Data Início */}
+              <div>
+                <Label>Data Início</Label>
+                <Input
+                  type="date"
+                  value={filtros.data_inicio}
+                  onChange={(e) => setFiltros({ ...filtros, data_inicio: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              
+              {/* Data Fim */}
+              <div>
+                <Label>Data Fim</Label>
+                <Input
+                  type="date"
+                  value={filtros.data_fim}
+                  onChange={(e) => setFiltros({ ...filtros, data_fim: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
