@@ -712,6 +712,9 @@ const CriarContrato = ({ user, onLogout }) => {
                         <div>
                           <Label htmlFor="valor_aplicado">
                             Valor {formData.periodicidade === 'semanal' ? 'Semanal' : 'Mensal'} (€) *
+                            {veiculoTemCondicoesPredefinidas && !permitirAlterarCondicoes && (
+                              <span className="text-xs text-amber-600 ml-2">(Pré-definido pelo veículo)</span>
+                            )}
                           </Label>
                           <Input
                             id="valor_aplicado"
@@ -719,6 +722,7 @@ const CriarContrato = ({ user, onLogout }) => {
                             step="0.01"
                             value={formData.valor_aplicado}
                             onChange={(e) => setFormData({...formData, valor_aplicado: e.target.value})}
+                            disabled={veiculoTemCondicoesPredefinidas && !permitirAlterarCondicoes}
                             required
                           />
                         </div>
