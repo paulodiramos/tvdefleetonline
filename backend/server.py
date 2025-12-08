@@ -973,6 +973,7 @@ class User(UserBase):
     approved: bool = False
     associated_partner_id: Optional[str] = None
     associated_gestor_id: Optional[str] = None
+    parceiros_atribuidos: List[str] = []  # IDs dos parceiros atribuídos (para gestores)
     subscription_id: Optional[str] = None  # ID da subscrição ativa
     plano_id: Optional[str] = None  # ID do plano no sistema unificado
     plano_nome: Optional[str] = None  # Nome do plano
