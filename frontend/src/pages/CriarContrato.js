@@ -7,8 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
-import { FileText, User, Car, Building, Calendar, Euro, Percent, Download, Check } from 'lucide-react';
+import { FileText, User, Car, Building, Calendar, Euro, Percent, Download, Check, AlertTriangle, Edit } from 'lucide-react';
 
 const TIPOS_CONTRATO = [
   { value: 'aluguer_sem_caucao', label: 'Aluguer sem Caução' },
