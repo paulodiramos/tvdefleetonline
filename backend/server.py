@@ -11556,7 +11556,78 @@ async def upload_recibo(
         
         await db.relatorios_ganhos.update_one({"id": relatorio_id}, {"$set": update_data})
         
-        return {"message": "Receipt uploaded successfully", "file_url": file_info["saved_path"]}
+        # MOLONI AUTO-INVOICING: Generate invoice when receipt is uploaded
+        moloni_result = None
+        try:
+            from services.moloni_service import MoloniService
+            moloni_service = MoloniService(db)
+            
+            # Only attempt if not already created
+            if not relatorio.get("moloni_invoice_id"):
+                moloni_result = await moloni_service.create_invoice_for_report(
+                    motorista_id=relatorio["motorista_id"],
+                    relatorio_id=relatorio_id,
+                    valor_total=relatorio["valor_total"],
+                    periodo_inicio=relatorio["periodo_inicio"],
+                    periodo_fim=relatorio["periodo_fim"]
+                )
+                
+                # Update relatorio with Moloni result
+                if moloni_result.get("success"):
+                    await db.relatorios_ganhos.update_one(
+                        {"id": relatorio_id},
+                        {
+                            "$set": {
+                                "moloni_invoice_id": moloni_result.get("moloni_invoice_id"),
+                                "moloni_invoice_status": "created",
+                                "updated_at": datetime.now(timezone.utc).isoformat()
+                            }
+                        }
+                    )
+                    logger.info(f"Moloni invoice created for report {relatorio_id}: {moloni_result.get('moloni_invoice_id')}")
+                else:
+                    # Log error but don't fail the receipt upload
+                    await db.relatorios_ganhos.update_one(
+                        {"id": relatorio_id},
+                        {
+                            "$set": {
+                                "moloni_invoice_status": "failed",
+                                "moloni_invoice_error": moloni_result.get("error"),
+                                "updated_at": datetime.now(timezone.utc).isoformat()
+                            }
+                        }
+                    )
+                    logger.warning(f"Moloni invoice creation failed for report {relatorio_id}: {moloni_result.get('error')}")
+            
+            await moloni_service.close()
+            
+        except Exception as moloni_error:
+            logger.error(f"Error during Moloni invoice creation: {moloni_error}")
+            # Continue - don't fail receipt upload if Moloni fails
+            await db.relatorios_ganhos.update_one(
+                {"id": relatorio_id},
+                {
+                    "$set": {
+                        "moloni_invoice_status": "error",
+                        "moloni_invoice_error": str(moloni_error),
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }
+                }
+            )
+        
+        response_data = {
+            "message": "Receipt uploaded successfully",
+            "file_url": file_info["saved_path"]
+        }
+        
+        if moloni_result and moloni_result.get("success"):
+            response_data["moloni_invoice_created"] = True
+            response_data["moloni_invoice_id"] = moloni_result.get("moloni_invoice_id")
+        elif moloni_result:
+            response_data["moloni_invoice_created"] = False
+            response_data["moloni_error"] = moloni_result.get("error")
+        
+        return response_data
         
     except Exception as e:
         logger.error(f"Error uploading receipt: {e}")
