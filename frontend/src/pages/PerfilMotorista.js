@@ -152,6 +152,14 @@ const PerfilMotorista = ({ user, onLogout }) => {
               onUpdate={handleUpdate}
             />
           </TabsContent>
+
+          {/* Tab: Auto-Faturação Moloni */}
+          <TabsContent value="faturacao">
+            <MotoristaFaturacaoMoloni 
+              motoristaData={motoristaData}
+              onUpdate={handleUpdate}
+            />
+          </TabsContent>
         </Tabs>
       </div>
     </Layout>
