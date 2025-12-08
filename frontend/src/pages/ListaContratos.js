@@ -55,9 +55,8 @@ const ListaContratos = ({ user, onLogout, showLayout = true }) => {
     return matchesStatus && matchesSearch;
   });
 
-  return (
-    <Layout user={user} onLogout={onLogout}>
-      <div className="space-y-6">
+  const content = (
+    <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Lista de Contratos</h1>
