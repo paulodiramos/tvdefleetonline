@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from 'sonner';
 import { FileText, Plus, Edit, Trash2, Save, X } from 'lucide-react';
 
-const TemplatesContratos = ({ user, onLogout }) => {
+const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
