@@ -324,7 +324,6 @@ const ConfiguracaoPlanos = ({ user, onLogout }) => {
                   >
                     <option value="motorista">Motorista</option>
                     <option value="parceiro">Parceiro</option>
-                    <option value="gestao">Gestão</option>
                   </select>
                 </div>
 
