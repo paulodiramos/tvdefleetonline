@@ -3372,9 +3372,19 @@ async def get_moloni_config(motorista_id: str, current_user: Dict = Depends(get_
     if current_user["role"] not in ["admin", "gestao"] and current_user["id"] != motorista_id:
         raise HTTPException(status_code=403, detail="Sem permissão")
     
-    motorista = await db.users.find_one({"id": motorista_id}, {"_id": 0, "moloni_auto_faturacao": 1})
+    motorista = await db.users.find_one(
+        {"id": motorista_id}, 
+        {"_id": 0, "moloni_auto_faturacao": 1, "plano_id": 1, "plano_features": 1}
+    )
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Verificar se o plano tem módulo de auto-faturação
+    modulo_disponivel = False
+    if motorista.get("plano_id"):
+        plano = await db.planos_sistema.find_one({"id": motorista["plano_id"]}, {"_id": 0, "features": 1})
+        if plano and plano.get("features"):
+            modulo_disponivel = "moloni_auto_faturacao" in plano.get("features", [])
     
     config = motorista.get("moloni_auto_faturacao", {
         "ativo": False,
@@ -3385,6 +3395,9 @@ async def get_moloni_config(motorista_id: str, current_user: Dict = Depends(get_
         "company_id": "",
         "custo_mensal_extra": 10.00
     })
+    
+    # Adicionar flag de módulo disponível
+    config["modulo_disponivel"] = modulo_disponivel
     
     # Não retornar credenciais sensíveis completas
     if config.get("client_secret") and len(config.get("client_secret", "")) > 4:
@@ -3408,6 +3421,20 @@ async def save_moloni_config(
     motorista = await db.users.find_one({"id": motorista_id})
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Verificar se o plano tem módulo de auto-faturação (apenas se tentando ativar)
+    if config_data.get("ativo"):
+        modulo_disponivel = False
+        if motorista.get("plano_id"):
+            plano = await db.planos_sistema.find_one({"id": motorista["plano_id"]}, {"_id": 0, "features": 1})
+            if plano and plano.get("features"):
+                modulo_disponivel = "moloni_auto_faturacao" in plano.get("features", [])
+        
+        if not modulo_disponivel:
+            raise HTTPException(
+                status_code=403, 
+                detail="Módulo de auto-faturação Moloni não disponível no plano atual. Contacte o administrador para upgrade."
+            )
     
     # Buscar config existente
     existing_config = motorista.get("moloni_auto_faturacao", {})
