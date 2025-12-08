@@ -171,7 +171,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
   // Document upload states
   const [uploadingDoc, setUploadingDoc] = useState(false);
 
-  const canEdit = user.role === 'admin' || user.role === 'gestao';
+  const canEdit = user.role === 'admin' || user.role === 'gestao' || (user.role === 'parceiro' && hasModuloEventos);
   const canEditPlanoManutencao = user.role === 'admin' || user.role === 'gestao';
   const canEditAlertas = user.role === 'admin' || user.role === 'gestao';
 
