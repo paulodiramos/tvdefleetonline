@@ -1146,6 +1146,227 @@ startxref
         except Exception as e:
             self.log_result("File-Serving-Vehicles", False, f"Request error: {str(e)}")
 
+    # ==================== PLAN ASSIGNMENT TESTS (REVIEW REQUEST) ====================
+    
+    def test_plan_assignment_for_all_user_types(self):
+        """Test plan assignment for all user types as per review request"""
+        print("\n🎯 TESTING PLAN ASSIGNMENT FOR ALL USER TYPES")
+        print("-" * 70)
+        print("Review Request: Test plan assignment for Motorista, Parceiro, Operacional, Gestão")
+        print("1. Verify existing users now have plans assigned")
+        print("2. Test creation of new users with auto-plan assignment")
+        print("3. Verify all base free plans exist")
+        print("-" * 70)
+        
+        # Execute all plan assignment tests
+        self.test_existing_users_have_plans()
+        self.test_new_user_creation_with_auto_plan()
+        self.test_base_free_plans_exist()
+        
+        return True
+    
+    def test_existing_users_have_plans(self):
+        """Test that existing users now have plans assigned"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Existing-Users-Plans", False, "No auth token for admin")
+            return
+        
+        try:
+            # Test 1: GET /api/motoristas - check plano_id, plano_nome, plano_valida_ate
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            if motoristas_response.status_code == 200:
+                motoristas = motoristas_response.json()
+                motoristas_with_plans = 0
+                
+                for motorista in motoristas:
+                    if (motorista.get("plano_id") and 
+                        motorista.get("plano_nome") and 
+                        motorista.get("plano_valida_ate")):
+                        motoristas_with_plans += 1
+                
+                if motoristas_with_plans > 0:
+                    self.log_result("Motoristas-Have-Plans", True, 
+                                  f"{motoristas_with_plans}/{len(motoristas)} motoristas have plans assigned")
+                else:
+                    self.log_result("Motoristas-Have-Plans", False, 
+                                  f"No motoristas have plans assigned out of {len(motoristas)}")
+            else:
+                self.log_result("Motoristas-Have-Plans", False, 
+                              f"Failed to get motoristas: {motoristas_response.status_code}")
+            
+            # Test 2: GET /api/parceiros - check plano_id, plano_nome, plano_valida_ate
+            parceiros_response = requests.get(f"{BACKEND_URL}/parceiros", headers=headers)
+            if parceiros_response.status_code == 200:
+                parceiros = parceiros_response.json()
+                parceiros_with_plans = 0
+                
+                for parceiro in parceiros:
+                    if (parceiro.get("plano_id") and 
+                        parceiro.get("plano_nome") and 
+                        parceiro.get("plano_valida_ate")):
+                        parceiros_with_plans += 1
+                
+                if parceiros_with_plans > 0:
+                    self.log_result("Parceiros-Have-Plans", True, 
+                                  f"{parceiros_with_plans}/{len(parceiros)} parceiros have plans assigned")
+                else:
+                    self.log_result("Parceiros-Have-Plans", False, 
+                                  f"No parceiros have plans assigned out of {len(parceiros)}")
+            else:
+                self.log_result("Parceiros-Have-Plans", False, 
+                              f"Failed to get parceiros: {parceiros_response.status_code}")
+            
+            # Test 3: Get operacional user and verify plan fields
+            users_response = requests.get(f"{BACKEND_URL}/users", headers=headers)
+            if users_response.status_code == 200:
+                users = users_response.json()
+                operacional_users = [u for u in users if u.get("role") == "operacional"]
+                gestao_users = [u for u in users if u.get("role") == "gestao"]
+                
+                operacional_with_plans = sum(1 for u in operacional_users 
+                                           if u.get("plano_id") and u.get("plano_nome") and u.get("plano_valida_ate"))
+                gestao_with_plans = sum(1 for u in gestao_users 
+                                      if u.get("plano_id") and u.get("plano_nome") and u.get("plano_valida_ate"))
+                
+                if operacional_with_plans > 0:
+                    self.log_result("Operacional-Users-Have-Plans", True, 
+                                  f"{operacional_with_plans}/{len(operacional_users)} operacional users have plans")
+                else:
+                    self.log_result("Operacional-Users-Have-Plans", False, 
+                                  f"No operacional users have plans out of {len(operacional_users)}")
+                
+                if gestao_with_plans > 0:
+                    self.log_result("Gestao-Users-Have-Plans", True, 
+                                  f"{gestao_with_plans}/{len(gestao_users)} gestao users have plans")
+                else:
+                    self.log_result("Gestao-Users-Have-Plans", False, 
+                                  f"No gestao users have plans out of {len(gestao_users)}")
+            else:
+                self.log_result("Users-Plan-Check", False, 
+                              f"Failed to get users: {users_response.status_code}")
+                
+        except Exception as e:
+            self.log_result("Existing-Users-Plans", False, f"Request error: {str(e)}")
+    
+    def test_new_user_creation_with_auto_plan(self):
+        """Test creation of new users with auto-plan assignment"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("New-User-Auto-Plan", False, "No auth token for admin")
+            return
+        
+        try:
+            # Test 1: Create new Parceiro and verify plan is assigned
+            parceiro_data = {
+                "nome_empresa": "Test Auto Plan Lda",
+                "contribuinte_empresa": "999888777",
+                "morada_completa": "Rua Auto Plan 123",
+                "codigo_postal": "1000-999",
+                "localidade": "Lisboa",
+                "nome_manager": "Manager Auto Plan",
+                "telefone": "211999888",
+                "telemovel": "911999888",
+                "email": f"autoplan.parceiro.{int(time.time())}@test.com",
+                "codigo_certidao_comercial": "AUTO123",
+                "validade_certidao_comercial": "2025-12-31"
+            }
+            
+            parceiro_response = requests.post(f"{BACKEND_URL}/parceiros", json=parceiro_data, headers=headers)
+            if parceiro_response.status_code == 200:
+                parceiro = parceiro_response.json()
+                if (parceiro.get("plano_id") and 
+                    parceiro.get("plano_nome") and 
+                    parceiro.get("plano_valida_ate")):
+                    self.log_result("New-Parceiro-Auto-Plan", True, 
+                                  f"New parceiro auto-assigned plan: {parceiro['plano_nome']}")
+                else:
+                    self.log_result("New-Parceiro-Auto-Plan", False, 
+                                  "New parceiro created but no plan assigned")
+            else:
+                self.log_result("New-Parceiro-Auto-Plan", False, 
+                              f"Failed to create parceiro: {parceiro_response.status_code}")
+            
+            # Test 2: Create new Operacional user and verify plan is assigned
+            import time
+            operacional_data = {
+                "email": f"autoplan.operacional.{int(time.time())}@test.com",
+                "password": "testpass123",
+                "name": "Operacional Auto Plan",
+                "role": "operacional",
+                "phone": "911888999"
+            }
+            
+            user_response = requests.post(f"{BACKEND_URL}/users", json=operacional_data, headers=headers)
+            if user_response.status_code == 200:
+                user = user_response.json()
+                if (user.get("plano_id") and 
+                    user.get("plano_nome") and 
+                    user.get("plano_valida_ate")):
+                    self.log_result("New-Operacional-Auto-Plan", True, 
+                                  f"New operacional user auto-assigned plan: {user['plano_nome']}")
+                else:
+                    self.log_result("New-Operacional-Auto-Plan", False, 
+                                  "New operacional user created but no plan assigned")
+            else:
+                self.log_result("New-Operacional-Auto-Plan", False, 
+                              f"Failed to create operacional user: {user_response.status_code}")
+                
+        except Exception as e:
+            self.log_result("New-User-Auto-Plan", False, f"Request error: {str(e)}")
+    
+    def test_base_free_plans_exist(self):
+        """Verify all base free plans exist for all user types"""
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Base-Free-Plans-Exist", False, "No auth token for admin")
+            return
+        
+        try:
+            # Get all plans from unified system
+            planos_response = requests.get(f"{BACKEND_URL}/planos-sistema", headers=headers)
+            if planos_response.status_code != 200:
+                self.log_result("Base-Free-Plans-Exist", False, 
+                              f"Failed to get planos: {planos_response.status_code}")
+                return
+            
+            planos = planos_response.json()
+            
+            # Check for base free plans for each user type
+            required_user_types = ["motorista", "parceiro", "operacional", "gestao"]
+            found_free_plans = {}
+            
+            for plano in planos:
+                user_type = plano.get("tipo_usuario")
+                preco_mensal = plano.get("preco_mensal", 0)
+                
+                if user_type in required_user_types and preco_mensal == 0:
+                    if user_type not in found_free_plans:
+                        found_free_plans[user_type] = []
+                    found_free_plans[user_type].append(plano)
+            
+            # Verify each user type has at least one free plan
+            all_types_covered = True
+            for user_type in required_user_types:
+                if user_type in found_free_plans and len(found_free_plans[user_type]) > 0:
+                    plan_names = [p["nome"] for p in found_free_plans[user_type]]
+                    self.log_result(f"Free-Plan-{user_type.title()}", True, 
+                                  f"Found {len(found_free_plans[user_type])} free plan(s): {', '.join(plan_names)}")
+                else:
+                    self.log_result(f"Free-Plan-{user_type.title()}", False, 
+                                  f"No free plan found for {user_type} (preco_mensal=0)")
+                    all_types_covered = False
+            
+            if all_types_covered:
+                self.log_result("Base-Free-Plans-Exist", True, 
+                              "All user types have base free plans (preco_mensal=0)")
+            else:
+                self.log_result("Base-Free-Plans-Exist", False, 
+                              "Some user types missing base free plans")
+                
+        except Exception as e:
+            self.log_result("Base-Free-Plans-Exist", False, f"Request error: {str(e)}")
+
     # ==================== UNIFIED PLAN SYSTEM TESTS ====================
     
     def test_unified_plan_system_e2e(self):
