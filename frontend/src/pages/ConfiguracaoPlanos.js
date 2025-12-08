@@ -135,18 +135,23 @@ const ConfiguracaoPlanos = ({ user, onLogout }) => {
   };
 
   const handleDeletePlano = async (planoId) => {
-    if (!window.confirm('Tem certeza que deseja desativar este plano?')) return;
+    if (!window.confirm('⚠️ ATENÇÃO: Tem certeza que deseja ELIMINAR PERMANENTEMENTE este plano?\n\nEsta ação não pode ser revertida! O plano só será eliminado se não estiver em uso.')) return;
     
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API}/api/planos-sistema/${planoId}`, {
+      const response = await axios.delete(`${API}/planos-sistema/${planoId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success('Plano desativado!');
-      fetchPlanos();
+      
+      if (response.data.em_uso) {
+        toast.error(`Plano não pode ser eliminado! Está em uso por ${response.data.motoristas} motoristas e ${response.data.parceiros} parceiros.`);
+      } else {
+        toast.success('Plano eliminado permanentemente!');
+        fetchPlanos();
+      }
     } catch (error) {
       console.error('Error deleting plan:', error);
-      toast.error('Erro ao desativar plano');
+      toast.error(error.response?.data?.detail || 'Erro ao eliminar plano');
     }
   };
 
