@@ -1014,16 +1014,16 @@ const Usuarios = ({ user, onLogout }) => {
             </div>
 
             {/* Info sobre tipos de planos */}
-            {selectedUser && ['parceiro', 'operacional', 'gestao'].includes(selectedUser.role) && (
+            {selectedUser && selectedUser.role === 'parceiro' && (
               <div className="bg-blue-50 border border-blue-200 p-3 rounded">
                 <p className="text-xs text-blue-800">
-                  ℹ️ <strong>{getRoleLabel(selectedUser.role)}</strong> pode ter plano de parceiro atribuído. Operacional e Gestor têm funcionalidades baseadas no plano.
+                  ℹ️ <strong>Parceiro</strong> pode ter plano atribuído para gerir veículos e motoristas.
                 </p>
               </div>
             )}
 
-            {/* Select de planos */}
-            {selectedUser && ['motorista', 'parceiro', 'operacional', 'gestao'].includes(selectedUser.role) && (
+            {/* Select de planos - Apenas Motorista e Parceiro */}
+            {selectedUser && ['motorista', 'parceiro'].includes(selectedUser.role) && (
               <>
                 <div>
                   <Label htmlFor="plano">
