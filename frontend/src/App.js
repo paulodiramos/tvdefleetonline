@@ -375,6 +375,12 @@ function App() {
             }
           />
           <Route
+            path="/pendentes"
+            element={
+              user ? <Pendentes user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/validacao-documentos/:motoristaId"
             element={
               user ? <ValidacaoDocumentosMotorista user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
