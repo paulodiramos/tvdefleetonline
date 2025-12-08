@@ -349,14 +349,43 @@ const ConfiguracaoPlanos = ({ user, onLogout }) => {
                   </select>
                 </div>
 
-                <div>
-                  <Label>Preço Mensal (€) *</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={planoForm.preco_mensal}
-                    onChange={(e) => setPlanoForm({...planoForm, preco_mensal: parseFloat(e.target.value)})}
-                  />
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="col-span-2">
+                    <Label>Preço Mensal sem IVA (€) *</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={planoForm.preco_mensal}
+                      onChange={(e) => setPlanoForm({...planoForm, preco_mensal: parseFloat(e.target.value) || 0})}
+                      placeholder="Ex: 50.00"
+                    />
+                  </div>
+                  <div>
+                    <Label>IVA (%)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={planoForm.taxa_iva}
+                      onChange={(e) => setPlanoForm({...planoForm, taxa_iva: parseInt(e.target.value) || 23})}
+                      placeholder="23"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 p-3 rounded">
+                  <p className="text-sm font-medium text-blue-900">Cálculo de Preços:</p>
+                  <div className="mt-2 space-y-1 text-sm">
+                    <p className="text-blue-800">
+                      <strong>Sem IVA:</strong> €{planoForm.preco_mensal.toFixed(2)}/mês
+                    </p>
+                    <p className="text-blue-800">
+                      <strong>IVA ({planoForm.taxa_iva}%):</strong> €{(planoForm.preco_mensal * planoForm.taxa_iva / 100).toFixed(2)}
+                    </p>
+                    <p className="text-lg font-bold text-blue-900">
+                      <strong>Com IVA:</strong> €{(planoForm.preco_mensal * (1 + planoForm.taxa_iva / 100)).toFixed(2)}/mês
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex items-center space-x-4">
