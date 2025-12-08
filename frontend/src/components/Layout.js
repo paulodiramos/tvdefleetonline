@@ -75,6 +75,15 @@ const Layout = ({ user, onLogout, children }) => {
       { path: '/motoristas', icon: Users, label: 'Motoristas' },
       { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' },
       { 
+        label: 'Relatórios', 
+        icon: FileText,
+        submenu: [
+          { path: '/criar-relatorio-semanal', label: 'Criar Relatório' },
+          { path: '/sincronizacao-auto', label: 'Sync Auto' },
+          { path: '/upload-csv', label: 'Upload CSV' }
+        ]
+      },
+      { 
         label: 'Financeiro', 
         icon: DollarSign,
         submenu: [
