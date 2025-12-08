@@ -115,10 +115,33 @@ const CriarContrato = ({ user, onLogout }) => {
       const veiculo = veiculos.find(v => v.id === veiculoSelecionado);
       setVeiculoData(veiculo);
       
+      // Verificar se veículo tem condições pré-definidas
+      const temCondicoes = veiculo?.tipo_contrato?.tipo || veiculo?.tipo_exploracao;
+      setVeiculoTemCondicoesPredefinidas(!!temCondicoes);
+      setPermitirAlterarCondicoes(false); // Reset ao trocar de veículo
+      
       // Se o veículo tem tipo_contrato configurado, usar esse
       if (veiculo?.tipo_contrato?.tipo) {
         const tipoVeiculo = veiculo.tipo_contrato.tipo;
         setTipoContrato(tipoVeiculo);
+        
+        // Determinar qual template usar baseado no tipo do veículo
+        let templateMatch = null;
+        if (tipoVeiculo === 'comissao') {
+          templateMatch = templates.find(t => t.tipo_contrato === 'comissao');
+        } else if (tipoVeiculo === 'aluguer' || tipoVeiculo.includes('aluguer')) {
+          // Tentar encontrar template de aluguer mais apropriado
+          templateMatch = templates.find(t => 
+            t.tipo_contrato.includes('aluguer') || 
+            t.tipo_contrato === 'aluguer_sem_caucao'
+          );
+        }
+        
+        // Se encontrou template compatível, selecionar automaticamente
+        if (templateMatch) {
+          setTipoContratoSelecionado(templateMatch.id);
+          toast.info(`Template "${templateMatch.nome_template}" selecionado automaticamente baseado no veículo`);
+        }
         
         // Pre-fill com dados do veículo
         if (tipoVeiculo === 'aluguer' || tipoVeiculo.includes('aluguer')) {
@@ -147,8 +170,11 @@ const CriarContrato = ({ user, onLogout }) => {
           }));
         }
       }
+    } else {
+      setVeiculoTemCondicoesPredefinidas(false);
+      setPermitirAlterarCondicoes(false);
     }
-  }, [veiculoSelecionado, veiculos]);
+  }, [veiculoSelecionado, veiculos, templates]);
 
   const fetchParceiros = async () => {
     try {
