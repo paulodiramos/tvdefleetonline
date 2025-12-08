@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { 
   ClipboardCheck, Plus, Calendar, Car, FileText, Upload, 
-  Download, Eye, CheckCircle, AlertCircle, XCircle, Trash2 
+  Download, Eye, CheckCircle, AlertCircle, XCircle, Trash2, Send
 } from 'lucide-react';
 
 const Vistorias = ({ user, onLogout }) => {
