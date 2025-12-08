@@ -34,7 +34,7 @@ const Integracoes = ({ user, onLogout }) => {
   const fetchConfiguracoes = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/api/integracoes/configuracoes`, {
+      const response = await axios.get(`${API}/integracoes/configuracoes`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.data.moloni) {
@@ -146,7 +146,7 @@ const Integracoes = ({ user, onLogout }) => {
                   try {
                     setLoading(true);
                     const token = localStorage.getItem('token');
-                    await axios.post(`${API}/api/integracoes/terabox`, configuracoes.terabox, {
+                    await axios.post(`${API}/integracoes/terabox`, configuracoes.terabox, {
                       headers: { Authorization: `Bearer ${token}` }
                     });
                     toast.success('Configurações Terabox salvas com sucesso!');
@@ -167,7 +167,7 @@ const Integracoes = ({ user, onLogout }) => {
                   try {
                     setLoading(true);
                     const token = localStorage.getItem('token');
-                    const response = await axios.post(`${API}/api/integracoes/terabox/test`, {}, {
+                    const response = await axios.post(`${API}/integracoes/terabox/test`, {}, {
                       headers: { Authorization: `Bearer ${token}` }
                     });
                     toast.success(response.data.message || 'Conexão Terabox testada com sucesso!');
