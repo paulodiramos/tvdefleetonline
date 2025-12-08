@@ -3364,6 +3364,94 @@ async def get_motoristas(current_user: Dict = Depends(get_current_user)):
         logger.error(f"Error fetching motoristas: {e}")
         raise HTTPException(status_code=500, detail=f"Error fetching motoristas: {str(e)}")
 
+# ==================== MOLONI AUTO-FATURAÇÃO (MOTORISTA) ====================
+
+@api_router.get("/motoristas/{motorista_id}/moloni-config")
+async def get_moloni_config(motorista_id: str, current_user: Dict = Depends(get_current_user)):
+    """Get Moloni configuration for motorista"""
+    if current_user["role"] not in ["admin", "gestao"] and current_user["id"] != motorista_id:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    motorista = await db.users.find_one({"id": motorista_id}, {"_id": 0, "moloni_auto_faturacao": 1})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    config = motorista.get("moloni_auto_faturacao", {
+        "ativo": False,
+        "client_id": "",
+        "client_secret": "",
+        "username": "",
+        "password": "",
+        "company_id": "",
+        "custo_mensal_extra": 10.00
+    })
+    
+    # Não retornar credenciais sensíveis completas
+    if config.get("client_secret") and len(config.get("client_secret", "")) > 4:
+        config["client_secret_masked"] = "***" + config["client_secret"][-4:]
+        config["client_secret"] = ""
+    if config.get("password"):
+        config["password"] = ""
+    
+    return config
+
+@api_router.post("/motoristas/{motorista_id}/moloni-config")
+async def save_moloni_config(
+    motorista_id: str,
+    config_data: Dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Save Moloni configuration for motorista"""
+    if current_user["role"] not in ["admin", "gestao"] and current_user["id"] != motorista_id:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    motorista = await db.users.find_one({"id": motorista_id})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Buscar config existente
+    existing_config = motorista.get("moloni_auto_faturacao", {})
+    
+    # Estrutura da configuração - manter valores antigos se não enviados
+    moloni_config = {
+        "ativo": config_data.get("ativo", existing_config.get("ativo", False)),
+        "client_id": config_data.get("client_id") or existing_config.get("client_id", ""),
+        "client_secret": config_data.get("client_secret") or existing_config.get("client_secret", ""),
+        "username": config_data.get("username") or existing_config.get("username", ""),
+        "password": config_data.get("password") or existing_config.get("password", ""),
+        "company_id": config_data.get("company_id") or existing_config.get("company_id", ""),
+        "custo_mensal_extra": config_data.get("custo_mensal_extra", 10.00),
+        "data_ativacao": datetime.now(timezone.utc).isoformat() if config_data.get("ativo") and not existing_config.get("ativo") else existing_config.get("data_ativacao")
+    }
+    
+    await db.users.update_one(
+        {"id": motorista_id},
+        {"$set": {"moloni_auto_faturacao": moloni_config}}
+    )
+    
+    return {"message": "Configuração Moloni salva com sucesso", "ativo": moloni_config["ativo"]}
+
+@api_router.post("/motoristas/{motorista_id}/moloni-config/testar")
+async def testar_moloni_config(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Test Moloni connection"""
+    if current_user["role"] not in ["admin", "gestao"] and current_user["id"] != motorista_id:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    motorista = await db.users.find_one({"id": motorista_id}, {"_id": 0, "moloni_auto_faturacao": 1})
+    if not motorista or not motorista.get("moloni_auto_faturacao"):
+        raise HTTPException(status_code=404, detail="Configuração Moloni não encontrada")
+    
+    config = motorista["moloni_auto_faturacao"]
+    
+    if not config.get("client_id") or not config.get("client_secret"):
+        raise HTTPException(status_code=400, detail="Credenciais incompletas")
+    
+    # TODO: Implementar chamada real à API Moloni para validar
+    return {"message": "Conexão Moloni testada com sucesso (simulado)", "status": "ok"}
+
 @api_router.get("/motoristas/{motorista_id}")
 async def get_motorista_by_id(motorista_id: str, current_user: Dict = Depends(get_current_user)):
     """Get a specific motorista by ID"""
