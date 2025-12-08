@@ -7052,6 +7052,7 @@ async def agendar_vistoria(
             "data_agendada": agendamento.get("data_agendada"),
             "tipo_vistoria": agendamento.get("tipo_vistoria", "periodica"),
             "notas": agendamento.get("notas", ""),
+            "parceiro_id": agendamento.get("parceiro_id"),
             "status": "agendada",  # agendada, realizada, cancelada
             "created_at": datetime.now(timezone.utc).isoformat(),
             "created_by": current_user["id"]
