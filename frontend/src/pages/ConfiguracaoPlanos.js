@@ -265,13 +265,13 @@ const ConfiguracaoPlanos = ({ user, onLogout }) => {
                                 ) : (
                                   <div>
                                     <p className="text-sm text-slate-600">
-                                      Sem IVA: <strong>€{plano.preco_mensal.toFixed(2)}</strong>
+                                      Sem IVA: <strong>€{plano.preco_mensal.toFixed(2)}</strong> | Semanal: <strong>€{(plano.preco_semanal || plano.preco_mensal / 4.33).toFixed(2)}</strong>
                                     </p>
                                     <p className="text-2xl font-bold text-blue-600">
                                       €{(plano.preco_mensal_com_iva || plano.preco_mensal * 1.23).toFixed(2)}/mês
                                     </p>
-                                    <p className="text-xs text-slate-500">
-                                      (IVA {plano.taxa_iva || 23}% incluído)
+                                    <p className="text-sm text-slate-600">
+                                      Semanal: <strong>€{(plano.preco_semanal_com_iva || (plano.preco_mensal * 1.23 / 4.33)).toFixed(2)}</strong> | (IVA {plano.taxa_iva || 23}%)
                                     </p>
                                   </div>
                                 )}
