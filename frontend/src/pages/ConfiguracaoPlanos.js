@@ -237,10 +237,31 @@ const ConfiguracaoPlanos = ({ user, onLogout }) => {
                                 <span>{plano.nome}</span>
                                 {!plano.ativo && <Badge variant="destructive">Inativo</Badge>}
                                 {plano.permite_trial && <Badge className="bg-green-100 text-green-800">Trial</Badge>}
+                                {plano.desconto_promocao > 0 && (
+                                  <Badge className="bg-yellow-100 text-yellow-800">-{plano.desconto_promocao}%</Badge>
+                                )}
                               </CardTitle>
-                              <p className="text-2xl font-bold text-blue-600 mt-2">
-                                €{plano.preco_mensal.toFixed(2)}/mês
-                              </p>
+                              <div className="mt-2">
+                                {plano.desconto_promocao > 0 ? (
+                                  <div>
+                                    <p className="text-lg text-slate-400 line-through">
+                                      €{plano.preco_mensal.toFixed(2)}
+                                    </p>
+                                    <p className="text-2xl font-bold text-yellow-600">
+                                      €{(plano.preco_mensal * (1 - plano.desconto_promocao / 100)).toFixed(2)}/mês
+                                    </p>
+                                    {plano.data_inicio_promocao && plano.data_fim_promocao && (
+                                      <p className="text-xs text-slate-500 mt-1">
+                                        Válido: {new Date(plano.data_inicio_promocao).toLocaleDateString()} - {new Date(plano.data_fim_promocao).toLocaleDateString()}
+                                      </p>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <p className="text-2xl font-bold text-blue-600">
+                                    €{plano.preco_mensal.toFixed(2)}/mês
+                                  </p>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </CardHeader>
