@@ -144,7 +144,6 @@ const Planos = ({ user, onLogout }) => {
                     className="w-full p-2 border rounded-md"
                   >
                     <option value="parceiro">Parceiro</option>
-                    <option value="operacional">Operacional</option>
                   </select>
                 </div>
 
