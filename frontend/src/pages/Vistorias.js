@@ -80,12 +80,67 @@ const Vistorias = ({ user, onLogout }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setVehicles(response.data);
-      if (response.data.length > 0) {
-        setSelectedVehicle(response.data[0]);
-      }
     } catch (error) {
       console.error('Error fetching vehicles:', error);
       toast.error('Erro ao carregar veículos');
+    }
+  };
+
+  const fetchParceiros = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/parceiros`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setParceiros(response.data);
+    } catch (error) {
+      console.error('Error fetching parceiros:', error);
+    }
+  };
+
+  const aplicarFiltros = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      // Buscar todas as vistorias de todos os veículos
+      const vistoriasPromises = vehicles.map(vehicle => 
+        axios.get(`${API}/vehicles/${vehicle.id}/vistorias`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).then(res => res.data.map(v => ({ ...v, veiculo: vehicle })))
+        .catch(() => [])
+      );
+      
+      const allVistorias = (await Promise.all(vistoriasPromises)).flat();
+      
+      // Aplicar filtros
+      let filtradas = allVistorias;
+      
+      // Filtro por parceiro
+      if (filtros.parceiro_id !== 'todos') {
+        filtradas = filtradas.filter(v => v.veiculo.parceiro_id === filtros.parceiro_id);
+      }
+      
+      // Filtro por estado
+      if (filtros.estado === 'realizadas') {
+        filtradas = filtradas.filter(v => v.pdf_relatorio);
+      } else if (filtros.estado === 'por_realizar') {
+        filtradas = filtradas.filter(v => !v.pdf_relatorio);
+      }
+      
+      // Filtro por data
+      if (filtros.data_inicio) {
+        filtradas = filtradas.filter(v => v.data_vistoria >= filtros.data_inicio);
+      }
+      if (filtros.data_fim) {
+        filtradas = filtradas.filter(v => v.data_vistoria <= filtros.data_fim);
+      }
+      
+      setVistorias(filtradas);
+    } catch (error) {
+      console.error('Error applying filters:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
