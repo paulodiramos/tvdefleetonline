@@ -376,12 +376,6 @@ function App() {
             }
           />
           <Route
-            path="/relatorios"
-            element={
-              user ? <Relatorios user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
-            }
-          />
-          <Route
             path="/validacao-documentos/:motoristaId"
             element={
               user ? <ValidacaoDocumentosMotorista user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
