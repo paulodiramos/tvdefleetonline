@@ -9593,18 +9593,15 @@ async def atribuir_plano_manual(
     
     plano_id = data.get("plano_id")
     periodicidade = data.get("periodicidade", "mensal")
-    duracao_dias = 30 if periodicidade == "mensal" else 7
+    duracao_dias = 30  # Sistema unificado usa apenas mensal
     
-    # Try to find plan in both motorista and parceiro collections
-    plano = await db.planos_motorista.find_one({"id": plano_id}, {"_id": 0})
-    plano_type = "motorista"
-    
-    if not plano:
-        plano = await db.planos_parceiro.find_one({"id": plano_id}, {"_id": 0})
-        plano_type = "parceiro"
+    # Find plan in unified system
+    plano = await db.planos_sistema.find_one({"id": plano_id, "ativo": True}, {"_id": 0})
     
     if not plano:
         raise HTTPException(status_code=404, detail="Plan not found")
+    
+    plano_type = plano.get("tipo_usuario", "motorista")
     
     user = await db.users.find_one({"id": user_id}, {"_id": 0})
     if not user:
