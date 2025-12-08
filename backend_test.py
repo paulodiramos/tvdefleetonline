@@ -1219,7 +1219,7 @@ startxref
                               f"Failed to get parceiros: {parceiros_response.status_code}")
             
             # Test 3: Get operacional user and verify plan fields
-            users_response = requests.get(f"{BACKEND_URL}/users", headers=headers)
+            users_response = requests.get(f"{BACKEND_URL}/users/all", headers=headers)
             if users_response.status_code == 200:
                 users = users_response.json()
                 operacional_users = [u for u in users if u.get("role") == "operacional"]
