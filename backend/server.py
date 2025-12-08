@@ -9179,12 +9179,18 @@ async def create_plano_sistema(plano_data: Dict, current_user: Dict = Depends(ge
     taxa_iva = plano_data.get("taxa_iva", 23)  # Default 23% (Portugal)
     preco_com_iva = preco_sem_iva * (1 + taxa_iva / 100)
     
+    # Calcular preço semanal automaticamente (mensal / 4.33)
+    preco_semanal = preco_sem_iva / 4.33
+    preco_semanal_com_iva = preco_com_iva / 4.33
+    
     plano = {
         "id": plano_id,
         "nome": plano_data["nome"],
         "descricao": plano_data.get("descricao", ""),
         "preco_mensal": preco_sem_iva,  # Preço sem IVA
         "preco_mensal_com_iva": round(preco_com_iva, 2),  # Preço com IVA
+        "preco_semanal": round(preco_semanal, 2),  # Preço semanal sem IVA
+        "preco_semanal_com_iva": round(preco_semanal_com_iva, 2),  # Preço semanal com IVA
         "taxa_iva": taxa_iva,  # Percentagem de IVA
         "tipo_usuario": plano_data["tipo_usuario"],  # motorista, parceiro
         "modulos": plano_data.get("modulos", []),
