@@ -64,6 +64,10 @@ const Usuarios = ({ user, onLogout }) => {
   const [duracaoDias, setDuracaoDias] = useState(30);
   const [showMotoristaDialog, setShowMotoristaDialog] = useState(false);
   const [selectedMotoristaId, setSelectedMotoristaId] = useState(null);
+  const [showParceirosDialog, setShowParceirosDialog] = useState(false);
+  const [selectedGestor, setSelectedGestor] = useState(null);
+  const [parceiros, setParceiros] = useState([]);
+  const [selectedParceiros, setSelectedParceiros] = useState([]);
   
   // Search and filter states
   const [searchTerm, setSearchTerm] = useState('');
