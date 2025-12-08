@@ -28,6 +28,7 @@ import ParceiroReports from "@/pages/ParceiroReports";
 import PerfilParceiro from "@/pages/PerfilParceiro";
 import GestaoParceirosModulos from "@/pages/GestaoParceirosModulos";
 import GestaoUtilizadores from "@/pages/GestaoUtilizadores";
+import GestaoPlanosParceiros from "@/pages/GestaoPlanosParceiros";
 import Pagamentos from "@/pages/Pagamentos";
 import UploadCSV from "@/pages/UploadCSV";
 import Planos from "@/pages/Planos";
