@@ -361,6 +361,12 @@ function App() {
             }
           />
           <Route
+            path="/configuracao-categorias"
+            element={
+              user && user.role === 'admin' ? <ConfiguracaoCategorias user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
             path="/vehicle-data"
             element={
               user ? <VehicleData user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
