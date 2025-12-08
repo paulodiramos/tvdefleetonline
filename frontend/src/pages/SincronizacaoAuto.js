@@ -85,8 +85,9 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      const ganhos = response.data.total_receitas || 0;
-      const despesas = response.data.total_despesas || 0;
+      // API retorna total_ganhos e total_gastos
+      const ganhos = response.data.total_ganhos || 0;
+      const despesas = response.data.total_gastos || 0;
       
       setDashboardStats({
         ganhos: ganhos,
