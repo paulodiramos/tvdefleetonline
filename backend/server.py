@@ -3347,6 +3347,12 @@ async def get_motoristas(current_user: Dict = Depends(get_current_user)):
                     m["approved_at"] = datetime.fromisoformat(m["approved_at"])
                 except ValueError:
                     m["approved_at"] = None
+            
+            # Add plano_nome lookup
+            if m.get("plano_id"):
+                plano = await db.planos_sistema.find_one({"id": m["plano_id"]}, {"_id": 0, "nome": 1})
+                if plano:
+                    m["plano_nome"] = plano.get("nome")
         
         return motoristas
     except Exception as e:
