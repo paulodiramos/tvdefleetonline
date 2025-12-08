@@ -37,6 +37,7 @@ const Dashboard = ({ user, onLogout }) => {
   const [alertas, setAlertas] = useState([]);
   const [proximasDatas, setProximasDatas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [planoAtivo, setPlanoAtivo] = useState(null);
   
   // Filtros de data
   const [filtroData, setFiltroData] = useState({ tipo: 'todos', dataInicio: '', dataFim: '' });
