@@ -209,9 +209,9 @@ const Layout = ({ user, onLogout, children }) => {
                   {user.role === 'admin' && (
                     <>
                       <DropdownMenuItem asChild>
-                        <Link to="/usuarios" className="flex items-center space-x-2 cursor-pointer">
-                          <Shield className="w-4 h-4" />
-                          <span>Utilizadores</span>
+                        <Link to="/planos-parceiros" className="flex items-center space-x-2 cursor-pointer">
+                          <Package className="w-4 h-4" />
+                          <span>Gestão de Planos</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
@@ -230,8 +230,8 @@ const Layout = ({ user, onLogout, children }) => {
                       </div>
                       <DropdownMenuItem asChild>
                         <Link to="/configuracao-planos" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <Package className="w-4 h-4" />
-                          <span>Planos</span>
+                          <Database className="w-4 h-4" />
+                          <span>Config. Planos Base</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
