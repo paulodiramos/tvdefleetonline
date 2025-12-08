@@ -226,7 +226,7 @@ function App() {
           <Route
             path="/upload-csv"
             element={
-              user ? <Financeiro user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+              user ? <UploadCSV user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
           <Route
