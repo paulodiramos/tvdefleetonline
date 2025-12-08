@@ -85,8 +85,8 @@ const Layout = ({ user, onLogout, children }) => {
       items.push({ path: '/criar-relatorio-semanal', icon: TrendingUp, label: 'Criar Relatório' });
     }
 
-    // Add Sincronização Auto for admin and gestao
-    if (user.role === 'admin' || user.role === 'gestao') {
+    // Add Sincronização Auto apenas para admin
+    if (user.role === 'admin') {
       items.push({ path: '/sincronizacao-auto', icon: Zap, label: 'Sync Auto' });
     }
 
