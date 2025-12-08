@@ -52,6 +52,7 @@ const Layout = ({ user, onLogout, children }) => {
     // For parceiro role: Replace dashboard with reports, add payments with financeiro submenu
     if (user.role === 'parceiro') {
       return [
+        { path: '/meu-plano', icon: Package, label: 'Meu Plano' },
         { path: '/motoristas', icon: Users, label: 'Motoristas' },
         { path: '/vehicles', icon: Car, label: 'Veículos' },
         { path: '/vistorias', icon: ClipboardCheck, label: 'Vistorias' },
