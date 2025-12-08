@@ -1212,12 +1212,10 @@ const Usuarios = ({ user, onLogout }) => {
               <Button variant="outline" onClick={() => setShowPlanoDialog(false)}>
                 Cancelar
               </Button>
-              {selectedUser?.role === 'motorista' && (
-                <Button onClick={handleAtribuirPlano} disabled={!selectedPlanoId}>
-                  <Package className="w-4 h-4 mr-2" />
-                  Atribuir Plano
-                </Button>
-              )}
+              <Button onClick={handleAtribuirPlano} disabled={!selectedPlanoId}>
+                <Package className="w-4 h-4 mr-2" />
+                Atribuir Plano
+              </Button>
             </div>
           </div>
         </DialogContent>
