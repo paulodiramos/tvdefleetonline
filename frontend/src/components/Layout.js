@@ -378,6 +378,55 @@ const Layout = ({ user, onLogout, children }) => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
+
+      {/* Footer */}
+      <footer className="bg-slate-50 border-t border-slate-200 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-slate-600">
+              © {new Date().getFullYear()} TVDEFleet. Todos os direitos reservados.
+            </p>
+            <div className="flex items-center space-x-6">
+              <button
+                onClick={() => setShowTermosModal(true)}
+                className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                Termos e Condições
+              </button>
+              <button
+                onClick={() => setShowPrivacidadeModal(true)}
+                className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                Política de Privacidade
+              </button>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      {/* Modal Termos e Condições */}
+      <Dialog open={showTermosModal} onOpenChange={setShowTermosModal}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Termos e Condições</DialogTitle>
+          </DialogHeader>
+          <div className="prose prose-sm max-w-none">
+            <div dangerouslySetInnerHTML={{ __html: termosText.replace(/\n/g, '<br/>') }} />
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Política de Privacidade */}
+      <Dialog open={showPrivacidadeModal} onOpenChange={setShowPrivacidadeModal}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Política de Privacidade</DialogTitle>
+          </DialogHeader>
+          <div className="prose prose-sm max-w-none">
+            <div dangerouslySetInnerHTML={{ __html: privacidadeText.replace(/\n/g, '<br/>') }} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
