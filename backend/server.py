@@ -7018,6 +7018,16 @@ async def gerar_pdf_vistoria(
         y_position -= 0.5*cm
         c.drawString(2*cm, y_position, f"KM do Veículo: {vistoria.get('km_veiculo', 'N/A')}")
         y_position -= 0.5*cm
+        
+        # TODO: Complete PDF generation...
+        c.save()
+        
+        pdf_url = f"/uploads/vistorias/relatorios/vistoria_{vistoria_id}.pdf"
+        return {"message": "PDF generated", "pdf_url": pdf_url}
+        
+    except Exception as e:
+        logger.error(f"Error generating PDF: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @api_router.post("/vehicles/{vehicle_id}/agendar-vistoria")
