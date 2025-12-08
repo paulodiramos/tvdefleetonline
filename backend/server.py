@@ -4331,8 +4331,15 @@ async def create_vehicle(vehicle_data: VehicleCreate, current_user: Dict = Depen
 @api_router.get("/vehicles", response_model=List[Vehicle])
 async def get_vehicles(current_user: Dict = Depends(get_current_user)):
     query = {}
-    if current_user["role"] in [UserRole.PARCEIRO, UserRole.OPERACIONAL]:
+    if current_user["role"] == UserRole.PARCEIRO:
         query["parceiro_id"] = current_user["id"]
+    elif current_user["role"] == UserRole.GESTAO:
+        # Gestor vê veículos dos parceiros atribuídos
+        parceiros_ids = current_user.get("parceiros_atribuidos", [])
+        if parceiros_ids:
+            query["parceiro_id"] = {"$in": parceiros_ids}
+        else:
+            query["parceiro_id"] = None  # Nenhum veículo se sem parceiros
     
     vehicles = await db.vehicles.find(query, {"_id": 0}).to_list(1000)
     for v in vehicles:
