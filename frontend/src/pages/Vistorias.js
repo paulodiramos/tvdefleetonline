@@ -71,6 +71,7 @@ const Vistorias = ({ user, onLogout }) => {
 
   useEffect(() => {
     fetchVehicles();
+    fetchVistoriasAgendadas();
     if (user.role === 'admin' || user.role === 'gestao') {
       fetchParceiros();
     }
