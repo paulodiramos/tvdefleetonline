@@ -6819,6 +6819,18 @@ async def create_vistoria(
             {"$set": {"proxima_vistoria": vistoria_data.get("proxima_vistoria")}}
         )
     
+    # If vistoria is closed (fechada), generate PDF and send email automatically
+    if vistoria.get("status") == "fechada":
+        try:
+            # Generate PDF
+            await gerar_pdf_vistoria(vehicle_id, vistoria_id, current_user)
+            # Send email (will be implemented when email service is configured)
+            # await enviar_email_vistoria(vehicle_id, vistoria_id, current_user)
+            logger.info(f"PDF generated for closed vistoria {vistoria_id}")
+        except Exception as e:
+            logger.error(f"Error generating PDF for vistoria {vistoria_id}: {e}")
+            # Don't fail the whole operation if PDF generation fails
+    
     return {"message": "Vistoria created successfully", "vistoria_id": vistoria_id}
 
 
