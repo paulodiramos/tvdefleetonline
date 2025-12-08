@@ -348,11 +348,139 @@ const RegistoMotorista = () => {
                 </div>
               </div>
 
+              {/* Documentos Obrigatórios */}
+              <div className="border-t pt-6 mt-6">
+                <div className="flex items-center space-x-2 mb-4">
+                  <FileText className="w-5 h-5 text-blue-600" />
+                  <h3 className="text-lg font-semibold">Documentos Obrigatórios</h3>
+                </div>
+                <p className="text-sm text-slate-600 mb-4">
+                  Carregue os seguintes documentos (PDF ou imagens). Serão automaticamente convertidos para PDF.
+                </p>
+
+                <div className="space-y-4">
+                  {/* Carta de Condução */}
+                  <div>
+                    <Label htmlFor="carta_conducao" className="flex items-center justify-between">
+                      <span>Carta de Condução *</span>
+                      {documentos.carta_conducao && (
+                        <span className="text-xs text-green-600 font-medium">✓ Carregado</span>
+                      )}
+                    </Label>
+                    <Input
+                      id="carta_conducao"
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => handleFileChange(e, 'carta_conducao')}
+                      required
+                      className="mt-1"
+                    />
+                    {documentos.carta_conducao && (
+                      <p className="text-xs text-slate-500 mt-1">{documentos.carta_conducao.name}</p>
+                    )}
+                  </div>
+
+                  {/* Identificação */}
+                  <div>
+                    <Label htmlFor="identificacao" className="flex items-center justify-between">
+                      <span>Cartão de Cidadão / Passaporte / Título de Residência *</span>
+                      {documentos.identificacao && (
+                        <span className="text-xs text-green-600 font-medium">✓ Carregado</span>
+                      )}
+                    </Label>
+                    <Input
+                      id="identificacao"
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => handleFileChange(e, 'identificacao')}
+                      required
+                      className="mt-1"
+                    />
+                    {documentos.identificacao && (
+                      <p className="text-xs text-slate-500 mt-1">{documentos.identificacao.name}</p>
+                    )}
+                  </div>
+
+                  {/* Licença TVDE */}
+                  <div>
+                    <Label htmlFor="licenca_tvde" className="flex items-center justify-between">
+                      <span>Licença TVDE *</span>
+                      {documentos.licenca_tvde && (
+                        <span className="text-xs text-green-600 font-medium">✓ Carregado</span>
+                      )}
+                    </Label>
+                    <Input
+                      id="licenca_tvde"
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => handleFileChange(e, 'licenca_tvde')}
+                      required
+                      className="mt-1"
+                    />
+                    {documentos.licenca_tvde && (
+                      <p className="text-xs text-slate-500 mt-1">{documentos.licenca_tvde.name}</p>
+                    )}
+                  </div>
+
+                  {/* Registo Criminal */}
+                  <div>
+                    <Label htmlFor="registo_criminal" className="flex items-center justify-between">
+                      <span>Registo Criminal *</span>
+                      {documentos.registo_criminal && (
+                        <span className="text-xs text-green-600 font-medium">✓ Carregado</span>
+                      )}
+                    </Label>
+                    <Input
+                      id="registo_criminal"
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => handleFileChange(e, 'registo_criminal')}
+                      required
+                      className="mt-1"
+                    />
+                    {documentos.registo_criminal && (
+                      <p className="text-xs text-slate-500 mt-1">{documentos.registo_criminal.name}</p>
+                    )}
+                  </div>
+
+                  {/* Comprovativo de Morada */}
+                  <div>
+                    <Label htmlFor="comprovativo_morada" className="flex items-center justify-between">
+                      <span>Comprovativo de Morada *</span>
+                      {documentos.comprovativo_morada && (
+                        <span className="text-xs text-green-600 font-medium">✓ Carregado</span>
+                      )}
+                    </Label>
+                    <Input
+                      id="comprovativo_morada"
+                      type="file"
+                      accept="image/*,.pdf"
+                      onChange={(e) => handleFileChange(e, 'comprovativo_morada')}
+                      required
+                      className="mt-1"
+                    />
+                    {documentos.comprovativo_morada && (
+                      <p className="text-xs text-slate-500 mt-1">{documentos.comprovativo_morada.name}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4">
+                  <div className="flex items-start space-x-2">
+                    <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5" />
+                    <p className="text-xs text-yellow-800">
+                      <strong>Importante:</strong> Todos os documentos são obrigatórios. Pode carregar imagens (JPG, PNG) ou PDFs. 
+                      As imagens serão automaticamente convertidas para PDF.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Info */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
-                  <strong>Próximos passos:</strong> Após o registo, a nossa equipa irá analisar os seus dados. 
-                  Receberá um email em 24-48 horas quando a sua conta for aprovada. Poderá então fazer login com o email e senha que escolheu.
+                  <strong>Próximos passos:</strong> Após o registo e envio dos documentos, a nossa equipa irá analisar tudo. 
+                  Receberá um email quando a sua conta for aprovada. Poderá então fazer login com o email e senha que escolheu.
                 </p>
               </div>
 
