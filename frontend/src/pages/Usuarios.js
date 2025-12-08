@@ -96,7 +96,7 @@ const Usuarios = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       // Buscar planos do sistema unificado
-      const response = await axios.get(`${API}/api/planos-sistema`, {
+      const response = await axios.get(`${API}/planos-sistema`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
