@@ -8747,8 +8747,23 @@ async def get_all_users(current_user: Dict = Depends(get_current_user)):
     if current_user["role"] != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Admin only")
     
-    # Get all users from users collection
-    users = await db.users.find({}, {"_id": 0, "password": 0}).to_list(length=None)
+    # Get all users with plan lookup using aggregation
+    users = await db.users.aggregate([
+        {
+            "$lookup": {
+                "from": "planos_sistema",
+                "localField": "plano_id",
+                "foreignField": "id",
+                "as": "plano_info"
+            }
+        },
+        {
+            "$project": {
+                "_id": 0,
+                "password": 0
+            }
+        }
+    ]).to_list(length=None)
     
     # Separate pending and approved users
     pending_users = []
@@ -8758,6 +8773,15 @@ async def get_all_users(current_user: Dict = Depends(get_current_user)):
         # Convert created_at to datetime if string
         if isinstance(user.get("created_at"), str):
             user["created_at"] = datetime.fromisoformat(user["created_at"])
+        
+        # Extract plan name from lookup result
+        if user.get("plano_info") and len(user["plano_info"]) > 0:
+            user["plano_nome"] = user["plano_info"][0].get("nome")
+        else:
+            user["plano_nome"] = None
+        
+        # Remove the plano_info array to clean up response
+        user.pop("plano_info", None)
         
         if user.get("approved", False):
             registered_users.append(user)
