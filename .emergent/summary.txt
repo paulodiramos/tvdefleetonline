@@ -1,175 +1,217 @@
 <analysis>**original_problem_statement:**
-The user's goal is to build a comprehensive fleet management system, TVDEFleet. The scope includes a driver's portal, an admin/manager portal, and partner/operational roles.
+O utilizador solicitou uma vasta gama de novas funcionalidades e melhorias para o sistema de gestão de frotas TVDEFleet.
 
-The latest requests have involved a massive refactoring of the user role and subscription plan systems.
+**REQUISITOS DO PRODUTO (Baseado nas últimas mensagens do utilizador):**
+1.  **Integrações:**
+    *   Implementar integração com **Moloni** para faturação automática.
+        *   No perfil do motorista, deve haver uma opção para ativar a auto-faturação, que acarreta um custo extra mensal associado ao plano.
+        *   A integração Moloni também deve ser usada pelo webapp para cobrar os planos de subscrição.
+    *   Implementar integração com o serviço de armazenamento em nuvem **Terabox**.
+    *   Avançar com as integrações de **Email** e **WhatsApp** para notificações e envio de relatórios.
+    *   Avançar com a integração de **Pagamentos**.
 
-**PRODUCT REQUIREMENTS (Based on last user messages):**
-*   **Plan Display:** In the Utilizadores list and the user detail view, the currently assigned plan for each user (Motorista or Parceiro) must be clearly displayed.
-*   **Plan Deletion:**
-    *   The Eliminar Plano button in Configuração de Planos must be functional for the Admin.
-    *   Deletion must be permanent (hard delete from the database).
-    *   When a plan is deleted, it must be automatically removed from any user who has it assigned.
-*   **Plan Calculations:** All plan prices (monthly and weekly) must correctly calculate and display values with and without IVA (VAT).
-*   **Plan Assignment:** The Atribuir Plano modal for both Motoristas and Parceiros must correctly save the assigned plan.
-*   **Access Control:** The Sincronização Auto page () must be accessible only to Admins.
-*   **Gestor Role:** The Gestor role does not have a subscription plan. Instead, Admins should have a UI to assign active Parceiros to a Gestor.
+2.  **Funcionalidades de Vistorias de Veículos:**
+    *   Criar um sistema para agendar e realizar vistorias de veículos.
+    *   Permitir o upload de fotos durante a vistoria.
+    *   Converter o relatório da vistoria (com fotos) para um PDF.
+    *   Permitir o download do PDF da vistoria.
+    *   O histórico de vistorias deve ficar associado ao veículo.
+    *   O agendamento pode ser periódico ou manual (por Parceiro ou Gestor).
+
+3.  **Melhorias na UI/UX e Estrutura:**
+    *   No menu Contratos, criar um submenu com Lista de Contratos e Criar Contrato. O item de menu Mensagens Contratos deve ser movido para dentro de Parceiros > Contratos.
+    *   No painel de controlo, a página Pendentes está a apresentar um erro Erro ao carregar documentos pendentes.
+    *   Nos ecrãs Financeiro e Pagamentos, para além da data, deve ser exibido o **número da semana**.
+    *   O plano ativo do motorista deve ser visível na lista de utilizadores e nos detalhes, tal como já acontece com os parceiros.
+    *   O tipo de contrato (na criação) deve assumir automaticamente as condições do veículo (comissão ou aluguer). A alteração destas condições pré-definidas deve ser possível (para parceiro, gestor, admin) através de um visto de confirmação com um pop-up.
+    *   Adicionar no footer links para Termos e Condições e Política de Privacidade, que abrem um pop-up com texto configurável na área de administração.
+    *   Remover completamente a role Operacional de todos os select/dropdowns e lógica da aplicação.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-The agent has successfully completed a massive overhaul of the application. The three critical bugs from the previous session have been resolved. The entire Operacional role has been removed from the database and codebase, with its permissions refactored into the Parceiro and Gestor roles.
+O agente implementou um grande volume de funcionalidades e correções. As duas tarefas prioritárias da sessão anterior (correção da eliminação de planos e exibição do plano do utilizador) foram concluídas com sucesso. O backend foi modificado para desagregar o plano do utilizador antes de o eliminar, e o frontend foi corrigido para usar o URL de API correto. A lista de utilizadores agora exibe o nome do plano atribuído.
 
-A new unified plan management system () is fully functional, allowing Admins to create, edit, and delete plans for Motoristas and Parceiros. This system now includes support for promotional pricing (between dates) and calculates prices with and without IVA.
+Foram implementadas as bases de um novo e complexo sistema de upload de documentos para o registo de motoristas e parceiros, incluindo novos endpoints no backend e campos de upload nos formulários de registo. Foi criada uma nova página Pendentes para administradores aprovarem esses documentos.
 
-A new backend and frontend workflow has been implemented for Gestores, allowing Admins to assign specific Parceiros to them. The dashboards for Gestores are now filtered to only show data from their assigned partners. A provisional password system has also been implemented, forcing users created by a Partner to change their password on first login.
-
-Numerous bugs reported by the user during the session have been fixed, including issues with plan assignment, UI errors ( values), and incorrect endpoints.
+Adicionalmente, foram feitas várias melhorias de UI, como a reorganização do menu de administração, a adição de um rodapé com links para termos de privacidade e a implementação de um fluxo de criação de contratos mais inteligente, que pré-preenche as condições com base no veículo selecionado. Foi também criado um endpoint de backend para gerar relatórios complexos em PDF usando .
 
 **Last working item**:
--   Last item agent was working: The agent started implementing the user's latest request to display the assigned plan for each user in the Utilizadores list and detail view. It was also tasked with fixing the plan deletion functionality to ensure it works for admins, performs a hard delete, and un-assigns the plan from users.
--   Status: IN PROGRESS
+-   Last item agent was working: O agente estava a iniciar a implementação das várias integrações solicitadas pelo utilizador (Moloni, Terabox, Email, WhatsApp). Começou por planear a estrutura e criar um resumo para confirmar o plano com o utilizador antes de avançar com a implementação do backend da integração Moloni.
+-   Status: NOT STARTED
 -   Agent Testing Done: N
 -   Which testing method agent to use? both
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: Plan Deletion from Configuração de Planos page fails (P0)
--   Issue 2: The assigned plan is not displayed on the Utilizadores list and user detail views (P1)
+-   Issue 1: A página Pendentes falha ao carregar dados (P0)
+-   Issue 2: A role Operacional continua a aparecer em vários locais da UI (P1)
+-   Issue 3: O plano atribuído ao Motorista não é visível na UI (P2)
 
 **Issues Detail**:
--   Issue 1: **Plan Deletion from Configuração de Planos page fails (P0)**
-    -   Attempted fixes: The agent changed the backend endpoint  to perform a hard  instead of a soft delete. Backend tests via  show the endpoint works correctly. However, the user reports that the action fails from the frontend with an Erro ao eliminar plano message.
+-   Issue 1: **A página Pendentes falha ao carregar dados (P0)**
+    -   Attempted fixes: O agente identificou que a rota  não estava a ser registada porque o código foi adicionado em  *depois* da linha . O agente moveu o bloco de código dos endpoints de documentos para a posição correta (antes do ) e reiniciou o backend. Um teste com  confirmou que o endpoint passou a responder com  e uma lista vazia. **No entanto, a página frontend nunca foi testada após a correção do backend.**
     -   Next debug checklist:
-        1.  Inspect the browser's developer console network tab when the delete button is clicked in  to see the exact request and response.
-        2.  Verify the  function in  is calling the correct URL () with the correct HTTP method ().
-        3.  Implement the logic on the backend delete endpoint to find all users/partners with the  and set their plan fields to  before deleting the plan itself.
-    -   Why fix this issue and what will be achieved with the fix?: This is a core administrative function for managing the subscription system.
+        1.  Navegar para a página  no frontend e verificar a consola do browser para ver se o erro Erro ao carregar documentos pendentes persiste.
+        2.  Se persistir, verificar a chamada de rede para  para garantir que está a ser feita corretamente.
+        3.  Implementar a lógica na página  para renderizar os dados recebidos do endpoint.
+    -   Why fix this issue and what will be achieved with the fix?: É uma funcionalidade central para o novo processo de aprovação de utilizadores.
     -   Status: IN PROGRESS
     -   Is recurring issue? Y
-    -   Should Test frontend/backend/both after fix? Both
-    -   Blocked on other issue: None
-
--   Issue 2: **The assigned plan is not displayed on the Utilizadores list and user detail views (P1)**
-    -   Attempted fixes: The agent has not started on this yet.
-    -   Next debug checklist:
-        1.  Modify the  endpoint in  to join/lookup the plan name from the  collection using the  stored on the user object.
-        2.  Update the user cards and detail views in  to display the  field if it exists.
-    -   Why fix this issue and what will be achieved with the fix?: It provides essential information to the Admin at a glance.
-    -   Status: NOT STARTED
-    -   Is recurring issue? N
     -   Should Test frontend/backend/both after fix? Frontend
     -   Blocked on other issue: None
 
+-   Issue 2: **A role Operacional continua a aparecer em vários locais da UI (P1)**
+    -   Attempted fixes: O agente removeu a opção Operacional de alguns dropdowns em  e removeu lógica relacionada em . No entanto, o utilizador reportou novamente a sua presença, indicando que a remoção não foi completa.
+    -   Next debug checklist:
+        1.  Executar um  global por operacional em todo o diretório .
+        2.  Remover sistematicamente todas as ocorrências em componentes, lógica de permissões e texto estático.
+    -   Why fix this issue and what will be achieved with the fix?: Completa a refatoração de roles iniciada na sessão anterior e elimina a confusão para o utilizador.
+    -   Status: IN PROGRESS
+    -   Is recurring issue? Y
+    -   Should Test frontend/backend/both after fix? Frontend
+    -   Blocked on other issue: None
+
+-   Issue 3: **O plano atribuído ao Motorista não é visível na UI (P2)**
+    -   Attempted fixes: O agente investigou com  e descobriu que o problema não era de código, mas sim de dados. O utilizador motorista de teste simplesmente não tinha um  atribuído no banco de dados. O agente atribuiu um plano manualmente via API e confirmou que o backend passou a retornar o nome do plano.
+    -   Next debug checklist: Esta não é uma questão de código. O sistema funciona. A solução é garantir que os motoristas tenham planos atribuídos (o que será feito com a funcionalidade de atribuição de plano base gratuito após aprovação de documentos).
+    -   Why fix this issue and what will be achieved with the fix?: Fornece consistência visual e informação importante ao admin.
+    -   Status: RESOLVED (Funcionalidade está correta, era um problema de dados de teste).
+    -   Is recurring issue? N
+    -   Should Test frontend/backend/both after fix? None
+    -   Blocked on other issue: None
+
 **In progress Task List**:
--   None
+-   Task 1: Implementação das Integrações (Moloni, Terabox, etc.) (P0)
+
+**Task Detail**:
+-   Task 1: **Implementação das Integrações (Moloni, Terabox, etc.) (P0)**
+    -   Where to resume: O agente criou um plano geral para as integrações. O próximo passo é implementar o backend para a integração Moloni, começando pelos endpoints para guardar as API keys e a lógica para a auto-faturação.
+    -   What will be achieved with this?: Permitirá a faturação automática de planos e serviços, e o armazenamento de ficheiros em cloud.
+    -   Status: NOT STARTED
+    -   Should Test frontend/backend/both after fix? Both
+    -   Blocked on something: Nenhum.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   (P1) Develop the CSV import system for Uber/Bolt earnings and vehicle mileage.
-    *   (P1) Build the system to send weekly earnings reports via Email/WhatsApp.
-    *   (P2) Implement PDF generation for Vehicle Inspection reports.
+    *   (P0) Criar sistema de vistorias de veículos com upload de fotos e geração de PDF.
+    *   (P1) Implementar frontend da página Pendentes para listar, visualizar e aprovar/rejeitar documentos.
+    *   (P1) Implementar o envio de notificações por Email e WhatsApp.
+    *   (P2) Implementar frontend da página Lista de Contratos.
+    *   (P2) Na aprovação de um novo utilizador, atribuir automaticamente o plano base gratuito.
 *   **Future Tasks:**
-    *   (P2) Implement a partner-facing report review system (approve/reject with comments).
-    *   (P2) Build the real-time messaging/ticket system for internal communication.
-    *   (P3) Develop a Vehicle Opportunities page for drivers.
+    *   (P2) Implementar a interface de criação de relatórios no frontend, utilizando o endpoint de PDF já criado.
+    *   (P3) Implementar a configuração de textos para Termos e Condições e Política de Privacidade na área de admin.
 
 **Completed work in this session**
--   **Critical Bug Fixes:**
-    -   Fixed  on plan creation by correctly serializing MongoDB responses (removing ).
-    -   Fixed auto-assignment of plans on driver approval by pointing to the correct collection () and fixing a duplicate, overriding endpoint in .
-    -   Fixed deleted drivers appearing in lists by adding a  filter to the GET endpoint.
--   **Major Refactoring:**
-    -   Completely removed the operacional role from the entire application (database, backend logic, frontend UI).
-    -   Removed the gestor role from the plan system; they no longer have plans.
--   **Feature Implementation:**
-    -   **Unified Plan System:** Completed the UI () and backend for managing all plans.
-    -   **Plan Promotions & IVA:** Added functionality for promotional pricing and automatic IVA calculation to all plans.
-    -   **Gestor-Partner Management:** Created backend endpoints and a frontend modal for Admins to assign/manage which partners a Gestor has access to.
-    -   **Dashboard Updates:** Dashboards for Gestores are now filtered. A card showing the user's active plan was added.
-    -   **Provisional Passwords:** Implemented a backend flow to flag users created by Partners with a provisional password and a frontend modal to force a password change on their first login.
--   **Security & UX:**
-    -   Restricted access to the  page to Admins only.
-    -   Removed the obsolete Gestão de Planos de Assinatura tab from Admin settings.
-    -   Fixed numerous frontend bugs, including broken plan assignment modals,  display errors, and incorrect API calls.
+-   **Resolução de Issues Críticas:**
+    -   Corrigida a funcionalidade de **eliminação de planos**, que agora remove o plano de todos os utilizadores associados antes da eliminação.
+    -   Implementada a **exibição do plano atribuído** na lista e detalhes de utilizadores.
+-   **Novas Funcionalidades:**
+    -   **Sistema de Documentos (Backend):** Criados endpoints para upload de documentos, listagem de pendentes e aprovação/rejeição.
+    -   **Sistema de Documentos (Frontend):** Atualizados os formulários de registo de Motorista e Parceiro para incluir campos de upload de múltiplos ficheiros.
+    -   **Sistema de Contratos Melhorado:** O formulário de criação de contrato agora deteta o tipo de contrato do veículo e bloqueia/permite a edição de condições com um modal de confirmação.
+    aniais.**
+    -   **Sistema de Relatórios (Backend):** Criado um endpoint robusto () que gera um PDF complexo com .
+-   **Melhorias de UI/UX:**
+    -   Menus de navegação (principal e de admin) foram extensivamente reorganizados e reestruturados múltiplas vezes de acordo com o feedback do utilizador.
+    -   Adicionado o número da semana aos ecrãs de pagamentos.
+    -   Adicionado um rodapé global com modais para Termos e Condições e Política de Privacidade, com conteúdo dinâmico do backend.
+    -   Removidas múltiplas referências à role Operacional.
+
+**Earlier issues found/mentioned but not fixed**
+-   **Incomplete Operacional Role Removal**: O agente removeu a role de vários locais, mas o utilizador continua a encontrá-la. Uma verificação global e remoção sistemática são necessárias.
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork:** Auto-assigned free plan does not persist in the database and Deleting a driver does not reliably remove them from the UI list.
--   **Recurrence count:** 2
--   **Status:** RESOLVED. The agent successfully identified the root causes (wrong collection, duplicate endpoints, missing query filters) and resolved them.
+-   None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Code Duplication:** A critical issue was found where an endpoint in  was overriding an identical one in . The agent fixed the logic in the overriding endpoint instead of removing it, which leaves technical debt.
--   **State Management (React):** The agent struggled with and eventually fixed bugs related to incorrect state structure (object vs. array) and values not being loaded into form state on edit, leading to  errors.
--   **Full-Stack Refactoring:** The removal of the operacional role required coordinated changes across database cleanup scripts, backend models, API endpoints, and multiple frontend components.
--   **API Design:** The agent created several new RESTful endpoints for managing new entities and relationships (e.g., assigning partners to gestores, creating drivers under a partner).
+-   **FastAPI Route Registration:** Um erro crítico foi causado pela adição de rotas em  *após* a inclusão do router (). A ordem é fundamental.
+-   **Backend PDF Generation:** Foi utilizada a biblioteca  para criar um endpoint que gera dinamicamente um PDF complexo a partir de dados JSON.
+-   **MongoDB Aggregation:** O endpoint  foi melhorado com um pipeline de agregação () para juntar a coleção  e obter o nome do plano.
+-   **Frontend State Management:** Lógica complexa de estado foi implementada em  para gerir o bloqueio de campos, a visibilidade de avisos e o fluxo de confirmação do utilizador.
+-   **Iterative UI Development:** O agente demonstrou capacidade de se adaptar a pedidos frequentes e contraditórios de alteração da UI, especialmente no .
 
 **key DB schema**
--   **planos_sistema** (collection): Now the single source of truth for all plans.
-    -   
--   **users** (collection):
-    -   Role  removed.
-    -   Added .
-    -   Added  for  roles.
--   **parceiros** (collection):
-    -   Added .
+-   **users** (collection): Implicitamente atualizada para suportar um array de documentos () e um status geral de aprovação ().
+-   **configuracoes** (collection): Nova coleção para armazenar textos configuráveis, como .
+
+**changes in tech stack**
+-   **reportlab**: Adicionada como dependência (implícita) para a geração de PDFs no backend.
 
 **All files of reference**
--   **Created**:
-    -   : UI to force password change.
--   **Updated/Refactored**:
-    -   : The most heavily modified file, containing fixes for duplicate endpoints, removal of the 'operacional' role, and new endpoints for gestor/plan management.
-    -   : Fixed driver approval and listing logic.
-    -   : Major updates for unified plan UI, promotions, and IVA.
-    -   : Major updates for fixing plan assignment and adding UI for gestor-partner management.
-    -   : Integrated the provisional password modal.
-    -   : Added the active plan display.
-    -   : Restricted sidebar navigation.
+-   **Criados**:
+    -   
+    -   
+    -   
+    -   
+    -   
+    -    (posteriormente abandonada)
+-   **Atualizados/Refatorados**:
+    -   : Principal ficheiro modificado, com múltiplos novos endpoints e lógica de negócio.
+    -   : Ficheiro com mais edições, refletindo os constantes pedidos de reorganização do menu.
+    -   : Implementou a nova lógica de contratos inteligentes.
+    -   , : Adicionados os campos de upload.
+    -   : Adicionadas e removidas rotas para suportar as novas páginas.
+    -   : Adicionado o badge do plano.
 
 **Areas that need refactoring**:
--   **Monolithic **: A significant amount of logic for different domains (users, plans, vehicles, partners) is still located in this single file.
--   **Duplicate Endpoint**: The  endpoint still exists in both  and . Although the logic is now consistent, the duplicate endpoint itself is technical debt and should be removed from  to avoid future confusion.
+-   ** Monolith**: O ficheiro continua a crescer e a acumular responsabilidades (autenticação, utilizadores, planos, documentos, relatórios PDF, configurações). A separação da lógica em routers/módulos distintos é cada vez mais necessária.
 
 **key api endpoints**
--   : Full CRUD for the new unified plan system.
--   : Assigns a list of partners to a gestor.
--   : Allows a partner to create a new driver with a provisional password.
--   : Used by the provisional password flow.
--   : Assigns a plan to a user (Motorista or Parceiro).
+-   : Agora remove o  dos utilizadores antes de apagar o plano.
+-   : Agora inclui o  através de um .
+-   : Novo endpoint para fazer upload de ficheiros.
+-   : Novo endpoint para listar utilizadores com documentos pendentes.
+-   : Novo endpoint para aprovar/rejeitar documentos.
+-   : Novo endpoint para buscar textos de configuração (termos, etc.).
+-   : Novo endpoint que recebe dados e retorna um relatório em PDF.
 
 **Critical Info for New Agent**
--   **Plan Deletion Logic:** The user wants plan deletion to also remove the plan from any assigned user. This requires updating the  endpoint to perform a multi-collection update (, ) before deleting the plan document.
--   **Displaying User Plans:** To show plan names in the user list, you will need to modify the  endpoint to perform a lookup/aggregation on the  collection.
--   **Backend Code Duplication**: Be aware that endpoint logic can be in  or the  directory. An endpoint for approving drivers is defined in both places. While the agent synchronized the logic, the duplication itself is a risk. Prefer modifying/using code in the  directory where appropriate.
+-   **Atenção à Ordem das Rotas no FastAPI**: Ao adicionar novos endpoints em , certifique-se de que o código está posicionado **antes** da linha . O agente anterior perdeu tempo a depurar um erro de Not Found por causa disto.
+-   **Problemas de Feature não funciona podem ser Problemas de Dados**: Antes de assumir que uma funcionalidade está quebrada (ex: plano do motorista não aparece), verifique com  se os dados de teste no banco de dados estão corretos. O sistema pode estar a funcionar como esperado.
+-   **O Utilizador Muda de Ideias Frequentemente (UI)**: Esteja preparado para fazer e refazer alterações na UI, especialmente na navegação (). Confirme sempre o layout final com um screenshot.
+-   **Refatoração Incompleta**: A role Operacional ainda existe em partes do código. É necessário um esforço concertado para a remover completamente e evitar que o utilizador a reporte novamente.
 
-**Last 10 User Messages and any pending user messages**
-1.  **User:** Admin can delete plans, plans have promotion dates, advance with the rest. - **Status:** COMPLETED.
-2.  **User:** Advance with Gestor dashboard/Partner creation flow. - **Status:** COMPLETED.
-3.  **User:** Plan assignment & deletion are broken. - **Status:** PARTIALLY COMPLETED (Backend confirmed working, but user still reports frontend errors).
-4.  **User:**  error, and add IVA to plans. - **Status:** COMPLETED.
-5.  **User:** Fix  error on plan assignment, button missing for partner plan save, calculate weekly price. - **Status:** COMPLETED.
-6.  **User:** Fix partner save button, show plan on dashboard, remove old plan UI, restrict sync page to admin. - **Status:** COMPLETED.
-7.  **User:** Plan delete still fails, and IVA calculation shows . - **Status:** COMPLETED.
-8.  **User (LATEST):** Show assigned plan on user list/details. Fix plan deletion so it's permanent and unassigns from users. - **Status:** PENDING (This is the current task).
-
-**Project Health Check:**
--   **Broken**: Plan deletion from the frontend is not working as intended.
--   **Mocked**: None.
-
-**3rd Party Integrations**
+**documents created in this job**
 -   None.
 
+**Last 10 User Messages and any pending user messages**
+1.  **User**: Avançar com integração de email/WhatsApp e pagamentos, e remover menu duplicado Contratos. - **Status**: PARCIALMENTE COMPLETO (menu duplicado removido, integrações planeadas mas não implementadas).
+2.  **User**: Implementar sistema de vistorias de veículos e reorganizar menu Contratos. - **Status**: PARCIALMENTE COMPLETO (menu reorganizado, vistorias planeadas mas não implementadas).
+3.  **User**: Ativar auto-faturação Moloni no perfil do motorista e usar Moloni para cobrar planos. Integrar com Terabox. - **Status**: PENDENTE.
+4.  **User**: Reorganizar menu principal. Corrigir visibilidade do plano do motorista. Iniciar integração Moloni. - **Status**: PARCIALMENTE COMPLETO (Menu reorganizado, visibilidade do plano diagnosticada, Moloni iniciada).
+5.  **User**: Reverter menu Relatórios para um submenu e remover links do topo. - **Status**: COMPLETO.
+6.  **User**: Remover links duplicados do menu de relatórios. - **Status**: COMPLETO.
+7.  **User**: Criar menu Relatórios com sub-itens e implementar backend para PDF. - **Status**: COMPLETO.
+8.  **User**: Implementar sistema de contratos melhorado (baseado no veículo). - **Status**: COMPLETO.
+9.  **User**: Adicionar número da semana aos pagamentos e footer com links para Termos/Privacidade. Corrigir visibilidade do plano do motorista. - **Status**: PARCIALMENTE COMPLETO (Semana e footer feitos, visibilidade do plano por corrigir).
+10. **User**: Remover Operacional, corrigir erro em Pendentes, melhorar contratos e pagamentos, adicionar footer. - **Status**: PENDENTE (Esta é a lista de tarefas atual).
+
+**Project Health Check:**
+-   **Broken**: A página  muito provavelmente ainda exibe um erro no frontend, pois a correção do backend nunca foi validada na UI. A remoção da role Operacional está incompleta.
+-   **Mocked**: As páginas , ,  são placeholders sem funcionalidade real.
+
+**3rd Party Integrations**
+-   **ReportLab**: Utilizada no backend para geração de PDFs.
+-   **Moloni**: Solicitada para faturação. Planeada, mas não implementada.
+-   **Terabox**: Solicitada para armazenamento de ficheiros. Planeada, mas não implementada.
+-   **WhatsApp**: Solicitada para notificações. Planeada, mas não implementada.
+
 **Testing status**
--   **Testing agent used after significant changes**: YES. The agent used the testing agent effectively to identify a critical bug caused by code duplication.
+-   **Testing agent used after significant changes**: NO
 -   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: None.
--   **Known regressions**: Several minor frontend regressions appeared during development (e.g.,  errors,  error) which were subsequently fixed. The plan deletion feature seems to have regressed on the frontend.
+-   **Known regressions**: A página Pendentes foi criada mas nunca funcionou. A remoção da role Operacional é uma regressão de refatoração, pois não foi concluída.
 
 **Credentials to test flow:**
--   Available in .
+-   Disponíveis em .
 
 **What agent forgot to execute**
--   The agent did not remove the duplicate  endpoint from  after identifying it, instead choosing to fix the code in both places. This leaves technical debt.
--   The agent did not fully implement the user's request for plan deletion, which required un-assigning the plan from all users before deleting the plan document itself. This is now part of the current task.</analysis>
+-   O agente corrigiu o endpoint  no backend, mas **esqueceu-se de testar se a página  no frontend passou a funcionar** após a correção.
+-   O agente não realizou uma busca e substituição global pela role operacional, deixando várias ocorrências no código.
+-   As implementações das páginas ,  e  ficaram como placeholders.
+-   A implementação do frontend da página  para listar e interagir com os documentos nunca foi feita.</analysis>
