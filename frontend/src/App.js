@@ -65,6 +65,7 @@ export { API };
 function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showMudarSenha, setShowMudarSenha] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
