@@ -22,7 +22,7 @@ const VerificarRecibos = ({ user, onLogout }) => {
   });
 
   useEffect(() => {
-    if (user?.role !== 'admin' && user?.role !== 'gestao' && user?.role !== 'operacional' && user?.role !== 'parceiro') {
+    if (user?.role !== 'admin' && user?.role !== 'gestao' && user?.role !== 'parceiro') {
       toast.error('Acesso negado');
       window.location.href = '/dashboard';
       return;
