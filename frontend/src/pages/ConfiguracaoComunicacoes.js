@@ -19,7 +19,15 @@ const ConfiguracaoComunicacoes = ({ user, onLogout }) => {
   // Email Config
   const [emailConfig, setEmailConfig] = useState({
     provider: 'sendgrid',
+    // SendGrid
     api_key: '',
+    // SMTP
+    smtp_host: '',
+    smtp_port: 587,
+    smtp_user: '',
+    smtp_password: '',
+    smtp_use_tls: true,
+    // Common
     sender_email: '',
     sender_name: '',
     enabled: false
