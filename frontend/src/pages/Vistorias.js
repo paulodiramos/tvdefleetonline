@@ -64,6 +64,7 @@ const Vistorias = ({ user, onLogout }) => {
   const [showAgendarDialog, setShowAgendarDialog] = useState(false);
   const [agendamentoForm, setAgendamentoForm] = useState({
     veiculo_id: '',
+    parceiro_id: '',
     data_agendada: '',
     tipo_vistoria: 'periodica',
     notas: ''
