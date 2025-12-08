@@ -659,6 +659,90 @@ const Vistorias = ({ user, onLogout }) => {
           </div>
         )}
 
+        {/* Agendar Vistoria Dialog */}
+        <Dialog open={showAgendarDialog} onOpenChange={setShowAgendarDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <Calendar className="w-5 h-5" />
+                <span>Agendar Vistoria</span>
+              </DialogTitle>
+            </DialogHeader>
+
+            <form onSubmit={handleAgendarVistoria} className="space-y-4">
+              <div>
+                <Label>
+                  Veículo <span className="text-red-500">*</span>
+                </Label>
+                <select
+                  className="w-full p-2 border rounded-md"
+                  value={agendamentoForm.veiculo_id}
+                  onChange={(e) => setAgendamentoForm({...agendamentoForm, veiculo_id: e.target.value})}
+                  required
+                >
+                  <option value="">Selecione um veículo</option>
+                  {vehicles.map((vehicle) => (
+                    <option key={vehicle.id} value={vehicle.id}>
+                      {vehicle.matricula} - {vehicle.marca} {vehicle.modelo}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <Label>
+                  Data Agendada <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  type="date"
+                  value={agendamentoForm.data_agendada}
+                  onChange={(e) => setAgendamentoForm({...agendamentoForm, data_agendada: e.target.value})}
+                  min={new Date().toISOString().split('T')[0]}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label>Tipo de Vistoria</Label>
+                <select
+                  className="w-full p-2 border rounded-md"
+                  value={agendamentoForm.tipo_vistoria}
+                  onChange={(e) => setAgendamentoForm({...agendamentoForm, tipo_vistoria: e.target.value})}
+                >
+                  <option value="periodica">Periódica</option>
+                  <option value="entrada">Entrada</option>
+                  <option value="saida">Saída</option>
+                  <option value="danos">Danos</option>
+                </select>
+              </div>
+
+              <div>
+                <Label>Notas</Label>
+                <Textarea
+                  value={agendamentoForm.notas}
+                  onChange={(e) => setAgendamentoForm({...agendamentoForm, notas: e.target.value})}
+                  placeholder="Observações sobre a vistoria agendada..."
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex space-x-3 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowAgendarDialog(false)}
+                  className="flex-1"
+                >
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={loading} className="flex-1">
+                  {loading ? 'Agendando...' : 'Agendar'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+
         {/* Create Vistoria Dialog */}
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
