@@ -558,6 +558,26 @@ const Vistorias = ({ user, onLogout }) => {
             </DialogHeader>
 
             <form onSubmit={handleCreateVistoria} className="space-y-6">
+              {/* Veículo Selection */}
+              <div>
+                <Label>
+                  Veículo <span className="text-red-500">*</span>
+                </Label>
+                <select
+                  className="w-full p-2 border rounded-md"
+                  value={vistoriaForm.veiculo_id}
+                  onChange={(e) => setVistoriaForm({...vistoriaForm, veiculo_id: e.target.value})}
+                  required
+                >
+                  <option value="">Selecione um veículo</option>
+                  {vehicles.map((vehicle) => (
+                    <option key={vehicle.id} value={vehicle.id}>
+                      {vehicle.matricula} - {vehicle.marca} {vehicle.modelo}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Basic Info */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
