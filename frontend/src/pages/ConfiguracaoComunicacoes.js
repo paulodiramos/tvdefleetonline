@@ -236,35 +236,148 @@ const ConfiguracaoComunicacoes = ({ user, onLogout }) => {
               
               <CardContent>
                 <form onSubmit={handleSaveEmail} className="space-y-6">
-                  {/* API Key */}
+                  {/* Provider Selection */}
                   <div>
-                    <Label htmlFor="api_key">
-                      API Key SendGrid <span className="text-red-500">*</span>
+                    <Label htmlFor="provider">
+                      Tipo de Servidor <span className="text-red-500">*</span>
                     </Label>
-                    <div className="relative">
-                      <Input
-                        id="api_key"
-                        type={showApiKey ? "text" : "password"}
-                        value={emailConfig.api_key}
-                        onChange={(e) => setEmailConfig({...emailConfig, api_key: e.target.value})}
-                        placeholder="SG.xxxxxxxxxxxxx"
-                        required
-                        className="pr-10"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowApiKey(!showApiKey)}
-                        className="absolute right-2 top-1/2 -translate-y-1/2"
-                      >
-                        {showApiKey ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
-                      </button>
-                    </div>
+                    <select
+                      id="provider"
+                      className="w-full p-2 border rounded-md mt-1"
+                      value={emailConfig.provider}
+                      onChange={(e) => setEmailConfig({...emailConfig, provider: e.target.value})}
+                    >
+                      <option value="sendgrid">SendGrid (API)</option>
+                      <option value="smtp">SMTP (Servidor Próprio)</option>
+                    </select>
                     <p className="text-xs text-slate-500 mt-1">
-                      Obtenha sua API key em: Settings → API Keys no dashboard SendGrid
+                      {emailConfig.provider === 'sendgrid' 
+                        ? 'API SendGrid - Simples e rápido'
+                        : 'SMTP - Use Gmail, Outlook ou servidor próprio'}
                     </p>
                   </div>
 
-                  {/* Sender Email */}
+                  {/* SendGrid Fields */}
+                  {emailConfig.provider === 'sendgrid' && (
+                    <div>
+                      <Label htmlFor="api_key">
+                        API Key SendGrid <span className="text-red-500">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="api_key"
+                          type={showApiKey ? "text" : "password"}
+                          value={emailConfig.api_key}
+                          onChange={(e) => setEmailConfig({...emailConfig, api_key: e.target.value})}
+                          placeholder="SG.xxxxxxxxxxxxx"
+                          className="pr-10"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowApiKey(!showApiKey)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2"
+                        >
+                          {showApiKey ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
+                        </button>
+                      </div>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Obtenha em: Settings → API Keys no dashboard SendGrid
+                      </p>
+                    </div>
+                  )}
+
+                  {/* SMTP Fields */}
+                  {emailConfig.provider === 'smtp' && (
+                    <>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="smtp_host">
+                            Servidor SMTP <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="smtp_host"
+                            type="text"
+                            value={emailConfig.smtp_host}
+                            onChange={(e) => setEmailConfig({...emailConfig, smtp_host: e.target.value})}
+                            placeholder="smtp.gmail.com"
+                          />
+                          <p className="text-xs text-slate-500 mt-1">
+                            Ex: smtp.gmail.com, smtp-mail.outlook.com
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="smtp_port">
+                            Porta <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id="smtp_port"
+                            type="number"
+                            value={emailConfig.smtp_port}
+                            onChange={(e) => setEmailConfig({...emailConfig, smtp_port: parseInt(e.target.value)})}
+                            placeholder="587"
+                          />
+                          <p className="text-xs text-slate-500 mt-1">
+                            587 (TLS) ou 465 (SSL)
+                          </p>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="smtp_user">
+                          Username SMTP <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id="smtp_user"
+                          type="text"
+                          value={emailConfig.smtp_user}
+                          onChange={(e) => setEmailConfig({...emailConfig, smtp_user: e.target.value})}
+                          placeholder="seu-email@gmail.com"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="smtp_password">
+                          Password SMTP <span className="text-red-500">*</span>
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            id="smtp_password"
+                            type={showSmtpPassword ? "text" : "password"}
+                            value={emailConfig.smtp_password}
+                            onChange={(e) => setEmailConfig({...emailConfig, smtp_password: e.target.value})}
+                            placeholder="••••••••"
+                            className="pr-10"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowSmtpPassword(!showSmtpPassword)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2"
+                          >
+                            {showSmtpPassword ? <EyeOff className="w-4 h-4 text-slate-500" /> : <Eye className="w-4 h-4 text-slate-500" />}
+                          </button>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Gmail: Use "Senha de App", não a senha normal
+                        </p>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="smtp_use_tls"
+                          checked={emailConfig.smtp_use_tls}
+                          onChange={(e) => setEmailConfig({...emailConfig, smtp_use_tls: e.target.checked})}
+                          className="w-4 h-4"
+                        />
+                        <Label htmlFor="smtp_use_tls" className="cursor-pointer">
+                          Usar TLS/STARTTLS (recomendado)
+                        </Label>
+                      </div>
+                    </>
+                  )}
+
+                  {/* Common Fields */}
                   <div>
                     <Label htmlFor="sender_email">
                       Email Remetente <span className="text-red-500">*</span>
@@ -275,14 +388,14 @@ const ConfiguracaoComunicacoes = ({ user, onLogout }) => {
                       value={emailConfig.sender_email}
                       onChange={(e) => setEmailConfig({...emailConfig, sender_email: e.target.value})}
                       placeholder="noreply@tvdefleet.com"
-                      required
                     />
-                    <p className="text-xs text-slate-500 mt-1">
-                      Este email deve estar verificado no SendGrid
-                    </p>
+                    {emailConfig.provider === 'smtp' && (
+                      <p className="text-xs text-slate-500 mt-1">
+                        Deve ser o mesmo email configurado no SMTP
+                      </p>
+                    )}
                   </div>
 
-                  {/* Sender Name */}
                   <div>
                     <Label htmlFor="sender_name">Nome do Remetente</Label>
                     <Input
