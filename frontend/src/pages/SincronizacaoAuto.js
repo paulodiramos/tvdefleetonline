@@ -208,29 +208,31 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
           </p>
         </div>
 
-        {/* Seletor de Parceiro */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex items-center space-x-4">
-              <Label className="text-base font-semibold min-w-[120px]">Parceiro:</Label>
-              <select
-                className="flex-1 p-2 border rounded-md"
-                value={selectedParceiro?.id || ''}
-                onChange={(e) => {
-                  const parceiro = parceiros.find(p => p.id === e.target.value);
-                  setSelectedParceiro(parceiro);
-                }}
-              >
-                <option value="">Selecione um parceiro</option>
-                {parceiros.map((parceiro) => (
-                  <option key={parceiro.id} value={parceiro.id}>
-                    {parceiro.nome_empresa || parceiro.email}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Seletor de Parceiro - Apenas para Admin/Gestao */}
+        {user.role !== 'parceiro' && (
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-4">
+                <Label className="text-base font-semibold min-w-[120px]">Parceiro:</Label>
+                <select
+                  className="flex-1 p-2 border rounded-md"
+                  value={selectedParceiro?.id || ''}
+                  onChange={(e) => {
+                    const parceiro = parceiros.find(p => p.id === e.target.value);
+                    setSelectedParceiro(parceiro);
+                  }}
+                >
+                  <option value="">Selecione um parceiro</option>
+                  {parceiros.map((parceiro) => (
+                    <option key={parceiro.id} value={parceiro.id}>
+                      {parceiro.nome_empresa || parceiro.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Grid de Plataformas */}
         {!selectedParceiro ? (
