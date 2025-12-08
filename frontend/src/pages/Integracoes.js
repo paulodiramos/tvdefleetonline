@@ -215,18 +215,6 @@ const Integracoes = ({ user, onLogout }) => {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-2">
-                <CreditCard className="w-6 h-6 text-purple-600" />
-              </div>
-              <CardTitle>Pagamentos</CardTitle>
-              <CardDescription>Gateways de pagamento</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-slate-500">Em breve</p>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </Layout>
