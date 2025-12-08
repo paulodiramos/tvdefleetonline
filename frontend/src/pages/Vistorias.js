@@ -108,6 +108,67 @@ const Vistorias = ({ user, onLogout }) => {
     }
   };
 
+  const fetchVistoriasAgendadas = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const agendaPromises = vehicles.map(vehicle =>
+        axios.get(`${API}/vehicles/${vehicle.id}/agenda`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).then(res => res.data)
+        .catch(() => ({ agenda: [] }))
+      );
+      
+      const allAgendas = await Promise.all(agendaPromises);
+      const agendadas = allAgendas.flatMap(a => 
+        (a.agenda || []).map(item => ({
+          ...item,
+          matricula: a.matricula,
+          veiculo_id: a.vehicle_id
+        }))
+      );
+      
+      setVistoriasAgendadas(agendadas);
+    } catch (error) {
+      console.error('Error fetching scheduled inspections:', error);
+    }
+  };
+
+  const handleAgendarVistoria = async (e) => {
+    e.preventDefault();
+    
+    if (!agendamentoForm.veiculo_id || !agendamentoForm.data_agendada) {
+      toast.error('Preencha veículo e data');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      await axios.post(
+        `${API}/vehicles/${agendamentoForm.veiculo_id}/agendar-vistoria`,
+        agendamentoForm,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success('Vistoria agendada com sucesso!');
+      setShowAgendarDialog(false);
+      fetchVistoriasAgendadas();
+      
+      setAgendamentoForm({
+        veiculo_id: '',
+        data_agendada: '',
+        tipo_vistoria: 'periodica',
+        notas: ''
+      });
+    } catch (error) {
+      console.error('Error scheduling inspection:', error);
+      toast.error('Erro ao agendar vistoria');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const aplicarFiltros = async () => {
     try {
       setLoading(true);
