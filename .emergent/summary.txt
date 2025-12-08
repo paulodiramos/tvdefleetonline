@@ -1,204 +1,175 @@
 <analysis>**original_problem_statement:**
-The user's goal is to build a comprehensive fleet management system called TVDEFleet. The scope includes a driver's portal, an admin/manager portal, and partner/operational roles.
+The user's goal is to build a comprehensive fleet management system, TVDEFleet. The scope includes a driver's portal, an admin/manager portal, and partner/operational roles.
 
-The latest user requests focus on adding new features and fixing a large number of bugs across all user roles.
+The latest requests have involved a massive refactoring of the user role and subscription plan systems.
 
 **PRODUCT REQUIREMENTS (Based on last user messages):**
-*   **Dashboard Enhancements:**
-    *   Add a last week selector to the date filter.
-*   **Motorista (Driver) Profile:**
-    *   Fix runtime error on contract download.
-    *   Ensure the notification for recibo pendente (pending receipt) links to .
-    *   Allow downloading a PDF of the weekly earnings report.
-    *   Fix the error on the Ver recibo (View Receipt) button.
-    *   Prevent drivers from replacing a receipt after it has been paid.
-    *   Allow drivers to download the receipt after payment.
-*   **Parceiro (Partner) Profile:**
-    *   Clarify that partners do not have plans or generate reports themselves; they manage a set of drivers.
-*   **Document Permissions:**
-    *   All roles (Admin, Gestor, Parceiro, Operacional, Motorista) should be able to download documents.
-    *   Only Admin, Gestor, or Operacional roles can approve or delete documents.
-*   **Admin Profile:**
-    *   Create a settings page for the admin to configure a system-wide email and WhatsApp number for communications.
-*   **Integrations:**
-    *   Integrate with Moloni (invoicing API).
-    *   Integrate with IFThenPay (payment gateway).
-*   **Custom Domain:**
-    *   Configure the application to use the main domain .
+*   **Plan Display:** In the Utilizadores list and the user detail view, the currently assigned plan for each user (Motorista or Parceiro) must be clearly displayed.
+*   **Plan Deletion:**
+    *   The Eliminar Plano button in Configuração de Planos must be functional for the Admin.
+    *   Deletion must be permanent (hard delete from the database).
+    *   When a plan is deleted, it must be automatically removed from any user who has it assigned.
+*   **Plan Calculations:** All plan prices (monthly and weekly) must correctly calculate and display values with and without IVA (VAT).
+*   **Plan Assignment:** The Atribuir Plano modal for both Motoristas and Parceiros must correctly save the assigned plan.
+*   **Access Control:** The Sincronização Auto page () must be accessible only to Admins.
+*   **Gestor Role:** The Gestor role does not have a subscription plan. Instead, Admins should have a UI to assign active Parceiros to a Gestor.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-The agent has implemented several new features and fixed numerous bugs. The dashboard for Admin/Gestor now includes a partner selection filter and a Last Week option in the date filter. A comprehensive UI for the Vehicle Inspection system has been built, allowing users to add damages with descriptions, costs, and photos. A new Admin Configuration page was created with UI and backend endpoints to manage communication settings (Email/WhatsApp).
+The agent has successfully completed a massive overhaul of the application. The three critical bugs from the previous session have been resolved. The entire Operacional role has been removed from the database and codebase, with its permissions refactored into the Parceiro and Gestor roles.
 
-Most critically, the agent diagnosed and fixed two deployment-blocking issues: a malformed  file and a series of  exceptions caused by the system trying to parse empty date strings when creating alerts. The agent also laid the foundation for Moloni and IFThenPay integrations by creating placeholder services and routes. Many user-reported bugs were discovered to be data-related issues (e.g., attempting to download a contract that didn't exist), and the agent improved error handling to display user-friendly messages in these cases.
+A new unified plan management system () is fully functional, allowing Admins to create, edit, and delete plans for Motoristas and Parceiros. This system now includes support for promotional pricing (between dates) and calculates prices with and without IVA.
+
+A new backend and frontend workflow has been implemented for Gestores, allowing Admins to assign specific Parceiros to them. The dashboards for Gestores are now filtered to only show data from their assigned partners. A provisional password system has also been implemented, forcing users created by a Partner to change their password on first login.
+
+Numerous bugs reported by the user during the session have been fixed, including issues with plan assignment, UI errors ( values), and incorrect endpoints.
 
 **Last working item**:
--   Last item agent was working: The agent was addressing deployment failures. It identified two root causes from the build logs: a syntax error in the  file and  exceptions in the alert-creation logic in  when encountering empty date fields for vehicles. The agent implemented code fixes for both issues. The last user interaction was a query about setting up a custom domain, which the agent answered by calling the .
+-   Last item agent was working: The agent started implementing the user's latest request to display the assigned plan for each user in the Utilizadores list and detail view. It was also tasked with fixing the plan deletion functionality to ensure it works for admins, performs a hard delete, and un-assigns the plan from users.
 -   Status: IN PROGRESS
 -   Agent Testing Done: N
--   Which testing method agent to use? Deployment agent to verify the fixes have resolved the build errors and the application is ready for deployment.
+-   Which testing method agent to use? both
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: Deployment Validation (P0)
--   Issue 2: User-Reported Bug: Blank/Broken Driver Pages (P1)
--   Issue 3: Document Deletion Functionality (P2)
--   Issue 4: Partner Role Logic and Permissions (P2)
+-   Issue 1: Plan Deletion from Configuração de Planos page fails (P0)
+-   Issue 2: The assigned plan is not displayed on the Utilizadores list and user detail views (P1)
 
 **Issues Detail**:
--   Issue 1: **Deployment Validation (P0)**
-    -   Attempted fixes: The agent corrected the  file and added checks in  to handle empty date strings gracefully.
+-   Issue 1: **Plan Deletion from Configuração de Planos page fails (P0)**
+    -   Attempted fixes: The agent changed the backend endpoint  to perform a hard  instead of a soft delete. Backend tests via  show the endpoint works correctly. However, the user reports that the action fails from the frontend with an Erro ao eliminar plano message.
     -   Next debug checklist:
-        1.  Invoke the Deployment Agent again.
-        2.  Analyze the new deployment logs to confirm the previous errors are gone.
-        3.  If new errors appear, debug and fix them.
-    -   Why fix this issue and what will be achieved with the fix?: This is a critical blocker. Fixing it will allow the application to be deployed to production.
+        1.  Inspect the browser's developer console network tab when the delete button is clicked in  to see the exact request and response.
+        2.  Verify the  function in  is calling the correct URL () with the correct HTTP method ().
+        3.  Implement the logic on the backend delete endpoint to find all users/partners with the  and set their plan fields to  before deleting the plan itself.
+    -   Why fix this issue and what will be achieved with the fix?: This is a core administrative function for managing the subscription system.
     -   Status: IN PROGRESS
     -   Is recurring issue? Y
-    -   Should Test frontend/backend/both after fix? Backend
-    -   Blocked on other issue: None
-
--   Issue 2: **User-Reported Bug: Blank/Broken Driver Pages (P1)**
-    -   **Description**: The original handoff mentioned:  is blank. The Ver Recibo button is broken.
-    -   Attempted fixes: The agent fixed the Ver Recibo button by adding better error handling for non-existent files. The agent observed that  was not blank and loaded correctly. However, a full test cycle has not been completed since the latest user requests.
-    -   Next debug checklist:
-        1.  Log in as a Motorista.
-        2.  Navigate to .
-        3.  Verify the page loads with data.
-        4.  Click Ver Recibo on a receipt that exists and one that doesn't to test both scenarios.
-    -   Why fix this issue and what will be achieved with the fix?: This is a core workflow for drivers to manage their earnings.
-    -   Status: TESTING PENDING
-    -   Is recurring issue? Y
     -   Should Test frontend/backend/both after fix? Both
     -   Blocked on other issue: None
 
--   Issue 3: **Document Deletion Functionality (P2)**
-    -   Attempted fixes: None. The agent implemented approve/reject functionality but noted the absence of a delete feature.
+-   Issue 2: **The assigned plan is not displayed on the Utilizadores list and user detail views (P1)**
+    -   Attempted fixes: The agent has not started on this yet.
     -   Next debug checklist:
-        1.  Backend: Create a new API endpoint (e.g., ) to delete a specific document.
-        2.  Frontend: In , add a Delete button next to each document, visible only to Admin/Gestor/Operacional roles.
-        3.  Connect the button to the new backend endpoint.
-    -   Why fix this issue and what will be achieved with the fix?: Fulfills a specific user requirement for document management permissions.
+        1.  Modify the  endpoint in  to join/lookup the plan name from the  collection using the  stored on the user object.
+        2.  Update the user cards and detail views in  to display the  field if it exists.
+    -   Why fix this issue and what will be achieved with the fix?: It provides essential information to the Admin at a glance.
     -   Status: NOT STARTED
     -   Is recurring issue? N
-    -   Should Test frontend/backend/both after fix? Both
-    -   Blocked on other issue: None
-
--   Issue 4: **Partner Role Logic and Permissions (P2)**
-    -   **Description**: The user clarified that partners don't have plans or generate their own reports; they are managers of a group of drivers.
-    -   Attempted fixes: None.
-    -   Next debug checklist:
-        1.  Review all backend endpoints related to partners (, , etc.).
-        2.  Ensure the logic reflects that a partner's data is an aggregation of their assigned drivers' data.
-        3.  Confirm partners cannot be assigned plans or access features they shouldn't.
-    -   Why fix this issue and what will be achieved with the fix?: Ensures the application logic correctly matches the business roles, preventing data access issues.
-    -   Status: NOT STARTED
-    -   Is recurring issue? N
-    -   Should Test frontend/backend/both after fix? Both
+    -   Should Test frontend/backend/both after fix? Frontend
     -   Blocked on other issue: None
 
 **In progress Task List**:
--   Task 1: Complete IFThenPay Integration (P1)
-    -   Where to resume: The backend routes in  and the service in  are created but empty. The frontend component  is also a placeholder. The next step is to implement the logic for generating payment references and handling callbacks, which requires API credentials from the user.
-    -   What will be achieved with this?: Enables subscription payments via a key Portuguese payment gateway.
-    -   Status: IN PROGRESS
-    -   Should Test frontend/backend/both after fix? Both
-    -   Blocked on something: User needs to provide IFThenPay API credentials.
--   Task 2: Complete Moloni Integration (P1)
-    -   Where to resume: The  agent provided a detailed playbook. The next step is to follow that playbook to implement the service logic for creating invoices.
-    -   What will be achieved with this?: Automates invoice generation for financial compliance.
-    -   Status: NOT STARTED
-    -   Should Test frontend/backend/both after fix? Backend
-    -   Blocked on something: User needs to provide Moloni API credentials.
+-   None
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   (P1) Implement PDF generation for Vehicle Inspection reports.
     *   (P1) Develop the CSV import system for Uber/Bolt earnings and vehicle mileage.
     *   (P1) Build the system to send weekly earnings reports via Email/WhatsApp.
+    *   (P2) Implement PDF generation for Vehicle Inspection reports.
 *   **Future Tasks:**
     *   (P2) Implement a partner-facing report review system (approve/reject with comments).
     *   (P2) Build the real-time messaging/ticket system for internal communication.
-    *   (P3) Create the UI for Admins to set prices for different modules and billing cycles.
     *   (P3) Develop a Vehicle Opportunities page for drivers.
 
 **Completed work in this session**
--   **Deployment Fixes**:
-    -   Corrected a malformed line in  that was breaking .
-    -   Modified alert creation logic in  to prevent  by checking for empty date strings before parsing.
--   **Features**:
-    -   **Dashboard Filter**: Added a Semana Passada (Last Week) option to the  component.
-    -   **Admin Settings**: Implemented a Comunicações tab in  with backend endpoints for saving system-wide Email and WhatsApp contacts.
-    -   **Vehicle Inspections**: Greatly enhanced  with a complete UI for adding, viewing, and managing damages, including descriptions, costs, and photo uploads.
-    -   **Document Permissions**: Added role-based checks in  to ensure only authorized users (Admin, Gestor, Operacional) can see approval/rejection buttons.
--   **Bug Fixes & UX Improvements**:
-    -   **Contract/Receipt Downloads**: Replaced runtime errors with user-friendly toast notifications when a user tries to download a file that doesn't exist on the server.
-    -   **Receipt Upload Logic**: Corrected the logic in  to prevent receipt replacement after payment is made, as per user request.
--   **Integration Scaffolding**:
-    -   Created placeholder files for IFThenPay (, , ) and Moloni integrations.
+-   **Critical Bug Fixes:**
+    -   Fixed  on plan creation by correctly serializing MongoDB responses (removing ).
+    -   Fixed auto-assignment of plans on driver approval by pointing to the correct collection () and fixing a duplicate, overriding endpoint in .
+    -   Fixed deleted drivers appearing in lists by adding a  filter to the GET endpoint.
+-   **Major Refactoring:**
+    -   Completely removed the operacional role from the entire application (database, backend logic, frontend UI).
+    -   Removed the gestor role from the plan system; they no longer have plans.
+-   **Feature Implementation:**
+    -   **Unified Plan System:** Completed the UI () and backend for managing all plans.
+    -   **Plan Promotions & IVA:** Added functionality for promotional pricing and automatic IVA calculation to all plans.
+    -   **Gestor-Partner Management:** Created backend endpoints and a frontend modal for Admins to assign/manage which partners a Gestor has access to.
+    -   **Dashboard Updates:** Dashboards for Gestores are now filtered. A card showing the user's active plan was added.
+    -   **Provisional Passwords:** Implemented a backend flow to flag users created by Partners with a provisional password and a frontend modal to force a password change on their first login.
+-   **Security & UX:**
+    -   Restricted access to the  page to Admins only.
+    -   Removed the obsolete Gestão de Planos de Assinatura tab from Admin settings.
+    -   Fixed numerous frontend bugs, including broken plan assignment modals,  display errors, and incorrect API calls.
+
+**Known issue recurrence from previous fork**
+-   **Issue recurrence in previous fork:** Auto-assigned free plan does not persist in the database and Deleting a driver does not reliably remove them from the UI list.
+-   **Recurrence count:** 2
+-   **Status:** RESOLVED. The agent successfully identified the root causes (wrong collection, duplicate endpoints, missing query filters) and resolved them.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Backend**: FastAPI, Pydantic, MongoDB. The agent successfully debugged deployment issues related to environment configuration and data integrity.
--   **Frontend**: React.js, , Tailwind CSS. The agent built complex, stateful UI components for inspections and settings.
--   **Deployment**: The agent interacted with deployment logs to identify and fix critical runtime errors preventing the application from starting in a production-like environment.
+-   **Code Duplication:** A critical issue was found where an endpoint in  was overriding an identical one in . The agent fixed the logic in the overriding endpoint instead of removing it, which leaves technical debt.
+-   **State Management (React):** The agent struggled with and eventually fixed bugs related to incorrect state structure (object vs. array) and values not being loaded into form state on edit, leading to  errors.
+-   **Full-Stack Refactoring:** The removal of the operacional role required coordinated changes across database cleanup scripts, backend models, API endpoints, and multiple frontend components.
+-   **API Design:** The agent created several new RESTful endpoints for managing new entities and relationships (e.g., assigning partners to gestores, creating drivers under a partner).
 
 **key DB schema**
--   **configuracoes** (collection): Updated to store new communication settings.
+-   **planos_sistema** (collection): Now the single source of truth for all plans.
     -   
+-   **users** (collection):
+    -   Role  removed.
+    -   Added .
+    -   Added  for  roles.
+-   **parceiros** (collection):
+    -   Added .
 
-**All files**
+**All files of reference**
 -   **Created**:
-    -   : To handle IFThenPay API callbacks and requests.
-    -   : To encapsulate the logic for interacting with the IFThenPay service.
-    -   : A placeholder component to display payment details.
-    -   : A new page for system-wide administrative settings.
+    -   : UI to force password change.
 -   **Updated/Refactored**:
-    -   : Fixed date parsing logic in the alert creation background task and added endpoints for admin communication settings.
-    -   : Corrected a syntax error.
-    -   : Added Semana Passada as a filter option.
-    -   : Major overhaul to add a complete UI for managing vehicle damages during an inspection.
-    -   : Improved error handling for contract downloads.
-    -   : Improved error handling and updated business logic for receipt uploads.
-    -   : Added role-based conditional rendering for action buttons.
+    -   : The most heavily modified file, containing fixes for duplicate endpoints, removal of the 'operacional' role, and new endpoints for gestor/plan management.
+    -   : Fixed driver approval and listing logic.
+    -   : Major updates for unified plan UI, promotions, and IVA.
+    -   : Major updates for fixing plan assignment and adding UI for gestor-partner management.
+    -   : Integrated the provisional password modal.
+    -   : Added the active plan display.
+    -   : Restricted sidebar navigation.
 
 **Areas that need refactoring**:
--   ****: CRITICAL. This monolithic file continues to be a source of complexity. Although deployment blockers within it were fixed, the long-term goal of refactoring its routes into separate files remains crucial for maintainability.
+-   **Monolithic **: A significant amount of logic for different domains (users, plans, vehicles, partners) is still located in this single file.
+-   **Duplicate Endpoint**: The  endpoint still exists in both  and . Although the logic is now consistent, the duplicate endpoint itself is technical debt and should be removed from  to avoid future confusion.
 
 **key api endpoints**
--   : Updates the system communication settings.
--   : Retrieves the system communication settings.
--   : Placeholder routes for payment integration.
+-   : Full CRUD for the new unified plan system.
+-   : Assigns a list of partners to a gestor.
+-   : Allows a partner to create a new driver with a provisional password.
+-   : Used by the provisional password flow.
+-   : Assigns a plan to a user (Motorista or Parceiro).
 
 **Critical Info for New Agent**
--   **Deployment is the Priority**: The previous agent fixed critical deployment errors, but success has not been confirmed. Your first action should be to run the deployment agent and verify the application builds and runs successfully.
--   **API Keys are Blockers**: The IFThenPay and Moloni integrations are blocked pending API credentials from the user. You must ask the user for these keys before proceeding with implementation.
--   **Data vs. Code Bugs**: Many user-reported issues were due to missing data in the development database. Always verify that the data required for a feature exists before assuming there is a code bug.
--   **Backend Hot Reload**: The backend hot reload was unreliable. The fix involved clearing  directories () and restarting the supervisor. If you make backend changes that don't appear, follow this procedure.
+-   **Plan Deletion Logic:** The user wants plan deletion to also remove the plan from any assigned user. This requires updating the  endpoint to perform a multi-collection update (, ) before deleting the plan document.
+-   **Displaying User Plans:** To show plan names in the user list, you will need to modify the  endpoint to perform a lookup/aggregation on the  collection.
+-   **Backend Code Duplication**: Be aware that endpoint logic can be in  or the  directory. An endpoint for approving drivers is defined in both places. While the agent synchronized the logic, the duplication itself is a risk. Prefer modifying/using code in the  directory where appropriate.
 
-**Last 5 User Messages and any pending user messages**
-1.  **User:** Provided a long list of new bug reports and feature requests, including dashboard date filters, fixing various download errors, clarifying permissions, and changing receipt upload logic. - **Status:** Mostly COMPLETED.
-2.  **User:** Requested the creation of an admin settings page for Email/WhatsApp, and integrations with Moloni and IFThenPay. - **Status:** IN PROGRESS.
-3.  **User:** Asked for the next steps after the agent provided a summary. - **Status:** COMPLETED.
-4.  **User:** Specified the main domain should be . - **Status:** ACKNOWLEDGED (No code changes needed, this is a deployment configuration).
-5.  **User:** Asked for help configuring cPanel for the custom domain. - **Status:** COMPLETED (Agent called support agent to explain the process).
+**Last 10 User Messages and any pending user messages**
+1.  **User:** Admin can delete plans, plans have promotion dates, advance with the rest. - **Status:** COMPLETED.
+2.  **User:** Advance with Gestor dashboard/Partner creation flow. - **Status:** COMPLETED.
+3.  **User:** Plan assignment & deletion are broken. - **Status:** PARTIALLY COMPLETED (Backend confirmed working, but user still reports frontend errors).
+4.  **User:**  error, and add IVA to plans. - **Status:** COMPLETED.
+5.  **User:** Fix  error on plan assignment, button missing for partner plan save, calculate weekly price. - **Status:** COMPLETED.
+6.  **User:** Fix partner save button, show plan on dashboard, remove old plan UI, restrict sync page to admin. - **Status:** COMPLETED.
+7.  **User:** Plan delete still fails, and IVA calculation shows . - **Status:** COMPLETED.
+8.  **User (LATEST):** Show assigned plan on user list/details. Fix plan deletion so it's permanent and unassigns from users. - **Status:** PENDING (This is the current task).
 
 **Project Health Check:**
--   **Broken**: The production deployment was failing due to runtime errors. The agent has implemented fixes, but the deployment status is **Pending Verification**.
+-   **Broken**: Plan deletion from the frontend is not working as intended.
+-   **Mocked**: None.
+
+**3rd Party Integrations**
+-   None.
 
 **Testing status**
--   **Testing agent used after significant changes**: NO
--   **Troubleshoot agent used after agent stuck in loop**: YES (For debugging the backend hot reload issue).
+-   **Testing agent used after significant changes**: YES. The agent used the testing agent effectively to identify a critical bug caused by code duplication.
+-   **Troubleshoot agent used after agent stuck in loop**: NO
 -   **Test files created**: None.
--   **Known regressions**: None identified in this session.
+-   **Known regressions**: Several minor frontend regressions appeared during development (e.g.,  errors,  error) which were subsequently fixed. The plan deletion feature seems to have regressed on the frontend.
 
 **Credentials to test flow:**
 -   Available in .
 
 **What agent forgot to execute**
--   The agent did not add a direct link/button from the main vehicle list/card to the Vistorias (Inspections) page after building out its functionality.
--   The agent did not implement the delete document functionality, which was part of the user's explicit permission requirements.
--   The agent has not yet re-run the deployment process to confirm that the fixes for the build errors were successful.</analysis>
+-   The agent did not remove the duplicate  endpoint from  after identifying it, instead choosing to fix the code in both places. This leaves technical debt.
+-   The agent did not fully implement the user's request for plan deletion, which required un-assigning the plan from all users before deleting the plan document itself. This is now part of the current task.</analysis>
