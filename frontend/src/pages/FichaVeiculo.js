@@ -168,9 +168,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
   // Document upload states
   const [uploadingDoc, setUploadingDoc] = useState(false);
 
-  const canEdit = user.role === 'admin' || user.role === 'gestao' || user.role === 'operacional';
-  const canEditPlanoManutencao = user.role === 'admin' || user.role === 'gestao' || (user.role === 'operacional' && user.plano_manutencao_ativo);
-  const canEditAlertas = user.role === 'admin' || user.role === 'gestao' || (user.role === 'operacional' && user.plano_alertas_ativo);
+  const canEdit = user.role === 'admin' || user.role === 'gestao';
+  const canEditPlanoManutencao = user.role === 'admin' || user.role === 'gestao';
+  const canEditAlertas = user.role === 'admin' || user.role === 'gestao';
 
   useEffect(() => {
     fetchVehicleData();
