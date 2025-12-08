@@ -12628,6 +12628,86 @@ async def send_notification(
         
     except Exception as e:
         logger.error(f"Error sending notification: {e}")
+
+
+# ============================================================================
+# CONFIGURAÇÃO DE CATEGORIAS DE PLATAFORMAS (Uber/Bolt)
+# ============================================================================
+
+@api_router.post("/configuracoes/categorias-plataformas")
+async def save_categorias_plataformas(
+    config_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Save platform categories configuration (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can configure categories")
+    
+    try:
+        plataforma = config_data.get("plataforma")  # 'uber' ou 'bolt'
+        categorias = config_data.get("categorias", [])
+        
+        if not plataforma or not categorias:
+            raise HTTPException(status_code=400, detail="Platform and categories are required")
+        
+        # Update or create config
+        await db.configuracoes_sistema.update_one(
+            {"tipo": f"categorias_{plataforma}"},
+            {
+                "$set": {
+                    "tipo": f"categorias_{plataforma}",
+                    "categorias": categorias,
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                    "updated_by": current_user["id"]
+                }
+            },
+            upsert=True
+        )
+        
+        logger.info(f"{plataforma.capitalize()} categories updated by {current_user['email']}")
+        return {"message": f"{plataforma.capitalize()} categories saved successfully"}
+        
+    except Exception as e:
+        logger.error(f"Error saving platform categories: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/configuracoes/categorias-plataformas")
+async def get_categorias_plataformas(current_user: Dict = Depends(get_current_user)):
+    """Get platform categories configuration"""
+    try:
+        # Default categories
+        default_uber = [
+            "UberX", "Share", "Electric", "Black", "Comfort",
+            "XL", "XXL", "Pet", "Package"
+        ]
+        
+        default_bolt = [
+            "Economy", "Comfort", "Executive", "XL", "Green",
+            "XXL", "Motorista Privado", "Pet"
+        ]
+        
+        # Fetch custom categories
+        uber_config = await db.configuracoes_sistema.find_one(
+            {"tipo": "categorias_uber"},
+            {"_id": 0}
+        )
+        
+        bolt_config = await db.configuracoes_sistema.find_one(
+            {"tipo": "categorias_bolt"},
+            {"_id": 0}
+        )
+        
+        return {
+            "uber": uber_config.get("categorias") if uber_config else default_uber,
+            "bolt": bolt_config.get("categorias") if bolt_config else default_bolt
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching platform categories: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
         raise HTTPException(status_code=500, detail=str(e))
 
 
