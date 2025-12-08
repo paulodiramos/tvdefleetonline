@@ -405,6 +405,54 @@ const ConfiguracaoPlanos = ({ user, onLogout }) => {
                 </p>
               </div>
 
+              {/* Sistema de Promoção */}
+              <div className="border-t pt-4">
+                <Label className="text-lg font-semibold mb-3 block">Sistema de Promoção</Label>
+                <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg space-y-4">
+                  <div>
+                    <Label>Desconto Promocional (%)</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={planoForm.desconto_promocao}
+                      onChange={(e) => setPlanoForm({...planoForm, desconto_promocao: parseInt(e.target.value) || 0})}
+                      placeholder="Ex: 20 para 20% de desconto"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Data Início Promoção</Label>
+                      <Input
+                        type="date"
+                        value={planoForm.data_inicio_promocao}
+                        onChange={(e) => setPlanoForm({...planoForm, data_inicio_promocao: e.target.value})}
+                      />
+                    </div>
+                    <div>
+                      <Label>Data Fim Promoção</Label>
+                      <Input
+                        type="date"
+                        value={planoForm.data_fim_promocao}
+                        onChange={(e) => setPlanoForm({...planoForm, data_fim_promocao: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  
+                  {planoForm.desconto_promocao > 0 && (
+                    <div className="bg-white p-3 rounded border border-yellow-300">
+                      <p className="text-sm font-medium text-slate-700">
+                        Preço com Promoção: €{(planoForm.preco_mensal * (1 - planoForm.desconto_promocao / 100)).toFixed(2)}/mês
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Desconto de {planoForm.desconto_promocao}% aplicado
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Actions */}
               <div className="flex justify-end space-x-3 pt-4 border-t">
                 <Button
