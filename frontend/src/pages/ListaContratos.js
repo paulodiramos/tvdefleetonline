@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { FileText, Search, Download, Eye, Calendar, User, Car } from 'lucide-react';
 
-const ListaContratos = ({ user, onLogout }) => {
+const ListaContratos = ({ user, onLogout, showLayout = true }) => {
   const [contratos, setContratos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
