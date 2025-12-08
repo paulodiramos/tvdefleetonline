@@ -65,6 +65,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
   const [editingIntervencao, setEditingIntervencao] = useState(null);
   const [categoriasUber, setCategoriasUber] = useState([]);
   const [categoriasBolt, setCategoriasBolt] = useState([]);
+  const [hasModuloEventos, setHasModuloEventos] = useState(false);
 
   const [extintorForm, setExtintorForm] = useState({
     numeracao: '',
