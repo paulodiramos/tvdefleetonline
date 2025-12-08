@@ -776,6 +776,26 @@ const Vistorias = ({ user, onLogout }) => {
             </DialogHeader>
 
             <form onSubmit={handleCreateVistoria} className="space-y-6">
+              {/* Filtro Parceiro para Admin/Gestão */}
+              {(user.role === 'admin' || user.role === 'gestao') && (
+                <div>
+                  <Label>Parceiro</Label>
+                  <select
+                    className="w-full p-2 border rounded-md"
+                    value={vistoriaForm.parceiro_filter || 'todos'}
+                    onChange={(e) => {
+                      const parceiroId = e.target.value === 'todos' ? '' : e.target.value;
+                      setVistoriaForm({...vistoriaForm, parceiro_filter: parceiroId, veiculo_id: ''});
+                    }}
+                  >
+                    <option value="todos">Todos os Veículos</option>
+                    {parceiros.map((p) => (
+                      <option key={p.id} value={p.id}>{p.nome_empresa}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {/* Veículo Selection */}
               <div>
                 <Label>
@@ -788,11 +808,13 @@ const Vistorias = ({ user, onLogout }) => {
                   required
                 >
                   <option value="">Selecione um veículo</option>
-                  {vehicles.map((vehicle) => (
-                    <option key={vehicle.id} value={vehicle.id}>
-                      {vehicle.matricula} - {vehicle.marca} {vehicle.modelo}
-                    </option>
-                  ))}
+                  {vehicles
+                    .filter(v => !vistoriaForm.parceiro_filter || v.parceiro_id === vistoriaForm.parceiro_filter)
+                    .map((vehicle) => (
+                      <option key={vehicle.id} value={vehicle.id}>
+                        {vehicle.matricula} - {vehicle.marca} {vehicle.modelo}
+                      </option>
+                    ))}
                 </select>
               </div>
 
