@@ -88,8 +88,13 @@ async def get_motoristas(current_user: Dict = Depends(get_current_user)):
     
     if current_user["role"] == UserRole.PARCEIRO:
         query["parceiro_atribuido"] = current_user["id"]
-    elif current_user["role"] == UserRole.OPERACIONAL:
-        query["parceiro_atribuido"] = current_user["id"]
+    elif current_user["role"] == UserRole.GESTAO:
+        # Gestor vê motoristas dos parceiros atribuídos
+        parceiros_ids = current_user.get("parceiros_atribuidos", [])
+        if parceiros_ids:
+            query["parceiro_atribuido"] = {"$in": parceiros_ids}
+        else:
+            query["parceiro_atribuido"] = None  # Nenhum motorista se sem parceiros
     
     motoristas = await db.motoristas.find(query, {"_id": 0}).to_list(length=None)
     
