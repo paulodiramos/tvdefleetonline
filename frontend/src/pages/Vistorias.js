@@ -73,7 +73,6 @@ const Vistorias = ({ user, onLogout }) => {
 
   useEffect(() => {
     fetchVehicles();
-    fetchVistoriasAgendadas();
     if (user.role === 'admin' || user.role === 'gestao') {
       fetchParceiros();
     }
@@ -81,6 +80,7 @@ const Vistorias = ({ user, onLogout }) => {
 
   useEffect(() => {
     if (vehicles.length > 0) {
+      fetchVistoriasAgendadas();
       aplicarFiltros();
     }
   }, [vehicles, filtros]);
