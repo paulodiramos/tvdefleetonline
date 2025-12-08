@@ -784,16 +784,15 @@ const Vistorias = ({ user, onLogout }) => {
               {/* Filtro Parceiro para Admin/Gestão */}
               {(user.role === 'admin' || user.role === 'gestao') && (
                 <div>
-                  <Label>Parceiro</Label>
+                  <Label>Parceiro (Opcional)</Label>
                   <select
                     className="w-full p-2 border rounded-md"
-                    value={vistoriaForm.parceiro_filter || 'todos'}
+                    value={vistoriaForm.parceiro_id || ''}
                     onChange={(e) => {
-                      const parceiroId = e.target.value === 'todos' ? '' : e.target.value;
-                      setVistoriaForm({...vistoriaForm, parceiro_filter: parceiroId, veiculo_id: ''});
+                      setVistoriaForm({...vistoriaForm, parceiro_id: e.target.value, veiculo_id: ''});
                     }}
                   >
-                    <option value="todos">Todos os Veículos</option>
+                    <option value="">Selecione um parceiro (opcional)</option>
                     {parceiros.map((p) => (
                       <option key={p.id} value={p.id}>{p.nome_empresa}</option>
                     ))}
