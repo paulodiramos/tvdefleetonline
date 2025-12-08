@@ -174,10 +174,13 @@ const Profile = ({ user, onLogout }) => {
           <Card className="lg:col-span-2">
             <Tabs defaultValue="info" className="w-full">
               <CardHeader>
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className={`grid w-full ${user.role === 'motorista' ? 'grid-cols-4' : 'grid-cols-3'}`}>
                   <TabsTrigger value="info">Dados Pessoais</TabsTrigger>
                   <TabsTrigger value="security">Segurança</TabsTrigger>
                   <TabsTrigger value="permissions">Permissões</TabsTrigger>
+                  {user.role === 'motorista' && (
+                    <TabsTrigger value="moloni">Moloni</TabsTrigger>
+                  )}
                 </TabsList>
               </CardHeader>
               <CardContent>
@@ -371,6 +374,13 @@ const Profile = ({ user, onLogout }) => {
                     </div>
                   )}
                 </TabsContent>
+
+                {/* Moloni Tab - Only for Motorista */}
+                {user.role === 'motorista' && (
+                  <TabsContent value="moloni">
+                    <MoloniConfig motorista_id={user.id} isOwnProfile={true} />
+                  </TabsContent>
+                )}
               </CardContent>
             </Tabs>
           </Card>
