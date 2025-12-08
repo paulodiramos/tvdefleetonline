@@ -7812,6 +7812,10 @@ async def get_contratos(
     
     # Populate motorista and vehicle names
     for contrato in contratos:
+        # Set default values
+        contrato["motorista_nome"] = "N/A"
+        contrato["veiculo_matricula"] = "Sem veículo"
+        
         if contrato.get("motorista_id"):
             motorista = await db.users.find_one({"id": contrato["motorista_id"]}, {"_id": 0, "name": 1})
             if motorista:
