@@ -3329,7 +3329,12 @@ async def delete_documento(
 @api_router.get("/motoristas", response_model=List[Motorista])
 async def get_motoristas(current_user: Dict = Depends(get_current_user)):
     try:
-        motoristas = await db.motoristas.find({}, {"_id": 0}).to_list(1000)
+        # Filter motoristas by role
+        query = {}
+        if current_user["role"] == "parceiro":
+            query["parceiro_atribuido"] = current_user["id"]
+        
+        motoristas = await db.motoristas.find(query, {"_id": 0}).to_list(1000)
         for m in motoristas:
             # Handle created_at
             if m.get("created_at"):
