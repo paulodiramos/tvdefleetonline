@@ -158,14 +158,14 @@ const Motoristas = ({ user, onLogout }) => {
       setShowEscolherPlanoDialog(false);
       setPlanoSelecionado(null);
       
-      // Refresh motorista details to show updated plan
+      // Refresh list first
+      await fetchMotoristas();
+      
+      // Then get fresh motorista details to update the modal
       const response = await axios.get(`${API}/motoristas/${selectedMotorista.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSelectedMotorista(response.data);
-      
-      // Refresh list
-      fetchMotoristas();
     } catch (error) {
       console.error('Error assigning plan:', error);
       toast.error('Erro ao atribuir plano');
