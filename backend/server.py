@@ -6639,6 +6639,7 @@ async def criar_plano(plano_data: Dict[str, Any], current_user: Dict = Depends(g
         "preco_mensal": plano_data.get("preco_mensal"),
         "preco_anual": plano_data.get("preco_anual"),
         "preco_vitalicio": plano_data.get("preco_vitalicio"),
+        "tipo_usuario": plano_data.get("tipo_usuario", "parceiro"),
         "ativo": plano_data.get("ativo", True),
         "destaque": plano_data.get("destaque", False),
         "created_at": now,
