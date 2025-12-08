@@ -7018,6 +7018,117 @@ async def gerar_pdf_vistoria(
         y_position -= 0.5*cm
         c.drawString(2*cm, y_position, f"KM do Veículo: {vistoria.get('km_veiculo', 'N/A')}")
         y_position -= 0.5*cm
+
+
+@api_router.post("/vehicles/{vehicle_id}/agendar-vistoria")
+async def agendar_vistoria(
+    vehicle_id: str,
+    agendamento: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Schedule a future inspection for a vehicle"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    try:
+        vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+        if not vehicle:
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+        
+        # Create agenda item
+        agenda_item = {
+            "id": str(uuid.uuid4()),
+            "tipo": "vistoria",
+            "data_agendada": agendamento.get("data_agendada"),
+            "tipo_vistoria": agendamento.get("tipo_vistoria", "periodica"),
+            "notas": agendamento.get("notas", ""),
+            "status": "agendada",  # agendada, realizada, cancelada
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_by": current_user["id"]
+        }
+        
+        # Add to agenda
+        await db.vehicles.update_one(
+            {"id": vehicle_id},
+            {"$push": {"agenda": agenda_item}}
+        )
+        
+        logger.info(f"Inspection scheduled for vehicle {vehicle_id} on {agenda_item['data_agendada']}")
+        return {"message": "Vistoria agendada com sucesso", "agenda_item": agenda_item}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error scheduling inspection: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/vehicles/{vehicle_id}/agenda")
+async def get_vehicle_agenda(
+    vehicle_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get vehicle agenda/schedule"""
+    try:
+        vehicle = await db.vehicles.find_one(
+            {"id": vehicle_id},
+            {"_id": 0, "agenda": 1, "matricula": 1}
+        )
+        
+        if not vehicle:
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+        
+        agenda = vehicle.get("agenda", [])
+        
+        # Filter only future and pending inspections
+        from datetime import datetime, timezone
+        today = datetime.now(timezone.utc).date().isoformat()
+        
+        agenda_vistorias = [
+            item for item in agenda 
+            if item.get("tipo") == "vistoria" 
+            and item.get("data_agendada", "") >= today
+            and item.get("status") != "cancelada"
+        ]
+        
+        return {
+            "vehicle_id": vehicle_id,
+            "matricula": vehicle.get("matricula"),
+            "agenda": agenda_vistorias
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching vehicle agenda: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.delete("/vehicles/{vehicle_id}/agenda/{agenda_id}")
+async def cancelar_agendamento(
+    vehicle_id: str,
+    agenda_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Cancel a scheduled inspection"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    try:
+        # Mark as cancelled
+        await db.vehicles.update_one(
+            {"id": vehicle_id, "agenda.id": agenda_id},
+            {"$set": {"agenda.$.status": "cancelada"}}
+        )
+        
+        logger.info(f"Agenda item {agenda_id} cancelled for vehicle {vehicle_id}")
+        return {"message": "Agendamento cancelado com sucesso"}
+        
+    except Exception as e:
+        logger.error(f"Error cancelling agenda item: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
         c.drawString(2*cm, y_position, f"Responsável: {vistoria.get('responsavel_nome', 'N/A')}")
         y_position -= 0.5*cm
         
