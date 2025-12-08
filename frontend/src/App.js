@@ -212,7 +212,7 @@ function App() {
           <Route
             path="/contratos"
             element={
-              user ? <Contratos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+              user ? <ContratosComTabs user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
           <Route
