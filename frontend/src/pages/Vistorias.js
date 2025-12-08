@@ -246,7 +246,73 @@ const Vistorias = ({ user, onLogout }) => {
     }
   };
 
-  const handleCreateVistoria = async (e) => {
+  const handleRealizarAgendada = (agenda) => {
+    // Pré-preencher formulário com dados da vistoria agendada
+    setVistoriaForm({
+      veiculo_id: agenda.veiculo_id,
+      parceiro_id: agenda.parceiro_id || '',
+      data_vistoria: new Date().toISOString().split('T')[0],
+      tipo: agenda.tipo_vistoria || 'periodica',
+      km_veiculo: '',
+      observacoes: agenda.notas || '',
+      estado_geral: 'bom',
+      itens_verificados: {
+        pneus: false,
+        travoes: false,
+        luzes: false,
+        nivel_oleo: false,
+        nivel_agua: false,
+        bateria: false,
+        cintos_seguranca: false,
+        extintor: false,
+        triangulo: false,
+        kit_primeiros_socorros: false,
+        documentacao: false,
+        limpeza_interior: false,
+        limpeza_exterior: false,
+      },
+      danos_encontrados: []
+    });
+    
+    // Guardar ID da agenda para remover depois
+    setAgendaIdAtual(agenda.id);
+    setFotosVistoria([]);
+    setShowCreateDialog(true);
+  };
+
+  const handleUploadFotoModal = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    
+    try {
+      setUploadingPhoto(true);
+      
+      for (const file of files) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          setFotosVistoria(prev => [...prev, {
+            file: file,
+            preview: event.target.result,
+            name: file.name
+          }]);
+        };
+        reader.readAsDataURL(file);
+      }
+      
+      toast.success(`${files.length} foto(s) adicionada(s)`);
+    } catch (error) {
+      console.error('Error adding photos:', error);
+      toast.error('Erro ao adicionar fotos');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const removeFotoModal = (index) => {
+    setFotosVistoria(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleCreateVistoria = async (e, status = 'fechada') => {
     e.preventDefault();
     
     if (!vistoriaForm.veiculo_id) {
