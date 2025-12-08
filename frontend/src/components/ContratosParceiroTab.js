@@ -35,7 +35,6 @@ const ContratosParceiroTab = ({ parceiroId, parceiroData, onUpdate, userRole }) 
   }, [parceiroData]);
 
   const canEdit = userRole === 'admin' || userRole === 'gestao' || 
-                  (userRole === 'operacional' && parceiroData?.id === user?.associated_partner_id) ||
                   (userRole === 'parceiro' && parceiroData?.id === user?.associated_partner_id);
 
   const handleSaveContrato = async () => {
