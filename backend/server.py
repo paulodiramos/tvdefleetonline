@@ -977,8 +977,9 @@ class User(UserBase):
     plano_id: Optional[str] = None  # ID do plano no sistema unificado
     plano_nome: Optional[str] = None  # Nome do plano
     plano_valida_ate: Optional[str] = None  # Data de validade do plano
-    plano_manutencao_ativo: bool = False  # Plano adicional para editar manutenções (Operacional)
-    plano_alertas_ativo: bool = False  # Plano adicional para editar alertas (Operacional)
+    plano_manutencao_ativo: bool = False  # Plano adicional para editar manutenções
+    plano_alertas_ativo: bool = False  # Plano adicional para editar alertas
+    senha_provisoria: bool = False  # Se True, deve mudar senha no próximo login
     campos_customizados: Dict[str, Any] = {}  # Campos adicionais customizáveis
 
 class TokenResponse(BaseModel):
