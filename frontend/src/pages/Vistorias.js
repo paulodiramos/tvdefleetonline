@@ -62,13 +62,16 @@ const Vistorias = ({ user, onLogout }) => {
 
   useEffect(() => {
     fetchVehicles();
+    if (user.role === 'admin' || user.role === 'gestao') {
+      fetchParceiros();
+    }
   }, []);
 
   useEffect(() => {
-    if (selectedVehicle) {
-      fetchVistorias(selectedVehicle.id);
+    if (vehicles.length > 0) {
+      aplicarFiltros();
     }
-  }, [selectedVehicle]);
+  }, [vehicles, filtros]);
 
   const fetchVehicles = async () => {
     try {
