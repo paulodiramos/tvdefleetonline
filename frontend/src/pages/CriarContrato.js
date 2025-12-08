@@ -973,6 +973,75 @@ const CriarContrato = ({ user, onLogout }) => {
           </form>
         )}
       </div>
+
+      {/* Modal de Confirmação de Alteração */}
+      <Dialog open={showConfirmacaoAlteracao} onOpenChange={setShowConfirmacaoAlteracao}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center space-x-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              <span>Confirmar Alteração de Condições</span>
+            </DialogTitle>
+            <DialogDescription>
+              <div className="space-y-3 mt-3">
+                <p className="text-slate-700">
+                  Você está prestes a alterar as condições de exploração deste veículo.
+                </p>
+                
+                <div className="bg-slate-50 p-3 rounded border">
+                  <p className="text-sm font-semibold text-slate-800 mb-2">Condições Atuais do Veículo:</p>
+                  <ul className="text-sm text-slate-600 space-y-1">
+                    <li>• Tipo: <span className="font-medium">{veiculoData?.tipo_contrato?.tipo || 'N/A'}</span></li>
+                    {veiculoData?.tipo_contrato?.tipo === 'comissao' && (
+                      <>
+                        <li>• Comissão Motorista: <span className="font-medium">{veiculoData.tipo_contrato.comissao_motorista}%</span></li>
+                        <li>• Comissão Parceiro: <span className="font-medium">{veiculoData.tipo_contrato.comissao_parceiro}%</span></li>
+                      </>
+                    )}
+                    {veiculoData?.tipo_contrato?.tipo === 'aluguer' && (
+                      <li>• Valor Aluguer: <span className="font-medium">€{veiculoData.tipo_contrato.valor_aluguer}</span></li>
+                    )}
+                  </ul>
+                </div>
+
+                <Alert className="border-amber-200 bg-amber-50">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  <AlertDescription className="text-sm text-amber-800">
+                    <p className="font-semibold">Atenção:</p>
+                    <p>As alterações feitas neste contrato <strong>NÃO</strong> serão aplicadas automaticamente ao veículo.</p>
+                    <p className="mt-2">
+                      Se desejar alterar permanentemente as condições do veículo, 
+                      edite-as diretamente na ficha do veículo.
+                    </p>
+                  </AlertDescription>
+                </Alert>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowConfirmacaoAlteracao(false);
+                setPermitirAlterarCondicoes(false);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                setShowConfirmacaoAlteracao(false);
+                setPermitirAlterarCondicoes(true);
+                toast.success('Você pode agora alterar as condições para este contrato');
+              }}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              <Check className="w-4 h-4 mr-2" />
+              Confirmar Alteração
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
