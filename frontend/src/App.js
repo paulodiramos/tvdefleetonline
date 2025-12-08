@@ -422,6 +422,15 @@ function App() {
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
+      
+      {/* Modal de Mudança de Senha Obrigatória */}
+      {user && showMudarSenha && (
+        <MudarSenhaObrigatorioModal
+          open={showMudarSenha}
+          user={user}
+          onSuccess={handleSenhaChanged}
+        />
+      )}
     </div>
   );
 }
