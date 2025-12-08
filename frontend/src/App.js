@@ -147,6 +147,8 @@ function App() {
           <Route path="/veiculos" element={<VeiculosPublico />} />
           <Route path="/servicos" element={<ServicosPublico />} />
           <Route path="/servicos/:servico" element={<ServicosPublico />} />
+          <Route path="/termos" element={<Termos />} />
+          <Route path="/privacidade" element={<Privacidade />} />
           
           {/* Auth Routes */}
           <Route
