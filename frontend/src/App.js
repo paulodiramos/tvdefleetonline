@@ -223,6 +223,16 @@ function App() {
             }
           />
           <Route
+            path="/utilizadores"
+            element={
+              user && user.role === 'admin' ? (
+                <GestaoUtilizadores user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
+            }
+          />
+          <Route
             path="/contratos"
             element={
               user ? <ContratosComTabs user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
