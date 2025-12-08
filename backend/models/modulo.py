@@ -127,5 +127,45 @@ MODULOS_SISTEMA = {
         "nome": "Gestão de Pagamentos",
         "descricao": "Sistema de pagamentos e recibos",
         "ordem": 16
+    },
+    "gestao_eventos_veiculo": {
+        "nome": "Gestão de Eventos de Veículos",
+        "descricao": "Editar e gerir eventos na agenda do veículo",
+        "ordem": 17
+    },
+    "vistorias_veiculos": {
+        "nome": "Vistorias de Veículos",
+        "descricao": "Sistema completo de vistorias e inspeções",
+        "ordem": 18
+    },
+    "importar_csv": {
+        "nome": "Importar CSV",
+        "descricao": "Importação de dados via CSV (ganhos, KM, etc.)",
+        "ordem": 19
+    },
+    "sincronizacao_automatica": {
+        "nome": "Sincronização Automática",
+        "descricao": "Sincronização automática com plataformas (Uber/Bolt)",
+        "ordem": 20
+    },
+    "envio_email": {
+        "nome": "Envio de Email",
+        "descricao": "Módulo de envio de emails e notificações",
+        "ordem": 21
+    },
+    "envio_whatsapp": {
+        "nome": "Envio de WhatsApp",
+        "descricao": "Envio de mensagens via WhatsApp",
+        "ordem": 22
+    },
+    "avisos_documentos": {
+        "nome": "Avisos de Documentos",
+        "descricao": "Alertas automáticos de documentos fora de prazo",
+        "ordem": 23
+    },
+    "avisos_revisoes": {
+        "nome": "Avisos de Revisões",
+        "descricao": "Alertas de veículos próximos da revisão",
+        "ordem": 24
     }
 }
