@@ -164,7 +164,7 @@ const GestaoPlanos = ({ user, onLogout }) => {
 
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API}/api/planos/${planoId}`, {
+      await axios.delete(`${API}/planos/${planoId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Plano eliminado com sucesso');
