@@ -113,21 +113,28 @@ const Vistorias = ({ user, onLogout }) => {
   const fetchVistoriasAgendadas = async () => {
     try {
       const token = localStorage.getItem('token');
-      const agendaPromises = vehicles.map(vehicle =>
-        axios.get(`${API}/vehicles/${vehicle.id}/agenda`, {
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(res => res.data)
-        .catch(() => ({ agenda: [] }))
-      );
+      const agendaPromises = vehicles.map(async (vehicle) => {
+        try {
+          const res = await axios.get(`${API}/vehicles/${vehicle.id}/agenda`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          // Filtrar apenas vistorias agendadas
+          const vistoriasAgendadas = (res.data || []).filter(item => 
+            item.tipo === 'vistoria' && item.status === 'agendada'
+          );
+          // Adicionar informações do veículo a cada vistoria
+          return vistoriasAgendadas.map(item => ({
+            ...item,
+            matricula: vehicle.matricula,
+            veiculo_id: vehicle.id
+          }));
+        } catch (error) {
+          return [];
+        }
+      });
       
       const allAgendas = await Promise.all(agendaPromises);
-      const agendadas = allAgendas.flatMap(a => 
-        (a.agenda || []).map(item => ({
-          ...item,
-          matricula: a.matricula,
-          veiculo_id: a.vehicle_id
-        }))
-      );
+      const agendadas = allAgendas.flat();
       
       setVistoriasAgendadas(agendadas);
     } catch (error) {
