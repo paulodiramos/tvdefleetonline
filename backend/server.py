@@ -3487,6 +3487,12 @@ async def get_motorista_by_id(motorista_id: str, current_user: Dict = Depends(ge
         if not motorista:
             raise HTTPException(status_code=404, detail="Motorista not found")
         
+        # Add plano_nome lookup
+        if motorista.get("plano_id"):
+            plano = await db.planos_sistema.find_one({"id": motorista["plano_id"]}, {"_id": 0, "nome": 1})
+            if plano:
+                motorista["plano_nome"] = plano.get("nome")
+        
         # Return raw data without strict model validation
         return motorista
     except HTTPException:
