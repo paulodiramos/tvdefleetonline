@@ -3081,6 +3081,70 @@ async def get_user_permissions(current_user: Dict = Depends(get_current_user)):
         "user": current_user
     }
 
+@api_router.put("/gestores/{gestor_id}/atribuir-parceiros")
+async def atribuir_parceiros_a_gestor(
+    gestor_id: str,
+    parceiros_data: Dict[str, List[str]],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Admin atribui parceiros a um gestor"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas Admin pode atribuir parceiros a gestores")
+    
+    parceiros_ids = parceiros_data.get("parceiros_ids", [])
+    
+    # Verificar se gestor existe
+    gestor = await db.users.find_one({"id": gestor_id, "role": "gestao"}, {"_id": 0})
+    if not gestor:
+        raise HTTPException(status_code=404, detail="Gestor não encontrado")
+    
+    # Atualizar gestor com lista de parceiros
+    await db.users.update_one(
+        {"id": gestor_id},
+        {"$set": {"parceiros_atribuidos": parceiros_ids}}
+    )
+    
+    # Remover este gestor de parceiros que não estão mais na lista
+    await db.parceiros.update_many(
+        {"gestor_associado_id": gestor_id, "id": {"$nin": parceiros_ids}},
+        {"$set": {"gestor_associado_id": None}}
+    )
+    
+    # Atribuir este gestor aos parceiros selecionados
+    await db.parceiros.update_many(
+        {"id": {"$in": parceiros_ids}},
+        {"$set": {"gestor_associado_id": gestor_id}}
+    )
+    
+    logger.info(f"Admin {current_user['id']} atribuiu {len(parceiros_ids)} parceiros ao gestor {gestor_id}")
+    
+    return {
+        "message": "Parceiros atribuídos ao gestor com sucesso",
+        "gestor_id": gestor_id,
+        "parceiros_count": len(parceiros_ids)
+    }
+
+@api_router.get("/gestores/{gestor_id}/parceiros")
+async def get_parceiros_do_gestor(
+    gestor_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter lista de parceiros atribuídos a um gestor"""
+    # Apenas Admin, o próprio Gestor ou outro Gestor pode ver
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    if current_user["role"] == UserRole.GESTAO and current_user["id"] != gestor_id:
+        raise HTTPException(status_code=403, detail="Gestor só pode ver seus próprios parceiros")
+    
+    # Buscar parceiros atribuídos
+    parceiros = await db.parceiros.find(
+        {"gestor_associado_id": gestor_id},
+        {"_id": 0}
+    ).to_list(length=None)
+    
+    return parceiros
+
 # ==================== MOTORISTA ENDPOINTS ====================
 
 @api_router.post("/motoristas/register", response_model=Motorista)
