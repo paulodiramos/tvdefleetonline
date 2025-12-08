@@ -9291,8 +9291,8 @@ async def atribuir_plano_motorista(
         plano_id = plano_data.get("plano_id")
         periodicidade = plano_data.get("periodicidade", "mensal")  # "semanal" ou "mensal"
         
-        # Verify plan exists and is a MOTORISTA plan
-        plano = await db.planos_motorista.find_one({"id": plano_id, "ativo": True}, {"_id": 0})
+        # Verify plan exists and is a MOTORISTA plan (using unified system)
+        plano = await db.planos_sistema.find_one({"id": plano_id, "ativo": True, "tipo_usuario": "motorista"}, {"_id": 0})
         if not plano:
             raise HTTPException(status_code=404, detail="Plano de motorista not found")
         
