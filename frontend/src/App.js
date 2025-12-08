@@ -220,6 +220,12 @@ function App() {
             }
           />
           <Route
+            path="/templates-contratos"
+            element={
+              user && user.role === 'parceiro' ? <TemplatesContratos user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
             path="/configuracoes-admin"
             element={
               user ? <ConfiguracoesAdmin user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
