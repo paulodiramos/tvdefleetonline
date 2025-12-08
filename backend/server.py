@@ -9206,6 +9206,9 @@ async def update_plano_sistema(plano_id: str, plano_data: Dict, current_user: Di
         "ativo": plano_data.get("ativo", True),
         "permite_trial": plano_data.get("permite_trial", False),
         "dias_trial": plano_data.get("dias_trial", 30),
+        "desconto_promocao": plano_data.get("desconto_promocao", 0),
+        "data_inicio_promocao": plano_data.get("data_inicio_promocao"),
+        "data_fim_promocao": plano_data.get("data_fim_promocao"),
         "updated_at": datetime.now(timezone.utc)
     }
     
