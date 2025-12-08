@@ -12604,6 +12604,309 @@ async def send_notification(
 ):
     """Send notification via email (Admin, Gestao, Parceiro)"""
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+
+
+# ============================================================================
+# GOOGLE DRIVE STORAGE INTEGRATION
+# ============================================================================
+
+@api_router.get("/storage/drive/connect")
+async def connect_google_drive(current_user: Dict = Depends(get_current_user)):
+    """Initiate Google Drive OAuth flow"""
+    try:
+        from google_auth_oauthlib.flow import Flow
+        
+        # Get configuration
+        config = await db.configuracoes_sistema.find_one({"tipo": "storage_google_drive"})
+        if not config:
+            raise HTTPException(
+                status_code=400,
+                detail="Google Drive not configured. Admin must configure it first."
+            )
+        
+        client_id = config.get("client_id")
+        client_secret = config.get("client_secret")
+        redirect_uri = config.get("redirect_uri")
+        
+        if not all([client_id, client_secret, redirect_uri]):
+            raise HTTPException(
+                status_code=400,
+                detail="Google Drive configuration is incomplete"
+            )
+        
+        flow = Flow.from_client_config(
+            {
+                "web": {
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "redirect_uris": [redirect_uri]
+                }
+            },
+            scopes=['https://www.googleapis.com/auth/drive.file'],
+            redirect_uri=redirect_uri
+        )
+        
+        authorization_url, state = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true',
+            prompt='consent',
+            state=current_user["id"]
+        )
+        
+        logger.info(f"Drive OAuth initiated for user {current_user['id']}")
+        return {"authorization_url": authorization_url}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to initiate Drive OAuth: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/storage/drive/callback")
+async def drive_callback(code: str, state: str):
+    """Handle Google Drive OAuth callback"""
+    try:
+        from google_auth_oauthlib.flow import Flow
+        
+        # Get configuration
+        config = await db.configuracoes_sistema.find_one({"tipo": "storage_google_drive"})
+        if not config:
+            raise HTTPException(status_code=400, detail="Google Drive not configured")
+        
+        client_id = config.get("client_id")
+        client_secret = config.get("client_secret")
+        redirect_uri = config.get("redirect_uri")
+        
+        flow = Flow.from_client_config(
+            {
+                "web": {
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                    "token_uri": "https://oauth2.googleapis.com/token",
+                    "redirect_uris": [redirect_uri]
+                }
+            },
+            scopes=None,
+            redirect_uri=redirect_uri
+        )
+        
+        flow.fetch_token(code=code)
+        credentials = flow.credentials
+        
+        # Verify required scopes
+        required_scopes = {"https://www.googleapis.com/auth/drive.file"}
+        granted_scopes = set(credentials.scopes or [])
+        
+        if not required_scopes.issubset(granted_scopes):
+            missing = required_scopes - granted_scopes
+            raise HTTPException(
+                status_code=400,
+                detail=f"Missing required Drive scopes: {', '.join(missing)}"
+            )
+        
+        # Store credentials
+        await db.drive_credentials.update_one(
+            {"user_id": state},
+            {"$set": {
+                "user_id": state,
+                "access_token": credentials.token,
+                "refresh_token": credentials.refresh_token,
+                "token_uri": credentials.token_uri,
+                "client_id": credentials.client_id,
+                "client_secret": credentials.client_secret,
+                "scopes": credentials.scopes,
+                "expiry": credentials.expiry.isoformat() if credentials.expiry else None,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+        
+        logger.info(f"Drive credentials stored for user {state}")
+        
+        # Redirect to frontend
+        frontend_url = config.get("frontend_url", "")
+        return {"message": "Google Drive connected successfully", "redirect": f"{frontend_url}/integracoes?drive_connected=true"}
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Drive OAuth callback failed: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@api_router.get("/storage/drive/status")
+async def get_drive_status(current_user: Dict = Depends(get_current_user)):
+    """Check if user has connected Google Drive"""
+    try:
+        creds = await db.drive_credentials.find_one({"user_id": current_user["id"]})
+        
+        if not creds:
+            return {"connected": False}
+        
+        # Get storage usage
+        from services.storage_service import StorageService
+        storage_service = StorageService(db)
+        
+        usage = await storage_service.get_storage_usage(current_user["id"])
+        
+        return {
+            "connected": True,
+            "storage_usage": usage
+        }
+    
+    except Exception as e:
+        logger.error(f"Error checking Drive status: {e}")
+        return {"connected": False, "error": str(e)}
+
+
+@api_router.post("/storage/drive/upload")
+async def upload_to_drive(
+    entity_type: str,
+    entity_id: str,
+    subfolder: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload file to Google Drive"""
+    try:
+        from services.storage_service import StorageService
+        
+        storage_service = StorageService(db)
+        
+        # Create folder structure if needed
+        folders = await storage_service.create_folder_structure(
+            user_id=current_user["id"],
+            entity_type=entity_type,
+            entity_id=entity_id
+        )
+        
+        # Determine target folder
+        folder_id = folders.get(subfolder)
+        if not folder_id:
+            raise HTTPException(status_code=400, detail=f"Invalid subfolder: {subfolder}")
+        
+        # Read file content
+        file_content = await file.read()
+        
+        # Upload file
+        result = await storage_service.upload_file(
+            user_id=current_user["id"],
+            file_content=file_content,
+            file_name=file.filename,
+            folder_id=folder_id,
+            mime_type=file.content_type or 'application/octet-stream'
+        )
+        
+        if result.get("success"):
+            # Save file reference in database
+            await db.drive_files.insert_one({
+                "user_id": current_user["id"],
+                "entity_type": entity_type,
+                "entity_id": entity_id,
+                "subfolder": subfolder,
+                "file_id": result["file_id"],
+                "file_name": result["file_name"],
+                "web_view_link": result.get("web_view_link"),
+                "uploaded_at": datetime.now(timezone.utc).isoformat()
+            })
+        
+        return result
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading to Drive: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/storage/drive/files/{entity_type}/{entity_id}")
+async def list_drive_files(
+    entity_type: str,
+    entity_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """List files for an entity"""
+    try:
+        files = await db.drive_files.find({
+            "user_id": current_user["id"],
+            "entity_type": entity_type,
+            "entity_id": entity_id
+        }, {"_id": 0}).sort("uploaded_at", -1).to_list(100)
+        
+        return files
+    
+    except Exception as e:
+        logger.error(f"Error listing Drive files: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.post("/configuracoes/storage/google-drive")
+async def save_drive_config(
+    config_data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Save Google Drive configuration (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can configure storage")
+    
+    try:
+        config = {
+            "tipo": "storage_google_drive",
+            "client_id": config_data.get("client_id"),
+            "client_secret": config_data.get("client_secret"),
+            "redirect_uri": config_data.get("redirect_uri"),
+            "frontend_url": config_data.get("frontend_url"),
+            "enabled": config_data.get("enabled", False),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_by": current_user["id"]
+        }
+        
+        await db.configuracoes_sistema.update_one(
+            {"tipo": "storage_google_drive"},
+            {"$set": config},
+            upsert=True
+        )
+        
+        logger.info(f"Google Drive configuration saved by {current_user['email']}")
+        return {"message": "Google Drive configuration saved successfully"}
+        
+    except Exception as e:
+        logger.error(f"Error saving Drive config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@api_router.get("/configuracoes/storage/google-drive")
+async def get_drive_config(current_user: Dict = Depends(get_current_user)):
+    """Get Google Drive configuration (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Only admins can view storage config")
+    
+    try:
+        config = await db.configuracoes_sistema.find_one(
+            {"tipo": "storage_google_drive"},
+            {"_id": 0}
+        )
+        
+        if not config:
+            return {
+                "client_id": "",
+                "client_secret": "",
+                "redirect_uri": "",
+                "frontend_url": "",
+                "enabled": False
+            }
+        
+        return config
+        
+    except Exception as e:
+        logger.error(f"Error fetching Drive config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
         raise HTTPException(status_code=403, detail="Not authorized")
     
     try:
