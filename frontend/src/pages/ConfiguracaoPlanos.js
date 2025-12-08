@@ -218,11 +218,11 @@ const ConfiguracaoPlanos = ({ user, onLogout }) => {
           </div>
         ) : (
           <div className="space-y-8">
-            {['motorista', 'parceiro', 'gestao'].map(tipo => (
+            {['motorista', 'parceiro'].map(tipo => (
               <div key={tipo}>
                 <h2 className="text-xl font-bold mb-4 capitalize flex items-center">
                   <Package className="w-5 h-5 mr-2 text-blue-600" />
-                  Planos para {tipo === 'gestao' ? 'Gestão' : tipo === 'motorista' ? 'Motoristas' : 'Parceiros'}
+                  Planos para {tipo === 'motorista' ? 'Motoristas' : 'Parceiros'}
                   <Badge className="ml-3">{planosPorTipo[tipo].length}</Badge>
                 </h2>
                 
