@@ -162,5 +162,40 @@ MODULOS_SISTEMA = {
         "nome": "Avisos de Revisões",
         "descricao": "Alertas de veículos próximos da revisão",
         "ordem": 23
+    },
+    "dashboard_ganhos": {
+        "nome": "Dashboard de Ganhos",
+        "descricao": "Visualização detalhada de ganhos e estatísticas (Motorista)",
+        "ordem": 24
+    },
+    "gestao_documentos_pessoais": {
+        "nome": "Gestão de Documentos Pessoais",
+        "descricao": "Upload e gestão de documentos pessoais (Motorista)",
+        "ordem": 25
+    },
+    "envio_recibos": {
+        "nome": "Envio de Recibos",
+        "descricao": "Enviar recibos de ganhos para aprovação (Motorista)",
+        "ordem": 26
+    },
+    "relatorios_performance": {
+        "nome": "Relatórios de Performance",
+        "descricao": "Relatórios detalhados de performance e produtividade (Motorista)",
+        "ordem": 27
+    },
+    "alertas_personalizados": {
+        "nome": "Alertas Personalizados",
+        "descricao": "Sistema de alertas customizados (Motorista)",
+        "ordem": 28
+    },
+    "historico_financeiro": {
+        "nome": "Histórico Financeiro",
+        "descricao": "Acesso completo ao histórico financeiro (Motorista)",
+        "ordem": 29
+    },
+    "suporte_prioritario": {
+        "nome": "Suporte Prioritário",
+        "descricao": "Atendimento prioritário e suporte dedicado",
+        "ordem": 30
     }
 }
