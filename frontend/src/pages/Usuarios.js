@@ -1150,11 +1150,15 @@ const Usuarios = ({ user, onLogout }) => {
                   </Select>
                 </div>
 
-                {selectedPlanoId && planos.find(p => p.id === selectedPlanoId) && (
+                {selectedPlanoId && (() => {
+                  const planosArray = selectedUser.role === 'motorista' ? planos.motorista : planos.parceiro;
+                  return planosArray.find(p => p.id === selectedPlanoId);
+                })() && (
                   <div className="bg-slate-50 p-3 rounded">
                     <p className="text-sm font-semibold text-slate-700 mb-2">Resumo do Plano:</p>
                     {(() => {
-                      const plano = planos.find(p => p.id === selectedPlanoId);
+                      const planosArray = selectedUser.role === 'motorista' ? planos.motorista : planos.parceiro;
+                      const plano = planosArray.find(p => p.id === selectedPlanoId);
                       const precoSemanal = plano.preco_semanal || 0;
                       const precoMensal = plano.preco_mensal || 0;
                       const desconto = plano.desconto_mensal_percentagem || 0;
