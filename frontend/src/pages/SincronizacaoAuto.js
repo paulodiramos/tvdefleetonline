@@ -24,6 +24,13 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
   const [selectedPlatform, setSelectedPlatform] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   
+  // Dashboard stats for parceiro
+  const [dashboardStats, setDashboardStats] = useState({
+    ganhos: 0,
+    despesas: 0,
+    saldo: 0
+  });
+  
   const [configForm, setConfigForm] = useState({
     plataforma: '',
     email: '',
