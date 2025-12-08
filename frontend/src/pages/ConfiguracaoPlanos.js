@@ -162,11 +162,15 @@ const ConfiguracaoPlanos = ({ user, onLogout }) => {
       nome: plano.nome,
       descricao: plano.descricao,
       preco_mensal: plano.preco_mensal,
+      taxa_iva: plano.taxa_iva || 23,
       tipo_usuario: plano.tipo_usuario,
       modulos: plano.modulos || [],
       ativo: plano.ativo,
       permite_trial: plano.permite_trial || false,
-      dias_trial: plano.dias_trial || 30
+      dias_trial: plano.dias_trial || 30,
+      desconto_promocao: plano.desconto_promocao || 0,
+      data_inicio_promocao: plano.data_inicio_promocao || '',
+      data_fim_promocao: plano.data_fim_promocao || ''
     });
     setShowModal(true);
   };
