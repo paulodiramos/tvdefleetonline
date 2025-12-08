@@ -975,6 +975,9 @@ class User(UserBase):
     associated_partner_id: Optional[str] = None
     associated_gestor_id: Optional[str] = None
     subscription_id: Optional[str] = None  # ID da subscrição ativa
+    plano_id: Optional[str] = None  # ID do plano no sistema unificado
+    plano_nome: Optional[str] = None  # Nome do plano
+    plano_valida_ate: Optional[str] = None  # Data de validade do plano
     plano_manutencao_ativo: bool = False  # Plano adicional para editar manutenções (Operacional)
     plano_alertas_ativo: bool = False  # Plano adicional para editar alertas (Operacional)
     campos_customizados: Dict[str, Any] = {}  # Campos adicionais customizáveis
