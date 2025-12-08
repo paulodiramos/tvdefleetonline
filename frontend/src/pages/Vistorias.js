@@ -262,6 +262,7 @@ const Vistorias = ({ user, onLogout }) => {
       // Reset form
       setVistoriaForm({
         veiculo_id: '',
+        parceiro_id: '',
         data_vistoria: new Date().toISOString().split('T')[0],
         tipo: 'periodica',
         km_veiculo: '',
