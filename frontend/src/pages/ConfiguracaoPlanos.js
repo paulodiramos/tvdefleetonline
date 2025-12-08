@@ -383,16 +383,33 @@ const ConfiguracaoPlanos = ({ user, onLogout }) => {
 
                 <div className="bg-blue-50 border border-blue-200 p-3 rounded">
                   <p className="text-sm font-medium text-blue-900">Cálculo de Preços:</p>
-                  <div className="mt-2 space-y-1 text-sm">
-                    <p className="text-blue-800">
-                      <strong>Sem IVA:</strong> €{planoForm.preco_mensal.toFixed(2)}/mês
-                    </p>
-                    <p className="text-blue-800">
-                      <strong>IVA ({planoForm.taxa_iva}%):</strong> €{(planoForm.preco_mensal * planoForm.taxa_iva / 100).toFixed(2)}
-                    </p>
-                    <p className="text-lg font-bold text-blue-900">
-                      <strong>Com IVA:</strong> €{(planoForm.preco_mensal * (1 + planoForm.taxa_iva / 100)).toFixed(2)}/mês
-                    </p>
+                  <div className="mt-2 space-y-2 text-sm">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="font-semibold text-blue-900">Mensal:</p>
+                        <p className="text-blue-800">
+                          Sem IVA: €{planoForm.preco_mensal.toFixed(2)}
+                        </p>
+                        <p className="text-blue-800">
+                          IVA ({planoForm.taxa_iva}%): €{(planoForm.preco_mensal * planoForm.taxa_iva / 100).toFixed(2)}
+                        </p>
+                        <p className="text-lg font-bold text-blue-900">
+                          Com IVA: €{(planoForm.preco_mensal * (1 + planoForm.taxa_iva / 100)).toFixed(2)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="font-semibold text-blue-900">Semanal:</p>
+                        <p className="text-blue-800">
+                          Sem IVA: €{(planoForm.preco_mensal / 4.33).toFixed(2)}
+                        </p>
+                        <p className="text-blue-800">
+                          IVA ({planoForm.taxa_iva}%): €{(planoForm.preco_mensal / 4.33 * planoForm.taxa_iva / 100).toFixed(2)}
+                        </p>
+                        <p className="text-lg font-bold text-blue-900">
+                          Com IVA: €{(planoForm.preco_mensal * (1 + planoForm.taxa_iva / 100) / 4.33).toFixed(2)}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
