@@ -157,19 +157,15 @@ const Motoristas = ({ user, onLogout }) => {
       toast.success('Plano atribuído com sucesso!');
       setShowEscolherPlanoDialog(false);
       setPlanoSelecionado(null);
-      fetchMotoristas();
       
-      // Update selected motorista
-      const updatedMotorista = {
-        ...selectedMotorista,
-        plano_id: planoSelecionado.id,
-        plano_nome: planoSelecionado.nome,
-        plano_features: {
-          features: planoSelecionado.features,
-          preco_mensal: planoSelecionado.preco_mensal
-        }
-      };
-      setSelectedMotorista(updatedMotorista);
+      // Refresh motorista details to show updated plan
+      const response = await axios.get(`${API}/motoristas/${selectedMotorista.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSelectedMotorista(response.data);
+      
+      // Refresh list
+      fetchMotoristas();
     } catch (error) {
       console.error('Error assigning plan:', error);
       toast.error('Erro ao atribuir plano');
