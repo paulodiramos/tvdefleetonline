@@ -6633,20 +6633,44 @@ async def criar_plano(plano_data: Dict[str, Any], current_user: Dict = Depends(g
     plano_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc)
     
+    # Estrutura de preços por periodicidade
+    precos = {
+        "semanal": {
+            "preco_sem_iva": plano_data.get("preco_semanal_sem_iva", 0),
+            "preco_com_iva": plano_data.get("preco_semanal_com_iva", 0),
+            "desconto_percentual": plano_data.get("desconto_semanal", 0)
+        },
+        "mensal": {
+            "preco_sem_iva": plano_data.get("preco_mensal_sem_iva", 0),
+            "preco_com_iva": plano_data.get("preco_mensal_com_iva", 0),
+            "desconto_percentual": plano_data.get("desconto_mensal", 0)
+        },
+        "trimestral": {
+            "preco_sem_iva": plano_data.get("preco_trimestral_sem_iva", 0),
+            "preco_com_iva": plano_data.get("preco_trimestral_com_iva", 0),
+            "desconto_percentual": plano_data.get("desconto_trimestral", 0)
+        },
+        "semestral": {
+            "preco_sem_iva": plano_data.get("preco_semestral_sem_iva", 0),
+            "preco_com_iva": plano_data.get("preco_semestral_com_iva", 0),
+            "desconto_percentual": plano_data.get("desconto_semestral", 0)
+        },
+        "anual": {
+            "preco_sem_iva": plano_data.get("preco_anual_sem_iva", 0),
+            "preco_com_iva": plano_data.get("preco_anual_com_iva", 0),
+            "desconto_percentual": plano_data.get("desconto_anual", 0)
+        }
+    }
+    
     plano = {
         "id": plano_id,
         "nome": plano_data["nome"],
         "descricao": plano_data.get("descricao"),
         "modulos": plano_data.get("modulos", []),
-        "preco": plano_data.get("preco", 0),
-        "periodicidade": plano_data.get("periodicidade", "mensal"),
         "tipo_cobranca": plano_data.get("tipo_cobranca", "por_veiculo"),
         "limite_veiculos": plano_data.get("limite_veiculos"),
-        "limite_motoristas": plano_data.get("limite_motoristas"),
-        "tipo_pagamento": plano_data.get("tipo_pagamento", "mensal"),
-        "preco_mensal": plano_data.get("preco_mensal"),
-        "preco_anual": plano_data.get("preco_anual"),
-        "preco_vitalicio": plano_data.get("preco_vitalicio"),
+        "precos": precos,
+        "taxa_iva": plano_data.get("taxa_iva", 23),
         "tipo_usuario": plano_data.get("tipo_usuario", "parceiro"),
         "ativo": plano_data.get("ativo", True),
         "destaque": plano_data.get("destaque", False),
