@@ -427,6 +427,42 @@ const Vistorias = ({ user, onLogout }) => {
           </div>
         </div>
 
+        {/* Vistorias Agendadas */}
+        {vistoriasAgendadas.length > 0 && (
+          <Card className="mb-6 bg-amber-50 border-amber-200">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center space-x-2">
+                <Calendar className="w-5 h-5 text-amber-600" />
+                <span>Vistorias Agendadas ({vistoriasAgendadas.length})</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {vistoriasAgendadas.map((agenda) => (
+                  <div key={agenda.id} className="flex items-center justify-between bg-white rounded-lg p-3 border border-amber-200">
+                    <div className="flex items-center space-x-4">
+                      <div className="bg-amber-100 rounded p-2">
+                        <Car className="w-4 h-4 text-amber-700" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-800">{agenda.matricula}</p>
+                        <p className="text-sm text-slate-600">
+                          {agenda.tipo_vistoria?.charAt(0).toUpperCase() + agenda.tipo_vistoria?.slice(1)} - {' '}
+                          {new Date(agenda.data_agendada).toLocaleDateString('pt-PT')}
+                        </p>
+                        {agenda.notas && (
+                          <p className="text-xs text-slate-500 mt-1">{agenda.notas}</p>
+                        )}
+                      </div>
+                    </div>
+                    <Badge className="bg-amber-100 text-amber-800">Agendada</Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Filtros */}
         <Card className="mb-6">
           <CardHeader>
