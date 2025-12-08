@@ -11413,6 +11413,9 @@ async def criar_relatorio_ganhos(relatorio_data: RelatorioGanhosCreate, current_
             "pago_por": None,
             "pago_em": None,
             "comprovativo_pagamento_url": None,
+            "moloni_invoice_id": None,
+            "moloni_invoice_status": None,
+            "moloni_invoice_error": None,
             "created_by": current_user["id"],
             "created_at": datetime.now(timezone.utc).isoformat(),
             "updated_at": datetime.now(timezone.utc).isoformat()
@@ -11420,7 +11423,76 @@ async def criar_relatorio_ganhos(relatorio_data: RelatorioGanhosCreate, current_
         
         await db.relatorios_ganhos.insert_one(relatorio)
         
-        return {"message": "Earnings report created successfully", "relatorio_id": relatorio_id}
+        # Try to auto-generate Moloni invoice if enabled
+        moloni_result = None
+        try:
+            from services.moloni_service import MoloniService
+            moloni_service = MoloniService(db)
+            
+            moloni_result = await moloni_service.create_invoice_for_report(
+                motorista_id=relatorio_data.motorista_id,
+                relatorio_id=relatorio_id,
+                valor_total=relatorio_data.valor_total,
+                periodo_inicio=relatorio_data.periodo_inicio,
+                periodo_fim=relatorio_data.periodo_fim
+            )
+            
+            # Update relatorio with Moloni result
+            if moloni_result.get("success"):
+                await db.relatorios_ganhos.update_one(
+                    {"id": relatorio_id},
+                    {
+                        "$set": {
+                            "moloni_invoice_id": moloni_result.get("moloni_invoice_id"),
+                            "moloni_invoice_status": "created",
+                            "updated_at": datetime.now(timezone.utc).isoformat()
+                        }
+                    }
+                )
+                logger.info(f"Moloni invoice created for report {relatorio_id}: {moloni_result.get('moloni_invoice_id')}")
+            else:
+                # Log error but don't fail the report creation
+                await db.relatorios_ganhos.update_one(
+                    {"id": relatorio_id},
+                    {
+                        "$set": {
+                            "moloni_invoice_status": "failed",
+                            "moloni_invoice_error": moloni_result.get("error"),
+                            "updated_at": datetime.now(timezone.utc).isoformat()
+                        }
+                    }
+                )
+                logger.warning(f"Moloni invoice creation failed for report {relatorio_id}: {moloni_result.get('error')}")
+            
+            await moloni_service.close()
+            
+        except Exception as moloni_error:
+            logger.error(f"Error during Moloni invoice creation: {moloni_error}")
+            # Continue - don't fail report creation if Moloni fails
+            await db.relatorios_ganhos.update_one(
+                {"id": relatorio_id},
+                {
+                    "$set": {
+                        "moloni_invoice_status": "error",
+                        "moloni_invoice_error": str(moloni_error),
+                        "updated_at": datetime.now(timezone.utc).isoformat()
+                    }
+                }
+            )
+        
+        response_data = {
+            "message": "Earnings report created successfully",
+            "relatorio_id": relatorio_id
+        }
+        
+        if moloni_result and moloni_result.get("success"):
+            response_data["moloni_invoice_created"] = True
+            response_data["moloni_invoice_id"] = moloni_result.get("moloni_invoice_id")
+        elif moloni_result:
+            response_data["moloni_invoice_created"] = False
+            response_data["moloni_error"] = moloni_result.get("error")
+        
+        return response_data
         
     except HTTPException:
         raise
