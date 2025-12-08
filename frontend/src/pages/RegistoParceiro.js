@@ -55,8 +55,33 @@ const RegistoParceiro = () => {
     });
   };
 
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'application/pdf'];
+      if (!validTypes.includes(file.type)) {
+        toast.error('Formato inválido. Use PDF ou imagens (JPG, PNG, WEBP)');
+        return;
+      }
+      
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('Arquivo muito grande. Máximo 10MB');
+        return;
+      }
+      
+      setCertidaoComercial(file);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validar certidão comercial
+    if (!certidaoComercial) {
+      toast.error('Por favor, carregue a Certidão Comercial');
+      return;
+    }
+    
     setLoading(true);
 
     try {
@@ -70,7 +95,8 @@ const RegistoParceiro = () => {
         approved: false
       };
 
-      await axios.post(`${API}/auth/register`, userData);
+      const registerResponse = await axios.post(`${API}/auth/register`, userData);
+      const userId = registerResponse.data.user_id || registerResponse.data.id;
 
       // Validate codigo_certidao_comercial format
       if (!/^\d{4}-\d{4}-\d{4}$/.test(formData.codigo_certidao_comercial)) {
@@ -97,8 +123,23 @@ const RegistoParceiro = () => {
 
       await axios.post(`${API}/parceiros/register-public`, parceiroData);
       
+      // Upload certidão comercial
+      const token = localStorage.getItem('token');
+      const uploadForm = new FormData();
+      uploadForm.append('file', certidaoComercial);
+      uploadForm.append('tipo_documento', 'certidao_comercial');
+      uploadForm.append('user_id', userId);
+      uploadForm.append('role', 'parceiro');
+      
+      await axios.post(`${API}/api/documentos/upload`, uploadForm, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: token ? `Bearer ${token}` : ''
+        }
+      });
+      
       setSuccess(true);
-      toast.success('Registo enviado com sucesso!');
+      toast.success('Registo e documentos enviados com sucesso!');
     } catch (error) {
       console.error('Erro no registo:', error);
       toast.error(error.response?.data?.detail || 'Erro ao registar. Tente novamente.');
