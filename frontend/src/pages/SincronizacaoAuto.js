@@ -234,6 +234,80 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
           </Card>
         )}
 
+        {/* Dashboard de Ganhos/Despesas - Para Parceiro */}
+        {user.role === 'parceiro' && selectedParceiro && (
+          <Card className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <span className="text-lg">Dashboard de Sincronização</span>
+                <Button
+                  onClick={() => handleSincronizarManual()}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={syncing['manual']}
+                >
+                  {syncing['manual'] ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      A sincronizar...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Sincronizar Agora
+                    </>
+                  )}
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Total Ganhos */}
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-slate-600">Total Ganhos</span>
+                    <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                      <span className="text-green-600 text-lg">€</span>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-slate-800">€0.00</p>
+                  <p className="text-xs text-slate-500 mt-1">Esta semana</p>
+                </div>
+
+                {/* Total Despesas */}
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-slate-600">Total Despesas</span>
+                    <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                      <span className="text-red-600 text-lg">€</span>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-slate-800">€0.00</p>
+                  <p className="text-xs text-slate-500 mt-1">Esta semana</p>
+                </div>
+
+                {/* Saldo */}
+                <div className="bg-white rounded-lg p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm text-slate-600">Saldo</span>
+                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                      <span className="text-blue-600 text-lg">€</span>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-blue-600">€0.00</p>
+                  <p className="text-xs text-slate-500 mt-1">Esta semana</p>
+                </div>
+              </div>
+
+              {/* Info sobre dados semanais */}
+              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800">
+                  ℹ️ Os dados são guardados semanalmente. Use o botão "Sincronizar Agora" para atualizar com os dados mais recentes das plataformas.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Grid de Plataformas */}
         {!selectedParceiro ? (
           <Card>
