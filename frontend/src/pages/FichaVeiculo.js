@@ -2460,14 +2460,6 @@ const FichaVeiculo = ({ user, onLogout }) => {
                           </Button>
                         )}
 
-                        {!canEditPlanoManutencao && user.role === 'operacional' && (
-                          <div className="mt-4 p-3 bg-orange-100 border border-orange-300 rounded-lg">
-                            <p className="text-sm text-orange-800">
-                              ⚠️ Você precisa do <strong>Plano de Manutenção</strong> ativo para editar estas configurações. Contacte o administrador.
-                            </p>
-                          </div>
-                        )}
-
                         {canEditPlanoManutencao && editMode && (
                           <div className="mt-4 space-y-3">
                             <div>
