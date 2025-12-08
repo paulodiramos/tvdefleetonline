@@ -42,6 +42,7 @@ const ConfiguracaoComunicacoes = ({ user, onLogout }) => {
   
   const [emailStatus, setEmailStatus] = useState(null);
   const [whatsappStatus, setWhatsappStatus] = useState(null);
+  const [showSmtpPassword, setShowSmtpPassword] = useState(false);
 
   useEffect(() => {
     fetchConfigurations();
