@@ -433,9 +433,16 @@ const Vistorias = ({ user, onLogout }) => {
               <Card key={vistoria.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
-                    <span className="text-base">
-                      {vistoria.tipo?.charAt(0).toUpperCase() + vistoria.tipo?.slice(1) || 'Vistoria'}
-                    </span>
+                    <div className="flex-1">
+                      <span className="text-base block">
+                        {vistoria.tipo?.charAt(0).toUpperCase() + vistoria.tipo?.slice(1) || 'Vistoria'}
+                      </span>
+                      {vistoria.veiculo && (
+                        <span className="text-xs text-slate-500 font-normal">
+                          {vistoria.veiculo.matricula}
+                        </span>
+                      )}
+                    </div>
                     {getEstadoBadge(vistoria.estado_geral)}
                   </CardTitle>
                 </CardHeader>
