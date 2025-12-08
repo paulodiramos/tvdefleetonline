@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Truck, LayoutDashboard, Car, Users, DollarSign, LogOut, Menu, X, Building, UserCircle, FileText, CreditCard, Upload, Settings, Database, Shield, ChevronDown, Zap, TrendingUp, Package, Receipt, MessageSquare, Plug, Bell, ClipboardCheck } from 'lucide-react';
+import { Truck, LayoutDashboard, Car, Users, DollarSign, LogOut, Menu, X, Building, UserCircle, FileText, CreditCard, Upload, Settings, Database, Shield, ChevronDown, Zap, TrendingUp, Package, Receipt, MessageSquare, Plug, Bell, ClipboardCheck, Mail } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import {
   DropdownMenu,
