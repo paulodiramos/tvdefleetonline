@@ -13597,6 +13597,64 @@ async def send_notification(
     except Exception as e:
         logger.error(f"Error sending notification: {e}")
 
+@api_router.get("/termos-conteudo")
+async def get_termos_conteudo():
+    """Get Terms & Conditions content"""
+    doc = await db.configuracoes.find_one({"tipo": "termos"}, {"_id": 0})
+    if not doc:
+        return {"conteudo": "", "updated_at": None}
+    return {"conteudo": doc.get("conteudo", ""), "updated_at": doc.get("updated_at")}
+
+@api_router.put("/termos-conteudo")
+async def update_termos_conteudo(data: Dict[str, Any], current_user: Dict = Depends(get_current_user)):
+    """Update Terms & Conditions (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    update_doc = {
+        "tipo": "termos",
+        "conteudo": data.get("conteudo", ""),
+        "updated_at": datetime.now(timezone.utc),
+        "updated_by": current_user["id"]
+    }
+    
+    await db.configuracoes.update_one(
+        {"tipo": "termos"},
+        {"$set": update_doc},
+        upsert=True
+    )
+    
+    return {"message": "Termos atualizados com sucesso"}
+
+@api_router.get("/privacidade-conteudo")
+async def get_privacidade_conteudo():
+    """Get Privacy Policy content"""
+    doc = await db.configuracoes.find_one({"tipo": "privacidade"}, {"_id": 0})
+    if not doc:
+        return {"conteudo": "", "updated_at": None}
+    return {"conteudo": doc.get("conteudo", ""), "updated_at": doc.get("updated_at")}
+
+@api_router.put("/privacidade-conteudo")
+async def update_privacidade_conteudo(data: Dict[str, Any], current_user: Dict = Depends(get_current_user)):
+    """Update Privacy Policy (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    update_doc = {
+        "tipo": "privacidade",
+        "conteudo": data.get("conteudo", ""),
+        "updated_at": datetime.now(timezone.utc),
+        "updated_by": current_user["id"]
+    }
+    
+    await db.configuracoes.update_one(
+        {"tipo": "privacidade"},
+        {"$set": update_doc},
+        upsert=True
+    )
+    
+    return {"message": "Política de Privacidade atualizada com sucesso"}
+
 @api_router.delete("/notificacoes/{notificacao_id}")
 async def delete_notificacao(notificacao_id: str, current_user: Dict = Depends(get_current_user)):
     """Delete a notification"""
