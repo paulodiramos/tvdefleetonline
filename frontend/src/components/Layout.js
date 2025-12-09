@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import Notificacoes from './Notificacoes';
+import CriarTemplateModal from './CriarTemplateModal';
 import {
   DropdownMenu,
   DropdownMenuContent,
