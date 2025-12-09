@@ -15,7 +15,9 @@ const ListaContratos = ({ user, onLogout, showLayout = true }) => {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     status: 'all',
-    search: ''
+    search: '',
+    tipoContrato: 'all',
+    periodo: 'all' // ultimos_30_dias, ultimos_90_dias, este_ano, all
   });
 
   useEffect(() => {
