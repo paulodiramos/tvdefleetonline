@@ -14238,6 +14238,103 @@ async def enviar_relatorio_pagamento(
     
     return {"message": "Report sent successfully"}
 
+@api_router.get("/recibos/{recibo_id}/pdf")
+async def get_recibo_pdf(recibo_id: str):
+    """Get receipt PDF (example/mock)"""
+    recibo = await db.recibos.find_one({"id": recibo_id}, {"_id": 0})
+    if not recibo:
+        raise HTTPException(status_code=404, detail="Receipt not found")
+    
+    # HTML de exemplo do recibo
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body {{ font-family: Arial, sans-serif; margin: 40px; }}
+            .header {{ text-align: center; margin-bottom: 40px; }}
+            .header h1 {{ color: #1e40af; margin: 0; }}
+            .info-box {{ background: #f1f5f9; padding: 20px; border-radius: 8px; margin: 20px 0; }}
+            .info-row {{ display: flex; justify-content: space-between; margin: 10px 0; }}
+            .label {{ font-weight: bold; color: #475569; }}
+            .value {{ color: #0f172a; }}
+            .total {{ font-size: 24px; font-weight: bold; color: #10b981; text-align: right; margin-top: 30px; }}
+            .footer {{ margin-top: 50px; text-align: center; color: #64748b; font-size: 12px; }}
+            table {{ width: 100%; border-collapse: collapse; margin: 20px 0; }}
+            th, td {{ border: 1px solid #e2e8f0; padding: 12px; text-align: left; }}
+            th {{ background: #f8fafc; font-weight: bold; }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>🚗 TVDEFleet</h1>
+            <p>Relatório Semanal de Ganhos e Despesas</p>
+        </div>
+        
+        <div class="info-box">
+            <div class="info-row">
+                <span class="label">Recibo Nº:</span>
+                <span class="value">{recibo.get('numero_recibo', 'N/A')}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Data de Emissão:</span>
+                <span class="value">{datetime.fromisoformat(recibo['data_emissao']).strftime('%d/%m/%Y')}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Período:</span>
+                <span class="value">{recibo.get('periodo', 'N/A')}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Parceiro:</span>
+                <span class="value">{recibo.get('parceiro_nome', 'N/A')}</span>
+            </div>
+        </div>
+        
+        <h3>Resumo Financeiro</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Descrição</th>
+                    <th style="text-align: right;">Valor (€)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Ganhos Brutos</td>
+                    <td style="text-align: right;">{recibo.get('valor', 0) + 50:.2f}</td>
+                </tr>
+                <tr>
+                    <td>Comissões Plataforma</td>
+                    <td style="text-align: right; color: red;">-30.00</td>
+                </tr>
+                <tr>
+                    <td>Combustível</td>
+                    <td style="text-align: right; color: red;">-20.00</td>
+                </tr>
+                <tr style="background: #f8fafc; font-weight: bold;">
+                    <td>Total Líquido</td>
+                    <td style="text-align: right; color: #10b981;">{recibo.get('valor', 0):.2f}</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="total">
+            Total a Receber: €{recibo.get('valor', 0):.2f}
+        </div>
+        
+        <div class="footer">
+            <p>Este documento foi gerado automaticamente pelo sistema TVDEFleet</p>
+            <p>Para questões, contacte: suporte@tvdefleet.com</p>
+            <p>Data de geração: {datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M')}</p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse(content=html_content)
+
 @api_router.delete("/notificacoes/{notificacao_id}")
 async def delete_notificacao(notificacao_id: str, current_user: Dict = Depends(get_current_user)):
     """Delete a notification"""
