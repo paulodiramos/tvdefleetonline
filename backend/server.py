@@ -8671,18 +8671,27 @@ async def atribuir_plano_parceiro(
         # Fallback para formato antigo
         valor_pago = plano.get("valor_mensal", 0)
     
-    # Update parceiro
+    # Update parceiro - try both users and parceiros collections
+    update_doc = {
+        "plano_id": plano_id,
+        "plano_status": "ativo",
+        "periodicidade": periodicidade,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
     result = await db.users.update_one(
         {"id": parceiro_id, "role": "parceiro"},
-        {"$set": {
-            "plano_id": plano_id,
-            "plano_status": "ativo",
-            "periodicidade": periodicidade,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
+        {"$set": update_doc}
     )
     
-    if result.modified_count == 0:
+    # If not found in users, try parceiros collection
+    if result.matched_count == 0:
+        result = await db.parceiros.update_one(
+            {"id": parceiro_id},
+            {"$set": update_doc}
+        )
+    
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Parceiro not found")
     
     # Criar/atualizar registro em planos_usuarios para controle de módulos
