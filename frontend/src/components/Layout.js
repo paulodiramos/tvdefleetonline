@@ -104,6 +104,7 @@ const Layout = ({ children, user, onLogout }) => {
         icon: TrendingUp,
         submenu: [
           { path: '/criar-relatorio-semanal', label: 'Criar Relatório' },
+          { path: '/relatorios-semanais', label: 'Relatórios Semanais' },
           { path: '/sincronizacao-auto', label: 'Sync Auto' },
           { path: '/upload-csv', label: 'Upload CSV' }
         ]
