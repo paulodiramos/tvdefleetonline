@@ -48,6 +48,18 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
     }
   };
 
+  const fetchParceiros = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/parceiros`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setParceiros(response.data);
+    } catch (error) {
+      console.error('Error fetching parceiros:', error);
+    }
+  };
+
   const handleSaveTemplate = async (e) => {
     e.preventDefault();
     
