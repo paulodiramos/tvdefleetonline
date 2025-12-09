@@ -188,15 +188,36 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Tipo de Contrato *</Label>
-                  <Input
-                    value={formData.tipo_contrato}
-                    onChange={(e) => setFormData({ ...formData, tipo_contrato: e.target.value })}
-                    placeholder="Ex: Aluguer, Prestação de Serviços, Parceria"
+                  <div className="flex justify-between items-center">
+                    <Label>Tipo de Contrato *</Label>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowNovoTipoDialog(true)}
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Novo Tipo
+                    </Button>
+                  </div>
+                  <Select 
+                    value={formData.tipo_contrato} 
+                    onValueChange={(value) => setFormData({ ...formData, tipo_contrato: value })}
                     required
-                  />
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione ou crie um tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tiposContrato.map((tipo) => (
+                        <SelectItem key={tipo} value={tipo}>
+                          {tipo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-slate-500">
-                    Defina o tipo de contrato (personalizado). Ex: Aluguer com Caução, Parceria Mensal, etc.
+                    Selecione um tipo existente ou clique em "Novo Tipo" para criar
                   </p>
                 </div>
                 
