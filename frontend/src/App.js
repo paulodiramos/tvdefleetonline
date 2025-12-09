@@ -23,7 +23,7 @@ import MotoristaMensagens from "@/pages/MotoristaMensagens";
 import MotoristaTickets from "@/pages/MotoristaTickets";
 import MotoristaOportunidades from "@/pages/MotoristaOportunidades";
 import CriarRelatorioSemanal from "@/pages/CriarRelatorioSemanal";
-import RelatoriosSemanais from "@/pages/RelatoriosSemanais";
+import RelatoriosSemanais from "@/pages/RelatoriosSemanaisNovo";
 import PagamentosParceiro from "@/pages/PagamentosParceiro";
 import ParceiroReports from "@/pages/ParceiroReports";
 import PerfilParceiro from "@/pages/PerfilParceiro";
