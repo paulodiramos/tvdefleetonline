@@ -30,7 +30,7 @@ const MeuPlanoMotorista = ({ user, onLogout }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/motoristas/meu-plano`, {
+      const response = await axios.get(`${API}/motorista/meu-plano`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPlanoData(response.data);
