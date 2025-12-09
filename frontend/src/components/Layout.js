@@ -21,6 +21,7 @@ const Layout = ({ children, user, onLogout }) => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificacoesOpen, setNotificacoesOpen] = useState(false);
+  const [criarTemplateOpen, setCriarTemplateOpen] = useState(false);
 
   const getNavItems = () => {
     if (!user) return [];
