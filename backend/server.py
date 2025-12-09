@@ -8434,11 +8434,17 @@ async def atribuir_plano_motorista(
     await db.planos_usuarios.delete_many({"user_id": motorista_id})
     
     # Criar nova atribuição
+    # Support both old 'features' and new 'modulos' field
+    modulos_ativos = plano.get("modulos", [])
+    if not modulos_ativos and plano.get("features"):
+        # Fallback to features for old plans
+        modulos_ativos = plano.get("features", [])
+    
     atribuicao = {
         "id": atribuicao_id,
         "user_id": motorista_id,
         "plano_id": plano_id,
-        "modulos_ativos": plano.get("modulos", []),
+        "modulos_ativos": modulos_ativos,
         "tipo_pagamento": "mensal",
         "valor_pago": plano.get("preco", 0),
         "data_inicio": now,
