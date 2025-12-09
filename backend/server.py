@@ -6213,7 +6213,10 @@ async def get_parceiro_alertas(parceiro_id: str, current_user: Dict = Depends(ge
         # Check extinguisher expiry
         if vehicle.get("extintor") and vehicle["extintor"].get("data_validade"):
             try:
-                data_validade_extintor = datetime.strptime(vehicle["extintor"]["data_validade"], "%Y-%m-%d").date()
+                parsed_date = safe_parse_date(vehicle["extintor"]["data_validade"])
+                if not parsed_date:
+                    continue
+                data_validade_extintor = parsed_date.date()
                 dias_restantes = (data_validade_extintor - today).days
                 
                 if 0 <= dias_restantes <= dias_aviso_inspecao:
