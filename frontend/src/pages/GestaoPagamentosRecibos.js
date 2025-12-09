@@ -29,8 +29,7 @@ const GestaoPagamentosRecibos = ({ user, onLogout }) => {
   
   // Filtros
   const [filtrosParceiro, setFiltrosParceiro] = useState('todos');
-  const [filtrosDataInicio, setFiltrosDataInicio] = useState('');
-  const [filtrosDataFim, setFiltrosDataFim] = useState('');
+  const [filtroSemana, setFiltroSemana] = useState('');
   const [filtrosEstado, setFiltrosEstado] = useState('all');
   
   // Modal
