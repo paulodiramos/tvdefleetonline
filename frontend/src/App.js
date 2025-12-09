@@ -527,6 +527,16 @@ function App() {
             }
           />
           <Route
+            path="/relatorios-semanais"
+            element={
+              user && ['admin', 'gestao', 'parceiro'].includes(user.role) ? (
+                <RelatoriosSemanais user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
+            }
+          />
+          <Route
             path="/pagamentos-parceiro"
             element={
               user ? <PagamentosParceiro user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
