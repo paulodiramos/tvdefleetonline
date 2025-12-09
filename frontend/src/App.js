@@ -336,6 +336,12 @@ function App() {
             }
           />
           <Route
+            path="/motorista-ganhos"
+            element={
+              user ? <MotoristaRecibosGanhos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/motorista/envio-recibo"
             element={
               user ? <MotoristaEnvioRecibo user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
