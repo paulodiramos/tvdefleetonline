@@ -340,14 +340,27 @@ const Layout = ({ children, user, onLogout }) => {
                     </div>
                     <div className="ml-6 space-y-1">
                       {item.submenu.map((subItem, subIndex) => (
-                        <Link
-                          key={subIndex}
-                          to={subItem.path}
-                          className="block px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-md"
-                          onClick={() => setMobileMenuOpen(false)}
-                        >
-                          {subItem.label}
-                        </Link>
+                        subItem.action ? (
+                          <button
+                            key={subIndex}
+                            onClick={() => {
+                              subItem.action();
+                              setMobileMenuOpen(false);
+                            }}
+                            className="block w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-md"
+                          >
+                            {subItem.label}
+                          </button>
+                        ) : (
+                          <Link
+                            key={subIndex}
+                            to={subItem.path}
+                            className="block px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-md"
+                            onClick={() => setMobileMenuOpen(false)}
+                          >
+                            {subItem.label}
+                          </Link>
+                        )
                       ))}
                     </div>
                   </div>
