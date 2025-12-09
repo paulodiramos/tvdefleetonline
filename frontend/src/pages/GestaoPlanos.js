@@ -860,6 +860,66 @@ const GestaoPlanos = ({ user, onLogout }) => {
                 </Label>
               </div>
 
+              {/* Seção de Promoções */}
+              <div className="border-t pt-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-slate-900">🎉 Promoção Temporal</h3>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="promocao_ativa"
+                      checked={planoForm.promocao_ativa}
+                      onCheckedChange={(checked) => setPlanoForm({ ...planoForm, promocao_ativa: checked })}
+                    />
+                    <Label htmlFor="promocao_ativa" className="cursor-pointer">
+                      Ativar promoção
+                    </Label>
+                  </div>
+                </div>
+
+                {planoForm.promocao_ativa && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <div>
+                      <Label htmlFor="promocao_data_inicio">Data Início</Label>
+                      <Input
+                        id="promocao_data_inicio"
+                        type="date"
+                        value={planoForm.promocao_data_inicio}
+                        onChange={(e) => setPlanoForm({ ...planoForm, promocao_data_inicio: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="promocao_data_fim">Data Fim</Label>
+                      <Input
+                        id="promocao_data_fim"
+                        type="date"
+                        value={planoForm.promocao_data_fim}
+                        onChange={(e) => setPlanoForm({ ...planoForm, promocao_data_fim: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="promocao_desconto">Desconto (%)</Label>
+                      <Input
+                        id="promocao_desconto"
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={planoForm.promocao_desconto_percentual}
+                        onChange={(e) => setPlanoForm({ ...planoForm, promocao_desconto_percentual: parseFloat(e.target.value) || 0 })}
+                        placeholder="Ex: 20"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div className="col-span-full">
+                      <p className="text-xs text-yellow-800">
+                        <strong>Nota:</strong> Durante o período promocional, o plano será exibido com este desconto adicional aplicado aos preços.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <Button type="button" variant="outline" onClick={handleCloseModal}>
                   <X className="w-4 h-4 mr-2" />
