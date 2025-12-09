@@ -13738,6 +13738,112 @@ async def update_privacidade_conteudo(data: Dict[str, Any], current_user: Dict =
     
     return {"message": "Política de Privacidade atualizada com sucesso"}
 
+# ============================================
+# RELATÓRIOS SEMANAIS
+# ============================================
+
+@api_router.post("/relatorios/gerar-semanal")
+async def gerar_relatorio_semanal(
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Generate weekly report PDF for motorista or parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    usuario_id = data.get("usuario_id")
+    tipo_usuario = data.get("tipo_usuario")  # motorista ou parceiro
+    data_inicio = data.get("data_inicio")
+    data_fim = data.get("data_fim")
+    
+    if not all([usuario_id, tipo_usuario, data_inicio, data_fim]):
+        raise HTTPException(status_code=400, detail="Missing required fields")
+    
+    # TODO: Implement PDF generation
+    # For now, return a placeholder response
+    raise HTTPException(
+        status_code=501,
+        detail="Funcionalidade de geração de PDF em desenvolvimento. Por favor, use a exportação manual por enquanto."
+    )
+
+@api_router.post("/relatorios/enviar-email")
+async def enviar_relatorio_email(
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Send weekly report via email"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    usuario_id = data.get("usuario_id")
+    tipo_usuario = data.get("tipo_usuario")
+    data_inicio = data.get("data_inicio")
+    data_fim = data.get("data_fim")
+    
+    if not all([usuario_id, tipo_usuario, data_inicio, data_fim]):
+        raise HTTPException(status_code=400, detail="Missing required fields")
+    
+    # Get user email
+    collection = db.motoristas if tipo_usuario == "motorista" else db.parceiros
+    usuario = await collection.find_one({"id": usuario_id}, {"_id": 0})
+    
+    if not usuario:
+        # Try users collection
+        usuario = await db.users.find_one({"id": usuario_id}, {"_id": 0})
+    
+    if not usuario:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    email_destino = usuario.get("email")
+    if not email_destino:
+        raise HTTPException(status_code=400, detail="User does not have an email")
+    
+    # TODO: Implement email sending with report attachment
+    # For now, return success message
+    raise HTTPException(
+        status_code=501,
+        detail="Funcionalidade de envio de email em desenvolvimento. Configure a integração de email (SMTP) para utilizar esta funcionalidade."
+    )
+
+@api_router.post("/relatorios/enviar-whatsapp")
+async def enviar_relatorio_whatsapp(
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Send weekly report via WhatsApp"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    usuario_id = data.get("usuario_id")
+    tipo_usuario = data.get("tipo_usuario")
+    data_inicio = data.get("data_inicio")
+    data_fim = data.get("data_fim")
+    
+    if not all([usuario_id, tipo_usuario, data_inicio, data_fim]):
+        raise HTTPException(status_code=400, detail="Missing required fields")
+    
+    # Get user phone
+    collection = db.motoristas if tipo_usuario == "motorista" else db.parceiros
+    usuario = await collection.find_one({"id": usuario_id}, {"_id": 0})
+    
+    if not usuario:
+        # Try users collection
+        usuario = await db.users.find_one({"id": usuario_id}, {"_id": 0})
+    
+    if not usuario:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    telefone = usuario.get("telefone")
+    if not telefone:
+        raise HTTPException(status_code=400, detail="User does not have a phone number")
+    
+    # TODO: Implement WhatsApp sending with report attachment
+    # For now, return success message
+    raise HTTPException(
+        status_code=501,
+        detail="Funcionalidade de envio por WhatsApp em desenvolvimento. Configure a integração WhatsApp Business API para utilizar esta funcionalidade."
+    )
+
 @api_router.delete("/notificacoes/{notificacao_id}")
 async def delete_notificacao(notificacao_id: str, current_user: Dict = Depends(get_current_user)):
     """Delete a notification"""
