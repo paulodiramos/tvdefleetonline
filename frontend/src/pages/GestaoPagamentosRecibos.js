@@ -55,19 +55,47 @@ const GestaoPagamentosRecibos = ({ user, onLogout }) => {
   ];
 
   useEffect(() => {
-    // Set default dates (current week)
+    // Set default week (current week)
     const hoje = new Date();
-    const inicioSemana = new Date(hoje);
-    inicioSemana.setDate(hoje.getDate() - hoje.getDay());
-    
-    setFiltrosDataInicio(inicioSemana.toISOString().split('T')[0]);
-    setFiltrosDataFim(hoje.toISOString().split('T')[0]);
+    const ano = hoje.getFullYear();
+    const semana = getWeekNumber(hoje);
+    setFiltroSemana(`${ano}-W${String(semana).padStart(2, '0')}`);
     
     if (user.role === 'admin' || user.role === 'gestao') {
       fetchParceiros();
     }
     fetchRegistos();
   }, []);
+
+  const getWeekNumber = (date) => {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  };
+
+  const getWeekDates = (weekString) => {
+    if (!weekString) return { inicio: null, fim: null };
+    
+    const [year, week] = weekString.split('-W');
+    const simple = new Date(year, 0, 1 + (week - 1) * 7);
+    const dow = simple.getDay();
+    const ISOweekStart = simple;
+    if (dow <= 4)
+      ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+    else
+      ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+    
+    const inicio = new Date(ISOweekStart);
+    const fim = new Date(ISOweekStart);
+    fim.setDate(fim.getDate() + 6);
+    
+    return {
+      inicio: inicio.toISOString().split('T')[0],
+      fim: fim.toISOString().split('T')[0]
+    };
+  };
 
   const fetchParceiros = async () => {
     try {
