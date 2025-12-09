@@ -221,30 +221,33 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
                   </p>
                 </div>
                 
-                {(user.role === 'admin' || user.role === 'gestao') && (
-                  <div className="space-y-2">
-                    <Label>Parceiro Associado (Opcional)</Label>
-                    <Select 
-                      value={formData.parceiro_id} 
-                      onValueChange={(value) => setFormData({ ...formData, parceiro_id: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um parceiro" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">Nenhum (Template global)</SelectItem>
-                        {parceiros.map((parceiro) => (
-                          <SelectItem key={parceiro.id} value={parceiro.id}>
-                            {parceiro.nome_empresa || parceiro.email}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <p className="text-xs text-slate-500">
-                      Associe este template a um parceiro específico ou deixe vazio para template global
-                    </p>
-                  </div>
-                )}
+                <div className="space-y-2">
+                  <Label>Parceiro Associado *</Label>
+                  <Select 
+                    value={formData.parceiro_id} 
+                    onValueChange={(value) => setFormData({ ...formData, parceiro_id: value })}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um parceiro" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(user.role === 'admin' || user.role === 'gestao') && (
+                        <SelectItem value="global">Template Global (todos os parceiros)</SelectItem>
+                      )}
+                      {parceiros.map((parceiro) => (
+                        <SelectItem key={parceiro.id} value={parceiro.id}>
+                          {parceiro.nome_empresa || parceiro.email}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-slate-500">
+                    {user.role === 'admin' || user.role === 'gestao'
+                      ? 'Selecione "Template Global" ou um parceiro específico'
+                      : 'Template será criado para o seu parceiro'}
+                  </p>
+                </div>
                 
                 <div className="space-y-2">
                   <Label>Descrição</Label>
