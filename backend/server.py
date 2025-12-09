@@ -6713,16 +6713,21 @@ async def deletar_plano(plano_id: str, current_user: Dict = Depends(get_current_
     if current_user["role"] != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Apenas admin pode deletar planos")
     
-    # Soft delete - apenas marca como inativo
-    result = await db.planos.update_one(
-        {"id": plano_id},
-        {"$set": {"ativo": False, "updated_at": datetime.now(timezone.utc)}}
-    )
+    # Verificar se há usuários com este plano
+    usuarios_com_plano = await db.planos_usuarios.count_documents({"plano_id": plano_id, "status": "ativo"})
+    if usuarios_com_plano > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Não é possível eliminar. {usuarios_com_plano} utilizador(es) têm este plano ativo."
+        )
     
-    if result.matched_count == 0:
+    # Eliminar plano permanentemente
+    result = await db.planos.delete_one({"id": plano_id})
+    
+    if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Plano não encontrado")
     
-    return {"message": "Plano desativado com sucesso"}
+    return {"message": "Plano eliminado com sucesso"}
 
 
 @api_router.post("/users/{user_id}/atribuir-modulos")
