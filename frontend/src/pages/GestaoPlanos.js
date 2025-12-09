@@ -185,7 +185,11 @@ const GestaoPlanos = ({ user, onLogout }) => {
         opcao_recibos_motorista: false,
         preco_recibo_por_motorista: 0,
         ativo: true,
-        tipo_usuario: 'parceiro'
+        tipo_usuario: 'parceiro',
+        promocao_ativa: false,
+        promocao_data_inicio: '',
+        promocao_data_fim: '',
+        promocao_desconto_percentual: 0
       });
     }
     setShowCriarPlano(true);
