@@ -8464,9 +8464,9 @@ async def atribuir_plano_motorista(
 @api_router.get("/parceiros/meu-plano")
 async def get_meu_plano_parceiro(current_user: Dict = Depends(get_current_user)):
     """Parceiro: Get active plan with calculated costs"""
-    print(f"DEBUG: current_user role = {current_user.get('role')}, type = {type(current_user.get('role'))}")
-    if current_user["role"] != "parceiro":
-        print(f"DEBUG: Role mismatch - expected 'parceiro', got '{current_user['role']}'")
+    # Allow both parceiro string and UserRole enum
+    user_role = current_user.get("role")
+    if user_role != "parceiro" and user_role != UserRole.PARCEIRO:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Buscar plano ativo
