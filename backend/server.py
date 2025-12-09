@@ -8233,6 +8233,64 @@ async def update_integracoes(
 
 # ==================== SUBSCRIPTION/PLANOS ENDPOINTS ====================
 
+@api_router.post("/admin/planos/{plano_id}/promocao")
+async def criar_promocao_plano(
+    plano_id: str,
+    promocao_data: Dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Admin: Add promotional pricing to a plan"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Validate plano exists
+    plano = await db.planos.find_one({"id": plano_id}, {"_id": 0})
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plano not found")
+    
+    # Create promotion
+    promocao = {
+        "ativa": True,
+        "nome": promocao_data.get("nome", "Promoção"),
+        "desconto_percentual": promocao_data.get("desconto_percentual", 0),
+        "data_inicio": promocao_data.get("data_inicio"),
+        "data_fim": promocao_data.get("data_fim"),
+        "created_at": datetime.now(timezone.utc),
+        "created_by": current_user["id"]
+    }
+    
+    # Update plano with promotion
+    await db.planos.update_one(
+        {"id": plano_id},
+        {
+            "$set": {
+                "promocao": promocao,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {"message": "Promoção criada com sucesso", "promocao": promocao}
+
+@api_router.delete("/admin/planos/{plano_id}/promocao")
+async def remover_promocao_plano(
+    plano_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Admin: Remove promotion from a plan"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    await db.planos.update_one(
+        {"id": plano_id},
+        {
+            "$unset": {"promocao": ""},
+            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    return {"message": "Promoção removida com sucesso"}
+
 @api_router.post("/admin/planos", response_model=PlanoAssinatura)
 async def create_plano(plano_data: PlanoCreate, current_user: Dict = Depends(get_current_user)):
     """Admin: Create new subscription plan"""
