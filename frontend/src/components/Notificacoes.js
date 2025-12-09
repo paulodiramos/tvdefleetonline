@@ -101,16 +101,14 @@ const Notificacoes = ({ open, onOpenChange, user }) => {
                       </p>
                     </div>
                     <div className="flex gap-1">
-                      {!notif.lida && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => marcarComoLida(notif.id)}
-                          title="Marcar como lida"
-                        >
-                          ✓
-                        </Button>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => marcarComoLida(notif.id)}
+                        title={notif.lida ? "Marcar como não lida" : "Marcar como lida"}
+                      >
+                        {notif.lida ? '👁️' : '✓'}
+                      </Button>
                       <Button
                         variant="ghost"
                         size="sm"
