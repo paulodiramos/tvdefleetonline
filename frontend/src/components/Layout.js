@@ -1,61 +1,49 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Truck, LayoutDashboard, Car, Users, DollarSign, LogOut, Menu, X, Building, UserCircle, FileText, CreditCard, Upload, Settings, Database, Shield, ChevronDown, Zap, TrendingUp, Package, Receipt, MessageSquare, Plug, Bell, ClipboardCheck, Mail } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { 
+  Users, Car, Truck, FileText, TrendingUp, DollarSign, MessageSquare, 
+  Building, ClipboardCheck, Package, Settings, LogOut, ChevronDown, 
+  Shield, Bell, Menu, X, Home, User
+} from 'lucide-react';
+import { useState } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import axios from 'axios';
-import { API } from '@/App';
-import NotificationBell from '@/components/NotificationBell';
+import { Button } from '@/components/ui/button';
 
-const Layout = ({ user, onLogout, children }) => {
+const Layout = ({ children, user, onLogout }) => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [showTermosModal, setShowTermosModal] = useState(false);
-  const [showPrivacidadeModal, setShowPrivacidadeModal] = useState(false);
-  const [termosText, setTermosText] = useState('');
-  const [privacidadeText, setPrivacidadeText] = useState('');
 
-  useEffect(() => {
-    fetchTextos();
-  }, []);
-
-  const fetchTextos = async () => {
-    try {
-      const response = await axios.get(`${API}/api/configuracoes/textos`);
-      setTermosText(response.data.termos_condicoes || 'Termos e Condições não configurados.');
-      setPrivacidadeText(response.data.politica_privacidade || 'Política de Privacidade não configurada.');
-    } catch (error) {
-      console.error('Error fetching textos:', error);
-    }
-  };
-
-  const isActive = (path) => location.pathname === path;
-
-  // Build navigation items based on role
   const getNavItems = () => {
-    // For motorista role: Menu completo (4 itens - Dashboard é logo)
+    if (!user) return [];
+
+    // Motorista menu
     if (user.role === 'motorista') {
       return [
-        { path: '/motorista/recibos', icon: Receipt, label: 'Ganhos' },
-        { path: '/motorista/oportunidades', icon: Car, label: 'Oportunidades' },
+        { path: '/profile', icon: Home, label: 'Início' },
+        { path: '/motorista-documentos', icon: FileText, label: 'Documentos' },
+        { path: '/motorista-ganhos', icon: DollarSign, label: 'Ganhos' },
         { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' }
       ];
     }
 
-    // For parceiro role: Replace dashboard with reports, add payments with financeiro submenu
+    // Parceiro menu
     if (user.role === 'parceiro') {
       return [
-        { path: '/meu-plano', icon: Package, label: 'Meu Plano' },
         { path: '/motoristas', icon: Users, label: 'Motoristas' },
-        { path: '/vehicles', icon: Car, label: 'Veículos' },
-        { path: '/vistorias', icon: ClipboardCheck, label: 'Vistorias' },
+        { 
+          label: 'Veículos', 
+          icon: Car,
+          submenu: [
+            { path: '/vehicles', label: 'Lista de Veículos' },
+            { path: '/vistorias', label: 'Vistorias' }
+          ]
+        },
         { 
           label: 'Contratos', 
           icon: FileText,
@@ -86,11 +74,17 @@ const Layout = ({ user, onLogout, children }) => {
       ];
     }
 
-    // Default items for admin, gestao (Dashboard removed - logo handles that)
+    // Admin/Gestao menu
     const items = [
       { path: '/motoristas', icon: Users, label: 'Motoristas' },
-      { path: '/vehicles', icon: Car, label: 'Veículos' },
-      { path: '/vistorias', icon: ClipboardCheck, label: 'Vistorias' },
+      { 
+        label: 'Veículos', 
+        icon: Car,
+        submenu: [
+          { path: '/vehicles', label: 'Lista de Veículos' },
+          { path: '/vistorias', label: 'Vistorias' }
+        ]
+      },
       { 
         label: 'Contratos', 
         icon: FileText,
@@ -148,22 +142,22 @@ const Layout = ({ user, onLogout, children }) => {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-0.5">
-              {navItems.map((item) => (
+            <nav className="hidden md:flex items-center space-x-1">
+              {navItems.map((item, index) => (
                 item.submenu ? (
-                  <DropdownMenu key={item.label}>
+                  <DropdownMenu key={index}>
                     <DropdownMenuTrigger asChild>
-                      <button className="flex items-center space-x-1.5 px-2.5 py-2 rounded-lg transition text-sm text-slate-600 hover:bg-slate-100">
-                        <item.icon className="w-3.5 h-3.5" />
+                      <Button variant="ghost" className="flex items-center space-x-1">
+                        <item.icon className="w-4 h-4" />
                         <span>{item.label}</span>
                         <ChevronDown className="w-3 h-3" />
-                      </button>
+                      </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      {item.submenu.map((subitem) => (
-                        <DropdownMenuItem key={subitem.path} asChild>
-                          <Link to={subitem.path} className="cursor-pointer">
-                            {subitem.label}
+                    <DropdownMenuContent align="start" className="w-56">
+                      {item.submenu.map((subItem, subIndex) => (
+                        <DropdownMenuItem key={subIndex} asChild>
+                          <Link to={subItem.path} className="cursor-pointer">
+                            {subItem.label}
                           </Link>
                         </DropdownMenuItem>
                       ))}
@@ -171,41 +165,51 @@ const Layout = ({ user, onLogout, children }) => {
                   </DropdownMenu>
                 ) : (
                   <Link
-                    key={item.path}
+                    key={index}
                     to={item.path}
-                    className={`flex items-center space-x-1.5 px-2.5 py-2 rounded-lg transition text-sm ${
-                      isActive(item.path)
-                        ? 'bg-blue-100 text-blue-700'
-                        : 'text-slate-600 hover:bg-slate-100'
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      location.pathname === item.path
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                     }`}
-                    data-testid={`nav-${item.label.toLowerCase()}`}
                   >
-                    <item.icon className="w-3.5 h-3.5" />
+                    <item.icon className="w-4 h-4" />
                     <span>{item.label}</span>
                   </Link>
                 )
               ))}
             </nav>
 
-            {/* User Menu */}
             <div className="flex items-center space-x-4">
-              {/* Notification Bell */}
-              <NotificationBell user={user} />
-              
-              {/* Admin Dropdown Menu */}
-              <DropdownMenu open={profileMenuOpen} onOpenChange={setProfileMenuOpen}>
+              {/* Notifications */}
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="w-5 h-5" />
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </Button>
+
+              {/* Painel de Controlo Dropdown */}
+              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="hidden md:flex items-center space-x-2"
-                    data-testid="profile-dropdown"
-                  >
-                    <span className="text-sm font-medium text-slate-800">Painel de Controlo</span>
-                    <ChevronDown className="w-4 h-4 text-slate-600" />
+                  <Button variant="ghost" className="flex items-center space-x-2">
+                    <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center">
+                      <User className="w-5 h-5 text-slate-600" />
+                    </div>
+                    <span className="text-sm font-medium hidden sm:inline-block">
+                      {user?.name || 'Utilizador'}
+                    </span>
+                    <ChevronDown className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-64">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">{user?.name}</p>
+                      <p className="text-xs text-slate-500">{user?.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+
+                  {/* Admin Panel */}
                   {user.role === 'admin' && (
                     <>
                       <DropdownMenuItem asChild>
@@ -215,13 +219,12 @@ const Layout = ({ user, onLogout, children }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/pendentes" className="flex items-center space-x-2 cursor-pointer">
-                          <ClipboardCheck className="w-4 h-4" />
-                          <span>Pendentes</span>
+                        <Link to="/usuarios" className="flex items-center space-x-2 cursor-pointer">
+                          <Users className="w-4 h-4" />
+                          <span>Utilizadores</span>
                         </Link>
                       </DropdownMenuItem>
-                      
-                      {/* Submenu Configurações */}
+                      <DropdownMenuSeparator />
                       <div className="px-2 py-1.5">
                         <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
                           <Settings className="w-3 h-3" />
@@ -229,167 +232,123 @@ const Layout = ({ user, onLogout, children }) => {
                         </div>
                       </div>
                       <DropdownMenuItem asChild>
-                        <Link to="/configuracao-planos" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <Database className="w-4 h-4" />
-                          <span>Config. Planos Base</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/integracoes" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <Plug className="w-4 h-4" />
+                        <Link to="/configuracao-integracao" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>Integrações</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/comunicacoes" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <Bell className="w-4 h-4" />
+                        <Link to="/configuracoes-comunicacao" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>Comunicações</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/configuracao-comunicacoes" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <Mail className="w-4 h-4" />
-                          <span>Config. Email/WhatsApp</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
                         <Link to="/configuracao-categorias" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <Car className="w-4 h-4" />
                           <span>Categorias Uber/Bolt</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/configuracoes-admin" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <FileText className="w-4 h-4" />
+                        <Link to="/termos-privacidade" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>Termos & Privacidade</span>
                         </Link>
                       </DropdownMenuItem>
-                      
-                      <DropdownMenuItem asChild>
-                        <Link to="/profile" className="flex items-center space-x-2 cursor-pointer">
-                          <UserCircle className="w-4 h-4" />
-                          <span>Perfil</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={onLogout}
-                        className="flex items-center space-x-2 cursor-pointer text-red-600"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        <span>Sair</span>
-                      </DropdownMenuItem>
                     </>
                   )}
-                  {user.role !== 'admin' && (
+
+                  {/* Parceiro Panel */}
+                  {user.role === 'parceiro' && (
                     <>
                       <DropdownMenuItem asChild>
-                        <Link to="/profile" className="flex items-center space-x-2 cursor-pointer">
-                          <UserCircle className="w-4 h-4" />
-                          <span>Perfil</span>
+                        <Link to="/meu-plano" className="flex items-center space-x-2 cursor-pointer">
+                          <Package className="w-4 h-4" />
+                          <span>Meu Plano</span>
                         </Link>
-                      </DropdownMenuItem>
-                      {user.role === 'parceiro' && (
-                        <DropdownMenuItem asChild>
-                          <Link to="/meus-planos" className="flex items-center space-x-2 cursor-pointer">
-                            <Package className="w-4 h-4" />
-                            <span>Meus Módulos</span>
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuItem
-                        onClick={onLogout}
-                        className="flex items-center space-x-2 cursor-pointer text-red-600"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        <span>Sair</span>
                       </DropdownMenuItem>
                     </>
                   )}
+
+                  {/* Motorista Panel */}
+                  {user.role === 'motorista' && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link to="/meu-plano-motorista" className="flex items-center space-x-2 cursor-pointer">
+                          <Package className="w-4 h-4" />
+                          <span>Meu Plano</span>
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
+
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/perfil" className="flex items-center space-x-2 cursor-pointer">
+                      <User className="w-4 h-4" />
+                      <span>Perfil</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={onLogout}
+                    className="flex items-center space-x-2 cursor-pointer text-red-600"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Sair</span>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
               {/* Mobile menu button */}
-              <button
-                className="md:hidden p-2"
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                data-testid="mobile-menu-button"
               >
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200 bg-white" data-testid="mobile-menu">
-            <div className="px-4 py-4 space-y-2">
-              {navItems.map((item) => (
+          <div className="md:hidden border-t border-slate-200 bg-white">
+            <nav className="px-4 py-3 space-y-1">
+              {navItems.map((item, index) => (
                 item.submenu ? (
-                  <div key={item.label} className="space-y-1">
-                    <div className="flex items-center space-x-2 px-4 py-2 text-slate-800 font-medium">
-                      <item.icon className="w-5 h-5" />
+                  <div key={index} className="space-y-1">
+                    <div className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-slate-600">
+                      <item.icon className="w-4 h-4" />
                       <span>{item.label}</span>
                     </div>
-                    {item.submenu.map((subitem) => (
-                      <Link
-                        key={subitem.path}
-                        to={subitem.path}
-                        className="flex items-center space-x-2 pl-11 pr-4 py-2 rounded-lg text-sm text-slate-600 hover:bg-slate-100"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <span>{subitem.label}</span>
-                      </Link>
-                    ))}
+                    <div className="ml-6 space-y-1">
+                      {item.submenu.map((subItem, subIndex) => (
+                        <Link
+                          key={subIndex}
+                          to={subItem.path}
+                          className="block px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 rounded-md"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          {subItem.label}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <Link
-                    key={item.path}
+                    key={index}
                     to={item.path}
-                    className={`flex items-center space-x-2 px-4 py-3 rounded-lg transition ${
-                      isActive(item.path)
-                        ? 'bg-blue-100 text-blue-700'
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium ${
+                      location.pathname === item.path
+                        ? 'bg-blue-50 text-blue-700'
                         : 'text-slate-600 hover:bg-slate-100'
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <item.icon className="w-5 h-5" />
+                    <item.icon className="w-4 h-4" />
                     <span>{item.label}</span>
                   </Link>
                 )
               ))}
-              <div className="pt-4 border-t border-slate-200">
-                <p className="text-sm font-medium text-slate-800 px-4">{user.name}</p>
-                <p className="text-xs text-slate-500 px-4 mb-3 capitalize">{user.role.replace('_', ' ')}</p>
-                <Link
-                  to="/"
-                  className="flex items-center space-x-2 px-4 py-3 rounded-lg text-blue-600 hover:bg-blue-50 mb-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <Truck className="w-5 h-5" />
-                  <span>Site Público</span>
-                </Link>
-                <Link
-                  to="/profile"
-                  className="flex items-center space-x-2 px-4 py-3 rounded-lg text-slate-600 hover:bg-slate-100 mb-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <UserCircle className="w-5 h-5" />
-                  <span>Meu Perfil</span>
-                </Link>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    onLogout();
-                  }}
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Sair
-                </Button>
-              </div>
-            </div>
+            </nav>
           </div>
         )}
       </header>
@@ -398,55 +357,6 @@ const Layout = ({ user, onLogout, children }) => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
-
-      {/* Footer */}
-      <footer className="bg-slate-50 border-t border-slate-200 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-slate-600">
-              © {new Date().getFullYear()} TVDEFleet. Todos os direitos reservados.
-            </p>
-            <div className="flex items-center space-x-6">
-              <button
-                onClick={() => setShowTermosModal(true)}
-                className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-              >
-                Termos e Condições
-              </button>
-              <button
-                onClick={() => setShowPrivacidadeModal(true)}
-                className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-              >
-                Política de Privacidade
-              </button>
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      {/* Modal Termos e Condições */}
-      <Dialog open={showTermosModal} onOpenChange={setShowTermosModal}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Termos e Condições</DialogTitle>
-          </DialogHeader>
-          <div className="prose prose-sm max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: termosText.replace(/\n/g, '<br/>') }} />
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal Política de Privacidade */}
-      <Dialog open={showPrivacidadeModal} onOpenChange={setShowPrivacidadeModal}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Política de Privacidade</DialogTitle>
-          </DialogHeader>
-          <div className="prose prose-sm max-w-none">
-            <div dangerouslySetInnerHTML={{ __html: privacidadeText.replace(/\n/g, '<br/>') }} />
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
