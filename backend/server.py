@@ -8291,6 +8291,74 @@ async def remover_promocao_plano(
     
     return {"message": "Promoção removida com sucesso"}
 
+@api_router.post("/parceiros/{parceiro_id}/comprar-plano-motorista")
+async def parceiro_comprar_plano_motorista(
+    parceiro_id: str,
+    motorista_id: str = Body(...),
+    plano_especial_id: str = Body(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Parceiro: Buy discounted plan for motorista and resell"""
+    if current_user["role"] not in [UserRole.PARCEIRO, UserRole.ADMIN]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Can only buy for your own motoristas")
+    
+    # Verify motorista belongs to parceiro
+    motorista = await db.users.find_one({"id": motorista_id, "parceiro_id": parceiro_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista not found or doesn't belong to this parceiro")
+    
+    # Get special plan
+    plano_especial = await db.planos.find_one({"id": plano_especial_id, "tipo_usuario": "motorista"}, {"_id": 0})
+    if not plano_especial:
+        raise HTTPException(status_code=404, detail="Special plan not found")
+    
+    # Calculate pricing (parceiro pays discounted price)
+    preco_base = plano_especial.get("precos", {}).get("mensal", {}).get("preco_com_iva", 0)
+    desconto_revenda = plano_especial.get("desconto_revenda_parceiro", 20)  # 20% default
+    preco_parceiro = preco_base * (1 - desconto_revenda / 100)
+    
+    # Create attribution
+    atribuicao_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    atribuicao = {
+        "id": atribuicao_id,
+        "user_id": motorista_id,
+        "plano_id": plano_especial_id,
+        "modulos_ativos": plano_especial.get("modulos", []),
+        "tipo_pagamento": "mensal",
+        "valor_pago": preco_base,  # Motorista pays full price
+        "valor_custo_parceiro": preco_parceiro,  # Parceiro pays discounted
+        "margem_parceiro": preco_base - preco_parceiro,
+        "comprado_por_parceiro": True,
+        "parceiro_id": parceiro_id,
+        "data_inicio": now,
+        "data_fim": None,
+        "status": "ativo",
+        "renovacao_automatica": True,
+        "created_at": now,
+        "updated_at": now,
+        "created_by": current_user["id"]
+    }
+    
+    await db.planos_usuarios.insert_one(atribuicao)
+    
+    # Update user
+    await db.users.update_one(
+        {"id": motorista_id},
+        {"$set": {"plano_id": plano_especial_id, "plano_status": "ativo"}}
+    )
+    
+    return {
+        "message": "Plano comprado e atribuído com sucesso",
+        "motorista_paga": preco_base,
+        "parceiro_paga": preco_parceiro,
+        "margem": preco_base - preco_parceiro
+    }
+
 @api_router.post("/admin/planos", response_model=PlanoAssinatura)
 async def create_plano(plano_data: PlanoCreate, current_user: Dict = Depends(get_current_user)):
     """Admin: Create new subscription plan"""
