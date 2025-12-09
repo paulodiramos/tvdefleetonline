@@ -422,7 +422,12 @@ function App() {
             }
           />
           <Route path="/configuracoes-comunicacao" element={<Navigate to="/comunicacoes" replace />} />
-          <Route path="/termos-privacidade" element={<Navigate to="/termos" replace />} />
+          <Route 
+            path="/termos-privacidade" 
+            element={
+              user && user.role === 'admin' ? <TermosPrivacidadeAdmin user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
+            } 
+          />
           <Route
             path="/configuracao-comunicacoes"
             element={
