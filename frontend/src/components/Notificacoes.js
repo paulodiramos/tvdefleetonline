@@ -11,6 +11,9 @@ import { Bell, CheckCircle, AlertCircle, Info, X } from 'lucide-react';
 const Notificacoes = ({ open, onOpenChange, user }) => {
   const [notificacoes, setNotificacoes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [editando, setEditando] = useState(null);
+  const [tituloEdit, setTituloEdit] = useState('');
+  const [mensagemEdit, setMensagemEdit] = useState('');
 
   useEffect(() => {
     if (open) {
