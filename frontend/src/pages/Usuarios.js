@@ -146,51 +146,7 @@ const Usuarios = ({ user, onLogout }) => {
     });
   };
 
-  const handleAtribuirPlano = async () => {
-    if (!selectedPlanoId) {
-      toast.error('Selecione um plano');
-      return;
-    }
-
-    // Verificar roles permitidos - Apenas motorista e parceiro têm planos
-    const allowedRoles = ['motorista', 'parceiro'];
-    if (!allowedRoles.includes(selectedUser?.role)) {
-      toast.error('Este utilizador não pode ter planos atribuídos');
-      return;
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      
-      // Usar endpoint apropriado conforme o role
-      let endpoint = '';
-      if (selectedUser.role === 'motorista') {
-        endpoint = `${API}/motoristas/${selectedUser.id}/atribuir-plano`;
-      } else {
-        // Para parceiro, operacional e gestor - usar endpoint genérico
-        endpoint = `${API}/users/${selectedUser.id}/atribuir-plano`;
-      }
-      
-      await axios.post(
-        endpoint,
-        { 
-          plano_id: selectedPlanoId, 
-          periodicidade: selectedPeriodicidade || 'mensal',
-          auto_renovacao: false 
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      toast.success(`Plano ${selectedPeriodicidade} atribuído com sucesso!`);
-      setShowPlanoDialog(false);
-      setSelectedPlanoId('');
-      setSelectedPeriodicidade('mensal');
-      fetchUsers();
-    } catch (error) {
-      console.error('Error assigning plan:', error);
-      toast.error(error.response?.data?.detail || 'Erro ao atribuir plano');
-    }
-  };
+  // DEPRECATED: Removido - agora usa /gestao-planos
 
   const handleApproveUser = async (userId, role) => {
     try {
