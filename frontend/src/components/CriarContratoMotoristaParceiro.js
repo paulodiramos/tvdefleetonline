@@ -81,7 +81,7 @@ const CriarContratoMotoristaParceiro = ({ user, parceiroId, onContratoCreated })
       const token = localStorage.getItem('token');
 
       const payload = {
-        parceiro_id: parceiroId,
+        parceiro_id: actualParceiroId,
         motorista_id: form.motorista_id,
         veiculo_id: form.veiculo_id,
         template_id: form.template_id
