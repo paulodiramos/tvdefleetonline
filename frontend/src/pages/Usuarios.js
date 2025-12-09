@@ -72,7 +72,6 @@ const Usuarios = ({ user, onLogout }) => {
 
   useEffect(() => {
     fetchUsers();
-    fetchPlanos();
     fetchParceiros();
   }, []);
 
