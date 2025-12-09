@@ -160,10 +160,19 @@ const Layout = ({ children, user, onLogout }) => {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="start" className="w-56">
                       {item.submenu.map((subItem, subIndex) => (
-                        <DropdownMenuItem key={subIndex} asChild>
-                          <Link to={subItem.path} className="cursor-pointer">
-                            {subItem.label}
-                          </Link>
+                        <DropdownMenuItem key={subIndex} asChild={!subItem.action}>
+                          {subItem.action ? (
+                            <button 
+                              onClick={subItem.action} 
+                              className="cursor-pointer w-full text-left"
+                            >
+                              {subItem.label}
+                            </button>
+                          ) : (
+                            <Link to={subItem.path} className="cursor-pointer">
+                              {subItem.label}
+                            </Link>
+                          )}
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
