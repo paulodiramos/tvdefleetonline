@@ -413,12 +413,15 @@ function App() {
               user ? <Integracoes user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
+          <Route path="/configuracao-integracao" element={<Navigate to="/integracoes" replace />} />
           <Route
             path="/comunicacoes"
             element={
               user ? <Comunicacoes user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
+          <Route path="/configuracoes-comunicacao" element={<Navigate to="/comunicacoes" replace />} />
+          <Route path="/termos-privacidade" element={<Navigate to="/termos" replace />} />
           <Route
             path="/configuracao-comunicacoes"
             element={
