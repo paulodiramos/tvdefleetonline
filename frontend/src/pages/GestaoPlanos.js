@@ -14,16 +14,25 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { 
-  Package, Plus, Edit, Trash2, Check, X, Info, Search, DollarSign, UserPlus
+  Package, Plus, Edit, Trash2, Check, X, Info, Search, DollarSign, UserPlus, Users
 } from 'lucide-react';
 
 const GestaoPlanos = ({ user, onLogout }) => {
   const [planos, setPlanos] = useState([]);
   const [modulos, setModulos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
+  const [showCriarPlano, setShowCriarPlano] = useState(false);
+  const [showAtribuir, setShowAtribuir] = useState(false);
   const [editingPlano, setEditingPlano] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('planos');
+  
+  // Atribuição de planos
+  const [usuarios, setUsuarios] = useState([]);
+  const [usuarioSelecionado, setUsuarioSelecionado] = useState(null);
+  const [planoParaAtribuir, setPlanoParaAtribuir] = useState('');
+  const [periodicidade, setPeriodicidade] = useState('mensal');
+  
   const [planoForm, setPlanoForm] = useState({
     nome: '',
     descricao: '',
@@ -54,13 +63,14 @@ const GestaoPlanos = ({ user, onLogout }) => {
 
   useEffect(() => {
     fetchPlanos();
+    fetchUsuarios();
   }, []);
 
   useEffect(() => {
-    if (planoForm.tipo_usuario) {
+    if (planoForm.tipo_usuario && showCriarPlano) {
       fetchModulos(planoForm.tipo_usuario);
     }
-  }, [planoForm.tipo_usuario]);
+  }, [planoForm.tipo_usuario, showCriarPlano]);
 
   const fetchPlanos = async () => {
     try {
@@ -77,6 +87,24 @@ const GestaoPlanos = ({ user, onLogout }) => {
     }
   };
 
+  const fetchUsuarios = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const [parceirosRes, motoristasRes] = await Promise.all([
+        axios.get(`${API}/parceiros`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/motoristas`, { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      
+      const allUsers = [
+        ...parceirosRes.data.map(p => ({ ...p, tipo: 'parceiro' })),
+        ...motoristasRes.data.map(m => ({ ...m, tipo: 'motorista' }))
+      ];
+      setUsuarios(allUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+    }
+  };
+
   const fetchModulos = async (tipoUsuario) => {
     try {
       const token = localStorage.getItem('token');
@@ -90,12 +118,10 @@ const GestaoPlanos = ({ user, onLogout }) => {
     }
   };
 
-  const handleOpenModal = (plano = null) => {
+  const handleOpenCriarPlano = (plano = null) => {
     if (plano) {
       setEditingPlano(plano);
-      
       const precos = plano.precos || {};
-      
       setPlanoForm({
         nome: plano.nome,
         descricao: plano.descricao || '',
@@ -153,12 +179,15 @@ const GestaoPlanos = ({ user, onLogout }) => {
         tipo_usuario: 'parceiro'
       });
     }
-    setShowModal(true);
+    setShowCriarPlano(true);
   };
 
   const handleCloseModal = () => {
-    setShowModal(false);
+    setShowCriarPlano(false);
+    setShowAtribuir(false);
     setEditingPlano(null);
+    setUsuarioSelecionado(null);
+    setPlanoParaAtribuir('');
   };
 
   const handleToggleModulo = (codigoModulo) => {
@@ -228,7 +257,34 @@ const GestaoPlanos = ({ user, onLogout }) => {
       fetchPlanos();
     } catch (error) {
       console.error('Error deleting plano:', error);
-      toast.error('Erro ao eliminar plano');
+      toast.error(error.response?.data?.detail || 'Erro ao eliminar plano');
+    }
+  };
+
+  const handleAtribuirPlano = async () => {
+    if (!usuarioSelecionado || !planoParaAtribuir) {
+      toast.error('Selecione um utilizador e um plano');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const endpoint = usuarioSelecionado.tipo === 'parceiro' 
+        ? `/admin/parceiros/${usuarioSelecionado.id}/atribuir-plano`
+        : `/admin/motoristas/${usuarioSelecionado.id}/atribuir-plano`;
+      
+      await axios.post(
+        `${API}${endpoint}`,
+        { plano_id: planoParaAtribuir, periodicidade },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success('Plano atribuído com sucesso!');
+      handleCloseModal();
+      fetchUsuarios();
+    } catch (error) {
+      console.error('Error atribuindo plano:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao atribuir plano');
     }
   };
 
@@ -264,145 +320,262 @@ const GestaoPlanos = ({ user, onLogout }) => {
 
   return (
     <Layout user={user} onLogout={onLogout}>
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-8">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-2">
               <Package className="w-8 h-8" />
               Gestão de Planos
             </h1>
             <p className="text-slate-600 mt-2">
-              Configure planos para parceiros e motoristas com módulos personalizados
+              Configure e atribua planos para parceiros e motoristas
             </p>
           </div>
-          <Button onClick={() => handleOpenModal()} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Criar Plano
-          </Button>
         </div>
 
-        <Card className="mb-6 border-blue-200 bg-blue-50">
-          <CardContent className="pt-6">
-            <div className="flex items-start gap-3">
-              <Info className="w-5 h-5 text-blue-600 mt-0.5" />
-              <div>
-                <h3 className="font-semibold text-blue-900 mb-1">Tipos de Planos:</h3>
-                <ul className="text-sm text-blue-800 space-y-1">
-                  <li><strong>Parceiro:</strong> Por Veículo ou Fixo com Limite + Opção extra de recibos por motorista</li>
-                  <li><strong>Motorista:</strong> Preço fixo com módulos personalizados</li>
-                </ul>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="planos">Planos</TabsTrigger>
+            <TabsTrigger value="atribuir">Atribuir Planos</TabsTrigger>
+          </TabsList>
+
+          {/* Tab: Gestão de Planos */}
+          <TabsContent value="planos" className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="relative flex-1 mr-4">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <Input
+                  placeholder="Pesquisar planos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-            <Input
-              placeholder="Pesquisar planos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <p className="text-slate-600 mt-4">A carregar planos...</p>
-          </div>
-        ) : filteredPlanos.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
-              <Package className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-              <p className="text-slate-600">Nenhum plano encontrado</p>
-              <Button onClick={() => handleOpenModal()} className="mt-4">
-                Criar Primeiro Plano
+              <Button onClick={() => handleOpenCriarPlano()} className="gap-2">
+                <Plus className="w-4 h-4" />
+                Criar Plano
               </Button>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredPlanos.map((plano) => (
-              <Card key={plano.id} className="hover:shadow-lg transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-xl">{plano.nome}</CardTitle>
-                      <div className="flex gap-2 mt-2">
-                        <Badge className={getTipoUsuarioColor(plano.tipo_usuario)}>
-                          {getTipoUsuarioLabel(plano.tipo_usuario)}
-                        </Badge>
-                        <Badge variant={plano.ativo ? "default" : "secondary"}>
-                          {plano.ativo ? 'Ativo' : 'Inativo'}
-                        </Badge>
-                        {plano.opcao_recibos_motorista && (
-                          <Badge variant="outline" className="text-xs">
-                            + Recibos
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-slate-600 mb-4 line-clamp-2">
-                    {plano.descricao || 'Sem descrição'}
-                  </p>
+            </div>
 
-                  <div className="space-y-3 mb-4">
-                    {plano.tipo_usuario === 'parceiro' && plano.tipo_cobranca && (
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-slate-600">Cobrança:</span>
-                        <span className="font-medium">{getTipoCobrancaLabel(plano.tipo_cobranca)}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-slate-600">Preço:</span>
-                      <span className="font-bold text-lg text-blue-600">
-                        {getPrecoDisplay(plano)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="border-t pt-4">
-                    <p className="text-sm font-medium text-slate-700 mb-2">
-                      Módulos Incluídos:
-                    </p>
-                    <Badge variant="outline" className="text-xs">
-                      {plano.modulos?.length || 0} módulos
-                    </Badge>
-                  </div>
-
-                  <div className="flex gap-2 mt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleOpenModal(plano)}
-                      className="flex-1 gap-1"
-                    >
-                      <Edit className="w-3 h-3" />
-                      Editar
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(plano.id)}
-                      className="gap-1"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      Eliminar
-                    </Button>
-                  </div>
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <p className="text-slate-600 mt-4">A carregar planos...</p>
+              </div>
+            ) : filteredPlanos.length === 0 ? (
+              <Card>
+                <CardContent className="text-center py-12">
+                  <Package className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                  <p className="text-slate-600">Nenhum plano encontrado</p>
+                  <Button onClick={() => handleOpenCriarPlano()} className="mt-4">
+                    Criar Primeiro Plano
+                  </Button>
                 </CardContent>
               </Card>
-            ))}
-          </div>
-        )}
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredPlanos.map((plano) => (
+                  <Card key={plano.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <CardTitle className="text-xl">{plano.nome}</CardTitle>
+                          <div className="flex gap-2 mt-2">
+                            <Badge className={getTipoUsuarioColor(plano.tipo_usuario)}>
+                              {getTipoUsuarioLabel(plano.tipo_usuario)}
+                            </Badge>
+                            <Badge variant={plano.ativo ? "default" : "secondary"}>
+                              {plano.ativo ? 'Ativo' : 'Inativo'}
+                            </Badge>
+                            {plano.opcao_recibos_motorista && (
+                              <Badge variant="outline" className="text-xs">
+                                + Recibos
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-slate-600 mb-4 line-clamp-2">
+                        {plano.descricao || 'Sem descrição'}
+                      </p>
 
-        <Dialog open={showModal} onOpenChange={setShowModal}>
+                      <div className="space-y-3 mb-4">
+                        {plano.tipo_usuario === 'parceiro' && plano.tipo_cobranca && (
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-slate-600">Cobrança:</span>
+                            <span className="font-medium">{getTipoCobrancaLabel(plano.tipo_cobranca)}</span>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-slate-600">Preço:</span>
+                          <span className="font-bold text-lg text-blue-600">
+                            {getPrecoDisplay(plano)}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="border-t pt-4">
+                        <p className="text-sm font-medium text-slate-700 mb-2">
+                          Módulos Incluídos:
+                        </p>
+                        <Badge variant="outline" className="text-xs">
+                          {plano.modulos?.length || 0} módulos
+                        </Badge>
+                      </div>
+
+                      <div className="flex gap-2 mt-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleOpenCriarPlano(plano)}
+                          className="flex-1 gap-1"
+                        >
+                          <Edit className="w-3 h-3" />
+                          Editar
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(plano.id)}
+                          className="gap-1"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          Eliminar
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Tab: Atribuir Planos */}
+          <TabsContent value="atribuir" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Atribuir Plano Manualmente</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Seleção de Utilizador */}
+                  <Card className="border-2">
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Users className="w-5 h-5" />
+                        Selecionar Utilizador
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="max-h-96 overflow-y-auto space-y-2">
+                        {usuarios.map((u) => (
+                          <div
+                            key={u.id}
+                            onClick={() => setUsuarioSelecionado(u)}
+                            className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                              usuarioSelecionado?.id === u.id
+                                ? 'border-blue-500 bg-blue-50'
+                                : 'hover:border-blue-300'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <p className="font-medium">{u.name || 'Sem nome'}</p>
+                                <p className="text-xs text-slate-500">{u.email}</p>
+                              </div>
+                              <Badge className={u.tipo === 'motorista' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}>
+                                {u.tipo === 'motorista' ? 'Motorista' : 'Parceiro'}
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Seleção de Plano */}
+                  <Card className="border-2">
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <Package className="w-5 h-5" />
+                        Selecionar Plano
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {usuarioSelecionado ? (
+                        <>
+                          <div className="p-3 bg-slate-50 rounded">
+                            <p className="text-sm font-medium">{usuarioSelecionado.name}</p>
+                            <p className="text-xs text-slate-600">
+                              Tipo: <strong>{usuarioSelecionado.tipo === 'motorista' ? 'Motorista' : 'Parceiro'}</strong>
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            {planos
+                              .filter(p => p.tipo_usuario === usuarioSelecionado.tipo && p.ativo)
+                              .map((plano) => (
+                                <div
+                                  key={plano.id}
+                                  onClick={() => setPlanoParaAtribuir(plano.id)}
+                                  className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                                    planoParaAtribuir === plano.id
+                                      ? 'border-blue-500 bg-blue-50'
+                                      : 'hover:border-blue-300'
+                                  }`}
+                                >
+                                  <p className="font-medium">{plano.nome}</p>
+                                  <p className="text-xs text-slate-600 mt-1">{getPrecoDisplay(plano)}</p>
+                                  <Badge variant="outline" className="text-xs mt-2">
+                                    {plano.modulos?.length || 0} módulos
+                                  </Badge>
+                                </div>
+                              ))}
+                          </div>
+
+                          {planoParaAtribuir && (
+                            <>
+                              <div>
+                                <Label>Periodicidade</Label>
+                                <Select value={periodicidade} onValueChange={setPeriodicidade}>
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="semanal">Semanal</SelectItem>
+                                    <SelectItem value="mensal">Mensal</SelectItem>
+                                    <SelectItem value="trimestral">Trimestral</SelectItem>
+                                    <SelectItem value="semestral">Semestral</SelectItem>
+                                    <SelectItem value="anual">Anual</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <Button onClick={handleAtribuirPlano} className="w-full">
+                                <UserPlus className="w-4 h-4 mr-2" />
+                                Atribuir Plano
+                              </Button>
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        <div className="text-center py-8 text-slate-500">
+                          <Users className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                          <p className="text-sm">Selecione um utilizador primeiro</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Modal Criar/Editar Plano */}
+        <Dialog open={showCriarPlano} onOpenChange={setShowCriarPlano}>
           <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
@@ -451,106 +624,38 @@ const GestaoPlanos = ({ user, onLogout }) => {
                 />
               </div>
 
-              {/* Configurações específicas para Parceiro */}
               {planoForm.tipo_usuario === 'parceiro' && (
-                <>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label htmlFor="tipo_cobranca">Tipo de Cobrança *</Label>
-                      <Select
-                        value={planoForm.tipo_cobranca}
-                        onValueChange={(value) => setPlanoForm({ ...planoForm, tipo_cobranca: value })}
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="por_veiculo">Por Veículo</SelectItem>
-                          <SelectItem value="fixo">Fixo com Limite</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label htmlFor="limite_veiculos">Limite de Veículos</Label>
-                      <Input
-                        id="limite_veiculos"
-                        type="number"
-                        value={planoForm.limite_veiculos || ''}
-                        onChange={(e) => setPlanoForm({ 
-                          ...planoForm, 
-                          limite_veiculos: e.target.value ? parseInt(e.target.value) : null 
-                        })}
-                        placeholder={planoForm.tipo_cobranca === 'fixo' ? 'Obrigatório' : 'Opcional'}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="taxa_iva">Taxa IVA (%)</Label>
-                      <Input
-                        id="taxa_iva"
-                        type="number"
-                        value={planoForm.taxa_iva}
-                        onChange={(e) => setPlanoForm({ ...planoForm, taxa_iva: parseFloat(e.target.value) })}
-                      />
-                    </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="tipo_cobranca">Tipo de Cobrança *</Label>
+                    <Select
+                      value={planoForm.tipo_cobranca}
+                      onValueChange={(value) => setPlanoForm({ ...planoForm, tipo_cobranca: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="por_veiculo">Por Veículo</SelectItem>
+                        <SelectItem value="fixo">Fixo com Limite</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  {/* Opção Extra: Envio de Recibos por Motorista */}
-                  <Card className="border-orange-200 bg-orange-50">
-                    <CardContent className="pt-6">
-                      <div className="flex items-start gap-3">
-                        <UserPlus className="w-5 h-5 text-orange-600 mt-0.5" />
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between mb-2">
-                            <Label htmlFor="opcao_recibos" className="text-base font-semibold text-orange-900">
-                              Opção Extra: Envio de Recibos por Motorista
-                            </Label>
-                            <Checkbox
-                              id="opcao_recibos"
-                              checked={planoForm.opcao_recibos_motorista}
-                              onCheckedChange={(checked) => setPlanoForm({ 
-                                ...planoForm, 
-                                opcao_recibos_motorista: checked,
-                                preco_recibo_por_motorista: checked ? planoForm.preco_recibo_por_motorista : 0
-                              })}
-                            />
-                          </div>
-                          <p className="text-sm text-orange-800 mb-3">
-                            Cobrar valor adicional por motorista que envia recibos
-                          </p>
-                          {planoForm.opcao_recibos_motorista && (
-                            <div className="grid grid-cols-2 gap-3">
-                              <div>
-                                <Label className="text-sm">Preço por Motorista (€)</Label>
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  value={planoForm.preco_recibo_por_motorista}
-                                  onChange={(e) => setPlanoForm({ 
-                                    ...planoForm, 
-                                    preco_recibo_por_motorista: parseFloat(e.target.value) || 0 
-                                  })}
-                                  placeholder="Ex: 5.00"
-                                />
-                              </div>
-                              <div className="flex items-end">
-                                <p className="text-xs text-orange-700">
-                                  Este valor será multiplicado pelo número de motoristas que enviam recibos
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </>
-              )}
+                  <div>
+                    <Label htmlFor="limite_veiculos">Limite de Veículos</Label>
+                    <Input
+                      id="limite_veiculos"
+                      type="number"
+                      value={planoForm.limite_veiculos || ''}
+                      onChange={(e) => setPlanoForm({ 
+                        ...planoForm, 
+                        limite_veiculos: e.target.value ? parseInt(e.target.value) : null 
+                      })}
+                      placeholder="Opcional"
+                    />
+                  </div>
 
-              {/* Apenas Taxa IVA para motoristas */}
-              {planoForm.tipo_usuario === 'motorista' && (
-                <div className="grid grid-cols-1 gap-4">
                   <div>
                     <Label htmlFor="taxa_iva">Taxa IVA (%)</Label>
                     <Input
