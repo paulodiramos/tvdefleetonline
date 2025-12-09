@@ -13988,6 +13988,7 @@ async def enviar_relatorio_whatsapp_massa(
                 "data_fim_relatorio": data_fim,
                 "data_envio": datetime.now(timezone.utc),
                 "status": "enviado",
+                "estado_relatorio": "enviado",
                 "enviado_por": current_user["id"]
             }
             await db.historico_relatorios.insert_one(historico_record)
