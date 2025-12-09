@@ -3509,6 +3509,7 @@ async def testar_moloni_config(
 @api_router.get("/motoristas/meu-plano")
 async def get_meu_plano_motorista(current_user: Dict = Depends(get_current_user)):
     """Motorista: Get active plan"""
+    print(f"DEBUG: get_meu_plano_motorista called for user {current_user.get('id')}")
     if current_user["role"] != "motorista":
         raise HTTPException(status_code=403, detail="Not authorized")
     
