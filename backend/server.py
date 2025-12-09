@@ -6205,7 +6205,10 @@ async def get_parceiro_alertas(parceiro_id: str, current_user: Dict = Depends(ge
         # Check inspection expiry
         if vehicle.get("inspection") and vehicle["inspection"].get("proxima_inspecao"):
             try:
-                proxima_inspecao = datetime.strptime(vehicle["inspection"]["proxima_inspecao"], "%Y-%m-%d").date()
+                parsed_date = safe_parse_date(vehicle["inspection"]["proxima_inspecao"])
+                if not parsed_date:
+                    continue
+                proxima_inspecao = parsed_date.date()
                 dias_restantes = (proxima_inspecao - today).days
                 
                 if 0 <= dias_restantes <= dias_aviso_inspecao:
