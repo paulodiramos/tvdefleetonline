@@ -14025,6 +14025,45 @@ async def get_historico_relatorios(
     
     return historico
 
+@api_router.patch("/relatorios/historico/{historico_id}/estado")
+async def atualizar_estado_relatorio(
+    historico_id: str,
+    data: Dict[str, str],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Update report state"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    novo_estado = data.get("estado_relatorio")
+    estados_validos = [
+        "enviado",
+        "pendente_recibo",
+        "recibo_enviado",
+        "verificar_recibo",
+        "aprovado",
+        "pagamento",
+        "liquidado"
+    ]
+    
+    if novo_estado not in estados_validos:
+        raise HTTPException(status_code=400, detail="Invalid state")
+    
+    result = await db.historico_relatorios.update_one(
+        {"id": historico_id},
+        {
+            "$set": {
+                "estado_relatorio": novo_estado,
+                "updated_at": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Report history not found")
+    
+    return {"message": "State updated successfully", "estado": novo_estado}
+
 @api_router.delete("/notificacoes/{notificacao_id}")
 async def delete_notificacao(notificacao_id: str, current_user: Dict = Depends(get_current_user)):
     """Delete a notification"""
