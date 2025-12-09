@@ -436,7 +436,10 @@ async def check_and_create_alerts():
         # Check TVDE license expiry
         if motorista.get("licenca_tvde_validade"):
             try:
-                validade_date = datetime.strptime(motorista["licenca_tvde_validade"], "%Y-%m-%d").date()
+                parsed_date = safe_parse_date(motorista["licenca_tvde_validade"])
+                if not parsed_date:
+                    continue
+                validade_date = parsed_date.date()
                 days_until_expiry = (validade_date - today).days
                 
                 if 0 <= days_until_expiry <= 30:
