@@ -3506,6 +3506,50 @@ async def testar_moloni_config(
     # TODO: Implementar chamada real à API Moloni para validar
     return {"message": "Conexão Moloni testada com sucesso (simulado)", "status": "ok"}
 
+@api_router.get("/motoristas/meu-plano")
+async def get_meu_plano_motorista(current_user: Dict = Depends(get_current_user)):
+    """Motorista: Get active plan"""
+    if current_user["role"] != "motorista":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Buscar plano ativo
+    atribuicao = await db.planos_usuarios.find_one(
+        {"user_id": current_user["id"], "status": "ativo"},
+        {"_id": 0}
+    )
+    
+    if not atribuicao:
+        return {"tem_plano": False, "plano": None, "modulos": []}
+    
+    plano = await db.planos.find_one({"id": atribuicao["plano_id"]}, {"_id": 0})
+    if not plano:
+        return {"tem_plano": False, "plano": None, "modulos": []}
+    
+    modulos_ativos = atribuicao.get("modulos_ativos", plano.get("modulos", []))
+    
+    # Buscar info dos módulos
+    from models.modulo import MODULOS_SISTEMA
+    modulos_info = []
+    for codigo in modulos_ativos:
+        if codigo in MODULOS_SISTEMA:
+            modulos_info.append({
+                "codigo": codigo,
+                "nome": MODULOS_SISTEMA[codigo]["nome"],
+                "descricao": MODULOS_SISTEMA[codigo]["descricao"]
+            })
+    
+    precos = plano.get("precos", {})
+    preco_semanal = precos.get("semanal", {}).get("preco_com_iva", 0)
+    preco_mensal = precos.get("mensal", {}).get("preco_com_iva", 0)
+    
+    return {
+        "tem_plano": True,
+        "plano": plano,
+        "modulos": modulos_info,
+        "preco_semanal": preco_semanal,
+        "preco_mensal": preco_mensal
+    }
+
 @api_router.get("/motoristas/{motorista_id}")
 async def get_motorista_by_id(motorista_id: str, current_user: Dict = Depends(get_current_user)):
     """Get a specific motorista by ID"""
