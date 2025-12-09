@@ -494,28 +494,42 @@ const GestaoPlanos = ({ user, onLogout }) => {
                       {/* Filtros */}
                       <div className="space-y-2">
                         <Input
+                          id="busca-usuario"
                           placeholder="Buscar por nome ou email..."
-                          onChange={(e) => {
-                            const search = e.target.value.toLowerCase();
-                            // Trigger re-render
-                            setUsuarios(prev => [...prev]);
-                          }}
                           className="mb-2"
                         />
                         <div className="flex gap-2">
-                          <Badge variant="outline" className="cursor-pointer hover:bg-blue-50">
+                          <Badge 
+                            variant={filtroTipoUsuario === 'all' ? 'default' : 'outline'}
+                            className="cursor-pointer hover:bg-blue-100"
+                            onClick={() => setFiltroTipoUsuario('all')}
+                          >
                             Todos ({usuarios.length})
                           </Badge>
-                          <Badge variant="outline" className="cursor-pointer hover:bg-green-50">
+                          <Badge 
+                            variant={filtroTipoUsuario === 'motorista' ? 'default' : 'outline'}
+                            className="cursor-pointer hover:bg-green-100"
+                            onClick={() => setFiltroTipoUsuario('motorista')}
+                          >
                             Motoristas ({usuarios.filter(u => u.tipo === 'motorista').length})
                           </Badge>
-                          <Badge variant="outline" className="cursor-pointer hover:bg-blue-50">
+                          <Badge 
+                            variant={filtroTipoUsuario === 'parceiro' ? 'default' : 'outline'}
+                            className="cursor-pointer hover:bg-blue-100"
+                            onClick={() => setFiltroTipoUsuario('parceiro')}
+                          >
                             Parceiros ({usuarios.filter(u => u.tipo === 'parceiro').length})
                           </Badge>
                         </div>
                       </div>
                       <div className="max-h-96 overflow-y-auto space-y-2">
-                        {usuarios.map((u) => (
+                        {usuarios
+                          .filter(u => filtroTipoUsuario === 'all' || u.tipo === filtroTipoUsuario)
+                          .filter(u => {
+                            const busca = document.getElementById('busca-usuario')?.value?.toLowerCase() || '';
+                            return !busca || u.name?.toLowerCase().includes(busca) || u.email?.toLowerCase().includes(busca);
+                          })
+                          .map((u) => (
                           <div
                             key={u.id}
                             onClick={() => setUsuarioSelecionado(u)}
