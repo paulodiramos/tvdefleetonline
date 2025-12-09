@@ -231,7 +231,7 @@ const GestaoPagamentosRecibos = ({ user, onLogout }) => {
                       <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Todos os Parceiros</SelectItem>
+                      <SelectItem value="todos">Todos os Parceiros</SelectItem>
                       {parceiros.map((parceiro) => (
                         <SelectItem key={parceiro.id} value={parceiro.id}>
                           {parceiro.nome_empresa || parceiro.email}
