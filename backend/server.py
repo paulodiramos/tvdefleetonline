@@ -11245,6 +11245,62 @@ async def get_pedidos_alteracao(current_user: Dict = Depends(get_current_user)):
 
 
 # ==================== CONFIGURAÇÕES ====================
+@api_router.get("/integracoes/configuracoes")
+async def get_integracoes_config(current_user: Dict = Depends(get_current_user)):
+    """Get integrations configuration (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    # Get configurations from database
+    config = await db.configuracoes.find_one({"tipo": "integracoes"}, {"_id": 0})
+    
+    if not config:
+        # Return default structure
+        return {
+            "moloni": {
+                "ativo": False,
+                "client_id": "",
+                "client_secret": "",
+                "username": "",
+                "password": "",
+                "company_id": "",
+                "taxa_mensal_extra": 10.00
+            },
+            "terabox": {
+                "ativo": False,
+                "api_key": "",
+                "folder_id": ""
+            },
+            "google_drive": {
+                "ativo": False,
+                "credentials": "",
+                "folder_id": ""
+            }
+        }
+    
+    return config
+
+@api_router.post("/integracoes/configuracoes")
+async def save_integracoes_config(
+    config_data: Dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Save integrations configuration (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    
+    config_data["tipo"] = "integracoes"
+    config_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    config_data["updated_by"] = current_user["id"]
+    
+    await db.configuracoes.update_one(
+        {"tipo": "integracoes"},
+        {"$set": config_data},
+        upsert=True
+    )
+    
+    return {"message": "Configuração salva com sucesso"}
+
 @api_router.get("/configuracoes/email")
 async def get_email_config(current_user: Dict = Depends(get_current_user)):
     """Get email configuration (Admin only)"""
