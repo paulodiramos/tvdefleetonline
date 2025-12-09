@@ -94,7 +94,7 @@ const Layout = ({ children, user, onLogout }) => {
         icon: FileText,
         submenu: [
           { path: '/contratos', label: 'Gestão de Contratos' },
-          { path: '/contratos?tab=templates', label: 'Criar Template' },
+          { action: () => setCriarTemplateOpen(true), label: 'Criar Template' },
           { path: '/criar-contrato', label: 'Criar Contrato' }
         ]
       },
