@@ -117,6 +117,22 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
     setShowAddDialog(true);
   };
 
+  const handleAdicionarTipo = () => {
+    if (!novoTipo.trim()) {
+      toast.error('Digite o nome do tipo de contrato');
+      return;
+    }
+    if (tiposContrato.includes(novoTipo)) {
+      toast.error('Este tipo já existe');
+      return;
+    }
+    setTiposContrato([...tiposContrato, novoTipo]);
+    setFormData({ ...formData, tipo_contrato: novoTipo });
+    setNovoTipo('');
+    setShowNovoTipoDialog(false);
+    toast.success('Novo tipo de contrato adicionado!');
+  };
+
   const handleDeleteTemplate = async (templateId) => {
     if (!confirm('Tem certeza que deseja excluir este template?')) return;
     
