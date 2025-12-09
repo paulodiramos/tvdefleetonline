@@ -14090,10 +14090,18 @@ async def get_pagamentos_recibos(
     elif parceiro_id:
         query["parceiro_id"] = parceiro_id
     
-    if data_inicio:
-        query["data_inicio"] = {"$gte": data_inicio}
-    if data_fim:
-        query["data_fim"] = {"$lte": data_fim}
+    # Filtros de data - verificar se o período do registo interseta com o filtro
+    if data_inicio and data_fim:
+        # Registo deve ter data_fim >= filtro_inicio E data_inicio <= filtro_fim
+        query["$and"] = [
+            {"data_fim": {"$gte": data_inicio}},
+            {"data_inicio": {"$lte": data_fim}}
+        ]
+    elif data_inicio:
+        query["data_fim"] = {"$gte": data_inicio}
+    elif data_fim:
+        query["data_inicio"] = {"$lte": data_fim}
+    
     if estado:
         query["estado"] = estado
     
