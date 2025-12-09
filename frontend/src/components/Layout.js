@@ -365,6 +365,13 @@ const Layout = ({ children, user, onLogout }) => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {children}
       </main>
+
+      {/* Notificações Modal */}
+      <Notificacoes 
+        open={notificacoesOpen} 
+        onOpenChange={setNotificacoesOpen}
+        user={user}
+      />
     </div>
   );
 };
