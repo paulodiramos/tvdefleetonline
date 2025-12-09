@@ -77,6 +77,7 @@ import Mensagens from "@/pages/Mensagens";
 import TemplatesContratos from "@/pages/TemplatesContratos";
 import Termos from "@/pages/Termos";
 import Privacidade from "@/pages/Privacidade";
+import TermosPrivacidadeAdmin from "@/pages/TermosPrivacidadeAdmin";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
