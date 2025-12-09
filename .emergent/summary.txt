@@ -1,195 +1,217 @@
 <analysis>**original_problem_statement:**
-O utilizador iniciou a sessão para continuar o desenvolvimento do sistema de gestão de frotas TVDEFleet. No entanto, foi imediatamente identificado um bug crítico: o sistema de planos e módulos para parceiros não estava a atualizar as permissões corretamente quando o plano de um parceiro era alterado.
+O utilizador iniciou a sessão para continuar o desenvolvimento do sistema de gestão de frotas TVDEFleet. O objetivo era continuar a partir do último trabalho, que era a criação de uma nova página de gestão de planos. No entanto, ao longo da sessão, o utilizador reportou uma avalanche de bugs, regressões e novos pedidos de funcionalidades, abrangendo quase todas as partes da aplicação.
 
-O utilizador então solicitou uma série de correções de bugs, refatorações e novas funcionalidades, incluindo:
-1.  **Correção de Bug Crítico:** Garantir que o sistema de planos e módulos respeita as alterações de plano em tempo real.
-2.  **Unificação de Funcionalidades:** Havia múltiplos sistemas de gestão de planos no frontend. O utilizador pediu para unificá-los num único sistema coeso.
-3.  **Expansão do Sistema de Planos:**
-    *   Criar um sistema de módulos e planos também para **motoristas**, não apenas para parceiros.
-    *   Implementar um sistema de preços complexo com múltiplas periodicidades (semanal, mensal, etc.), descontos, e valores com/sem IVA.
-    *   Implementar uma lógica de faturação adicional para parceiros, com um custo extra por motorista.
-    *   Filtrar os módulos disponíveis na UI de criação de planos com base no tipo de utilizador (parceiro ou motorista).
-4.  **Reorganização da UI:** Múltiplos pedidos para reestruturar os menus de navegação para todos os perfis (admin, gestor, parceiro, motorista), movendo itens para submenus e painéis de controlo.
-5.  **Correção de Múltiplos Bugs:** O utilizador reportou uma série de problemas, incluindo páginas de perfil em branco, erros no carregamento de módulos, notificações que não funcionavam, e problemas na criação de templates de contrato.
-6.  **Novas Funcionalidades:**
-    *   Permitir que parceiros e motoristas alterem o seu próprio plano a partir de uma nova página Meu Plano.
-    *   Criar uma página dedicada para o admin atribuir planos manualmente aos utilizadores.
+Os principais pedidos e problemas incluem:
+1.  **Bugs Críticos e Regressões:**
+    *   Erro no dashboard após o login.
+    *   Páginas de perfil do parceiro e do motorista com erros, em branco ou a não carregar dados.
+    *   Página de ganhos do motorista em branco.
+    *   Várias páginas de administração (Integrações, Comunicações, Termos e Privacidade) com links quebrados ou em branco.
+    *   A atribuição de planos não funciona ou gera erros.
+    *   A criação/edição de planos não guarda os valores de preço introduzidos.
+    *   As notificações não funcionavam corretamente.
+
+2.  **Novas Funcionalidades e Melhorias de UX:**
+    *   Unificar o sistema de gestão de contratos, permitindo que parceiros/gestores criem os seus próprios tipos de contrato e editem templates.
+    *   Implementar um modal de criação de templates de contrato com base numa imagem fornecida.
+    *   Melhorar a página de gestão de planos com filtros para utilizadores ativos (parceiros/motoristas) e mostrar o valor do plano ao atribuir.
+    *   Implementar um sistema de promoções temporais (com data de início e fim) para os planos.
+    *   Permitir que um parceiro compre um plano com desconto para um dos seus motoristas.
+    *   Tornar os campos nas páginas de Termos e Privacidade editáveis pelo admin.
+    *   Ajustar o tamanho das pop-ups de notificação.
+    *   Garantir que a alteração de um plano tem sempre um custo associado.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-O agente corrigiu com sucesso o bug crítico no sistema de planos e módulos. Foi implementada uma refatoração massiva, unificando os vários sistemas de planos numa única página de gestão () que agora suporta tanto parceiros como motoristas.
+O agente realizou uma extensa sessão de debugging e implementação, corrigindo inúmeros problemas e adicionando novas funcionalidades.
 
-O sistema de planos foi expandido para incluir uma estrutura de preços complexa com múltiplas periodicidades e um campo  para diferenciar os planos. Foram criados novos módulos para motoristas e a UI de gestão de planos agora filtra os módulos dinamicamente.
+*   **Correções de Backend:** O agente diagnosticou e corrigiu um bug de routing crítico e recorrente no FastAPI, onde rotas com parâmetros (ex: ) capturavam rotas estáticas (ex: ). A solução foi reordenar as definições de rotas em . Também foram corrigidos endpoints duplicados para a gestão de planos ( e ) que impediam o armazenamento correto dos preços. A lógica de atribuição de planos foi melhorada para suportar tanto planos legados (com ) como novos (com ). A lógica de obtenção de perfis foi corrigida para consultar múltiplas coleções ( e ), resolvendo inconsistências arquiteturais.
 
-O agente também corrigiu uma série de bugs de frontend (páginas em branco, notificações) e backend (erros de parsing de data que causavam crashes). A estrutura de menus da aplicação () foi reescrita para corresponder aos pedidos do utilizador. Foram criadas novas páginas (, ) para os utilizadores gerirem os seus próprios planos.
+*   **Correções de Frontend:** Foram corrigidas múltiplas rotas quebradas no  (ex: Ganhos do Motorista) e foram adicionados redirects para URLs incorretas reportadas pelo utilizador. O sistema antigo de atribuição de planos na página  foi removido e substituído por um redirecionamento para a página de gestão centralizada.
+
+*   **Novas Funcionalidades (Implementadas):**
+    *   Foi criado um novo modal para a criação de templates de contrato, conforme a imagem fornecida pelo utilizador, e integrado no menu .
+    *   As páginas de Termos e Privacidade foram tornadas editáveis no frontend com suporte de backend.
+    *   As notificações foram melhoradas para permitir edição inline e alternar entre o estado de lido/não lido.
+    *   A página de Gestão de Planos foi melhorada com filtros funcionais para tipo de utilizador (parceiro/motorista).
+    *   Foi implementada a base no backend para um sistema de promoções e para a revenda de planos de parceiros para motoristas.
 
 **Last working item**:
--   Last item agent was working: O agente estava a responder ao último pedido do utilizador para substituir o modal de atribuição de planos por uma página dedicada e melhorada. O agente reescreveu o ficheiro  com a nova lógica para esta página e reiniciou o frontend.
+-   Last item agent was working: O agente estava a investigar um erro que ocorria no dashboard () imediatamente após o login do utilizador. O agente confirmou que os endpoints públicos e de estatísticas que o dashboard consome estavam a funcionar, sugerindo que o problema estava na lógica do componente frontend .
 -   Status: IN PROGRESS
 -   Agent Testing Done: N
--   Which testing method agent to use? screenshot tool. O próximo agente deve fazer login como admin, navegar para a página de gestão de planos e tirar um screenshot para verificar se a nova UI de atribuição manual de planos está a ser renderizada corretamente e sem erros.
+-   Which testing method agent to use? Frontend testing agent. A próxima tarefa é fazer login como admin e navegar para  para reproduzir o erro de forma consistente. O agente de teste deve capturar os logs da consola do browser e as respostas de rede para identificar qual componente ou chamada de API está a falhar.
 -   User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: (P0) Verificação da nova página de atribuição manual de planos.
--   Issue 2: (P1) Erros de visualização de módulos e dados no perfil do parceiro.
--   Issue 3: (P2) O ficheiro  continua a ser um monólito, o que aumenta a complexidade e o risco de erros.
+-   Issue 1: (P0) Erro na página  após o login.
+-   Issue 2: (P1) A funcionalidade de guardar e atualizar os preços dos planos ainda é reportada como defeituosa pelo utilizador, apesar da correção dos endpoints duplicados.
+-   Issue 3: (P1) A funcionalidade de atribuir um plano a um utilizador ainda é reportada como defeituosa.
+-   Issue 4: (P2) O perfil do parceiro () foi reportado novamente com erros de carregamento, mesmo após correções.
+-   Issue 5: (P3) O ficheiro  continua a ser um monólito, o que causa bugs recorrentes de routing e duplicação de código.
 
 Issues Detail:
 -   Issue 1:
-    -   Attempted fixes: O agente reescreveu  para criar a página solicitada, mas não a testou.
+    -   Attempted fixes: O agente verificou que os endpoints da API (, ) que alimentam o dashboard estão a funcionar corretamente via .
     -   Next debug checklist:
-        1.  Fazer login como admin.
-        2.  Usar a  na rota .
-        3.  Analisar o screenshot e os logs da consola do browser para verificar se a página carrega sem erros e com a nova UI.
-        4.  Se houver erros, inspecionar  e os logs da consola para depurar.
-    -   Why fix this issue and what will be achieved with the fix? Atender ao último pedido do utilizador para uma melhor UX na atribuição de planos.
+        1.  Usar o  para fazer login e navegar para .
+        2.  Analisar os logs da consola do browser e o  para identificar JavaScript errors ou chamadas de API falhadas no cliente.
+        3.  Inspecionar o ficheiro , especificamente os  hooks e a renderização condicional, para encontrar a causa do erro.
+    -   Why fix this issue and what will be achieved with the fix? O dashboard é a primeira página após o login, e um erro aqui impede o uso de toda a aplicação.
     -   Status: IN PROGRESS
-    -   Is recurring issue? N
+    -   Is recurring issue? Y
     -   Should Test frontend/backend/both after fix? Frontend
     -   Blocked on other issue: None
 
 -   Issue 2:
-    -   Attempted fixes: O agente fez várias correções nos componentes  e  para corrigir endpoints e lógica de carregamento de dados.
+    -   Attempted fixes: O agente encontrou e removeu endpoints  e  duplicados em  no ficheiro , que era a causa mais provável do problema.
     -   Next debug checklist:
-        1.  Fazer login como parceiro de teste que tenha um plano ativo.
-        2.  Navegar para a página de perfil/dashboard.
-        3.  Verificar se os dados do plano e os módulos ativos são exibidos corretamente, sem erros na consola.
-        4.  Se persistirem erros, inspecionar as chamadas de API no  do browser e a lógica nos ficheiros  e .
-    -   Why fix this issue and what will be achieved with the fix? Uma funcionalidade central para o parceiro está quebrada, impedindo-o de ver o seu status atual.
+        1.  Fazer um teste ponta-a-ponta: criar um novo plano com preços na UI de , guardar, recarregar a página e verificar se os preços persistem.
+        2.  Editar um plano existente, alterar os preços, guardar e verificar novamente.
+        3.  Se falhar, inspecionar a payload enviada no  e os logs do backend ao chamar  e .
+    -   Why fix this issue and what will be achieved with the fix? A gestão de planos é uma funcionalidade central e não funciona sem preços.
+    -   Status: USER VERIFICATION PENDING
+    -   Is recurring issue? Y
+    -   Should Test frontend/backend/both after fix? Both
+    -   Blocked on other issue: None
+
+-   Issue 3:
+    -   Attempted fixes: O agente verificou que o endpoint  funciona via . A UI em  foi revista.
+    -   Next debug checklist:
+        1.  Na UI, na aba Atribuir Planos, selecionar um utilizador e um plano e clicar em Atribuir.
+        2.  Verificar a chamada de API no  e a resposta.
+        3.  Se houver um erro, adicionar  na função  em  para inspecionar os IDs e a payload antes do envio.
+    -   Why fix this issue and what will be achieved with the fix? A atribuição de planos é a ação principal da página de gestão de planos.
     -   Status: USER VERIFICATION PENDING
     -   Is recurring issue? Y
     -   Should Test frontend/backend/both after fix? Frontend
     -   Blocked on other issue: None
 
--   Issue 3:
-    -   Attempted fixes: Nenhum nesta sessão.
-    -   Next debug checklist: Planear a refatoração de  para usar  do FastAPI, dividindo a lógica por funcionalidades (planos, utilizadores, vistorias, etc.) em ficheiros separados dentro de uma pasta .
-    -   Why fix this issue and what will be achieved with the fix? Melhorar a manutenibilidade, estabilidade e escalabilidade do backend.
+-   Issue 4:
+    -   Attempted fixes: O agente corrigiu o endpoint  para procurar o utilizador tanto na coleção  como na coleção .
+    -   Next debug checklist:
+        1.  Fazer login como parceiro de teste ().
+        2.  Navegar para a página de perfil.
+        3.  Inspecionar os logs da consola e as chamadas de API no  para ver que dados estão a falhar o carregamento. O ficheiro a verificar é .
+    -   Why fix this issue and what will be achieved with the fix? O perfil é uma página essencial para o utilizador parceiro.
+    -   Status: USER VERIFICATION PENDING
+    -   Is recurring issue? Y
+    -   Should Test frontend/backend/both after fix? Frontend
+    -   Blocked on other issue: None
+
+-   Issue 5:
+    -   Attempted fixes: Nenhuma refatoração estrutural foi feita. O agente corrigiu bugs causados pelo monólito (endpoints duplicados, ordem de rotas).
+    -   Next debug checklist: Planear a refatoração. Mover rotas relacionadas com  de  para um novo ficheiro  usando .
+    -   Why fix this issue and what will be achieved with the fix? Reduzir a complexidade, eliminar bugs recorrentes e melhorar a manutenibilidade do backend.
     -   Status: NOT STARTED
     -   Is recurring issue? Y
     -   Should Test frontend/backend/both after fix? Both
     -   Blocked on other issue: None
 
 **In progress Task List**:
--   Task 1: Unificação e finalização do sistema de gestão de planos.
-    -   Where to resume: Testar a nova página de atribuição de planos (). Após a verificação, confirmar com o utilizador se a refatoração está completa.
-    -   What will be achieved with this? Um sistema de gestão de planos centralizado, robusto e que cumpre todos os requisitos do utilizador.
+-   Task 1: Depurar e corrigir o erro no Dashboard.
+    -   Where to resume: Investigar o componente .
+    -   What will be achieved with this? Permitir o acesso e uso da aplicação após o login.
     -   Status: IN PROGRESS
     -   Should Test frontend/backend/both after fix? Frontend
-    -   Blocked on something: Issue 1
+    -   Blocked on something: Este é o principal bloqueador.
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   (P0) **Implementar Relatório de Faturação Mensal para Parceiros**: Com base no novo sistema de planos e no endpoint , criar um relatório que detalhe os custos.
-    *   (P1) **Teste Ponta-a-Ponta da Faturação Moloni**: Executar o fluxo completo para motoristas.
-    *   (P1) **Implementar Histórico de Cobranças e Faturas**: Criar uma página onde o parceiro/motorista possa ver o histórico de faturas e fazer o download.
+    *   (P1) **Gestão de Contratos do Parceiro**: Permitir que o parceiro crie os seus próprios tipos de contrato e veja uma lista dos seus templates e contratos ativos.
+    *   (P2) **Implementar Custo na Alteração de Plano**: Garantir que a lógica de negócio para cobrar uma taxa ao alterar um plano seja implementada.
+    *   (P2) **Finalizar UI para Promoções**: A UI para criar promoções com data de início/fim na página de Gestão de Planos precisa ser implementada.
+    *   (P2) **Finalizar UI para Revenda de Planos**: Criar a UI para que um parceiro possa comprar e atribuir um plano a um dos seus motoristas.
 *   **Future Tasks:**
     *   (P2) **Refatorar **: Decompor o monólito em múltiplos routers.
-    *   (P2) **Implementar Lógica de Negócio do Google Drive**.
-    *   (P2) **Utilizar o Serviço de Comunicações** () em mais partes da aplicação.
+    *   (P3) **Implementar Relatório de Faturação Mensal para Parceiros**.
+    *   (P3) **Teste Ponta-a-Ponta da Faturação Moloni**.
 
 **Completed work in this session**
--   **Resolução de Bug Crítico**: Corrigido o problema em que as permissões de módulos não eram atualizadas após a alteração do plano de um utilizador.
--   **Unificação do Sistema de Planos**: Refatoradas múltiplas páginas de gestão de planos numa única UI ().
--   **Expansão do Modelo de Planos**:
-    -   Sistema de planos e módulos estendido para **Motoristas**.
-    -   Implementada uma estrutura de preços complexa no backend e frontend (múltiplas periodicidades, descontos, valor por motorista).
--   **Criação de Novos Módulos**: Adicionados módulos para importação de CSV, sincronização, avisos, etc., conforme solicitado.
--   **Reorganização da UI**: O menu principal () foi reestruturado várias vezes para todos os perfis, de acordo com os pedidos do utilizador.
--   **Correção de Bugs de Estabilidade**: Resolvido um crash recorrente no backend causado pelo parsing de datas inválidas, através da implementação de uma função .
--   **Novas Páginas de Perfil**: Criadas as páginas  e  para permitir que os utilizadores vejam e alterem os seus planos.
--   **Correção de Múltiplos Bugs de UI**: Resolvidos problemas em páginas de perfil em branco, notificações quebradas e pré-preenchimento de formulários.
-
-**Earlier issues found/mentioned but not fixed**
--   Issue 1: O ficheiro  é um monólito e precisa urgentemente de ser refatorado para uma arquitetura baseada em routers.
-
-**Known issue recurrence from previous fork**
--   Nenhuma.
+-   **Correção Crítica de Routing (Backend)**: Resolvido o conflito de rotas no FastAPI movendo rotas estáticas (ex: ) para antes de rotas com parâmetros () em .
+-   **Correção de Endpoints Duplicados**: Removidos endpoints  e  duplicados para , que impediam que os preços fossem guardados.
+-   **Correção de Inconsistência de Dados**: Atualizados vários endpoints para consultar tanto a coleção  como as coleções /, corrigindo múltiplos bugs de Not Found.
+-   **Funcionalidade de Edição de Conteúdo**: As páginas de  e  foram transformadas em conteúdo dinâmico e editável pelo admin, com suporte de frontend e backend.
+-   **Melhoria das Notificações**: As notificações agora podem ser editadas inline, e o seu estado (lido/não lido) pode ser alternado. O pop-up foi alargado para 1000px.
+-   **Implementação de Modal de Contratos**: Criado e integrado um novo modal para Criar Template de Contrato, com variáveis dinâmicas, conforme a imagem do utilizador.
+-   **Correção de Rotas (Frontend)**: Adicionadas rotas em falta (ex: ) e redirects para URLs incorretas em .
+-   **Melhoria da Gestão de Planos**: Adicionados filtros funcionais por tipo de utilizador (parceiro/motorista) na página .
+-   **Refatoração da UI**: Removida a tab Templates da página de contratos para admin/gestor.
 
 **Code Architecture**
-tipo_usuario
+
 
 **Key Technical Concepts**
--   **Bug Triage and Resolution**: O agente diagnosticou e corrigiu um bug crítico de lógica de negócios na atribuição de planos, envolvendo múltiplas coleções na base de dados ( e ).
--   **Large-Scale Refactoring**: O agente unificou múltiplos componentes de frontend num único sistema mais coeso () e reestruturou repetidamente a navegação principal ().
--   **Defensive Programming**: Implementada uma função  no backend para prevenir crashes causados por dados de data inválidos ou em falta, melhorando a robustez geral do sistema de alertas.
--   **API-Driven Dynamic UI**: A UI de gestão de planos foi desenvolvida para buscar dinamicamente os módulos disponíveis com base no tipo de utilizador selecionado, comunicando com um endpoint de API com filtros.
--   **Complex UI State Management**: A página  gere um estado complexo, incluindo o tipo de utilizador, a lista de módulos filtrada, e uma estrutura de preços aninhada com múltiplas periodicidades.
-
-**key DB schema**
--   **planos**: Adicionado campo  (string: parceiro, motorista). O campo de preço foi substituído por um objeto complexo  para suportar múltiplas periodicidades e um .
--   **planos_usuarios**: A consistência dos dados nesta coleção foi o cerne da correção do bug principal. Agora é corretamente criada/atualizada quando um plano é atribuído.
-
-**changes in tech stack**
--   Nenhuma.
+-   **FastAPI Route Order Precedence**: A sessão demonstrou repetidamente que a ordem de definição das rotas em  é crítica. Rotas estáticas (e.g., ) devem ser declaradas ANTES de rotas com parâmetros (e.g., ) para evitar que a rota com parâmetro capture a chamada incorretamente.
+-   **Architectural Inconsistency (Dual User Collections)**: A aplicação sofre de uma inconsistência onde a autenticação está na coleção , mas os dados operacionais estão em coleções separadas (, ). Isto exigiu correções em múltiplos endpoints para que consultassem ambas as fontes de dados para encontrar o utilizador correto.
+-   **State Management in Complex Components**: Componentes como  e  gerem um estado complexo (múltiplos formulários, modais, dados de API, filtros), tornando-os frágeis e difíceis de depurar.
 
 **All files of reference**
 -   **Criados**:
-    -    (substituiu várias páginas antigas)
-    -   
     -   
     -   
     -   
 -   **Atualizados/Refatorados (principais)**:
-    -   : Lógica de planos, módulos e alertas massivamente atualizada.
-    -   : Módulos categorizados por tipo de utilizador.
-    -   : Menus completamente redesenhados.
-    -   : Roteamento simplificado e atualizado.
-    -   : Correções de bugs.
+    -   : Múltiplas correções críticas de routing e lógica.
+    -   : Múltiplas correções de rotas e adição de redirects.
+    -   : Integração de novo modal e ajustes nos menus.
+    -   : Adição de filtros e melhorias na UI.
+    -   : Transformado em componente com conteúdo editável.
+    -   : Funcionalidade de edição adicionada.
 
 **Areas that need refactoring**:
--   **CRÍTICO - **: A necessidade de refatorar este ficheiro para uma arquitetura de múltiplos routers é agora mais crítica do que nunca.
--   ****: Este ficheiro tornou-se extremamente complexo. Poderia beneficiar da extração de lógica e componentes secundários (ex: formulário de preços, seletor de módulos) para ficheiros separados.
+-   **CRÍTICO - **: A necessidade de refatorar este ficheiro para uma arquitetura de múltiplos routers é a principal prioridade técnica para evitar a recorrência de bugs.
+-   ****: Este ficheiro tornou-se excessivamente grande e complexo. A lógica de gestão de planos, atribuição e o formulário de edição deveriam ser divididos em componentes mais pequenos.
+-   ****: Este ficheiro contém a lógica de menus para múltiplos perfis, modais e estado, tornando-o difícil de manter. A lógica dos menus deveria ser extraída.
 
 **key api endpoints**
--   **Novos/Atualizados (principais):**
-    -   : Agora executa uma eliminação real (hard delete).
-    -   : Filtra módulos por tipo de utilizador.
-    -   : Novo endpoint para atribuir planos a motoristas.
-    -   : Novo endpoint para calcular o custo dinâmico de um plano de parceiro.
-    -   : Lógica corrigida para garantir consistência na base de dados.
+-   **Corrigidos (principais):**
+    -    e : Corrigidos através da reordenação de rotas.
+    -    e : Corrigidos removendo definições duplicadas.
+    -   : Corrigido para consultar a coleção  também.
+-   **Novos:**
+    -   
+    -   
+    -   
+    -   
+    -   
 
 **Critical Info for New Agent**
--   O sistema de planos e módulos foi quase totalmente reescrito nesta sessão. É complexo e o centro de muitas funcionalidades. Qualquer alteração aqui requer testes cuidadosos.
--   O último passo do agente foi criar uma nova página de Atribuição Manual de Planos para o admin. A sua primeira tarefa deve ser verificar se esta página funciona como esperado.
--   Apesar de muitas correções, o utilizador reportou vários bugs de UI em rápida sucessão. É provável que ainda existam problemas de estabilidade no frontend. Teste exaustivamente as alterações do ponto de vista do utilizador.
--   O ficheiro  é um ponto de falha significativo. Tenha extremo cuidado ao editá-lo e considere fortemente a sua refatoração como uma tarefa prioritária para a saúde a longo prazo do projeto.
-
-**documents created in this job**
--   
+-   **Atenção ao Routing do Backend**: A causa raiz de muitos bugs Not Found ou Not Authorized foi a ordem das rotas no . Sempre que adicionar uma rota estática (ex: ), verifique se ela está definida ANTES de qualquer rota com parâmetro (ex: ).
+-   **Inconsistência de Dados do Utilizador**: Lembre-se que os dados do utilizador estão divididos entre a coleção  (para auth) e as coleções / (para dados operacionais). Qualquer consulta a um utilizador pode exigir a verificação em ambas as fontes.
+-   **O utilizador reporta bugs em série**: Espere um fluxo contínuo de feedback. Agrupe os problemas por prioridade e tente resolver os bloqueadores críticos primeiro. Comunique claramente o seu plano de ação.
+-   **A Refatoração do  é urgente**: Muitos dos problemas que surgiram nesta sessão são sintomas de um backend monolítico. Priorize a sua refatoração para garantir a estabilidade do projeto a longo prazo.
 
 **Last 10 User Messages and any pending user messages**
-1.  **User**: Pediu para filtrar módulos por tipo de utilizador, adicionar preços múltiplos (semanal, mensal etc.) com e sem IVA, e descontos. - **Status**: COMPLETO.
-2.  **User**: Corrigiu requisitos: Moloni é só para motoristas, motoristas têm preço fixo, parceiros precisam de um módulo de histórico de veículo e uma opção de custo extra por motorista. - **Status**: COMPLETO.
-3.  **User**: Reportou vários bugs: não é possível eliminar planos, módulos do parceiro com erros, perfil do parceiro em branco, e pediu uma grande reorganização dos menus para todos os perfis. - **Status**: PARCIALMENTE COMPLETO (correções implementadas, verificação pendente).
-4.  **User**: Pediu mais funcionalidades: Criar Template de Contrato como submenu, cálculo automático de faturação semanal, e permitir que utilizadores mudem de plano no seu perfil. - **Status**: COMPLETO.
-5.  **User**: Reportou uma nova vaga de bugs: menus de planos vazios, perfil do parceiro em branco, notificações e contratos quebrados para múltiplos perfis. - **Status**: PARCIALMENTE COMPLETO (correções implementadas, verificação pendente).
-6.  **User**: Pediu para corrigir todos os bugs e testar as funções de todos os perfis. - **Status**: COMPLETO (Agente executou correções e usou um agente de teste, que reportou 91% de sucesso).
-7.  **User**: Forneceu HTML de um modal de atribuição de planos e pediu que fosse substituído por uma página dedicada () para o admin atribuir planos manualmente. - **Status**: EM PROGRESSO (este foi o último item de trabalho).
-8.  **User**: (sim) - Confirmou um plano de ação. - **Status**: COMPLETO.
-9.  **User**: (corrigir todos os bugs e testar as funcoes de todos os perfis) - Reiteração. - **Status**: COMPLETO.
-10. **User**: (gestor notificoes nao funciona; parceiro perfil em branco; admin mesmo problema de template de contratop;:) - Parte da lista de bugs. - **Status**: PARCIALMENTE COMPLETO.
+1.  **User**: Reportou erro no dashboard após o login. - **Status**: IN PROGRESS.
+2.  **User**: Reportou que o perfil do parceiro dá erro, pediu para editar notificações, criar tipos de contrato personalizados e que a alteração de plano tenha custo. - **Status**: PARCIALMENTE COMPLETO (Perfil corrigido, notificações editáveis, resto pendente).
+3.  **User**: Reportou erro ESLint no . - **Status**: RESOLVIDO.
+4.  **User**: Pediu para remover a tab Templates dos contratos, tornar Termos/Privacidade editáveis e reportou que os planos não guardam valores. - **Status**: PARCIALMENTE COMPLETO (Tab removida, Termos editável, bug dos planos pendente de verificação).
+5.  **User**: Reportou que a atribuição de planos falha, links de admin estão quebrados e gestão de planos não funciona bem. - **Status**: PARCIALMENTE COMPLETO (Links corrigidos com redirects, resto pendente de verificação).
+6.  **User**: Pediu filtros na lista de contratos, que notificações sejam editáveis, reportou que os ganhos do motorista estão em branco e a gestão de planos tem problemas. - **Status**: PARCIALMENTE COMPLETO (Filtros de contrato e correção de ganhos implementados, resto pendente).
+7.  **User**: Reportou vários problemas: Ganhos do motorista em branco, perfil do parceiro incorreto, gestão de planos com valores em falta, pediu promoções nos planos, e um sistema de revenda de planos. - **Status**: PARCIALMENTE COMPLETO.
+8.  **User**: Confirmou plano de ação (opcao a). - **Status**: COMPLETO.
+9.  **User**: Confirmou plano de ação (fase 1 e fase 2 avanacar). - **Status**: COMPLETO.
+10. **User**: Reportou uma longa lista de bugs: atribuição de planos antiga, páginas de admin em branco, notificações com largura errada, contratos duplicados, página de documentos do motorista em branco,  do motorista não funciona. - **Status**: PARCIALMENTE COMPLETO.
 
 **Project Health Check:**
--   **Broken**: O estado do perfil do parceiro e a visualização dos seus módulos são incertos e foram reportados como quebrados recentemente. As correções aplicadas precisam de verificação.
--   **Mocked**: As integrações Moloni e Google Drive continuam pendentes de teste e implementação completa, respetivamente.
-
-**3rd Party Integrations**
--   **Moloni**: Backend implementado, mas requer teste ponta-a-ponta (agora focado apenas em motoristas).
--   **SendGrid / SMTP**: Prontos, mas não totalmente integrados nos fluxos de notificação.
--   **Google Drive**: Esqueleto de backend existe, implementação pendente.
--   **ReportLab**: Usado com sucesso para gerar PDFs.
+-   **Broken**:
+    -   A página  falha ao carregar após o login.
+    -   As funcionalidades de guardar preços e atribuir planos () são repetidamente reportadas como defeituosas pelo utilizador.
+    -   A estabilidade da página de perfil do parceiro () é incerta.
+-   **Mocked**:
+    -   As integrações com Moloni e Google Drive permanecem por implementar/testar.
+    -   A funcionalidade de promoções e revenda de planos tem apenas a base do backend; a UI está por fazer.
 
 **Testing status**
--   Testing agent used after significant changes: YES, o agente usou um agente de teste para validar os 4 perfis de utilizador após uma série de correções, com 91% de sucesso.
--   Troubleshoot agent used after agent stuck in loop: YES, o agente usou o  para diagnosticar o bug crítico inicial no sistema de planos.
--   Test files created: None.
--   Known regressions: O utilizador reportou várias regressões no frontend (notificações, perfis) durante a sessão. O agente tentou corrigi-las, mas a estabilidade completa não está confirmada.
+-   Testing agent used after significant changes: NO
+-   Troubleshoot agent used after agent stuck in loop: NO
+-   Test files created: []
+-   Known regressions: A funcionalidade de guardar preços dos planos e a estabilidade do perfil do parceiro são regressões conhecidas e recorrentes. A aplicação inteira parece instável, com novas regressões a aparecer a cada nova funcionalidade.
 
 **Credentials to test flow:**
 -   Disponíveis em .
 
 **What agent forgot to execute**
--   O agente não esqueceu tarefas, mas foi forçado a adiar as tarefas originais (relatório de faturação, teste Moloni) para lidar com a avalanche de bugs críticos e novos requisitos de alta prioridade do utilizador relacionados com o sistema de planos.</analysis>
+O agente não esqueceu, mas foi constantemente forçado a adiar tarefas de fundo (como a refatoração do  e relatórios de faturação) para lidar com a avalanche de bugs críticos e regressões reportadas pelo utilizador. O agente também não utilizou o testing agent, o que poderia ter ajudado a apanhar regressões mais cedo.</analysis>
