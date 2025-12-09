@@ -8906,12 +8906,19 @@ async def trocar_plano(
     
     await db.planos_usuarios.insert_one(atribuicao)
     
-    return {
+    response = {
         "message": "Plan changed successfully", 
         "plano_id": plano_id,
         "periodicidade": periodicidade,
-        "valor": valor_pago
+        "valor_plano": valor_pago
     }
+    
+    if taxa_troca > 0:
+        response["taxa_troca"] = taxa_troca
+        response["valor_total"] = valor_pago + taxa_troca
+        response["message"] = f"Plano alterado com sucesso. Taxa de troca de {taxa_troca}€ aplicada."
+    
+    return response
 
 # ==================== ENDPOINTS DE CONTRATOS ====================
 
