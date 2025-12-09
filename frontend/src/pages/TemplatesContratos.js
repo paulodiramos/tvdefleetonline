@@ -18,6 +18,7 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [formData, setFormData] = useState({
     nome: '',
+    tipo_contrato: '',
     descricao: '',
     texto_template: ''
   });
