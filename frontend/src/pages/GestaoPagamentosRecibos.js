@@ -28,7 +28,7 @@ const GestaoPagamentosRecibos = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(false);
   
   // Filtros
-  const [filtrosParceiro, setFiltrosParceiro] = useState('');
+  const [filtrosParceiro, setFiltrosParceiro] = useState('todos');
   const [filtrosDataInicio, setFiltrosDataInicio] = useState('');
   const [filtrosDataFim, setFiltrosDataFim] = useState('');
   const [filtrosEstado, setFiltrosEstado] = useState('all');
