@@ -54,7 +54,31 @@ const ListaContratos = ({ user, onLogout, showLayout = true }) => {
     const matchesSearch = !filters.search || 
       contrato.motorista_nome?.toLowerCase().includes(filters.search.toLowerCase()) ||
       contrato.veiculo_matricula?.toLowerCase().includes(filters.search.toLowerCase());
-    return matchesStatus && matchesSearch;
+    
+    const matchesTipo = filters.tipoContrato === 'all' || contrato.tipo_contrato === filters.tipoContrato;
+    
+    // Filtro de período
+    let matchesPeriodo = true;
+    if (filters.periodo !== 'all' && contrato.data_inicio) {
+      const dataInicio = new Date(contrato.data_inicio);
+      const hoje = new Date();
+      const diff = hoje - dataInicio;
+      const dias = diff / (1000 * 60 * 60 * 24);
+      
+      switch(filters.periodo) {
+        case 'ultimos_30_dias':
+          matchesPeriodo = dias <= 30;
+          break;
+        case 'ultimos_90_dias':
+          matchesPeriodo = dias <= 90;
+          break;
+        case 'este_ano':
+          matchesPeriodo = dataInicio.getFullYear() === hoje.getFullYear();
+          break;
+      }
+    }
+    
+    return matchesStatus && matchesSearch && matchesTipo && matchesPeriodo;
   });
 
   const content = (
