@@ -403,6 +403,7 @@ const Layout = ({ children, user, onLogout }) => {
       <CriarTemplateModal
         open={criarTemplateOpen}
         onOpenChange={setCriarTemplateOpen}
+        user={user}
         onSuccess={() => {
           // Refresh ou redirect se necessário
         }}
