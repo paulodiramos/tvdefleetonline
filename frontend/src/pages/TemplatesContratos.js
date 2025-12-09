@@ -69,7 +69,7 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
       
       setShowAddDialog(false);
       setEditingTemplate(null);
-      setFormData({ nome: '', descricao: '', texto_template: '' });
+      setFormData({ nome: '', tipo_contrato: '', descricao: '', texto_template: '' });
       fetchTemplates();
     } catch (error) {
       console.error('Error saving template:', error);
