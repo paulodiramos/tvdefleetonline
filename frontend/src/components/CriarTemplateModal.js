@@ -250,7 +250,7 @@ const CriarTemplateModal = ({ open, onOpenChange, onSuccess, user }) => {
           <div className="flex justify-end pt-4 border-t">
             <Button
               onClick={handleSubmit}
-              disabled={saving || !tipoContrato || !textoContrato.trim()}
+              disabled={saving || !tipoContrato || !parceiroId || !textoContrato.trim()}
               className="bg-slate-800 hover:bg-slate-700 text-white px-6 py-2"
             >
               <FileText className="w-4 h-4 mr-2" />
@@ -258,6 +258,44 @@ const CriarTemplateModal = ({ open, onOpenChange, onSuccess, user }) => {
             </Button>
           </div>
         </div>
+
+        {/* Diálogo Novo Tipo */}
+        <Dialog open={mostrarNovoTipo} onOpenChange={setMostrarNovoTipo}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Adicionar Novo Tipo de Contrato</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="novo-tipo">Nome do Tipo</Label>
+                <Input
+                  id="novo-tipo"
+                  value={novoTipo}
+                  onChange={(e) => setNovoTipo(e.target.value)}
+                  placeholder="Ex: Compra de Viatura, Leasing"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdicionarNovoTipo()}
+                  className="mt-2"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setMostrarNovoTipo(false);
+                    setNovoTipo('');
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button onClick={handleAdicionarNovoTipo}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </DialogContent>
     </Dialog>
   );
