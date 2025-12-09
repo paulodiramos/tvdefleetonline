@@ -31,6 +31,7 @@ const GestaoPlanos = ({ user, onLogout }) => {
   const [usuarios, setUsuarios] = useState([]);
   const [filtroTipoUsuario, setFiltroTipoUsuario] = useState('all'); // all, motorista, parceiro
   const [usuarioSelecionado, setUsuarioSelecionado] = useState(null);
+  const [planoSelecionado, setPlanoSelecionado] = useState(null);
   const [planoParaAtribuir, setPlanoParaAtribuir] = useState('');
   const [periodicidade, setPeriodicidade] = useState('mensal');
   
