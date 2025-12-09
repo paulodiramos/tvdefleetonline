@@ -136,46 +136,80 @@ const Notificacoes = ({ open, onOpenChange, user }) => {
                     notif.lida ? 'bg-slate-50' : 'bg-blue-50 border-blue-200'
                   }`}
                 >
-                  <div className="flex items-start gap-3">
-                    {getIcon(notif.tipo)}
-                    <div className="flex-1">
-                      <h4 className="font-medium text-slate-800">{notif.titulo}</h4>
-                      <p className="text-sm text-slate-600 mt-1">{notif.mensagem}</p>
-                      <p className="text-xs text-slate-500 mt-2">
-                        {new Date(notif.created_at).toLocaleString('pt-PT')}
-                      </p>
+                  {editando === notif.id ? (
+                    <div className="space-y-3 p-3 bg-blue-50 rounded">
+                      <Input
+                        value={tituloEdit}
+                        onChange={(e) => setTituloEdit(e.target.value)}
+                        placeholder="Título"
+                        className="font-medium"
+                      />
+                      <Textarea
+                        value={mensagemEdit}
+                        onChange={(e) => setMensagemEdit(e.target.value)}
+                        placeholder="Mensagem"
+                        className="min-h-[80px]"
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <Button size="sm" variant="outline" onClick={cancelarEdicao}>
+                          Cancelar
+                        </Button>
+                        <Button size="sm" onClick={() => salvarEdicao(notif.id)}>
+                          Salvar
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => marcarComoLida(notif.id)}
-                        title={notif.lida ? "Marcar como não lida" : "Marcar como lida"}
-                      >
-                        {notif.lida ? '👁️' : '✓'}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={async () => {
-                          if (confirm('Deseja remover esta notificação?')) {
-                            try {
-                              const token = localStorage.getItem('token');
-                              await axios.delete(`${window.location.origin}/api/notificacoes/${notif.id}`, {
-                                headers: { Authorization: `Bearer ${token}` }
-                              });
-                              setNotificacoes(prev => prev.filter(n => n.id !== notif.id));
-                            } catch (error) {
-                              console.error('Erro ao remover:', error);
+                  ) : (
+                    <div className="flex items-start gap-3">
+                      {getIcon(notif.tipo)}
+                      <div className="flex-1">
+                        <h4 className="font-medium text-slate-800">{notif.titulo}</h4>
+                        <p className="text-sm text-slate-600 mt-1">{notif.mensagem}</p>
+                        <p className="text-xs text-slate-500 mt-2">
+                          {new Date(notif.created_at).toLocaleString('pt-PT')}
+                        </p>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => iniciarEdicao(notif)}
+                          title="Editar"
+                        >
+                          ✏️
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => marcarComoLida(notif.id)}
+                          title={notif.lida ? "Marcar como não lida" : "Marcar como lida"}
+                        >
+                          {notif.lida ? '👁️' : '✓'}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={async () => {
+                            if (confirm('Deseja remover esta notificação?')) {
+                              try {
+                                const token = localStorage.getItem('token');
+                                await axios.delete(`${window.location.origin}/api/notificacoes/${notif.id}`, {
+                                  headers: { Authorization: `Bearer ${token}` }
+                                });
+                                setNotificacoes(prev => prev.filter(n => n.id !== notif.id));
+                                toast.success('Notificação removida');
+                              } catch (error) {
+                                console.error('Erro ao remover:', error);
+                              }
                             }
-                          }
-                        }}
-                        title="Remover"
-                      >
-                        <X className="w-4 h-4 text-red-500" />
-                      </Button>
+                          }}
+                          title="Remover"
+                        >
+                          <X className="w-4 h-4 text-red-500" />
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>
