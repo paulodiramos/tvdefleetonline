@@ -10465,20 +10465,21 @@ async def get_planos(current_user: Dict = Depends(get_current_user)):
         logger.error(f"Error fetching planos: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.post("/planos")
-async def create_plano(plano: PlanoCreate, current_user: Dict = Depends(get_current_user)):
-    """Create a new plan (Admin only)"""
-    if current_user["role"] != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Admin only")
-    
-    plano_dict = plano.dict()
-    plano_dict["id"] = str(uuid.uuid4())
-    plano_dict["ativo"] = True
-    plano_dict["created_at"] = datetime.now(timezone.utc)
-    plano_dict["updated_at"] = datetime.now(timezone.utc)
-    
-    await db.planos.insert_one(plano_dict)
-    return {"message": "Plan created successfully", "plano_id": plano_dict["id"]}
+# DEPRECATED: Endpoint duplicado - usar o endpoint mais completo na linha 6808
+# @api_router.post("/planos")
+# async def create_plano(plano: PlanoCreate, current_user: Dict = Depends(get_current_user)):
+#     """Create a new plan (Admin only)"""
+#     if current_user["role"] != UserRole.ADMIN:
+#         raise HTTPException(status_code=403, detail="Admin only")
+#     
+#     plano_dict = plano.dict()
+#     plano_dict["id"] = str(uuid.uuid4())
+#     plano_dict["ativo"] = True
+#     plano_dict["created_at"] = datetime.now(timezone.utc)
+#     plano_dict["updated_at"] = datetime.now(timezone.utc)
+#     
+#     await db.planos.insert_one(plano_dict)
+#     return {"message": "Plan created successfully", "plano_id": plano_dict["id"]}
 
 @api_router.put("/planos/{plano_id}")
 async def update_plano(plano_id: str, updates: Dict[str, Any], current_user: Dict = Depends(get_current_user)):
