@@ -6173,7 +6173,10 @@ async def get_parceiro_alertas(parceiro_id: str, current_user: Dict = Depends(ge
         # Check insurance expiry
         if vehicle.get("insurance") and vehicle["insurance"].get("data_validade"):
             try:
-                data_validade = datetime.strptime(vehicle["insurance"]["data_validade"], "%Y-%m-%d").date()
+                parsed_date = safe_parse_date(vehicle["insurance"]["data_validade"])
+                if not parsed_date:
+                    continue
+                data_validade = parsed_date.date()
                 dias_restantes = (data_validade - today).days
                 
                 if 0 <= dias_restantes <= dias_aviso_seguro:
