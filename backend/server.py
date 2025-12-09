@@ -8828,7 +8828,7 @@ async def trocar_plano(
     plano_data: Dict[str, str],
     current_user: Dict = Depends(get_current_user)
 ):
-    """Parceiro/Motorista: Change subscription plan"""
+    """Parceiro/Motorista: Change subscription plan with change fee"""
     plano_id = plano_data.get("plano_id")
     periodicidade = plano_data.get("periodicidade", "mensal")
     
@@ -8836,12 +8836,36 @@ async def trocar_plano(
         raise HTTPException(status_code=400, detail="plano_id required")
     
     # Verificar se o plano existe e é do tipo correto
-    plano = await db.planos.find_one({"id": plano_id, "ativo": True}, {"_id": 0})
-    if not plano:
+    novo_plano = await db.planos.find_one({"id": plano_id, "ativo": True}, {"_id": 0})
+    if not novo_plano:
         raise HTTPException(status_code=404, detail="Plan not found or inactive")
     
-    if plano.get("tipo_usuario") != current_user["role"]:
+    if novo_plano.get("tipo_usuario") != current_user["role"]:
         raise HTTPException(status_code=400, detail="Plan type does not match user role")
+    
+    # Verificar se o utilizador já tem um plano ativo
+    plano_atual_id = current_user.get("plano_id")
+    taxa_troca = 0
+    
+    if plano_atual_id and plano_atual_id != plano_id:
+        # Utilizador está a trocar de plano - aplicar taxa de troca (10% do valor do novo plano)
+        precos_novo = novo_plano.get("precos", {})
+        valor_novo_plano = precos_novo.get(periodicidade, {}).get("preco_com_iva", 0)
+        taxa_troca = round(valor_novo_plano * 0.10, 2)  # 10% de taxa de troca
+        
+        # Criar registro de taxa na coleção de transações/faturas
+        taxa_record = {
+            "id": str(uuid.uuid4()),
+            "user_id": current_user["id"],
+            "tipo": "taxa_troca_plano",
+            "plano_anterior_id": plano_atual_id,
+            "plano_novo_id": plano_id,
+            "valor": taxa_troca,
+            "status": "pendente",  # Pode ser processado posteriormente
+            "data": datetime.now(timezone.utc),
+            "created_at": datetime.now(timezone.utc)
+        }
+        await db.taxas_troca_plano.insert_one(taxa_record)
     
     # Atualizar user
     await db.users.update_one(
