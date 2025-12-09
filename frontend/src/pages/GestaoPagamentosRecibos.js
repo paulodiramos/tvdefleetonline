@@ -276,23 +276,18 @@ const GestaoPagamentosRecibos = ({ user, onLogout }) => {
               )}
               
               <div>
-                <Label>Data Início</Label>
+                <Label>Semana</Label>
                 <Input
-                  type="date"
-                  value={filtrosDataInicio}
-                  onChange={(e) => setFiltrosDataInicio(e.target.value)}
+                  type="week"
+                  value={filtroSemana}
+                  onChange={(e) => setFiltroSemana(e.target.value)}
                   className="mt-2"
                 />
-              </div>
-              
-              <div>
-                <Label>Data Fim</Label>
-                <Input
-                  type="date"
-                  value={filtrosDataFim}
-                  onChange={(e) => setFiltrosDataFim(e.target.value)}
-                  className="mt-2"
-                />
+                {filtroSemana && (
+                  <p className="text-xs text-slate-500 mt-1">
+                    {getWeekDates(filtroSemana).inicio} a {getWeekDates(filtroSemana).fim}
+                  </p>
+                )}
               </div>
               
               <div>
