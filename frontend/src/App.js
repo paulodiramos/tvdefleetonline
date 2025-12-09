@@ -26,6 +26,7 @@ import CriarRelatorioSemanal from "@/pages/CriarRelatorioSemanal";
 import PagamentosParceiro from "@/pages/PagamentosParceiro";
 import ParceiroReports from "@/pages/ParceiroReports";
 import PerfilParceiro from "@/pages/PerfilParceiro";
+import PerfilParceiroCompleto from "@/pages/PerfilParceiroCompleto";
 import GestaoParceirosModulos from "@/pages/GestaoParceirosModulos";
 import GestaoUtilizadores from "@/pages/GestaoUtilizadores";
 import GestaoPlanosParceiros from "@/pages/GestaoPlanosParceiros";
