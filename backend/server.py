@@ -8731,6 +8731,7 @@ async def atribuir_plano_motorista(
         raise HTTPException(status_code=403, detail="Not authorized")
     
     plano_id = plano_data.get("plano_id")
+    periodicidade = plano_data.get("periodicidade", "mensal")
     if not plano_id:
         raise HTTPException(status_code=400, detail="plano_id required")
     
@@ -8739,12 +8740,21 @@ async def atribuir_plano_motorista(
     if not plano:
         raise HTTPException(status_code=404, detail="Plan not found")
     
+    # Obter valor do plano baseado na periodicidade
+    valor_pago = 0
+    if plano.get("precos") and plano["precos"].get(periodicidade):
+        valor_pago = plano["precos"][periodicidade].get("preco_com_iva", 0)
+    elif plano.get("preco"):
+        # Fallback para formato antigo
+        valor_pago = plano.get("preco", 0)
+    
     # Update motorista
     result = await db.users.update_one(
         {"id": motorista_id, "role": "motorista"},
         {"$set": {
             "plano_id": plano_id,
             "plano_status": "ativo",
+            "periodicidade": periodicidade,
             "updated_at": datetime.now(timezone.utc).isoformat()
         }}
     )
@@ -8771,8 +8781,8 @@ async def atribuir_plano_motorista(
         "user_id": motorista_id,
         "plano_id": plano_id,
         "modulos_ativos": modulos_ativos,
-        "tipo_pagamento": "mensal",
-        "valor_pago": plano.get("preco", 0),
+        "tipo_pagamento": periodicidade,
+        "valor_pago": valor_pago,
         "data_inicio": now,
         "data_fim": None,
         "status": "ativo",
