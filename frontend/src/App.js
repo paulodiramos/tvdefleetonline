@@ -30,6 +30,8 @@ import GestaoParceirosModulos from "@/pages/GestaoParceirosModulos";
 import GestaoUtilizadores from "@/pages/GestaoUtilizadores";
 import GestaoPlanosParceiros from "@/pages/GestaoPlanosParceiros";
 import DashboardPlanosAtivos from "@/pages/DashboardPlanosAtivos";
+import MeuPlanoParceiro from "@/pages/MeuPlanoParceiro";
+import MeuPlanoMotorista from "@/pages/MeuPlanoMotorista";
 import Pagamentos from "@/pages/Pagamentos";
 import UploadCSV from "@/pages/UploadCSV";
 import Planos from "@/pages/Planos";
