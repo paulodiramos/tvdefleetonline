@@ -81,6 +81,7 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
     setEditingTemplate(template);
     setFormData({
       nome: template.nome,
+      tipo_contrato: template.tipo_contrato || '',
       descricao: template.descricao || '',
       texto_template: template.texto_template
     });
