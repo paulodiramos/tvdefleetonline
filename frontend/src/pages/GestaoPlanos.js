@@ -152,7 +152,11 @@ const GestaoPlanos = ({ user, onLogout }) => {
         opcao_recibos_motorista: plano.opcao_recibos_motorista || false,
         preco_recibo_por_motorista: plano.preco_recibo_por_motorista || 0,
         ativo: plano.ativo !== false,
-        tipo_usuario: plano.tipo_usuario || 'parceiro'
+        tipo_usuario: plano.tipo_usuario || 'parceiro',
+        promocao_ativa: plano.promocao_ativa || false,
+        promocao_data_inicio: plano.promocao_data_inicio || '',
+        promocao_data_fim: plano.promocao_data_fim || '',
+        promocao_desconto_percentual: plano.promocao_desconto_percentual || 0
       });
     } else {
       setEditingPlano(null);
