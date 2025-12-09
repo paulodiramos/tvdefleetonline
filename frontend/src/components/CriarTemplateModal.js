@@ -126,7 +126,7 @@ const CriarTemplateModal = ({ open, onOpenChange, onSuccess }) => {
                 <SelectValue placeholder="Selecione o tipo de contrato" />
               </SelectTrigger>
               <SelectContent>
-                {tiposContrato.map((tipo) => (
+                {tiposContratoBase.map((tipo) => (
                   <SelectItem key={tipo.value} value={tipo.value}>
                     {tipo.label}
                   </SelectItem>
