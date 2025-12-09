@@ -18,6 +18,16 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
+  const [showNovoTipoDialog, setShowNovoTipoDialog] = useState(false);
+  const [novoTipo, setNovoTipo] = useState('');
+  const [tiposContrato, setTiposContrato] = useState([
+    'Aluguer',
+    'Prestação de Serviços',
+    'Parceria',
+    'Compra',
+    'Venda',
+    'Arrendamento'
+  ]);
   const [formData, setFormData] = useState({
     nome: '',
     tipo_contrato: '',
