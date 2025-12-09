@@ -173,6 +173,32 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
                     Defina o tipo de contrato (personalizado). Ex: Aluguer com Caução, Parceria Mensal, etc.
                   </p>
                 </div>
+                
+                {(user.role === 'admin' || user.role === 'gestao') && (
+                  <div className="space-y-2">
+                    <Label>Parceiro Associado (Opcional)</Label>
+                    <Select 
+                      value={formData.parceiro_id} 
+                      onValueChange={(value) => setFormData({ ...formData, parceiro_id: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um parceiro" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Nenhum (Template global)</SelectItem>
+                        {parceiros.map((parceiro) => (
+                          <SelectItem key={parceiro.id} value={parceiro.id}>
+                            {parceiro.nome_empresa || parceiro.email}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-500">
+                      Associe este template a um parceiro específico ou deixe vazio para template global
+                    </p>
+                  </div>
+                )}
+                
                 <div className="space-y-2">
                   <Label>Descrição</Label>
                   <Input
