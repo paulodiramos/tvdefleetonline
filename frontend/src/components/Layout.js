@@ -396,6 +396,15 @@ const Layout = ({ children, user, onLogout }) => {
         onOpenChange={setNotificacoesOpen}
         user={user}
       />
+
+      {/* Criar Template Modal */}
+      <CriarTemplateModal
+        open={criarTemplateOpen}
+        onOpenChange={setCriarTemplateOpen}
+        onSuccess={() => {
+          // Refresh ou redirect se necessário
+        }}
+      />
     </div>
   );
 };
