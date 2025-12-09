@@ -93,26 +93,7 @@ const Usuarios = ({ user, onLogout }) => {
     }
   };
 
-  const fetchPlanos = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      // Buscar planos do sistema unificado
-      const response = await axios.get(`${API}/planos-sistema`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      const todosPlanos = response.data || [];
-      
-      // Separar por tipo
-      setPlanos({
-        motorista: todosPlanos.filter(p => p.tipo_usuario === 'motorista' && p.ativo),
-        parceiro: todosPlanos.filter(p => p.tipo_usuario === 'parceiro' && p.ativo)
-      });
-    } catch (error) {
-      console.error('Error fetching plans:', error);
-      toast.error('Erro ao carregar planos');
-    }
-  };
+  // DEPRECATED: Removido - agora usa /gestao-planos
 
   const fetchParceiros = async () => {
     try {
