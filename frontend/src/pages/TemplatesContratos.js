@@ -13,18 +13,23 @@ import { FileText, Plus, Edit, Trash2, Save, X } from 'lucide-react';
 
 const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
   const [templates, setTemplates] = useState([]);
+  const [parceiros, setParceiros] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [formData, setFormData] = useState({
     nome: '',
     tipo_contrato: '',
+    parceiro_id: '',
     descricao: '',
     texto_template: ''
   });
 
   useEffect(() => {
     fetchTemplates();
+    if (user.role === 'admin' || user.role === 'gestao') {
+      fetchParceiros();
+    }
   }, []);
 
   const fetchTemplates = async () => {
