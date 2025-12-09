@@ -15,6 +15,9 @@ const CriarContratoMotoristaParceiro = ({ user, parceiroId, onContratoCreated })
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
 
+  // Use parceiroId do prop ou user.id se for parceiro
+  const actualParceiroId = parceiroId || (user?.role === 'parceiro' ? user.id : null);
+
   const [form, setForm] = useState({
     template_id: '',
     motorista_id: '',
@@ -22,8 +25,10 @@ const CriarContratoMotoristaParceiro = ({ user, parceiroId, onContratoCreated })
   });
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (actualParceiroId) {
+      fetchData();
+    }
+  }, [actualParceiroId]);
 
   const fetchData = async () => {
     try {
@@ -37,7 +42,7 @@ const CriarContratoMotoristaParceiro = ({ user, parceiroId, onContratoCreated })
       
       // Filtrar templates do parceiro
       const myTemplates = templatesRes.data.filter(t => 
-        t.parceiro_id === parceiroId || t.tipo_contrato === 'motorista'
+        t.parceiro_id === actualParceiroId || t.tipo_contrato === 'motorista'
       );
       setTemplates(myTemplates);
 
@@ -45,14 +50,14 @@ const CriarContratoMotoristaParceiro = ({ user, parceiroId, onContratoCreated })
       const motoristasRes = await axios.get(`${API}/motoristas`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const myMotoristas = motoristasRes.data.filter(m => m.parceiro_id === parceiroId);
+      const myMotoristas = motoristasRes.data.filter(m => m.parceiro_id === actualParceiroId);
       setMotoristas(myMotoristas);
 
       // Buscar veículos do parceiro
       const veiculosRes = await axios.get(`${API}/vehicles`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const myVeiculos = veiculosRes.data.filter(v => v.parceiro_id === parceiroId);
+      const myVeiculos = veiculosRes.data.filter(v => v.parceiro_id === actualParceiroId);
       setVeiculos(myVeiculos);
 
     } catch (error) {
