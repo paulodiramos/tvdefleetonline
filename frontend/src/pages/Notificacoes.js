@@ -155,7 +155,7 @@ const Notificacoes = ({ user, onLogout }) => {
 
   return (
     <Layout user={user} onLogout={onLogout}>
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="mx-auto space-y-6" style={{width: '1100px', minHeight: '600px', maxWidth: '95vw'}}>
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Notificações</h1>
