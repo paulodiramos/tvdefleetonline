@@ -6213,7 +6213,13 @@ async def get_parceiro(parceiro_id: str, current_user: Dict = Depends(get_curren
     if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
         raise HTTPException(status_code=403, detail="Can only view your own data")
     
+    # Try parceiros collection first
     parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    
+    # Fallback to users collection
+    if not parceiro:
+        parceiro = await db.users.find_one({"id": parceiro_id, "role": "parceiro"}, {"_id": 0})
+    
     if not parceiro:
         raise HTTPException(status_code=404, detail="Parceiro not found")
     
