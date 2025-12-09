@@ -36,13 +36,21 @@ const Notificacoes = ({ open, onOpenChange, user }) => {
   const marcarComoLida = async (notifId) => {
     try {
       const token = localStorage.getItem('token');
+      const notif = notificacoes.find(n => n.id === notifId);
+      const novoEstado = !notif.lida;
+      
       await axios.put(
         `${API}/notificacoes/${notifId}/lida`,
-        {},
+        { lida: novoEstado },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchNotificacoes();
-      toast.success('Notificação marcada como lida');
+      
+      // Update local state
+      setNotificacoes(prev => prev.map(n => 
+        n.id === notifId ? { ...n, lida: novoEstado } : n
+      ));
+      
+      toast.success(novoEstado ? 'Marcada como lida' : 'Marcada como não lida');
     } catch (error) {
       console.error('Error marking notification:', error);
     }
