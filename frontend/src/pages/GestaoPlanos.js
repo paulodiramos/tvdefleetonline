@@ -416,9 +416,9 @@ const GestaoPlanos = ({ user, onLogout }) => {
                             <Badge variant={plano.ativo ? "default" : "secondary"}>
                               {plano.ativo ? 'Ativo' : 'Inativo'}
                             </Badge>
-                            {plano.promocao && plano.promocao.ativa && (
+                            {plano.promocao_ativa && (
                               <Badge className="bg-red-100 text-red-800 text-xs">
-                                🎉 {plano.promocao.desconto_percentual}% OFF
+                                🎉 {plano.promocao_desconto_percentual}% OFF
                               </Badge>
                             )}
                             {plano.opcao_recibos_motorista && (
