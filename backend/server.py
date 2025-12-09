@@ -3506,10 +3506,9 @@ async def testar_moloni_config(
     # TODO: Implementar chamada real à API Moloni para validar
     return {"message": "Conexão Moloni testada com sucesso (simulado)", "status": "ok"}
 
-@api_router.get("/motoristas/meu-plano")
-async def get_meu_plano_motorista(current_user: Dict = Depends(get_current_user)):
-    """Motorista: Get active plan"""
-    print(f"DEBUG: get_meu_plano_motorista called for user {current_user.get('id')}")
+@api_router.get("/motorista/meu-plano")
+async def get_meu_plano_motorista_v2(current_user: Dict = Depends(get_current_user)):
+    """Motorista: Get active plan (self)"""
     if current_user["role"] != "motorista":
         raise HTTPException(status_code=403, detail="Not authorized")
     
