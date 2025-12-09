@@ -12,6 +12,70 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { FileText, Mail, Send, CheckSquare, Clock, Search } from 'lucide-react';
 
+// Componente para gerenciar estado do relatório
+const EstadoRelatorioSelect = ({ item, onEstadoChange }) => {
+  const [estado, setEstado] = useState(item.estado_relatorio || 'enviado');
+  const [alterando, setAlterando] = useState(false);
+
+  const estadosRelatorio = [
+    { value: 'enviado', label: 'Enviado', color: 'bg-blue-100 text-blue-800' },
+    { value: 'pendente_recibo', label: 'Pendente de Recibo', color: 'bg-yellow-100 text-yellow-800' },
+    { value: 'recibo_enviado', label: 'Recibo Enviado', color: 'bg-purple-100 text-purple-800' },
+    { value: 'verificar_recibo', label: 'Verificar Recibo', color: 'bg-orange-100 text-orange-800' },
+    { value: 'aprovado', label: 'Aprovado', color: 'bg-green-100 text-green-800' },
+    { value: 'pagamento', label: 'Pagamento', color: 'bg-indigo-100 text-indigo-800' },
+    { value: 'liquidado', label: 'Liquidado', color: 'bg-emerald-100 text-emerald-800' }
+  ];
+
+  const handleAlterarEstado = async (novoEstado) => {
+    try {
+      setAlterando(true);
+      const token = localStorage.getItem('token');
+      
+      await axios.patch(
+        `${API}/relatorios/historico/${item.id}/estado`,
+        { estado_relatorio: novoEstado },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      setEstado(novoEstado);
+      toast.success('Estado atualizado!');
+      onEstadoChange();
+    } catch (error) {
+      console.error('Error updating state:', error);
+      toast.error('Erro ao atualizar estado');
+    } finally {
+      setAlterando(false);
+    }
+  };
+
+  const estadoAtual = estadosRelatorio.find(e => e.value === estado);
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-xs text-slate-600">Estado:</span>
+      <Select value={estado} onValueChange={handleAlterarEstado} disabled={alterando}>
+        <SelectTrigger className="h-7 text-xs w-auto">
+          <SelectValue>
+            <Badge className={`${estadoAtual?.color} text-xs border-0`}>
+              {estadoAtual?.label}
+            </Badge>
+          </SelectValue>
+        </SelectTrigger>
+        <SelectContent>
+          {estadosRelatorio.map((e) => (
+            <SelectItem key={e.value} value={e.value}>
+              <span className={`px-2 py-1 rounded ${e.color}`}>
+                {e.label}
+              </span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+};
+
 const RelatoriosSemanaisNovo = ({ user, onLogout }) => {
   const [usuarios, setUsuarios] = useState([]);
   const [usuariosSelecionados, setUsuariosSelecionados] = useState([]);
