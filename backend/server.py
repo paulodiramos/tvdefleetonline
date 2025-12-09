@@ -6926,6 +6926,10 @@ async def atualizar_plano(
         "opcao_recibos_motorista": plano_data.get("opcao_recibos_motorista", False) if plano_data.get("tipo_usuario") == "parceiro" else False,
         "preco_recibo_por_motorista": plano_data.get("preco_recibo_por_motorista", 0) if plano_data.get("tipo_usuario") == "parceiro" else 0,
         "ativo": plano_data.get("ativo", True),
+        "promocao_ativa": plano_data.get("promocao_ativa", False),
+        "promocao_data_inicio": plano_data.get("promocao_data_inicio"),
+        "promocao_data_fim": plano_data.get("promocao_data_fim"),
+        "promocao_desconto_percentual": plano_data.get("promocao_desconto_percentual", 0),
         "updated_at": datetime.now(timezone.utc)
     }
     
