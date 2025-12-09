@@ -143,6 +143,18 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
                   />
                 </div>
                 <div className="space-y-2">
+                  <Label>Tipo de Contrato *</Label>
+                  <Input
+                    value={formData.tipo_contrato}
+                    onChange={(e) => setFormData({ ...formData, tipo_contrato: e.target.value })}
+                    placeholder="Ex: Aluguer, Prestação de Serviços, Parceria"
+                    required
+                  />
+                  <p className="text-xs text-slate-500">
+                    Defina o tipo de contrato (personalizado). Ex: Aluguer com Caução, Parceria Mensal, etc.
+                  </p>
+                </div>
+                <div className="space-y-2">
                   <Label>Descrição</Label>
                   <Input
                     value={formData.descricao}
