@@ -59,6 +59,40 @@ const Notificacoes = ({ open, onOpenChange, user }) => {
     }
   };
 
+  const iniciarEdicao = (notif) => {
+    setEditando(notif.id);
+    setTituloEdit(notif.titulo);
+    setMensagemEdit(notif.mensagem);
+  };
+
+  const cancelarEdicao = () => {
+    setEditando(null);
+    setTituloEdit('');
+    setMensagemEdit('');
+  };
+
+  const salvarEdicao = async (notifId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.patch(
+        `${API}/notificacoes/${notifId}`,
+        { titulo: tituloEdit, mensagem: mensagemEdit },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Update local state
+      setNotificacoes(prev => prev.map(n => 
+        n.id === notifId ? { ...n, titulo: tituloEdit, mensagem: mensagemEdit } : n
+      ));
+      
+      toast.success('Notificação atualizada!');
+      cancelarEdicao();
+    } catch (error) {
+      console.error('Error updating notification:', error);
+      toast.error('Erro ao atualizar');
+    }
+  };
+
   const getIcon = (tipo) => {
     switch (tipo) {
       case 'sucesso':
