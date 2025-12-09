@@ -356,6 +356,12 @@ function App() {
             }
           />
           <Route
+            path="/motorista-documentos"
+            element={
+              user && user.role === 'motorista' ? <MotoristaDocumentos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/motorista/planos"
             element={
               user ? <MotoristaPlanosPagina user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
