@@ -288,7 +288,7 @@ const Layout = ({ children, user, onLogout }) => {
 
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link to="/perfil" className="flex items-center space-x-2 cursor-pointer">
+                    <Link to="/profile" className="flex items-center space-x-2 cursor-pointer">
                       <User className="w-4 h-4" />
                       <span>Perfil</span>
                     </Link>
