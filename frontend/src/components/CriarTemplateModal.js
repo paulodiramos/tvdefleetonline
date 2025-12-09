@@ -27,6 +27,40 @@ const CriarTemplateModal = ({ open, onOpenChange, onSuccess, user }) => {
     { value: 'venda', label: 'Venda' }
   ]);
 
+  useEffect(() => {
+    if (open && user && (user.role === 'admin' || user.role === 'gestao')) {
+      fetchParceiros();
+    }
+  }, [open]);
+
+  const fetchParceiros = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/parceiros`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setParceiros(response.data);
+    } catch (error) {
+      console.error('Error fetching parceiros:', error);
+    }
+  };
+
+  const handleAdicionarNovoTipo = () => {
+    if (!novoTipo.trim()) {
+      toast.error('Digite o nome do novo tipo');
+      return;
+    }
+    const novoTipoObj = {
+      value: novoTipo.toLowerCase().replace(/ /g, '_'),
+      label: novoTipo
+    };
+    setTiposContrato([...tiposContrato, novoTipoObj]);
+    setTipoContrato(novoTipoObj.value);
+    setMostrarNovoTipo(false);
+    setNovoTipo('');
+    toast.success('Novo tipo adicionado!');
+  };
+
   const variaveisDisponiveis = [
     { key: '{PARCEIRO_NOME}', desc: 'Nome do Parceiro' },
     { key: '{PARCEIRO_NIF}', desc: 'NIF do Parceiro' },
