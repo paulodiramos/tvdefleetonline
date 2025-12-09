@@ -88,7 +88,7 @@ const GestaoPagamentosRecibos = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       
       const params = {};
-      if (filtrosParceiro) params.parceiro_id = filtrosParceiro;
+      if (filtrosParceiro && filtrosParceiro !== 'todos') params.parceiro_id = filtrosParceiro;
       if (filtrosDataInicio) params.data_inicio = filtrosDataInicio;
       if (filtrosDataFim) params.data_fim = filtrosDataFim;
       if (filtrosEstado !== 'all') params.estado = filtrosEstado;
