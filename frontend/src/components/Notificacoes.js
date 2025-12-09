@@ -100,15 +100,38 @@ const Notificacoes = ({ open, onOpenChange, user }) => {
                         {new Date(notif.created_at).toLocaleString('pt-PT')}
                       </p>
                     </div>
-                    {!notif.lida && (
+                    <div className="flex gap-1">
+                      {!notif.lida && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => marcarComoLida(notif.id)}
+                          title="Marcar como lida"
+                        >
+                          ✓
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => marcarComoLida(notif.id)}
+                        onClick={async () => {
+                          if (confirm('Deseja remover esta notificação?')) {
+                            try {
+                              const token = localStorage.getItem('token');
+                              await axios.delete(`${window.location.origin}/api/notificacoes/${notif.id}`, {
+                                headers: { Authorization: `Bearer ${token}` }
+                              });
+                              setNotificacoes(prev => prev.filter(n => n.id !== notif.id));
+                            } catch (error) {
+                              console.error('Erro ao remover:', error);
+                            }
+                          }
+                        }}
+                        title="Remover"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-4 h-4 text-red-500" />
                       </Button>
-                    )}
+                    </div>
                   </div>
                 </div>
               ))}
