@@ -66,6 +66,15 @@ api_router = APIRouter(prefix="/api")
 
 # ==================== FILE UPLOAD UTILITIES ====================
 
+def safe_parse_date(date_str: str, format: str = "%Y-%m-%d"):
+    """Safely parse date string, return None if empty or invalid"""
+    if not date_str or not date_str.strip():
+        return None
+    try:
+        return datetime.strptime(date_str.strip(), format)
+    except (ValueError, TypeError):
+        return None
+
 async def convert_image_to_pdf(image_path: Path, output_path: Path) -> Path:
     """Convert an image file to PDF format"""
     try:
