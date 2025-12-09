@@ -10481,14 +10481,15 @@ async def get_planos(current_user: Dict = Depends(get_current_user)):
 #     await db.planos.insert_one(plano_dict)
 #     return {"message": "Plan created successfully", "plano_id": plano_dict["id"]}
 
-@api_router.put("/planos/{plano_id}")
-async def update_plano(plano_id: str, updates: Dict[str, Any], current_user: Dict = Depends(get_current_user)):
-    """Update a plan (Admin only)"""
-    if current_user["role"] != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Admin only")
-    
-    updates["updated_at"] = datetime.now(timezone.utc)
-    result = await db.planos.update_one({"id": plano_id}, {"$set": updates})
+# DEPRECATED: Endpoint duplicado - usar o endpoint mais completo na linha 6868
+# @api_router.put("/planos/{plano_id}")
+# async def update_plano(plano_id: str, updates: Dict[str, Any], current_user: Dict = Depends(get_current_user)):
+#     """Update a plan (Admin only)"""
+#     if current_user["role"] != UserRole.ADMIN:
+#         raise HTTPException(status_code=403, detail="Admin only")
+#     
+#     updates["updated_at"] = datetime.now(timezone.utc)
+#     result = await db.planos.update_one({"id": plano_id}, {"$set": updates})
     
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Plan not found")
