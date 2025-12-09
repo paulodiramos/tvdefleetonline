@@ -11,15 +11,18 @@ import { FileText } from 'lucide-react';
 
 const CriarTemplateModal = ({ open, onOpenChange, onSuccess }) => {
   const [tipoContrato, setTipoContrato] = useState('');
+  const [novoTipo, setNovoTipo] = useState('');
+  const [mostrarNovoTipo, setMostrarNovoTipo] = useState(false);
   const [textoContrato, setTextoContrato] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const tiposContrato = [
+  const tiposContratoBase = [
     { value: 'aluguer_sem_caucao', label: 'Aluguer Sem Caução' },
     { value: 'aluguer_com_caucao', label: 'Aluguer Com Caução' },
     { value: 'prestacao_servicos', label: 'Prestação de Serviços' },
     { value: 'parceria', label: 'Parceria' },
-    { value: 'outro', label: 'Outro' }
+    { value: 'compra', label: 'Compra' },
+    { value: 'venda', label: 'Venda' }
   ];
 
   const variaveisDisponiveis = [
