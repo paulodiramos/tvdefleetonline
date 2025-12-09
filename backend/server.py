@@ -8757,18 +8757,27 @@ async def atribuir_plano_motorista(
         # Fallback para formato antigo
         valor_pago = plano.get("preco", 0)
     
-    # Update motorista
+    # Update motorista - try both users and motoristas collections
+    update_doc = {
+        "plano_id": plano_id,
+        "plano_status": "ativo",
+        "periodicidade": periodicidade,
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
     result = await db.users.update_one(
         {"id": motorista_id, "role": "motorista"},
-        {"$set": {
-            "plano_id": plano_id,
-            "plano_status": "ativo",
-            "periodicidade": periodicidade,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
+        {"$set": update_doc}
     )
     
-    if result.modified_count == 0:
+    # If not found in users, try motoristas collection
+    if result.matched_count == 0:
+        result = await db.motoristas.update_one(
+            {"id": motorista_id},
+            {"$set": update_doc}
+        )
+    
+    if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Motorista not found")
     
     # Criar/atualizar registro em planos_usuarios para controle de módulos
