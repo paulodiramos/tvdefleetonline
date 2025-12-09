@@ -8654,6 +8654,7 @@ async def atribuir_plano_parceiro(
         raise HTTPException(status_code=403, detail="Not authorized")
     
     plano_id = plano_data.get("plano_id")
+    periodicidade = plano_data.get("periodicidade", "mensal")
     if not plano_id:
         raise HTTPException(status_code=400, detail="plano_id required")
     
@@ -8662,12 +8663,21 @@ async def atribuir_plano_parceiro(
     if not plano:
         raise HTTPException(status_code=404, detail="Plan not found")
     
+    # Obter valor do plano baseado na periodicidade
+    valor_pago = 0
+    if plano.get("precos") and plano["precos"].get(periodicidade):
+        valor_pago = plano["precos"][periodicidade].get("preco_com_iva", 0)
+    elif plano.get("valor_mensal"):
+        # Fallback para formato antigo
+        valor_pago = plano.get("valor_mensal", 0)
+    
     # Update parceiro
     result = await db.users.update_one(
         {"id": parceiro_id, "role": "parceiro"},
         {"$set": {
             "plano_id": plano_id,
             "plano_status": "ativo",
+            "periodicidade": periodicidade,
             "updated_at": datetime.now(timezone.utc).isoformat()
         }}
     )
@@ -8694,8 +8704,8 @@ async def atribuir_plano_parceiro(
         "user_id": parceiro_id,
         "plano_id": plano_id,
         "modulos_ativos": modulos_ativos,
-        "tipo_pagamento": "mensal",
-        "valor_pago": plano.get("valor_mensal", 0),
+        "tipo_pagamento": periodicidade,
+        "valor_pago": valor_pago,
         "data_inicio": now,
         "data_fim": None,  # Sem data de fim por padrão
         "status": "ativo",
