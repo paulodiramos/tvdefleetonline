@@ -322,6 +322,13 @@ const GestaoPlanos = ({ user, onLogout }) => {
     return tipo === 'motorista' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800';
   };
 
+  const getUserDisplayName = (user) => {
+    if (user.tipo === 'parceiro') {
+      return user.nome_empresa || user.name || user.nome || 'Sem nome';
+    }
+    return user.name || user.nome || 'Sem nome';
+  };
+
   const getPrecoDisplay = (plano) => {
     // Suportar novo formato (precos.mensal.preco_com_iva)
     if (plano.precos) {
