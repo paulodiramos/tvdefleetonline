@@ -63,7 +63,7 @@ const Notificacoes = ({ open, onOpenChange, user }) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[80vh]">
+      <DialogContent className="max-h-[80vh]" style={{width: '1000px', maxWidth: '95vw'}}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Bell className="w-5 h-5" />
