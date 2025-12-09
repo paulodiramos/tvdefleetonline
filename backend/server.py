@@ -13883,6 +13883,148 @@ async def enviar_relatorio_whatsapp(
         detail="Funcionalidade de envio por WhatsApp em desenvolvimento. Configure a integração WhatsApp Business API para utilizar esta funcionalidade."
     )
 
+@api_router.post("/relatorios/enviar-email-massa")
+async def enviar_relatorio_email_massa(
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Send weekly reports via email to multiple users"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    usuario_ids = data.get("usuario_ids", [])
+    tipo_usuario = data.get("tipo_usuario")
+    data_inicio = data.get("data_inicio")
+    data_fim = data.get("data_fim")
+    
+    if not all([usuario_ids, tipo_usuario, data_inicio, data_fim]):
+        raise HTTPException(status_code=400, detail="Missing required fields")
+    
+    if len(usuario_ids) == 0:
+        raise HTTPException(status_code=400, detail="No users selected")
+    
+    collection = db.motoristas if tipo_usuario == "motorista" else db.parceiros
+    enviados = 0
+    erros = []
+    
+    for usuario_id in usuario_ids:
+        try:
+            usuario = await collection.find_one({"id": usuario_id}, {"_id": 0})
+            if not usuario:
+                usuario = await db.users.find_one({"id": usuario_id}, {"_id": 0})
+            
+            if not usuario or not usuario.get("email"):
+                erros.append(f"Utilizador {usuario_id}: sem email")
+                continue
+            
+            # Registar envio no histórico
+            historico_record = {
+                "id": str(uuid.uuid4()),
+                "usuario_id": usuario_id,
+                "tipo_usuario": tipo_usuario,
+                "tipo_envio": "email",
+                "destino": usuario.get("email"),
+                "data_inicio_relatorio": data_inicio,
+                "data_fim_relatorio": data_fim,
+                "data_envio": datetime.now(timezone.utc),
+                "status": "enviado",
+                "enviado_por": current_user["id"]
+            }
+            await db.historico_relatorios.insert_one(historico_record)
+            enviados += 1
+            
+        except Exception as e:
+            erros.append(f"Utilizador {usuario_id}: {str(e)}")
+    
+    return {
+        "message": f"Relatórios enviados para {enviados} de {len(usuario_ids)} utilizadores",
+        "enviados": enviados,
+        "erros": erros
+    }
+
+@api_router.post("/relatorios/enviar-whatsapp-massa")
+async def enviar_relatorio_whatsapp_massa(
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Send weekly reports via WhatsApp to multiple users"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    usuario_ids = data.get("usuario_ids", [])
+    tipo_usuario = data.get("tipo_usuario")
+    data_inicio = data.get("data_inicio")
+    data_fim = data.get("data_fim")
+    
+    if not all([usuario_ids, tipo_usuario, data_inicio, data_fim]):
+        raise HTTPException(status_code=400, detail="Missing required fields")
+    
+    if len(usuario_ids) == 0:
+        raise HTTPException(status_code=400, detail="No users selected")
+    
+    collection = db.motoristas if tipo_usuario == "motorista" else db.parceiros
+    enviados = 0
+    erros = []
+    
+    for usuario_id in usuario_ids:
+        try:
+            usuario = await collection.find_one({"id": usuario_id}, {"_id": 0})
+            if not usuario:
+                usuario = await db.users.find_one({"id": usuario_id}, {"_id": 0})
+            
+            if not usuario or not usuario.get("telefone"):
+                erros.append(f"Utilizador {usuario_id}: sem telefone")
+                continue
+            
+            # Registar envio no histórico
+            historico_record = {
+                "id": str(uuid.uuid4()),
+                "usuario_id": usuario_id,
+                "tipo_usuario": tipo_usuario,
+                "tipo_envio": "whatsapp",
+                "destino": usuario.get("telefone"),
+                "data_inicio_relatorio": data_inicio,
+                "data_fim_relatorio": data_fim,
+                "data_envio": datetime.now(timezone.utc),
+                "status": "enviado",
+                "enviado_por": current_user["id"]
+            }
+            await db.historico_relatorios.insert_one(historico_record)
+            enviados += 1
+            
+        except Exception as e:
+            erros.append(f"Utilizador {usuario_id}: {str(e)}")
+    
+    return {
+        "message": f"Relatórios enviados para {enviados} de {len(usuario_ids)} utilizadores",
+        "enviados": enviados,
+        "erros": erros
+    }
+
+@api_router.get("/relatorios/historico")
+async def get_historico_relatorios(
+    tipo_usuario: Optional[str] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get report sending history"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    query = {}
+    if tipo_usuario:
+        query["tipo_usuario"] = tipo_usuario
+    
+    # Se for parceiro, só pode ver seus próprios envios
+    if current_user["role"] == UserRole.PARCEIRO:
+        query["enviado_por"] = current_user["id"]
+    
+    historico = await db.historico_relatorios.find(
+        query, 
+        {"_id": 0}
+    ).sort("data_envio", -1).limit(50).to_list(50)
+    
+    return historico
+
 @api_router.delete("/notificacoes/{notificacao_id}")
 async def delete_notificacao(notificacao_id: str, current_user: Dict = Depends(get_current_user)):
     """Delete a notification"""
