@@ -294,9 +294,12 @@ async def check_and_create_alerts():
                 pass
         
         # Check insurance expiry
-        if vehicle.get("insurance"):
+        if vehicle.get("insurance") and vehicle["insurance"].get("data_validade"):
             try:
-                validade_date = datetime.strptime(vehicle["insurance"]["data_validade"], "%Y-%m-%d").date()
+                parsed_date = safe_parse_date(vehicle["insurance"]["data_validade"])
+                if not parsed_date:
+                    continue
+                validade_date = parsed_date.date()
                 days_until_expiry = (validade_date - today).days
                 
                 if 0 <= days_until_expiry <= 30:
