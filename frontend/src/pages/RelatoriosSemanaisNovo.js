@@ -343,8 +343,8 @@ const RelatoriosSemanaisNovo = ({ user, onLogout }) => {
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {historico.slice(0, 10).map((item, idx) => (
                   <div key={idx} className="p-3 border rounded-lg text-sm">
-                    <div className="flex justify-between items-start">
-                      <div>
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1">
                         <p className="font-medium">
                           {usuarios.find(u => u.id === item.usuario_id) 
                             ? getUserDisplayName(usuarios.find(u => u.id === item.usuario_id))
@@ -353,14 +353,17 @@ const RelatoriosSemanaisNovo = ({ user, onLogout }) => {
                         <p className="text-xs text-slate-500">
                           {item.tipo_envio === 'email' ? '📧 Email' : '📱 WhatsApp'} → {item.destino}
                         </p>
+                        <div className="mt-2">
+                          <EstadoRelatorioSelect 
+                            item={item} 
+                            onEstadoChange={fetchHistorico}
+                          />
+                        </div>
                       </div>
                       <div className="text-right">
                         <p className="text-xs text-slate-500">
                           {new Date(item.data_envio).toLocaleString('pt-PT')}
                         </p>
-                        <Badge variant={item.status === 'enviado' ? 'default' : 'secondary'} className="text-xs mt-1">
-                          {item.status}
-                        </Badge>
                       </div>
                     </div>
                   </div>
