@@ -6863,6 +6863,10 @@ async def criar_plano(plano_data: Dict[str, Any], current_user: Dict = Depends(g
         "preco_recibo_por_motorista": plano_data.get("preco_recibo_por_motorista", 0) if plano_data.get("tipo_usuario") == "parceiro" else 0,
         "ativo": plano_data.get("ativo", True),
         "destaque": plano_data.get("destaque", False),
+        "promocao_ativa": plano_data.get("promocao_ativa", False),
+        "promocao_data_inicio": plano_data.get("promocao_data_inicio"),
+        "promocao_data_fim": plano_data.get("promocao_data_fim"),
+        "promocao_desconto_percentual": plano_data.get("promocao_desconto_percentual", 0),
         "created_at": now,
         "updated_at": now
     }
