@@ -17,7 +17,7 @@ const Termos = () => {
   useEffect(() => {
     fetchConteudo();
     checkAdmin();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkAdmin = () => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
