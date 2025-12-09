@@ -8412,6 +8412,214 @@ async def atribuir_plano_motorista(
     
     return {"message": "Plan assigned successfully to motorista", "plano_id": plano_id, "atribuicao_id": atribuicao_id}
 
+
+@api_router.get("/parceiros/meu-plano")
+async def get_meu_plano_parceiro(current_user: Dict = Depends(get_current_user)):
+    """Parceiro: Get active plan with calculated costs"""
+    if current_user["role"] != "parceiro":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Buscar plano ativo
+    atribuicao = await db.planos_usuarios.find_one(
+        {"user_id": current_user["id"], "status": "ativo"},
+        {"_id": 0}
+    )
+    
+    if not atribuicao:
+        # Fallback para users.plano_id
+        user = await db.users.find_one({"id": current_user["id"]}, {"_id": 0})
+        if not user or not user.get("plano_id"):
+            return {
+                "tem_plano": False,
+                "plano": None,
+                "modulos": [],
+                "custo_semanal": 0,
+                "custo_mensal": 0,
+                "total_veiculos": 0,
+                "total_motoristas": 0,
+                "motoristas_com_recibos": 0
+            }
+        
+        plano = await db.planos.find_one({"id": user["plano_id"]}, {"_id": 0})
+        if not plano:
+            return {"tem_plano": False, "plano": None}
+        
+        modulos_ativos = plano.get("modulos", [])
+    else:
+        plano = await db.planos.find_one({"id": atribuicao["plano_id"]}, {"_id": 0})
+        if not plano:
+            return {"tem_plano": False, "plano": None}
+        modulos_ativos = atribuicao.get("modulos_ativos", plano.get("modulos", []))
+    
+    # Contar veículos e motoristas do parceiro
+    total_veiculos = await db.vehicles.count_documents({"parceiro_id": current_user["id"]})
+    total_motoristas = await db.users.count_documents({"parceiro_id": current_user["id"], "role": "motorista"})
+    
+    # Contar motoristas que enviam recibos (assumindo que têm campo recibos_ativos)
+    motoristas_com_recibos = await db.users.count_documents({
+        "parceiro_id": current_user["id"], 
+        "role": "motorista",
+        "envia_recibos": True
+    })
+    
+    # Calcular custos
+    precos = plano.get("precos", {})
+    preco_base_semanal = precos.get("semanal", {}).get("preco_com_iva", 0)
+    
+    # Custo por veículo/motorista
+    if plano.get("tipo_cobranca") == "por_veiculo":
+        custo_base = preco_base_semanal * total_veiculos
+    else:
+        custo_base = preco_base_semanal
+    
+    # Adicionar custo de recibos se opção ativa
+    custo_recibos = 0
+    if plano.get("opcao_recibos_motorista", False):
+        custo_recibos = plano.get("preco_recibo_por_motorista", 0) * motoristas_com_recibos
+    
+    custo_semanal = custo_base + custo_recibos
+    custo_mensal = custo_semanal * 4.33  # Média de semanas por mês
+    
+    # Buscar info dos módulos
+    from models.modulo import MODULOS_SISTEMA
+    modulos_info = []
+    for codigo in modulos_ativos:
+        if codigo in MODULOS_SISTEMA:
+            modulos_info.append({
+                "codigo": codigo,
+                "nome": MODULOS_SISTEMA[codigo]["nome"],
+                "descricao": MODULOS_SISTEMA[codigo]["descricao"]
+            })
+    
+    return {
+        "tem_plano": True,
+        "plano": plano,
+        "modulos": modulos_info,
+        "custo_semanal": round(custo_semanal, 2),
+        "custo_mensal": round(custo_mensal, 2),
+        "total_veiculos": total_veiculos,
+        "total_motoristas": total_motoristas,
+        "motoristas_com_recibos": motoristas_com_recibos,
+        "detalhes_calculo": {
+            "preco_base_semanal": preco_base_semanal,
+            "custo_base": custo_base,
+            "custo_recibos": custo_recibos,
+            "tipo_cobranca": plano.get("tipo_cobranca")
+        }
+    }
+
+
+@api_router.get("/motoristas/meu-plano")
+async def get_meu_plano_motorista(current_user: Dict = Depends(get_current_user)):
+    """Motorista: Get active plan"""
+    if current_user["role"] != "motorista":
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Buscar plano ativo
+    atribuicao = await db.planos_usuarios.find_one(
+        {"user_id": current_user["id"], "status": "ativo"},
+        {"_id": 0}
+    )
+    
+    if not atribuicao:
+        return {"tem_plano": False, "plano": None, "modulos": []}
+    
+    plano = await db.planos.find_one({"id": atribuicao["plano_id"]}, {"_id": 0})
+    if not plano:
+        return {"tem_plano": False, "plano": None, "modulos": []}
+    
+    modulos_ativos = atribuicao.get("modulos_ativos", plano.get("modulos", []))
+    
+    # Buscar info dos módulos
+    from models.modulo import MODULOS_SISTEMA
+    modulos_info = []
+    for codigo in modulos_ativos:
+        if codigo in MODULOS_SISTEMA:
+            modulos_info.append({
+                "codigo": codigo,
+                "nome": MODULOS_SISTEMA[codigo]["nome"],
+                "descricao": MODULOS_SISTEMA[codigo]["descricao"]
+            })
+    
+    precos = plano.get("precos", {})
+    preco_semanal = precos.get("semanal", {}).get("preco_com_iva", 0)
+    preco_mensal = precos.get("mensal", {}).get("preco_com_iva", 0)
+    
+    return {
+        "tem_plano": True,
+        "plano": plano,
+        "modulos": modulos_info,
+        "preco_semanal": preco_semanal,
+        "preco_mensal": preco_mensal
+    }
+
+
+@api_router.post("/users/trocar-plano")
+async def trocar_plano(
+    plano_data: Dict[str, str],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Parceiro/Motorista: Change subscription plan"""
+    plano_id = plano_data.get("plano_id")
+    periodicidade = plano_data.get("periodicidade", "mensal")
+    
+    if not plano_id:
+        raise HTTPException(status_code=400, detail="plano_id required")
+    
+    # Verificar se o plano existe e é do tipo correto
+    plano = await db.planos.find_one({"id": plano_id, "ativo": True}, {"_id": 0})
+    if not plano:
+        raise HTTPException(status_code=404, detail="Plan not found or inactive")
+    
+    if plano.get("tipo_usuario") != current_user["role"]:
+        raise HTTPException(status_code=400, detail="Plan type does not match user role")
+    
+    # Atualizar user
+    await db.users.update_one(
+        {"id": current_user["id"]},
+        {"$set": {
+            "plano_id": plano_id,
+            "plano_status": "ativo",
+            "plano_periodicidade": periodicidade,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Remover atribuição anterior
+    await db.planos_usuarios.delete_many({"user_id": current_user["id"]})
+    
+    # Criar nova atribuição
+    now = datetime.now(timezone.utc)
+    atribuicao_id = str(uuid.uuid4())
+    
+    precos = plano.get("precos", {})
+    valor_pago = precos.get(periodicidade, {}).get("preco_com_iva", 0)
+    
+    atribuicao = {
+        "id": atribuicao_id,
+        "user_id": current_user["id"],
+        "plano_id": plano_id,
+        "modulos_ativos": plano.get("modulos", []),
+        "tipo_pagamento": periodicidade,
+        "valor_pago": valor_pago,
+        "data_inicio": now,
+        "data_fim": None,
+        "status": "ativo",
+        "renovacao_automatica": True,
+        "created_at": now,
+        "updated_at": now,
+        "created_by": current_user["id"]
+    }
+    
+    await db.planos_usuarios.insert_one(atribuicao)
+    
+    return {
+        "message": "Plan changed successfully", 
+        "plano_id": plano_id,
+        "periodicidade": periodicidade,
+        "valor": valor_pago
+    }
+
 # ==================== ENDPOINTS DE CONTRATOS ====================
 
 @api_router.get("/parceiros/{parceiro_id}/templates-contrato")
