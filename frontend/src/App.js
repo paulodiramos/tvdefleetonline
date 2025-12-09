@@ -248,9 +248,19 @@ function App() {
             path="/meu-plano"
             element={
               user && user.role === 'parceiro' ? (
-                <DashboardPlanosAtivos user={user} onLogout={handleLogout} />
+                <MeuPlanoParceiro user={user} onLogout={handleLogout} />
               ) : (
                 <Navigate to="/dashboard" />
+              )
+            }
+          />
+          <Route
+            path="/meu-plano-motorista"
+            element={
+              user && user.role === 'motorista' ? (
+                <MeuPlanoMotorista user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/profile" />
               )
             }
           />
