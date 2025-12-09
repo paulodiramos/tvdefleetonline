@@ -6206,8 +6206,12 @@ async def get_meu_plano_parceiro(current_user: Dict = Depends(get_current_user))
 @api_router.get("/parceiros/{parceiro_id}")
 async def get_parceiro(parceiro_id: str, current_user: Dict = Depends(get_current_user)):
     """Get specific parceiro by ID"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+    # Admin/Gestor can see any, Parceiro can only see self
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
+    
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Can only view your own data")
     
     parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
     if not parceiro:
