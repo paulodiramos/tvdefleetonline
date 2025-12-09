@@ -99,6 +99,7 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
     setFormData({
       nome: template.nome,
       tipo_contrato: template.tipo_contrato || '',
+      parceiro_id: template.parceiro_id || '',
       descricao: template.descricao || '',
       texto_template: template.texto_template
     });
