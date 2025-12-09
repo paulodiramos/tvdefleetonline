@@ -329,9 +329,12 @@ async def check_and_create_alerts():
                 pass
         
         # Check next inspection
-        if vehicle.get("inspection"):
+        if vehicle.get("inspection") and vehicle["inspection"].get("proxima_inspecao"):
             try:
-                proxima_date = datetime.strptime(vehicle["inspection"]["proxima_inspecao"], "%Y-%m-%d").date()
+                parsed_date = safe_parse_date(vehicle["inspection"]["proxima_inspecao"])
+                if not parsed_date:
+                    continue
+                proxima_date = parsed_date.date()
                 days_until_inspection = (proxima_date - today).days
                 
                 if 0 <= days_until_inspection <= 30:
