@@ -154,21 +154,59 @@ const CriarTemplateModal = ({ open, onOpenChange, onSuccess, user }) => {
         <div className="space-y-6 mt-4">
           {/* Tipo de Contrato */}
           <div>
-            <Label htmlFor="tipo-contrato" className="text-base font-medium">
-              Tipo de Contrato <span className="text-red-500">*</span>
-            </Label>
+            <div className="flex justify-between items-center mb-2">
+              <Label htmlFor="tipo-contrato" className="text-base font-medium">
+                Tipo de Contrato <span className="text-red-500">*</span>
+              </Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setMostrarNovoTipo(true)}
+              >
+                <Plus className="w-3 h-3 mr-1" />
+                Novo Tipo
+              </Button>
+            </div>
             <Select value={tipoContrato} onValueChange={setTipoContrato}>
-              <SelectTrigger className="mt-2">
+              <SelectTrigger>
                 <SelectValue placeholder="Selecione o tipo de contrato" />
               </SelectTrigger>
               <SelectContent>
-                {tiposContratoBase.map((tipo) => (
+                {tiposContrato.map((tipo) => (
                   <SelectItem key={tipo.value} value={tipo.value}>
                     {tipo.label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Parceiro Associado */}
+          <div>
+            <Label htmlFor="parceiro" className="text-base font-medium">
+              Parceiro Associado <span className="text-red-500">*</span>
+            </Label>
+            <Select value={parceiroId} onValueChange={setParceiroId}>
+              <SelectTrigger className="mt-2">
+                <SelectValue placeholder="Selecione um parceiro" />
+              </SelectTrigger>
+              <SelectContent>
+                {(user?.role === 'admin' || user?.role === 'gestao') && (
+                  <SelectItem value="global">Template Global (todos os parceiros)</SelectItem>
+                )}
+                {parceiros.map((parceiro) => (
+                  <SelectItem key={parceiro.id} value={parceiro.id}>
+                    {parceiro.nome_empresa || parceiro.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-slate-500 mt-1">
+              {user?.role === 'admin' || user?.role === 'gestao'
+                ? 'Selecione "Template Global" ou um parceiro específico'
+                : 'Template será criado para o seu parceiro'}
+            </p>
           </div>
 
           {/* Texto do Contrato */}
