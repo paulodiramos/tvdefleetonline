@@ -638,7 +638,7 @@ const GestaoPlanos = ({ user, onLogout }) => {
                                   <p className="text-sm font-semibold text-blue-900 mb-2">💰 Resumo da Atribuição</p>
                                   <div className="text-sm text-blue-800">
                                     <p><strong>Plano:</strong> {planoSelecionado.nome}</p>
-                                    <p><strong>Usuário:</strong> {usuarioSelecionado.name}</p>
+                                    <p><strong>Usuário:</strong> {getUserDisplayName(usuarioSelecionado)}</p>
                                     <p><strong>Periodicidade:</strong> {periodicidade}</p>
                                     <p className="mt-2 text-lg font-bold">
                                       Valor: {getPrecoDisplay(planoSelecionado)}
