@@ -612,7 +612,22 @@ const GestaoPlanos = ({ user, onLogout }) => {
                                 </Select>
                               </div>
 
-                              <Button onClick={handleAtribuirPlano} className="w-full">
+                              {/* Resumo do Valor */}
+                              {planoSelecionado && (
+                                <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                  <p className="text-sm font-semibold text-blue-900 mb-2">💰 Resumo da Atribuição</p>
+                                  <div className="text-sm text-blue-800">
+                                    <p><strong>Plano:</strong> {planoSelecionado.nome}</p>
+                                    <p><strong>Usuário:</strong> {usuarioSelecionado.name}</p>
+                                    <p><strong>Periodicidade:</strong> {periodicidade}</p>
+                                    <p className="mt-2 text-lg font-bold">
+                                      Valor: {getPrecoDisplay(planoSelecionado)}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+
+                              <Button onClick={handleAtribuirPlano} className="w-full" disabled={!planoSelecionado}>
                                 <UserPlus className="w-4 h-4 mr-2" />
                                 Atribuir Plano
                               </Button>
