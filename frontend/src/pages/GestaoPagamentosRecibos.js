@@ -261,7 +261,7 @@ const GestaoPagamentosRecibos = ({ user, onLogout }) => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               {(user.role === 'admin' || user.role === 'gestao') && (
                 <div>
                   <Label>Parceiro</Label>
@@ -282,19 +282,55 @@ const GestaoPagamentosRecibos = ({ user, onLogout }) => {
               )}
               
               <div>
-                <Label>Semana</Label>
-                <Input
-                  type="week"
-                  value={filtroSemana}
-                  onChange={(e) => setFiltroSemana(e.target.value)}
-                  className="mt-2"
-                />
-                {filtroSemana && (
-                  <p className="text-xs text-slate-500 mt-1">
-                    {getWeekDates(filtroSemana).inicio} a {getWeekDates(filtroSemana).fim}
-                  </p>
-                )}
+                <Label>Filtrar por</Label>
+                <Select value={tipoFiltroData} onValueChange={setTipoFiltroData}>
+                  <SelectTrigger className="mt-2">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="semana">Semana</SelectItem>
+                    <SelectItem value="datas">Datas Específicas</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+              
+              {tipoFiltroData === 'semana' ? (
+                <div>
+                  <Label>Semana</Label>
+                  <Input
+                    type="week"
+                    value={filtroSemana}
+                    onChange={(e) => setFiltroSemana(e.target.value)}
+                    className="mt-2"
+                  />
+                  {filtroSemana && (
+                    <p className="text-xs text-slate-500 mt-1">
+                      {getWeekDates(filtroSemana).inicio} a {getWeekDates(filtroSemana).fim}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <Label>Data Início</Label>
+                    <Input
+                      type="date"
+                      value={filtrosDataInicio}
+                      onChange={(e) => setFiltrosDataInicio(e.target.value)}
+                      className="mt-2"
+                    />
+                  </div>
+                  <div>
+                    <Label>Data Fim</Label>
+                    <Input
+                      type="date"
+                      value={filtrosDataFim}
+                      onChange={(e) => setFiltrosDataFim(e.target.value)}
+                      className="mt-2"
+                    />
+                  </div>
+                </>
+              )}
               
               <div>
                 <Label>Estado</Label>
