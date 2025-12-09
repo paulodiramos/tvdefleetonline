@@ -320,7 +320,7 @@ function App() {
                 user.role === 'motorista' ? (
                   <PerfilMotorista user={user} onLogout={handleLogout} />
                 ) : user.role === 'parceiro' ? (
-                  <PerfilParceiro user={user} onLogout={handleLogout} />
+                  <PerfilParceiroCompleto user={user} onLogout={handleLogout} />
                 ) : (
                   <Profile user={user} onLogout={handleLogout} />
                 )
