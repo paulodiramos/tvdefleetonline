@@ -546,7 +546,8 @@ const GestaoPlanos = ({ user, onLogout }) => {
                           .filter(u => filtroTipoUsuario === 'all' || u.tipo === filtroTipoUsuario)
                           .filter(u => {
                             const busca = document.getElementById('busca-usuario')?.value?.toLowerCase() || '';
-                            return !busca || u.name?.toLowerCase().includes(busca) || u.email?.toLowerCase().includes(busca);
+                            const nome = getUserDisplayName(u).toLowerCase();
+                            return !busca || nome.includes(busca) || u.email?.toLowerCase().includes(busca);
                           })
                           .map((u) => (
                           <div
@@ -560,7 +561,7 @@ const GestaoPlanos = ({ user, onLogout }) => {
                           >
                             <div className="flex items-center justify-between">
                               <div>
-                                <p className="font-medium">{u.name || 'Sem nome'}</p>
+                                <p className="font-medium">{getUserDisplayName(u)}</p>
                                 <p className="text-xs text-slate-500">{u.email}</p>
                               </div>
                               <Badge className={u.tipo === 'motorista' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}>
