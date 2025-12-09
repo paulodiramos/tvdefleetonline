@@ -14066,6 +14066,178 @@ async def atualizar_estado_relatorio(
     
     return {"message": "State updated successfully", "estado": novo_estado}
 
+# ============================================
+# GESTÃO DE PAGAMENTOS E RECIBOS (UNIFICADO)
+# ============================================
+
+@api_router.get("/pagamentos-recibos")
+async def get_pagamentos_recibos(
+    parceiro_id: Optional[str] = None,
+    data_inicio: Optional[str] = None,
+    data_fim: Optional[str] = None,
+    estado: Optional[str] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get unified payments and receipts records"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    query = {}
+    
+    # Se for parceiro, só vê seus registos
+    if current_user["role"] == UserRole.PARCEIRO:
+        query["parceiro_id"] = current_user["id"]
+    elif parceiro_id:
+        query["parceiro_id"] = parceiro_id
+    
+    if data_inicio:
+        query["data_inicio"] = {"$gte": data_inicio}
+    if data_fim:
+        query["data_fim"] = {"$lte": data_fim}
+    if estado:
+        query["estado"] = estado
+    
+    registos = await db.pagamentos_recibos.find(
+        query,
+        {"_id": 0}
+    ).sort("data_inicio", -1).to_list(100)
+    
+    return registos
+
+@api_router.get("/pagamentos-recibos/{registro_id}/recibo")
+async def get_recibo(
+    registro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get receipt details"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    registro = await db.pagamentos_recibos.find_one({"id": registro_id}, {"_id": 0})
+    if not registro:
+        raise HTTPException(status_code=404, detail="Record not found")
+    
+    # Buscar recibo associado
+    recibo = await db.recibos.find_one({"registro_id": registro_id}, {"_id": 0})
+    if not recibo:
+        raise HTTPException(status_code=404, detail="Receipt not found")
+    
+    return recibo
+
+@api_router.post("/pagamentos-recibos/{registro_id}/pagamento")
+async def realizar_pagamento(
+    registro_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Process payment"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    metodo = data.get("metodo_pagamento")
+    valor = data.get("valor")
+    observacoes = data.get("observacoes", "")
+    
+    if not metodo or not valor:
+        raise HTTPException(status_code=400, detail="Missing required fields")
+    
+    # Criar registro de pagamento
+    pagamento_id = str(uuid.uuid4())
+    pagamento = {
+        "id": pagamento_id,
+        "registro_id": registro_id,
+        "metodo_pagamento": metodo,
+        "valor": valor,
+        "observacoes": observacoes,
+        "data_pagamento": datetime.now(timezone.utc),
+        "processado_por": current_user["id"],
+        "status": "concluido"
+    }
+    await db.pagamentos.insert_one(pagamento)
+    
+    # Atualizar estado do registro
+    await db.pagamentos_recibos.update_one(
+        {"id": registro_id},
+        {
+            "$set": {
+                "estado": "liquidado",
+                "pagamento_id": pagamento_id,
+                "data_pagamento": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    return {"message": "Payment processed successfully", "pagamento_id": pagamento_id}
+
+@api_router.patch("/pagamentos-recibos/{registro_id}/estado")
+async def atualizar_estado_pagamento(
+    registro_id: str,
+    data: Dict[str, str],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Update payment/receipt state"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    novo_estado = data.get("estado")
+    estados_validos = [
+        "pendente_recibo",
+        "recibo_enviado",
+        "verificar_recibo",
+        "aprovado",
+        "pagamento_pendente",
+        "pagamento_processando",
+        "liquidado"
+    ]
+    
+    if novo_estado not in estados_validos:
+        raise HTTPException(status_code=400, detail="Invalid state")
+    
+    result = await db.pagamentos_recibos.update_one(
+        {"id": registro_id},
+        {
+            "$set": {
+                "estado": novo_estado,
+                "updated_at": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Record not found")
+    
+    return {"message": "State updated successfully", "estado": novo_estado}
+
+@api_router.post("/pagamentos-recibos/{registro_id}/enviar-relatorio")
+async def enviar_relatorio_pagamento(
+    registro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Send payment report"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    registro = await db.pagamentos_recibos.find_one({"id": registro_id}, {"_id": 0})
+    if not registro:
+        raise HTTPException(status_code=404, detail="Record not found")
+    
+    # TODO: Implementar envio real de email
+    # Por agora, apenas marcar como enviado
+    
+    await db.pagamentos_recibos.update_one(
+        {"id": registro_id},
+        {
+            "$set": {
+                "relatorio_enviado": True,
+                "data_envio_relatorio": datetime.now(timezone.utc),
+                "updated_at": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    return {"message": "Report sent successfully"}
+
 @api_router.delete("/notificacoes/{notificacao_id}")
 async def delete_notificacao(notificacao_id: str, current_user: Dict = Depends(get_current_user)):
     """Delete a notification"""
