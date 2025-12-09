@@ -5,6 +5,7 @@ import {
   Shield, Bell, Menu, X, Home, User
 } from 'lucide-react';
 import { useState } from 'react';
+import Notificacoes from './Notificacoes';
 import {
   DropdownMenu,
   DropdownMenuContent,
