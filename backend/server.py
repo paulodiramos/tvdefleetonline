@@ -258,9 +258,12 @@ async def check_and_create_alerts():
         vehicle_id = vehicle["id"]
         
         # Check registration expiry
-        if vehicle.get("validade_matricula") and vehicle["validade_matricula"].strip():
+        if vehicle.get("validade_matricula"):
             try:
-                validade_date = datetime.strptime(vehicle["validade_matricula"], "%Y-%m-%d").date()
+                parsed_date = safe_parse_date(vehicle["validade_matricula"])
+                if not parsed_date:
+                    continue
+                validade_date = parsed_date.date()
                 days_until_expiry = (validade_date - today).days
                 
                 if 0 <= days_until_expiry <= 30:
