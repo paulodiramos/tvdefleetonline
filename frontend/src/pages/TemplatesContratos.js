@@ -350,6 +350,43 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
           </div>
         )}
 
+        {/* Diálogo Novo Tipo de Contrato */}
+        <Dialog open={showNovoTipoDialog} onOpenChange={setShowNovoTipoDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Adicionar Novo Tipo de Contrato</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="novo-tipo">Nome do Tipo</Label>
+                <Input
+                  id="novo-tipo"
+                  value={novoTipo}
+                  onChange={(e) => setNovoTipo(e.target.value)}
+                  placeholder="Ex: Compra de Viatura, Leasing"
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdicionarTipo()}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowNovoTipoDialog(false);
+                    setNovoTipo('');
+                  }}
+                >
+                  Cancelar
+                </Button>
+                <Button onClick={handleAdicionarTipo}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Adicionar
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Informação de Ajuda */}
         <Card className="border-blue-200 bg-blue-50">
           <CardHeader>
