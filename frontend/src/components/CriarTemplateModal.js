@@ -9,21 +9,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { FileText } from 'lucide-react';
 
-const CriarTemplateModal = ({ open, onOpenChange, onSuccess }) => {
+const CriarTemplateModal = ({ open, onOpenChange, onSuccess, user }) => {
   const [tipoContrato, setTipoContrato] = useState('');
+  const [parceiroId, setParceiroId] = useState('');
+  const [parceiros, setParceiros] = useState([]);
   const [novoTipo, setNovoTipo] = useState('');
   const [mostrarNovoTipo, setMostrarNovoTipo] = useState(false);
   const [textoContrato, setTextoContrato] = useState('');
   const [saving, setSaving] = useState(false);
-
-  const tiposContratoBase = [
+  const [tiposContrato, setTiposContrato] = useState([
     { value: 'aluguer_sem_caucao', label: 'Aluguer Sem Caução' },
     { value: 'aluguer_com_caucao', label: 'Aluguer Com Caução' },
     { value: 'prestacao_servicos', label: 'Prestação de Serviços' },
     { value: 'parceria', label: 'Parceria' },
     { value: 'compra', label: 'Compra' },
     { value: 'venda', label: 'Venda' }
-  ];
+  ]);
 
   const variaveisDisponiveis = [
     { key: '{PARCEIRO_NOME}', desc: 'Nome do Parceiro' },
