@@ -881,9 +881,8 @@ const Usuarios = ({ user, onLogout }) => {
                       className="h-auto py-3 flex flex-col items-center space-y-1"
                       onClick={() => {
                         setShowDetailsDialog(false);
-                        setSelectedUser(viewingUser);
-                        setSelectedPlanoId('');
-                        setShowPlanoDialog(true);
+                        navigate('/gestao-planos?tab=atribuir');
+                        toast.info(`Redirecionando para Gestão de Planos`);
                       }}
                     >
                       <Package className="w-5 h-5" />
