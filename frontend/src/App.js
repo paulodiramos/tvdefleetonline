@@ -538,6 +538,16 @@ function App() {
             }
           />
           <Route
+            path="/gestao-pagamentos-recibos"
+            element={
+              user && ['admin', 'gestao', 'parceiro'].includes(user.role) ? (
+                <GestaoPagamentosRecibos user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
+            }
+          />
+          <Route
             path="/pagamentos-parceiro"
             element={
               user ? <PagamentosParceiro user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
