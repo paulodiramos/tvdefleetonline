@@ -99,7 +99,7 @@ const ListaContratos = ({ user, onLogout, showLayout = true }) => {
         {/* Filtros */}
         <Card>
           <CardContent className="pt-6">
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid md:grid-cols-4 gap-4">
               <div className="md:col-span-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -114,15 +114,49 @@ const ListaContratos = ({ user, onLogout, showLayout = true }) => {
               <div>
                 <Select value={filters.status} onValueChange={(value) => setFilters({ ...filters, status: value })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Status" />
+                    <SelectValue placeholder="Estado" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="ativo">Ativos</SelectItem>
-                    <SelectItem value="terminado">Terminados</SelectItem>
-                    <SelectItem value="pendente">Pendentes</SelectItem>
+                    <SelectItem value="all">Todos Estados</SelectItem>
+                    <SelectItem value="ativo">✅ Ativos</SelectItem>
+                    <SelectItem value="terminado">❌ Terminados</SelectItem>
+                    <SelectItem value="pendente">⏳ Pendentes</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <Select value={filters.tipoContrato} onValueChange={(value) => setFilters({ ...filters, tipoContrato: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos Tipos</SelectItem>
+                    <SelectItem value="aluguer_sem_caucao">Aluguer S/ Caução</SelectItem>
+                    <SelectItem value="aluguer_com_caucao">Aluguer C/ Caução</SelectItem>
+                    <SelectItem value="prestacao_servicos">Prestação Serviços</SelectItem>
+                    <SelectItem value="parceria">Parceria</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid md:grid-cols-4 gap-4 mt-4">
+              <div>
+                <Select value={filters.periodo} onValueChange={(value) => setFilters({ ...filters, periodo: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Período" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todo Período</SelectItem>
+                    <SelectItem value="ultimos_30_dias">Últimos 30 dias</SelectItem>
+                    <SelectItem value="ultimos_90_dias">Últimos 90 dias</SelectItem>
+                    <SelectItem value="este_ano">Este Ano</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="md:col-span-3">
+                <div className="text-sm text-slate-600">
+                  Mostrando <strong>{filteredContratos.length}</strong> de <strong>{contratos.length}</strong> contratos
+                </div>
               </div>
             </div>
           </CardContent>
