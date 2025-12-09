@@ -310,12 +310,28 @@ const GestaoPlanos = ({ user, onLogout }) => {
   };
 
   const getPrecoDisplay = (plano) => {
-    if (!plano.precos) return 'N/A';
-    const mensal = plano.precos.mensal;
-    if (mensal && mensal.preco_com_iva > 0) {
-      return `${mensal.preco_com_iva}€/mês`;
+    // Suportar novo formato (precos.mensal.preco_com_iva)
+    if (plano.precos) {
+      const mensal = plano.precos.mensal;
+      if (mensal && mensal.preco_com_iva > 0) {
+        return `€${mensal.preco_com_iva.toFixed(2)}/mês`;
+      }
+      const semanal = plano.precos.semanal;
+      if (semanal && semanal.preco_com_iva > 0) {
+        return `€${semanal.preco_com_iva.toFixed(2)}/semana`;
+      }
     }
-    return 'Configurar preços';
+    // Suportar formato antigo (preco_mensal, preco_semanal)
+    if (plano.preco_mensal > 0) {
+      return `€${plano.preco_mensal.toFixed(2)}/mês`;
+    }
+    if (plano.preco_semanal > 0) {
+      return `€${plano.preco_semanal.toFixed(2)}/semana`;
+    }
+    if (plano.preco > 0) {
+      return `€${plano.preco.toFixed(2)}`;
+    }
+    return 'Sem preço definido';
   };
 
   return (
