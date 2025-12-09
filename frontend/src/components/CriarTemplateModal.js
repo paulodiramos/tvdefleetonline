@@ -93,6 +93,10 @@ const CriarTemplateModal = ({ open, onOpenChange, onSuccess, user }) => {
       toast.error('Selecione o tipo de contrato');
       return;
     }
+    if (!parceiroId) {
+      toast.error('Selecione um parceiro');
+      return;
+    }
     if (!textoContrato.trim()) {
       toast.error('Preencha o texto do contrato');
       return;
@@ -106,6 +110,7 @@ const CriarTemplateModal = ({ open, onOpenChange, onSuccess, user }) => {
         `${API}/contratos/templates`,
         {
           tipo_contrato: tipoContrato,
+          parceiro_id: parceiroId,
           texto_template: textoContrato,
           ativo: true
         },
@@ -114,6 +119,7 @@ const CriarTemplateModal = ({ open, onOpenChange, onSuccess, user }) => {
 
       toast.success('Template criado com sucesso!');
       setTipoContrato('');
+      setParceiroId('');
       setTextoContrato('');
       onOpenChange(false);
       if (onSuccess) onSuccess();
