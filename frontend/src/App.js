@@ -24,6 +24,7 @@ import MotoristaTickets from "@/pages/MotoristaTickets";
 import MotoristaOportunidades from "@/pages/MotoristaOportunidades";
 import CriarRelatorioSemanal from "@/pages/CriarRelatorioSemanal";
 import RelatoriosSemanais from "@/pages/RelatoriosSemanaisNovo";
+import GestaoPagamentosRecibos from "@/pages/GestaoPagamentosRecibos";
 import PagamentosParceiro from "@/pages/PagamentosParceiro";
 import ParceiroReports from "@/pages/ParceiroReports";
 import PerfilParceiro from "@/pages/PerfilParceiro";
