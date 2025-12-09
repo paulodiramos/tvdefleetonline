@@ -599,7 +599,10 @@ const GestaoPlanos = ({ user, onLogout }) => {
                               .map((plano) => (
                                 <div
                                   key={plano.id}
-                                  onClick={() => setPlanoParaAtribuir(plano.id)}
+                                  onClick={() => {
+                                    setPlanoParaAtribuir(plano.id);
+                                    setPlanoSelecionado(plano);
+                                  }}
                                   className={`p-3 border rounded-lg cursor-pointer transition-all ${
                                     planoParaAtribuir === plano.id
                                       ? 'border-blue-500 bg-blue-50'
