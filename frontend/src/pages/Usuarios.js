@@ -57,10 +57,7 @@ const Usuarios = ({ user, onLogout }) => {
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState('');
-  const [showPlanoDialog, setShowPlanoDialog] = useState(false);
-  const [planos, setPlanos] = useState([]);
-  const [selectedPlanoId, setSelectedPlanoId] = useState('');
-  const [selectedPeriodicidade, setSelectedPeriodicidade] = useState('mensal');
+  // DEPRECATED: Estados removidos - agora usa /gestao-planos para atribuição
   const [duracaoDias, setDuracaoDias] = useState(30);
   const [showMotoristaDialog, setShowMotoristaDialog] = useState(false);
   const [selectedMotoristaId, setSelectedMotoristaId] = useState(null);
