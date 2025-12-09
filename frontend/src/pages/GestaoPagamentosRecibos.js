@@ -116,8 +116,14 @@ const GestaoPagamentosRecibos = ({ user, onLogout }) => {
       
       const params = {};
       if (filtrosParceiro && filtrosParceiro !== 'todos') params.parceiro_id = filtrosParceiro;
-      if (filtrosDataInicio) params.data_inicio = filtrosDataInicio;
-      if (filtrosDataFim) params.data_fim = filtrosDataFim;
+      
+      // Converter semana para datas
+      if (filtroSemana) {
+        const { inicio, fim } = getWeekDates(filtroSemana);
+        if (inicio) params.data_inicio = inicio;
+        if (fim) params.data_fim = fim;
+      }
+      
       if (filtrosEstado !== 'all') params.estado = filtrosEstado;
       
       const response = await axios.get(`${API}/pagamentos-recibos`, {
