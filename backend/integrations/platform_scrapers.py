@@ -278,23 +278,23 @@ class ViaVerdeScraper(BaseScraper):
             await self.page.screenshot(path='/tmp/viaverde_03_modal_search.png')
             logger.info("📸 Screenshot 3: Modal confirmado")
             
-            # Seletores mais específicos baseados na análise da imagem
+            # Seletores priorizados baseados na análise da estrutura do modal
             email_selectors = [
-                # Baseado na análise: campos podem ter IDs específicos
+                # Prioridade 1: IDs simples (mais provável)
                 '#email',
-                '#login-email',
-                '#emailAddress',
-                'input[name="email"]',
-                'input[type="email"]',
-                # Dentro de modal/dialog
+                'input#email',
+                # Prioridade 2: Input type email visível (dentro do modal)
                 '[role="dialog"] input[type="email"]',
                 '.modal input[type="email"]',
-                # Por placeholder
-                'input[placeholder*="Email"]',
-                'input[placeholder*="email"]',
-                # Por classes
-                '.email-input',
-                '.via-verde-input[name="email"]'
+                'input[type="email"]',
+                # Prioridade 3: Por name attribute
+                'input[name="email"]',
+                '[role="dialog"] input[name="email"]',
+                # Prioridade 4: Por placeholder
+                'input[placeholder*="email" i]',
+                # Prioridade 5: Qualquer input visível no modal (fallback)
+                '[role="dialog"] input:not([type="password"])',
+                '.modal input:not([type="password"])'
             ]
             
             logger.info("📝 Tentando preencher email...")
