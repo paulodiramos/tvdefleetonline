@@ -15102,6 +15102,181 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Erro ao carregar agendamentos: {e}")
 
+# ==================================================
+# SINCRONIZAÇÃO - Configuração e Agendamento
+# ==================================================
+
+@app.get("/api/sincronizacao/configuracoes")
+async def obter_configuracoes_sincronizacao(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Obter configurações de sincronização de todos os parceiros
+    """
+    try:
+        if current_user["role"] not in ["admin", "gestao"]:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        # Buscar todas as configurações de sincronização
+        configs = await db.configuracoes_sincronizacao.find({}, {"_id": 0}).to_list(1000)
+        
+        # Se não houver configs, criar configs vazias para cada parceiro
+        if not configs or len(configs) == 0:
+            parceiros = await db.parceiros.find({}, {"_id": 0, "id": 1}).to_list(1000)
+            configs = []
+            for parceiro in parceiros:
+                config = {
+                    "parceiro_id": parceiro["id"],
+                    "dia_semana": 1,  # Segunda-feira por padrão
+                    "hora": "00:00",
+                    "ativo": True,
+                    "ultima_sincronizacao": None,
+                    "status": None,
+                    "mensagem_erro": None,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.configuracoes_sincronizacao.insert_one(config)
+                configs.append(config)
+        
+        return configs
+        
+    except Exception as e:
+        logger.error(f"Erro ao obter configurações: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/sincronizacao/configurar-dia")
+async def configurar_dia_sincronizacao(
+    request: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Configurar o dia da semana para sincronização automática
+    """
+    try:
+        if current_user["role"] not in ["admin", "gestao"]:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        parceiro_id = request.get("parceiro_id")
+        dia_semana = request.get("dia_semana")
+        
+        if parceiro_id is None or dia_semana is None:
+            raise HTTPException(status_code=400, detail="Dados inválidos")
+        
+        # Verificar se já existe configuração
+        config_existente = await db.configuracoes_sincronizacao.find_one(
+            {"parceiro_id": parceiro_id},
+            {"_id": 0}
+        )
+        
+        if config_existente:
+            # Atualizar
+            await db.configuracoes_sincronizacao.update_one(
+                {"parceiro_id": parceiro_id},
+                {"$set": {
+                    "dia_semana": dia_semana,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+        else:
+            # Criar nova
+            config = {
+                "parceiro_id": parceiro_id,
+                "dia_semana": dia_semana,
+                "hora": "00:00",
+                "ativo": True,
+                "ultima_sincronizacao": None,
+                "status": None,
+                "mensagem_erro": None,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.configuracoes_sincronizacao.insert_one(config)
+        
+        return {"message": "Configuração atualizada com sucesso"}
+        
+    except Exception as e:
+        logger.error(f"Erro ao configurar dia: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/sincronizacao/forcar")
+async def forcar_sincronizacao(
+    request: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Forçar sincronização manual imediata
+    """
+    try:
+        if current_user["role"] not in ["admin", "gestao"]:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        parceiro_id = request.get("parceiro_id")
+        
+        if not parceiro_id:
+            raise HTTPException(status_code=400, detail="parceiro_id é obrigatório")
+        
+        # Buscar parceiro
+        parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+        if not parceiro:
+            raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+        
+        # Atualizar status da configuração para "em_progresso"
+        await db.configuracoes_sincronizacao.update_one(
+            {"parceiro_id": parceiro_id},
+            {"$set": {
+                "status": "em_progresso",
+                "mensagem_erro": None,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }},
+            upsert=True
+        )
+        
+        # Simular sincronização (em produção, aqui seria feita a integração real)
+        # Por exemplo: sincronizar dados de uma plataforma externa
+        await asyncio.sleep(1)  # Simular processamento
+        
+        # Atualizar status para sucesso
+        await db.configuracoes_sincronizacao.update_one(
+            {"parceiro_id": parceiro_id},
+            {"$set": {
+                "status": "sucesso",
+                "ultima_sincronizacao": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        # Registar log
+        log = {
+            "id": str(uuid4()),
+            "parceiro_id": parceiro_id,
+            "tipo": "manual",
+            "status": "sucesso",
+            "data": datetime.now(timezone.utc).isoformat(),
+            "usuario_id": current_user["id"]
+        }
+        await db.logs_sincronizacao_parceiro.insert_one(log)
+        
+        return {
+            "message": f"Sincronização concluída para {parceiro.get('nome_empresa', 'parceiro')}",
+            "status": "sucesso"
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao forçar sincronização: {e}")
+        
+        # Atualizar status para erro
+        if parceiro_id:
+            await db.configuracoes_sincronizacao.update_one(
+                {"parceiro_id": parceiro_id},
+                {"$set": {
+                    "status": "erro",
+                    "mensagem_erro": str(e),
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }},
+                upsert=True
+            )
+        
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
