@@ -6124,6 +6124,123 @@ async def get_parceiro_estatisticas(
         "total_vistorias": total_vistorias
     }
 
+
+@api_router.post("/parceiros/{parceiro_id}/certidao-permanente/upload")
+async def upload_certidao_permanente(
+    parceiro_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload certidão permanente document"""
+    # Verificar permissão
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        if current_user["role"] == "parceiro" and current_user["id"] != parceiro_id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verificar se parceiro existe
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro not found")
+    
+    # Criar diretório para documentos do parceiro
+    parceiro_docs_dir = UPLOAD_DIR / "parceiros" / parceiro_id
+    parceiro_docs_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Guardar ficheiro
+    file_extension = file.filename.split('.')[-1]
+    file_name = f"certidao_permanente.{file_extension}"
+    file_path = parceiro_docs_dir / file_name
+    
+    with open(file_path, "wb") as f:
+        content = await file.read()
+        f.write(content)
+    
+    # Atualizar no banco de dados
+    await db.parceiros.update_one(
+        {"id": parceiro_id},
+        {"$set": {
+            "certidao_permanente_file": str(file_path),
+            "certidao_permanente_filename": file.filename,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {
+        "message": "Certidão permanente uploaded successfully",
+        "file_path": str(file_path)
+    }
+
+@api_router.get("/parceiros/{parceiro_id}/certidao-permanente")
+async def download_certidao_permanente(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Download certidão permanente document"""
+    # Verificar permissão
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        if current_user["role"] == "parceiro" and current_user["id"] != parceiro_id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Buscar parceiro
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro not found")
+    
+    if not parceiro.get("certidao_permanente_file"):
+        raise HTTPException(status_code=404, detail="Certidão permanente not found")
+    
+    file_path = Path(parceiro["certidao_permanente_file"])
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="File not found on server")
+    
+    # Determinar media type
+    media_type = mimetypes.guess_type(str(file_path))[0] or 'application/octet-stream'
+    
+    return FileResponse(
+        path=file_path,
+        media_type=media_type,
+        filename=parceiro.get("certidao_permanente_filename", "certidao_permanente.pdf")
+    )
+
+@api_router.put("/parceiros/{parceiro_id}/certidao-permanente")
+async def update_certidao_permanente_data(
+    parceiro_id: str,
+    data: Dict[str, str] = Body(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Update certidão permanente code and validity"""
+    # Verificar permissão
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        if current_user["role"] == "parceiro" and current_user["id"] != parceiro_id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verificar se parceiro existe
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro not found")
+    
+    # Atualizar dados
+    update_data = {
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if "codigo_certidao_permanente" in data:
+        update_data["codigo_certidao_permanente"] = data["codigo_certidao_permanente"]
+    
+    if "validade_certidao_permanente" in data:
+        update_data["validade_certidao_permanente"] = data["validade_certidao_permanente"]
+    
+    await db.parceiros.update_one(
+        {"id": parceiro_id},
+        {"$set": update_data}
+    )
+    
+    return {
+        "message": "Certidão permanente data updated successfully",
+        "data": update_data
+    }
+
+
 @api_router.get("/parceiros/meu-plano")
 async def get_meu_plano_parceiro(current_user: Dict = Depends(get_current_user)):
     """Parceiro: Get active plan with calculated costs"""
