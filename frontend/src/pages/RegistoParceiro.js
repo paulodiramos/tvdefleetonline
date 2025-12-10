@@ -299,6 +299,17 @@ const RegistoParceiro = () => {
                     placeholder="1000-001"
                   />
                 </div>
+                <div>
+                  <Label htmlFor="localidade">Localidade *</Label>
+                  <Input
+                    id="localidade"
+                    name="localidade"
+                    value={formData.localidade}
+                    onChange={handleChange}
+                    required
+                    placeholder="Lisboa"
+                  />
+                </div>
               </div>
 
               <div>
