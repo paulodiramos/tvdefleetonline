@@ -624,7 +624,8 @@ const Vehicles = ({ user, onLogout }) => {
                 </form>
               </DialogContent>
             </Dialog>
-          )}
+            )}
+          </div>
         </div>
 
         {vehicles.length === 0 ? (
