@@ -148,7 +148,7 @@ const CredenciaisParceiros = ({ user, onLogout }) => {
         ) : (
           <div className="space-y-4">
             {parceirosFiltrados.map((parceiro) => {
-              const credsP parceiro = getCredenciaisParceiro(parceiro.id);
+              const credsParceiro = getCredenciaisParceiro(parceiro.id);
               
               return (
                 <Card key={parceiro.id}>
