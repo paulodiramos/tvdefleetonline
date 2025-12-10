@@ -2404,6 +2404,90 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
         </DialogContent>
       </Dialog>
 
+      {/* Import CSV Dialog */}
+      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="w-5 h-5" />
+              Importar {importType === 'motoristas' ? 'Motoristas' : 'Veículos'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-5 h-5 text-blue-700 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-blue-800">
+                  <p className="font-semibold mb-1">Antes de importar:</p>
+                  <ol className="list-decimal list-inside space-y-1 text-xs">
+                    <li>Descarregue o ficheiro de exemplo</li>
+                    <li>Preencha com os seus dados</li>
+                    <li>Não altere os cabeçalhos das colunas</li>
+                    <li>Guarde como CSV (separado por vírgulas)</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Button
+                variant="outline"
+                onClick={() => handleDownloadCSVExample(importType)}
+                className="w-full"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Descarregar Exemplo CSV
+              </Button>
+
+              <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center">
+                <input
+                  type="file"
+                  accept=".csv"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      handleImportCSV(file);
+                    }
+                  }}
+                  className="hidden"
+                  id="csv-upload"
+                />
+                <label
+                  htmlFor="csv-upload"
+                  className="cursor-pointer flex flex-col items-center gap-2"
+                >
+                  <Upload className="w-8 h-8 text-slate-400" />
+                  <span className="text-sm text-slate-600">
+                    Clique para selecionar o ficheiro CSV
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    Apenas ficheiros .csv são aceites
+                  </span>
+                </label>
+              </div>
+
+              {importLoading && (
+                <div className="flex items-center justify-center gap-2 p-4">
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                  <span className="text-sm text-slate-600">A importar...</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowImportDialog(false)}
+                className="flex-1"
+                disabled={importLoading}
+              >
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
     </Layout>
   );
 };
