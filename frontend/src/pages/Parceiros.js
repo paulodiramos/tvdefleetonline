@@ -1170,8 +1170,10 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                     <Button
                       size="sm"
                       onClick={() => {
+                        console.log('Botão Importar Veículos clicado');
                         setImportType('veiculos');
                         setShowImportDialog(true);
+                        console.log('showImportDialog definido como true');
                       }}
                       className="w-full bg-blue-600 hover:bg-blue-700"
                     >
