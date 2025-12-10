@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
   User, Mail, Phone, Building, MapPin, Calendar, 
-  Package, CheckCircle, TrendingUp, Users, Car 
+  Package, CheckCircle, TrendingUp, Users, Car, FileText 
 } from 'lucide-react';
 import { toast } from 'sonner';
 
