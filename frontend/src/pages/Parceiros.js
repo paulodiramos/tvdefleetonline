@@ -2129,7 +2129,7 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
           {previewTemplate && (
             <div className="p-6 overflow-y-auto max-h-[calc(95vh-100px)]">
               {/* Simulação de Página A4 */}
-              <div className="mx-auto bg-white shadow-2xl" style={{
+              <div className="print-area mx-auto bg-white shadow-2xl" style={{
                 width: '210mm',
                 minHeight: '297mm',
                 padding: '20mm',
