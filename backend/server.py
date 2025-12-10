@@ -15277,6 +15277,71 @@ async def forcar_sincronizacao(
         
         raise HTTPException(status_code=500, detail=str(e))
 
+# ==================================================
+# CREDENCIAIS PARCEIROS - Admin only
+# ==================================================
+
+@app.get("/api/admin/credenciais-parceiros")
+async def obter_credenciais_parceiros(
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Obter credenciais de login dos parceiros (apenas para admin)
+    """
+    try:
+        if current_user["role"] != "admin":
+            raise HTTPException(status_code=403, detail="Acesso negado - apenas administradores")
+        
+        # Buscar todos os utilizadores com role 'parceiro'
+        users_parceiros = await db.users.find(
+            {"role": "parceiro"},
+            {"_id": 0, "id": 1, "email": 1, "password": 1, "name": 1, "active": 1, "created_at": 1}
+        ).to_list(1000)
+        
+        # Para cada parceiro, buscar dados adicionais da coleção parceiros
+        credenciais_completas = []
+        
+        for user in users_parceiros:
+            parceiro_data = await db.parceiros.find_one(
+                {"email": user["email"]},
+                {"_id": 0, "id": 1, "nome_empresa": 1, "telefone": 1, "nif": 1}
+            )
+            
+            # Montar credencial
+            credencial = {
+                "parceiro_id": user["id"],
+                "email": user["email"],
+                "password": user["password"],  # Hash do bcrypt
+                "nome": user.get("name", "Sem nome"),
+                "nome_empresa": parceiro_data.get("nome_empresa") if parceiro_data else None,
+                "telefone": parceiro_data.get("telefone") if parceiro_data else None,
+                "nif": parceiro_data.get("nif") if parceiro_data else None,
+                "ativo": user.get("active", True),
+                "plataforma": "tvdefleet",  # Sistema principal
+                "updated_at": user.get("created_at")
+            }
+            
+            credenciais_completas.append(credencial)
+        
+        # Registar acesso (auditoria)
+        log_auditoria = {
+            "id": str(uuid.uuid4()),
+            "acao": "visualizacao_credenciais",
+            "usuario_id": current_user["id"],
+            "usuario_email": current_user["email"],
+            "data": datetime.now(timezone.utc).isoformat(),
+            "detalhes": f"Visualizou credenciais de {len(credenciais_completas)} parceiros"
+        }
+        await db.logs_auditoria.insert_one(log_auditoria)
+        
+        return credenciais_completas
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao obter credenciais: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
