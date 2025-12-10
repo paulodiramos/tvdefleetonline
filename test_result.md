@@ -7051,3 +7051,106 @@ agent_communication:
         
         Sistema de aprovação de parceiros está 100% funcional e pronto para produção!
 
+
+    - agent: "testing"
+      message: |
+        🎯 TESTE COMPLETO DE IMPORTAÇÃO CSV DE MOTORISTAS E VEÍCULOS - RESULTADOS FINAIS
+        
+        CONTEXTO DO TESTE:
+        Teste completo da funcionalidade de importação de CSV de motoristas e veículos conforme review request em português, validando todos os 5 cenários especificados com credenciais admin@tvdefleet.com/o72ocUHy.
+        
+        URL: https://fleet-master-35.preview.emergentagent.com ✅
+        
+        ✅ PARTE 1: ACESSO À FUNCIONALIDADE - 100% FUNCIONANDO
+        
+        **LOGIN E NAVEGAÇÃO:**
+        - ✅ Login admin@tvdefleet.com/o72ocUHy funcionando perfeitamente
+        - ✅ Redirecionamento para dashboard correto
+        - ✅ Navegação para /parceiros sem erros 404/500
+        - ✅ Página carrega com lista de parceiros (5 parceiros encontrados)
+        
+        **SELEÇÃO DE PARCEIRO:**
+        - ✅ Clique num parceiro da lista para ver detalhes funcionando
+        - ✅ Vista detalhada do parceiro carrega corretamente
+        - ✅ Botão "← Voltar aos Parceiros" presente (confirma vista detalhada)
+        
+        ✅ PARTE 2: SEÇÃO "IMPORTAÇÃO EM MASSA (CSV)" - 100% VISÍVEL
+        
+        **LOCALIZAÇÃO DA SEÇÃO:**
+        - ✅ Seção "Importação em Massa (CSV)" encontrada após scroll
+        - ✅ Seção está visível na vista detalhada do parceiro (não no modal de perfil)
+        - ✅ Título "Importação em Massa (CSV)" com ícone Upload presente
+        - ✅ Layout com gradiente azul conforme design
+        
+        ✅ PARTE 3: VERIFICAÇÃO DOS 2 CARDS - 100% FUNCIONANDO
+        
+        **CARDS MOTORISTAS E VEÍCULOS:**
+        - ✅ Card "Motoristas" encontrado e visível
+        - ✅ Card "Veículos" encontrado e visível
+        - ✅ Ambos os cards têm descrição: "Importe múltiplos [motoristas/veículos] de uma só vez usando um ficheiro CSV"
+        - ✅ Ícones corretos: Users para Motoristas, Car para Veículos
+        
+        ✅ PARTE 4: BOTÕES "DESCARREGAR EXEMPLO" - 100% FUNCIONANDO
+        
+        **FUNCIONALIDADE DE DOWNLOAD:**
+        - ✅ Encontrados 2 botões "Descarregar Exemplo" (1 por card)
+        - ✅ Botão "Descarregar Exemplo" de Motoristas clicado com sucesso
+        - ✅ Botão "Descarregar Exemplo" de Veículos clicado com sucesso
+        - ✅ Backend logs confirmam downloads: GET /api/parceiros/csv-examples/motoristas HTTP/1.1" 200 OK
+        - ✅ Backend logs confirmam downloads: GET /api/parceiros/csv-examples/veiculos HTTP/1.1" 200 OK
+        
+        ❌ PARTE 5: MODAIS DE IMPORTAÇÃO - PROBLEMA IDENTIFICADO
+        
+        **BOTÕES "IMPORTAR CSV":**
+        - ✅ Encontrados 2 botões "Importar CSV" (1 por card)
+        - ✅ Botões estão visíveis e habilitados
+        - ❌ Modal "Importar Motoristas" não abre ao clicar no primeiro botão
+        - ❌ Modal "Importar Veículos" não abre ao clicar no segundo botão
+        
+        **INVESTIGAÇÃO DO PROBLEMA:**
+        - ✅ Botões têm texto correto: "Importar CSV"
+        - ✅ Botões estão habilitados e visíveis
+        - ✅ Nenhum erro JavaScript no console
+        - ✅ Nenhum erro visível na UI
+        - ❌ Modais não abrem após clique nos botões
+        
+        ✅ PARTE 6: INSTRUÇÕES - 100% VISÍVEIS
+        
+        **SEÇÃO DE INSTRUÇÕES:**
+        - ✅ Seção de instruções com ícone AlertTriangle presente
+        - ✅ 4 passos listados corretamente:
+          1. Descarregue o ficheiro de exemplo
+          2. Preencha com os seus dados (não altere os cabeçalhos)
+          3. Guarde como CSV (separado por vírgulas)
+          4. Faça upload do ficheiro
+        
+        📊 RESULTADO FINAL: 4/5 PARTES FUNCIONANDO (80% SUCESSO)
+        
+        🎯 FUNCIONALIDADES CONFIRMADAS COMO FUNCIONANDO:
+        ✅ Login e navegação para parceiros
+        ✅ Seleção de parceiro e vista detalhada
+        ✅ Seção "Importação em Massa (CSV)" visível
+        ✅ 2 cards (Motoristas e Veículos) presentes
+        ✅ Botões "Descarregar Exemplo" funcionando (downloads confirmados)
+        ✅ Instruções de uso visíveis e corretas
+        ✅ Backend endpoints de CSV funcionando (/api/parceiros/csv-examples/)
+        
+        ❌ PROBLEMA CRÍTICO IDENTIFICADO:
+        - Modais de importação não abrem ao clicar nos botões "Importar CSV"
+        - Botões estão presentes e funcionais, mas a ação de abrir modal falha
+        - Possível problema no JavaScript do frontend (event handlers)
+        
+        **ENDPOINTS BACKEND CONFIRMADOS FUNCIONANDO:**
+        - GET /api/parceiros/csv-examples/motoristas ✅
+        - GET /api/parceiros/csv-examples/veiculos ✅
+        - POST /api/parceiros/{parceiro_id}/importar-motoristas (implementado)
+        - POST /api/parceiros/{parceiro_id}/importar-veiculos (implementado)
+        
+        **OBSERVAÇÕES TÉCNICAS:**
+        - Funcionalidade está 80% implementada e funcional
+        - Downloads de exemplo funcionam perfeitamente
+        - Interface está bem estruturada e visível
+        - Problema específico com abertura de modais de importação
+        - Todos os elementos visuais conforme especificação
+        
+        Sistema de importação CSV está quase totalmente funcional, necessitando apenas correção na abertura dos modais de importação.
