@@ -9690,9 +9690,42 @@ async def gerar_pdf_contrato(
         c.drawString(2*cm, y, f"{6 if veiculo else 5}. CLÁUSULAS CONTRATUAIS")
         y -= 0.8*cm
         
+        # Substituir variáveis no texto
+        clausulas_texto_final = contrato["clausulas_texto"]
+        
+        # Variáveis do parceiro
+        clausulas_texto_final = clausulas_texto_final.replace("{PARCEIRO_NOME}", parceiro.get('nome_empresa', parceiro.get('name', 'N/A')))
+        clausulas_texto_final = clausulas_texto_final.replace("{PARCEIRO_NIF}", parceiro.get('contribuinte_empresa', parceiro.get('nif', 'N/A')))
+        clausulas_texto_final = clausulas_texto_final.replace("{PARCEIRO_MORADA}", parceiro.get('morada_completa', parceiro.get('morada', 'N/A')))
+        clausulas_texto_final = clausulas_texto_final.replace("{PARCEIRO_CP}", parceiro.get('codigo_postal', 'N/A'))
+        clausulas_texto_final = clausulas_texto_final.replace("{PARCEIRO_TELEFONE}", parceiro.get('telefone', parceiro.get('phone', 'N/A')))
+        clausulas_texto_final = clausulas_texto_final.replace("{PARCEIRO_EMAIL}", parceiro.get('email', 'N/A'))
+        
+        # Variáveis do motorista
+        clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_NOME}", motorista.get('name', 'N/A'))
+        clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_CC}", motorista.get('numero_cc', motorista.get('cc_numero', 'N/A')))
+        clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_CC_VALIDADE}", motorista.get('validade_cc', motorista.get('cc_validade', 'N/A')))
+        clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_NIF}", motorista.get('nif', 'N/A'))
+        clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_MORADA}", motorista.get('morada_completa', motorista.get('morada', 'N/A')))
+        clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_CP}", motorista.get('codigo_postal', 'N/A'))
+        clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_LOCALIDADE}", motorista.get('localidade', 'N/A'))
+        clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_TELEFONE}", motorista.get('phone', motorista.get('telefone', 'N/A')))
+        clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_CARTA_CONDUCAO}", motorista.get('carta_conducao_numero', motorista.get('numero_carta_conducao', 'N/A')))
+        clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_CARTA_CONDUCAO_VALIDADE}", motorista.get('carta_conducao_validade', motorista.get('validade_carta_conducao', 'N/A')))
+        clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_LICENCA_TVDE}", motorista.get('licenca_tvde_numero', motorista.get('numero_licenca_tvde', 'N/A')))
+        clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_LICENCA_TVDE_VALIDADE}", motorista.get('licenca_tvde_validade', motorista.get('validade_licenca_tvde', 'N/A')))
+        clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_SS}", motorista.get('numero_seguranca_social', 'N/A'))
+        
+        # Variáveis do veículo
+        if veiculo:
+            clausulas_texto_final = clausulas_texto_final.replace("{VEICULO_MARCA}", veiculo.get('marca', 'N/A'))
+            clausulas_texto_final = clausulas_texto_final.replace("{VEICULO_MODELO}", veiculo.get('modelo', 'N/A'))
+            clausulas_texto_final = clausulas_texto_final.replace("{VEICULO_MATRICULA}", veiculo.get('matricula', 'N/A'))
+            clausulas_texto_final = clausulas_texto_final.replace("{VEICULO_ANO}", str(veiculo.get('ano', 'N/A')))
+        
         c.setFont("Helvetica", 9)
         # Split text into lines
-        clausulas_lines = contrato["clausulas_texto"].split('\n')
+        clausulas_lines = clausulas_texto_final.split('\n')
         for line in clausulas_lines:
             if y < 2*cm:
                 c.showPage()
