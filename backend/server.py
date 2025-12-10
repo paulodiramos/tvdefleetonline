@@ -15622,8 +15622,11 @@ async def import_csv(
         if len(file_content) == 0:
             raise HTTPException(status_code=400, detail="Ficheiro vazio")
         
+        # Extrair metadata do nome do ficheiro
+        from utils.csv_parsers import get_parser, extract_dates_from_filename
+        data_inicio, data_fim, nome_frota = extract_dates_from_filename(file.filename)
+        
         # Obter parser adequado
-        from utils.csv_parsers import get_parser
         parser = get_parser(plataforma, file_content)
         
         # Fazer parse
@@ -15648,6 +15651,15 @@ async def import_csv(
                 registo['parceiro_id'] = parceiro_id
                 registo['motorista_id'] = motorista_id
                 registo['importado_por'] = current_user['id']
+                registo['nome_ficheiro'] = file.filename
+                
+                # Adicionar datas e frota extraídas do filename
+                if data_inicio:
+                    registo['periodo_inicio'] = data_inicio
+                if data_fim:
+                    registo['periodo_fim'] = data_fim
+                if nome_frota:
+                    registo['nome_frota'] = nome_frota
                 registo['data_importacao'] = datetime.now(timezone.utc).isoformat()
                 registo['ficheiro_origem'] = file.filename
                 
