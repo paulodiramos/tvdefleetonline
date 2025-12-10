@@ -73,7 +73,7 @@ class BoltScraper(BaseScraper):
         self.platform_name = "Bolt"
         self.login_url = "https://partners.bolt.eu/login"
     
-    async def login(self, email: str, password: str) -> bool:
+    async def login(self, email: str, password: str, **kwargs) -> bool:
         try:
             logger.info(f"🔑 {self.platform_name}: Login com {email}")
             await self.page.goto(self.login_url, wait_until="networkidle")
@@ -178,7 +178,7 @@ class UberScraper(BaseScraper):
         self.platform_name = "Uber"
         self.login_url = "https://partners.uber.com/login"
     
-    async def login(self, email: str, password: str) -> bool:
+    async def login(self, email: str, password: str, **kwargs) -> bool:
         # Similar ao Bolt, ajustar seletores
         logger.info(f"🔑 {self.platform_name}: Login (a implementar)")
         return False
@@ -793,7 +793,7 @@ class GPSScraper(BaseScraper):
         self.platform_name = "GPS"
         self.login_url = ""  # Configurável por utilizador
     
-    async def login(self, email: str, password: str) -> bool:
+    async def login(self, email: str, password: str, **kwargs) -> bool:
         logger.info(f"🔑 {self.platform_name}: Login genérico (a implementar)")
         return False
     
@@ -812,7 +812,7 @@ class CombustivelScraper(BaseScraper):
         self.platform_name = "Combustível"
         self.login_url = ""  # Configurável
     
-    async def login(self, email: str, password: str) -> bool:
+    async def login(self, email: str, password: str, **kwargs) -> bool:
         logger.info(f"🔑 {self.platform_name}: Login (a implementar)")
         return False
     
