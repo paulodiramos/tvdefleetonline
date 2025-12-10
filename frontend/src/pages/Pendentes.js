@@ -269,7 +269,7 @@ const Pendentes = ({ user, onLogout }) => {
             <div className="space-y-6">
               {/* Informações do Utilizador */}
               <div className="bg-slate-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-slate-800 mb-2">Informações do Utilizador</h3>
+                <h3 className="font-semibold text-slate-800 mb-3">Informações do Utilizador</h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <span className="text-slate-600">Email:</span>
@@ -291,6 +291,92 @@ const Pendentes = ({ user, onLogout }) => {
                   </div>
                 </div>
               </div>
+
+              {/* Dados do Parceiro (se aplicável) */}
+              {selectedUser.parceiro_data && (
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-slate-800 mb-3">Dados da Empresa</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-slate-600">Nome da Empresa:</span>
+                      <p className="font-medium">{selectedUser.parceiro_data.nome || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">NIF:</span>
+                      <p className="font-medium">{selectedUser.parceiro_data.nif || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Morada:</span>
+                      <p className="font-medium">{selectedUser.parceiro_data.morada || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Código Postal:</span>
+                      <p className="font-medium">{selectedUser.parceiro_data.codigo_postal || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Código Certidão Comercial:</span>
+                      <p className="font-medium">{selectedUser.parceiro_data.codigo_certidao_comercial || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Responsável:</span>
+                      <p className="font-medium">{selectedUser.parceiro_data.responsavel_nome || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Contacto Responsável:</span>
+                      <p className="font-medium">{selectedUser.parceiro_data.responsavel_contacto || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Finalidade:</span>
+                      <p className="font-medium capitalize">
+                        {selectedUser.parceiro_data.finalidade === 'gestao_frota' ? 'Gestão de Frota' : 'Usar Plataforma'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Nº de Veículos:</span>
+                      <p className="font-medium">{selectedUser.parceiro_data.numero_veiculos || 0}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Nº de Motoristas:</span>
+                      <p className="font-medium">{selectedUser.parceiro_data.numero_motoristas || 0}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Dados do Motorista (se aplicável) */}
+              {selectedUser.motorista_data && (
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-slate-800 mb-3">Dados do Motorista</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-slate-600">Nome Completo:</span>
+                      <p className="font-medium">{selectedUser.motorista_data.nome || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">NIF:</span>
+                      <p className="font-medium">{selectedUser.motorista_data.nif || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Data de Nascimento:</span>
+                      <p className="font-medium">
+                        {selectedUser.motorista_data.data_nascimento 
+                          ? new Date(selectedUser.motorista_data.data_nascimento).toLocaleDateString() 
+                          : 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Morada:</span>
+                      <p className="font-medium">{selectedUser.motorista_data.morada || 'N/A'}</p>
+                    </div>
+                    {selectedUser.motorista_data.parceiro_id && (
+                      <div>
+                        <span className="text-slate-600">Parceiro Associado:</span>
+                        <p className="font-medium">{selectedUser.motorista_data.parceiro_id}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Lista de Documentos */}
               <div>
