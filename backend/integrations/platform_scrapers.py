@@ -542,9 +542,9 @@ class ViaVerdeScraper(BaseScraper):
             if not navegado:
                 logger.warning("⚠️ Link de Extratos não encontrado na página, tentando URL direto")
                 try:
-                    # Tentar URL correto para empresas
-                    logger.info("🔗 Navegando para URL de extratos: /empresas/minha-via-verde/extratos-movimentos")
-                    await self.page.goto('https://www.viaverde.pt/empresas/minha-via-verde/extratos-movimentos', wait_until="networkidle")
+                    # Tentar URL correto para particulares (conta pessoal)
+                    logger.info("🔗 Navegando para URL de extratos (Particulares): /particulares/minha-via-verde/ExtratoseMovimentos")
+                    await self.page.goto('https://www.viaverde.pt/particulares/minha-via-verde/ExtratoseMovimentos', wait_until="networkidle")
                     await asyncio.sleep(5)
                     navegado = True
                     logger.info("✅ Navegado para página de extratos via URL direto")
