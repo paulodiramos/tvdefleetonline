@@ -317,6 +317,12 @@ const Pendentes = ({ user, onLogout }) => {
                       <span className="text-slate-600">Código Certidão Comercial:</span>
                       <p className="font-medium">{selectedUser.parceiro_data.codigo_certidao_comercial || 'N/A'}</p>
                     </div>
+                    {selectedUser.parceiro_data.certidao_permanente && (
+                      <div>
+                        <span className="text-slate-600">Código Certidão Permanente:</span>
+                        <p className="font-medium">{selectedUser.parceiro_data.certidao_permanente}</p>
+                      </div>
+                    )}
                     <div>
                       <span className="text-slate-600">Responsável:</span>
                       <p className="font-medium">{selectedUser.parceiro_data.responsavel_nome || 'N/A'}</p>
