@@ -11619,7 +11619,7 @@ async def salvar_credenciais_plataforma(
 ):
     """Salva credenciais de uma plataforma para um parceiro específico"""
     try:
-        user = await verify_token(credentials)
+        user = await get_current_user(credentials)
         if user['role'] not in ['admin', 'manager']:
             raise HTTPException(status_code=403, detail="Acesso negado")
         
@@ -11684,7 +11684,7 @@ async def listar_credenciais_plataformas(
 ):
     """Lista credenciais de plataformas por parceiro (sem passwords)"""
     try:
-        user = await verify_token(credentials)
+        user = await get_current_user(credentials)
         if user['role'] not in ['admin', 'manager']:
             raise HTTPException(status_code=403, detail="Acesso negado")
         
@@ -11711,7 +11711,7 @@ async def sincronizar_plataforma_manual(
 ):
     """Sincroniza manualmente uma plataforma para um parceiro específico"""
     try:
-        user = await verify_token(credentials)
+        user = await get_current_user(credentials)
         if user['role'] not in ['admin', 'manager']:
             raise HTTPException(status_code=403, detail="Acesso negado")
         
@@ -11803,7 +11803,7 @@ async def listar_logs_sincronizacao(
 ):
     """Lista histórico de sincronizações"""
     try:
-        user = await verify_token(credentials)
+        user = await get_current_user(credentials)
         
         query = {}
         if parceiro_id:
@@ -11916,7 +11916,7 @@ async def importar_ganhos_uber(
     """Importa ficheiro CSV de ganhos da Uber"""
     try:
         # Verificar autenticação
-        user = await verify_token(credentials)
+        user = await get_current_user(credentials)
         if user['role'] not in ['admin', 'manager']:
             raise HTTPException(status_code=403, detail="Acesso negado")
         
@@ -12031,7 +12031,7 @@ async def importar_ganhos_bolt(
     """Importa ficheiro CSV de ganhos da Bolt"""
     try:
         # Verificar autenticação
-        user = await verify_token(credentials)
+        user = await get_current_user(credentials)
         if user['role'] not in ['admin', 'manager']:
             raise HTTPException(status_code=403, detail="Acesso negado")
         
@@ -12162,7 +12162,7 @@ async def listar_ganhos_bolt(
 ):
     """Lista ganhos importados da Bolt"""
     try:
-        user = await verify_token(credentials)
+        user = await get_current_user(credentials)
         
         query = {}
         if motorista_id:
@@ -12189,7 +12189,7 @@ async def listar_ganhos_uber(
 ):
     """Lista ganhos importados da Uber"""
     try:
-        user = await verify_token(credentials)
+        user = await get_current_user(credentials)
         
         query = {}
         if motorista_id:
