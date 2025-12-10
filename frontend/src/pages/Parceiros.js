@@ -2362,7 +2362,7 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                     <div className="text-center">
                       <div className="border-t-2 border-slate-400 pt-2 mt-16">
                         <p className="text-sm font-semibold text-slate-700">O Parceiro</p>
-                        <p className="text-xs text-slate-500 mt-1">{'{'}{PARCEIRO_NOME}{'}'}</p>
+                        <p className="text-xs text-slate-500 mt-1">{'{PARCEIRO_NOME}'}</p>
                       </div>
                     </div>
                     <div className="text-center">
