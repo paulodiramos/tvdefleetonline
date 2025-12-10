@@ -56,7 +56,7 @@ class BaseScraper:
         except Exception as e:
             logger.error(f"Erro ao fechar browser: {e}")
     
-    async def login(self, email: str, password: str) -> bool:
+    async def login(self, email: str, password: str, **kwargs) -> bool:
         """Método genérico de login - deve ser sobrescrito"""
         raise NotImplementedError
     
