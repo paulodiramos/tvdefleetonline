@@ -262,6 +262,30 @@ const GestaoCredenciais = ({ user, onLogout }) => {
           </div>
         </div>
 
+        {/* Filtro de Parceiro (Admin/Gestao) */}
+        {(user.role === 'admin' || user.role === 'gestao') && parceiros.length > 0 && (
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <Label className="min-w-[100px]">Filtrar por Parceiro:</Label>
+                <Select value={parceiroFiltro || 'todos'} onValueChange={setParceiroFiltro}>
+                  <SelectTrigger className="max-w-sm">
+                    <SelectValue placeholder="Todos os parceiros" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos os Parceiros</SelectItem>
+                    {parceiros.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.nome_empresa || p.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Info Card */}
         <Card className="border-blue-200 bg-blue-50">
           <CardContent className="pt-6">
