@@ -8,6 +8,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, List, Tuple
 from playwright.async_api import async_playwright, Page, Browser
 import re
+import csv
 
 logger = logging.getLogger(__name__)
 
