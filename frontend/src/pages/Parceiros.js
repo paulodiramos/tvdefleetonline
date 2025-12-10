@@ -34,6 +34,11 @@ const Parceiros = ({ user, onLogout }) => {
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [importType, setImportType] = useState('motoristas'); // 'motoristas' ou 'veiculos'
   const [importLoading, setImportLoading] = useState(false);
+
+  // Debug: log quando showImportDialog muda
+  useEffect(() => {
+    console.log('showImportDialog mudou para:', showImportDialog);
+  }, [showImportDialog]);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingParceiro, setEditingParceiro] = useState(null);
   const [showPlanosDialog, setShowPlanosDialog] = useState(false);
