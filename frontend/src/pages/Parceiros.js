@@ -2453,8 +2453,7 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
         }}
       >
         <div 
-          className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-transform duration-200"
-          style={{ transform: showImportDialog ? 'scale(1)' : 'scale(0.95)' }}
+          className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
