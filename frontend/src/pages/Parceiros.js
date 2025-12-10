@@ -1153,13 +1153,9 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                     </Button>
                     <Button
                       size="sm"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        alert('Botão clicado! Tipo: motoristas');
+                      onClick={() => {
                         setImportType('motoristas');
                         setShowImportDialog(true);
-                        console.log('Estado após clicar:', { importType: 'motoristas', showImportDialog: true });
                       }}
                       className="w-full bg-blue-600 hover:bg-blue-700"
                     >
