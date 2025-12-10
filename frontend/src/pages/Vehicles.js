@@ -158,24 +158,15 @@ const Vehicles = ({ user, onLogout }) => {
         comfort: false,
         executive: false,
         xl: false,
+        green: false,
         xxl: false,
+        motorista_privado: false,
         pet: false
-      }
+      },
+      via_verde_disponivel: false,
+      cartao_frota_disponivel: false
     });
-    
-    try {
-      await axios.post(`${API}/vehicles`, newVehicle, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      setShowAddDialog(false);
-      toast.success('Veículo adicionado com sucesso');
-      fetchVehicles();
-    } catch (error) {
-    console.error('Error adding vehicle:', error);
-    toast.error('Erro ao adicionar veículo');
-  }
-};
+  };
 
   const handleDownloadCSVExample = () => {
     window.open(`${API}/parceiros/csv-examples/veiculos`, '_blank');
@@ -207,7 +198,7 @@ const Vehicles = ({ user, onLogout }) => {
       const formData = new FormData();
       formData.append('file', file);
       
-      const response = await axios.post(`${API}/parceiros/${parceiro_id}/importar-veiculos`, formData, {
+      const response = await axios.post(`${API}/parceiros/${parceiro_id}/importar-veiculos-csv`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
@@ -235,16 +226,6 @@ const Vehicles = ({ user, onLogout }) => {
     } finally {
       setImportLoading(false);
     }
-  };
-
-        green: false,
-        xxl: false,
-        motorista_privado: false,
-        pet: false
-      },
-      via_verde_disponivel: false,
-      cartao_frota_disponivel: false
-    });
   };
 
   const handleDeleteVehicle = async (vehicleId) => {
