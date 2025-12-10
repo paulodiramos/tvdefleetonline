@@ -1372,6 +1372,274 @@ startxref
         except Exception as e:
             self.log_result("Base-Free-Plans-Exist", False, f"Request error: {str(e)}")
 
+    # ==================== PARTNER APPROVAL BUG FIX TESTS ====================
+    
+    def test_partner_approval_bug_fix(self):
+        """Test complete partner approval flow bug fix as per review request"""
+        print("\n🚨 TESTING PARTNER APPROVAL BUG FIX")
+        print("-" * 70)
+        print("CONTEXTO: Bug onde ao aprovar utilizador com role 'parceiro',")
+        print("o documento na coleção 'parceiros' não era atualizado para approved: true")
+        print("-" * 70)
+        
+        # Execute all partner approval tests
+        self.test_partner_approval_endpoint_structure()
+        self.test_partner_approval_via_api()
+        self.test_partner_listing_endpoint()
+        self.test_partner_details_endpoint()
+        
+        return True
+    
+    def test_partner_approval_endpoint_structure(self):
+        """TESTE 1: Verificar estrutura do endpoint de aprovação"""
+        print("\n📋 TESTE 1: Verificar estrutura do endpoint de aprovação")
+        print("Endpoint: PUT /api/users/{user_id}/approve")
+        print("Verificar que o código atualiza ambas as coleções: users e parceiros")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Partner-Approval-Structure", False, "No auth token for admin")
+            return
+        
+        try:
+            # Get list of users to find a partner
+            users_response = requests.get(f"{BACKEND_URL}/users/all", headers=headers)
+            if users_response.status_code != 200:
+                self.log_result("Partner-Approval-Structure", False, "Could not get users list")
+                return
+            
+            users_data = users_response.json()
+            all_users = users_data.get("registered_users", []) + users_data.get("pending_users", [])
+            partner_users = [u for u in all_users if u.get("role") == "parceiro"]
+            
+            if not partner_users:
+                self.log_result("Partner-Approval-Structure", False, "No partner users found to test")
+                return
+            
+            # Test endpoint exists and accepts the correct structure
+            test_user_id = partner_users[0]["id"]
+            
+            # Test with correct body structure
+            approval_data = {"role": "parceiro"}
+            response = requests.put(
+                f"{BACKEND_URL}/users/{test_user_id}/approve",
+                json=approval_data,
+                headers=headers
+            )
+            
+            # Should return 200 (success) or 400 (already approved) - both indicate endpoint works
+            if response.status_code in [200, 400]:
+                self.log_result("Partner-Approval-Structure", True, 
+                              f"Endpoint structure correct (status: {response.status_code})")
+            else:
+                self.log_result("Partner-Approval-Structure", False, 
+                              f"Unexpected status: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Partner-Approval-Structure", False, f"Request error: {str(e)}")
+    
+    def test_partner_approval_via_api(self):
+        """TESTE 2: Testar aprovação via API"""
+        print("\n🔧 TESTE 2: Testar aprovação via API")
+        print("1. Criar utilizador de teste pendente com role 'parceiro'")
+        print("2. Fazer login como admin e obter token JWT")
+        print("3. Chamar endpoint de aprovação")
+        print("4. Verificar na DB que AMBOS os documentos foram atualizados")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Partner-Approval-API", False, "No auth token for admin")
+            return
+        
+        try:
+            # Step 1: Create test partner user directly in DB (simulate registration)
+            import time
+            test_email = f"teste_backend_parceiro_{int(time.time())}@example.com"
+            
+            # Create test parceiro data
+            parceiro_data = {
+                "nome_empresa": "TESTE BACKEND LDA",
+                "contribuinte_empresa": "123456789",
+                "morada_completa": "Rua Teste Backend 123",
+                "codigo_postal": "1000-100",
+                "localidade": "Lisboa",
+                "nome_manager": "Teste Backend Manager",
+                "email_manager": test_email,
+                "email_empresa": test_email,
+                "telefone": "211234567",
+                "telemovel": "911234567",
+                "email": test_email,
+                "certidao_permanente": "123456789012",
+                "codigo_certidao_comercial": "TEST123",
+                "validade_certidao_comercial": "2025-12-31"
+            }
+            
+            # Create parceiro (this should create both user and parceiro records)
+            parceiro_response = requests.post(f"{BACKEND_URL}/parceiros", json=parceiro_data, headers=headers)
+            
+            if parceiro_response.status_code != 200:
+                self.log_result("Partner-Approval-API", False, 
+                              f"Could not create test parceiro: {parceiro_response.status_code}")
+                return
+            
+            parceiro = parceiro_response.json()
+            parceiro_id = parceiro["id"]
+            
+            # Step 2: Admin login already done (we have headers)
+            
+            # Step 3: Call approval endpoint
+            approval_data = {"role": "parceiro"}
+            approval_response = requests.put(
+                f"{BACKEND_URL}/users/{parceiro_id}/approve",
+                json=approval_data,
+                headers=headers
+            )
+            
+            if approval_response.status_code == 200:
+                # Step 4: Verify both collections were updated
+                # Check users collection
+                users_response = requests.get(f"{BACKEND_URL}/users/all", headers=headers)
+                if users_response.status_code == 200:
+                    users_data = users_response.json()
+                    all_users = users_data.get("registered_users", []) + users_data.get("pending_users", [])
+                    test_user = next((u for u in all_users if u.get("email") == test_email), None)
+                    
+                    if test_user and test_user.get("approved"):
+                        # Check parceiros collection
+                        parceiros_response = requests.get(f"{BACKEND_URL}/parceiros", headers=headers)
+                        if parceiros_response.status_code == 200:
+                            parceiros = parceiros_response.json()
+                            test_parceiro = next((p for p in parceiros if p.get("email") == test_email), None)
+                            
+                            if test_parceiro and test_parceiro.get("approved"):
+                                self.log_result("Partner-Approval-API", True, 
+                                              "✅ BOTH collections updated: users.approved=true AND parceiros.approved=true")
+                            else:
+                                self.log_result("Partner-Approval-API", False, 
+                                              "❌ Users collection updated but parceiros collection NOT updated")
+                        else:
+                            self.log_result("Partner-Approval-API", False, 
+                                          "Could not verify parceiros collection")
+                    else:
+                        self.log_result("Partner-Approval-API", False, 
+                                      "Users collection not updated correctly")
+                else:
+                    self.log_result("Partner-Approval-API", False, 
+                                  "Could not verify users collection")
+            else:
+                self.log_result("Partner-Approval-API", False, 
+                              f"Approval failed: {approval_response.status_code}", approval_response.text)
+                
+        except Exception as e:
+            self.log_result("Partner-Approval-API", False, f"Request error: {str(e)}")
+    
+    def test_partner_listing_endpoint(self):
+        """TESTE 3: Validar endpoint de listagem de parceiros"""
+        print("\n📋 TESTE 3: Validar endpoint de listagem de parceiros")
+        print("Endpoint: GET /api/parceiros")
+        print("Confirmar que apenas retorna parceiros com approved: true")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Partner-Listing-Endpoint", False, "No auth token for admin")
+            return
+        
+        try:
+            # Test as admin (can see all)
+            admin_response = requests.get(f"{BACKEND_URL}/parceiros", headers=headers)
+            
+            if admin_response.status_code == 200:
+                admin_parceiros = admin_response.json()
+                
+                # Test as non-admin (should only see approved)
+                parceiro_headers = self.get_headers("parceiro")
+                if parceiro_headers:
+                    parceiro_response = requests.get(f"{BACKEND_URL}/parceiros", headers=parceiro_headers)
+                    
+                    if parceiro_response.status_code == 200:
+                        parceiro_parceiros = parceiro_response.json()
+                        
+                        # Verify all returned parceiros are approved
+                        all_approved = all(p.get("approved", False) for p in parceiro_parceiros)
+                        
+                        if all_approved:
+                            self.log_result("Partner-Listing-Endpoint", True, 
+                                          f"✅ Endpoint returns only approved partners ({len(parceiro_parceiros)} found)")
+                        else:
+                            unapproved_count = sum(1 for p in parceiro_parceiros if not p.get("approved", False))
+                            self.log_result("Partner-Listing-Endpoint", False, 
+                                          f"❌ Found {unapproved_count} unapproved partners in results")
+                    else:
+                        self.log_result("Partner-Listing-Endpoint", False, 
+                                      f"Parceiro request failed: {parceiro_response.status_code}")
+                else:
+                    # Test with admin only
+                    self.log_result("Partner-Listing-Endpoint", True, 
+                                  f"✅ Admin can access endpoint ({len(admin_parceiros)} partners found)")
+            else:
+                self.log_result("Partner-Listing-Endpoint", False, 
+                              f"Admin request failed: {admin_response.status_code}")
+                
+        except Exception as e:
+            self.log_result("Partner-Listing-Endpoint", False, f"Request error: {str(e)}")
+    
+    def test_partner_details_endpoint(self):
+        """TESTE 4: Validar endpoint de detalhes do parceiro"""
+        print("\n🔍 TESTE 4: Validar endpoint de detalhes do parceiro")
+        print("Endpoint: GET /api/parceiros/{parceiro_id}")
+        print("Confirmar que retorna dados do parceiro sem erro")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Partner-Details-Endpoint", False, "No auth token for admin")
+            return
+        
+        try:
+            # Get list of parceiros first
+            parceiros_response = requests.get(f"{BACKEND_URL}/parceiros", headers=headers)
+            
+            if parceiros_response.status_code != 200:
+                self.log_result("Partner-Details-Endpoint", False, "Could not get parceiros list")
+                return
+            
+            parceiros = parceiros_response.json()
+            if not parceiros:
+                self.log_result("Partner-Details-Endpoint", False, "No parceiros available for test")
+                return
+            
+            # Test details endpoint for first parceiro
+            parceiro_id = parceiros[0]["id"]
+            
+            details_response = requests.get(f"{BACKEND_URL}/parceiros/{parceiro_id}", headers=headers)
+            
+            if details_response.status_code == 200:
+                parceiro_details = details_response.json()
+                
+                # Verify essential fields are present (compatibility logic)
+                essential_fields = ["id", "email"]
+                missing_fields = [field for field in essential_fields if field not in parceiro_details]
+                
+                if not missing_fields:
+                    # Check if compatibility mapping is working
+                    has_nome_empresa = "nome_empresa" in parceiro_details
+                    has_fallback_mapping = "nome" in parceiro_details or "empresa" in parceiro_details
+                    
+                    if has_nome_empresa or has_fallback_mapping:
+                        self.log_result("Partner-Details-Endpoint", True, 
+                                      "✅ Partner details endpoint working with compatibility logic")
+                    else:
+                        self.log_result("Partner-Details-Endpoint", True, 
+                                      "✅ Partner details endpoint working (basic fields present)")
+                else:
+                    self.log_result("Partner-Details-Endpoint", False, 
+                                  f"Missing essential fields: {missing_fields}")
+            else:
+                self.log_result("Partner-Details-Endpoint", False, 
+                              f"Details request failed: {details_response.status_code}", details_response.text)
+                
+        except Exception as e:
+            self.log_result("Partner-Details-Endpoint", False, f"Request error: {str(e)}")
+
     # ==================== UNIFIED PLAN SYSTEM TESTS ====================
     
     def test_unified_plan_system_e2e(self):
