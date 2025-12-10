@@ -165,12 +165,16 @@ class UberCSVParser(CSVParserBase):
             self.detect_encoding()
             decoded = self.file_content.decode(self.encoding)
             
+            # Remover BOM se existir
+            if decoded.startswith('\ufeff'):
+                decoded = decoded[1:]
+            
             delimiter = ','
             if ';' in decoded[:500]:
                 delimiter = ';'
             
-            # Detectar tipo de ficheiro baseado nos headers
-            first_line = decoded.split('\n')[0].lower()
+            # Detectar tipo de ficheiro baseado nos headers (normalizar para lowercase e remover BOM)
+            first_line = decoded.split('\n')[0].lower().replace('\ufeff', '')
             
             if 'uuid do motorista' in first_line or 'pago a si' in first_line:
                 logger.info("📄 Ficheiro detectado como: Uber Payments (Pagamentos de Motoristas)")
