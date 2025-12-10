@@ -330,14 +330,25 @@ const Vehicles = ({ user, onLogout }) => {
             <h1 className="text-4xl font-bold text-slate-800 mb-2">Veículos</h1>
             <p className="text-slate-600">Gerir frota de veículos</p>
           </div>
-          {(user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') && (
-            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-              <DialogTrigger asChild>
-                <Button className="bg-emerald-600 hover:bg-emerald-700" data-testid="add-vehicle-button">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Veículo
-                </Button>
-              </DialogTrigger>
+          <div className="flex gap-3">
+            {user.role === 'parceiro' && (
+              <Button 
+                onClick={() => setShowImportDialog(true)}
+                variant="outline"
+                className="border-emerald-600 text-emerald-600 hover:bg-emerald-50"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Importar CSV
+              </Button>
+            )}
+            {(user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') && (
+              <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+                <DialogTrigger asChild>
+                  <Button className="bg-emerald-600 hover:bg-emerald-700" data-testid="add-vehicle-button">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Veículo
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" data-testid="add-vehicle-dialog">
                 <DialogHeader>
                   <DialogTitle>Adicionar Novo Veículo</DialogTitle>
