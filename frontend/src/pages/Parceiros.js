@@ -2086,60 +2086,135 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
 
       {/* Preview Dialog */}
       <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Eye className="w-5 h-5 text-blue-600" />
-              Preview do Template: {previewTemplate?.nome_template}
+        <DialogContent className="max-w-5xl max-h-[95vh] p-0">
+          <DialogHeader className="p-6 pb-3 border-b">
+            <DialogTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Eye className="w-5 h-5 text-blue-600" />
+                <span>Pré-visualização: {previewTemplate?.nome_template}</span>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.print()}
+                  className="text-slate-600"
+                >
+                  <FileText className="w-4 h-4 mr-2" />
+                  Imprimir
+                </Button>
+              </div>
             </DialogTitle>
           </DialogHeader>
           {previewTemplate && (
-            <div className="space-y-4">
-              {/* Template Info */}
-              <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-lg">
-                <div>
-                  <span className="text-sm font-medium text-slate-600">Tipo:</span>
-                  <p className="text-sm text-slate-800">{previewTemplate.tipo_contrato}</p>
+            <div className="p-6 overflow-y-auto max-h-[calc(95vh-100px)]">
+              {/* Simulação de Página A4 */}
+              <div className="mx-auto bg-white shadow-2xl" style={{
+                width: '210mm',
+                minHeight: '297mm',
+                padding: '20mm',
+                boxSizing: 'border-box',
+                fontFamily: 'Georgia, serif'
+              }}>
+                {/* Cabeçalho do Documento */}
+                <div className="text-center mb-8 pb-4 border-b-2 border-slate-300">
+                  <h1 className="text-2xl font-bold text-slate-800 mb-2">
+                    CONTRATO DE PRESTAÇÃO DE SERVIÇOS
+                  </h1>
+                  <p className="text-sm text-slate-600 uppercase tracking-wide">
+                    {previewTemplate.tipo_contrato}
+                  </p>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Template ID: {previewTemplate.id?.substring(0, 8)}
+                  </p>
                 </div>
-                <div>
-                  <span className="text-sm font-medium text-slate-600">Periodicidade:</span>
-                  <p className="text-sm text-slate-800">{previewTemplate.periodicidade_padrao}</p>
+
+                {/* Informações do Template */}
+                <div className="mb-6 p-4 bg-slate-50 rounded border border-slate-200">
+                  <h3 className="text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wide">
+                    Condições do Template
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-slate-600">Periodicidade:</span>
+                      <span className="font-medium text-slate-800">{previewTemplate.periodicidade_padrao || 'N/A'}</span>
+                    </div>
+                    {previewTemplate.valor_caucao && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Caução:</span>
+                        <span className="font-medium text-slate-800">
+                          €{previewTemplate.valor_caucao}
+                          {previewTemplate.numero_parcelas_caucao && ` (${previewTemplate.numero_parcelas_caucao}x)`}
+                        </span>
+                      </div>
+                    )}
+                    {previewTemplate.valor_epoca_alta && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Época Alta:</span>
+                        <span className="font-medium text-slate-800">€{previewTemplate.valor_epoca_alta}</span>
+                      </div>
+                    )}
+                    {previewTemplate.valor_epoca_baixa && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-600">Época Baixa:</span>
+                        <span className="font-medium text-slate-800">€{previewTemplate.valor_epoca_baixa}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                {previewTemplate.valor_caucao && (
-                  <div>
-                    <span className="text-sm font-medium text-slate-600">Caução:</span>
-                    <p className="text-sm text-slate-800">
-                      €{previewTemplate.valor_caucao}
-                      {previewTemplate.numero_parcelas_caucao && ` (${previewTemplate.numero_parcelas_caucao}x)`}
+
+                {/* Texto do Contrato - Formato Documento */}
+                <div className="mb-8">
+                  <h3 className="text-sm font-semibold text-slate-700 mb-4 uppercase tracking-wide border-b pb-2">
+                    Cláusulas Contratuais
+                  </h3>
+                  <div className="text-justify leading-relaxed" style={{ 
+                    fontSize: '11pt',
+                    lineHeight: '1.8',
+                    textAlign: 'justify'
+                  }}>
+                    {previewTemplate.clausulas_texto ? (
+                      <pre className="whitespace-pre-wrap font-serif text-slate-800" style={{
+                        fontFamily: 'Georgia, serif',
+                        fontSize: '11pt'
+                      }}>
+                        {previewTemplate.clausulas_texto}
+                      </pre>
+                    ) : (
+                      <p className="text-slate-500 italic">Sem texto de contrato definido neste template</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Rodapé do Documento */}
+                <div className="mt-12 pt-8 border-t border-slate-300">
+                  <div className="grid grid-cols-2 gap-12 mb-8">
+                    <div className="text-center">
+                      <div className="border-t-2 border-slate-400 pt-2 mt-16">
+                        <p className="text-sm font-semibold text-slate-700">O Parceiro</p>
+                        <p className="text-xs text-slate-500 mt-1">{'{'}{PARCEIRO_NOME}{'}'}</p>
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="border-t-2 border-slate-400 pt-2 mt-16">
+                        <p className="text-sm font-semibold text-slate-700">O Motorista</p>
+                        <p className="text-xs text-slate-500 mt-1">{'{'}{MOTORISTA_NOME}{'}'}</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-center text-xs text-slate-400 mt-8">
+                    <p>Template: {previewTemplate.nome_template}</p>
+                    <p>Data de criação: {previewTemplate.created_at ? new Date(previewTemplate.created_at).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                    <p className="mt-2 text-[10px]">
+                      Este é um template de contrato. As variáveis serão substituídas pelos dados reais ao gerar o contrato.
                     </p>
                   </div>
-                )}
-                {previewTemplate.valor_epoca_alta && (
-                  <div>
-                    <span className="text-sm font-medium text-slate-600">Época Alta:</span>
-                    <p className="text-sm text-slate-800">€{previewTemplate.valor_epoca_alta}</p>
-                  </div>
-                )}
-                {previewTemplate.valor_epoca_baixa && (
-                  <div>
-                    <span className="text-sm font-medium text-slate-600">Época Baixa:</span>
-                    <p className="text-sm text-slate-800">€{previewTemplate.valor_epoca_baixa}</p>
-                  </div>
-                )}
-              </div>
-
-              {/* Template Text */}
-              <div>
-                <h3 className="text-sm font-semibold text-slate-700 mb-2">Texto do Contrato:</h3>
-                <div className="border rounded-lg p-4 max-h-[400px] overflow-y-auto bg-white">
-                  <pre className="text-sm text-slate-800 whitespace-pre-wrap font-mono">
-                    {previewTemplate.clausulas_texto || 'Sem texto de contrato definido'}
-                  </pre>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex gap-3 justify-end pt-4 border-t">
+              <div className="flex gap-3 justify-center mt-6 pb-4">
                 <Button variant="outline" onClick={() => setShowPreviewDialog(false)}>
                   Fechar
                 </Button>
