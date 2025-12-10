@@ -9765,6 +9765,30 @@ async def gerar_pdf_contrato(
         {"$set": {"pdf_url": pdf_url}}
     )
     
+    # Adicionar contrato à ficha do motorista para download
+    motorista_id = contrato.get("motorista_id")
+    if motorista_id:
+        # Adicionar ao array de contratos do motorista
+        motorista_doc = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+        if motorista_doc:
+            contratos_list = motorista_doc.get("contratos_pdfs", [])
+            contratos_list.append({
+                "contrato_id": contrato_id,
+                "pdf_url": pdf_url,
+                "pdf_filename": pdf_filename,
+                "template_nome": contrato.get("nome_template", "N/A"),
+                "tipo_contrato": contrato.get("tipo_contrato", "N/A"),
+                "data_criacao": datetime.now(timezone.utc).isoformat()
+            })
+            
+            await db.motoristas.update_one(
+                {"id": motorista_id},
+                {"$set": {
+                    "contratos_pdfs": contratos_list,
+                    "contrato_atual_pdf": pdf_url
+                }}
+            )
+    
     return {
         "message": "PDF gerado com sucesso",
         "pdf_url": pdf_url,
