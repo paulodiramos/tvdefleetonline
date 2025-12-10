@@ -235,7 +235,7 @@ class CombustivelScraper(BaseScraper):
         self.platform_name = "Combustível"
         self.login_url = ""  # Configurável
     
-    async def login(self, email: str, password: str) -> Bool:
+    async def login(self, email: str, password: str) -> bool:
         logger.info(f"🔑 {self.platform_name}: Login (a implementar)")
         return False
     
