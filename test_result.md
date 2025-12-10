@@ -280,6 +280,21 @@ backend:
           comment: "✅ TESTADO: Background task funcionando. Verificação manual de alertas executa sem erros. Sistema de alertas automático ativo e operacional."
 
 frontend:
+  - task: "Sistema de Importação CSV - Modal e File Upload"
+    implemented: true
+    working: false
+    file: "frontend/src/pages/Parceiros.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Sistema de importação CSV implementado com modal inline, handleImportCSV function, file upload area, e endpoints backend para importar motoristas e veículos via CSV"
+        - working: false
+          agent: "testing"
+          comment: "❌ TESTE CRÍTICO FALHADO - SISTEMA DE IMPORTAÇÃO CSV NÃO FUNCIONA. PROBLEMA CONFIRMADO: 1) ✅ Login admin funcionando 2) ✅ Navegação para /parceiros funcionando 3) ✅ Seleção de parceiro funcionando (clique no card, não no botão 'Ver Perfil') 4) ✅ Vista detalhada do parceiro carregada ('Santos & Filhos Lda') 5) ✅ Seção 'Importação em Massa (CSV)' encontrada e visível 6) ✅ Botões 'Importar CSV' encontrados (2 botões: Motoristas e Veículos) 7) ❌ CRÍTICO: Modal de importação CSV NÃO ABRE quando botão é clicado. DETALHES TÉCNICOS: - Botão 'Importar CSV' está visível e habilitado - Clique no botão é executado sem erros JavaScript - Modal inline (.fixed.inset-0.z-50) não aparece - Estado showImportDialog não está sendo atualizado - Função onClick não está a funcionar corretamente. CAUSA RAIZ: O utilizador reporta que 'não funciona nem dá erro' - confirmado que o modal não abre ao clicar no botão. Sistema precisa de correção urgente no event handler do botão 'Importar CSV'."
+
   - task: "Atualização necessária - Integração com sistema de alertas"
     implemented: true
     working: true
