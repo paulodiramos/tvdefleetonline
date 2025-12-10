@@ -6819,3 +6819,68 @@ Botão "Eliminar Parceiro" no perfil de parceiros, visível apenas para Admin.
 
 **Resultado:** ✅ 100% Funcional
 
+agent_communication:
+    - agent: "testing"
+      message: |
+        🚨 TESTE CRÍTICO DO FLUXO DE APROVAÇÃO DE PARCEIROS - BUG FIX VALIDADO
+        
+        CONTEXTO DO BUG CORRIGIDO:
+        Quando um admin aprovava um utilizador com role "parceiro", o documento na coleção `parceiros` não era atualizado para `approved: true`, causando erro "Erro ao carregar dados do parceiro" quando o parceiro tentava usar a plataforma após aprovação.
+        
+        CORREÇÃO IMPLEMENTADA:
+        - Endpoint: PUT /api/users/{user_id}/approve (linhas 10426-10436 em server.py)
+        - Matching por campo `email` entre coleções `users` e `parceiros`
+        - Atualização de ambas as coleções com approved=true, status="aprovado", approved_at, approved_by
+        
+        TESTES EXECUTADOS CONFORME REVIEW REQUEST:
+        
+        ✅ TESTE 1: VERIFICAR ESTRUTURA DO ENDPOINT DE APROVAÇÃO
+        - Endpoint: PUT /api/users/{user_id}/approve
+        - ✅ Código atualiza ambas as coleções: users e parceiros
+        - ✅ Matching feito pelo campo email (linhas 10426-10436)
+        - ✅ Estrutura do endpoint correta (status: 200)
+        
+        ✅ TESTE 2: TESTAR APROVAÇÃO VIA API
+        - ✅ Criado utilizador de teste pendente com role "parceiro"
+        - ✅ Login como admin e obtenção de token JWT
+        - ✅ Chamada ao endpoint PUT /api/users/{test_parceiro_id}/approve com body {"role": "parceiro"}
+        - ✅ VERIFICADO NA DB: AMBOS os documentos foram atualizados:
+          * users.approved = true ✅
+          * parceiros.approved = true ✅
+          * parceiros.status = "aprovado" ✅
+          * Campos approved_at e approved_by presentes ✅
+        
+        ✅ TESTE 3: VALIDAR ENDPOINT DE LISTAGEM DE PARCEIROS
+        - Endpoint: GET /api/parceiros
+        - ✅ Confirma que apenas retorna parceiros com approved: true
+        - ✅ Parceiro aprovado no teste anterior aparece na lista
+        - ✅ Filtro de aprovação funcionando corretamente
+        
+        ✅ TESTE 4: VALIDAR ENDPOINT DE DETALHES DO PARCEIRO
+        - Endpoint: GET /api/parceiros/{parceiro_id}
+        - ✅ Confirma que retorna dados do parceiro sem erro
+        - ✅ Lógica de compatibilidade para campos em falta funcionando
+        - ✅ Mapeamento automático de campos antigos → novos operacional
+        
+        📊 RESULTADO FINAL: 4/4 TESTES PASSARAM (100% SUCESSO)
+        
+        🎯 BUG DE APROVAÇÃO DE PARCEIROS FOI CORRIGIDO COM SUCESSO!
+        
+        **FUNCIONALIDADES CONFIRMADAS:**
+        ✅ Endpoint PUT /api/users/{user_id}/approve funcionando corretamente
+        ✅ Atualização automática de ambas as collections (users + parceiros)
+        ✅ Matching por email entre coleções funcionando
+        ✅ Campos approved_at e approved_by sendo definidos
+        ✅ Sistema de listagem filtrando apenas parceiros aprovados
+        ✅ Endpoint de detalhes com lógica de compatibilidade
+        ✅ Fluxo completo de aprovação operacional
+        
+        **VALIDAÇÃO TÉCNICA:**
+        - Código nas linhas 10426-10436 do server.py funcionando
+        - Query: db.parceiros.update_one({"email": user.get("email")}, {...})
+        - Campos atualizados: approved=True, status="aprovado", approved_at, approved_by
+        - Sistema de autenticação e autorização operacional
+        - Compatibilidade com estruturas antigas mantida
+        
+        Sistema de aprovação de parceiros está 100% funcional e pronto para produção!
+
