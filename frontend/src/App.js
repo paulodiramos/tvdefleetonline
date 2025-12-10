@@ -550,6 +550,26 @@ function App() {
             }
           />
           <Route
+            path="/configuracao-sincronizacao"
+            element={
+              user && user.role === 'admin' ? (
+                <ConfiguracaoSincronizacao user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
+            }
+          />
+          <Route
+            path="/credenciais-parceiros"
+            element={
+              user && user.role === 'admin' ? (
+                <CredenciaisParceiros user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
+            }
+          />
+          <Route
             path="/pagamentos-parceiro"
             element={
               user ? <PagamentosParceiro user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
