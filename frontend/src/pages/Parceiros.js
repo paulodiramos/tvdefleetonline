@@ -423,6 +423,59 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
       // Atualizar a lista de parceiros
       fetchParceiros();
     } catch (error) {
+
+
+  const handleDownloadCSVExample = (tipo) => {
+    window.open(`${API}/parceiros/csv-examples/${tipo}`, '_blank');
+    toast.success(`Exemplo de ${tipo} descarregado`);
+  };
+
+  const handleImportCSV = async (file) => {
+    if (!file) return;
+    
+    setImportLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const endpoint = importType === 'motoristas' 
+        ? `${API}/parceiros/${selectedParceiro.id}/importar-motoristas`
+        : `${API}/parceiros/${selectedParceiro.id}/importar-veiculos`;
+      
+      const response = await axios.post(endpoint, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      // Show results
+      const { motoristas_criados, veiculos_criados, erros, total_linhas } = response.data;
+      const criados = motoristas_criados || veiculos_criados;
+      
+      if (erros && erros.length > 0) {
+        toast.warning(
+          `${criados} de ${total_linhas} importados com sucesso. ${erros.length} erros encontrados.`,
+          { duration: 5000 }
+        );
+        console.error('Erros na importação:', erros);
+      } else {
+        toast.success(`${criados} ${importType} importados com sucesso!`);
+      }
+      
+      // Refresh data
+      handleSelectParceiro(selectedParceiro);
+      setShowImportDialog(false);
+      
+    } catch (error) {
+      console.error('Error importing CSV:', error);
+      toast.error('Erro ao importar CSV: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
       console.error('Error saving certidão data:', error);
       toast.error('Erro ao guardar dados da certidão permanente');
     }
