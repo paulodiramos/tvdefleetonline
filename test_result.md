@@ -1033,6 +1033,32 @@ agent_communication:
         🎯 SISTEMA DE CRIAÇÃO DE CONTRATOS ESTÁ COMPLETAMENTE FUNCIONAL!
         
         Sistema pronto para produção com todas as funcionalidades testadas e validadas.
+    
+    - agent: "testing"
+      message: |
+        🚨 TESTE CRÍTICO DO FLUXO DE REGISTO E APROVAÇÃO DE PARCEIROS - INICIANDO
+        
+        CONTEXTO DO BUG CORRIGIDO:
+        Quando um admin aprovava um utilizador com role "parceiro", o documento na coleção `parceiros` não era atualizado para `approved: true`, causando erro "Erro ao carregar dados do parceiro" quando o parceiro tentava usar a plataforma após aprovação.
+        
+        FLUXO DE TESTE COMPLETO CONFORME REVIEW REQUEST:
+        
+        **PARTE 1: Registo de Novo Parceiro**
+        - Aceder à página de registo: `/registo-parceiro`
+        - Preencher formulário com dados de teste únicos
+        - Submeter e verificar mensagem de sucesso
+        
+        **PARTE 2: Aprovação pelo Admin**
+        - Login como admin: admin@tvdefleet.com / o72ocUHy
+        - Navegar para página de utilizadores pendentes
+        - Localizar e aprovar o utilizador recém-registado
+        
+        **PARTE 3: Login como Parceiro Aprovado (TESTE CRÍTICO)**
+        - Login com credenciais do parceiro aprovado
+        - Verificar se NÃO aparece "Erro ao carregar dados do parceiro"
+        - Validar acesso normal à plataforma
+        
+        INICIANDO TESTE COMPLETO...
 
 
 backend:
