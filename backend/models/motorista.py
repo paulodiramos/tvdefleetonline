@@ -155,7 +155,7 @@ class Motorista(BaseModel):
     seguro_validade: Optional[str] = None
     
     # Documents & Validation
-    documents: MotoristaDocuments
+    documents: Optional[MotoristaDocuments] = None
     documents_validacao: Dict[str, DocumentoValidacao] = {}
     documentos_aprovados: bool = False
     observacoes_internas: Optional[str] = None
