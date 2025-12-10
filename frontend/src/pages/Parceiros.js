@@ -479,11 +479,6 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
     }
   };
 
-      console.error('Error saving certidão data:', error);
-      toast.error('Erro ao guardar dados da certidão permanente');
-    }
-  };
-
   const handleSolicitarPlano = async (parceiroId, planoId) => {
     try {
       const token = localStorage.getItem('token');
