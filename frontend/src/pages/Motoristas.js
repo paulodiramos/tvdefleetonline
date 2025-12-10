@@ -594,14 +594,25 @@ const Motoristas = ({ user, onLogout }) => {
             <h1 className="text-4xl font-bold text-slate-800 mb-2">Motoristas</h1>
             <p className="text-slate-600">Gerir motoristas e aprovações</p>
           </div>
-          {(user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') && (
-            <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-              <DialogTrigger asChild>
-                <Button className="bg-blue-600 hover:bg-blue-700" data-testid="add-motorista-button">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Motorista
-                </Button>
-              </DialogTrigger>
+          <div className="flex gap-3">
+            {user.role === 'parceiro' && (
+              <Button 
+                onClick={() => setShowImportDialog(true)}
+                variant="outline"
+                className="border-blue-600 text-blue-600 hover:bg-blue-50"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Importar CSV
+              </Button>
+            )}
+            {(user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') && (
+              <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
+                <DialogTrigger asChild>
+                  <Button className="bg-blue-600 hover:bg-blue-700" data-testid="add-motorista-button">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Motorista
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" data-testid="add-motorista-dialog">
                 <DialogHeader>
                   <DialogTitle>Adicionar Novo Motorista</DialogTitle>
