@@ -158,6 +158,68 @@ const Vehicles = ({ user, onLogout }) => {
         comfort: false,
         executive: false,
         xl: false,
+
+
+  const handleDownloadCSVExample = () => {
+    window.open(`${API}/parceiros/csv-examples/veiculos`, '_blank');
+    toast.success('Exemplo de veículos descarregado');
+  };
+
+  const handleImportCSV = async (file) => {
+    if (!file) {
+      toast.error('Por favor selecione um ficheiro');
+      return;
+    }
+    
+    let parceiro_id;
+    if (user.role === 'admin' || user.role === 'gestao') {
+      toast.error('Por favor, importe veículos através da página do parceiro');
+      return;
+    } else if (user.role === 'parceiro') {
+      parceiro_id = user.id;
+    } else {
+      toast.error('Sem permissão para importar veículos');
+      return;
+    }
+    
+    setImportLoading(true);
+    toast.info('A processar ficheiro...');
+    
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await axios.post(`${API}/parceiros/${parceiro_id}/importar-veiculos`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      const { veiculos_criados, erros, total_linhas } = response.data;
+      
+      if (erros && erros.length > 0) {
+        toast.warning(
+          `${veiculos_criados} de ${total_linhas} importados com sucesso. ${erros.length} erros encontrados.`,
+          { duration: 5000 }
+        );
+        console.error('Erros na importação:', erros);
+      } else {
+        toast.success(`${veiculos_criados} veículos importados com sucesso!`);
+      }
+      
+      fetchVehicles();
+      setShowImportDialog(false);
+      
+    } catch (error) {
+      console.error('Error importing CSV:', error);
+      toast.error('Erro ao importar CSV: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
         green: false,
         xxl: false,
         motorista_privado: false,
