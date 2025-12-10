@@ -258,19 +258,69 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Texto do Template *</Label>
+                  <Label>Texto do Contrato *</Label>
+                  <p className="text-xs text-slate-600 mb-2">
+                    <strong>Variáveis Disponíveis:</strong>
+                  </p>
+                  <div className="grid grid-cols-3 gap-2 text-xs text-slate-600 mb-2 p-3 bg-slate-50 rounded max-h-40 overflow-y-auto">
+                    <div><code>{'{'}PARCEIRO_NOME{'}'}</code></div>
+                    <div><code>{'{'}PARCEIRO_NIF{'}'}</code></div>
+                    <div><code>{'{'}PARCEIRO_MORADA{'}'}</code></div>
+                    <div><code>{'{'}PARCEIRO_CP{'}'}</code></div>
+                    <div><code>{'{'}PARCEIRO_LOCALIDADE{'}'}</code></div>
+                    <div><code>{'{'}PARCEIRO_TELEFONE{'}'}</code></div>
+                    <div><code>{'{'}PARCEIRO_EMAIL{'}'}</code></div>
+                    <div><code>{'{'}REP_LEGAL_NOME{'}'}</code></div>
+                    <div><code>{'{'}REP_LEGAL_CC{'}'}</code></div>
+                    <div><code>{'{'}REP_LEGAL_CC_VALIDADE{'}'}</code></div>
+                    <div><code>{'{'}REP_LEGAL_TELEFONE{'}'}</code></div>
+                    <div><code>{'{'}REP_LEGAL_EMAIL{'}'}</code></div>
+                    <div><code>{'{'}MOTORISTA_NOME{'}'}</code></div>
+                    <div><code>{'{'}MOTORISTA_CC{'}'}</code></div>
+                    <div><code>{'{'}MOTORISTA_CC_VALIDADE{'}'}</code></div>
+                    <div><code>{'{'}MOTORISTA_NIF{'}'}</code></div>
+                    <div><code>{'{'}MOTORISTA_MORADA{'}'}</code></div>
+                    <div><code>{'{'}MOTORISTA_CP{'}'}</code></div>
+                    <div><code>{'{'}MOTORISTA_LOCALIDADE{'}'}</code></div>
+                    <div><code>{'{'}MOTORISTA_TELEFONE{'}'}</code></div>
+                    <div><code>{'{'}MOTORISTA_CARTA_CONDUCAO{'}'}</code></div>
+                    <div><code>{'{'}MOTORISTA_CARTA_CONDUCAO_VALIDADE{'}'}</code></div>
+                    <div><code>{'{'}MOTORISTA_LICENCA_TVDE{'}'}</code></div>
+                    <div><code>{'{'}MOTORISTA_LICENCA_TVDE_VALIDADE{'}'}</code></div>
+                    <div><code>{'{'}MOTORISTA_SS{'}'}</code></div>
+                    <div><code>{'{'}MOTORISTA_EMAIL{'}'}</code></div>
+                    <div><code>{'{'}VEICULO_MARCA{'}'}</code></div>
+                    <div><code>{'{'}VEICULO_MODELO{'}'}</code></div>
+                    <div><code>{'{'}VEICULO_MATRICULA{'}'}</code></div>
+                    <div><code>{'{'}DATA_INICIO{'}'}</code></div>
+                    <div><code>{'{'}DATA_EMISSAO{'}'}</code></div>
+                    <div><code>{'{'}TIPO_CONTRATO{'}'}</code></div>
+                    <div><code>{'{'}VALOR_SEMANAL{'}'}</code></div>
+                    <div><code>{'{'}COMISSAO{'}'}</code></div>
+                    <div><code>{'{'}CAUCAO_TOTAL{'}'}</code></div>
+                    <div><code>{'{'}CAUCAO_PARCELAS{'}'}</code></div>
+                    <div><code>{'{'}CAUCAO_TEXTO{'}'}</code></div>
+                    <div><code>{'{'}DATA_INICIO_EPOCA_ALTA{'}'}</code></div>
+                    <div><code>{'{'}DATA_FIM_EPOCA_ALTA{'}'}</code></div>
+                    <div><code>{'{'}EPOCA_ALTA_VALOR{'}'}</code></div>
+                    <div><code>{'{'}TEXTO_EPOCA_ALTA{'}'}</code></div>
+                    <div><code>{'{'}DATA_INICIO_EPOCA_BAIXA{'}'}</code></div>
+                    <div><code>{'{'}DATA_FIM_EPOCA_BAIXA{'}'}</code></div>
+                    <div><code>{'{'}EPOCA_BAIXA_VALOR{'}'}</code></div>
+                    <div><code>{'{'}TEXTO_EPOCA_BAIXA{'}'}</code></div>
+                    <div><code>{'{'}CONDICOES_VEICULO{'}'}</code></div>
+                  </div>
+                  <p className="text-xs text-slate-500 mb-2">
+                    Clique numa variável para inseri-la no texto do contrato
+                  </p>
                   <Textarea
                     value={formData.texto_template}
                     onChange={(e) => setFormData({ ...formData, texto_template: e.target.value })}
-                    placeholder="Digite o texto do contrato. Use {MOTORISTA_NOME}, {VEICULO_MATRICULA}, {DATA_INICIO}, etc. para inserir dados dinâmicos."
+                    placeholder="Cole ou escreva o texto do contrato aqui. Use as variáveis acima para preenchimento automático."
                     rows={15}
                     className="font-mono text-sm"
                     required
                   />
-                  <p className="text-xs text-slate-500">
-                    Variáveis disponíveis: {'{MOTORISTA_NOME}'}, {'{MOTORISTA_NIF}'}, {'{VEICULO_MATRICULA}'}, 
-                    {'{VEICULO_MARCA}'}, {'{DATA_INICIO}'}, {'{DATA_FIM}'}, {'{PARCEIRO_NOME}'}, {'{PARCEIRO_NIF}'}
-                  </p>
                 </div>
                 <div className="flex space-x-2 justify-end">
                   <Button type="button" variant="outline" onClick={handleCloseDialog}>
