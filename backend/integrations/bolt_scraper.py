@@ -79,16 +79,69 @@ class BoltScraper:
             await self.page.goto(f"{self.base_url}/login", wait_until="networkidle")
             await asyncio.sleep(2)
             
-            # Preencher email
-            logger.info("📝 Preenchendo email...")
-            email_selector = 'input[type="email"], input[name="email"], input[id*="email"]'
-            await self.page.wait_for_selector(email_selector, timeout=10000)
-            await self.page.fill(email_selector, email)
+            # Tirar screenshot da página de login
+            await self.page.screenshot(path='/tmp/bolt_login_page.png')
+            logger.info("📸 Screenshot da página de login salvo")
             
-            # Preencher password
+            # Preencher email - tentar múltiplos seletores
+            logger.info("📝 Preenchendo email...")
+            email_selectors = [
+                'input[type="email"]',
+                'input[name="email"]',
+                'input[name="username"]',
+                'input[placeholder*="mail"]',
+                'input[placeholder*="email"]',
+                'input[id*="email"]',
+                '#email',
+                '[data-testid="email"]'
+            ]
+            
+            email_filled = False
+            for selector in email_selectors:
+                try:
+                    if await self.page.is_visible(selector, timeout=2000):
+                        await self.page.fill(selector, email)
+                        email_filled = True
+                        logger.info(f"✅ Email preenchido usando: {selector}")
+                        break
+                except:
+                    continue
+            
+            if not email_filled:
+                logger.error("❌ Não foi possível encontrar campo de email")
+                await self.page.screenshot(path='/tmp/bolt_email_not_found.png')
+                return False
+            
+            # Aguardar um pouco
+            await asyncio.sleep(1)
+            
+            # Preencher password - tentar múltiplos seletores
             logger.info("🔐 Preenchendo password...")
-            password_selector = 'input[type="password"], input[name="password"]'
-            await self.page.fill(password_selector, password)
+            password_selectors = [
+                'input[type="password"]',
+                'input[name="password"]',
+                'input[placeholder*="password"]',
+                'input[placeholder*="senha"]',
+                'input[id*="password"]',
+                '#password',
+                '[data-testid="password"]'
+            ]
+            
+            password_filled = False
+            for selector in password_selectors:
+                try:
+                    if await self.page.is_visible(selector, timeout=2000):
+                        await self.page.fill(selector, password)
+                        password_filled = True
+                        logger.info(f"✅ Password preenchida usando: {selector}")
+                        break
+                except:
+                    continue
+            
+            if not password_filled:
+                logger.error("❌ Não foi possível encontrar campo de password")
+                await self.page.screenshot(path='/tmp/bolt_password_not_found.png')
+                return False
             
             # Clicar no botão de login
             logger.info("👆 Clicando no botão de login...")
