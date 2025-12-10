@@ -606,18 +606,33 @@ class ViaVerdeScraper(BaseScraper):
                 logger.error(f"❌ Erro ao aguardar/extrair tabela: {e}")
                 logger.info("📸 Tirando screenshot para debug...")
                 await self.page.screenshot(path='/tmp/viaverde_table_error.png')
+                
+                # Verificar se é uma página 404
+                page_content = await self.page.content()
+                if "página não encontrada" in page_content.lower() or "page not found" in page_content.lower():
+                    logger.error("❌ Página 404 - URL de extratos incorreto")
+                    return {
+                        "success": False,
+                        "platform": "via_verde",
+                        "message": "Página de extratos não encontrada. A estrutura do site pode ter mudado.",
+                        "data": []
+                    }
             
-            # Se não conseguiu extrair da tabela, tentar baixar PDF
+            # Se não conseguiu extrair da tabela
             if len(dados_extraidos) == 0:
-                logger.info("📥 Tentando exportar via botão...")
+                logger.warning("⚠️ Nenhum dado extraído da tabela")
+                logger.info("📥 Tentando procurar botões de exportação...")
                 
                 export_buttons = [
                     'button:has-text("Exportar extratos")',
                     'button:has-text("Exportar")',
+                    'button:has-text("Descarregar")',
                     'a:has-text("Exportar extratos")',
-                    'a:has-text("2ª Via")'
+                    'a:has-text("2ª Via")',
+                    'a:has-text("Download")'
                 ]
                 
+                export_found = False
                 for button in export_buttons:
                     try:
                         if await self.page.is_visible(button, timeout=2000):
@@ -625,17 +640,27 @@ class ViaVerdeScraper(BaseScraper):
                             await self.page.click(button)
                             await asyncio.sleep(3)
                             logger.info("✅ Clicado em botão de exportação")
+                            export_found = True
                             break
                     except:
                         continue
+                
+                if not export_found:
+                    logger.warning("⚠️ Nenhum botão de exportação encontrado")
+                    return {
+                        "success": False,
+                        "platform": "via_verde",
+                        "message": "Não foi possível extrair dados. A estrutura da página de extratos pode ter mudado ou não há dados disponíveis.",
+                        "data": []
+                    }
             
             return {
-                "success": True,
+                "success": len(dados_extraidos) > 0,
                 "platform": "via_verde",
                 "extracted_at": datetime.now(timezone.utc).isoformat(),
                 "data": dados_extraidos,
                 "total_registos": len(dados_extraidos),
-                "message": f"{len(dados_extraidos)} extratos encontrados"
+                "message": f"{len(dados_extraidos)} extratos encontrados" if len(dados_extraidos) > 0 else "Nenhum extrato encontrado"
             }
             
         except Exception as e:
