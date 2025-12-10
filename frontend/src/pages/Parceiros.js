@@ -714,6 +714,26 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
   if (selectedParceiro) {
     return (
       <Layout user={user} onLogout={onLogout}>
+        <style>{`
+          @media print {
+            body * {
+              visibility: hidden;
+            }
+            .print-area, .print-area * {
+              visibility: visible;
+            }
+            .print-area {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 100%;
+            }
+            @page {
+              size: A4;
+              margin: 0;
+            }
+          }
+        `}</style>
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
