@@ -13217,19 +13217,58 @@ async def upload_documento(
 
 @api_router.get("/documentos/pendentes")
 async def get_documentos_pendentes(current_user: Dict = Depends(get_current_user)):
-    """Listar todos os utilizadores com documentos pendentes de aprovação (Admin only)"""
+    """Listar todos os utilizadores não aprovados (com ou sem documentos pendentes) (Admin only)"""
     if current_user["role"] != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Admin only")
     
     try:
-        # Buscar todos os documentos pendentes
+        # Buscar todos os utilizadores não aprovados
+        users_nao_aprovados = await db.users.find(
+            {"approved": False},
+            {"_id": 0, "password": 0}
+        ).to_list(length=None)
+        
+        users_pendentes = {}
+        
+        # Adicionar utilizadores não aprovados
+        for user in users_nao_aprovados:
+            user_id = user["id"]
+            
+            # Se for parceiro, buscar dados adicionais
+            parceiro_data = None
+            if user.get("role") == "parceiro":
+                parceiro_data = await db.parceiros.find_one(
+                    {"email": user.get("email")},
+                    {"_id": 0}
+                )
+            
+            # Se for motorista, buscar dados adicionais
+            motorista_data = None
+            if user.get("role") == "motorista":
+                motorista_data = await db.motoristas.find_one(
+                    {"email": user.get("email")},
+                    {"_id": 0}
+                )
+            
+            # Buscar documentos deste utilizador
+            documentos = await db.documentos_validacao.find(
+                {"user_id": user_id},
+                {"_id": 0}
+            ).to_list(length=None)
+            
+            users_pendentes[user_id] = {
+                "user": user,
+                "parceiro_data": parceiro_data,
+                "motorista_data": motorista_data,
+                "documentos": documentos
+            }
+        
+        # Adicionar também utilizadores com documentos pendentes (mesmo que approved=true)
         documentos_pendentes = await db.documentos_validacao.find(
             {"status": "pendente"},
             {"_id": 0}
         ).to_list(length=None)
         
-        # Agrupar por utilizador
-        users_pendentes = {}
         for doc in documentos_pendentes:
             user_id = doc["user_id"]
             if user_id not in users_pendentes:
@@ -13252,15 +13291,18 @@ async def get_documentos_pendentes(current_user: Dict = Depends(get_current_user
                             {"_id": 0}
                         )
                     
+                    # Buscar todos os documentos
+                    documentos = await db.documentos_validacao.find(
+                        {"user_id": user_id},
+                        {"_id": 0}
+                    ).to_list(length=None)
+                    
                     users_pendentes[user_id] = {
                         "user": user,
                         "parceiro_data": parceiro_data,
                         "motorista_data": motorista_data,
-                        "documentos": []
+                        "documentos": documentos
                     }
-            
-            if user_id in users_pendentes:
-                users_pendentes[user_id]["documentos"].append(doc)
         
         return list(users_pendentes.values())
         
