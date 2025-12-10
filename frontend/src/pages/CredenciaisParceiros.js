@@ -111,6 +111,10 @@ const CredenciaisParceiros = ({ user, onLogout }) => {
                   Esta informação é <strong>confidencial</strong>. Use apenas para suporte técnico ou resolução de problemas.
                   Todas as visualizações são registadas no sistema de auditoria.
                 </p>
+                <p className="text-sm text-red-800 mt-2">
+                  <strong>Nota sobre passwords:</strong> Por segurança, as passwords são encriptadas com bcrypt e não podem ser desencriptadas. 
+                  Para consultar as passwords originais dos utilizadores de teste, ver o ficheiro <code className="bg-red-100 px-1 rounded">CREDENCIAIS_TESTE.md</code>.
+                </p>
               </div>
             </div>
           </CardContent>
