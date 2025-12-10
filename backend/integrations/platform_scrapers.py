@@ -382,7 +382,8 @@ class ViaVerdeScraper(BaseScraper):
                 await self.page.screenshot(path='/tmp/viaverde_06_password_fail.png')
                 return False
             
-            await asyncio.sleep(1)
+            # Aguardar para garantir que JavaScript processou os inputs
+            await asyncio.sleep(2)
             await self.page.screenshot(path='/tmp/viaverde_07_before_submit.png')
             logger.info("📸 Screenshot 5: Antes de submeter")
             
