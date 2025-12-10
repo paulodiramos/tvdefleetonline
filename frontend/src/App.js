@@ -582,6 +582,16 @@ function App() {
             }
           />
           <Route
+            path="/gestao-credenciais"
+            element={
+              user ? (
+                <GestaoCredenciais user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/pagamentos-parceiro"
             element={
               user ? <PagamentosParceiro user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
