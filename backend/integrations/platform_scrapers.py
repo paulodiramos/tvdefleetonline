@@ -340,17 +340,21 @@ class ViaVerdeScraper(BaseScraper):
             await self.page.screenshot(path='/tmp/viaverde_05_email_filled.png')
             logger.info("📸 Screenshot 4: Email preenchido")
             
-            # Preencher password
+            # Preencher password com seletores priorizados
             password_selectors = [
+                # Prioridade 1: IDs simples
                 '#password',
-                '#login-password',
-                'input[name="password"]',
-                'input[type="password"]',
+                'input#password',
+                # Prioridade 2: Type password dentro do modal
                 '[role="dialog"] input[type="password"]',
                 '.modal input[type="password"]',
-                'input[placeholder*="senha"]',
-                'input[placeholder*="password"]',
-                '.password-input'
+                'input[type="password"]',
+                # Prioridade 3: Por name attribute
+                'input[name="password"]',
+                '[role="dialog"] input[name="password"]',
+                # Prioridade 4: Por placeholder
+                'input[placeholder*="pass" i]',
+                'input[placeholder*="senha" i]'
             ]
             
             logger.info("🔐 Tentando preencher password...")
