@@ -440,21 +440,43 @@ class ViaVerdeScraper(BaseScraper):
                 await self.page.screenshot(path='/tmp/viaverde_08_button_fail.png')
                 return False
             
-            # Aguardar resposta
+            # Aguardar resposta e processamento
             logger.info("⏳ Aguardando resposta do servidor...")
-            await asyncio.sleep(10)
+            await asyncio.sleep(5)
+            
+            # CRÍTICO: Verificar se modal fechou (principal indicador de sucesso)
+            modal_closed = False
+            try:
+                modal = await self.page.query_selector('[role="dialog"]')
+                if modal:
+                    is_visible = await modal.is_visible()
+                    modal_closed = not is_visible
+                else:
+                    modal_closed = True
+                    
+                logger.info(f"🔍 Modal fechou: {modal_closed}")
+            except:
+                modal_closed = True
+                logger.info("🔍 Modal não encontrado - presumindo fechado")
+            
+            await asyncio.sleep(3)
             await self.page.screenshot(path='/tmp/viaverde_09_after_submit.png')
             logger.info("📸 Screenshot 6: Após submit")
             
-            # Verificar se login foi bem-sucedido
+            # Verificar URL
             current_url = self.page.url
             logger.info(f"📍 URL final: {current_url}")
             
-            # Verificar erros
-            error_msg = await self._check_error_message()
-            if error_msg:
-                logger.error(f"❌ Mensagem de erro encontrada: {error_msg}")
-                return False
+            # Se modal fechou, é muito provável que login foi bem-sucedido
+            if modal_closed:
+                logger.info("✅ Modal fechou - provável sucesso")
+            
+            # Verificar erros apenas se modal ainda estiver aberto
+            if not modal_closed:
+                error_msg = await self._check_error_message()
+                if error_msg:
+                    logger.error(f"❌ Mensagem de erro encontrada: {error_msg}")
+                    return False
             
             # Verificar indicadores de sucesso
             success_indicators = [
