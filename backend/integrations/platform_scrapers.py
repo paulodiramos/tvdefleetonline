@@ -215,40 +215,66 @@ class ViaVerdeScraper(BaseScraper):
             logger.info(f"📍 URL atual: {self.page.url}")
             logger.info("📸 Screenshot 1: Página de login")
             
-            # IMPORTANTE: Procurar e clicar no botão "Login" que abre o modal
-            logger.info("🔍 Procurando botão de login que abre modal...")
-            login_trigger_buttons = [
-                'button:has-text("Login")',
-                'a:has-text("Login")',
-                '[class*="login"]',
-                '#login-button',
-                'button[data-action="login"]'
+            # Verificar se já estamos numa página de login direto (não modal)
+            # Procurar campos de login na página principal
+            logger.info("🔍 Verificando se há formulário de login direto...")
+            
+            direct_email_selectors = [
+                'input#txtUsername',
+                'input[name*="UserLogin"][type="email"]',
+                'input[type="email"]',
+                'input[name="email"]'
             ]
             
-            modal_opened = False
-            for selector in login_trigger_buttons:
+            has_direct_form = False
+            for selector in direct_email_selectors:
                 try:
                     if await self.page.is_visible(selector, timeout=2000):
-                        logger.info(f"🎯 Clicando em: {selector}")
-                        await self.page.click(selector)
-                        await asyncio.sleep(2)
-                        modal_opened = True
+                        logger.info(f"✅ Formulário direto encontrado: {selector}")
+                        has_direct_form = True
                         break
                 except:
                     continue
             
-            if not modal_opened:
-                logger.warning("⚠️ Tentando clicar em qualquer link com 'login'")
-                try:
-                    await self.page.click('text=Login')
-                    await asyncio.sleep(2)
-                    modal_opened = True
-                except:
-                    pass
+            if not has_direct_form:
+                # Procurar e clicar no botão "Login" que abre modal
+                logger.info("🔍 Formulário direto não encontrado, procurando botão de modal...")
+                
+                login_trigger_buttons = [
+                    'button:has-text("Login")',
+                    'a:has-text("Login")',
+                    '[class*="login"]',
+                    '#login-button',
+                    'button[data-action="login"]'
+                ]
+                
+                modal_opened = False
+                for selector in login_trigger_buttons:
+                    try:
+                        if await self.page.is_visible(selector, timeout=2000):
+                            logger.info(f"🎯 Clicando em botão modal: {selector}")
+                            await self.page.click(selector)
+                            await asyncio.sleep(3)
+                            modal_opened = True
+                            break
+                    except:
+                        continue
+                
+                if not modal_opened:
+                    logger.warning("⚠️ Tentando clicar em qualquer link com 'login'")
+                    try:
+                        await self.page.click('text=Login')
+                        await asyncio.sleep(2)
+                        modal_opened = True
+                    except:
+                        pass
+                
+                if not modal_opened:
+                    logger.error("❌ Botão de login não encontrado")
+                    return False
             
-            # Screenshot após tentar abrir modal
-            await self.page.screenshot(path='/tmp/viaverde_02_after_click.png')
-            logger.info("📸 Screenshot 2: Após clicar em login")
+            await self.page.screenshot(path='/tmp/viaverde_02_login_form.png')
+            logger.info("📸 Screenshot 2: Formulário de login")
             
             # Aguardar modal aparecer - CRÍTICO: Dar tempo para animação completar
             logger.info("⏳ Aguardando modal aparecer e estar interativo...")
