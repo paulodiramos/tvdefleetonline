@@ -15374,7 +15374,7 @@ async def criar_credencial(
 @app.put("/api/credenciais-plataforma/{cred_id}")
 async def atualizar_credencial(
     cred_id: str,
-    request: dict,
+    request: dict = Body(...),
     current_user: dict = Depends(get_current_user)
 ):
     """Atualizar credencial existente"""
