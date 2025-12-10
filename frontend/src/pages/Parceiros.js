@@ -1190,12 +1190,12 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                     </Button>
                     <Button
                       size="sm"
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                         setImportType('veiculos');
-                        // Usar setTimeout para garantir que o estado é atualizado
-                        setTimeout(() => {
-                          setShowImportDialog(true);
-                        }, 10);
+                        setShowImportDialog(true);
+                        setForceRender(prev => prev + 1);
                       }}
                       className="w-full bg-blue-600 hover:bg-blue-700"
                     >
