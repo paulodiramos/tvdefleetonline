@@ -114,6 +114,7 @@ const RegistoParceiro = () => {
         nif: formData.nif,
         morada: formData.morada,
         codigo_postal: formData.codigo_postal,
+        localidade: formData.localidade,
         codigo_certidao_comercial: formData.codigo_certidao_comercial,
         responsavel_nome: formData.responsavel_nome,
         responsavel_contacto: formData.responsavel_contacto,
