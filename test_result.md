@@ -1095,6 +1095,57 @@ agent_communication:
         ✅ Correção do perfil do parceiro está 100% operacional
         ⚠️ Verificação manual recomendada para contagem visual das variáveis no modal de template
     
+    - agent: "testing"
+      message: |
+        🚨 TESTE CRÍTICO FALHADO - SISTEMA DE IMPORTAÇÃO CSV NÃO FUNCIONA
+        
+        CONTEXTO DO TESTE:
+        Teste completo do sistema de importação CSV conforme review request em português, validando todos os passos críticos especificados.
+        
+        CREDENCIAIS TESTADAS:
+        - Admin: admin@tvdefleet.com / o72ocUHy ✅
+        
+        URL: https://fleet-master-35.preview.emergentagent.com ✅
+        
+        ❌ PROBLEMA CRÍTICO CONFIRMADO: MODAL DE IMPORTAÇÃO CSV NÃO ABRE
+        
+        **PASSOS TESTADOS COM SUCESSO:**
+        1. ✅ Login admin@tvdefleet.com/o72ocUHy funcionando perfeitamente
+        2. ✅ Navegação para /parceiros sem erros 404/500
+        3. ✅ Página carrega com lista de 5 parceiros
+        4. ✅ Clique CORRETO no card do parceiro (não no botão "Ver Perfil")
+        5. ✅ Entrada na vista detalhada do parceiro "Santos & Filhos Lda"
+        6. ✅ Seção "Importação em Massa (CSV)" encontrada e visível
+        7. ✅ Encontrados 2 botões "Importar CSV" (Motoristas e Veículos)
+        8. ✅ Botão "Importar CSV" está visível e habilitado
+        
+        **PROBLEMA CRÍTICO IDENTIFICADO:**
+        9. ❌ Modal de importação CSV NÃO ABRE quando botão é clicado
+        10. ❌ Estado showImportDialog não está sendo atualizado
+        11. ❌ Modal inline (.fixed.inset-0.z-50) não aparece
+        
+        **DETALHES TÉCNICOS:**
+        - Botão onClick handler não está funcionando corretamente
+        - Nenhum erro JavaScript detectado no console
+        - Clique no botão é executado sem exceções
+        - Função setShowImportDialog(true) não está sendo chamada
+        - Função setImportType('motoristas') não está sendo chamada
+        
+        **CAUSA RAIZ CONFIRMADA:**
+        O utilizador reporta que "não funciona nem dá erro" - CONFIRMADO que:
+        - Modal não abre ao clicar no botão "Importar CSV"
+        - Não há feedback visual ou mensagens de erro
+        - Sistema parece "morto" ao clicar no botão
+        
+        **AÇÃO NECESSÁRIA URGENTE:**
+        1. Verificar event handler do botão "Importar CSV" em Parceiros.js
+        2. Verificar se onClick está corretamente vinculado ao setShowImportDialog
+        3. Verificar se há conflitos de CSS ou JavaScript impedindo o modal
+        4. Testar função handleImportCSV manualmente
+        5. Verificar se selectedParceiro está definido corretamente
+        
+        Sistema de importação CSV está QUEBRADO e precisa correção imediata!
+    
     - agent: "main"
       message: |
         🚀 NOVA IMPLEMENTAÇÃO - ATRIBUIÇÃO DE MOTORISTA A PARCEIRO
