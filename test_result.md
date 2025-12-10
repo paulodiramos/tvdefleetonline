@@ -1157,6 +1157,18 @@ backend:
           comment: "✅ TESTADO: Todos os 5 templates CSV funcionando perfeitamente. CORRIGIDO: Endpoint estava definido após app.include_router - movido para posição correta. Testados: GET /api/templates/csv/uber (CSV), /bolt (CSV), /prio (XLSX), /viaverde (CSV), /gps (CSV). Content-Type headers corretos. Template inválido retorna 404 corretamente. Todos os arquivos existem em /app/backend/templates/csv_examples/."
 
 frontend:
+  - task: "Fluxo Completo de Registo e Aprovação de Parceiros - Bug Fix Crítico"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/RegistoParceiro.js, frontend/src/pages/Usuarios.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTE CRÍTICO COMPLETO: Fluxo de registo e aprovação de parceiros funcionando perfeitamente. BUG CORRIGIDO: Parceiros aprovados NÃO apresentam mais erro 'Erro ao carregar dados do parceiro'. Testado: 1) Registo público via /registo-parceiro ✅ 2) Aprovação pelo admin via /usuarios ✅ 3) Login do parceiro aprovado ✅ 4) Acesso completo à plataforma ✅ 5) Navegação sem erros críticos ✅. Backend atualiza corretamente ambas as collections (users + parceiros) com approved=true. Sistema 100% operacional."
+
   - task: "Novo Perfil de Motorista com 3 Componentes"
     implemented: true
     working: true
