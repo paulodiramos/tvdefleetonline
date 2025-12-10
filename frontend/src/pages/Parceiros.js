@@ -434,9 +434,23 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
   };
 
   const handleImportCSV = async (file) => {
-    if (!file) return;
+    console.log('handleImportCSV chamado com file:', file);
+    
+    if (!file) {
+      console.log('Nenhum ficheiro selecionado');
+      toast.error('Por favor selecione um ficheiro');
+      return;
+    }
+    
+    console.log('Ficheiro selecionado:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
     
     setImportLoading(true);
+    toast.info('A processar ficheiro...');
+    
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
@@ -446,12 +460,16 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
         ? `${API}/parceiros/${selectedParceiro.id}/importar-motoristas`
         : `${API}/parceiros/${selectedParceiro.id}/importar-veiculos`;
       
+      console.log('A enviar para endpoint:', endpoint);
+      
       const response = await axios.post(endpoint, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });
+      
+      console.log('Resposta recebida:', response.data);
       
       // Show results
       const { motoristas_criados, veiculos_criados, erros, total_linhas } = response.data;
@@ -473,6 +491,7 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
       
     } catch (error) {
       console.error('Error importing CSV:', error);
+      console.error('Error details:', error.response?.data);
       toast.error('Erro ao importar CSV: ' + (error.response?.data?.detail || error.message));
     } finally {
       setImportLoading(false);
