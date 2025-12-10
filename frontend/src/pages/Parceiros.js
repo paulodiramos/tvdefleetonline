@@ -2416,7 +2416,10 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
       </Dialog>
 
       {/* Import CSV Dialog */}
-      <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+      <Dialog open={showImportDialog} onOpenChange={(open) => {
+        console.log('Dialog onOpenChange chamado com:', open);
+        setShowImportDialog(open);
+      }}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
