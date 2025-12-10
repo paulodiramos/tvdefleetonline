@@ -143,27 +143,69 @@ class BoltScraper:
                 await self.page.screenshot(path='/tmp/bolt_password_not_found.png')
                 return False
             
-            # Clicar no botão de login
-            logger.info("👆 Clicando no botão de login...")
-            login_button = 'button[type="submit"], button:has-text("Log in"), button:has-text("Sign in")'
-            await self.page.click(login_button)
+            # Tirar screenshot antes de clicar
+            await self.page.screenshot(path='/tmp/bolt_before_submit.png')
+            
+            # Aguardar um pouco
+            await asyncio.sleep(1)
+            
+            # Clicar no botão de login - tentar múltiplos seletores
+            logger.info("👆 Procurando botão de login...")
+            login_button_selectors = [
+                'button[type="submit"]',
+                'button:has-text("Log in")',
+                'button:has-text("Login")',
+                'button:has-text("Sign in")',
+                'button:has-text("Entrar")',
+                'input[type="submit"]',
+                '[data-testid="login-button"]',
+                'button.login-button',
+                'button#login',
+                'button#submit'
+            ]
+            
+            button_clicked = False
+            for selector in login_button_selectors:
+                try:
+                    if await self.page.is_visible(selector, timeout=2000):
+                        logger.info(f"🎯 Encontrado botão: {selector}")
+                        await self.page.click(selector)
+                        button_clicked = True
+                        break
+                except:
+                    continue
+            
+            if not button_clicked:
+                logger.error("❌ Não foi possível encontrar botão de login")
+                await self.page.screenshot(path='/tmp/bolt_button_not_found.png')
+                return False
             
             # Aguardar navegação ou erro
-            await asyncio.sleep(5)
+            logger.info("⏳ Aguardando resposta...")
+            await asyncio.sleep(8)
+            
+            # Tirar screenshot após submit
+            await self.page.screenshot(path='/tmp/bolt_after_submit.png')
             
             # Verificar se login foi bem-sucedido
             current_url = self.page.url
+            logger.info(f"📍 URL atual: {current_url}")
             
-            if "login" not in current_url.lower():
+            # Verificar mensagem de erro primeiro
+            error_msg = await self._check_error_message()
+            if error_msg:
+                logger.error(f"❌ Erro detectado: {error_msg}")
+                await self.page.screenshot(path='/tmp/bolt_login_failed.png')
+                return False
+            
+            if "login" not in current_url.lower() or "dashboard" in current_url.lower():
                 logger.info("✅ Login bem-sucedido!")
                 
                 # Tirar screenshot de confirmação
                 await self.page.screenshot(path='/tmp/bolt_login_success.png')
                 return True
             else:
-                # Verificar mensagem de erro
-                error_msg = await self._check_error_message()
-                logger.error(f"❌ Login falhou. URL ainda contém 'login'. Erro: {error_msg}")
+                logger.error(f"❌ Login falhou. URL ainda contém 'login'")
                 await self.page.screenshot(path='/tmp/bolt_login_failed.png')
                 return False
                 
