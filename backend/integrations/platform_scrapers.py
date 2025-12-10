@@ -356,46 +356,115 @@ class ViaVerdeScraper(BaseScraper):
             await asyncio.sleep(5)
             await self.page.screenshot(path='/tmp/viaverde_dashboard.png')
             
-            # Procurar por links de transações/extratos
-            transaction_links = [
-                'a:has-text("Transações")',
+            # Procurar por links "Extratos e Movimentos"
+            extratos_links = [
+                'a:has-text("Extratos e Movimentos")',
                 'a:has-text("Extratos")',
                 'a:has-text("Movimentos")',
-                'a:has-text("Histórico")',
-                '[href*="transac"]',
                 '[href*="extrato"]',
                 '[href*="movimento"]'
             ]
             
-            for link in transaction_links:
+            navegado = False
+            for link in extratos_links:
                 try:
                     if await self.page.is_visible(link, timeout=2000):
                         await self.page.click(link)
-                        await asyncio.sleep(3)
-                        logger.info(f"✅ Navegado para transações")
+                        await asyncio.sleep(4)
+                        logger.info(f"✅ Navegado para Extratos e Movimentos")
+                        navegado = True
                         break
                 except:
                     continue
             
-            await self.page.screenshot(path='/tmp/viaverde_transactions.png')
+            if not navegado:
+                logger.warning("⚠️ Link de Extratos não encontrado, tentando URL direta")
+                try:
+                    await self.page.goto('https://www.viaverde.pt/extratos-movimentos')
+                    await asyncio.sleep(3)
+                except:
+                    pass
             
-            # Tentar extrair dados da página
-            # Nota: Estrutura real depende do HTML da Via Verde
-            data = {
+            await self.page.screenshot(path='/tmp/viaverde_extratos_page.png')
+            
+            # Tentar extrair dados da tabela HTML
+            logger.info("📋 Tentando extrair dados da tabela...")
+            
+            dados_extraidos = []
+            
+            try:
+                # Aguardar tabela carregar
+                await self.page.wait_for_selector('table', timeout=10000)
+                
+                # Extrair linhas da tabela
+                rows = await self.page.query_selector_all('table tbody tr')
+                logger.info(f"📊 Encontradas {len(rows)} linhas na tabela")
+                
+                for row in rows:
+                    try:
+                        # Extrair células
+                        cells = await row.query_selector_all('td')
+                        
+                        if len(cells) >= 4:
+                            # Estrutura conforme screenshots: Nº Extrato, Contrato, Ano, Mês
+                            num_extrato = await cells[0].text_content()
+                            contrato = await cells[1].text_content()
+                            ano = await cells[2].text_content()
+                            mes = await cells[3].text_content()
+                            
+                            dados_extraidos.append({
+                                "numero_extrato": num_extrato.strip() if num_extrato else "",
+                                "contrato": contrato.strip() if contrato else "",
+                                "ano": ano.strip() if ano else "",
+                                "mes": mes.strip() if mes else "",
+                                "plataforma": "via_verde"
+                            })
+                    except Exception as e:
+                        logger.warning(f"⚠️ Erro ao processar linha: {e}")
+                        continue
+                
+                logger.info(f"✅ {len(dados_extraidos)} registos extraídos da tabela")
+                
+            except Exception as e:
+                logger.warning(f"⚠️ Não foi possível extrair tabela: {e}")
+            
+            # Se não conseguiu extrair da tabela, tentar baixar PDF
+            if len(dados_extraidos) == 0:
+                logger.info("📥 Tentando exportar via botão...")
+                
+                export_buttons = [
+                    'button:has-text("Exportar extratos")',
+                    'button:has-text("Exportar")',
+                    'a:has-text("Exportar extratos")',
+                    'a:has-text("2ª Via")'
+                ]
+                
+                for button in export_buttons:
+                    try:
+                        if await self.page.is_visible(button, timeout=2000):
+                            logger.info(f"🎯 Encontrado botão: {button}")
+                            await self.page.click(button)
+                            await asyncio.sleep(3)
+                            logger.info("✅ Clicado em botão de exportação")
+                            break
+                    except:
+                        continue
+            
+            return {
                 "success": True,
                 "platform": "via_verde",
                 "extracted_at": datetime.now(timezone.utc).isoformat(),
-                "data": [],
-                "message": "Estrutura de dados a ajustar conforme HTML real da Via Verde"
+                "data": dados_extraidos,
+                "total_registos": len(dados_extraidos),
+                "message": f"{len(dados_extraidos)} extratos encontrados"
             }
-            
-            return data
             
         except Exception as e:
             logger.error(f"❌ Erro ao extrair dados: {e}")
             return {
                 "success": False,
-                "error": str(e)
+                "error": str(e),
+                "data": []
             }
     
     async def _fill_field(self, selectors: List[str], value: str, field_name: str) -> bool:
