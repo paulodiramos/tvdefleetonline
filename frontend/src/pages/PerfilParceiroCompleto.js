@@ -255,6 +255,33 @@ const PerfilParceiroCompleto = ({ user, onLogout }) => {
                           )}
                         </div>
                       </div>
+                      <div className="flex flex-col gap-2 ml-4">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            // Open preview in new window or modal
+                            toast.info('Função de pré-visualização em desenvolvimento');
+                          }}
+                          title="Ver template completo"
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          Ver
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            window.open(`${API}/templates-contratos/${template.id}/download-pdf`, '_blank');
+                            toast.success('Download iniciado');
+                          }}
+                          className="text-green-600 hover:text-green-700"
+                          title="Download em PDF"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          PDF
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
