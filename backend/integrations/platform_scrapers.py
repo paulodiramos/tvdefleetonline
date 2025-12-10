@@ -331,9 +331,25 @@ class ViaVerdeScraper(BaseScraper):
             if not email_filled:
                 logger.error("❌ Campo de email não encontrado")
                 await self.page.screenshot(path='/tmp/viaverde_04_email_fail.png')
-                # Tentar pegar todos os inputs visíveis
-                all_inputs = await self.page.query_selector_all('input')
-                logger.info(f"Total de inputs encontrados: {len(all_inputs)}")
+                
+                # DEBUG: Tentar pegar info de todos os inputs visíveis
+                try:
+                    all_inputs = await self.page.query_selector_all('input')
+                    logger.info(f"🔍 DEBUG: Total de inputs encontrados: {len(all_inputs)}")
+                    
+                    for i, inp in enumerate(all_inputs):
+                        try:
+                            is_visible = await inp.is_visible()
+                            inp_type = await inp.get_attribute('type')
+                            inp_id = await inp.get_attribute('id')
+                            inp_name = await inp.get_attribute('name')
+                            inp_class = await inp.get_attribute('class')
+                            logger.info(f"  Input {i+1}: type={inp_type}, id={inp_id}, name={inp_name}, visible={is_visible}, class={inp_class}")
+                        except:
+                            pass
+                except Exception as e:
+                    logger.warning(f"Erro ao fazer debug dos inputs: {e}")
+                
                 return False
             
             await asyncio.sleep(1)
