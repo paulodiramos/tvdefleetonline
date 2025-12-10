@@ -11677,31 +11677,32 @@ async def salvar_credenciais_plataforma(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/credenciais-plataforma")
-async def listar_credenciais_plataformas(
-    parceiro_id: Optional[str] = None,
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    """Lista credenciais de plataformas por parceiro (sem passwords)"""
-    try:
-        user = await get_current_user(credentials)
-        if user['role'] not in ['admin', 'manager']:
-            raise HTTPException(status_code=403, detail="Acesso negado")
-        
-        query = {}
-        if parceiro_id:
-            query['parceiro_id'] = parceiro_id
-            
-        credenciais = await db.credenciais_plataforma.find(query).to_list(length=None)
-        
-        # Remover passwords encriptadas da resposta
-        for cred in credenciais:
-            cred.pop('password_encrypted', None)
-        
-        return credenciais
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# ENDPOINT ANTIGO - COMENTADO (duplicado, usar o novo em GESTÃO DE CREDENCIAIS)
+# @app.get("/api/credenciais-plataforma")
+# async def listar_credenciais_plataformas(
+#     parceiro_id: Optional[str] = None,
+#     credentials: HTTPAuthorizationCredentials = Depends(security)
+# ):
+#     """Lista credenciais de plataformas por parceiro (sem passwords)"""
+#     try:
+#         user = await get_current_user(credentials)
+#         if user['role'] not in ['admin', 'manager']:
+#             raise HTTPException(status_code=403, detail="Acesso negado")
+#         
+#         query = {}
+#         if parceiro_id:
+#             query['parceiro_id'] = parceiro_id
+#             
+#         credenciais = await db.credenciais_plataforma.find(query).to_list(length=None)
+#         
+#         # Remover passwords encriptadas da resposta
+#         for cred in credenciais:
+#             cred.pop('password_encrypted', None)
+#         
+#         return credenciais
+#         
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/sincronizar/{parceiro_id}/{plataforma}")
 async def sincronizar_plataforma_manual(
