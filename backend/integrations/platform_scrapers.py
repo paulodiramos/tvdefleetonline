@@ -202,13 +202,18 @@ class ViaVerdeScraper(BaseScraper):
         try:
             logger.info(f"🔑 {self.platform_name}: Login com {email} (área: {account_type})")
             
-            # Navegar diretamente para a área de login de Empresas
-            login_url = f'https://www.viaverde.pt/{account_type}/'
-            logger.info(f"🔗 Navegando para: {login_url}")
-            await self.page.goto(login_url, wait_until='domcontentloaded')
-            await asyncio.sleep(3)
-            await self.page.screenshot(path='/tmp/viaverde_01_home.png')
-            logger.info("📸 Screenshot 1: Página de empresas")
+            # ESTRATÉGIA: Navegar direto para a página de extratos que FORÇA o login
+            # Isto mantém a sessão na área correta
+            target_url = f'https://www.viaverde.pt/{account_type}/minha-via-verde/extratos-movimentos'
+            logger.info(f"🔗 Navegando direto para extratos (forçará login): {target_url}")
+            
+            await self.page.goto(target_url, wait_until='domcontentloaded')
+            await asyncio.sleep(4)
+            
+            # Isto deve mostrar a página de login/redirect
+            await self.page.screenshot(path='/tmp/viaverde_01_login_page.png')
+            logger.info(f"📍 URL atual: {self.page.url}")
+            logger.info("📸 Screenshot 1: Página de login")
             
             # IMPORTANTE: Procurar e clicar no botão "Login" que abre o modal
             logger.info("🔍 Procurando botão de login que abre modal...")
