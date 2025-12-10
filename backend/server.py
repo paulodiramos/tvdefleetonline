@@ -10423,6 +10423,18 @@ async def approve_user(
                 {"$set": {"status": "approved", "approved": True, "updated_at": datetime.now(timezone.utc).isoformat()}}
             )
     
+    # If user has parceiro role, update parceiros collection
+    if user and user.get("role") == "parceiro":
+        await db.parceiros.update_one(
+            {"email": user.get("email")},
+            {"$set": {
+                "approved": True,
+                "status": "aprovado",
+                "approved_at": datetime.now(timezone.utc).isoformat(),
+                "approved_by": current_user["id"]
+            }}
+        )
+    
     return {"message": "User approved successfully"}
 
 @api_router.put("/users/{user_id}/set-role")
