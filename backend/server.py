@@ -6000,6 +6000,12 @@ async def create_parceiro_public(parceiro_data: Dict[str, Any]):
     
     await db.parceiros.insert_one(new_parceiro)
     
+    return {
+        "success": True,
+        "message": "Parceiro registado com sucesso. Aguarde aprovação.",
+        "parceiro_id": parceiro_id
+    }
+    
     return {"message": "Parceiro registered successfully", "id": parceiro_id}
 
 @api_router.get("/parceiros", response_model=List[Parceiro])
