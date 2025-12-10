@@ -15308,10 +15308,13 @@ async def obter_credenciais_parceiros(
             )
             
             # Montar credencial
+            # Nota: Passwords são encriptadas com bcrypt e não podem ser desencriptadas
+            # Para ver a password original, consultar o ficheiro CREDENCIAIS_TESTE.md
             credencial = {
                 "parceiro_id": user["id"],
                 "email": user["email"],
-                "password": user["password"],  # Hash do bcrypt
+                "password": "[ENCRIPTADA - Consultar CREDENCIAIS_TESTE.md]",
+                "password_hash": user["password"],  # Hash bcrypt (para referência)
                 "nome": user.get("name", "Sem nome"),
                 "nome_empresa": parceiro_data.get("nome_empresa") if parceiro_data else None,
                 "telefone": parceiro_data.get("telefone") if parceiro_data else None,
