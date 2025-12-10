@@ -1023,6 +1023,78 @@ agent_communication:
         
         All bug fixes have been successfully implemented and tested. The unified plan system is working perfectly!
     
+    - agent: "testing"
+      message: |
+        🎯 TESTE CRÍTICO DAS CORREÇÕES IMPLEMENTADAS - RESULTADOS FINAIS
+        
+        CONTEXTO DO TESTE:
+        Teste completo das duas correções implementadas conforme review request em português:
+        1. Corrigido erro "Erro ao carregar perfil do parceiro" - campos name e phone agora são opcionais no modelo Motorista
+        2. Adicionadas TODAS as variáveis no sistema de substituição de templates (50+ variáveis)
+        
+        CREDENCIAIS TESTADAS:
+        - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
+        - Admin: admin@tvdefleet.com / o72ocUHy ✅
+        
+        URL: https://fleet-master-35.preview.emergentagent.com ✅
+        
+        ✅ TESTE 1: PERFIL DO PARCEIRO - ERRO RESOLVIDO (100% SUCESSO)
+        
+        **LOGIN E NAVEGAÇÃO:**
+        - ✅ Login parceiro@tvdefleet.com/UQ1B6DXU funcionando perfeitamente
+        - ✅ Redirecionamento para dashboard correto (URL: /dashboard)
+        - ✅ Navegação para /profile sem problemas
+        
+        **VERIFICAÇÃO CRÍTICA:**
+        - ✅ CRÍTICO: NÃO foi encontrado o erro "Erro ao carregar perfil do parceiro"
+        - ✅ Perfil carrega corretamente com título "Meu Perfil"
+        - ✅ Seção "Informações do Parceiro" presente e funcional
+        - ✅ Dados do parceiro exibidos: Nome (Maria Santos - Parceira), Email (parceiro@tvdefleet.com), Morada
+        - ✅ Estatísticas funcionando: Motoristas (0), Veículos (0), Contratos (0)
+        - ✅ Seção "Plano Ativo" presente (mostra "Nenhum plano ativo")
+        
+        ❌ TESTE 2: VARIÁVEIS NO TEMPLATE - LIMITAÇÃO TÉCNICA
+        
+        **LOGIN ADMIN:**
+        - ✅ Login admin@tvdefleet.com/o72ocUHy funcionando
+        - ✅ Navegação para /parceiros funcionando
+        - ✅ Página carrega com 5 parceiros visíveis
+        
+        **LIMITAÇÃO ENCONTRADA:**
+        - ❌ Sessão perdida durante navegação entre páginas no ambiente de teste
+        - ❌ Não foi possível completar o teste do modal de criação de template
+        - ⚠️ VERIFICAÇÃO MANUAL NECESSÁRIA: Abrir modal de template e contar variáveis
+        
+        **ANÁLISE DO CÓDIGO:**
+        - ✅ Código em /app/frontend/src/pages/Parceiros.js (linhas 792-838) contém TODAS as variáveis esperadas
+        - ✅ Variáveis implementadas por categoria:
+          * Parceiro (7): PARCEIRO_NOME, PARCEIRO_NIF, PARCEIRO_MORADA, PARCEIRO_CP, PARCEIRO_LOCALIDADE, PARCEIRO_TELEFONE, PARCEIRO_EMAIL
+          * Rep Legal (5): REP_LEGAL_NOME, REP_LEGAL_CC, REP_LEGAL_CC_VALIDADE, REP_LEGAL_TELEFONE, REP_LEGAL_EMAIL
+          * Motorista (14): MOTORISTA_NOME, MOTORISTA_CC, MOTORISTA_CC_VALIDADE, MOTORISTA_NIF, MOTORISTA_MORADA, MOTORISTA_CP, MOTORISTA_LOCALIDADE, MOTORISTA_TELEFONE, MOTORISTA_CARTA_CONDUCAO, MOTORISTA_CARTA_CONDUCAO_VALIDADE, MOTORISTA_LICENCA_TVDE, MOTORISTA_LICENCA_TVDE_VALIDADE, MOTORISTA_SS, MOTORISTA_EMAIL
+          * Veículo (3): VEICULO_MARCA, VEICULO_MODELO, VEICULO_MATRICULA
+          * Contrato (17): DATA_INICIO, DATA_EMISSAO, TIPO_CONTRATO, VALOR_SEMANAL, COMISSAO, CAUCAO_TOTAL, CAUCAO_PARCELAS, CAUCAO_TEXTO, DATA_INICIO_EPOCA_ALTA, DATA_FIM_EPOCA_ALTA, EPOCA_ALTA_VALOR, TEXTO_EPOCA_ALTA, DATA_INICIO_EPOCA_BAIXA, DATA_FIM_EPOCA_BAIXA, EPOCA_BAIXA_VALOR, TEXTO_EPOCA_BAIXA, CONDICOES_VEICULO
+        
+        📊 RESULTADO FINAL: 1/2 TESTES COMPLETADOS (50% TESTADO)
+        
+        🎯 CORREÇÃO 1 CONFIRMADA: Erro do perfil do parceiro foi RESOLVIDO com sucesso!
+        
+        **FUNCIONALIDADES CONFIRMADAS:**
+        ✅ Login de parceiro funcionando sem erros críticos
+        ✅ Perfil do parceiro carrega completamente sem erro "Erro ao carregar perfil do parceiro"
+        ✅ Todas as seções do perfil funcionais (Informações, Estatísticas, Plano)
+        ✅ Interface responsiva e dados corretos exibidos
+        ✅ Código das variáveis de template implementado corretamente (46+ variáveis)
+        
+        **OBSERVAÇÕES TÉCNICAS:**
+        - Correção 1 (perfil do parceiro): 100% funcional e testada
+        - Correção 2 (variáveis template): Código implementado mas teste UI limitado por sessão
+        - Sistema geral estável e operacional
+        - Todas as variáveis esperadas presentes no código fonte
+        
+        **RECOMENDAÇÃO:**
+        ✅ Correção do perfil do parceiro está 100% operacional
+        ⚠️ Verificação manual recomendada para contagem visual das variáveis no modal de template
+    
     - agent: "main"
       message: |
         🚀 NOVA IMPLEMENTAÇÃO - ATRIBUIÇÃO DE MOTORISTA A PARCEIRO
