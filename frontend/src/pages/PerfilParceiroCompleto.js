@@ -68,6 +68,19 @@ const PerfilParceiroCompleto = ({ user, onLogout }) => {
     }
   };
 
+  const fetchTemplates = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/parceiros/${user.id}/templates-contrato`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTemplates(response.data || []);
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+      setTemplates([]);
+    }
+  };
+
   if (loading) {
     return (
       <Layout user={user} onLogout={onLogout}>
