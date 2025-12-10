@@ -209,6 +209,68 @@ const PerfilParceiroCompleto = ({ user, onLogout }) => {
           </Card>
         </div>
 
+        {/* Templates de Contrato */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                <span>Meus Templates de Contrato</span>
+              </div>
+              <span className="text-sm font-normal text-slate-500">
+                {templates.length} {templates.length === 1 ? 'template' : 'templates'}
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {templates.length > 0 ? (
+              <div className="space-y-3">
+                {templates.map((template) => (
+                  <div key={template.id} className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-5 h-5 text-blue-600" />
+                          <h3 className="font-semibold text-slate-800">
+                            {template.nome_template || template.tipo_contrato}
+                          </h3>
+                          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">
+                            {template.tipo_contrato}
+                          </span>
+                        </div>
+                        {template.clausulas_texto && (
+                          <p className="text-sm text-slate-600 mt-2 line-clamp-2">
+                            {template.clausulas_texto.substring(0, 150)}...
+                          </p>
+                        )}
+                        <div className="mt-2 flex gap-4 text-xs text-slate-500">
+                          {template.valor_caucao && (
+                            <span>Caução: €{template.valor_caucao}</span>
+                          )}
+                          {template.periodicidade_padrao && (
+                            <span>Periodicidade: {template.periodicidade_padrao}</span>
+                          )}
+                          {template.created_at && (
+                            <span>Criado: {new Date(template.created_at).toLocaleDateString('pt-PT')}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-500">Nenhum template de contrato criado</p>
+                <p className="text-sm text-slate-400 mt-1">
+                  Os templates de contrato são geridos pelo administrador
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Plano Ativo */}
         <Card>
           <CardHeader>
