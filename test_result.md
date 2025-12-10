@@ -1126,6 +1126,21 @@ agent_communication:
 
 
 backend:
+  - task: "Partner Approval Bug Fix - Database Collections Update"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+          agent: "main"
+          comment: "Bug fix implemented in PUT /api/users/{user_id}/approve endpoint (lines 10426-10436). When approving user with role 'parceiro', both 'users' and 'parceiros' collections are now updated with approved=true, status='aprovado', approved_at, and approved_by fields."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTE COMPLETO DO BUG FIX: Todos os 4 testes do review request passaram com sucesso! TESTE 1: Estrutura do endpoint PUT /api/users/{user_id}/approve verificada ✅ TESTE 2: Aprovação via API testada - criado utilizador teste, aprovado via endpoint, verificado que AMBAS as coleções (users + parceiros) foram atualizadas com approved=true ✅ TESTE 3: Endpoint GET /api/parceiros retorna apenas parceiros aprovados ✅ TESTE 4: Endpoint GET /api/parceiros/{id} funciona corretamente com lógica de compatibilidade ✅. Bug corrigido: matching por campo 'email' entre coleções funcionando. Sistema de aprovação de parceiros 100% operacional."
+
   - task: "Valor da Inspeção - Campo adicionado"
     implemented: true
     working: true
