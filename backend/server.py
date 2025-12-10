@@ -15246,7 +15246,7 @@ async def forcar_sincronizacao(
         
         # Registar log
         log = {
-            "id": str(uuid4()),
+            "id": str(uuid.uuid4()),
             "parceiro_id": parceiro_id,
             "tipo": "manual",
             "status": "sucesso",
