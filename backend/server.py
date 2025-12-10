@@ -15278,6 +15278,303 @@ async def forcar_sincronizacao(
         raise HTTPException(status_code=500, detail=str(e))
 
 # ==================================================
+# GESTÃO DE CREDENCIAIS DE PLATAFORMAS
+# ==================================================
+
+@app.get("/api/credenciais-plataforma")
+async def listar_credenciais(
+    parceiro_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar credenciais de plataformas"""
+    try:
+        query = {}
+        
+        # Filtrar por parceiro se fornecido
+        if parceiro_id:
+            query['parceiro_id'] = parceiro_id
+        
+        # Se não for admin/gestao, mostrar apenas suas próprias credenciais
+        if current_user['role'] not in ['admin', 'gestao']:
+            query['parceiro_id'] = current_user['id']
+        
+        credenciais = await db.credenciais_plataforma.find(
+            query,
+            {"_id": 0, "password": 0}  # Não retornar password
+        ).to_list(1000)
+        
+        return credenciais
+        
+    except Exception as e:
+        logger.error(f"Erro ao listar credenciais: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/credenciais-plataforma")
+async def criar_credencial(
+    request: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Criar nova credencial de plataforma"""
+    try:
+        if current_user['role'] not in ['admin', 'gestao', 'parceiro']:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        # Validar dados obrigatórios
+        required_fields = ['plataforma', 'email', 'password']
+        for field in required_fields:
+            if not request.get(field):
+                raise HTTPException(status_code=400, detail=f"Campo {field} é obrigatório")
+        
+        # Se não for admin/gestao, usar próprio ID como parceiro
+        parceiro_id = request.get('parceiro_id')
+        if current_user['role'] == 'parceiro':
+            parceiro_id = current_user['id']
+        
+        # Verificar se já existe credencial para esta plataforma/parceiro
+        existing = await db.credenciais_plataforma.find_one({
+            'plataforma': request['plataforma'],
+            'parceiro_id': parceiro_id
+        })
+        
+        if existing:
+            raise HTTPException(
+                status_code=400, 
+                detail="Já existe credencial para esta plataforma e parceiro"
+            )
+        
+        credencial = {
+            "id": str(uuid.uuid4()),
+            "parceiro_id": parceiro_id,
+            "plataforma": request['plataforma'],
+            "email": request['email'],
+            "password": request['password'],  # TODO: Encriptar em produção
+            "ativo": request.get('ativo', True),
+            "sincronizacao_automatica": request.get('sincronizacao_automatica', True),
+            "frequencia_dias": request.get('frequencia_dias', 7),
+            "ultima_sincronizacao": None,
+            "proximo_sincronizacao": None,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "created_by": current_user['id']
+        }
+        
+        await db.credenciais_plataforma.insert_one(credencial)
+        
+        logger.info(f"✅ Credencial criada: {credencial['plataforma']} para {credencial.get('email')}")
+        
+        return {"success": True, "message": "Credencial criada com sucesso", "id": credencial['id']}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao criar credencial: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/api/credenciais-plataforma/{cred_id}")
+async def atualizar_credencial(
+    cred_id: str,
+    request: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Atualizar credencial existente"""
+    try:
+        # Buscar credencial
+        credencial = await db.credenciais_plataforma.find_one({"id": cred_id}, {"_id": 0})
+        if not credencial:
+            raise HTTPException(status_code=404, detail="Credencial não encontrada")
+        
+        # Verificar permissão
+        if current_user['role'] not in ['admin', 'gestao']:
+            if credencial['parceiro_id'] != current_user['id']:
+                raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        # Atualizar campos
+        update_data = {
+            "email": request.get('email', credencial['email']),
+            "ativo": request.get('ativo', credencial['ativo']),
+            "sincronizacao_automatica": request.get('sincronizacao_automatica', credencial.get('sincronizacao_automatica', True)),
+            "frequencia_dias": request.get('frequencia_dias', credencial.get('frequencia_dias', 7)),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Atualizar password apenas se fornecida
+        if request.get('password'):
+            update_data['password'] = request['password']
+        
+        await db.credenciais_plataforma.update_one(
+            {"id": cred_id},
+            {"$set": update_data}
+        )
+        
+        return {"success": True, "message": "Credencial atualizada"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao atualizar credencial: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/credenciais-plataforma/{cred_id}")
+async def deletar_credencial(
+    cred_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Deletar credencial"""
+    try:
+        # Buscar credencial
+        credencial = await db.credenciais_plataforma.find_one({"id": cred_id}, {"_id": 0})
+        if not credencial:
+            raise HTTPException(status_code=404, detail="Credencial não encontrada")
+        
+        # Verificar permissão
+        if current_user['role'] not in ['admin', 'gestao']:
+            if credencial['parceiro_id'] != current_user['id']:
+                raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        await db.credenciais_plataforma.delete_one({"id": cred_id})
+        
+        return {"success": True, "message": "Credencial removida"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao deletar credencial: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/credenciais-plataforma/{cred_id}/testar")
+async def testar_credencial(
+    cred_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Testar conexão com credencial"""
+    try:
+        # Buscar credencial
+        credencial = await db.credenciais_plataforma.find_one({"id": cred_id}, {"_id": 0})
+        if not credencial:
+            raise HTTPException(status_code=404, detail="Credencial não encontrada")
+        
+        # Testar login
+        from integrations.platform_scrapers import get_scraper
+        
+        async with get_scraper(credencial['plataforma'], headless=True) as scraper:
+            login_success = await scraper.login(credencial['email'], credencial['password'])
+            
+            if login_success:
+                return {
+                    "success": True,
+                    "message": f"Conexão com {credencial['plataforma']} bem-sucedida!"
+                }
+            else:
+                return {
+                    "success": False,
+                    "message": "Falha no login. Verifique as credenciais."
+                }
+        
+    except Exception as e:
+        logger.error(f"Erro ao testar credencial: {e}")
+        return {
+            "success": False,
+            "message": f"Erro: {str(e)}"
+        }
+
+@app.post("/api/credenciais-plataforma/{cred_id}/sincronizar")
+async def sincronizar_credencial(
+    cred_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Forçar sincronização manual"""
+    try:
+        # Buscar credencial
+        credencial = await db.credenciais_plataforma.find_one({"id": cred_id}, {"_id": 0})
+        if not credencial:
+            raise HTTPException(status_code=404, detail="Credencial não encontrada")
+        
+        logger.info(f"🔄 Iniciando sincronização: {credencial['plataforma']}")
+        
+        # Criar log
+        log_id = str(uuid.uuid4())
+        log = {
+            "id": log_id,
+            "credencial_id": cred_id,
+            "plataforma": credencial['plataforma'],
+            "parceiro_id": credencial.get('parceiro_id'),
+            "tipo": "manual",
+            "status": "em_progresso",
+            "data_inicio": datetime.now(timezone.utc).isoformat(),
+            "usuario_id": current_user['id']
+        }
+        await db.logs_sincronizacao.insert_one(log)
+        
+        # Executar scraping
+        from integrations.platform_scrapers import get_scraper
+        
+        async with get_scraper(credencial['plataforma'], headless=True) as scraper:
+            # Login
+            login_success = await scraper.login(credencial['email'], credencial['password'])
+            
+            if not login_success:
+                await db.logs_sincronizacao.update_one(
+                    {"id": log_id},
+                    {"$set": {
+                        "status": "erro",
+                        "mensagem_erro": "Falha no login",
+                        "data_fim": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                return {
+                    "success": False,
+                    "message": "Falha no login. Verifique as credenciais."
+                }
+            
+            # Extrair dados
+            data = await scraper.extract_data()
+            
+            if data.get('success'):
+                # Atualizar log
+                await db.logs_sincronizacao.update_one(
+                    {"id": log_id},
+                    {"$set": {
+                        "status": "sucesso",
+                        "data_fim": datetime.now(timezone.utc).isoformat(),
+                        "registos_extraidos": len(data.get('data', []))
+                    }}
+                )
+                
+                # Atualizar última sincronização
+                await db.credenciais_plataforma.update_one(
+                    {"id": cred_id},
+                    {"$set": {
+                        "ultima_sincronizacao": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                
+                return {
+                    "success": True,
+                    "message": "Sincronização concluída!",
+                    "registos": len(data.get('data', []))
+                }
+            else:
+                await db.logs_sincronizacao.update_one(
+                    {"id": log_id},
+                    {"$set": {
+                        "status": "erro",
+                        "mensagem_erro": data.get('error', 'Erro desconhecido'),
+                        "data_fim": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                return {
+                    "success": False,
+                    "message": f"Erro: {data.get('error')}"
+                }
+        
+    except Exception as e:
+        logger.error(f"Erro na sincronização: {e}")
+        return {
+            "success": False,
+            "message": f"Erro: {str(e)}"
+        }
+
+# ==================================================
 # CSV IMPORT - Upload Manual de Ficheiros
 # ==================================================
 
