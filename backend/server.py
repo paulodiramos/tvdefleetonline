@@ -552,20 +552,26 @@ class ParceiroCreate(BaseModel):
 class Parceiro(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
-    nome_empresa: str
-    contribuinte_empresa: str
-    morada_completa: str
+    # Campos flexíveis - suporta ambas as estruturas (antiga e nova)
+    nome_empresa: Optional[str] = None
+    nome: Optional[str] = None  # Estrutura nova
+    contribuinte_empresa: Optional[str] = None
+    nif: Optional[str] = None  # Estrutura nova
+    morada_completa: Optional[str] = None
+    morada: Optional[str] = None  # Estrutura nova
     codigo_postal: str
-    localidade: str
-    nome_manager: str
-    email_manager: Optional[str] = None  # Opcional para retrocompatibilidade
-    email_empresa: Optional[str] = None  # Opcional para retrocompatibilidade
-    telefone: str
-    telemovel: str
+    localidade: Optional[str] = None
+    nome_manager: Optional[str] = None
+    responsavel_nome: Optional[str] = None  # Estrutura nova
+    email_manager: Optional[str] = None
+    email_empresa: Optional[str] = None
+    telefone: Optional[str] = None
+    telemovel: Optional[str] = None
+    responsavel_contacto: Optional[str] = None  # Estrutura nova
     email: str
-    certidao_permanente: Optional[str] = None  # Opcional para retrocompatibilidade
-    codigo_certidao_comercial: str
-    validade_certidao_comercial: str
+    certidao_permanente: Optional[str] = None
+    codigo_certidao_comercial: Optional[str] = None
+    validade_certidao_comercial: Optional[str] = None
     seguro_responsabilidade_civil: Optional[str] = None
     seguro_acidentes_trabalho: Optional[str] = None
     licenca_tvde: Optional[str] = None
@@ -575,7 +581,8 @@ class Parceiro(BaseModel):
     plano_status: str = "pendente"  # "pendente", "ativo", "suspenso"
     gestor_associado_id: Optional[str] = None
     total_vehicles: int = 0
-    localidade: Optional[str] = None
+    approved: Optional[bool] = None
+    status: Optional[str] = None
     # Contrato único do parceiro com múltiplos tipos
     contrato_texto: Optional[str] = None  # Texto base do contrato
     contratos_tipos: List[Dict[str, Any]] = []  # Lista de tipos de contrato disponíveis: [{nome, tipo, valores}]
