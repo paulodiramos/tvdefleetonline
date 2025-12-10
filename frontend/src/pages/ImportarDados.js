@@ -24,8 +24,8 @@ const ImportarDados = ({ user, onLogout }) => {
   const [plataforma, setPlataforma] = useState('bolt');
   const [parceiros, setParceiros] = useState([]);
   const [motoristas, setMotoristas] = useState([]);
-  const [parceiroSelecionado, setParceiroSelecionado] = useState('');
-  const [motoristaSelecionado, setMotoristaSelecionado] = useState('');
+  const [parceiroSelecionado, setParceiroSelecionado] = useState(null);
+  const [motoristaSelecionado, setMotoristaSelecionado] = useState(null);
   const [arquivo, setArquivo] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [historico, setHistorico] = useState([]);
@@ -199,7 +199,7 @@ const ImportarDados = ({ user, onLogout }) => {
                     <SelectValue placeholder="Selecione um parceiro" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="none">Nenhum</SelectItem>
                     {parceiros.map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.nome_empresa || p.email}
@@ -219,7 +219,7 @@ const ImportarDados = ({ user, onLogout }) => {
                     <SelectValue placeholder="Selecione um motorista" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Nenhum</SelectItem>
+                    <SelectItem value="none">Nenhum</SelectItem>
                     {motoristas.map((m) => (
                       <SelectItem key={m.id} value={m.id}>
                         {m.nome || m.email}
