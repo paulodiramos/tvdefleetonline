@@ -15278,6 +15278,175 @@ async def forcar_sincronizacao(
         raise HTTPException(status_code=500, detail=str(e))
 
 # ==================================================
+# CSV IMPORT - Upload Manual de Ficheiros
+# ==================================================
+
+@app.post("/api/import-csv/{plataforma}")
+async def import_csv(
+    plataforma: str,
+    file: UploadFile = File(...),
+    parceiro_id: Optional[str] = Form(None),
+    motorista_id: Optional[str] = Form(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Importar ficheiro CSV de qualquer plataforma
+    
+    Plataformas suportadas: bolt, uber, via_verde, gps, combustivel
+    """
+    try:
+        logger.info(f"📥 Importando CSV {plataforma} - Ficheiro: {file.filename}")
+        
+        # Validar plataforma
+        plataformas_validas = ['bolt', 'uber', 'via_verde', 'gps', 'combustivel']
+        if plataforma.lower() not in plataformas_validas:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Plataforma inválida. Use: {', '.join(plataformas_validas)}"
+            )
+        
+        # Ler conteúdo do ficheiro
+        file_content = await file.read()
+        
+        if len(file_content) == 0:
+            raise HTTPException(status_code=400, detail="Ficheiro vazio")
+        
+        # Obter parser adequado
+        from utils.csv_parsers import get_parser
+        parser = get_parser(plataforma, file_content)
+        
+        # Fazer parse
+        sucesso, registos, mensagem = parser.parse()
+        
+        if not sucesso:
+            logger.error(f"❌ Erro no parse: {mensagem}")
+            return {
+                "success": False,
+                "message": mensagem,
+                "registos_importados": 0
+            }
+        
+        # Guardar registos na base de dados
+        registos_salvos = 0
+        collection_name = f"dados_{plataforma}"
+        
+        for registo in registos:
+            try:
+                # Adicionar metadata
+                registo['id'] = str(uuid.uuid4())
+                registo['parceiro_id'] = parceiro_id
+                registo['motorista_id'] = motorista_id
+                registo['importado_por'] = current_user['id']
+                registo['data_importacao'] = datetime.now(timezone.utc).isoformat()
+                registo['ficheiro_origem'] = file.filename
+                
+                # Inserir na coleção apropriada
+                await db[collection_name].insert_one(registo)
+                registos_salvos += 1
+                
+            except Exception as e:
+                logger.error(f"Erro ao salvar registo: {e}")
+                continue
+        
+        # Registar log de importação
+        log = {
+            "id": str(uuid.uuid4()),
+            "plataforma": plataforma,
+            "ficheiro": file.filename,
+            "registos_processados": len(registos),
+            "registos_salvos": registos_salvos,
+            "parceiro_id": parceiro_id,
+            "motorista_id": motorista_id,
+            "usuario_id": current_user['id'],
+            "data": datetime.now(timezone.utc).isoformat()
+        }
+        await db.logs_importacao_csv.insert_one(log)
+        
+        logger.info(f"✅ {registos_salvos} registos importados com sucesso")
+        
+        return {
+            "success": True,
+            "message": f"{registos_salvos} registos importados com sucesso!",
+            "registos_importados": registos_salvos,
+            "registos_processados": len(registos)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao importar CSV: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/import-csv/history")
+async def get_import_history(
+    plataforma: Optional[str] = None,
+    parceiro_id: Optional[str] = None,
+    limit: int = 50,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter histórico de importações"""
+    try:
+        query = {}
+        
+        if plataforma:
+            query['plataforma'] = plataforma
+        
+        if parceiro_id:
+            query['parceiro_id'] = parceiro_id
+        
+        # Permitir que users vejam apenas suas importações
+        if current_user['role'] not in ['admin', 'gestao']:
+            query['usuario_id'] = current_user['id']
+        
+        logs = await db.logs_importacao_csv.find(
+            query,
+            {"_id": 0}
+        ).sort('data', -1).limit(limit).to_list(length=None)
+        
+        return logs
+        
+    except Exception as e:
+        logger.error(f"Erro ao obter histórico: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/dados/{plataforma}")
+async def get_dados_plataforma(
+    plataforma: str,
+    parceiro_id: Optional[str] = None,
+    motorista_id: Optional[str] = None,
+    data_inicio: Optional[str] = None,
+    data_fim: Optional[str] = None,
+    limit: int = 100,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter dados importados de uma plataforma"""
+    try:
+        collection_name = f"dados_{plataforma}"
+        
+        query = {}
+        if parceiro_id:
+            query['parceiro_id'] = parceiro_id
+        if motorista_id:
+            query['motorista_id'] = motorista_id
+        if data_inicio:
+            query['data'] = {"$gte": data_inicio}
+        if data_fim:
+            if 'data' not in query:
+                query['data'] = {}
+            query['data']['$lte'] = data_fim
+        
+        dados = await db[collection_name].find(
+            query,
+            {"_id": 0}
+        ).sort('data', -1).limit(limit).to_list(length=None)
+        
+        return dados
+        
+    except Exception as e:
+        logger.error(f"Erro ao obter dados: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ==================================================
 # BOLT INTEGRATION - Sincronização Real
 # ==================================================
 
