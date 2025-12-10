@@ -1781,6 +1781,94 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                 </CardContent>
               </Card>
 
+              {/* Certidão Permanente */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center space-x-2">
+                    <FileText className="w-5 h-5" />
+                    <span>Certidão Permanente</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="codigo_certidao_permanente">Código Certidão Permanente</Label>
+                      <Input
+                        id="codigo_certidao_permanente"
+                        value={profileParceiro.codigo_certidao_permanente || ''}
+                        onChange={(e) => setProfileParceiro({...profileParceiro, codigo_certidao_permanente: e.target.value})}
+                        placeholder="Insira o código"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="validade_certidao_permanente">Validade</Label>
+                      <Input
+                        id="validade_certidao_permanente"
+                        type="date"
+                        value={profileParceiro.validade_certidao_permanente || ''}
+                        onChange={(e) => setProfileParceiro({...profileParceiro, validade_certidao_permanente: e.target.value})}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Upload/Download Section */}
+                  <div className="border-t pt-4">
+                    <label className="text-sm text-slate-500 mb-2 block">Documento</label>
+                    <div className="flex items-center gap-2">
+                      {profileParceiro.certidao_permanente_file ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(`${API}/parceiros/${profileParceiro.id}/certidao-permanente`, '_blank')}
+                            className="flex items-center gap-2"
+                          >
+                            <Download className="w-4 h-4" />
+                            Download
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const input = document.createElement('input');
+                              input.type = 'file';
+                              input.accept = '.pdf,.jpg,.jpeg,.png';
+                              input.onchange = (e) => handleUploadCertidaoPermanente(e.target.files[0]);
+                              input.click();
+                            }}
+                          >
+                            Substituir
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const input = document.createElement('input');
+                            input.type = 'file';
+                            input.accept = '.pdf,.jpg,.jpeg,.png';
+                            input.onchange = (e) => handleUploadCertidaoPermanente(e.target.files[0]);
+                            input.click();
+                          }}
+                          className="flex items-center gap-2"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Upload Certidão
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={() => handleSaveCertidaoPermanente()}
+                    className="w-full"
+                  >
+                    Guardar Alterações
+                  </Button>
+                </CardContent>
+              </Card>
+
               {/* Motoristas */}
               <Card>
                 <CardHeader>
