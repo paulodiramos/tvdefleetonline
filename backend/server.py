@@ -13287,6 +13287,54 @@ async def get_documentos_user(user_id: str, current_user: Dict = Depends(get_cur
         logger.error(f"Erro ao listar documentos do utilizador: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@api_router.get("/users/{user_id}/complete-details")
+async def get_user_complete_details(user_id: str, current_user: Dict = Depends(get_current_user)):
+    """Obter TODOS os dados de um utilizador (user + parceiro/motorista + documentos)"""
+    # Apenas admin pode ver
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas Admin")
+    
+    try:
+        # Buscar utilizador
+        user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
+        if not user:
+            raise HTTPException(status_code=404, detail="Utilizador não encontrado")
+        
+        # Buscar dados de parceiro se aplicável
+        parceiro_data = None
+        if user.get("role") == "parceiro":
+            parceiro_data = await db.parceiros.find_one(
+                {"email": user.get("email")},
+                {"_id": 0}
+            )
+        
+        # Buscar dados de motorista se aplicável
+        motorista_data = None
+        if user.get("role") == "motorista":
+            motorista_data = await db.motoristas.find_one(
+                {"email": user.get("email")},
+                {"_id": 0}
+            )
+        
+        # Buscar documentos
+        documentos = await db.documentos_validacao.find(
+            {"user_id": user_id},
+            {"_id": 0}
+        ).to_list(length=None)
+        
+        return {
+            "user": user,
+            "parceiro_data": parceiro_data,
+            "motorista_data": motorista_data,
+            "documentos": documentos
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao buscar detalhes completos: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 @api_router.get("/documentos/{documento_id}/download")
 async def download_documento(documento_id: str, current_user: Dict = Depends(get_current_user)):
     """Download de documento (Admin, Parceiro ou Gestor)"""
