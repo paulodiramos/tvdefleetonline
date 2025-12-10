@@ -31,6 +31,9 @@ const Parceiros = ({ user, onLogout }) => {
   const [templateToDelete, setTemplateToDelete] = useState(null);
   const [showPreviewDialog, setShowPreviewDialog] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState(null);
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importType, setImportType] = useState('motoristas'); // 'motoristas' ou 'veiculos'
+  const [importLoading, setImportLoading] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingParceiro, setEditingParceiro] = useState(null);
   const [showPlanosDialog, setShowPlanosDialog] = useState(false);
