@@ -513,57 +513,53 @@ class ViaVerdeScraper(BaseScraper):
             logger.info(f"📍 URL atual após login: {current_url}")
             await self.page.screenshot(path='/tmp/viaverde_dashboard.png')
             
-            # IMPORTANTE: Procurar por diferentes variações de links para extratos
+            # CRÍTICO: Procurar pelo link específico que aparece após login
+            # Este link mantém a sessão ativa
             extratos_links = [
+                'a:has-text("Consultar extratos e movimentos")',  # Texto exato que aparece após login
                 'a:has-text("Extratos e Movimentos")',
                 'a:has-text("Consultar extratos")',
-                'a:has-text("Extratos")',
-                'a:has-text("Movimentos")',
-                'a:has-text("Portagens")',
+                '[href*="ExtratoseMovimentos"]',  # Href direto
                 '[href*="extrato"]',
-                '[href*="movimento"]',
-                '[href*="portagen"]'
+                '[href*="movimento"]'
             ]
             
-            logger.info("🔍 Procurando links para extratos...")
+            logger.info("🔍 Procurando link 'Consultar extratos e movimentos' após login...")
             navegado = False
+            
+            # Aguardar um pouco para menu carregar
+            await asyncio.sleep(3)
+            
             for link in extratos_links:
                 try:
-                    if await self.page.is_visible(link, timeout=2000):
+                    locator = self.page.locator(link)
+                    if await locator.is_visible(timeout=3000):
                         logger.info(f"✅ Encontrado link: {link}")
-                        await self.page.click(link)
-                        await asyncio.sleep(5)
-                        logger.info(f"✅ Navegado para Extratos")
+                        # Tirar screenshot antes de clicar
+                        await self.page.screenshot(path='/tmp/viaverde_before_click_extratos.png')
+                        
+                        await locator.click()
+                        await asyncio.sleep(6)  # Aguardar página carregar
+                        
+                        logger.info(f"✅ Clicado em link de extratos")
+                        await self.page.screenshot(path='/tmp/viaverde_after_click_extratos.png')
                         navegado = True
                         break
-                except:
+                except Exception as e:
+                    logger.debug(f"Link {link} não encontrado: {e}")
                     continue
             
             if not navegado:
-                logger.warning("⚠️ Link de Extratos não encontrado na página, tentando URL direto")
-                try:
-                    # Tentar URL correto para particulares (conta pessoal)
-                    logger.info("🔗 Navegando para URL de extratos (Particulares): /particulares/minha-via-verde/ExtratoseMovimentos")
-                    
-                    # Usar goto com timeout explícito
-                    await self.page.goto(
-                        'https://www.viaverde.pt/particulares/minha-via-verde/ExtratoseMovimentos',
-                        wait_until="domcontentloaded",  # Não aguardar networkidle para evitar timeouts longos
-                        timeout=30000  # Timeout de 30s
-                    )
-                    logger.info("✅ Página carregada, aguardando conteúdo dinâmico...")
-                    await asyncio.sleep(5)
-                    navegado = True
-                    logger.info("✅ Pronto para extrair dados")
-                except Exception as e:
-                    logger.error(f"❌ Erro ao navegar para extratos: {e}")
-                    await self.page.screenshot(path='/tmp/viaverde_nav_error.png')
-                    return {
-                        "success": False,
-                        "platform": "via_verde",
-                        "message": f"Erro ao aceder à página de extratos: {str(e)}",
-                        "data": []
-                    }
+                logger.error("❌ Link de Extratos não encontrado após login")
+                await self.page.screenshot(path='/tmp/viaverde_no_extratos_link.png')
+                
+                # Retornar mensagem clara
+                return {
+                    "success": False,
+                    "platform": "via_verde",
+                    "message": "Não foi possível encontrar o link para extratos após login. A conta pode não ter acesso a esta funcionalidade ou a estrutura do site mudou.",
+                    "data": []
+                }
             
             # Screenshot da página de extratos
             await asyncio.sleep(2)
