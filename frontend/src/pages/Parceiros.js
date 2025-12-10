@@ -423,7 +423,10 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
       // Atualizar a lista de parceiros
       fetchParceiros();
     } catch (error) {
-
+      console.error('Error saving certidão data:', error);
+      toast.error('Erro ao guardar dados da certidão permanente');
+    }
+  };
 
   const handleDownloadCSVExample = (tipo) => {
     window.open(`${API}/parceiros/csv-examples/${tipo}`, '_blank');
