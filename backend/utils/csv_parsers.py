@@ -10,6 +10,44 @@ import re
 
 logger = logging.getLogger(__name__)
 
+def extract_dates_from_filename(filename: str) -> Tuple[str, str, str]:
+    """
+    Extrair datas e nome da frota do nome do ficheiro
+    
+    Formato esperado: YYYYMMDD-YYYYMMDD-tipo-NOME_DA_FROTA.csv
+    Exemplo: 20251201-20251208-payments_driver-MACHADO_DE_SOUSA__SOUSA_LDA.csv
+    
+    Returns:
+        Tupla (data_inicio, data_fim, nome_frota)
+    """
+    try:
+        # Pattern para extrair datas YYYYMMDD-YYYYMMDD
+        date_pattern = r'(\d{8})-(\d{8})'
+        match = re.search(date_pattern, filename)
+        
+        if match:
+            data_inicio_str = match.group(1)
+            data_fim_str = match.group(2)
+            
+            # Converter para formato YYYY-MM-DD
+            data_inicio = f"{data_inicio_str[:4]}-{data_inicio_str[4:6]}-{data_inicio_str[6:8]}"
+            data_fim = f"{data_fim_str[:4]}-{data_fim_str[4:6]}-{data_fim_str[6:8]}"
+            
+            # Extrair nome da frota (após o último hífen antes da extensão)
+            frota_pattern = r'-([^-]+)\.\w+$'
+            frota_match = re.search(frota_pattern, filename)
+            nome_frota = frota_match.group(1).replace('_', ' ') if frota_match else ''
+            
+            logger.info(f"📅 Datas extraídas: {data_inicio} até {data_fim}, Frota: {nome_frota}")
+            return data_inicio, data_fim, nome_frota
+        else:
+            logger.warning("⚠️ Não foi possível extrair datas do nome do ficheiro")
+            return '', '', ''
+            
+    except Exception as e:
+        logger.warning(f"⚠️ Erro ao extrair datas do filename: {e}")
+        return '', '', ''
+
 class CSVParserBase:
     """Classe base para parsers de CSV"""
     
