@@ -9732,6 +9732,31 @@ async def gerar_pdf_contrato(
             clausulas_texto_final = clausulas_texto_final.replace("{VEICULO_MATRICULA}", veiculo.get('matricula', 'N/A'))
             clausulas_texto_final = clausulas_texto_final.replace("{VEICULO_ANO}", str(veiculo.get('ano', 'N/A')))
         
+        # Variáveis do contrato (datas e valores)
+        clausulas_texto_final = clausulas_texto_final.replace("{DATA_INICIO}", contrato.get('data_inicio', 'N/A'))
+        clausulas_texto_final = clausulas_texto_final.replace("{DATA_EMISSAO}", datetime.now().strftime("%d/%m/%Y"))
+        clausulas_texto_final = clausulas_texto_final.replace("{TIPO_CONTRATO}", contrato.get('tipo_contrato', 'N/A'))
+        clausulas_texto_final = clausulas_texto_final.replace("{VALOR_SEMANAL}", f"€{contrato.get('valor_aplicado', 0):.2f}")
+        clausulas_texto_final = clausulas_texto_final.replace("{COMISSAO}", f"{contrato.get('percentagem_motorista_aplicado', 0)}%")
+        clausulas_texto_final = clausulas_texto_final.replace("{CAUCAO_TOTAL}", f"€{contrato.get('valor_caucao_aplicado', 0):.2f}")
+        clausulas_texto_final = clausulas_texto_final.replace("{CAUCAO_PARCELAS}", str(contrato.get('numero_parcelas_caucao_aplicado', 'N/A')))
+        clausulas_texto_final = clausulas_texto_final.replace("{CAUCAO_TEXTO}", contrato.get('caucao_texto', 'N/A'))
+        
+        # Variáveis de época alta
+        clausulas_texto_final = clausulas_texto_final.replace("{DATA_INICIO_EPOCA_ALTA}", contrato.get('data_inicio_epoca_alta', 'N/A'))
+        clausulas_texto_final = clausulas_texto_final.replace("{DATA_FIM_EPOCA_ALTA}", contrato.get('data_fim_epoca_alta', 'N/A'))
+        clausulas_texto_final = clausulas_texto_final.replace("{EPOCA_ALTA_VALOR}", f"€{contrato.get('valor_epoca_alta_aplicado', 0):.2f}")
+        clausulas_texto_final = clausulas_texto_final.replace("{TEXTO_EPOCA_ALTA}", contrato.get('texto_epoca_alta', 'N/A'))
+        
+        # Variáveis de época baixa
+        clausulas_texto_final = clausulas_texto_final.replace("{DATA_INICIO_EPOCA_BAIXA}", contrato.get('data_inicio_epoca_baixa', 'N/A'))
+        clausulas_texto_final = clausulas_texto_final.replace("{DATA_FIM_EPOCA_BAIXA}", contrato.get('data_fim_epoca_baixa', 'N/A'))
+        clausulas_texto_final = clausulas_texto_final.replace("{EPOCA_BAIXA_VALOR}", f"€{contrato.get('valor_epoca_baixa_aplicado', 0):.2f}")
+        clausulas_texto_final = clausulas_texto_final.replace("{TEXTO_EPOCA_BAIXA}", contrato.get('texto_epoca_baixa', 'N/A'))
+        
+        # Outras variáveis
+        clausulas_texto_final = clausulas_texto_final.replace("{CONDICOES_VEICULO}", contrato.get('condicoes_veiculo', 'N/A'))
+        
         c.setFont("Helvetica", 9)
         # Split text into lines
         clausulas_lines = clausulas_texto_final.split('\n')
