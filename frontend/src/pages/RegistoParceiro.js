@@ -21,6 +21,7 @@ const RegistoParceiro = () => {
     nif: '',
     morada: '',
     codigo_postal: '',
+    localidade: '',
     codigo_certidao_comercial: '',
     responsavel_nome: '',
     responsavel_contacto: '',
