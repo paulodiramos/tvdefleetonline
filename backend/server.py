@@ -6084,6 +6084,246 @@ async def get_parceiros(current_user: Dict = Depends(get_current_user)):
     return parceiros
 
 
+@api_router.get("/parceiros/csv-examples/{tipo}")
+async def download_csv_example(tipo: str):
+    """Download CSV example file for motoristas or veiculos"""
+    if tipo not in ["motoristas", "veiculos"]:
+        raise HTTPException(status_code=400, detail="Tipo inválido. Use 'motoristas' ou 'veiculos'")
+    
+    file_path = ROOT_DIR / "templates" / "csv_examples" / f"exemplo_{tipo}.csv"
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Ficheiro de exemplo não encontrado")
+    
+    return FileResponse(
+        path=file_path,
+        media_type="text/csv",
+        filename=f"exemplo_{tipo}.csv"
+    )
+
+@api_router.post("/parceiros/{parceiro_id}/importar-motoristas")
+async def importar_motoristas_csv(
+    parceiro_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Import motoristas from CSV file"""
+    # Check permissions
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        if current_user["role"] == "parceiro" and current_user["id"] != parceiro_id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verify parceiro exists
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro not found")
+    
+    try:
+        # Read CSV file
+        content = await file.read()
+        decoded = content.decode('utf-8-sig')  # Handle BOM
+        csv_reader = csv.DictReader(io.StringIO(decoded))
+        
+        motoristas_criados = 0
+        erros = []
+        
+        for idx, row in enumerate(csv_reader, start=2):  # Start at 2 (header is line 1)
+            try:
+                # Validate required fields
+                if not row.get('Nome') or not row.get('Email'):
+                    erros.append(f"Linha {idx}: Nome e Email são obrigatórios")
+                    continue
+                
+                # Check if user already exists
+                existing_user = await db.users.find_one({"email": row['Email']})
+                if existing_user:
+                    erros.append(f"Linha {idx}: Email {row['Email']} já existe")
+                    continue
+                
+                # Generate user ID
+                user_id = str(uuid.uuid4())
+                
+                # Create user document
+                user_doc = {
+                    "id": user_id,
+                    "email": row['Email'],
+                    "name": row['Nome'],
+                    "role": UserRole.MOTORISTA,
+                    "password": hash_password(row.get('Telefone', 'password123').replace(" ", "")[-9:]),  # Use last 9 digits of phone as password
+                    "phone": row.get('Telefone', ''),
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "approved": True  # Auto-approve imported motoristas
+                }
+                await db.users.insert_one(user_doc)
+                
+                # Create motorista document
+                motorista_doc = {
+                    "id": user_id,
+                    "email": row['Email'],
+                    "name": row['Nome'],
+                    "phone": row.get('Telefone', ''),
+                    "whatsapp": row.get('WhatsApp', row.get('Telefone', '')),
+                    "nacionalidade": row.get('Nacionalidade', 'Portuguesa'),
+                    
+                    # Uber data
+                    "telefone_uber": row.get('Telefone Uber', ''),
+                    "email_uber": row.get('Email Uber', ''),
+                    "uuid_motorista_uber": row.get('ID Uber', ''),
+                    
+                    # Bolt data
+                    "telefone_bolt": row.get('Telefone Bolt', ''),
+                    "email_bolt": row.get('Email Bolt', ''),
+                    "identificador_motorista_bolt": row.get('ID Bolt', ''),
+                    
+                    # Address
+                    "morada_completa": row.get('Morada', ''),
+                    "codigo_postal": row.get('Código Postal', ''),
+                    "localidade": row.get('Localidade', ''),
+                    
+                    # Documents
+                    "numero_cc": row.get('CC', ''),
+                    "nif": row.get('NIF', ''),
+                    "numero_seguranca_social": row.get('Seg Social', ''),
+                    "numero_cartao_utente": row.get('C Utente', ''),
+                    
+                    # TVDE License
+                    "licenca_tvde_numero": row.get('TVDE', ''),
+                    "licenca_tvde_validade": row.get('Validade TVDE', ''),
+                    
+                    # Driving License
+                    "carta_conducao_numero": row.get('Carta', ''),
+                    "data_emissao_carta": row.get('Desde Carta', ''),
+                    "carta_conducao_validade": row.get('Validade Carta', ''),
+                    
+                    # Banking
+                    "iban": row.get('IBAN', ''),
+                    
+                    # Emergency Contact
+                    "emergencia_nome": row.get('Contacto Emergência Nome', ''),
+                    "emergencia_telefone": row.get('Contacto Emergência Telefone', ''),
+                    "emergencia_morada": row.get('Contacto Emergência Morada', ''),
+                    "emergencia_codigo_postal": row.get('Contacto Emergência Código Postal', ''),
+                    
+                    # Assignment
+                    "parceiro_id": parceiro_id,
+                    "parceiro_atribuido": parceiro_id,
+                    "status_motorista": "ativo",
+                    "approved": True,
+                    "senha_provisoria": True,
+                    
+                    # Auto-generated
+                    "id_cartao_frota_combustivel": f"FROTA-{str(uuid.uuid4())[:8].upper()}",
+                    
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+                
+                await db.motoristas.insert_one(motorista_doc)
+                motoristas_criados += 1
+                
+            except Exception as e:
+                erros.append(f"Linha {idx}: {str(e)}")
+                logger.error(f"Error importing motorista at line {idx}: {e}")
+        
+        return {
+            "message": f"Importação concluída",
+            "motoristas_criados": motoristas_criados,
+            "erros": erros,
+            "total_linhas": idx - 1  # Subtract header
+        }
+        
+    except Exception as e:
+        logger.error(f"Error processing CSV: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao processar CSV: {str(e)}")
+
+@api_router.post("/parceiros/{parceiro_id}/importar-veiculos")
+async def importar_veiculos_csv(
+    parceiro_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Import veiculos from CSV file"""
+    # Check permissions
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        if current_user["role"] == "parceiro" and current_user["id"] != parceiro_id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verify parceiro exists
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro not found")
+    
+    try:
+        # Read CSV file
+        content = await file.read()
+        decoded = content.decode('utf-8-sig')  # Handle BOM
+        csv_reader = csv.DictReader(io.StringIO(decoded))
+        
+        veiculos_criados = 0
+        erros = []
+        
+        for idx, row in enumerate(csv_reader, start=2):  # Start at 2 (header is line 1)
+            try:
+                # Validate required fields
+                if not row.get('Marca') or not row.get('Matrícula'):
+                    erros.append(f"Linha {idx}: Marca e Matrícula são obrigatórias")
+                    continue
+                
+                # Check if vehicle already exists
+                existing_vehicle = await db.vehicles.find_one({"matricula": row['Matrícula']})
+                if existing_vehicle:
+                    erros.append(f"Linha {idx}: Matrícula {row['Matrícula']} já existe")
+                    continue
+                
+                # Parse dates
+                data_matricula = row.get('Data de Matrícula', '')
+                validade_matricula = row.get('Validade da Matrícula', '')
+                
+                # Create vehicle document
+                veiculo_doc = {
+                    "id": str(uuid.uuid4()),
+                    "marca": row['Marca'],
+                    "modelo": row.get('Modelo', ''),
+                    "versao": row.get('Versão', ''),
+                    "ano": row.get('Ano', ''),
+                    "matricula": row['Matrícula'],
+                    "data_matricula": data_matricula,
+                    "validade_matricula": validade_matricula,
+                    "cor": row.get('Cor', ''),
+                    "combustivel": row.get('Combustível', ''),
+                    "caixa": row.get('Caixa', ''),
+                    "lugares": row.get('Lugares', '5'),
+                    "km_atual": row.get('KM Atual', '').replace(' km', '').strip(),
+                    "status": row.get('Status', 'disponivel').lower().replace('í', 'i').replace('á', 'a'),
+                    
+                    # Assignment
+                    "parceiro_id": parceiro_id,
+                    "motorista_id": None,
+                    
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+                
+                await db.vehicles.insert_one(veiculo_doc)
+                veiculos_criados += 1
+                
+            except Exception as e:
+                erros.append(f"Linha {idx}: {str(e)}")
+                logger.error(f"Error importing veiculo at line {idx}: {e}")
+        
+        return {
+            "message": f"Importação concluída",
+            "veiculos_criados": veiculos_criados,
+            "erros": erros,
+            "total_linhas": idx - 1  # Subtract header
+        }
+        
+    except Exception as e:
+        logger.error(f"Error processing CSV: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao processar CSV: {str(e)}")
+
+
+
 @api_router.get("/parceiros/{parceiro_id}/estatisticas")
 async def get_parceiro_estatisticas(
     parceiro_id: str,
