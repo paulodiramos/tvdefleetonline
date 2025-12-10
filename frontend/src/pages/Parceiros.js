@@ -2438,11 +2438,19 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
 
       {/* Import CSV Modal (Sempre no DOM) */}
       <div 
+        key={`import-modal-${importType}`}
         className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 transition-opacity duration-200 ${
           showImportDialog ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setShowImportDialog(false)}
-        style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+        style={{ 
+          position: 'fixed', 
+          top: 0, 
+          left: 0, 
+          right: 0, 
+          bottom: 0,
+          display: showImportDialog ? 'flex' : 'none'
+        }}
       >
         <div 
           className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 transform transition-transform duration-200"
