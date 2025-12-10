@@ -35,6 +35,7 @@ const GestaoCredenciais = ({ user, onLogout }) => {
   const [editando, setEditando] = useState(null);
   const [testando, setTestando] = useState({});
   const [senhasVisiveis, setSenhasVisiveis] = useState({});
+  const [parceiroFiltro, setParceiroFiltro] = useState(null);
   
   // Form state
   const [formData, setFormData] = useState({
