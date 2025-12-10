@@ -540,17 +540,23 @@ class ViaVerdeScraper(BaseScraper):
                     continue
             
             if not navegado:
-                logger.warning("⚠️ Link de Extratos não encontrado na página")
-                logger.info("📸 Tirando screenshot da página atual para análise...")
-                await self.page.screenshot(path='/tmp/viaverde_no_extratos_link.png')
-                
-                # Retornar mensagem informativa em vez de erro
-                return {
-                    "success": False,
-                    "platform": "via_verde",
-                    "message": "Não foi possível encontrar a página de extratos. Por favor, verifique se a conta tem acesso a esta funcionalidade.",
-                    "data": []
-                }
+                logger.warning("⚠️ Link de Extratos não encontrado na página, tentando URL direto")
+                try:
+                    # Tentar URL correto para empresas
+                    logger.info("🔗 Navegando para URL de extratos: /empresas/minha-via-verde/extratos-movimentos")
+                    await self.page.goto('https://www.viaverde.pt/empresas/minha-via-verde/extratos-movimentos', wait_until="networkidle")
+                    await asyncio.sleep(5)
+                    navegado = True
+                    logger.info("✅ Navegado para página de extratos via URL direto")
+                except Exception as e:
+                    logger.error(f"❌ Erro ao navegar para extratos: {e}")
+                    await self.page.screenshot(path='/tmp/viaverde_no_extratos_link.png')
+                    return {
+                        "success": False,
+                        "platform": "via_verde",
+                        "message": "Não foi possível aceder à página de extratos.",
+                        "data": []
+                    }
             
             # Screenshot da página de extratos
             await asyncio.sleep(2)
