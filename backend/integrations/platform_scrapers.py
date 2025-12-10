@@ -198,17 +198,17 @@ class ViaVerdeScraper(BaseScraper):
         self.platform_name = "Via Verde"
         self.login_url = "https://www.viaverde.pt"
     
-    async def login(self, email: str, password: str) -> bool:
+    async def login(self, email: str, password: str, account_type: str = "empresas") -> bool:
         try:
-            logger.info(f"🔑 {self.platform_name}: Login com {email}")
+            logger.info(f"🔑 {self.platform_name}: Login com {email} (área: {account_type})")
             
-            # Navegar para a página principal
-            await self.page.goto(self.login_url, wait_until="networkidle")
+            # Navegar diretamente para a área de login de Empresas
+            login_url = f'https://www.viaverde.pt/{account_type}/'
+            logger.info(f"🔗 Navegando para: {login_url}")
+            await self.page.goto(login_url, wait_until='domcontentloaded')
             await asyncio.sleep(3)
-            
-            # Screenshot da página inicial
             await self.page.screenshot(path='/tmp/viaverde_01_home.png')
-            logger.info("📸 Screenshot 1: Home page")
+            logger.info("📸 Screenshot 1: Página de empresas")
             
             # IMPORTANTE: Procurar e clicar no botão "Login" que abre o modal
             logger.info("🔍 Procurando botão de login que abre modal...")
