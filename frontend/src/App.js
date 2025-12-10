@@ -571,6 +571,16 @@ function App() {
             }
           />
           <Route
+            path="/importar-dados"
+            element={
+              user ? (
+                <ImportarDados user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/pagamentos-parceiro"
             element={
               user ? <PagamentosParceiro user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
