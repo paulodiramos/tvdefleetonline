@@ -15541,6 +15541,7 @@ async def sincronizar_credencial(
             
             # Extrair dados
             data = await scraper.extract_data()
+            logger.info(f"📊 Resultado da extração: {data}")
             
             if data.get('success'):
                 # Atualizar log
