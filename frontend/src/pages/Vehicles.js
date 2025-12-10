@@ -162,10 +162,16 @@ const Vehicles = ({ user, onLogout }) => {
         pet: false
       }
     });
-    setShowAddDialog(false);
-    toast.success('Veículo adicionado com sucesso');
-    fetchVehicles();
-  } catch (error) {
+    
+    try {
+      await axios.post(`${API}/vehicles`, newVehicle, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setShowAddDialog(false);
+      toast.success('Veículo adicionado com sucesso');
+      fetchVehicles();
+    } catch (error) {
     console.error('Error adding vehicle:', error);
     toast.error('Erro ao adicionar veículo');
   }
