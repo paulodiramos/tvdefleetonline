@@ -6009,11 +6009,30 @@ startxref
 if __name__ == "__main__":
     tester = TVDEFleetTester()
     
-    # Run unified plan system tests as requested in review
-    summary = tester.run_unified_plan_system_tests_only()
+    # Run partner approval bug fix tests as requested in review
+    print("🚨 STARTING PARTNER APPROVAL BUG FIX TESTING")
+    print("=" * 80)
+    print("Testing bug fix: Partner approval flow database updates")
+    print("Context: When approving user with role 'parceiro', both 'users' and 'parceiros' collections must be updated")
+    print("=" * 80)
+    
+    # Authenticate admin user
+    print("\n🔐 AUTHENTICATING ADMIN USER")
+    print("-" * 40)
+    tester.authenticate_user("admin")
+    tester.authenticate_user("parceiro")  # Also authenticate parceiro for some tests
+    
+    # Run Partner Approval Bug Fix Tests
+    print("\n🚨 PARTNER APPROVAL BUG FIX TESTS")
+    print("=" * 50)
+    tester.test_partner_approval_bug_fix()
+    
+    # Print summary
+    tester.print_summary()
+    summary = tester.get_test_summary()
     
     if summary["failed"] == 0:
-        print("🎉 All unified plan system tests are working correctly!")
+        print("🎉 All partner approval bug fix tests are working correctly!")
         exit(0)
     else:
         print(f"💥 {summary['failed']} out of {summary['total']} tests are failing!")
