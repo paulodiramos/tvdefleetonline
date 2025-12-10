@@ -57,11 +57,14 @@ const GestaoCredenciais = ({ user, onLogout }) => {
   ];
 
   useEffect(() => {
-    fetchCredenciais();
     if (user.role === 'admin' || user.role === 'gestao') {
       fetchParceiros();
     }
   }, []);
+
+  useEffect(() => {
+    fetchCredenciais();
+  }, [parceiroFiltro]);
 
   const fetchParceiros = async () => {
     try {
