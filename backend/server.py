@@ -15450,10 +15450,21 @@ async def testar_credencial(
 ):
     """Testar conexão com credencial"""
     try:
+        logger.info(f"🔍 Buscando credencial com ID: {cred_id}")
+        
+        # Debug: listar todas as credenciais
+        all_creds = await db.credenciais_plataforma.find({}, {"_id": 0, "id": 1, "plataforma": 1}).to_list(100)
+        logger.info(f"📊 Total de credenciais na DB: {len(all_creds)}")
+        for c in all_creds:
+            logger.info(f"  - ID: {c.get('id')}, Plataforma: {c.get('plataforma')}")
+        
         # Buscar credencial
         credencial = await db.credenciais_plataforma.find_one({"id": cred_id}, {"_id": 0})
         if not credencial:
+            logger.error(f"❌ Credencial com ID {cred_id} não encontrada")
             raise HTTPException(status_code=404, detail="Credencial não encontrada")
+        
+        logger.info(f"✅ Credencial encontrada: {credencial.get('plataforma')} - {credencial.get('email')}")
         
         # Testar login
         from integrations.platform_scrapers import get_scraper
