@@ -244,32 +244,39 @@ class ViaVerdeScraper(BaseScraper):
             await self.page.screenshot(path='/tmp/viaverde_02_after_click.png')
             logger.info("📸 Screenshot 2: Após clicar em login")
             
-            # Aguardar modal aparecer
-            logger.info("⏳ Aguardando modal aparecer...")
-            await asyncio.sleep(3)
+            # Aguardar modal aparecer - CRÍTICO: Dar tempo para animação completar
+            logger.info("⏳ Aguardando modal aparecer e estar interativo...")
+            await asyncio.sleep(4)
             
             # Verificar se há iframe
             frames = self.page.frames
             logger.info(f"🔍 Encontrados {len(frames)} frames na página")
             
-            # Tentar encontrar modal/dialog
+            # Tentar encontrar modal/dialog e aguardar estar visível
             modal_selectors = [
                 '[role="dialog"]',
                 '.modal',
                 '#modal-login',
                 '[aria-modal="true"]',
-                '.popup'
+                '.popup',
+                'div:has-text("A Minha Via Verde")'
             ]
             
             modal_found = False
             for selector in modal_selectors:
-                if await self.page.is_visible(selector, timeout=2000):
-                    logger.info(f"✅ Modal encontrado: {selector}")
+                try:
+                    await self.page.wait_for_selector(selector, timeout=5000, state='visible')
                     modal_found = True
+                    logger.info(f"✅ Modal encontrado e visível: {selector}")
                     break
+                except:
+                    continue
+            
+            # Aguardar mais um pouco para garantir que campos estão interativos
+            await asyncio.sleep(2)
             
             await self.page.screenshot(path='/tmp/viaverde_03_modal_search.png')
-            logger.info("📸 Screenshot 3: Procura por modal")
+            logger.info("📸 Screenshot 3: Modal confirmado")
             
             # Seletores mais específicos baseados na análise da imagem
             email_selectors = [
