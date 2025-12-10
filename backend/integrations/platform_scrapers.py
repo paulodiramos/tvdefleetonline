@@ -297,10 +297,26 @@ class ViaVerdeScraper(BaseScraper):
                     # Aguardar elemento aparecer
                     await self.page.wait_for_selector(selector, timeout=3000)
                     if await self.page.is_visible(selector):
-                        await self.page.fill(selector, email)
-                        logger.info(f"✅ Email preenchido com: {selector}")
-                        email_filled = True
-                        break
+                        # Clicar para dar foco
+                        await self.page.click(selector)
+                        await asyncio.sleep(0.5)
+                        
+                        # Limpar campo
+                        await self.page.fill(selector, '')
+                        await asyncio.sleep(0.3)
+                        
+                        # Digitar email
+                        await self.page.type(selector, email, delay=50)
+                        await asyncio.sleep(0.5)
+                        
+                        # Verificar preenchimento
+                        filled_value = await self.page.evaluate(f'document.querySelector("{selector}").value')
+                        if filled_value and '@' in filled_value:
+                            logger.info(f"✅ Email preenchido com: {selector} ({filled_value})")
+                            email_filled = True
+                            break
+                        else:
+                            logger.warning(f"⚠️ Email não preenchido corretamente com {selector}")
                 except Exception as e:
                     logger.debug(f"Tentativa {selector}: {e}")
                     continue
