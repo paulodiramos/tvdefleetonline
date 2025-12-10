@@ -48,6 +48,9 @@ const Usuarios = ({ user, onLogout }) => {
   const [registeredUsers, setRegisteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [showFullProfileDialog, setShowFullProfileDialog] = useState(false);
+  const [fullProfileData, setFullProfileData] = useState(null);
+  const [loadingProfile, setLoadingProfile] = useState(false);
   const [selectedRole, setSelectedRole] = useState('');
   const [actionType, setActionType] = useState(''); // 'approve', 'delete', 'changeRole', 'resetPassword'
   const [showDialog, setShowDialog] = useState(false);
