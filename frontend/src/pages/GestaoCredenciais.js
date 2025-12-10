@@ -79,7 +79,13 @@ const GestaoCredenciais = ({ user, onLogout }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/credenciais-plataforma`, {
+      
+      let url = `${API}/credenciais-plataforma`;
+      if (parceiroFiltro && parceiroFiltro !== 'todos') {
+        url += `?parceiro_id=${parceiroFiltro}`;
+      }
+      
+      const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setCredenciais(response.data);
