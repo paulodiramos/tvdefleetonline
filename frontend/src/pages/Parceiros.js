@@ -371,6 +371,60 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
     }
   };
 
+
+  const handleUploadCertidaoPermanente = async (file) => {
+    if (!file) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await axios.post(
+        `${API}/parceiros/${profileParceiro.id}/certidao-permanente/upload`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      setProfileParceiro({
+        ...profileParceiro,
+        certidao_permanente_file: response.data.file_path
+      });
+      
+      toast.success('Certidão permanente carregada com sucesso');
+    } catch (error) {
+      console.error('Error uploading certidão:', error);
+      toast.error('Erro ao carregar certidão permanente');
+    }
+  };
+
+  const handleSaveCertidaoPermanente = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/parceiros/${profileParceiro.id}/certidao-permanente`,
+        {
+          codigo_certidao_permanente: profileParceiro.codigo_certidao_permanente,
+          validade_certidao_permanente: profileParceiro.validade_certidao_permanente
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success('Dados da certidão permanente atualizados com sucesso');
+      
+      // Atualizar a lista de parceiros
+      fetchParceiros();
+    } catch (error) {
+      console.error('Error saving certidão data:', error);
+      toast.error('Erro ao guardar dados da certidão permanente');
+    }
+  };
+
   const handleSolicitarPlano = async (parceiroId, planoId) => {
     try {
       const token = localStorage.getItem('token');
