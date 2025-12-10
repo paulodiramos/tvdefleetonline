@@ -6245,6 +6245,24 @@ async def get_parceiro(parceiro_id: str, current_user: Dict = Depends(get_curren
     if isinstance(parceiro.get("created_at"), str):
         parceiro["created_at"] = datetime.fromisoformat(parceiro["created_at"])
     
+    # Map fields for compatibility with both old and new structure
+    if "nome_empresa" not in parceiro and "nome" in parceiro:
+        parceiro["nome_empresa"] = parceiro["nome"]
+    if "contribuinte_empresa" not in parceiro and "nif" in parceiro:
+        parceiro["contribuinte_empresa"] = parceiro["nif"]
+    if "morada_completa" not in parceiro and "morada" in parceiro:
+        parceiro["morada_completa"] = parceiro["morada"]
+    if "nome_manager" not in parceiro and "responsavel_nome" in parceiro:
+        parceiro["nome_manager"] = parceiro["responsavel_nome"]
+    if "telemovel" not in parceiro and "responsavel_contacto" in parceiro:
+        parceiro["telemovel"] = parceiro["responsavel_contacto"]
+    
+    # Defaults for required fields
+    if "localidade" not in parceiro:
+        parceiro["localidade"] = "N/A"
+    if "validade_certidao_comercial" not in parceiro:
+        parceiro["validade_certidao_comercial"] = "2099-12-31"
+    
     return parceiro
 
 @api_router.put("/parceiros/{parceiro_id}")
