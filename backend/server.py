@@ -11606,76 +11606,77 @@ from apscheduler.triggers.cron import CronTrigger
 # Scheduler global
 scheduler = AsyncIOScheduler()
 
-@app.post("/api/credenciais-plataforma")
-async def salvar_credenciais_plataforma(
-    parceiro_id: str = Form(...),
-    plataforma: str = Form(...),
-    email: str = Form(...),
-    password: str = Form(...),
-    sincronizacao_automatica: bool = Form(False),
-    horario_sincronizacao: Optional[str] = Form(None),
-    frequencia_dias: int = Form(7),
-    credentials: HTTPAuthorizationCredentials = Depends(security)
-):
-    """Salva credenciais de uma plataforma para um parceiro específico"""
-    try:
-        user = await get_current_user(credentials)
-        if user['role'] not in ['admin', 'manager']:
-            raise HTTPException(status_code=403, detail="Acesso negado")
-        
-        # Encriptar password
-        password_encrypted = encrypt_password(password)
-        
-        # Verificar se já existe para este parceiro e plataforma
-        existing = await db.credenciais_plataforma.find_one({
-            'parceiro_id': parceiro_id,
-            'plataforma': plataforma
-        })
-        
-        if existing:
-            # Atualizar
-            update_data = {
-                'email': email,
-                'sincronizacao_automatica': sincronizacao_automatica,
-                'horario_sincronizacao': horario_sincronizacao,
-                'frequencia_dias': frequencia_dias,
-                'updated_at': datetime.now(timezone.utc)
-            }
-            # Só atualizar password se foi fornecida
-            if password:
-                update_data['password_encrypted'] = password_encrypted
-                
-            await db.credenciais_plataforma.update_one(
-                {'parceiro_id': parceiro_id, 'plataforma': plataforma},
-                {'$set': update_data}
-            )
-            cred_id = existing['id']
-        else:
-            # Criar novo
-            credencial = {
-                'id': str(uuid.uuid4()),
-                'parceiro_id': parceiro_id,
-                'plataforma': plataforma,
-                'email': email,
-                'password_encrypted': password_encrypted,
-                'ativo': True,
-                'sincronizacao_automatica': sincronizacao_automatica,
-                'horario_sincronizacao': horario_sincronizacao,
-                'frequencia_dias': frequencia_dias,
-                'created_at': datetime.now(timezone.utc),
-                'updated_at': datetime.now(timezone.utc)
-            }
-            await db.credenciais_plataforma.insert_one(credencial)
-            cred_id = credencial['id']
-        
-        # Se sincronização automática ativada, agendar job
-        if sincronizacao_automatica and horario_sincronizacao:
-            await agendar_sincronizacao(cred_id, horario_sincronizacao, frequencia_dias)
-        
-        return {'success': True, 'message': 'Credenciais salvas com sucesso', 'id': cred_id}
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# ENDPOINT ANTIGO POST - COMENTADO (duplicado, usar o novo em GESTÃO DE CREDENCIAIS)
+# @app.post("/api/credenciais-plataforma")
+# async def salvar_credenciais_plataforma(
+#     parceiro_id: str = Form(...),
+#     plataforma: str = Form(...),
+#     email: str = Form(...),
+#     password: str = Form(...),
+#     sincronizacao_automatica: bool = Form(False),
+#     horario_sincronizacao: Optional[str] = Form(None),
+#     frequencia_dias: int = Form(7),
+#     credentials: HTTPAuthorizationCredentials = Depends(security)
+# ):
+#     """Salva credenciais de uma plataforma para um parceiro específico"""
+#     try:
+#         user = await get_current_user(credentials)
+#         if user['role'] not in ['admin', 'manager']:
+#             raise HTTPException(status_code=403, detail="Acesso negado")
+#         
+#         # Encriptar password
+#         password_encrypted = encrypt_password(password)
+#         
+#         # Verificar se já existe para este parceiro e plataforma
+#         existing = await db.credenciais_plataforma.find_one({
+#             'parceiro_id': parceiro_id,
+#             'plataforma': plataforma
+#         })
+#         
+#         if existing:
+#             # Atualizar
+#             update_data = {
+#                 'email': email,
+#                 'sincronizacao_automatica': sincronizacao_automatica,
+#                 'horario_sincronizacao': horario_sincronizacao,
+#                 'frequencia_dias': frequencia_dias,
+#                 'updated_at': datetime.now(timezone.utc)
+#             }
+#             # Só atualizar password se foi fornecida
+#             if password:
+#                 update_data['password_encrypted'] = password_encrypted
+#                 
+#             await db.credenciais_plataforma.update_one(
+#                 {'parceiro_id': parceiro_id, 'plataforma': plataforma},
+#                 {'$set': update_data}
+#             )
+#             cred_id = existing['id']
+#         else:
+#             # Criar novo
+#             credencial = {
+#                 'id': str(uuid.uuid4()),
+#                 'parceiro_id': parceiro_id,
+#                 'plataforma': plataforma,
+#                 'email': email,
+#                 'password_encrypted': password_encrypted,
+#                 'ativo': True,
+#                 'sincronizacao_automatica': sincronizacao_automatica,
+#                 'horario_sincronizacao': horario_sincronizacao,
+#                 'frequencia_dias': frequencia_dias,
+#                 'created_at': datetime.now(timezone.utc),
+#                 'updated_at': datetime.now(timezone.utc)
+#             }
+#             await db.credenciais_plataforma.insert_one(credencial)
+#             cred_id = credencial['id']
+#         
+#         # Se sincronização automática ativada, agendar job
+#         if sincronizacao_automatica and horario_sincronizacao:
+#             await agendar_sincronizacao(cred_id, horario_sincronizacao, frequencia_dias)
+#         
+#         return {'success': True, 'message': 'Credenciais salvas com sucesso', 'id': cred_id}
+#         
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 
 # ENDPOINT ANTIGO - COMENTADO (duplicado, usar o novo em GESTÃO DE CREDENCIAIS)
 # @app.get("/api/credenciais-plataforma")
