@@ -2551,6 +2551,7 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
           </div>
         </div>
       </div>
+      )}
 
     </Layout>
   );
