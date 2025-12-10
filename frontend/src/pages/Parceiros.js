@@ -1297,7 +1297,7 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                 <div className="text-center py-8 text-slate-500">
                   <FileText className="w-12 h-12 mx-auto mb-3 text-slate-300" />
                   <p>Nenhum template de contrato criado ainda</p>
-                  <p className="text-sm mt-1">Clique em "Criar Template de Contrato" para começar</p>
+                  <p className="text-sm mt-1">Clique em &quot;Criar Template de Contrato&quot; para começar</p>
                 </div>
               )}
             </CardContent>
