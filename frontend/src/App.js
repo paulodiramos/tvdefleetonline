@@ -27,6 +27,7 @@ import RelatoriosSemanais from "@/pages/RelatoriosSemanaisNovo";
 import GestaoPagamentosRecibos from "@/pages/GestaoPagamentosRecibos";
 import ConfiguracaoSincronizacao from "@/pages/ConfiguracaoSincronizacao";
 import CredenciaisParceiros from "@/pages/CredenciaisParceiros";
+import ImportarDados from "@/pages/ImportarDados";
 import PagamentosParceiro from "@/pages/PagamentosParceiro";
 import ParceiroReports from "@/pages/ParceiroReports";
 import PerfilParceiro from "@/pages/PerfilParceiro";
