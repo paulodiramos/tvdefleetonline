@@ -28,6 +28,8 @@ const Vehicles = ({ user, onLogout }) => {
     combustivel: 'all',
     search: ''
   });
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
   const [newVehicle, setNewVehicle] = useState({
     marca: '',
     modelo: '',
