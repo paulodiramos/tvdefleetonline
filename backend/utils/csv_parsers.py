@@ -119,10 +119,10 @@ class BoltCSVParser(CSVParserBase):
 
 
 class UberCSVParser(CSVParserBase):
-    """Parser para ficheiros CSV da Uber"""
+    """Parser para ficheiros CSV da Uber (viagens e pagamentos)"""
     
     def parse(self) -> Tuple[bool, List[Dict], str]:
-        """Parse de ficheiro CSV da Uber"""
+        """Parse de ficheiro CSV da Uber - detecta automaticamente o tipo"""
         try:
             self.detect_encoding()
             decoded = self.file_content.decode(self.encoding)
@@ -131,6 +131,87 @@ class UberCSVParser(CSVParserBase):
             if ';' in decoded[:500]:
                 delimiter = ';'
             
+            # Detectar tipo de ficheiro baseado nos headers
+            first_line = decoded.split('\n')[0].lower()
+            
+            if 'uuid do motorista' in first_line or 'pago a si' in first_line:
+                logger.info("📄 Ficheiro detectado como: Uber Payments (Pagamentos de Motoristas)")
+                return self._parse_payments(decoded, delimiter)
+            else:
+                logger.info("📄 Ficheiro detectado como: Uber Trips (Viagens)")
+                return self._parse_trips(decoded, delimiter)
+                
+        except Exception as e:
+            logger.error(f"Erro ao fazer parse do CSV Uber: {e}")
+            return False, [], f"Erro: {str(e)}"
+    
+    def _parse_payments(self, decoded: str, delimiter: str) -> Tuple[bool, List[Dict], str]:
+        """Parse de ficheiro de pagamentos da Uber"""
+        try:
+            csv_reader = csv.DictReader(io.StringIO(decoded), delimiter=delimiter)
+            
+            records = []
+            for row in csv_reader:
+                try:
+                    # Nome completo do motorista
+                    nome_proprio = row.get('Nome próprio do motorista', '').strip()
+                    apelido = row.get('Apelido do motorista', '').strip()
+                    nome_completo = f"{nome_proprio} {apelido}".strip()
+                    
+                    record = {
+                        'uuid_motorista': row.get('UUID do motorista'),
+                        'nome_motorista': nome_completo,
+                        'nome_proprio': nome_proprio,
+                        'apelido': apelido,
+                        
+                        # Valores principais
+                        'pago_total': self._parse_money(row.get('Pago a si', '0')),
+                        'rendimentos_total': self._parse_money(row.get('Pago a si : Os seus rendimentos', '0')),
+                        
+                        # Detalhes de rendimentos
+                        'tarifa': self._parse_money(row.get('Pago a si : Os seus rendimentos : Tarifa', '0')),
+                        'impostos': self._parse_money(row.get('Pago a si : Os seus rendimentos : Impostos', '0')),
+                        'taxa_servico': self._parse_money(row.get('Pago a si:Os seus rendimentos:Taxa de serviço', '0')),
+                        'gratificacao': self._parse_money(row.get('Pago a si:Os seus rendimentos:Gratificação', '0')),
+                        
+                        # Detalhes da tarifa
+                        'tarifa_base': self._parse_money(row.get('Pago a si:Os seus rendimentos:Tarifa:Tarifa', '0')),
+                        'ajuste_tarifa': self._parse_money(row.get('Pago a si:Os seus rendimentos:Tarifa:Ajuste', '0')),
+                        'cancelamento': self._parse_money(row.get('Pago a si:Os seus rendimentos:Tarifa:Cancelamento', '0')),
+                        'ajuste_taxa_servico': self._parse_money(row.get('Pago a si:Os seus rendimentos:Tarifa:Ajuste da taxa de serviço', '0')),
+                        'uberx_priority': self._parse_money(row.get('Pago a si:Os seus rendimentos:Tarifa:UberX Priority', '0')),
+                        'imposto_tarifa': self._parse_money(row.get('Pago a si:Os seus rendimentos:Tarifa:Imposto sobre a tarifa', '0')),
+                        'tempo_espera_recolha': self._parse_money(row.get('Pago a si:Os seus rendimentos:Tarifa:Tempo de espera na recolha', '0')),
+                        
+                        # Saldo da viagem
+                        'dinheiro_recebido': self._parse_money(row.get('Pago a si : Saldo da viagem : Pagamentos : Dinheiro recebido', '0')),
+                        'reembolso_portagem': self._parse_money(row.get('Pago a si:Saldo da viagem:Reembolsos:Portagem', '0')),
+                        'imposto_saldo': self._parse_money(row.get('Pago a si:Saldo da viagem:Impostos:Imposto sobre a tarifa', '0')),
+                        'transferido_banco': self._parse_money(row.get('Pago a si:Saldo da viagem:Pagamentos:Transferido para uma conta bancária', '0')),
+                        
+                        'plataforma': 'uber',
+                        'tipo_ficheiro': 'pagamentos',
+                        'dados_completos': row
+                    }
+                    records.append(record)
+                    
+                except Exception as e:
+                    logger.warning(f"Erro ao processar linha de pagamento Uber: {e}")
+                    continue
+            
+            if len(records) == 0:
+                return False, [], "Nenhum registo válido encontrado no ficheiro"
+            
+            logger.info(f"✅ {len(records)} registos de pagamentos Uber processados")
+            return True, records, f"{len(records)} pagamentos de motoristas importados"
+            
+        except Exception as e:
+            logger.error(f"Erro ao processar pagamentos Uber: {e}")
+            return False, [], f"Erro ao processar pagamentos: {str(e)}"
+    
+    def _parse_trips(self, decoded: str, delimiter: str) -> Tuple[bool, List[Dict], str]:
+        """Parse de ficheiro de viagens da Uber"""
+        try:
             csv_reader = csv.DictReader(io.StringIO(decoded), delimiter=delimiter)
             
             records = []
@@ -147,25 +228,26 @@ class UberCSVParser(CSVParserBase):
                         'cidade': row.get('City') or row.get('Cidade'),
                         'tipo_servico': row.get('Product') or row.get('Serviço'),
                         'plataforma': 'uber',
+                        'tipo_ficheiro': 'viagens',
                         'dados_completos': row
                     }
                     records.append(record)
                 except Exception as e:
-                    logger.warning(f"Erro ao processar linha Uber: {e}")
+                    logger.warning(f"Erro ao processar linha de viagem Uber: {e}")
                     continue
             
             if len(records) == 0:
                 return False, [], "Nenhum registo válido encontrado no ficheiro"
             
-            logger.info(f"✅ {len(records)} registos Uber processados")
+            logger.info(f"✅ {len(records)} registos de viagens Uber processados")
             return True, records, f"{len(records)} viagens importadas"
             
         except Exception as e:
-            logger.error(f"Erro ao fazer parse do CSV Uber: {e}")
-            return False, [], f"Erro: {str(e)}"
+            logger.error(f"Erro ao processar viagens Uber: {e}")
+            return False, [], f"Erro ao processar viagens: {str(e)}"
     
     def _parse_money(self, value: str) -> float:
-        if not value:
+        if not value or value == '':
             return 0.0
         clean = re.sub(r'[€$£\s]', '', str(value))
         clean = clean.replace(',', '.')
@@ -175,7 +257,7 @@ class UberCSVParser(CSVParserBase):
             return 0.0
     
     def _parse_number(self, value: str) -> float:
-        if not value:
+        if not value or value == '':
             return 0.0
         clean = str(value).replace(',', '.')
         try:
