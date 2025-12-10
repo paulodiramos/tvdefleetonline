@@ -1,0 +1,4 @@
+Marca,Modelo,Versão,Ano,Matrícula,Data de Matrícula,Validade da Matrícula,Cor,Combustível,Caixa,Lugares,KM Atual,Status
+Toyota,Prius,Hybrid,2020,AB-12-CD,15/03/2020,15/03/2026,Branco,Híbrido,Automática,5,45000,Disponível
+Hyundai,Ioniq,Electric,2021,EF-34-GH,20/06/2021,20/06/2027,Cinza,Elétrico,Automática,5,32000,Disponível
+Nissan,Leaf,E-Plus,2022,IJ-56-KL,10/01/2022,10/01/2028,Azul,Elétrico,Automática,5,18000,Disponível
