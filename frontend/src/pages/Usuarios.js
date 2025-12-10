@@ -1217,6 +1217,12 @@ const Usuarios = ({ user, onLogout }) => {
                           : 'N/A'}
                       </p>
                     </div>
+                    {fullProfileData.parceiro_data.certidao_permanente && (
+                      <div>
+                        <span className="text-slate-600">Código Certidão Permanente:</span>
+                        <p className="font-medium">{fullProfileData.parceiro_data.certidao_permanente}</p>
+                      </div>
+                    )}
                     <div>
                       <span className="text-slate-600">Responsável:</span>
                       <p className="font-medium">{fullProfileData.parceiro_data.responsavel_nome || fullProfileData.parceiro_data.nome_manager || 'N/A'}</p>
