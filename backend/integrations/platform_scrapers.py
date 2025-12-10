@@ -548,12 +548,17 @@ class ViaVerdeScraper(BaseScraper):
             dados_extraidos = []
             
             try:
-                # Aguardar tabela carregar
-                await self.page.wait_for_selector('table', timeout=10000)
+                # Aguardar tabela carregar com timeout maior
+                logger.info("⏳ Aguardando tabela de extratos carregar...")
+                await self.page.wait_for_selector('table', timeout=30000)  # 30s
+                logger.info("✅ Tabela encontrada!")
                 
                 # Extrair linhas da tabela
                 rows = await self.page.query_selector_all('table tbody tr')
                 logger.info(f"📊 Encontradas {len(rows)} linhas na tabela")
+                
+                if len(rows) == 0:
+                    logger.warning("⚠️ Tabela encontrada mas está vazia")
                 
                 for row in rows:
                     try:
@@ -574,6 +579,8 @@ class ViaVerdeScraper(BaseScraper):
                                 "mes": mes.strip() if mes else "",
                                 "plataforma": "via_verde"
                             })
+                        else:
+                            logger.debug(f"⚠️ Linha ignorada: apenas {len(cells)} células")
                     except Exception as e:
                         logger.warning(f"⚠️ Erro ao processar linha: {e}")
                         continue
@@ -581,7 +588,9 @@ class ViaVerdeScraper(BaseScraper):
                 logger.info(f"✅ {len(dados_extraidos)} registos extraídos da tabela")
                 
             except Exception as e:
-                logger.warning(f"⚠️ Não foi possível extrair tabela: {e}")
+                logger.error(f"❌ Erro ao aguardar/extrair tabela: {e}")
+                logger.info("📸 Tirando screenshot para debug...")
+                await self.page.screenshot(path='/tmp/viaverde_table_error.png')
             
             # Se não conseguiu extrair da tabela, tentar baixar PDF
             if len(dados_extraidos) == 0:
