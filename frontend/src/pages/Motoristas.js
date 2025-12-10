@@ -749,7 +749,8 @@ const Motoristas = ({ user, onLogout }) => {
                 </form>
               </DialogContent>
             </Dialog>
-          )}
+            )}
+          </div>
         </div>
 
         {motoristas.length === 0 ? (
