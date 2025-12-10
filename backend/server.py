@@ -15278,6 +15278,240 @@ async def forcar_sincronizacao(
         raise HTTPException(status_code=500, detail=str(e))
 
 # ==================================================
+# BOLT INTEGRATION - Sincronização Real
+# ==================================================
+
+@app.post("/api/bolt/test-connection")
+async def test_bolt_connection(
+    request: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Testar conexão com Bolt Partner usando credenciais fornecidas
+    """
+    try:
+        if current_user["role"] not in ["admin", "gestao"]:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        email = request.get("email")
+        password = request.get("password")
+        
+        if not email or not password:
+            raise HTTPException(status_code=400, detail="Email e password são obrigatórios")
+        
+        logger.info(f"🧪 Testando conexão Bolt para: {email}")
+        
+        # Import do scraper
+        from integrations.bolt_scraper import test_bolt_connection
+        
+        # Testar conexão
+        result = await test_bolt_connection(email, password)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Erro ao testar conexão Bolt: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/bolt/sync-earnings")
+async def sync_bolt_earnings(
+    request: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Sincronizar ganhos da Bolt para um parceiro
+    """
+    try:
+        if current_user["role"] not in ["admin", "gestao"]:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        parceiro_id = request.get("parceiro_id")
+        email = request.get("email")
+        password = request.get("password")
+        
+        if not all([parceiro_id, email, password]):
+            raise HTTPException(status_code=400, detail="Dados incompletos")
+        
+        logger.info(f"🔄 Iniciando sincronização Bolt para parceiro: {parceiro_id}")
+        
+        # Buscar parceiro
+        parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+        if not parceiro:
+            raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+        
+        # Import do scraper
+        from integrations.bolt_scraper import BoltScraper
+        
+        # Criar log de sincronização
+        log_id = str(uuid.uuid4())
+        log = {
+            "id": log_id,
+            "parceiro_id": parceiro_id,
+            "plataforma": "bolt",
+            "tipo": "manual",
+            "status": "em_progresso",
+            "data_inicio": datetime.now(timezone.utc).isoformat(),
+            "usuario_id": current_user["id"]
+        }
+        await db.logs_sincronizacao_parceiro.insert_one(log)
+        
+        # Executar scraping
+        async with BoltScraper(headless=True) as scraper:
+            # Login
+            login_success = await scraper.login(email, password)
+            
+            if not login_success:
+                # Atualizar log
+                await db.logs_sincronizacao_parceiro.update_one(
+                    {"id": log_id},
+                    {"$set": {
+                        "status": "erro",
+                        "mensagem_erro": "Falha no login. Verifique as credenciais.",
+                        "data_fim": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                return {
+                    "success": False,
+                    "message": "Falha no login. Verifique as credenciais."
+                }
+            
+            # Navegar para earnings
+            await scraper.navigate_to_earnings()
+            
+            # Extrair dados
+            earnings_data = await scraper.extract_earnings_data()
+            
+            if earnings_data.get("success"):
+                # Guardar dados extraídos
+                ganho_bolt = {
+                    "id": str(uuid.uuid4()),
+                    "parceiro_id": parceiro_id,
+                    "plataforma": "bolt",
+                    "periodo_inicio": earnings_data.get("period_start"),
+                    "periodo_fim": earnings_data.get("period_end"),
+                    "valor_total": earnings_data.get("total_earnings", 0),
+                    "num_viagens": earnings_data.get("trips_count", 0),
+                    "data_extracao": earnings_data.get("extracted_at"),
+                    "dados_completos": earnings_data,
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.ganhos_bolt.insert_one(ganho_bolt)
+                
+                # Atualizar log
+                await db.logs_sincronizacao_parceiro.update_one(
+                    {"id": log_id},
+                    {"$set": {
+                        "status": "sucesso",
+                        "data_fim": datetime.now(timezone.utc).isoformat(),
+                        "registos_extraidos": 1,
+                        "valor_total": earnings_data.get("total_earnings", 0)
+                    }}
+                )
+                
+                # Atualizar configuração de sincronização
+                await db.configuracoes_sincronizacao.update_one(
+                    {"parceiro_id": parceiro_id},
+                    {"$set": {
+                        "ultima_sincronizacao": datetime.now(timezone.utc).isoformat(),
+                        "status": "sucesso"
+                    }},
+                    upsert=True
+                )
+                
+                return {
+                    "success": True,
+                    "message": f"Sincronização concluída! Ganhos: €{earnings_data.get('total_earnings', 0)}",
+                    "data": earnings_data
+                }
+            else:
+                # Erro na extração
+                await db.logs_sincronizacao_parceiro.update_one(
+                    {"id": log_id},
+                    {"$set": {
+                        "status": "erro",
+                        "mensagem_erro": earnings_data.get("error", "Erro desconhecido"),
+                        "data_fim": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                return {
+                    "success": False,
+                    "message": f"Erro ao extrair dados: {earnings_data.get('error')}"
+                }
+        
+    except Exception as e:
+        logger.error(f"Erro na sincronização Bolt: {e}")
+        
+        # Atualizar log
+        if 'log_id' in locals():
+            await db.logs_sincronizacao_parceiro.update_one(
+                {"id": log_id},
+                {"$set": {
+                    "status": "erro",
+                    "mensagem_erro": str(e),
+                    "data_fim": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+        
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/bolt/save-credentials")
+async def save_bolt_credentials(
+    request: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Guardar credenciais da Bolt para um parceiro
+    """
+    try:
+        if current_user["role"] not in ["admin", "gestao"]:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        parceiro_id = request.get("parceiro_id")
+        email = request.get("email")
+        password = request.get("password")
+        
+        if not all([parceiro_id, email, password]):
+            raise HTTPException(status_code=400, detail="Dados incompletos")
+        
+        # Verificar se parceiro existe
+        parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+        if not parceiro:
+            raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+        
+        # Guardar credenciais (encriptar password na produção)
+        cred = {
+            "parceiro_id": parceiro_id,
+            "plataforma": "bolt",
+            "email": email,
+            "password": password,  # ATENÇÃO: Na produção, encriptar!
+            "ativo": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Verificar se já existe
+        existing = await db.credenciais_bolt.find_one({
+            "parceiro_id": parceiro_id,
+            "plataforma": "bolt"
+        })
+        
+        if existing:
+            await db.credenciais_bolt.update_one(
+                {"parceiro_id": parceiro_id, "plataforma": "bolt"},
+                {"$set": cred}
+            )
+            message = "Credenciais atualizadas"
+        else:
+            await db.credenciais_bolt.insert_one(cred)
+            message = "Credenciais guardadas"
+        
+        return {"success": True, "message": message}
+        
+    except Exception as e:
+        logger.error(f"Erro ao guardar credenciais: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ==================================================
 # CREDENCIAIS PARCEIROS - Admin only
 # ==================================================
 
