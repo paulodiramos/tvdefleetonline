@@ -7,7 +7,7 @@ import requests
 import json
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://via-verde-sync.preview.emergentagent.com/api"
+BACKEND_URL = "https://fleet-master-35.preview.emergentagent.com/api"
 
 # Test credentials
 ADMIN_CREDS = {"email": "admin@tvdefleet.com", "password": "o72ocUHy"}

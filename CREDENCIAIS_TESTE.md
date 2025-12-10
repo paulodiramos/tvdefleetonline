@@ -58,7 +58,7 @@
 
 ### Login via Frontend
 ```
-1. Acesse: https://via-verde-sync.preview.emergentagent.com/login
+1. Acesse: https://fleet-master-35.preview.emergentagent.com/login
 2. Use qualquer credencial acima
 3. Navegue conforme as permissões do role
 ```
