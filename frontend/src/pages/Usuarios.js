@@ -110,6 +110,23 @@ const Usuarios = ({ user, onLogout }) => {
     }
   };
 
+  const fetchFullProfile = async (userId) => {
+    setLoadingProfile(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/users/${userId}/complete-details`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setFullProfileData(response.data);
+      setShowFullProfileDialog(true);
+    } catch (error) {
+      console.error('Error fetching full profile:', error);
+      toast.error('Erro ao carregar perfil completo');
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
+
   const handleOpenParceirosDialog = async (gestor) => {
     setSelectedGestor(gestor);
     
