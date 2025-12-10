@@ -158,7 +158,18 @@ const Vehicles = ({ user, onLogout }) => {
         comfort: false,
         executive: false,
         xl: false,
-
+        xxl: false,
+        pet: false
+      }
+    });
+    setShowAddDialog(false);
+    toast.success('Veículo adicionado com sucesso');
+    fetchVehicles();
+  } catch (error) {
+    console.error('Error adding vehicle:', error);
+    toast.error('Erro ao adicionar veículo');
+  }
+};
 
   const handleDownloadCSVExample = () => {
     window.open(`${API}/parceiros/csv-examples/veiculos`, '_blank');
