@@ -746,6 +746,85 @@ const Vehicles = ({ user, onLogout }) => {
           </>
         )}
       </div>
+      {/* Import CSV Modal */}
+      {showImportDialog && (
+      <div 
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50"
+        onClick={() => setShowImportDialog(false)}
+      >
+        <div 
+          className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="border-b p-6 pb-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <Upload className="w-5 h-5" />
+                Importar Veículos em Massa
+              </h2>
+              <button onClick={() => setShowImportDialog(false)} className="text-slate-400 hover:text-slate-600">
+                <XCircle className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          <div className="p-6 space-y-4">
+            <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="w-5 h-5 text-emerald-700 mt-0.5 flex-shrink-0" />
+                <div className="text-sm text-emerald-800">
+                  <p className="font-semibold mb-1">Antes de importar:</p>
+                  <ol className="list-decimal list-inside space-y-1 text-xs">
+                    <li>Descarregue o ficheiro de exemplo</li>
+                    <li>Preencha com os dados dos seus veículos</li>
+                    <li>Não altere os cabeçalhos das colunas</li>
+                    <li>Guarde como CSV (separado por vírgulas)</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
+            <Button variant="outline" onClick={handleDownloadCSVExample} className="w-full">
+              <Download className="w-4 h-4 mr-2" />
+              Descarregar Exemplo CSV
+            </Button>
+
+            <div className="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-emerald-400 transition-colors">
+              <input
+                type="file"
+                accept=".csv"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    handleImportCSV(file);
+                    e.target.value = '';
+                  }
+                }}
+                className="hidden"
+                id="csv-upload-vehicles"
+              />
+              <label htmlFor="csv-upload-vehicles" className="cursor-pointer flex flex-col items-center gap-2">
+                <Upload className="w-8 h-8 text-slate-400" />
+                <span className="text-sm text-slate-600 font-medium">Clique para selecionar o ficheiro CSV</span>
+                <span className="text-xs text-slate-500">Apenas ficheiros .csv são aceites</span>
+              </label>
+            </div>
+
+            {importLoading && (
+              <div className="flex items-center justify-center gap-2 p-4">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-emerald-600"></div>
+                <span className="text-sm text-slate-600">A importar...</span>
+              </div>
+            )}
+
+            <Button variant="outline" onClick={() => setShowImportDialog(false)} className="w-full" disabled={importLoading}>
+              Cancelar
+            </Button>
+          </div>
+        </div>
+      </div>
+      )}
+
     </Layout>
   );
 };
