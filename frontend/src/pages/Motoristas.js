@@ -218,7 +218,13 @@ const Motoristas = ({ user, onLogout }) => {
         carta_conducao_numero: '',
         carta_conducao_validade: '',
         licenca_tvde_numero: '',
-
+        licenca_tvde_validade: ''
+      });
+    } catch (error) {
+      console.error('Error adding motorista:', error);
+      toast.error('Erro ao adicionar motorista');
+    }
+  };
 
   const handleDownloadCSVExample = () => {
     window.open(`${API}/parceiros/csv-examples/motoristas`, '_blank');
