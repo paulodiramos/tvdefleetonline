@@ -507,40 +507,55 @@ class ViaVerdeScraper(BaseScraper):
         try:
             logger.info(f"📊 {self.platform_name}: Extraindo dados de portagens...")
             
-            # Aguardar página carregar
+            # Aguardar página carregar após login
             await asyncio.sleep(5)
+            current_url = self.page.url
+            logger.info(f"📍 URL atual após login: {current_url}")
             await self.page.screenshot(path='/tmp/viaverde_dashboard.png')
             
-            # Procurar por links "Extratos e Movimentos"
+            # IMPORTANTE: Procurar por diferentes variações de links para extratos
             extratos_links = [
                 'a:has-text("Extratos e Movimentos")',
+                'a:has-text("Consultar extratos")',
                 'a:has-text("Extratos")',
                 'a:has-text("Movimentos")',
+                'a:has-text("Portagens")',
                 '[href*="extrato"]',
-                '[href*="movimento"]'
+                '[href*="movimento"]',
+                '[href*="portagen"]'
             ]
             
+            logger.info("🔍 Procurando links para extratos...")
             navegado = False
             for link in extratos_links:
                 try:
                     if await self.page.is_visible(link, timeout=2000):
+                        logger.info(f"✅ Encontrado link: {link}")
                         await self.page.click(link)
-                        await asyncio.sleep(4)
-                        logger.info(f"✅ Navegado para Extratos e Movimentos")
+                        await asyncio.sleep(5)
+                        logger.info(f"✅ Navegado para Extratos")
                         navegado = True
                         break
                 except:
                     continue
             
             if not navegado:
-                logger.warning("⚠️ Link de Extratos não encontrado, tentando URL direta")
-                try:
-                    await self.page.goto('https://www.viaverde.pt/extratos-movimentos')
-                    await asyncio.sleep(3)
-                except:
-                    pass
+                logger.warning("⚠️ Link de Extratos não encontrado na página")
+                logger.info("📸 Tirando screenshot da página atual para análise...")
+                await self.page.screenshot(path='/tmp/viaverde_no_extratos_link.png')
+                
+                # Retornar mensagem informativa em vez de erro
+                return {
+                    "success": False,
+                    "platform": "via_verde",
+                    "message": "Não foi possível encontrar a página de extratos. Por favor, verifique se a conta tem acesso a esta funcionalidade.",
+                    "data": []
+                }
             
+            # Screenshot da página de extratos
+            await asyncio.sleep(2)
             await self.page.screenshot(path='/tmp/viaverde_extratos_page.png')
+            logger.info(f"📍 URL da página de extratos: {self.page.url}")
             
             # Tentar extrair dados da tabela HTML
             logger.info("📋 Tentando extrair dados da tabela...")
