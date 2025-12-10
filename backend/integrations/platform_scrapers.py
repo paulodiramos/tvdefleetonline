@@ -544,17 +544,24 @@ class ViaVerdeScraper(BaseScraper):
                 try:
                     # Tentar URL correto para particulares (conta pessoal)
                     logger.info("🔗 Navegando para URL de extratos (Particulares): /particulares/minha-via-verde/ExtratoseMovimentos")
-                    await self.page.goto('https://www.viaverde.pt/particulares/minha-via-verde/ExtratoseMovimentos', wait_until="networkidle")
+                    
+                    # Usar goto com timeout explícito
+                    await self.page.goto(
+                        'https://www.viaverde.pt/particulares/minha-via-verde/ExtratoseMovimentos',
+                        wait_until="domcontentloaded",  # Não aguardar networkidle para evitar timeouts longos
+                        timeout=30000  # Timeout de 30s
+                    )
+                    logger.info("✅ Página carregada, aguardando conteúdo dinâmico...")
                     await asyncio.sleep(5)
                     navegado = True
-                    logger.info("✅ Navegado para página de extratos via URL direto")
+                    logger.info("✅ Pronto para extrair dados")
                 except Exception as e:
                     logger.error(f"❌ Erro ao navegar para extratos: {e}")
-                    await self.page.screenshot(path='/tmp/viaverde_no_extratos_link.png')
+                    await self.page.screenshot(path='/tmp/viaverde_nav_error.png')
                     return {
                         "success": False,
                         "platform": "via_verde",
-                        "message": "Não foi possível aceder à página de extratos.",
+                        "message": f"Erro ao aceder à página de extratos: {str(e)}",
                         "data": []
                     }
             
