@@ -799,6 +799,20 @@ const Usuarios = ({ user, onLogout }) => {
               <div>
                 <h3 className="text-base font-semibold text-slate-800 mb-3">Ações Rápidas</h3>
                 <div className="grid grid-cols-2 gap-3">
+                  {/* Ver Perfil Completo */}
+                  <Button
+                    variant="outline"
+                    className="h-auto py-3 flex flex-col items-center space-y-1 border-blue-500 text-blue-600 hover:bg-blue-50"
+                    onClick={() => {
+                      setShowDetailsDialog(false);
+                      fetchFullProfile(viewingUser.id);
+                    }}
+                    disabled={loadingProfile}
+                  >
+                    <Eye className="w-5 h-5" />
+                    <span className="text-xs">{loadingProfile ? 'Carregando...' : 'Ver Perfil'}</span>
+                  </Button>
+
                   {/* Change Role */}
                   <Button
                     variant="outline"
