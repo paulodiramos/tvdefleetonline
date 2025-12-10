@@ -2230,7 +2230,7 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-slate-600">
-              Tem certeza que deseja deletar o template <strong>"{templateToDelete?.nome_template}"</strong>?
+              Tem certeza que deseja deletar o template <strong>&quot;{templateToDelete?.nome_template}&quot;</strong>?
             </p>
             <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
               <p className="text-sm text-yellow-800">
