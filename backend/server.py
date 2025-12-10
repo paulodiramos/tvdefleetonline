@@ -13231,8 +13231,26 @@ async def get_documentos_pendentes(current_user: Dict = Depends(get_current_user
                 # Buscar informações do utilizador
                 user = await db.users.find_one({"id": user_id}, {"_id": 0, "password": 0})
                 if user:
+                    # Se for parceiro, buscar dados adicionais
+                    parceiro_data = None
+                    if user.get("role") == "parceiro":
+                        parceiro_data = await db.parceiros.find_one(
+                            {"email": user.get("email")},
+                            {"_id": 0}
+                        )
+                    
+                    # Se for motorista, buscar dados adicionais
+                    motorista_data = None
+                    if user.get("role") == "motorista":
+                        motorista_data = await db.motoristas.find_one(
+                            {"email": user.get("email")},
+                            {"_id": 0}
+                        )
+                    
                     users_pendentes[user_id] = {
                         "user": user,
+                        "parceiro_data": parceiro_data,
+                        "motorista_data": motorista_data,
                         "documentos": []
                     }
             
