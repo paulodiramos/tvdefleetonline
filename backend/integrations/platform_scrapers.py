@@ -336,15 +336,33 @@ class ViaVerdeScraper(BaseScraper):
                 try:
                     await self.page.wait_for_selector(selector, timeout=3000)
                     if await self.page.is_visible(selector):
-                        await self.page.fill(selector, password)
-                        logger.info(f"✅ Password preenchida com: {selector}")
-                        password_filled = True
-                        break
-                except:
+                        # CRÍTICO: Usar múltiplos métodos para garantir preenchimento
+                        # 1. Primeiro clicar no campo para dar foco
+                        await self.page.click(selector)
+                        await asyncio.sleep(0.5)
+                        
+                        # 2. Limpar campo primeiro
+                        await self.page.fill(selector, '')
+                        await asyncio.sleep(0.3)
+                        
+                        # 3. Usar .type() em vez de .fill() para simular digitação real
+                        await self.page.type(selector, password, delay=50)
+                        await asyncio.sleep(0.5)
+                        
+                        # 4. Verificar se o valor foi preenchido verificando o atributo value
+                        filled_value = await self.page.evaluate(f'document.querySelector("{selector}").value')
+                        if filled_value and len(filled_value) > 0:
+                            logger.info(f"✅ Password preenchida com sucesso usando: {selector} (length: {len(filled_value)})")
+                            password_filled = True
+                            break
+                        else:
+                            logger.warning(f"⚠️ Password não foi preenchida corretamente com {selector}")
+                except Exception as e:
+                    logger.debug(f"Tentativa {selector} falhou: {e}")
                     continue
             
             if not password_filled:
-                logger.error("❌ Campo de password não encontrado")
+                logger.error("❌ Campo de password não encontrado ou não foi possível preencher")
                 await self.page.screenshot(path='/tmp/viaverde_06_password_fail.png')
                 return False
             
