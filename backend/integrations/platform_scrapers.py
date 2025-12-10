@@ -507,28 +507,227 @@ class ViaVerdeScraper(BaseScraper):
         try:
             logger.info(f"📊 {self.platform_name}: Extraindo dados de portagens...")
             
+            # Calcular datas se não fornecidas (última semana)
+            if not start_date:
+                start_date = (datetime.now(timezone.utc) - timedelta(days=7)).strftime('%Y-%m-%d')
+            if not end_date:
+                end_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+            
+            logger.info(f"📅 Período: {start_date} até {end_date}")
+            
             # Aguardar página carregar após login
             await asyncio.sleep(3)
             current_url = self.page.url
             logger.info(f"📍 URL atual após login: {current_url}")
-            await self.page.screenshot(path='/tmp/viaverde_after_login.png')
+            await self.page.screenshot(path='/tmp/viaverde_01_after_login.png')
             
-            # NOTA: A extração de dados da Via Verde requer análise específica da conta
-            # A estrutura da página varia entre contas de Particulares e Empresas
-            # Por agora, retornamos sucesso do login e orientamos para upload manual
+            # 1. Navegar para página de extratos e movimentos (EMPRESAS)
+            logger.info("🔗 Navegando para extratos e movimentos (Empresas)...")
+            try:
+                await self.page.goto(
+                    'https://www.viaverde.pt/empresas/minha-via-verde/extratos-movimentos',
+                    wait_until="domcontentloaded",
+                    timeout=30000
+                )
+                await asyncio.sleep(5)
+                logger.info("✅ Página de extratos carregada")
+                await self.page.screenshot(path='/tmp/viaverde_02_extratos_page.png')
+            except Exception as e:
+                logger.error(f"❌ Erro ao navegar para extratos: {e}")
+                return {
+                    "success": False,
+                    "platform": "via_verde",
+                    "message": f"Erro ao aceder à página de extratos: {str(e)}",
+                    "data": []
+                }
             
-            logger.info("✅ Login bem-sucedido na Via Verde")
-            logger.info("ℹ️  Extração automática de dados em desenvolvimento")
-            logger.info("💡 Recomendação: Usar sistema de upload manual em /importar-dados")
+            # 2. Clicar no botão/tab "Movimentos"
+            logger.info("🔍 Procurando botão 'Movimentos'...")
+            movimentos_selectors = [
+                'a:has-text("Movimentos")',
+                'button:has-text("Movimentos")',
+                '[href*="movimento"]',
+                'li:has-text("Movimentos")',
+                '.tab:has-text("Movimentos")'
+            ]
+            
+            clicked_movimentos = False
+            for selector in movimentos_selectors:
+                try:
+                    locator = self.page.locator(selector)
+                    if await locator.is_visible(timeout=3000):
+                        logger.info(f"✅ Encontrado: {selector}")
+                        await locator.click()
+                        await asyncio.sleep(3)
+                        clicked_movimentos = True
+                        logger.info("✅ Clicado em 'Movimentos'")
+                        await self.page.screenshot(path='/tmp/viaverde_03_movimentos_tab.png')
+                        break
+                except Exception as e:
+                    logger.debug(f"Tentativa {selector} falhou: {e}")
+                    continue
+            
+            if not clicked_movimentos:
+                logger.warning("⚠️ Botão 'Movimentos' não encontrado, continuando...")
+            
+            # 3. Preencher filtros de data
+            logger.info("📅 Preenchendo filtros de data...")
+            
+            # Converter formato de data para DD-MM-YYYY (formato português)
+            start_date_pt = datetime.strptime(start_date, '%Y-%m-%d').strftime('%d-%m-%Y')
+            end_date_pt = datetime.strptime(end_date, '%Y-%m-%d').strftime('%d-%m-%Y')
+            
+            # Procurar campos de data
+            date_from_selectors = [
+                'input[name*="DataInicio"]',
+                'input[name*="dataInicio"]',
+                'input[name*="from"]',
+                'input[id*="DataInicio"]',
+                'input[placeholder*="início"]',
+                'input[type="date"]'
+            ]
+            
+            date_to_selectors = [
+                'input[name*="DataFim"]',
+                'input[name*="dataFim"]',
+                'input[name*="to"]',
+                'input[id*="DataFim"]',
+                'input[placeholder*="fim"]'
+            ]
+            
+            # Preencher data inicial
+            filled_from = False
+            for selector in date_from_selectors:
+                try:
+                    locator = self.page.locator(selector).first
+                    if await locator.is_visible(timeout=2000):
+                        await locator.click()
+                        await asyncio.sleep(0.3)
+                        await locator.fill(start_date_pt)
+                        await asyncio.sleep(0.5)
+                        logger.info(f"✅ Data inicial preenchida: {start_date_pt}")
+                        filled_from = True
+                        break
+                except:
+                    continue
+            
+            # Preencher data final
+            filled_to = False
+            for selector in date_to_selectors:
+                try:
+                    locator = self.page.locator(selector).first
+                    if await locator.is_visible(timeout=2000):
+                        await locator.click()
+                        await asyncio.sleep(0.3)
+                        await locator.fill(end_date_pt)
+                        await asyncio.sleep(0.5)
+                        logger.info(f"✅ Data final preenchida: {end_date_pt}")
+                        filled_to = True
+                        break
+                except:
+                    continue
+            
+            if not filled_from or not filled_to:
+                logger.warning(f"⚠️ Datas não preenchidas (from: {filled_from}, to: {filled_to})")
+            
+            await self.page.screenshot(path='/tmp/viaverde_04_dates_filled.png')
+            
+            # 4. Clicar no botão "Filtrar"
+            logger.info("🔍 Procurando botão 'Filtrar'...")
+            filter_selectors = [
+                'button:has-text("Filtrar")',
+                'input[value="Filtrar"]',
+                'a:has-text("Filtrar")',
+                'button[type="submit"]'
+            ]
+            
+            clicked_filter = False
+            for selector in filter_selectors:
+                try:
+                    locator = self.page.locator(selector)
+                    if await locator.is_visible(timeout=3000):
+                        logger.info(f"✅ Encontrado botão filtrar: {selector}")
+                        await locator.click()
+                        await asyncio.sleep(5)  # Aguardar resultados carregarem
+                        clicked_filter = True
+                        logger.info("✅ Filtro aplicado")
+                        await self.page.screenshot(path='/tmp/viaverde_05_after_filter.png')
+                        break
+                except:
+                    continue
+            
+            if not clicked_filter:
+                logger.warning("⚠️ Botão 'Filtrar' não encontrado")
+            
+            # 5. Exportar CSV
+            logger.info("📥 Procurando botão 'Exportar CSV'...")
+            export_selectors = [
+                'button:has-text("Exportar")',
+                'a:has-text("Exportar")',
+                'button:has-text("CSV")',
+                'a:has-text("CSV")',
+                'button:has-text("Download")',
+                '[title*="Exportar"]',
+                '[title*="CSV"]'
+            ]
+            
+            # Configurar download
+            download_path = f'/tmp/viaverde_export_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+            
+            export_clicked = False
+            for selector in export_selectors:
+                try:
+                    locator = self.page.locator(selector)
+                    if await locator.is_visible(timeout=3000):
+                        logger.info(f"✅ Encontrado botão exportar: {selector}")
+                        
+                        # Aguardar download
+                        async with self.page.expect_download() as download_info:
+                            await locator.click()
+                            download = await download_info.value
+                        
+                        # Guardar ficheiro
+                        await download.save_as(download_path)
+                        logger.info(f"✅ CSV exportado: {download_path}")
+                        export_clicked = True
+                        break
+                except Exception as e:
+                    logger.debug(f"Tentativa {selector} falhou: {e}")
+                    continue
+            
+            if not export_clicked:
+                logger.warning("⚠️ Botão 'Exportar CSV' não encontrado")
+                return {
+                    "success": False,
+                    "platform": "via_verde",
+                    "message": "Não foi possível encontrar o botão de exportação de CSV. Verifique se há dados disponíveis para o período selecionado.",
+                    "data": []
+                }
+            
+            await self.page.screenshot(path='/tmp/viaverde_06_export_done.png')
+            
+            # 6. Processar CSV (básico - pode ser expandido)
+            dados_extraidos = []
+            try:
+                import csv
+                with open(download_path, 'r', encoding='utf-8') as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        dados_extraidos.append(dict(row))
+                
+                logger.info(f"✅ {len(dados_extraidos)} registos extraídos do CSV")
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao processar CSV: {e}")
             
             return {
                 "success": True,
                 "platform": "via_verde",
                 "extracted_at": datetime.now(timezone.utc).isoformat(),
-                "data": [],
-                "total_registos": 0,
-                "message": "Login bem-sucedido. Extração automática de dados em desenvolvimento. Por favor, use o sistema de upload manual de CSV disponível em 'Importar Dados'.",
-                "login_successful": True
+                "data": dados_extraidos,
+                "total_registos": len(dados_extraidos),
+                "message": f"Extração concluída! {len(dados_extraidos)} movimentos exportados.",
+                "csv_file": download_path,
+                "period": f"{start_date} até {end_date}"
             }
             
         except Exception as e:
