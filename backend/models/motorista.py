@@ -70,8 +70,8 @@ class Motorista(BaseModel):
     # Basic Info
     id: str
     email: str
-    name: str
-    phone: str
+    name: Optional[str] = None
+    phone: Optional[str] = None
     morada_completa: Optional[str] = None
     codigo_postal: Optional[str] = None
     localidade: Optional[str] = None
