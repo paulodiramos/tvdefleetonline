@@ -1155,7 +1155,10 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                       size="sm"
                       onClick={() => {
                         setImportType('motoristas');
-                        setShowImportDialog(true);
+                        // Usar setTimeout para garantir que o estado é atualizado
+                        setTimeout(() => {
+                          setShowImportDialog(true);
+                        }, 10);
                       }}
                       className="w-full bg-blue-600 hover:bg-blue-700"
                     >
