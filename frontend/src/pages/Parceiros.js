@@ -2482,9 +2482,13 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                     type="file"
                     accept=".csv"
                     onChange={(e) => {
+                      console.log('Input file onChange disparado');
                       const file = e.target.files[0];
+                      console.log('Ficheiro do input:', file);
                       if (file) {
                         handleImportCSV(file);
+                        // Reset input para permitir selecionar o mesmo ficheiro novamente
+                        e.target.value = '';
                       }
                     }}
                     className="hidden"
@@ -2495,7 +2499,7 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                     className="cursor-pointer flex flex-col items-center gap-2"
                   >
                     <Upload className="w-8 h-8 text-slate-400" />
-                    <span className="text-sm text-slate-600">
+                    <span className="text-sm text-slate-600 font-medium">
                       Clique para selecionar o ficheiro CSV
                     </span>
                     <span className="text-xs text-slate-500">
