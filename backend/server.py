@@ -9698,8 +9698,16 @@ async def gerar_pdf_contrato(
         clausulas_texto_final = clausulas_texto_final.replace("{PARCEIRO_NIF}", parceiro.get('contribuinte_empresa', parceiro.get('nif', 'N/A')))
         clausulas_texto_final = clausulas_texto_final.replace("{PARCEIRO_MORADA}", parceiro.get('morada_completa', parceiro.get('morada', 'N/A')))
         clausulas_texto_final = clausulas_texto_final.replace("{PARCEIRO_CP}", parceiro.get('codigo_postal', 'N/A'))
+        clausulas_texto_final = clausulas_texto_final.replace("{PARCEIRO_LOCALIDADE}", parceiro.get('localidade', 'N/A'))
         clausulas_texto_final = clausulas_texto_final.replace("{PARCEIRO_TELEFONE}", parceiro.get('telefone', parceiro.get('phone', 'N/A')))
         clausulas_texto_final = clausulas_texto_final.replace("{PARCEIRO_EMAIL}", parceiro.get('email', 'N/A'))
+        
+        # Variáveis do representante legal
+        clausulas_texto_final = clausulas_texto_final.replace("{REP_LEGAL_NOME}", parceiro.get('representante_legal_nome', parceiro.get('nome_manager', 'N/A')))
+        clausulas_texto_final = clausulas_texto_final.replace("{REP_LEGAL_CC}", parceiro.get('representante_legal_cc', 'N/A'))
+        clausulas_texto_final = clausulas_texto_final.replace("{REP_LEGAL_CC_VALIDADE}", parceiro.get('representante_legal_cc_validade', 'N/A'))
+        clausulas_texto_final = clausulas_texto_final.replace("{REP_LEGAL_TELEFONE}", parceiro.get('representante_legal_telefone', 'N/A'))
+        clausulas_texto_final = clausulas_texto_final.replace("{REP_LEGAL_EMAIL}", parceiro.get('representante_legal_email', 'N/A'))
         
         # Variáveis do motorista
         clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_NOME}", motorista.get('name', 'N/A'))
@@ -9715,6 +9723,7 @@ async def gerar_pdf_contrato(
         clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_LICENCA_TVDE}", motorista.get('licenca_tvde_numero', motorista.get('numero_licenca_tvde', 'N/A')))
         clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_LICENCA_TVDE_VALIDADE}", motorista.get('licenca_tvde_validade', motorista.get('validade_licenca_tvde', 'N/A')))
         clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_SS}", motorista.get('numero_seguranca_social', 'N/A'))
+        clausulas_texto_final = clausulas_texto_final.replace("{MOTORISTA_EMAIL}", motorista.get('email', 'N/A'))
         
         # Variáveis do veículo
         if veiculo:
