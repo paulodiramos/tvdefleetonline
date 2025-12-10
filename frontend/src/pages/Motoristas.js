@@ -218,6 +218,86 @@ const Motoristas = ({ user, onLogout }) => {
         carta_conducao_numero: '',
         carta_conducao_validade: '',
         licenca_tvde_numero: '',
+
+
+  const handleDownloadCSVExample = () => {
+    window.open(`${API}/parceiros/csv-examples/motoristas`, '_blank');
+    toast.success('Exemplo de motoristas descarregado');
+  };
+
+  const handleImportCSV = async (file) => {
+    console.log('handleImportCSV chamado com file:', file);
+    
+    if (!file) {
+      console.log('Nenhum ficheiro selecionado');
+      toast.error('Por favor selecione um ficheiro');
+      return;
+    }
+    
+    console.log('Ficheiro selecionado:', {
+      name: file.name,
+      size: file.size,
+      type: file.type
+    });
+    
+    // Verificar se é admin/gestão ou parceiro
+    let parceiro_id;
+    if (user.role === 'admin' || user.role === 'gestao') {
+      toast.error('Por favor, importe motoristas através da página do parceiro');
+      return;
+    } else if (user.role === 'parceiro') {
+      parceiro_id = user.id;
+    } else {
+      toast.error('Sem permissão para importar motoristas');
+      return;
+    }
+    
+    setImportLoading(true);
+    toast.info('A processar ficheiro...');
+    
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const endpoint = `${API}/parceiros/${parceiro_id}/importar-motoristas`;
+      
+      console.log('A enviar para endpoint:', endpoint);
+      
+      const response = await axios.post(endpoint, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      console.log('Resposta recebida:', response.data);
+      
+      const { motoristas_criados, erros, total_linhas } = response.data;
+      
+      if (erros && erros.length > 0) {
+        toast.warning(
+          `${motoristas_criados} de ${total_linhas} importados com sucesso. ${erros.length} erros encontrados.`,
+          { duration: 5000 }
+        );
+        console.error('Erros na importação:', erros);
+      } else {
+        toast.success(`${motoristas_criados} motoristas importados com sucesso!`);
+      }
+      
+      // Refresh list
+      fetchMotoristas();
+      setShowImportDialog(false);
+      
+    } catch (error) {
+      console.error('Error importing CSV:', error);
+      console.error('Error details:', error.response?.data);
+      toast.error('Erro ao importar CSV: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setImportLoading(false);
+    }
+  };
+
         licenca_tvde_validade: '',
         regime: 'aluguer',
         iban: '',
