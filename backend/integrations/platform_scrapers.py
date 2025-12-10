@@ -480,26 +480,20 @@ class ViaVerdeScraper(BaseScraper):
             
             # Verificar indicadores de sucesso
             success_indicators = [
+                modal_closed,  # Se modal fechou, principal indicador
                 "dashboard" in current_url.lower(),
                 "area-cliente" in current_url.lower(),
                 "extrato" in current_url.lower(),
-                "movimento" in current_url.lower()
+                "movimento" in current_url.lower(),
+                "particulares" in current_url.lower() and "login" not in current_url.lower()
             ]
             
-            # Verificar se modal fechou
-            try:
-                modal_closed = not await self.page.is_visible('[role="dialog"]', timeout=2000)
-                if modal_closed:
-                    logger.info("✅ Modal fechou - possível sucesso")
-            except:
-                modal_closed = True
-            
-            if any(success_indicators) or (modal_closed and "login" not in current_url.lower()):
+            if any(success_indicators):
                 logger.info("✅ Login bem-sucedido!")
                 await self.page.screenshot(path='/tmp/viaverde_10_success.png')
                 return True
             
-            logger.error("❌ Login falhou")
+            logger.error("❌ Login falhou - indicadores de sucesso não encontrados")
             return False
             
         except Exception as e:
