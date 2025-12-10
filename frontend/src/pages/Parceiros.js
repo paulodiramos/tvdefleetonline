@@ -1105,6 +1105,100 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
             </Card>
           </div>
 
+          {/* Importação em Massa */}
+          <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-800">
+                <Upload className="w-5 h-5" />
+                Importação em Massa (CSV)
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                {/* Motoristas */}
+                <div className="bg-white rounded-lg p-4 border border-blue-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Users className="w-6 h-6 text-blue-600" />
+                    <h3 className="font-semibold text-slate-800">Motoristas</h3>
+                  </div>
+                  <p className="text-sm text-slate-600 mb-4">
+                    Importe múltiplos motoristas de uma só vez usando um ficheiro CSV
+                  </p>
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownloadCSVExample('motoristas')}
+                      className="w-full"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Descarregar Exemplo
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setImportType('motoristas');
+                        setShowImportDialog(true);
+                      }}
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Importar CSV
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Veículos */}
+                <div className="bg-white rounded-lg p-4 border border-blue-200">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Car className="w-6 h-6 text-blue-600" />
+                    <h3 className="font-semibold text-slate-800">Veículos</h3>
+                  </div>
+                  <p className="text-sm text-slate-600 mb-4">
+                    Importe múltiplos veículos de uma só vez usando um ficheiro CSV
+                  </p>
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownloadCSVExample('veiculos')}
+                      className="w-full"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Descarregar Exemplo
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setImportType('veiculos');
+                        setShowImportDialog(true);
+                      }}
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Importar CSV
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 p-3 bg-blue-100 rounded-lg border border-blue-300">
+                <div className="flex items-start gap-2">
+                  <AlertTriangle className="w-5 h-5 text-blue-700 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-blue-800">
+                    <p className="font-semibold mb-1">Instruções:</p>
+                    <ol className="list-decimal list-inside space-y-1 text-xs">
+                      <li>Descarregue o ficheiro de exemplo</li>
+                      <li>Preencha com os seus dados (não altere os cabeçalhos)</li>
+                      <li>Guarde como CSV (separado por vírgulas)</li>
+                      <li>Faça upload do ficheiro</li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Lista de Templates de Contrato */}
           <Card>
             <CardHeader>
