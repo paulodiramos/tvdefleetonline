@@ -2438,11 +2438,10 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
       </Dialog>
 
       {/* Import CSV Modal (Sempre no DOM) */}
+      {showImportDialog && (
       <div 
-        key={`import-modal-${importType}`}
-        className={`fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 transition-opacity duration-200 ${
-          showImportDialog ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
+        key={`import-modal-${importType}-${forceRender}`}
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50"
         onClick={() => setShowImportDialog(false)}
         style={{ 
           position: 'fixed', 
@@ -2450,7 +2449,7 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
           left: 0, 
           right: 0, 
           bottom: 0,
-          display: showImportDialog ? 'flex' : 'none'
+          zIndex: 9999
         }}
       >
         <div 
