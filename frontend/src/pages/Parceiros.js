@@ -1259,6 +1259,15 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
                           <Button
                             size="sm"
                             variant="outline"
+                            onClick={() => window.open(`${API}/templates-contratos/${template.id}/download-pdf`, '_blank')}
+                            className="text-green-600 hover:text-green-700"
+                            title="Download PDF"
+                          >
+                            <Download className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
                             onClick={() => handleEditTemplate(template)}
                             className="text-blue-600 hover:text-blue-700"
                             title="Editar template"
