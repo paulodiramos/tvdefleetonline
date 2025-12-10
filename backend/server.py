@@ -15312,7 +15312,7 @@ async def listar_credenciais(
 
 @app.post("/api/credenciais-plataforma")
 async def criar_credencial(
-    request: dict,
+    request: dict = Body(...),
     current_user: dict = Depends(get_current_user)
 ):
     """Criar nova credencial de plataforma"""
