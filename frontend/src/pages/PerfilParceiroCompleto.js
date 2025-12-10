@@ -15,6 +15,7 @@ const PerfilParceiroCompleto = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [parceiroData, setParceiroData] = useState(null);
   const [planoData, setPlanoData] = useState(null);
+  const [templates, setTemplates] = useState([]);
   const [stats, setStats] = useState({
     total_motoristas: 0,
     total_veiculos: 0,
@@ -25,6 +26,7 @@ const PerfilParceiroCompleto = ({ user, onLogout }) => {
     fetchParceiroData();
     fetchPlanoData();
     fetchStats();
+    fetchTemplates();
   }, []);
 
   const fetchParceiroData = async () => {
