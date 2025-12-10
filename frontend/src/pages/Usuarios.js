@@ -1131,6 +1131,197 @@ const Usuarios = ({ user, onLogout }) => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modal Perfil Completo */}
+      <Dialog open={showFullProfileDialog} onOpenChange={setShowFullProfileDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Perfil Completo do Utilizador</DialogTitle>
+          </DialogHeader>
+
+          {fullProfileData && (
+            <div className="space-y-6">
+              {/* Dados do Utilizador */}
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <h3 className="font-semibold text-slate-800 mb-3">Informações do Utilizador</h3>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-slate-600">Email:</span>
+                    <p className="font-medium">{fullProfileData.user.email}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-600">Nome:</span>
+                    <p className="font-medium">{fullProfileData.user.name || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-600">Telefone:</span>
+                    <p className="font-medium">{fullProfileData.user.phone || 'N/A'}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-600">Role:</span>
+                    <p className="font-medium capitalize">{fullProfileData.user.role}</p>
+                  </div>
+                  <div>
+                    <span className="text-slate-600">Status:</span>
+                    <p className="font-medium">
+                      {fullProfileData.user.approved ? (
+                        <span className="text-green-600">✓ Aprovado</span>
+                      ) : (
+                        <span className="text-orange-600">⏳ Pendente</span>
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="text-slate-600">Data de Registo:</span>
+                    <p className="font-medium">
+                      {new Date(fullProfileData.user.created_at).toLocaleDateString('pt-PT')}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dados do Parceiro */}
+              {fullProfileData.parceiro_data && (
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-slate-800 mb-3">Dados da Empresa</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-slate-600">Nome da Empresa:</span>
+                      <p className="font-medium">{fullProfileData.parceiro_data.nome || fullProfileData.parceiro_data.nome_empresa || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">NIF:</span>
+                      <p className="font-medium">{fullProfileData.parceiro_data.nif || fullProfileData.parceiro_data.contribuinte_empresa || 'N/A'}</p>
+                    </div>
+                    <div className="col-span-2">
+                      <span className="text-slate-600">Morada:</span>
+                      <p className="font-medium">{fullProfileData.parceiro_data.morada || fullProfileData.parceiro_data.morada_completa || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Código Postal:</span>
+                      <p className="font-medium">{fullProfileData.parceiro_data.codigo_postal || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Localidade:</span>
+                      <p className="font-medium">{fullProfileData.parceiro_data.localidade || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Código Certidão Comercial:</span>
+                      <p className="font-medium">{fullProfileData.parceiro_data.codigo_certidao_comercial || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Validade Certidão:</span>
+                      <p className="font-medium">
+                        {fullProfileData.parceiro_data.validade_certidao_comercial 
+                          ? new Date(fullProfileData.parceiro_data.validade_certidao_comercial).toLocaleDateString('pt-PT')
+                          : 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Responsável:</span>
+                      <p className="font-medium">{fullProfileData.parceiro_data.responsavel_nome || fullProfileData.parceiro_data.nome_manager || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Contacto Responsável:</span>
+                      <p className="font-medium">{fullProfileData.parceiro_data.responsavel_contacto || fullProfileData.parceiro_data.telemovel || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Telefone Empresa:</span>
+                      <p className="font-medium">{fullProfileData.parceiro_data.telefone || 'N/A'}</p>
+                    </div>
+                    {fullProfileData.parceiro_data.finalidade && (
+                      <div>
+                        <span className="text-slate-600">Finalidade:</span>
+                        <p className="font-medium capitalize">
+                          {fullProfileData.parceiro_data.finalidade === 'gestao_frota' ? 'Gestão de Frota' : 'Usar Plataforma'}
+                        </p>
+                      </div>
+                    )}
+                    {fullProfileData.parceiro_data.numero_veiculos !== undefined && (
+                      <div>
+                        <span className="text-slate-600">Nº de Veículos:</span>
+                        <p className="font-medium">{fullProfileData.parceiro_data.numero_veiculos || 0}</p>
+                      </div>
+                    )}
+                    {fullProfileData.parceiro_data.numero_motoristas !== undefined && (
+                      <div>
+                        <span className="text-slate-600">Nº de Motoristas:</span>
+                        <p className="font-medium">{fullProfileData.parceiro_data.numero_motoristas || 0}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Dados do Motorista */}
+              {fullProfileData.motorista_data && (
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-slate-800 mb-3">Dados do Motorista</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-slate-600">Nome Completo:</span>
+                      <p className="font-medium">{fullProfileData.motorista_data.nome || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">NIF:</span>
+                      <p className="font-medium">{fullProfileData.motorista_data.nif || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Data de Nascimento:</span>
+                      <p className="font-medium">
+                        {fullProfileData.motorista_data.data_nascimento 
+                          ? new Date(fullProfileData.motorista_data.data_nascimento).toLocaleDateString('pt-PT')
+                          : 'N/A'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600">Morada:</span>
+                      <p className="font-medium">{fullProfileData.motorista_data.morada || 'N/A'}</p>
+                    </div>
+                    {fullProfileData.motorista_data.parceiro_id && (
+                      <div>
+                        <span className="text-slate-600">Parceiro Associado:</span>
+                        <p className="font-medium">{fullProfileData.motorista_data.parceiro_id}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Documentos */}
+              {fullProfileData.documentos && fullProfileData.documentos.length > 0 && (
+                <div className="bg-amber-50 p-4 rounded-lg">
+                  <h3 className="font-semibold text-slate-800 mb-3">Documentos</h3>
+                  <div className="space-y-2">
+                    {fullProfileData.documentos.map((doc, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-2 bg-white rounded">
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{doc.tipo_documento}</p>
+                          <p className="text-xs text-slate-500">
+                            Status: <span className={doc.status === 'aprovado' ? 'text-green-600' : 'text-orange-600'}>
+                              {doc.status}
+                            </span>
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            window.open(`${API}/documentos/${doc.id}/download`, '_blank');
+                          }}
+                        >
+                          <Eye className="w-4 h-4 mr-1" />
+                          Ver
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
