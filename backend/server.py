@@ -9394,6 +9394,179 @@ async def update_template_contrato(
             if (template_data.percentagem_motorista + template_data.percentagem_parceiro) != 100:
                 raise HTTPException(status_code=400, detail="Percentagens de comissão devem somar 100%")
     
+
+
+@api_router.get("/templates-contratos/{template_id}/download-pdf")
+async def download_template_pdf(
+    template_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Generate and download template as PDF in A4 format"""
+    # Check permissions
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    # Get template
+    template = await db.templates_contrato.find_one({"id": template_id}, {"_id": 0})
+    if not template:
+        raise HTTPException(status_code=404, detail="Template não encontrado")
+    
+    # Create PDF
+    output_dir = UPLOAD_DIR / "templates_pdf"
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    pdf_filename = f"template_{template_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    output_path = output_dir / pdf_filename
+    
+    # Create PDF with A4 format
+    c = canvas.Canvas(str(output_path), pagesize=A4)
+    width, height = A4
+    
+    # Header
+    c.setFont("Helvetica-Bold", 16)
+    c.drawCentredString(width/2, height - 2*cm, "CONTRATO DE PRESTAÇÃO DE SERVIÇOS")
+    
+    c.setFont("Helvetica", 10)
+    c.drawCentredString(width/2, height - 2.7*cm, f"Template: {template.get('nome_template', 'N/A')}")
+    c.drawCentredString(width/2, height - 3.2*cm, f"Tipo: {template.get('tipo_contrato', 'N/A').upper()}")
+    
+    # Line separator
+    c.setStrokeColorRGB(0.3, 0.3, 0.3)
+    c.setLineWidth(2)
+    c.line(2*cm, height - 3.7*cm, width - 2*cm, height - 3.7*cm)
+    
+    y = height - 5*cm
+    
+    # Template Information Box
+    c.setFillColorRGB(0.95, 0.95, 0.95)
+    c.rect(2*cm, y - 3*cm, width - 4*cm, 2.5*cm, fill=1, stroke=0)
+    
+    c.setFillColorRGB(0, 0, 0)
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(2.5*cm, y - 0.8*cm, "CONDIÇÕES DO TEMPLATE")
+    
+    c.setFont("Helvetica", 9)
+    info_y = y - 1.5*cm
+    
+    if template.get('periodicidade_padrao'):
+        c.drawString(2.5*cm, info_y, f"Periodicidade: {template['periodicidade_padrao']}")
+        info_y -= 0.5*cm
+    
+    if template.get('valor_caucao'):
+        caucao_text = f"Caução: €{template['valor_caucao']}"
+        if template.get('numero_parcelas_caucao'):
+            caucao_text += f" ({template['numero_parcelas_caucao']}x)"
+        c.drawString(2.5*cm, info_y, caucao_text)
+        info_y -= 0.5*cm
+    
+    if template.get('valor_epoca_alta'):
+        c.drawString(width/2 + 1*cm, y - 1.5*cm, f"Época Alta: €{template['valor_epoca_alta']}")
+    
+    if template.get('valor_epoca_baixa'):
+        c.drawString(width/2 + 1*cm, y - 2*cm, f"Época Baixa: €{template['valor_epoca_baixa']}")
+    
+    y -= 4*cm
+    
+    # Contract Clauses Section
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(2*cm, y, "CLÁUSULAS CONTRATUAIS")
+    y -= 0.8*cm
+    
+    # Draw line under title
+    c.setStrokeColorRGB(0.5, 0.5, 0.5)
+    c.setLineWidth(0.5)
+    c.line(2*cm, y, width - 2*cm, y)
+    y -= 0.5*cm
+    
+    # Contract text
+    c.setFont("Helvetica", 9)
+    clausulas_texto = template.get('clausulas_texto', 'Sem texto de contrato definido')
+    
+    # Split text into lines and handle pagination
+    lines = clausulas_texto.split('\n')
+    for line in lines:
+        # Word wrap for long lines
+        while len(line) > 0:
+            if y < 3*cm:  # New page if needed
+                c.showPage()
+                y = height - 2*cm
+                c.setFont("Helvetica", 9)
+            
+            # Calculate how much text fits in one line
+            max_width = width - 4*cm
+            if c.stringWidth(line, "Helvetica", 9) <= max_width:
+                c.drawString(2*cm, y, line)
+                y -= 0.5*cm
+                break
+            else:
+                # Find break point
+                words = line.split(' ')
+                current_line = ''
+                remaining = ''
+                
+                for i, word in enumerate(words):
+                    test_line = current_line + (' ' if current_line else '') + word
+                    if c.stringWidth(test_line, "Helvetica", 9) <= max_width:
+                        current_line = test_line
+                    else:
+                        remaining = ' '.join(words[i:])
+                        break
+                
+                if current_line:
+                    c.drawString(2*cm, y, current_line)
+                    y -= 0.5*cm
+                
+                line = remaining
+                if not remaining:
+                    break
+    
+    # Footer with signatures
+    if y < 8*cm:
+        c.showPage()
+        y = height - 2*cm
+    
+    y = 8*cm  # Fixed position for signatures
+    
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(2*cm, y, "ASSINATURAS")
+    y -= 0.5*cm
+    c.setLineWidth(0.5)
+    c.line(2*cm, y, width - 2*cm, y)
+    y -= 2*cm
+    
+    # Signature lines
+    c.setFont("Helvetica", 9)
+    sig_y = y - 2*cm
+    
+    # Parceiro signature
+    c.line(2.5*cm, sig_y, 9*cm, sig_y)
+    c.drawString(2.5*cm, sig_y - 0.5*cm, "O Parceiro")
+    c.setFont("Helvetica", 8)
+    c.drawString(2.5*cm, sig_y - 0.9*cm, "{PARCEIRO_NOME}")
+    
+    # Motorista signature
+    c.setFont("Helvetica", 9)
+    c.line(width/2 + 1*cm, sig_y, width - 2.5*cm, sig_y)
+    c.drawString(width/2 + 1*cm, sig_y - 0.5*cm, "O Motorista")
+    c.setFont("Helvetica", 8)
+    c.drawString(width/2 + 1*cm, sig_y - 0.9*cm, "{MOTORISTA_NOME}")
+    
+    # Footer info
+    c.setFont("Helvetica", 7)
+    c.setFillColorRGB(0.5, 0.5, 0.5)
+    footer_y = 1.5*cm
+    c.drawCentredString(width/2, footer_y, f"Template: {template.get('nome_template', 'N/A')}")
+    c.drawCentredString(width/2, footer_y - 0.4*cm, f"Criado em: {template.get('created_at', 'N/A')[:10] if template.get('created_at') else 'N/A'}")
+    c.drawCentredString(width/2, footer_y - 0.8*cm, "Este é um template. As variáveis serão substituídas pelos dados reais ao gerar o contrato.")
+    
+    c.save()
+    
+    return FileResponse(
+        path=output_path,
+        media_type="application/pdf",
+        filename=f"template_{template.get('nome_template', 'contrato').replace(' ', '_')}.pdf"
+    )
+
     update_data = template_data.dict()
     update_data["updated_at"] = datetime.now(timezone.utc)
     
