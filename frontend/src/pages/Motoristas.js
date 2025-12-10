@@ -45,6 +45,8 @@ const Motoristas = ({ user, onLogout }) => {
     status: 'all',
     search: ''
   });
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [importLoading, setImportLoading] = useState(false);
   const [newMotorista, setNewMotorista] = useState({
     email: '',
     name: '',
