@@ -304,18 +304,6 @@ const Motoristas = ({ user, onLogout }) => {
     }
   };
 
-        licenca_tvde_validade: '',
-        regime: 'aluguer',
-        iban: '',
-        whatsapp: '',
-        tipo_pagamento: 'recibo_verde',
-        senha_provisoria: true
-      });
-    } catch (error) {
-      toast.error(error.response?.data?.detail || 'Erro ao adicionar motorista');
-    }
-  };
-
   const handleEditMotorista = () => {
     setEditForm({
       ...selectedMotorista,
