@@ -10,7 +10,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 # Configuração MongoDB
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ.get('DB_NAME', 'tvde_fleet')]
+db = client[os.environ.get('DB_NAME', 'tvdefleet_db')]
 
 async def criar_dados_exemplo():
     """Criar registos de exemplo"""
