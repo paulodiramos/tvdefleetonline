@@ -111,8 +111,12 @@ const ImportarDados = ({ user, onLogout }) => {
       
       const formData = new FormData();
       formData.append('file', arquivo);
-      if (parceiroSelecionado) formData.append('parceiro_id', parceiroSelecionado);
-      if (motoristaSelecionado) formData.append('motorista_id', motoristaSelecionado);
+      if (parceiroSelecionado && parceiroSelecionado !== 'none') {
+        formData.append('parceiro_id', parceiroSelecionado);
+      }
+      if (motoristaSelecionado && motoristaSelecionado !== 'none') {
+        formData.append('motorista_id', motoristaSelecionado);
+      }
 
       const response = await axios.post(
         `${API}/import-csv/${plataforma}`,
