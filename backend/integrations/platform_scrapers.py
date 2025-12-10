@@ -203,149 +203,229 @@ class ViaVerdeScraper(BaseScraper):
             
             # Navegar para a página principal
             await self.page.goto(self.login_url, wait_until="networkidle")
-            await asyncio.sleep(2)
+            await asyncio.sleep(3)
             
             # Screenshot da página inicial
-            await self.page.screenshot(path='/tmp/viaverde_home.png')
-            logger.info("📸 Screenshot da home page")
+            await self.page.screenshot(path='/tmp/viaverde_01_home.png')
+            logger.info("📸 Screenshot 1: Home page")
             
-            # Procurar botão de login/área cliente
-            login_buttons = [
-                'a:has-text("Área Cliente")',
+            # IMPORTANTE: Procurar e clicar no botão "Login" que abre o modal
+            logger.info("🔍 Procurando botão de login que abre modal...")
+            login_trigger_buttons = [
+                'button:has-text("Login")',
                 'a:has-text("Login")',
-                'a:has-text("Entrar")',
-                'button:has-text("Área Cliente")',
-                '[href*="login"]',
-                '[href*="area-cliente"]'
+                '[class*="login"]',
+                '#login-button',
+                'button[data-action="login"]'
             ]
             
-            button_clicked = False
-            for selector in login_buttons:
+            modal_opened = False
+            for selector in login_trigger_buttons:
                 try:
                     if await self.page.is_visible(selector, timeout=2000):
-                        logger.info(f"🎯 Encontrado botão: {selector}")
+                        logger.info(f"🎯 Clicando em: {selector}")
                         await self.page.click(selector)
+                        await asyncio.sleep(2)
+                        modal_opened = True
+                        break
+                except:
+                    continue
+            
+            if not modal_opened:
+                logger.warning("⚠️ Tentando clicar em qualquer link com 'login'")
+                try:
+                    await self.page.click('text=Login')
+                    await asyncio.sleep(2)
+                    modal_opened = True
+                except:
+                    pass
+            
+            # Screenshot após tentar abrir modal
+            await self.page.screenshot(path='/tmp/viaverde_02_after_click.png')
+            logger.info("📸 Screenshot 2: Após clicar em login")
+            
+            # Aguardar modal aparecer
+            logger.info("⏳ Aguardando modal aparecer...")
+            await asyncio.sleep(3)
+            
+            # Verificar se há iframe
+            frames = self.page.frames
+            logger.info(f"🔍 Encontrados {len(frames)} frames na página")
+            
+            # Tentar encontrar modal/dialog
+            modal_selectors = [
+                '[role="dialog"]',
+                '.modal',
+                '#modal-login',
+                '[aria-modal="true"]',
+                '.popup'
+            ]
+            
+            modal_found = False
+            for selector in modal_selectors:
+                if await self.page.is_visible(selector, timeout=2000):
+                    logger.info(f"✅ Modal encontrado: {selector}")
+                    modal_found = True
+                    break
+            
+            await self.page.screenshot(path='/tmp/viaverde_03_modal_search.png')
+            logger.info("📸 Screenshot 3: Procura por modal")
+            
+            # Seletores mais específicos baseados na análise da imagem
+            email_selectors = [
+                # Baseado na análise: campos podem ter IDs específicos
+                '#email',
+                '#login-email',
+                '#emailAddress',
+                'input[name="email"]',
+                'input[type="email"]',
+                # Dentro de modal/dialog
+                '[role="dialog"] input[type="email"]',
+                '.modal input[type="email"]',
+                # Por placeholder
+                'input[placeholder*="Email"]',
+                'input[placeholder*="email"]',
+                # Por classes
+                '.email-input',
+                '.via-verde-input[name="email"]'
+            ]
+            
+            logger.info("📝 Tentando preencher email...")
+            email_filled = False
+            for selector in email_selectors:
+                try:
+                    # Aguardar elemento aparecer
+                    await self.page.wait_for_selector(selector, timeout=3000)
+                    if await self.page.is_visible(selector):
+                        await self.page.fill(selector, email)
+                        logger.info(f"✅ Email preenchido com: {selector}")
+                        email_filled = True
+                        break
+                except Exception as e:
+                    logger.debug(f"Tentativa {selector}: {e}")
+                    continue
+            
+            if not email_filled:
+                logger.error("❌ Campo de email não encontrado")
+                await self.page.screenshot(path='/tmp/viaverde_04_email_fail.png')
+                # Tentar pegar todos os inputs visíveis
+                all_inputs = await self.page.query_selector_all('input')
+                logger.info(f"Total de inputs encontrados: {len(all_inputs)}")
+                return False
+            
+            await asyncio.sleep(1)
+            await self.page.screenshot(path='/tmp/viaverde_05_email_filled.png')
+            logger.info("📸 Screenshot 4: Email preenchido")
+            
+            # Preencher password
+            password_selectors = [
+                '#password',
+                '#login-password',
+                'input[name="password"]',
+                'input[type="password"]',
+                '[role="dialog"] input[type="password"]',
+                '.modal input[type="password"]',
+                'input[placeholder*="senha"]',
+                'input[placeholder*="password"]',
+                '.password-input'
+            ]
+            
+            logger.info("🔐 Tentando preencher password...")
+            password_filled = False
+            for selector in password_selectors:
+                try:
+                    await self.page.wait_for_selector(selector, timeout=3000)
+                    if await self.page.is_visible(selector):
+                        await self.page.fill(selector, password)
+                        logger.info(f"✅ Password preenchida com: {selector}")
+                        password_filled = True
+                        break
+                except:
+                    continue
+            
+            if not password_filled:
+                logger.error("❌ Campo de password não encontrado")
+                await self.page.screenshot(path='/tmp/viaverde_06_password_fail.png')
+                return False
+            
+            await asyncio.sleep(1)
+            await self.page.screenshot(path='/tmp/viaverde_07_before_submit.png')
+            logger.info("📸 Screenshot 5: Antes de submeter")
+            
+            # Clicar no botão Login dentro do modal
+            login_button_selectors = [
+                'button:has-text("Login")',
+                '[role="dialog"] button[type="submit"]',
+                '.modal button:has-text("Login")',
+                '.login-btn',
+                '#login-button',
+                'button.via-verde-button',
+                'button.btn-primary',
+                'button.green-button'
+            ]
+            
+            logger.info("👆 Tentando clicar no botão Login...")
+            button_clicked = False
+            for selector in login_button_selectors:
+                try:
+                    if await self.page.is_visible(selector, timeout=2000):
+                        await self.page.click(selector)
+                        logger.info(f"✅ Botão clicado: {selector}")
                         button_clicked = True
                         break
                 except:
                     continue
             
             if not button_clicked:
-                logger.warning("⚠️ Botão de login não encontrado, tentando acesso direto")
-                # Tentar URL direta de login
-                possible_login_urls = [
-                    "https://www.viaverde.pt/area-cliente",
-                    "https://www.viaverde.pt/login",
-                    "https://cliente.viaverde.pt",
-                    "https://www.viaverde.pt/particulares/area-cliente"
-                ]
-                
-                for url in possible_login_urls:
-                    try:
-                        await self.page.goto(url, wait_until="networkidle", timeout=10000)
-                        await asyncio.sleep(2)
-                        await self.page.screenshot(path=f'/tmp/viaverde_login_page.png')
-                        logger.info(f"✅ Acedido: {url}")
-                        break
-                    except:
-                        continue
-            
-            await asyncio.sleep(3)
-            await self.page.screenshot(path='/tmp/viaverde_login_form.png')
-            
-            # Tentar preencher email
-            email_filled = await self._fill_field(
-                [
-                    'input[type="email"]',
-                    'input[name="email"]',
-                    'input[name="username"]',
-                    'input[name="utilizador"]',
-                    'input[placeholder*="mail"]',
-                    'input[placeholder*="utilizador"]',
-                    'input[id*="email"]',
-                    'input[id*="user"]',
-                    '#email',
-                    '#username'
-                ],
-                email,
-                "email"
-            )
-            
-            if not email_filled:
-                logger.error("❌ Campo de email não encontrado")
-                return False
-            
-            await asyncio.sleep(1)
-            
-            # Tentar preencher password
-            password_filled = await self._fill_field(
-                [
-                    'input[type="password"]',
-                    'input[name="password"]',
-                    'input[name="senha"]',
-                    'input[placeholder*="password"]',
-                    'input[placeholder*="senha"]',
-                    'input[id*="password"]',
-                    '#password',
-                    '#senha'
-                ],
-                password,
-                "password"
-            )
-            
-            if not password_filled:
-                logger.error("❌ Campo de password não encontrado")
-                return False
-            
-            await asyncio.sleep(1)
-            await self.page.screenshot(path='/tmp/viaverde_before_submit.png')
-            
-            # Tentar clicar no botão de login
-            button_clicked = await self._click_button(
-                [
-                    'button[type="submit"]',
-                    'button:has-text("Entrar")',
-                    'button:has-text("Login")',
-                    'button:has-text("Aceder")',
-                    'input[type="submit"]',
-                    'a:has-text("Entrar")',
-                    '[data-testid="login-button"]',
-                    '.btn-login',
-                    '#login-button',
-                    '#submit'
-                ],
-                "login"
-            )
-            
-            if not button_clicked:
                 logger.error("❌ Botão de login não encontrado")
+                await self.page.screenshot(path='/tmp/viaverde_08_button_fail.png')
                 return False
             
             # Aguardar resposta
-            await asyncio.sleep(8)
-            await self.page.screenshot(path='/tmp/viaverde_after_login.png')
+            logger.info("⏳ Aguardando resposta do servidor...")
+            await asyncio.sleep(10)
+            await self.page.screenshot(path='/tmp/viaverde_09_after_submit.png')
+            logger.info("📸 Screenshot 6: Após submit")
             
             # Verificar se login foi bem-sucedido
             current_url = self.page.url
-            logger.info(f"📍 URL atual: {current_url}")
+            logger.info(f"📍 URL final: {current_url}")
             
             # Verificar erros
             error_msg = await self._check_error_message()
             if error_msg:
-                logger.error(f"❌ Erro: {error_msg}")
+                logger.error(f"❌ Mensagem de erro encontrada: {error_msg}")
                 return False
             
-            # Verificar se saiu da página de login
-            if "login" not in current_url.lower() or "dashboard" in current_url.lower() or "area-cliente" in current_url.lower():
+            # Verificar indicadores de sucesso
+            success_indicators = [
+                "dashboard" in current_url.lower(),
+                "area-cliente" in current_url.lower(),
+                "extrato" in current_url.lower(),
+                "movimento" in current_url.lower()
+            ]
+            
+            # Verificar se modal fechou
+            try:
+                modal_closed = not await self.page.is_visible('[role="dialog"]', timeout=2000)
+                if modal_closed:
+                    logger.info("✅ Modal fechou - possível sucesso")
+            except:
+                modal_closed = True
+            
+            if any(success_indicators) or (modal_closed and "login" not in current_url.lower()):
                 logger.info("✅ Login bem-sucedido!")
+                await self.page.screenshot(path='/tmp/viaverde_10_success.png')
                 return True
             
-            logger.error("❌ Login falhou - ainda na página de login")
+            logger.error("❌ Login falhou")
             return False
             
         except Exception as e:
             logger.error(f"❌ Erro durante login: {e}")
-            await self.page.screenshot(path='/tmp/viaverde_error.png')
+            import traceback
+            traceback.print_exc()
+            await self.page.screenshot(path='/tmp/viaverde_99_exception.png')
             return False
     
     async def extract_data(self, start_date=None, end_date=None) -> Dict:
