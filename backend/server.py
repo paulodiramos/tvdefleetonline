@@ -6011,6 +6011,11 @@ async def create_parceiro_public(parceiro_data: Dict[str, Any]):
 @api_router.get("/parceiros", response_model=List[Parceiro])
 async def get_parceiros(current_user: Dict = Depends(get_current_user)):
     query = {}
+    
+    # IMPORTANTE: Apenas mostrar parceiros aprovados (exceto para admin que pode ver todos)
+    if current_user["role"] != UserRole.ADMIN:
+        query["approved"] = True
+    
     if current_user["role"] == UserRole.GESTAO:
         query["gestor_associado_id"] = current_user["id"]
     elif current_user["role"] == "parceiro":
