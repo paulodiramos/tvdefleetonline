@@ -15301,7 +15301,7 @@ async def listar_credenciais(
         
         credenciais = await db.credenciais_plataforma.find(
             query,
-            {"_id": 0, "password": 0}  # Não retornar password
+            {"_id": 0, "password": 0, "password_encrypted": 0}  # Não retornar passwords
         ).to_list(1000)
         
         return credenciais
