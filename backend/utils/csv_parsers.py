@@ -185,9 +185,97 @@ class UberCSVParser(CSVParserBase):
 
 
 class ViaVerdeCSVParser(CSVParserBase):
-    """Parser para ficheiros CSV Via Verde (portagens)"""
+    """Parser para ficheiros CSV/XLSX Via Verde (portagens)"""
     
     def parse(self) -> Tuple[bool, List[Dict], str]:
+        """Parse de ficheiro CSV ou XLSX Via Verde"""
+        try:
+            # Verificar se é XLSX
+            if self.file_content[:4] == b'PK\x03\x04':
+                logger.info("📄 Ficheiro detectado como XLSX")
+                return self._parse_xlsx()
+            else:
+                logger.info("📄 Ficheiro detectado como CSV")
+                return self._parse_csv()
+                
+        except Exception as e:
+            logger.error(f"Erro ao fazer parse do ficheiro Via Verde: {e}")
+            return False, [], f"Erro: {str(e)}"
+    
+    def _parse_xlsx(self) -> Tuple[bool, List[Dict], str]:
+        """Parse de ficheiro XLSX Via Verde"""
+        try:
+            import openpyxl
+            from io import BytesIO
+            
+            # Carregar workbook
+            workbook = openpyxl.load_workbook(BytesIO(self.file_content))
+            sheet = workbook.active
+            
+            # Obter headers da primeira linha
+            headers = []
+            for cell in sheet[1]:
+                headers.append(cell.value)
+            
+            logger.info(f"📋 Headers encontrados: {headers}")
+            
+            records = []
+            # Processar cada linha (começar na linha 2, após headers)
+            for row in sheet.iter_rows(min_row=2, values_only=True):
+                try:
+                    # Criar dicionário com os dados
+                    row_dict = {}
+                    for i, value in enumerate(row):
+                        if i < len(headers):
+                            row_dict[headers[i]] = value
+                    
+                    # Mapear para estrutura padronizada
+                    record = {
+                        'matricula': row_dict.get('License Plate') or row_dict.get('Matrícula'),
+                        'iai': row_dict.get('IAI'),
+                        'obu': row_dict.get('OBU'),
+                        'servico': row_dict.get('Service') or row_dict.get('Serviço'),
+                        'descricao_servico': row_dict.get('Service Description'),
+                        'mercado': row_dict.get('Market'),
+                        'descricao_mercado': row_dict.get('Market Description'),
+                        'data_entrada': self._parse_datetime(row_dict.get('Entry Date')),
+                        'data_saida': self._parse_datetime(row_dict.get('Exit Date')),
+                        'ponto_entrada': row_dict.get('Entry Point'),
+                        'ponto_saida': row_dict.get('Exit Point'),
+                        'valor': self._parse_money(row_dict.get('Value')),
+                        'pago': row_dict.get('Is Payed'),
+                        'data_pagamento': self._parse_datetime(row_dict.get('Payment Date')),
+                        'numero_contrato': row_dict.get('Contract Number'),
+                        'desconto_vv': self._parse_money(row_dict.get('Discount VV')),
+                        'desconto_vv_percentagem': self._parse_money(row_dict.get('Discount VVPercentage')),
+                        'valor_liquido': self._parse_money(row_dict.get('Liquid Value')),
+                        'saldo_desconto': self._parse_money(row_dict.get('Discount Balance')),
+                        'conta_mobilidade': row_dict.get('Mobility Account'),
+                        'metodo_pagamento': row_dict.get('Payment Method'),
+                        'data_sistema': self._parse_datetime(row_dict.get('System')),
+                        'plataforma': 'via_verde',
+                        'dados_completos': row_dict
+                    }
+                    
+                    # Só adicionar se tiver matrícula (validação básica)
+                    if record['matricula']:
+                        records.append(record)
+                        
+                except Exception as e:
+                    logger.warning(f"Erro ao processar linha XLSX Via Verde: {e}")
+                    continue
+            
+            if len(records) == 0:
+                return False, [], "Nenhum registo válido encontrado no ficheiro"
+            
+            logger.info(f"✅ {len(records)} registos Via Verde processados do XLSX")
+            return True, records, f"{len(records)} transações importadas"
+            
+        except Exception as e:
+            logger.error(f"Erro ao processar XLSX Via Verde: {e}")
+            return False, [], f"Erro ao processar XLSX: {str(e)}"
+    
+    def _parse_csv(self) -> Tuple[bool, List[Dict], str]:
         """Parse de ficheiro CSV Via Verde"""
         try:
             self.detect_encoding()
@@ -206,33 +294,57 @@ class ViaVerdeCSVParser(CSVParserBase):
                         'data': row.get('Data') or row.get('Date') or row.get('data'),
                         'hora': row.get('Hora') or row.get('Time') or row.get('hora'),
                         'local': row.get('Local') or row.get('Portagem') or row.get('Location'),
-                        'matricula': row.get('Matrícula') or row.get('Matricula') or row.get('Vehicle'),
-                        'valor': self._parse_money(row.get('Valor') or row.get('Montante') or row.get('Amount') or '0'),
+                        'matricula': row.get('Matrícula') or row.get('Matricula') or row.get('Vehicle') or row.get('License Plate'),
+                        'valor': self._parse_money(row.get('Valor') or row.get('Montante') or row.get('Amount') or row.get('Value') or '0'),
                         'tipo': row.get('Tipo') or 'portagem',
                         'plataforma': 'via_verde',
                         'dados_completos': row
                     }
                     records.append(record)
                 except Exception as e:
-                    logger.warning(f"Erro ao processar linha Via Verde: {e}")
+                    logger.warning(f"Erro ao processar linha Via Verde CSV: {e}")
                     continue
             
             if len(records) == 0:
                 return False, [], "Nenhum registo válido encontrado no ficheiro"
             
-            logger.info(f"✅ {len(records)} registos Via Verde processados")
+            logger.info(f"✅ {len(records)} registos Via Verde processados do CSV")
             return True, records, f"{len(records)} transações importadas"
             
         except Exception as e:
-            logger.error(f"Erro ao fazer parse do CSV Via Verde: {e}")
-            return False, [], f"Erro: {str(e)}"
+            logger.error(f"Erro ao processar CSV Via Verde: {e}")
+            return False, [], f"Erro ao processar CSV: {str(e)}"
     
-    def _parse_money(self, value: str) -> float:
-        if not value:
-            return 0.0
-        clean = re.sub(r'[€$£\s]', '', str(value))
-        clean = clean.replace(',', '.')
+    def _parse_datetime(self, value):
+        """Converter valor para string de data/hora"""
+        if value is None or value == '':
+            return None
+        
+        from datetime import datetime
+        
+        # Se já for datetime do Excel
+        if isinstance(value, datetime):
+            return value.isoformat()
+        
+        # Se for string, tentar fazer parse
         try:
+            return str(value)
+        except:
+            return None
+    
+    def _parse_money(self, value) -> float:
+        """Converter valor para float"""
+        if value is None or value == '':
+            return 0.0
+        
+        # Se já for número
+        if isinstance(value, (int, float)):
+            return float(value)
+        
+        # Se for string
+        try:
+            clean = re.sub(r'[€$£\s]', '', str(value))
+            clean = clean.replace(',', '.')
             return float(clean)
         except:
             return 0.0
