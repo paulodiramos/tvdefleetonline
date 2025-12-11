@@ -155,6 +155,9 @@ backend:
         - working: true
           agent: "testing"
           comment: "✅ TESTADO COMPLETAMENTE: Endpoint POST /api/parceiros/{parceiro_id}/importar-motoristas funcionando perfeitamente. TESTE REALIZADO: 1) Autenticação como parceiro (parceiro@tvdefleet.com) ✅ 2) Criação de CSV com 2 motoristas de teste ✅ 3) Importação via endpoint com parceiro_id correto ✅ 4) Verificação da resposta: 2 motoristas criados, 0 erros ✅ 5) VERIFICAÇÃO CRÍTICA: Campo parceiro_atribuido corretamente definido com ID do parceiro logado ✅. RESULTADO: Motoristas são corretamente associados ao parceiro que fez o login. Campo parceiro_atribuido = ab2a25aa-4f70-4c7b-835d-9204b0cd0d7e (ID do parceiro). NOTA: Campo parceiro_id não está implementado no modelo atual, mas parceiro_atribuido funciona corretamente para associação."
+        - working: true
+          agent: "testing"
+          comment: "🎯 DIAGNÓSTICO COMPLETO REALIZADO: Problema reportado 'não encontra parceiro' e erro 404 NÃO CONFIRMADO. TESTE EXTENSIVO: 1) ✅ Login como parceiro (parceiro@tvdefleet.com/UQ1B6DXU) funcionando 2) ✅ Busca de dados do parceiro via GET /api/parceiros funcionando 3) ✅ Parceiro encontrado: ID=ab2a25aa-4f70-4c7b-835d-9204b0cd0d7e, Nome='Santos & Filhos Lda' 4) ✅ Importação CSV como PARCEIRO: Status 200, 1 motorista criado, 0 erros 5) ✅ Login como admin (admin@tvdefleet.com) funcionando 6) ✅ Importação CSV como ADMIN: Status 200, 1 motorista criado, 0 erros. CONCLUSÃO: Endpoint POST /api/parceiros/{id}/importar-motoristas está FUNCIONANDO CORRETAMENTE para ambos os perfis. O problema reportado pode ter sido causado por: formato CSV incorreto, dados inválidos, ou problema temporário já resolvido. SISTEMA OPERACIONAL."
 
   - task: "Restrição de permissões - Parceiros não podem criar receitas"
     implemented: true
