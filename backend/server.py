@@ -6086,8 +6086,11 @@ async def get_parceiros(current_user: Dict = Depends(get_current_user)):
 
 
 @api_router.get("/parceiros/csv-examples/{tipo}")
-async def download_csv_example(tipo: str):
-    """Download CSV example file for motoristas or veiculos"""
+async def download_csv_example(
+    tipo: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Download CSV example file for motoristas or veiculos with parceiro ID"""
     if tipo not in ["motoristas", "veiculos"]:
         raise HTTPException(status_code=400, detail="Tipo inválido. Use 'motoristas' ou 'veiculos'")
     
@@ -6096,10 +6099,27 @@ async def download_csv_example(tipo: str):
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Ficheiro de exemplo não encontrado")
     
+    # Read the original file
+    with open(file_path, 'r', encoding='utf-8') as f:
+        content = f.read()
+    
+    # Get parceiro ID
+    parceiro_id = current_user["id"] if current_user["role"] == "parceiro" else "SEU_ID_PARCEIRO"
+    
+    # Add comment with parceiro ID at the top
+    comment = f"# ID do Parceiro Logado: {parceiro_id}\n# Este ficheiro é um exemplo. Edite conforme necessário.\n"
+    modified_content = comment + content
+    
+    # Create temporary file with modified content
+    import tempfile
+    with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.csv', encoding='utf-8') as tmp:
+        tmp.write(modified_content)
+        tmp_path = tmp.name
+    
     return FileResponse(
-        path=file_path,
+        path=tmp_path,
         media_type="text/csv",
-        filename=f"exemplo_{tipo}.csv"
+        filename=f"exemplo_{tipo}_parceiro_{parceiro_id[:8]}.csv"
     )
 
 @api_router.post("/parceiros/{parceiro_id}/importar-motoristas")
