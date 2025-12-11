@@ -1483,7 +1483,7 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
             motoristas = motoristas_response.json()
             
             # Find our test drivers
-            test_emails = ["joao.test@example.com", "maria.test@example.com"]
+            test_emails = [f"joao.test.{timestamp}@example.com", f"maria.test.{timestamp}@example.com"]
             found_drivers = []
             
             for motorista in motoristas:
