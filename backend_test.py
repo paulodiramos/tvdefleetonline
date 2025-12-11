@@ -1503,6 +1503,12 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
                 driver_parceiro_id = driver.get("parceiro_id")
                 driver_parceiro_atribuido = driver.get("parceiro_atribuido")
                 
+                # Debug: Print all driver fields to see what's available
+                print(f"   DEBUG - Driver {driver_email} fields:")
+                for key, value in driver.items():
+                    if 'parceiro' in key.lower():
+                        print(f"     {key}: {value}")
+                
                 # CRITICAL VERIFICATION: Check parceiro_id
                 if driver_parceiro_id != parceiro_id:
                     association_errors.append(
