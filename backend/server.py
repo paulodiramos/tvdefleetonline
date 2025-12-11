@@ -1252,6 +1252,7 @@ class Motorista(BaseModel):
     licenca_tvde_numero: Optional[str] = None
     licenca_tvde_validade: Optional[str] = None
     codigo_registo_criminal: Optional[str] = None  # Formato: xxxx-xxxx-xxxx
+    parceiro_id: Optional[str] = None  # ID do parceiro (para compatibilidade)
     parceiro_atribuido: Optional[str] = None  # ID do parceiro
     veiculo_atribuido: Optional[str] = None  # ID do veículo
     status_motorista: Optional[str] = "pendente_documentos"  # aguarda_carro, ferias, ativo, pendente_documentos, desativo
