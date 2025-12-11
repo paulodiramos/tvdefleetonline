@@ -1374,24 +1374,27 @@ startxref
 
     # ==================== CSV IMPORT DRIVER ASSOCIATION TEST ====================
     
-    def test_csv_import_driver_association_simplified(self):
+    def test_csv_import_driver_association_corrected_backend(self):
         """
-        Test CSV import driver association after code simplification
+        Test CSV import driver association after backend correction
         
-        CONTEXTO: Simplifiquei o código para usar diretamente `user.id` como `parceiro_id` 
-        quando um parceiro está logado, em vez de buscar na lista de parceiros.
+        CONTEXTO: Backend foi corrigido para usar automaticamente current_user["id"] como parceiro_id
+        quando um parceiro faz login e importa CSV. Não depende mais do que vem no path da URL.
         
-        TESTE:
+        TESTE CONFORME REVIEW REQUEST:
         1. Login como parceiro (parceiro@tvdefleet.com / UQ1B6DXU)
-        2. Capturar user.id do response
+        2. Capturar token e user.id
         3. Criar CSV de teste com motorista
-        4. Importar CSV usando user.id como parceiro_id
-        5. Verificar se funciona (200 OK, 1 motorista criado, sem erros)
+        4. Importar CSV via POST /api/parceiros/{qualquer_id}/importar-motoristas
+        5. Backend deve ignorar {qualquer_id} e usar current_user["id"]
+        6. Verificar que não dá mais "Parceiro not found"
+        7. Verificar motorista criado com email como login e últimos 9 dígitos do telefone como senha
         """
-        print("\n🎯 TESTING CSV IMPORT AFTER CODE SIMPLIFICATION")
+        print("\n🎯 TESTING CSV IMPORT AFTER BACKEND CORRECTION")
         print("-" * 70)
-        print("CONTEXTO: Testar importação CSV de motoristas como parceiro após simplificação do código")
-        print("Credenciais: parceiro@tvdefleet.com / UQ1B6DXU")
+        print("CONTEXTO: Backend corrigido para usar automaticamente current_user['id'] como parceiro_id")
+        print("CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU")
+        print("OBJETIVO: Verificar que não há mais erro 'Parceiro not found'")
         print("-" * 70)
         
         # Step 1: Login as partner and capture user.id
