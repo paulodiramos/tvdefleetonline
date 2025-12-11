@@ -183,7 +183,15 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
     }
   };
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-slate-600">A carregar...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Layout user={user} onLogout={onLogout}>
