@@ -260,10 +260,10 @@ const Motoristas = ({ user, onLogout }) => {
         console.log('Parceiros recebidos:', parceirosResponse.data);
         console.log('Total parceiros:', parceirosResponse.data.length);
         
-        // Encontrar o parceiro pelo email do user
+        // Encontrar o parceiro pelo email do user (case insensitive)
         const parceiro = parceirosResponse.data.find(p => {
           console.log('Comparando:', p.email, '===', user.email, '?', p.email === user.email);
-          return p.email === user.email;
+          return p.email && user.email && p.email.toLowerCase() === user.email.toLowerCase();
         });
         
         console.log('Parceiro encontrado:', parceiro);
