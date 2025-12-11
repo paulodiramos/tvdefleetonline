@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Layout from '../components/Layout';
+import axios from 'axios';
+import { API } from '@/App';
+import Layout from '@/components/Layout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Users, Car, Upload, Download, CheckCircle, XCircle, AlertCircle, FileText } from 'lucide-react';
-import axios from 'axios';
 import { toast } from 'sonner';
-
-const API = process.env.REACT_APP_BACKEND_URL;
 
 const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
   const navigate = useNavigate();
