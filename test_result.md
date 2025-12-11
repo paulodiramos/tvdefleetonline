@@ -460,7 +460,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Sistema de Importação CSV - Modal e File Upload"
+    - "Sistema de Download de CSV - Motoristas e Veículos"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -469,6 +469,7 @@ test_plan:
   expanded_features_tested: true
   unified_plan_system_tested: true
   csv_import_system_working: true
+  csv_download_system_working: true
 
 agent_communication:
     - agent: "testing"
