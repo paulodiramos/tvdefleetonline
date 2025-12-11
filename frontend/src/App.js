@@ -583,6 +583,16 @@ function App() {
             }
           />
           <Route
+            path="/importar-motoristas-veiculos"
+            element={
+              user ? (
+                <ImportarMotoristasVeiculos />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/gestao-credenciais"
             element={
               user ? (
