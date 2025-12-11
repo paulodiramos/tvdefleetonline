@@ -6213,25 +6213,33 @@ async def importar_motoristas_csv(
     current_user: Dict = Depends(get_current_user)
 ):
     """Import motoristas from CSV file - associa automaticamente ao parceiro logado"""
-    logger.info(f"Importar motoristas - User role: {current_user['role']}, parceiro_id recebido: {parceiro_id}")
+    logger.info(f"=== INICIO IMPORTAÇÃO MOTORISTAS ===")
+    logger.info(f"User role: {current_user['role']}, User ID: {current_user['id']}, User email: {current_user.get('email')}")
+    logger.info(f"Parceiro_id recebido no path: {parceiro_id}")
     
-    # Para parceiros, usar sempre o próprio ID
+    # Para parceiros, usar SEMPRE o próprio ID (ignorar o ID do path)
     if current_user["role"] == "parceiro":
+        original_id = parceiro_id
         parceiro_id = current_user["id"]
-        logger.info(f"Parceiro logado - usando current_user['id']: {parceiro_id}")
+        logger.info(f"PARCEIRO LOGADO - Substituindo ID do path '{original_id}' por current_user['id']: '{parceiro_id}'")
     
     # Check permissions
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "parceiro"]:
+        logger.error(f"Usuário sem permissão: role={current_user['role']}")
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Verify parceiro exists
-    logger.info(f"Verificando se parceiro existe: {parceiro_id}")
+    logger.info(f"Verificando se parceiro existe no banco: {parceiro_id}")
     parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
     if not parceiro:
-        logger.error(f"Parceiro não encontrado: {parceiro_id}")
-        raise HTTPException(status_code=404, detail="Parceiro not found")
+        logger.error(f"PARCEIRO NÃO ENCONTRADO NO BANCO: {parceiro_id}")
+        # List all parceiros IDs for debugging
+        all_parceiros = await db.parceiros.find({}, {"_id": 0, "id": 1, "email": 1}).to_list(100)
+        logger.error(f"Parceiros disponíveis no banco: {[p.get('id') for p in all_parceiros]}")
+        raise HTTPException(status_code=404, detail=f"Parceiro not found: {parceiro_id}")
     
     logger.info(f"Parceiro encontrado: {parceiro.get('nome_empresa', parceiro.get('email', 'N/A'))}")
+    logger.info(f"=== FIM VERIFICAÇÕES INICIAIS ===")
     
     try:
         # Read CSV file with multiple encoding support
