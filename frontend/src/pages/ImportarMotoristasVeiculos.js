@@ -10,9 +10,8 @@ import { toast } from 'react-hot-toast';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-const ImportarMotoristasVeiculos = () => {
+const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
   const navigate = useNavigate();
-  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [motoristasFile, setMotoristasFile] = useState(null);
   const [veiculosFile, setVeiculosFile] = useState(null);
@@ -20,16 +19,11 @@ const ImportarMotoristasVeiculos = () => {
   const [veiculosResult, setVeiculosResult] = useState(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user');
-    
-    if (!token || !storedUser) {
-      navigate('/');
+    if (!user) {
+      navigate('/login');
       return;
     }
-    
-    setUser(JSON.parse(storedUser));
-  }, [navigate]);
+  }, [user, navigate]);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
