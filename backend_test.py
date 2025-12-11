@@ -6573,37 +6573,50 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
 if __name__ == "__main__":
     tester = TVDEFleetTester()
     
-    # Run CSV import diagnosis as requested in review
-    print("🚨 DIAGNÓSTICO COMPLETO - PROBLEMA IMPORTAÇÃO CSV MOTORISTAS")
+    # Run CSV import test after code simplification as requested in review
+    print("🎯 TESTE IMPORTAÇÃO CSV DE MOTORISTAS APÓS SIMPLIFICAÇÃO DO CÓDIGO")
     print("=" * 80)
-    print("PROBLEMA REPORTADO:")
-    print("- Quando logado como parceiro: erro 'não encontra parceiro'")
-    print("- Quando logado como admin: também há erro nos motoristas")
-    print("- Logs: POST /api/parceiros/{id}/importar-motoristas HTTP/1.1 404 Not Found")
+    print("CONTEXTO:")
+    print("Simplifiquei o código para usar diretamente `user.id` como `parceiro_id`")
+    print("quando um parceiro está logado, em vez de buscar na lista de parceiros.")
+    print("")
     print("CREDENCIAIS:")
     print("- Parceiro: parceiro@tvdefleet.com / UQ1B6DXU")
-    print("- Admin: admin@tvdefleet.com / admin123")
+    print("")
+    print("TESTE:")
+    print("1. Login como parceiro")
+    print("2. Capturar user.id do response")
+    print("3. Criar CSV de teste")
+    print("4. Importar CSV usando user.id como parceiro_id")
+    print("5. Verificar se funciona")
     print("=" * 80)
     
-    # Run the diagnosis
-    success = tester.test_csv_import_driver_diagnosis()
+    # Authenticate first
+    if not tester.authenticate_user("parceiro"):
+        print("❌ FALHA: Não foi possível autenticar como parceiro")
+        exit(1)
+    
+    # Run the simplified CSV import test
+    success = tester.test_csv_import_driver_association_simplified()
     
     # Print summary
     tester.print_summary()
     summary = tester.get_test_summary()
     
-    print(f"\n🎯 DIAGNÓSTICO COMPLETO")
+    print(f"\n🎯 RESULTADO FINAL")
     print(f"Total Tests: {summary['total']}")
     print(f"✅ Passed: {summary['passed']}")
     print(f"❌ Failed: {summary['failed']}")
     
     if summary["failed"] == 0 and success:
-        print("\n🎉 DIAGNÓSTICO CONCLUÍDO - SISTEMA FUNCIONANDO!")
-        print("✅ Endpoint de importação CSV está operacional")
-        print("✅ Motoristas são corretamente associados ao parceiro")
+        print("\n🎉 TESTE CONCLUÍDO COM SUCESSO!")
+        print("✅ Login bem-sucedido")
+        print("✅ user.id = parceiro_id na tabela parceiros")
+        print("✅ Importação funciona usando user.id diretamente")
+        print("✅ Motorista é criado e associado ao parceiro correto")
         exit(0)
     else:
-        print(f"\n🚨 PROBLEMA CONFIRMADO!")
-        print(f"❌ Endpoint /api/parceiros/{{id}}/importar-motoristas não está funcionando")
-        print(f"❌ Necessária correção no backend")
+        print(f"\n🚨 TESTE FALHADO!")
+        print(f"❌ Algum problema foi encontrado durante o teste")
+        print(f"❌ Verificar logs acima para detalhes")
         exit(1)
