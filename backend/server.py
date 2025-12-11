@@ -6166,7 +6166,12 @@ async def importar_motoristas_csv(
         if decoded is None:
             raise HTTPException(status_code=400, detail="Não foi possível ler o ficheiro CSV. Tente guardar o ficheiro como UTF-8.")
         
-        csv_reader = csv.DictReader(io.StringIO(decoded))
+        # Detect delimiter (Portuguese Excel often uses semicolon)
+        sample = decoded[:1000]
+        delimiter = ';' if sample.count(';') > sample.count(',') else ','
+        logger.info(f"Detected CSV delimiter: '{delimiter}'")
+        
+        csv_reader = csv.DictReader(io.StringIO(decoded), delimiter=delimiter)
         
         motoristas_criados = 0
         erros = []
