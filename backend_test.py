@@ -1472,8 +1472,9 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
             # Step 5: Query the created drivers and verify association
             print("\n📋 STEP 5: Consultar os motoristas criados e verificar associação")
             
-            # Get all motoristas to find the ones we just created
-            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            # Get all motoristas to find the ones we just created (use admin headers to see all fields)
+            admin_headers = self.get_headers("admin")
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=admin_headers)
             
             if motoristas_response.status_code != 200:
                 self.log_result("CSV-Import-Verify-Association", False, 
