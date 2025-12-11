@@ -6215,6 +6215,9 @@ async def importar_motoristas_csv(
                     # Auto-generated
                     "id_cartao_frota_combustivel": f"FROTA-{str(uuid.uuid4())[:8].upper()}",
                     
+                    # Required documents field (empty for CSV import)
+                    "documents": {},
+                    
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }
