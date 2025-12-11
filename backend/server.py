@@ -12804,7 +12804,13 @@ async def importar_ganhos_bolt(
         # Ler conteúdo do ficheiro
         contents = await file.read()
         decoded = contents.decode('utf-8')
-        csv_reader = csv.DictReader(io.StringIO(decoded))
+        
+        # Detect delimiter (Portuguese Excel often uses semicolon)
+        sample = decoded[:1000]
+        delimiter = ';' if sample.count(';') > sample.count(',') else ','
+        logger.info(f"Detected CSV delimiter for Bolt ganhos import: '{delimiter}'")
+        
+        csv_reader = csv.DictReader(io.StringIO(decoded), delimiter=delimiter)
         
         ganhos_importados = []
         motoristas_encontrados = 0
