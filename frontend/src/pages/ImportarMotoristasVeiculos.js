@@ -282,6 +282,13 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
                 <Upload className="h-4 w-4 mr-2" />
                 {loading ? 'A processar...' : 'Importar Motoristas'}
               </Button>
+              
+              {/* Debug info */}
+              {process.env.NODE_ENV === 'development' && (
+                <p className="text-xs text-slate-400 mt-1">
+                  Debug: File={motoristasFile ? 'Yes' : 'No'}, Loading={loading ? 'Yes' : 'No'}
+                </p>
+              )}
 
               {/* Result */}
               {motoristasResult && (
@@ -392,6 +399,13 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
                 <Upload className="h-4 w-4 mr-2" />
                 {loading ? 'A processar...' : 'Importar Veículos'}
               </Button>
+              
+              {/* Debug info */}
+              {process.env.NODE_ENV === 'development' && (
+                <p className="text-xs text-slate-400 mt-1">
+                  Debug: File={veiculosFile ? 'Yes' : 'No'}, Loading={loading ? 'Yes' : 'No'}
+                </p>
+              )}
 
               {/* Result */}
               {veiculosResult && (
