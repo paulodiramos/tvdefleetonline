@@ -256,7 +256,14 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
                   id="motoristas-file-input"
                   type="file"
                   accept=".csv"
-                  onChange={(e) => setMotoristasFile(e.target.files[0])}
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    console.log('File selected:', file);
+                    if (file) {
+                      setMotoristasFile(file);
+                      console.log('Motoristas file set:', file.name);
+                    }
+                  }}
                   className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
                 />
                 {motoristasFile && (
@@ -359,7 +366,14 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
                   id="veiculos-file-input"
                   type="file"
                   accept=".csv"
-                  onChange={(e) => setVeiculosFile(e.target.files[0])}
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    console.log('File selected:', file);
+                    if (file) {
+                      setVeiculosFile(file);
+                      console.log('Veiculos file set:', file.name);
+                    }
+                  }}
                   className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
                 />
                 {veiculosFile && (
