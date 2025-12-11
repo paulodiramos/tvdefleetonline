@@ -6304,9 +6304,22 @@ async def importar_veiculos_csv(
         raise HTTPException(status_code=404, detail="Parceiro not found")
     
     try:
-        # Read CSV file
+        # Read CSV file with multiple encoding support
         content = await file.read()
-        decoded = content.decode('utf-8-sig')  # Handle BOM
+        
+        # Try multiple encodings (Portuguese files often use ISO-8859-1 or Windows-1252)
+        decoded = None
+        for encoding in ['utf-8-sig', 'utf-8', 'iso-8859-1', 'windows-1252', 'latin-1']:
+            try:
+                decoded = content.decode(encoding)
+                logger.info(f"Successfully decoded veiculos CSV with encoding: {encoding}")
+                break
+            except UnicodeDecodeError:
+                continue
+        
+        if decoded is None:
+            raise HTTPException(status_code=400, detail="Não foi possível ler o ficheiro CSV. Tente guardar o ficheiro como UTF-8.")
+        
         csv_reader = csv.DictReader(io.StringIO(decoded))
         
         veiculos_criados = 0
