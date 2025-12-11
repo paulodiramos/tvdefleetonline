@@ -168,9 +168,28 @@ const Vehicles = ({ user, onLogout }) => {
     });
   };
 
-  const handleDownloadCSVExample = () => {
-    window.open(`${API}/parceiros/csv-examples/veiculos`, '_blank');
-    toast.success('Exemplo de veículos descarregado');
+  const handleDownloadCSVExample = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/parceiros/csv-examples/veiculos`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'exemplo_veiculos.csv');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success('Exemplo de veículos descarregado');
+    } catch (error) {
+      console.error('Erro ao descarregar exemplo:', error);
+      toast.error('Erro ao descarregar exemplo CSV');
+    }
   };
 
   const handleImportCSV = async (file) => {
