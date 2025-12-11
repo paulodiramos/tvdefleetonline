@@ -6628,8 +6628,8 @@ if __name__ == "__main__":
         print("❌ FALHA: Não foi possível autenticar como parceiro")
         exit(1)
     
-    # Run the simplified CSV import test
-    success = tester.test_csv_import_driver_association_simplified()
+    # Run the corrected CSV import test
+    success = tester.test_csv_import_driver_association_corrected_backend()
     
     # Print summary
     tester.print_summary()
