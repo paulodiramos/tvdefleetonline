@@ -248,10 +248,7 @@ const Motoristas = ({ user, onLogout }) => {
     
     // Verificar se é admin/gestão ou parceiro
     let parceiro_id;
-    if (user.role === 'admin' || user.role === 'gestao') {
-      toast.error('Por favor, importe motoristas através da página do parceiro');
-      return;
-    } else if (user.role === 'parceiro') {
+    if (user.role === 'parceiro') {
       // Buscar o parceiro_id associado ao user logado
       try {
         const token = localStorage.getItem('token');
