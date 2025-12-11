@@ -6243,17 +6243,20 @@ async def importar_motoristas_csv(
         logger.error(f"Error processing CSV: {e}")
         raise HTTPException(status_code=500, detail=f"Erro ao processar CSV: {str(e)}")
 
-@api_router.post("/parceiros/{parceiro_id}/importar-veiculos")
+@api_router.post("/parceiros/{parceiro_id}/importar-veiculos-csv")
 async def importar_veiculos_csv(
     parceiro_id: str,
     file: UploadFile = File(...),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Import veiculos from CSV file"""
+    """Import veiculos from CSV file - associa automaticamente ao parceiro logado"""
+    # Para parceiros, usar sempre o próprio ID
+    if current_user["role"] == "parceiro":
+        parceiro_id = current_user["id"]
+    
     # Check permissions
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
-        if current_user["role"] == "parceiro" and current_user["id"] != parceiro_id:
-            raise HTTPException(status_code=403, detail="Not authorized")
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "parceiro"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
     
     # Verify parceiro exists
     parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
