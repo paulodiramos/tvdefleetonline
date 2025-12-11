@@ -25,11 +25,7 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
     }
   }, [user, navigate]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/');
-  };
+  // handleLogout is now passed as prop
 
   const handleDownloadExample = async (tipo) => {
     try {
