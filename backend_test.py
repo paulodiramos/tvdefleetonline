@@ -1372,6 +1372,170 @@ startxref
         except Exception as e:
             self.log_result("Base-Free-Plans-Exist", False, f"Request error: {str(e)}")
 
+    # ==================== CSV IMPORT DRIVER ASSOCIATION TEST ====================
+    
+    def test_csv_import_driver_association(self):
+        """Test CSV import endpoint for drivers to ensure correct partner association"""
+        print("\n🎯 TESTING CSV IMPORT DRIVER ASSOCIATION")
+        print("-" * 70)
+        print("CONTEXTO: Testar o endpoint de importação de motoristas por CSV")
+        print("para garantir que os motoristas são corretamente associados ao parceiro logado")
+        print("-" * 70)
+        
+        # Execute the complete CSV import test
+        return self.test_partner_csv_import_complete_flow()
+    
+    def test_partner_csv_import_complete_flow(self):
+        """Complete test flow for partner CSV import as per review request"""
+        
+        # Step 1: Authenticate as Partner
+        print("\n📋 STEP 1: Autenticar como Parceiro")
+        if not self.authenticate_user("parceiro"):
+            self.log_result("CSV-Import-Auth", False, "Failed to authenticate as parceiro")
+            return False
+        
+        headers = self.get_headers("parceiro")
+        
+        # Get partner user info to extract parceiro_id
+        try:
+            # Login to get user info
+            creds = TEST_CREDENTIALS["parceiro"]
+            login_response = requests.post(f"{BACKEND_URL}/auth/login", json=creds)
+            
+            if login_response.status_code != 200:
+                self.log_result("CSV-Import-Get-Partner-ID", False, "Failed to get partner user info")
+                return False
+            
+            user_data = login_response.json()
+            user_info = user_data.get("user", {})
+            parceiro_id = user_info.get("id")
+            
+            if not parceiro_id:
+                self.log_result("CSV-Import-Get-Partner-ID", False, "Could not extract parceiro_id from user")
+                return False
+            
+            self.log_result("CSV-Import-Get-Partner-ID", True, f"Partner ID obtained: {parceiro_id}")
+            
+        except Exception as e:
+            self.log_result("CSV-Import-Get-Partner-ID", False, f"Error getting partner ID: {str(e)}")
+            return False
+        
+        # Step 2: Create CSV test file with 2 drivers
+        print("\n📋 STEP 2: Criar arquivo CSV de teste com 2 motoristas")
+        csv_content = """Nome,Email,Telefone,Nacionalidade
+João Silva Test,joao.test@example.com,912345678,Portuguesa
+Maria Santos Test,maria.test@example.com,923456789,Portuguesa"""
+        
+        try:
+            # Step 3: Import the CSV
+            print("\n📋 STEP 3: Importar o CSV")
+            files = {
+                'file': ('test_motoristas.csv', csv_content.encode('utf-8'), 'text/csv')
+            }
+            
+            import_response = requests.post(
+                f"{BACKEND_URL}/parceiros/{parceiro_id}/importar-motoristas",
+                files=files,
+                headers=headers
+            )
+            
+            if import_response.status_code != 200:
+                self.log_result("CSV-Import-Upload", False, 
+                              f"CSV import failed: {import_response.status_code}", import_response.text)
+                return False
+            
+            import_result = import_response.json()
+            
+            # Step 4: Verify the response
+            print("\n📋 STEP 4: Verificar a resposta")
+            motoristas_criados = import_result.get("motoristas_criados", 0)
+            erros = import_result.get("erros", [])
+            
+            if motoristas_criados != 2:
+                self.log_result("CSV-Import-Response-Check", False, 
+                              f"Expected 2 drivers created, got {motoristas_criados}")
+                return False
+            
+            if len(erros) > 0:
+                self.log_result("CSV-Import-Response-Check", False, 
+                              f"Import had errors: {erros}")
+                return False
+            
+            self.log_result("CSV-Import-Response-Check", True, 
+                          f"CSV import successful: {motoristas_criados} drivers created, no errors")
+            
+            # Step 5: Query the created drivers and verify association
+            print("\n📋 STEP 5: Consultar os motoristas criados e verificar associação")
+            
+            # Get all motoristas to find the ones we just created
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            
+            if motoristas_response.status_code != 200:
+                self.log_result("CSV-Import-Verify-Association", False, 
+                              f"Failed to get motoristas list: {motoristas_response.status_code}")
+                return False
+            
+            motoristas = motoristas_response.json()
+            
+            # Find our test drivers
+            test_emails = ["joao.test@example.com", "maria.test@example.com"]
+            found_drivers = []
+            
+            for motorista in motoristas:
+                if motorista.get("email") in test_emails:
+                    found_drivers.append(motorista)
+            
+            if len(found_drivers) != 2:
+                self.log_result("CSV-Import-Verify-Association", False, 
+                              f"Expected to find 2 test drivers, found {len(found_drivers)}")
+                return False
+            
+            # Verify critical association fields
+            association_errors = []
+            
+            for driver in found_drivers:
+                driver_email = driver.get("email")
+                driver_parceiro_id = driver.get("parceiro_id")
+                driver_parceiro_atribuido = driver.get("parceiro_atribuido")
+                
+                # CRITICAL VERIFICATION: Check parceiro_id
+                if driver_parceiro_id != parceiro_id:
+                    association_errors.append(
+                        f"Driver {driver_email}: parceiro_id is '{driver_parceiro_id}', expected '{parceiro_id}'"
+                    )
+                
+                # CRITICAL VERIFICATION: Check parceiro_atribuido
+                if driver_parceiro_atribuido != parceiro_id:
+                    association_errors.append(
+                        f"Driver {driver_email}: parceiro_atribuido is '{driver_parceiro_atribuido}', expected '{parceiro_id}'"
+                    )
+            
+            if association_errors:
+                self.log_result("CSV-Import-Verify-Association", False, 
+                              f"Association verification failed: {'; '.join(association_errors)}")
+                return False
+            
+            # SUCCESS: All verifications passed
+            self.log_result("CSV-Import-Verify-Association", True, 
+                          f"✅ All association checks passed: Both drivers have correct parceiro_id and parceiro_atribuido = {parceiro_id}")
+            
+            # Log detailed success information
+            print(f"\n🎉 CSV IMPORT TEST COMPLETED SUCCESSFULLY!")
+            print(f"✅ Motoristas criados: {motoristas_criados}")
+            print(f"✅ Erros na importação: {len(erros)}")
+            print(f"✅ Parceiro ID do utilizador logado: {parceiro_id}")
+            
+            for driver in found_drivers:
+                print(f"✅ Motorista: {driver['name']} ({driver['email']})")
+                print(f"   - parceiro_id: {driver.get('parceiro_id')}")
+                print(f"   - parceiro_atribuido: {driver.get('parceiro_atribuido')}")
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("CSV-Import-Complete-Flow", False, f"Test error: {str(e)}")
+            return False
+
     # ==================== PARTNER APPROVAL BUG FIX TESTS ====================
     
     def test_partner_approval_bug_fix(self):
