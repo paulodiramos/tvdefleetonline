@@ -1422,9 +1422,11 @@ startxref
         
         # Step 2: Create CSV test file with 2 drivers
         print("\n📋 STEP 2: Criar arquivo CSV de teste com 2 motoristas")
-        csv_content = """Nome,Email,Telefone,Nacionalidade
-João Silva Test,joao.test@example.com,912345678,Portuguesa
-Maria Santos Test,maria.test@example.com,923456789,Portuguesa"""
+        import time
+        timestamp = int(time.time())
+        csv_content = f"""Nome,Email,Telefone,Nacionalidade
+João Silva Test,joao.test.{timestamp}@example.com,912345678,Portuguesa
+Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
         
         try:
             # Step 3: Import the CSV
