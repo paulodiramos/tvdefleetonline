@@ -6232,14 +6232,19 @@ async def importar_motoristas_csv(
                 # Generate user ID
                 user_id = str(uuid.uuid4())
                 
+                # Normalize phone numbers
+                telefone_normalizado = normalize_phone(row.get('Telefone', ''))
+                whatsapp_normalizado = normalize_phone(row.get('WhatsApp', row.get('Telefone', '')))
+                telefone_uber_normalizado = normalize_phone(row.get('Telefone Uber', ''))
+                
                 # Create user document
                 user_doc = {
                     "id": user_id,
                     "email": row['Email'],
                     "name": row['Nome'],
                     "role": UserRole.MOTORISTA,
-                    "password": hash_password(row.get('Telefone', 'password123').replace(" ", "")[-9:]),  # Use last 9 digits of phone as password
-                    "phone": row.get('Telefone', ''),
+                    "password": hash_password(telefone_normalizado[-9:] if telefone_normalizado else 'password123'),  # Use last 9 digits of phone as password
+                    "phone": telefone_normalizado,
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "approved": True  # Auto-approve imported motoristas
                 }
