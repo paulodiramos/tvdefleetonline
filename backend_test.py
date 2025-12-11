@@ -1385,6 +1385,213 @@ startxref
         # Execute the complete CSV import test
         return self.test_partner_csv_import_complete_flow()
     
+    def test_csv_import_driver_diagnosis(self):
+        """
+        DIAGNÓSTICO COMPLETO DO PROBLEMA DE IMPORTAÇÃO CSV DE MOTORISTAS
+        
+        Problema Reportado:
+        - Quando logado como parceiro: erro "não encontra parceiro"
+        - Quando logado como admin: também há erro nos motoristas
+        - Logs mostram: POST /api/parceiros/{id}/importar-motoristas HTTP/1.1" 404 Not Found
+        
+        Credenciais:
+        - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU
+        - Admin: admin@tvdefleet.com / admin123
+        """
+        print("\n🚨 DIAGNÓSTICO COMPLETO - PROBLEMA IMPORTAÇÃO CSV MOTORISTAS")
+        print("=" * 80)
+        print("PROBLEMA REPORTADO:")
+        print("- Quando logado como parceiro: erro 'não encontra parceiro'")
+        print("- Quando logado como admin: também há erro nos motoristas")
+        print("- Logs: POST /api/parceiros/{id}/importar-motoristas HTTP/1.1 404 Not Found")
+        print("=" * 80)
+        
+        # STEP 1: Login as Partner
+        print("\n📋 STEP 1: FAZER LOGIN COMO PARCEIRO")
+        print("-" * 50)
+        
+        partner_auth_success = self.authenticate_user("parceiro")
+        if not partner_auth_success:
+            self.log_result("CSV-Import-Diagnosis", False, "FALHA: Não foi possível autenticar como parceiro")
+            return False
+        
+        partner_headers = self.get_headers("parceiro")
+        print("✅ Login como parceiro@tvdefleet.com realizado com sucesso")
+        
+        # STEP 2: Get Partner Data
+        print("\n📋 STEP 2: BUSCAR DADOS DO PARCEIRO")
+        print("-" * 50)
+        
+        try:
+            parceiros_response = requests.get(f"{BACKEND_URL}/parceiros", headers=partner_headers)
+            print(f"GET /api/parceiros - Status: {parceiros_response.status_code}")
+            
+            if parceiros_response.status_code == 200:
+                parceiros = parceiros_response.json()
+                print(f"✅ Encontrados {len(parceiros)} parceiros")
+                
+                # Find the logged partner
+                partner_email = "parceiro@tvdefleet.com"
+                logged_partner = None
+                
+                for parceiro in parceiros:
+                    if parceiro.get("email") == partner_email:
+                        logged_partner = parceiro
+                        break
+                
+                if logged_partner:
+                    partner_id = logged_partner["id"]
+                    partner_name = logged_partner.get("nome_empresa", logged_partner.get("name", "N/A"))
+                    print(f"✅ Parceiro encontrado:")
+                    print(f"   - ID: {partner_id}")
+                    print(f"   - Nome: {partner_name}")
+                    print(f"   - Email: {logged_partner.get('email')}")
+                else:
+                    self.log_result("CSV-Import-Diagnosis", False, "FALHA: Parceiro logado não encontrado na lista")
+                    return False
+            else:
+                self.log_result("CSV-Import-Diagnosis", False, f"FALHA: Erro ao buscar parceiros - Status: {parceiros_response.status_code}")
+                print(f"Response: {parceiros_response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_result("CSV-Import-Diagnosis", False, f"FALHA: Erro na requisição de parceiros - {str(e)}")
+            return False
+        
+        # STEP 3: Create Test CSV
+        print("\n📋 STEP 3: CRIAR CSV DE TESTE COM 1 MOTORISTA")
+        print("-" * 50)
+        
+        csv_content = """nome,email,telefone,nif,carta_conducao_numero,carta_conducao_validade,licenca_tvde_numero,licenca_tvde_validade,morada_completa,codigo_postal,data_nascimento,nacionalidade
+João Silva Teste,joao.teste@example.com,911234567,123456789,PT123456789,2025-12-31,TVDE123456,2025-12-31,Rua Teste 123,1000-100,1990-01-01,Portuguesa"""
+        
+        print("✅ CSV criado com 1 motorista de teste:")
+        print("   - Nome: João Silva Teste")
+        print("   - Email: joao.teste@example.com")
+        print("   - NIF: 123456789")
+        
+        # STEP 4: Test CSV Import
+        print("\n📋 STEP 4: TENTAR IMPORTAR CSV")
+        print("-" * 50)
+        
+        try:
+            files = {
+                'file': ('motoristas_teste.csv', csv_content.encode('utf-8'), 'text/csv')
+            }
+            
+            import_url = f"{BACKEND_URL}/parceiros/{partner_id}/importar-motoristas"
+            print(f"URL de importação: {import_url}")
+            
+            import_response = requests.post(import_url, files=files, headers=partner_headers)
+            print(f"POST {import_url} - Status: {import_response.status_code}")
+            
+            if import_response.status_code == 200:
+                result = import_response.json()
+                print("✅ IMPORTAÇÃO REALIZADA COM SUCESSO!")
+                print(f"   - Motoristas criados: {result.get('motoristas_criados', 0)}")
+                print(f"   - Erros: {result.get('erros', 0)}")
+                print(f"   - Detalhes: {result}")
+                
+                self.log_result("CSV-Import-Diagnosis", True, "SUCESSO: Importação CSV funcionando corretamente")
+                return True
+                
+            elif import_response.status_code == 404:
+                print("❌ ERRO 404 - ENDPOINT NÃO ENCONTRADO")
+                print("   Este é o problema reportado!")
+                
+                # STEP 5: Diagnose 404 Error
+                print("\n📋 STEP 5: DIAGNÓSTICO DO ERRO 404")
+                print("-" * 50)
+                
+                # Check available routes
+                self.diagnose_available_routes(partner_headers)
+                
+                self.log_result("CSV-Import-Diagnosis", False, 
+                              f"CONFIRMADO: Erro 404 - Endpoint /api/parceiros/{partner_id}/importar-motoristas não encontrado")
+                return False
+                
+            else:
+                print(f"❌ ERRO {import_response.status_code}")
+                print(f"Response: {import_response.text}")
+                
+                self.log_result("CSV-Import-Diagnosis", False, 
+                              f"ERRO: Status {import_response.status_code} - {import_response.text}")
+                return False
+                
+        except Exception as e:
+            self.log_result("CSV-Import-Diagnosis", False, f"ERRO: Exceção na importação - {str(e)}")
+            return False
+    
+    def diagnose_available_routes(self, headers):
+        """Diagnose available routes to understand the 404 error"""
+        print("\n🔍 DIAGNÓSTICO DE ROTAS DISPONÍVEIS")
+        print("-" * 40)
+        
+        # Test common variations of the import endpoint
+        test_endpoints = [
+            "/parceiros/importar-motoristas",
+            "/importar-motoristas", 
+            "/motoristas/importar-csv",
+            "/motoristas/import-csv",
+            "/import/motoristas",
+            "/csv/motoristas"
+        ]
+        
+        for endpoint in test_endpoints:
+            try:
+                test_url = f"{BACKEND_URL}{endpoint}"
+                response = requests.get(test_url, headers=headers)
+                print(f"GET {endpoint} - Status: {response.status_code}")
+                
+                if response.status_code != 404:
+                    print(f"   ⚠️  Endpoint alternativo encontrado: {endpoint}")
+                    
+            except Exception as e:
+                print(f"GET {endpoint} - Erro: {str(e)}")
+        
+        # Test if the parceiro-specific endpoint exists with different methods
+        print("\n🔍 TESTANDO MÉTODOS HTTP NO ENDPOINT ESPECÍFICO")
+        print("-" * 40)
+        
+        # Get a sample partner ID for testing
+        try:
+            parceiros_response = requests.get(f"{BACKEND_URL}/parceiros", headers=headers)
+            if parceiros_response.status_code == 200:
+                parceiros = parceiros_response.json()
+                if parceiros:
+                    sample_partner_id = parceiros[0]["id"]
+                    
+                    test_methods = ["GET", "POST", "PUT", "PATCH"]
+                    for method in test_methods:
+                        try:
+                            test_url = f"{BACKEND_URL}/parceiros/{sample_partner_id}/importar-motoristas"
+                            
+                            if method == "GET":
+                                response = requests.get(test_url, headers=headers)
+                            elif method == "POST":
+                                response = requests.post(test_url, headers=headers)
+                            elif method == "PUT":
+                                response = requests.put(test_url, headers=headers)
+                            elif method == "PATCH":
+                                response = requests.patch(test_url, headers=headers)
+                            
+                            print(f"{method} /parceiros/{sample_partner_id}/importar-motoristas - Status: {response.status_code}")
+                            
+                            if response.status_code != 404:
+                                print(f"   ⚠️  Método {method} retorna status diferente de 404")
+                                
+                        except Exception as e:
+                            print(f"{method} - Erro: {str(e)}")
+        except Exception as e:
+            print(f"Erro ao testar métodos HTTP: {str(e)}")
+        
+        print("\n💡 POSSÍVEIS CAUSAS DO ERRO 404:")
+        print("1. Endpoint não implementado no backend")
+        print("2. Rota registrada com nome diferente")
+        print("3. Endpoint requer parâmetros adicionais")
+        print("4. Problema de configuração de rotas")
+        print("5. Endpoint movido para outra localização")
+    
     def test_partner_csv_import_complete_flow(self):
         """Complete test flow for partner CSV import as per review request"""
         
