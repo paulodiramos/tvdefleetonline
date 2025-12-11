@@ -301,6 +301,18 @@ backend:
           comment: "✅ TESTADO: Background task funcionando. Verificação manual de alertas executa sem erros. Sistema de alertas automático ativo e operacional."
 
 frontend:
+  - task: "Sistema de Download de CSV - Motoristas e Veículos"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/Motoristas.js, frontend/src/pages/Vehicles.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTE COMPLETO DO SISTEMA DE DOWNLOAD CSV - 100% FUNCIONANDO! CONTEXTO: Testado sistema de download de CSV de exemplo após correção conforme review request. CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU ✅. TESTE 1 - DOWNLOAD CSV MOTORISTAS: 1) ✅ Login como parceiro funcionando 2) ✅ Navegação para /motoristas funcionando 3) ✅ Botão 'Importar CSV' encontrado e clicável 4) ✅ Modal de importação abre corretamente 5) ✅ Botão 'Descarregar Exemplo CSV' funcionando 6) ✅ Ficheiro 'exemplo_motoristas.csv' descarregado com sucesso 7) ✅ Toast de sucesso aparece. TESTE 2 - DOWNLOAD CSV VEÍCULOS: 1) ✅ Navegação para /vehicles funcionando 2) ✅ Botão 'Importar CSV' encontrado e clicável 3) ✅ Modal de importação abre corretamente 4) ✅ Botão 'Descarregar Exemplo CSV' funcionando 5) ✅ Ficheiro 'exemplo_veiculos.csv' descarregado com sucesso 6) ✅ Toast de sucesso aparece. TESTE 3 - VERIFICAÇÃO CONTEÚDO CSV: 1) ✅ Primeira linha contém comentário: '# ID do Parceiro Logado: ab2a25aa-4f70-4c7b-835d-9204b0cd0d7e' 2) ✅ Segunda linha contém comentário explicativo 3) ✅ Terceira linha contém headers das colunas 4) ✅ Coluna 'Localidade' presente em ambos os CSV (posição 14 em motoristas, posição 12 em veículos). BACKEND ENDPOINTS TESTADOS: GET /api/parceiros/csv-examples/motoristas (Status 200) ✅ GET /api/parceiros/csv-examples/veiculos (Status 200) ✅. RESULTADO FINAL: Sistema de download de CSV está 100% operacional e atende todos os requisitos do review request!"
+
   - task: "Sistema de Templates - Campo Parceiro Oculto para Parceiros"
     implemented: false
     working: false
