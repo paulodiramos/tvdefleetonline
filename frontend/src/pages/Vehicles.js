@@ -184,7 +184,25 @@ const Vehicles = ({ user, onLogout }) => {
       toast.error('Por favor, importe veículos através da página do parceiro');
       return;
     } else if (user.role === 'parceiro') {
-      parceiro_id = user.id;
+      // Buscar o parceiro_id associado ao user logado
+      try {
+        const token = localStorage.getItem('token');
+        const parceirosResponse = await axios.get(`${API}/parceiros`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        // Encontrar o parceiro pelo email do user
+        const parceiro = parceirosResponse.data.find(p => p.email === user.email);
+        if (!parceiro) {
+          toast.error('Parceiro não encontrado. Contacte o administrador.');
+          return;
+        }
+        parceiro_id = parceiro.id;
+      } catch (error) {
+        console.error('Erro ao buscar parceiro:', error);
+        toast.error('Erro ao buscar dados do parceiro');
+        return;
+      }
     } else {
       toast.error('Sem permissão para importar veículos');
       return;
