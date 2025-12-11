@@ -29,24 +29,38 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
 
   const handleDownloadExample = async (tipo) => {
     try {
+      console.log('Download example:', tipo);
+      console.log('API:', API);
+      console.log('User:', user);
+      
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/parceiros/csv-examples/${tipo}`, {
+      console.log('Token exists:', !!token);
+      
+      const url = `${API}/parceiros/csv-examples/${tipo}`;
+      console.log('Request URL:', url);
+      
+      const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
       });
       
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      console.log('Response received:', response.status);
+      
+      const blob = new Blob([response.data], { type: 'text/csv' });
+      const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.href = url;
+      link.href = downloadUrl;
       link.setAttribute('download', `exemplo_${tipo}.csv`);
       document.body.appendChild(link);
       link.click();
       link.remove();
+      window.URL.revokeObjectURL(downloadUrl);
       
       toast.success(`Exemplo de ${tipo} descarregado com sucesso`);
     } catch (error) {
       console.error('Erro ao descarregar exemplo:', error);
-      toast.error('Erro ao descarregar exemplo CSV');
+      console.error('Error details:', error.response?.data);
+      toast.error(`Erro ao descarregar exemplo: ${error.response?.status || error.message}`);
     }
   };
 
