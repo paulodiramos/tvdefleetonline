@@ -28,6 +28,7 @@ import GestaoPagamentosRecibos from "@/pages/GestaoPagamentosRecibos";
 import ConfiguracaoSincronizacao from "@/pages/ConfiguracaoSincronizacao";
 import CredenciaisParceiros from "@/pages/CredenciaisParceiros";
 import ImportarDados from "@/pages/ImportarDados";
+import ImportarMotoristasVeiculos from "@/pages/ImportarMotoristasVeiculos";
 import GestaoCredenciais from "@/pages/GestaoCredenciais";
 import PagamentosParceiro from "@/pages/PagamentosParceiro";
 import ParceiroReports from "@/pages/ParceiroReports";
