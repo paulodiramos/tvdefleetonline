@@ -45,6 +45,32 @@ class TVDEFleetTester:
             "details": details
         })
     
+    def print_summary(self):
+        """Print test results summary"""
+        print("\n" + "="*80)
+        print("📋 RESUMO DOS TESTES")
+        print("="*80)
+        
+        for result in self.test_results:
+            status = "✅ PASS" if result["success"] else "❌ FAIL"
+            print(f"{status} {result['test']}: {result['message']}")
+            if result["details"]:
+                print(f"   Details: {result['details']}")
+        
+        print("="*80)
+    
+    def get_test_summary(self):
+        """Get test results summary statistics"""
+        total = len(self.test_results)
+        passed = sum(1 for r in self.test_results if r["success"])
+        failed = total - passed
+        
+        return {
+            "total": total,
+            "passed": passed,
+            "failed": failed
+        }
+    
     def authenticate_user(self, role):
         """Authenticate user and store token"""
         try:
