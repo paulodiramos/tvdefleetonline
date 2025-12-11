@@ -300,7 +300,21 @@ backend:
           agent: "testing"
           comment: "✅ TESTADO: Background task funcionando. Verificação manual de alertas executa sem erros. Sistema de alertas automático ativo e operacional."
 
-frontend:
+  - task: "Página de Importação de Motoristas & Veículos"
+    implemented: true
+    working: true
+    file: "frontend/src/pages/ImportarMotoristasVeiculos.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ PROBLEMA IDENTIFICADO: Página não carregava devido a problema de props. Component estava verificando localStorage para user em vez de receber como prop, causando redirecionamento para home page."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTE COMPLETO DA PÁGINA DE IMPORTAÇÃO - 100% FUNCIONANDO APÓS CORREÇÃO! CONTEXTO: Testada nova página /importar-motoristas-veiculos dedicada à importação CSV conforme review request. CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU ✅. CORREÇÃO APLICADA: Atualizado component para receber user e onLogout como props em vez de usar localStorage. TESTE 1 - ACESSO À PÁGINA: ✅ Login como parceiro funcionando ✅ URL '/importar-motoristas-veiculos' carrega corretamente ✅ Título 'Importar Motoristas & Veículos' presente. TESTE 2 - INTERFACE MOTORISTAS: ✅ Card 'Importar Motoristas' visível ✅ Botão 'Descarregar Exemplo' presente ✅ Input de file upload presente ✅ Botão 'Importar Motoristas' presente. TESTE 3 - INTERFACE VEÍCULOS: ✅ Card 'Importar Veículos' visível ✅ Botão 'Descarregar Exemplo' presente ✅ Input de file upload presente ✅ Botão 'Importar Veículos' presente. TESTE 4 - INSTRUÇÕES: ✅ Card 'Como Importar' visível ✅ 3 passos claramente explicados ✅ Alertas sobre senhas e localidades presentes. TESTE 5 - LAYOUT: ✅ Layout responsivo (desktop/mobile) ✅ Cards lado a lado (desktop) ✅ Cores consistentes ✅ Ícones corretos (Users/Car). RESULTADO: Página 100% funcional, menu acessível via Relatórios, interface limpa e intuitiva!"
+
   - task: "Sistema de Download de CSV - Motoristas e Veículos"
     implemented: true
     working: true
