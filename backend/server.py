@@ -6109,18 +6109,25 @@ async def importar_motoristas_csv(
     current_user: Dict = Depends(get_current_user)
 ):
     """Import motoristas from CSV file - associa automaticamente ao parceiro logado"""
+    logger.info(f"Importar motoristas - User role: {current_user['role']}, parceiro_id recebido: {parceiro_id}")
+    
     # Para parceiros, usar sempre o próprio ID
     if current_user["role"] == "parceiro":
         parceiro_id = current_user["id"]
+        logger.info(f"Parceiro logado - usando current_user['id']: {parceiro_id}")
     
     # Check permissions
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "parceiro"]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Verify parceiro exists
+    logger.info(f"Verificando se parceiro existe: {parceiro_id}")
     parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
     if not parceiro:
+        logger.error(f"Parceiro não encontrado: {parceiro_id}")
         raise HTTPException(status_code=404, detail="Parceiro not found")
+    
+    logger.info(f"Parceiro encontrado: {parceiro.get('nome_empresa', parceiro.get('email', 'N/A'))}")
     
     try:
         # Read CSV file
