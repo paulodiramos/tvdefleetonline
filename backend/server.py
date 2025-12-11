@@ -6330,6 +6330,7 @@ async def importar_veiculos_csv(
                     "combustivel": row.get('Combustível', ''),
                     "caixa": row.get('Caixa', ''),
                     "lugares": row.get('Lugares', '5'),
+                    "localidade": row.get('Localidade', ''),
                     "km_atual": row.get('KM Atual', '').replace(' km', '').strip(),
                     "status": row.get('Status', 'disponivel').lower().replace('í', 'i').replace('á', 'a'),
                     
