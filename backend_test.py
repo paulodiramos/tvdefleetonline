@@ -1462,7 +1462,7 @@ startxref
         print("\n📋 STEP 3: CRIAR CSV DE TESTE COM 1 MOTORISTA")
         print("-" * 50)
         
-        csv_content = """nome,email,telefone,nif,carta_conducao_numero,carta_conducao_validade,licenca_tvde_numero,licenca_tvde_validade,morada_completa,codigo_postal,data_nascimento,nacionalidade
+        csv_content = """Nome,Email,Telefone,NIF,Carta Condução Número,Carta Condução Validade,Licença TVDE Número,Licença TVDE Validade,Morada Completa,Código Postal,Data Nascimento,Nacionalidade
 João Silva Teste,joao.teste@example.com,911234567,123456789,PT123456789,2025-12-31,TVDE123456,2025-12-31,Rua Teste 123,1000-100,1990-01-01,Portuguesa"""
         
         print("✅ CSV criado com 1 motorista de teste:")
