@@ -211,15 +211,16 @@ const CriarTemplateModal = ({ open, onOpenChange, onSuccess, user }) => {
           </div>
 
           {/* Parceiro Associado */}
-          <div>
-            <Label htmlFor="parceiro" className="text-base font-medium">
-              Parceiro Associado <span className="text-red-500">*</span>
-            </Label>
-            <Select value={parceiroId} onValueChange={setParceiroId}>
-              <SelectTrigger className="mt-2">
-                <SelectValue placeholder="Selecione um parceiro" />
-              </SelectTrigger>
-              <SelectContent>
+          {(user.role === 'admin' || user.role === 'gestao') && (
+            <div>
+              <Label htmlFor="parceiro" className="text-base font-medium">
+                Parceiro Associado <span className="text-red-500">*</span>
+              </Label>
+              <Select value={parceiroId} onValueChange={setParceiroId}>
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Selecione um parceiro" />
+                </SelectTrigger>
+                <SelectContent>
                 {(user?.role === 'admin' || user?.role === 'gestao') && (
                   <SelectItem value="global">Template Global (todos os parceiros)</SelectItem>
                 )}
