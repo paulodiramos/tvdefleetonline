@@ -28,8 +28,13 @@ const CriarTemplateModal = ({ open, onOpenChange, onSuccess, user }) => {
   ]);
 
   useEffect(() => {
-    if (open && user && (user.role === 'admin' || user.role === 'gestao')) {
-      fetchParceiros();
+    if (open && user) {
+      if (user.role === 'admin' || user.role === 'gestao') {
+        fetchParceiros();
+      } else if (user.role === 'parceiro') {
+        // Buscar o parceiro_id associado ao user logado
+        fetchParceiroLogado();
+      }
     }
   }, [open]);
 
@@ -42,6 +47,23 @@ const CriarTemplateModal = ({ open, onOpenChange, onSuccess, user }) => {
       setParceiros(response.data);
     } catch (error) {
       console.error('Error fetching parceiros:', error);
+    }
+  };
+
+  const fetchParceiroLogado = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/parceiros`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Encontrar o parceiro pelo email do user
+      const parceiro = response.data.find(p => p.email === user.email);
+      if (parceiro) {
+        setParceiroId(parceiro.id);
+      }
+    } catch (error) {
+      console.error('Error fetching parceiro:', error);
     }
   };
 
