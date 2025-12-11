@@ -474,7 +474,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Sistema de Download de CSV - Motoristas e Veículos"
+    - "Página de Importação de Motoristas & Veículos"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -484,6 +484,7 @@ test_plan:
   unified_plan_system_tested: true
   csv_import_system_working: true
   csv_download_system_working: true
+  importar_page_tested: true
 
 agent_communication:
     - agent: "testing"
