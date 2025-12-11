@@ -6236,6 +6236,7 @@ async def importar_motoristas_csv(
                 telefone_normalizado = normalize_phone(row.get('Telefone', ''))
                 whatsapp_normalizado = normalize_phone(row.get('WhatsApp', row.get('Telefone', '')))
                 telefone_uber_normalizado = normalize_phone(row.get('Telefone Uber', ''))
+                telefone_bolt_normalizado = normalize_phone(row.get('Telefone Bolt', ''))
                 
                 # Create user document
                 user_doc = {
