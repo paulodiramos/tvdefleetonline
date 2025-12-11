@@ -157,7 +157,7 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
   if (!user) return null;
 
   return (
-    <Layout user={user} onLogout={handleLogout}>
+    <Layout user={user} onLogout={onLogout}>
       <div className="p-4 md:p-8 max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
