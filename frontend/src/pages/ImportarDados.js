@@ -1,24 +1,31 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { API } from '@/App';
-import Layout from '@/components/Layout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useNavigate } from 'react-router-dom';
+import Layout from '../components/Layout';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'react-hot-toast';
 import { 
   Upload, 
   FileText, 
   CheckCircle, 
   AlertCircle,
+  XCircle,
   History,
   Car,
   CreditCard,
   MapPin,
-  Fuel
+  Fuel,
+  Users,
+  Download
 } from 'lucide-react';
+
+const API = process.env.REACT_APP_BACKEND_URL;
 
 const ImportarDados = ({ user, onLogout }) => {
   const [plataforma, setPlataforma] = useState('bolt');
