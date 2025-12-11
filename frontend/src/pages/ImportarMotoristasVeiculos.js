@@ -91,7 +91,10 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
-          }
+          },
+          timeout: 120000, // 2 minutes timeout for large CSV files
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity
         }
       );
       
@@ -151,7 +154,10 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'
-          }
+          },
+          timeout: 120000, // 2 minutes timeout for large CSV files
+          maxContentLength: Infinity,
+          maxBodyLength: Infinity
         }
       );
       
