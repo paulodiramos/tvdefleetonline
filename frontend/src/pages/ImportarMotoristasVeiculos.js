@@ -73,12 +73,21 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
 
     try {
       const token = localStorage.getItem('token');
+      
+      // CRITICAL: Get fresh user data from token to avoid cache issues
+      const userResponse = await axios.get(`${API}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const freshUser = userResponse.data;
+      
+      console.log('Fresh user from API:', freshUser);
+      console.log('User from props:', user);
+      
       const formData = new FormData();
       formData.append('file', motoristasFile);
 
-      let parceiro_id = user.id;
-      console.log('Importing motoristas for parceiro:', parceiro_id);
-      console.log('User object:', user);
+      let parceiro_id = freshUser.id; // Use fresh user ID
+      console.log('Using parceiro_id:', parceiro_id);
       console.log('File:', motoristasFile.name);
       
       const url = `${API}/parceiros/${parceiro_id}/importar-motoristas`;
@@ -136,12 +145,21 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
 
     try {
       const token = localStorage.getItem('token');
+      
+      // CRITICAL: Get fresh user data from token to avoid cache issues
+      const userResponse = await axios.get(`${API}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const freshUser = userResponse.data;
+      
+      console.log('Fresh user from API:', freshUser);
+      console.log('User from props:', user);
+      
       const formData = new FormData();
       formData.append('file', veiculosFile);
 
-      let parceiro_id = user.id;
-      console.log('Importing veiculos for parceiro:', parceiro_id);
-      console.log('User object:', user);
+      let parceiro_id = freshUser.id; // Use fresh user ID
+      console.log('Using parceiro_id:', parceiro_id);
       console.log('File:', veiculosFile.name);
       
       const url = `${API}/parceiros/${parceiro_id}/importar-veiculos-csv`;
