@@ -256,13 +256,27 @@ const Motoristas = ({ user, onLogout }) => {
           headers: { Authorization: `Bearer ${token}` }
         });
         
+        console.log('User email:', user.email);
+        console.log('Parceiros recebidos:', parceirosResponse.data);
+        console.log('Total parceiros:', parceirosResponse.data.length);
+        
         // Encontrar o parceiro pelo email do user
-        const parceiro = parceirosResponse.data.find(p => p.email === user.email);
+        const parceiro = parceirosResponse.data.find(p => {
+          console.log('Comparando:', p.email, '===', user.email, '?', p.email === user.email);
+          return p.email === user.email;
+        });
+        
+        console.log('Parceiro encontrado:', parceiro);
+        
         if (!parceiro) {
+          console.error('Parceiro não encontrado!');
+          console.error('User email:', user.email);
+          console.error('Emails dos parceiros:', parceirosResponse.data.map(p => p.email));
           toast.error('Parceiro não encontrado. Contacte o administrador.');
           return;
         }
         parceiro_id = parceiro.id;
+        console.log('Usando parceiro_id:', parceiro_id);
       } catch (error) {
         console.error('Erro ao buscar parceiro:', error);
         toast.error('Erro ao buscar dados do parceiro');
