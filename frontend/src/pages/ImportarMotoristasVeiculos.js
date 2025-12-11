@@ -431,7 +431,7 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
               </div>
               <div>
                 <h4 className="font-medium text-slate-900 mb-2">📤 Passo 3: Importar</h4>
-                <p>Selecione o ficheiro CSV preenchido e clique em "Importar". Os dados serão automaticamente associados à sua conta.</p>
+                <p>Selecione o ficheiro CSV preenchido e clique em &quot;Importar&quot;. Os dados serão automaticamente associados à sua conta.</p>
               </div>
               <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p className="text-yellow-800">
@@ -440,7 +440,7 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
               </div>
               <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <p className="text-blue-800">
-                  <strong>Dica:</strong> A coluna "Localidade" está incluída nos ficheiros de exemplo para indicar a localização dos motoristas e veículos.
+                  <strong>Dica:</strong> A coluna &quot;Localidade&quot; está incluída nos ficheiros de exemplo para indicar a localização dos motoristas e veículos.
                 </p>
               </div>
             </div>
