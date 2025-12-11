@@ -6255,12 +6255,12 @@ async def importar_motoristas_csv(
                     "id": user_id,
                     "email": row['Email'],
                     "name": row['Nome'],
-                    "phone": row.get('Telefone', ''),
-                    "whatsapp": row.get('WhatsApp', row.get('Telefone', '')),
+                    "phone": telefone_normalizado,
+                    "whatsapp": whatsapp_normalizado,
                     "nacionalidade": row.get('Nacionalidade', 'Portuguesa'),
                     
                     # Uber data
-                    "telefone_uber": row.get('Telefone Uber', ''),
+                    "telefone_uber": telefone_uber_normalizado,
                     "email_uber": row.get('Email Uber', ''),
                     "uuid_motorista_uber": row.get('ID Uber', ''),
                     
