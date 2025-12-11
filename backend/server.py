@@ -2195,7 +2195,13 @@ async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio
         
         # Decode CSV
         csv_text = file_content.decode('utf-8-sig')  # Handle BOM
-        csv_reader = csv.DictReader(io.StringIO(csv_text))
+        
+        # Detect delimiter (Portuguese Excel often uses semicolon)
+        sample = csv_text[:1000]
+        delimiter = ';' if sample.count(';') > sample.count(',') else ','
+        logger.info(f"Detected CSV delimiter for Uber import: '{delimiter}'")
+        
+        csv_reader = csv.DictReader(io.StringIO(csv_text), delimiter=delimiter)
         
         # Process CSV rows (can have multiple motoristas)
         total_registos = 0
