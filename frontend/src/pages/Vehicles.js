@@ -200,6 +200,10 @@ const Vehicles = ({ user, onLogout }) => {
         toast.error('Erro ao buscar dados do parceiro');
         return;
       }
+    } else if (user.role === 'admin' || user.role === 'gestao') {
+      // Para admin/gestão, precisa selecionar parceiro primeiro
+      toast.error('Por favor, vá à página do parceiro específico para importar veículos');
+      return;
     } else {
       toast.error('Sem permissão para importar veículos');
       return;
