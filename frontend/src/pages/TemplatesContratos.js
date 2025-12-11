@@ -40,8 +40,27 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
     fetchTemplates();
     if (user.role === 'admin' || user.role === 'gestao') {
       fetchParceiros();
+    } else if (user.role === 'parceiro') {
+      fetchParceiroLogado();
     }
   }, []);
+
+  const fetchParceiroLogado = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/parceiros`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Encontrar o parceiro pelo email do user
+      const parceiro = response.data.find(p => p.email === user.email);
+      if (parceiro) {
+        setFormData(prev => ({ ...prev, parceiro_id: parceiro.id }));
+      }
+    } catch (error) {
+      console.error('Error fetching parceiro:', error);
+    }
+  };
 
   const fetchTemplates = async () => {
     try {
