@@ -12510,7 +12510,13 @@ async def sincronizar_plataforma_manual(
                 with open(file_path, 'rb') as f:
                     contents = f.read()
                     decoded = contents.decode('utf-8')
-                    csv_reader = csv.DictReader(io.StringIO(decoded))
+                    
+                    # Detect delimiter (Portuguese Excel often uses semicolon)
+                    sample = decoded[:1000]
+                    delimiter = ';' if sample.count(';') > sample.count(',') else ','
+                    logger.info(f"Detected CSV delimiter for automatic sync: '{delimiter}'")
+                    
+                    csv_reader = csv.DictReader(io.StringIO(decoded), delimiter=delimiter)
                     
                     registos_importados = 0
                     for row in csv_reader:
