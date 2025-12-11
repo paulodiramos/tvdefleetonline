@@ -1406,13 +1406,26 @@ startxref
         print("- Logs: POST /api/parceiros/{id}/importar-motoristas HTTP/1.1 404 Not Found")
         print("=" * 80)
         
+        # Test both as partner and admin
+        partner_success = self.test_csv_import_as_partner()
+        admin_success = self.test_csv_import_as_admin()
+        
+        if partner_success and admin_success:
+            self.log_result("CSV-Import-Diagnosis", True, "SUCESSO: Importação CSV funcionando corretamente para ambos os perfis")
+            return True
+        else:
+            self.log_result("CSV-Import-Diagnosis", False, f"FALHA: Parceiro={partner_success}, Admin={admin_success}")
+            return False
+    
+    def test_csv_import_as_partner(self):
+        """Test CSV import as partner"""
         # STEP 1: Login as Partner
         print("\n📋 STEP 1: FAZER LOGIN COMO PARCEIRO")
         print("-" * 50)
         
         partner_auth_success = self.authenticate_user("parceiro")
         if not partner_auth_success:
-            self.log_result("CSV-Import-Diagnosis", False, "FALHA: Não foi possível autenticar como parceiro")
+            self.log_result("CSV-Import-Partner", False, "FALHA: Não foi possível autenticar como parceiro")
             return False
         
         partner_headers = self.get_headers("parceiro")
@@ -1447,33 +1460,105 @@ startxref
                     print(f"   - Nome: {partner_name}")
                     print(f"   - Email: {logged_partner.get('email')}")
                 else:
-                    self.log_result("CSV-Import-Diagnosis", False, "FALHA: Parceiro logado não encontrado na lista")
+                    self.log_result("CSV-Import-Partner", False, "FALHA: Parceiro logado não encontrado na lista")
                     return False
             else:
-                self.log_result("CSV-Import-Diagnosis", False, f"FALHA: Erro ao buscar parceiros - Status: {parceiros_response.status_code}")
+                self.log_result("CSV-Import-Partner", False, f"FALHA: Erro ao buscar parceiros - Status: {parceiros_response.status_code}")
                 print(f"Response: {parceiros_response.text}")
                 return False
                 
         except Exception as e:
-            self.log_result("CSV-Import-Diagnosis", False, f"FALHA: Erro na requisição de parceiros - {str(e)}")
+            self.log_result("CSV-Import-Partner", False, f"FALHA: Erro na requisição de parceiros - {str(e)}")
             return False
         
         # STEP 3: Create Test CSV
-        print("\n📋 STEP 3: CRIAR CSV DE TESTE COM 1 MOTORISTA")
+        print("\n📋 STEP 3: CRIAR CSV DE TESTE COM 1 MOTORISTA (PARCEIRO)")
         print("-" * 50)
         
-        csv_content = """Nome,Email,Telefone,NIF,Carta Condução Número,Carta Condução Validade,Licença TVDE Número,Licença TVDE Validade,Morada Completa,Código Postal,Data Nascimento,Nacionalidade
-João Silva Teste,joao.teste@example.com,911234567,123456789,PT123456789,2025-12-31,TVDE123456,2025-12-31,Rua Teste 123,1000-100,1990-01-01,Portuguesa"""
+        import time
+        timestamp = int(time.time())
+        csv_content = f"""Nome,Email,Telefone,NIF,Carta Condução Número,Carta Condução Validade,Licença TVDE Número,Licença TVDE Validade,Morada Completa,Código Postal,Data Nascimento,Nacionalidade
+João Silva Parceiro,joao.parceiro.{timestamp}@example.com,911234567,123456789,PT123456789,2025-12-31,TVDE123456,2025-12-31,Rua Teste 123,1000-100,1990-01-01,Portuguesa"""
         
         print("✅ CSV criado com 1 motorista de teste:")
-        print("   - Nome: João Silva Teste")
-        print("   - Email: joao.teste@example.com")
+        print(f"   - Nome: João Silva Parceiro")
+        print(f"   - Email: joao.parceiro.{timestamp}@example.com")
         print("   - NIF: 123456789")
         
         # STEP 4: Test CSV Import
-        print("\n📋 STEP 4: TENTAR IMPORTAR CSV")
+        print("\n📋 STEP 4: TENTAR IMPORTAR CSV COMO PARCEIRO")
         print("-" * 50)
         
+        return self.perform_csv_import_test(partner_id, csv_content, partner_headers, "PARCEIRO")
+    
+    def test_csv_import_as_admin(self):
+        """Test CSV import as admin"""
+        # STEP 1: Login as Admin
+        print("\n📋 STEP 5: FAZER LOGIN COMO ADMIN")
+        print("-" * 50)
+        
+        admin_auth_success = self.authenticate_user("admin")
+        if not admin_auth_success:
+            self.log_result("CSV-Import-Admin", False, "FALHA: Não foi possível autenticar como admin")
+            return False
+        
+        admin_headers = self.get_headers("admin")
+        print("✅ Login como admin@tvdefleet.com realizado com sucesso")
+        
+        # STEP 2: Get Partner Data (admin can see all partners)
+        print("\n📋 STEP 6: BUSCAR DADOS DO PARCEIRO (COMO ADMIN)")
+        print("-" * 50)
+        
+        try:
+            parceiros_response = requests.get(f"{BACKEND_URL}/parceiros", headers=admin_headers)
+            print(f"GET /api/parceiros - Status: {parceiros_response.status_code}")
+            
+            if parceiros_response.status_code == 200:
+                parceiros = parceiros_response.json()
+                print(f"✅ Admin pode ver {len(parceiros)} parceiros")
+                
+                if parceiros:
+                    # Use first partner for testing
+                    test_partner = parceiros[0]
+                    partner_id = test_partner["id"]
+                    partner_name = test_partner.get("nome_empresa", test_partner.get("name", "N/A"))
+                    print(f"✅ Usando parceiro para teste:")
+                    print(f"   - ID: {partner_id}")
+                    print(f"   - Nome: {partner_name}")
+                    print(f"   - Email: {test_partner.get('email')}")
+                else:
+                    self.log_result("CSV-Import-Admin", False, "FALHA: Nenhum parceiro encontrado para teste")
+                    return False
+            else:
+                self.log_result("CSV-Import-Admin", False, f"FALHA: Erro ao buscar parceiros como admin - Status: {parceiros_response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_result("CSV-Import-Admin", False, f"FALHA: Erro na requisição de parceiros como admin - {str(e)}")
+            return False
+        
+        # STEP 3: Create Test CSV
+        print("\n📋 STEP 7: CRIAR CSV DE TESTE COM 1 MOTORISTA (ADMIN)")
+        print("-" * 50)
+        
+        import time
+        timestamp = int(time.time())
+        csv_content = f"""Nome,Email,Telefone,NIF,Carta Condução Número,Carta Condução Validade,Licença TVDE Número,Licença TVDE Validade,Morada Completa,Código Postal,Data Nascimento,Nacionalidade
+Maria Silva Admin,maria.admin.{timestamp}@example.com,922345678,987654321,PT987654321,2025-12-31,TVDE987654,2025-12-31,Rua Admin 456,2000-200,1985-05-15,Portuguesa"""
+        
+        print("✅ CSV criado com 1 motorista de teste:")
+        print(f"   - Nome: Maria Silva Admin")
+        print(f"   - Email: maria.admin.{timestamp}@example.com")
+        print("   - NIF: 987654321")
+        
+        # STEP 4: Test CSV Import
+        print("\n📋 STEP 8: TENTAR IMPORTAR CSV COMO ADMIN")
+        print("-" * 50)
+        
+        return self.perform_csv_import_test(partner_id, csv_content, admin_headers, "ADMIN")
+    
+    def perform_csv_import_test(self, partner_id, csv_content, headers, user_type):
+        """Perform the actual CSV import test"""
         try:
             files = {
                 'file': ('motoristas_teste.csv', csv_content.encode('utf-8'), 'text/csv')
@@ -1482,44 +1567,43 @@ João Silva Teste,joao.teste@example.com,911234567,123456789,PT123456789,2025-12
             import_url = f"{BACKEND_URL}/parceiros/{partner_id}/importar-motoristas"
             print(f"URL de importação: {import_url}")
             
-            import_response = requests.post(import_url, files=files, headers=partner_headers)
+            import_response = requests.post(import_url, files=files, headers=headers)
             print(f"POST {import_url} - Status: {import_response.status_code}")
             
             if import_response.status_code == 200:
                 result = import_response.json()
-                print("✅ IMPORTAÇÃO REALIZADA COM SUCESSO!")
+                print(f"✅ IMPORTAÇÃO REALIZADA COM SUCESSO ({user_type})!")
                 print(f"   - Motoristas criados: {result.get('motoristas_criados', 0)}")
-                print(f"   - Erros: {result.get('erros', 0)}")
-                print(f"   - Detalhes: {result}")
+                print(f"   - Erros: {result.get('erros', [])}")
+                print(f"   - Total linhas: {result.get('total_linhas', 0)}")
                 
-                self.log_result("CSV-Import-Diagnosis", True, "SUCESSO: Importação CSV funcionando corretamente")
+                self.log_result(f"CSV-Import-{user_type}", True, f"Importação CSV funcionando como {user_type}")
                 return True
                 
             elif import_response.status_code == 404:
-                print("❌ ERRO 404 - ENDPOINT NÃO ENCONTRADO")
+                print(f"❌ ERRO 404 - ENDPOINT NÃO ENCONTRADO ({user_type})")
                 print("   Este é o problema reportado!")
                 
-                # STEP 5: Diagnose 404 Error
-                print("\n📋 STEP 5: DIAGNÓSTICO DO ERRO 404")
+                # Diagnose 404 Error
+                print(f"\n📋 DIAGNÓSTICO DO ERRO 404 ({user_type})")
                 print("-" * 50)
                 
-                # Check available routes
-                self.diagnose_available_routes(partner_headers)
+                self.diagnose_available_routes(headers)
                 
-                self.log_result("CSV-Import-Diagnosis", False, 
-                              f"CONFIRMADO: Erro 404 - Endpoint /api/parceiros/{partner_id}/importar-motoristas não encontrado")
+                self.log_result(f"CSV-Import-{user_type}", False, 
+                              f"CONFIRMADO: Erro 404 - Endpoint não encontrado para {user_type}")
                 return False
                 
             else:
-                print(f"❌ ERRO {import_response.status_code}")
+                print(f"❌ ERRO {import_response.status_code} ({user_type})")
                 print(f"Response: {import_response.text}")
                 
-                self.log_result("CSV-Import-Diagnosis", False, 
-                              f"ERRO: Status {import_response.status_code} - {import_response.text}")
+                self.log_result(f"CSV-Import-{user_type}", False, 
+                              f"ERRO {user_type}: Status {import_response.status_code}")
                 return False
                 
         except Exception as e:
-            self.log_result("CSV-Import-Diagnosis", False, f"ERRO: Exceção na importação - {str(e)}")
+            self.log_result(f"CSV-Import-{user_type}", False, f"ERRO {user_type}: Exceção - {str(e)}")
             return False
     
     def diagnose_available_routes(self, headers):
