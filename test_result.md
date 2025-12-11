@@ -292,6 +292,18 @@ backend:
           comment: "✅ TESTADO: Background task funcionando. Verificação manual de alertas executa sem erros. Sistema de alertas automático ativo e operacional."
 
 frontend:
+  - task: "Sistema de Templates - Campo Parceiro Oculto para Parceiros"
+    implemented: false
+    working: false
+    file: "frontend/src/pages/TemplatesContratos.js"
+    stuck_count: 1
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ PROBLEMA IDENTIFICADO: Campo 'Parceiro' ainda está visível para utilizadores parceiros no sistema de templates. TESTE REALIZADO: 1) ✅ Login como parceiro funcionando 2) ✅ Página /contratos carrega corretamente 3) ✅ Botão 'Novo Template' encontrado e funcionando 4) ✅ Formulário/modal de template abre adequadamente 5) ❌ CRÍTICO: Campo 'Parceiro' ainda está visível para parceiros. PROBLEMA: Segundo o review request, o campo parceiro deveria estar oculto quando parceiro está logado, mas ainda está visível. NECESSÁRIA CORREÇÃO: Implementar lógica condicional no frontend para ocultar o campo 'Parceiro' quando user.role === 'parceiro'."
+
   - task: "Campo de seleção de parceiro no formulário de criação de contratos"
     implemented: true
     working: true
