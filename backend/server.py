@@ -3917,6 +3917,72 @@ async def update_motorista(
     
     return {"message": "Motorista updated successfully"}
 
+@api_router.put("/motoristas/{motorista_id}/desativar")
+async def desativar_motorista(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Desativar motorista - Parceiros podem desativar seus próprios motoristas"""
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista not found")
+    
+    # Check permissions
+    if current_user["role"] == "parceiro":
+        # Parceiro can only deactivate their own motoristas
+        if motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Sem permissão para desativar este motorista")
+    elif current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    # Update motorista status to inactive
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        {"$set": {"status": "inativo", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Also deactivate user account
+    await db.users.update_one(
+        {"id": motorista_id},
+        {"$set": {"active": False}}
+    )
+    
+    return {"message": "Motorista desativado com sucesso"}
+
+@api_router.put("/motoristas/{motorista_id}/ativar")
+async def ativar_motorista(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Ativar motorista - Parceiros podem ativar seus próprios motoristas"""
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista not found")
+    
+    # Check permissions
+    if current_user["role"] == "parceiro":
+        # Parceiro can only activate their own motoristas
+        if motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Sem permissão para ativar este motorista")
+    elif current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Sem permissão")
+    
+    # Update motorista status to active
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        {"$set": {"status": "ativo", "updated_at": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    # Also activate user account
+    await db.users.update_one(
+        {"id": motorista_id},
+        {"$set": {"active": True}}
+    )
+    
+    return {"message": "Motorista ativado com sucesso"}
+
 @api_router.delete("/motoristas/{motorista_id}")
 async def delete_motorista(
     motorista_id: str,
