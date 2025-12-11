@@ -19,13 +19,12 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
   const [veiculosResult, setVeiculosResult] = useState(null);
 
   useEffect(() => {
-    if (!user) {
+    const token = localStorage.getItem('token');
+    if (!user || !token) {
       navigate('/login');
       return;
     }
   }, [user, navigate]);
-
-  // handleLogout is now passed as prop
 
   const handleDownloadExample = async (tipo) => {
     try {
