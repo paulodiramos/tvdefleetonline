@@ -1374,6 +1374,102 @@ startxref
 
     # ==================== CSV IMPORT DRIVER ASSOCIATION TEST ====================
     
+    def test_csv_import_driver_association_simplified(self):
+        """
+        Test CSV import driver association after code simplification
+        
+        CONTEXTO: Simplifiquei o código para usar diretamente `user.id` como `parceiro_id` 
+        quando um parceiro está logado, em vez de buscar na lista de parceiros.
+        
+        TESTE:
+        1. Login como parceiro (parceiro@tvdefleet.com / UQ1B6DXU)
+        2. Capturar user.id do response
+        3. Criar CSV de teste com motorista
+        4. Importar CSV usando user.id como parceiro_id
+        5. Verificar se funciona (200 OK, 1 motorista criado, sem erros)
+        """
+        print("\n🎯 TESTING CSV IMPORT AFTER CODE SIMPLIFICATION")
+        print("-" * 70)
+        print("CONTEXTO: Testar importação CSV de motoristas como parceiro após simplificação do código")
+        print("Credenciais: parceiro@tvdefleet.com / UQ1B6DXU")
+        print("-" * 70)
+        
+        # Step 1: Login as partner and capture user.id
+        try:
+            login_response = requests.post(f"{BACKEND_URL}/auth/login", json={
+                "email": "parceiro@tvdefleet.com",
+                "password": "UQ1B6DXU"
+            })
+            
+            if login_response.status_code != 200:
+                self.log_result("CSV-Import-Simplified-Login", False, 
+                              f"Login failed: {login_response.status_code}", login_response.text)
+                return False
+            
+            login_data = login_response.json()
+            user_id = login_data["user"]["id"]
+            token = login_data["access_token"]
+            headers = {"Authorization": f"Bearer {token}"}
+            
+            self.log_result("CSV-Import-Simplified-Login", True, 
+                          f"✅ Login bem-sucedido, user.id = {user_id}")
+            
+            # Step 2: Create test CSV content
+            csv_content = """Nome,Email,Telefone
+Teste Import,teste.import@example.com,912345678"""
+            
+            self.log_result("CSV-Import-Simplified-CSV", True, 
+                          "✅ CSV de teste criado com 1 motorista")
+            
+            # Step 3: Import CSV using user.id as parceiro_id
+            files = {
+                'file': ('test_motoristas.csv', csv_content.encode('utf-8'), 'text/csv')
+            }
+            
+            import_response = requests.post(
+                f"{BACKEND_URL}/parceiros/{user_id}/importar-motoristas",
+                files=files,
+                headers=headers
+            )
+            
+            # Step 4: Verify response
+            if import_response.status_code == 200:
+                result = import_response.json()
+                motoristas_criados = result.get("motoristas_criados", 0)
+                erros = result.get("erros", [])
+                
+                if motoristas_criados == 1 and len(erros) == 0:
+                    self.log_result("CSV-Import-Simplified-Success", True, 
+                                  f"✅ Importação funcionou: {motoristas_criados} motorista criado, {len(erros)} erros")
+                    
+                    # Verify the driver was associated with the correct partner
+                    if "motoristas_detalhes" in result:
+                        motorista_details = result["motoristas_detalhes"][0]
+                        parceiro_atribuido = motorista_details.get("parceiro_atribuido")
+                        
+                        if parceiro_atribuido == user_id:
+                            self.log_result("CSV-Import-Simplified-Association", True, 
+                                          f"✅ Motorista corretamente associado ao parceiro: {parceiro_atribuido}")
+                        else:
+                            self.log_result("CSV-Import-Simplified-Association", False, 
+                                          f"❌ Motorista associado ao parceiro errado: {parceiro_atribuido} (esperado: {user_id})")
+                    
+                    return True
+                else:
+                    self.log_result("CSV-Import-Simplified-Success", False, 
+                                  f"❌ Resultado inesperado: {motoristas_criados} motoristas criados, {len(erros)} erros")
+                    if erros:
+                        print(f"   Erros: {erros}")
+                    return False
+            else:
+                self.log_result("CSV-Import-Simplified-Success", False, 
+                              f"❌ Importação falhou: {import_response.status_code}", import_response.text)
+                return False
+                
+        except Exception as e:
+            self.log_result("CSV-Import-Simplified-Error", False, f"❌ Erro durante teste: {str(e)}")
+            return False
+    
     def test_csv_import_driver_association(self):
         """Test CSV import endpoint for drivers to ensure correct partner association"""
         print("\n🎯 TESTING CSV IMPORT DRIVER ASSOCIATION")
