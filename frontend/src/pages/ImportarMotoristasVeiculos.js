@@ -427,7 +427,7 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
               </div>
               <div>
                 <h4 className="font-medium text-slate-900 mb-2">✏️ Passo 2: Preencher Dados</h4>
-                <p>Edite o ficheiro CSV com os dados dos seus motoristas ou veículos. Mantenha o formato das colunas e não remova os headers.</p>
+                <p>Edite o ficheiro CSV com os dados dos seus motoristas ou veículos. Mantenha o formato das colunas e não remova os cabeçalhos.</p>
               </div>
               <div>
                 <h4 className="font-medium text-slate-900 mb-2">📤 Passo 3: Importar</h4>
