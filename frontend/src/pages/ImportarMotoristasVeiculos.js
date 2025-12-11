@@ -139,9 +139,15 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
       formData.append('file', veiculosFile);
 
       let parceiro_id = user.id;
+      console.log('Importing veiculos for parceiro:', parceiro_id);
+      console.log('User object:', user);
+      console.log('File:', veiculosFile.name);
+      
+      const url = `${API}/parceiros/${parceiro_id}/importar-veiculos-csv`;
+      console.log('POST URL:', url);
 
       const response = await axios.post(
-        `${API}/parceiros/${parceiro_id}/importar-veiculos-csv`,
+        url,
         formData,
         {
           headers: {
@@ -150,6 +156,8 @@ const ImportarMotoristasVeiculos = ({ user, onLogout }) => {
           }
         }
       );
+      
+      console.log('Import response:', response.data);
 
       setVeiculosResult({
         success: true,
