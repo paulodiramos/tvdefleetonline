@@ -232,11 +232,10 @@ const CriarTemplateModal = ({ open, onOpenChange, onSuccess, user }) => {
               </SelectContent>
             </Select>
             <p className="text-xs text-slate-500 mt-1">
-              {user?.role === 'admin' || user?.role === 'gestao'
-                ? 'Selecione "Template Global" ou um parceiro específico'
-                : 'Template será criado para o seu parceiro'}
+              Cada parceiro pode ter apenas 1 template ativo. Ao criar um novo, o anterior será desativado.
             </p>
-          </div>
+            </div>
+          )}
 
           {/* Texto do Contrato */}
           <div>
