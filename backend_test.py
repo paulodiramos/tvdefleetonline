@@ -6173,31 +6173,36 @@ Maria Santos Test,maria.test@example.com,923456789,Portuguesa"""
 if __name__ == "__main__":
     tester = TVDEFleetTester()
     
-    # Run partner approval bug fix tests as requested in review
-    print("🚨 STARTING PARTNER APPROVAL BUG FIX TESTING")
+    # Run CSV import driver association test as requested in review
+    print("🎯 STARTING CSV IMPORT DRIVER ASSOCIATION TESTING")
     print("=" * 80)
-    print("Testing bug fix: Partner approval flow database updates")
-    print("Context: When approving user with role 'parceiro', both 'users' and 'parceiros' collections must be updated")
+    print("Testing: CSV import endpoint for drivers to ensure correct partner association")
+    print("Context: When a partner imports drivers via CSV, drivers must be correctly associated to the partner")
+    print("Credentials: parceiro@tvdefleet.com / UQ1B6DXU")
     print("=" * 80)
     
-    # Authenticate admin user
-    print("\n🔐 AUTHENTICATING ADMIN USER")
+    # Authenticate users
+    print("\n🔐 AUTHENTICATING USERS")
     print("-" * 40)
     tester.authenticate_user("admin")
-    tester.authenticate_user("parceiro")  # Also authenticate parceiro for some tests
+    tester.authenticate_user("parceiro")
     
-    # Run Partner Approval Bug Fix Tests
-    print("\n🚨 PARTNER APPROVAL BUG FIX TESTS")
+    # Run CSV Import Driver Association Test
+    print("\n🎯 CSV IMPORT DRIVER ASSOCIATION TEST")
     print("=" * 50)
-    tester.test_partner_approval_bug_fix()
+    success = tester.test_csv_import_driver_association()
     
     # Print summary
     tester.print_summary()
     summary = tester.get_test_summary()
     
-    if summary["failed"] == 0:
-        print("🎉 All partner approval bug fix tests are working correctly!")
+    if summary["failed"] == 0 and success:
+        print("\n🎉 CSV IMPORT DRIVER ASSOCIATION TEST PASSED!")
+        print("✅ Motoristas são corretamente associados ao parceiro logado")
+        print("✅ Campo parceiro_id == ID do parceiro que fez login")
+        print("✅ Campo parceiro_atribuido == ID do parceiro que fez login")
         exit(0)
     else:
-        print(f"💥 {summary['failed']} out of {summary['total']} tests are failing!")
+        print(f"\n💥 CSV IMPORT TEST FAILED!")
+        print(f"❌ {summary['failed']} out of {summary['total']} tests are failing!")
         exit(1)
