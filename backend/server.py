@@ -6184,12 +6184,34 @@ async def importar_motoristas_csv(
         if decoded is None:
             raise HTTPException(status_code=400, detail="Não foi possível ler o ficheiro CSV. Tente guardar o ficheiro como UTF-8.")
         
+        # Remove comment lines starting with #
+        lines = decoded.split('\n')
+        clean_lines = [line for line in lines if not line.strip().startswith('#')]
+        decoded = '\n'.join(clean_lines)
+        
         # Detect delimiter (Portuguese Excel often uses semicolon)
         sample = decoded[:1000]
         delimiter = ';' if sample.count(';') > sample.count(',') else ','
         logger.info(f"Detected CSV delimiter: '{delimiter}'")
         
         csv_reader = csv.DictReader(io.StringIO(decoded), delimiter=delimiter)
+        
+        # Helper function to normalize phone numbers from scientific notation
+        def normalize_phone(value):
+            if not value:
+                return ''
+            value = str(value).strip()
+            # Convert scientific notation like 3,5196E+11 to normal number
+            if 'E+' in value.upper() or 'e+' in value:
+                try:
+                    # Replace comma with dot for float parsing
+                    value = value.replace(',', '.')
+                    number = float(value)
+                    # Format without decimals
+                    value = str(int(number))
+                except:
+                    pass
+            return value.replace(' ', '').replace('-', '')
         
         motoristas_criados = 0
         erros = []
