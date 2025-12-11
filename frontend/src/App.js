@@ -586,7 +586,7 @@ function App() {
             path="/importar-motoristas-veiculos"
             element={
               user ? (
-                <ImportarMotoristasVeiculos />
+                <ImportarMotoristasVeiculos user={user} onLogout={handleLogout} />
               ) : (
                 <Navigate to="/login" />
               )
