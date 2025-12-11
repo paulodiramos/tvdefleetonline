@@ -6108,11 +6108,14 @@ async def importar_motoristas_csv(
     file: UploadFile = File(...),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Import motoristas from CSV file"""
+    """Import motoristas from CSV file - associa automaticamente ao parceiro logado"""
+    # Para parceiros, usar sempre o próprio ID
+    if current_user["role"] == "parceiro":
+        parceiro_id = current_user["id"]
+    
     # Check permissions
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
-        if current_user["role"] == "parceiro" and current_user["id"] != parceiro_id:
-            raise HTTPException(status_code=403, detail="Not authorized")
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "parceiro"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
     
     # Verify parceiro exists
     parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
