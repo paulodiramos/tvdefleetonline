@@ -429,9 +429,28 @@ O ajuste de valor visa apoiar o motorista durante o período de menor rendimento
     }
   };
 
-  const handleDownloadCSVExample = (tipo) => {
-    window.open(`${API}/parceiros/csv-examples/${tipo}`, '_blank');
-    toast.success(`Exemplo de ${tipo} descarregado`);
+  const handleDownloadCSVExample = async (tipo) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/parceiros/csv-examples/${tipo}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `exemplo_${tipo}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success(`Exemplo de ${tipo} descarregado`);
+    } catch (error) {
+      console.error('Erro ao descarregar exemplo:', error);
+      toast.error('Erro ao descarregar exemplo CSV');
+    }
   };
 
   const handleImportCSV = async (file) => {
