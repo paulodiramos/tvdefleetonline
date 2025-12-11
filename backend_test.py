@@ -1451,9 +1451,12 @@ Maria Santos Test,maria.test@example.com,923456789,Portuguesa"""
             motoristas_criados = import_result.get("motoristas_criados", 0)
             erros = import_result.get("erros", [])
             
+            # Debug: Print full response
+            print(f"   Full import response: {import_result}")
+            
             if motoristas_criados != 2:
                 self.log_result("CSV-Import-Response-Check", False, 
-                              f"Expected 2 drivers created, got {motoristas_criados}")
+                              f"Expected 2 drivers created, got {motoristas_criados}. Errors: {erros}")
                 return False
             
             if len(erros) > 0:
