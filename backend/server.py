@@ -6266,7 +6266,7 @@ async def importar_motoristas_csv(
                     "uuid_motorista_uber": row.get('ID Uber', ''),
                     
                     # Bolt data
-                    "telefone_bolt": row.get('Telefone Bolt', ''),
+                    "telefone_bolt": telefone_bolt_normalizado,
                     "email_bolt": row.get('Email Bolt', ''),
                     "identificador_motorista_bolt": row.get('ID Bolt', ''),
                     
