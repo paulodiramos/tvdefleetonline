@@ -6226,6 +6226,7 @@ async def importar_motoristas_csv(
                     
                     # Documents
                     "numero_cc": row.get('CC', ''),
+                    "validade_cc": row.get('Validade CC', ''),
                     "nif": row.get('NIF', ''),
                     "numero_seguranca_social": row.get('Seg Social', ''),
                     "numero_cartao_utente": row.get('C Utente', ''),
