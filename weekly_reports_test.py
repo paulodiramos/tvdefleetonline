@@ -228,7 +228,17 @@ startxref
             
             if response.status_code == 200:
                 result = response.json()
-                self.recibo_filename = result.get("filename")
+                # Extract filename from response - could be in different fields
+                self.recibo_filename = result.get("filename") or result.get("recibo_filename")
+                
+                # If still no filename, try to extract from recibo_url in the report
+                if not self.recibo_filename:
+                    report_response = requests.get(f"{BACKEND_URL}/relatorios/semanal/{self.created_report_id}", headers=headers)
+                    if report_response.status_code == 200:
+                        report = report_response.json()
+                        recibo_url = report.get("recibo_url", "")
+                        if recibo_url and "/api/relatorios/recibos/" in recibo_url:
+                            self.recibo_filename = recibo_url.split("/api/relatorios/recibos/")[-1]
                 
                 # Verify state changed to 'em_analise'
                 report_response = requests.get(f"{BACKEND_URL}/relatorios/semanal/{self.created_report_id}", headers=headers)
