@@ -99,6 +99,7 @@ class Motorista(BaseModel):
     numero_carta_conducao: Optional[str] = None
     carta_conducao_validade: Optional[str] = None
     validade_carta_conducao: Optional[str] = None
+    carta_conducao_emissao: Optional[str] = None  # Alias para UI
     categoria_carta_conducao: Optional[str] = None
     emissao_carta: Optional[str] = None
     data_emissao_carta: Optional[str] = None
