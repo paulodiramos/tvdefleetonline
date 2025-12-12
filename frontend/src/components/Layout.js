@@ -61,6 +61,8 @@ const Layout = ({ children, user, onLogout }) => {
           label: 'Relatórios', 
           icon: TrendingUp,
           submenu: [
+            { path: '/gerar-relatorio-semanal', label: 'Gerar Relatório Semanal' },
+            { path: '/configuracao-relatorios', label: 'Configurar Relatórios' },
             { path: '/criar-relatorio-semanal', label: 'Criar Relatório' },
             { path: '/gestao-pagamentos-recibos', label: 'Pagamentos & Recibos' },
             { path: '/gestao-credenciais', label: 'Sincronização Automática' },
