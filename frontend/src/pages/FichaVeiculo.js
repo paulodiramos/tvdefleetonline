@@ -42,6 +42,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const [vehicle, setVehicle] = useState(null);
   const [motorista, setMotorista] = useState(null);
+  const [motoristasDisponiveis, setMotoristasDisponiveis] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
