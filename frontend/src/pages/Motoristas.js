@@ -1159,7 +1159,11 @@ const Motoristas = ({ user, onLogout }) => {
                         {isEditing ? (
                           <Input type="date" value={editForm.data_nascimento || ''} onChange={(e) => setEditForm({...editForm, data_nascimento: e.target.value})} />
                         ) : (
-                          <p className="font-medium">{selectedMotorista.data_nascimento ? new Date(selectedMotorista.data_nascimento).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                          <p className="font-medium">
+                            {selectedMotorista.data_nascimento && selectedMotorista.data_nascimento !== '' 
+                              ? selectedMotorista.data_nascimento 
+                              : 'N/A'}
+                          </p>
                         )}
                       </div>
                       <div>
