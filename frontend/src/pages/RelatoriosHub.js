@@ -47,6 +47,13 @@ const RelatoriosHub = ({ user, onLogout }) => {
   // Modal de edição rápida
   const [showEditModal, setShowEditModal] = useState(false);
   const [relatorioEditando, setRelatorioEditando] = useState(null);
+  
+  // Modal de confirmação de pagamento
+  const [showPagarModal, setShowPagarModal] = useState(false);
+  const [relatorioPagando, setRelatorioPagando] = useState(null);
+  const [dataPagamento, setDataPagamento] = useState(new Date().toISOString().split('T')[0]);
+  const [metodoPagamento, setMetodoPagamento] = useState('transferencia');
+  const [observacoesPagamento, setObservacoesPagamento] = useState('');
 
   useEffect(() => {
     fetchData();
@@ -263,6 +270,35 @@ const RelatoriosHub = ({ user, onLogout }) => {
       fetchData();
     } catch (error) {
       toast.error('Erro ao rejeitar');
+    }
+  };
+
+  const handleMarcarPago = (relatorio) => {
+    setRelatorioPagando(relatorio);
+    setShowPagarModal(true);
+  };
+
+  const confirmarPagamento = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/api/relatorios/semanal/${relatorioPagando.id}/marcar-pago`, {
+        data_pagamento: dataPagamento,
+        metodo_pagamento: metodoPagamento,
+        observacoes: observacoesPagamento
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Pagamento registado com sucesso!');
+      setShowPagarModal(false);
+      setRelatorioPagando(null);
+      setDataPagamento(new Date().toISOString().split('T')[0]);
+      setMetodoPagamento('transferencia');
+      setObservacoesPagamento('');
+      fetchData();
+    } catch (error) {
+      console.error('Erro ao marcar como pago:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao registar pagamento');
     }
   };
 
