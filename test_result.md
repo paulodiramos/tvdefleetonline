@@ -474,7 +474,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Página de Importação de Motoristas & Veículos"
+    - "Fluxo completo da página de veículos para parceiro"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -485,6 +485,7 @@ test_plan:
   csv_import_system_working: true
   csv_download_system_working: true
   importar_page_tested: true
+  vehicles_flow_tested: true
 
 agent_communication:
     - agent: "testing"
