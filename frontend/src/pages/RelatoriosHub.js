@@ -332,12 +332,28 @@ const RelatoriosHub = ({ user, onLogout }) => {
       'rascunho': { label: 'Rascunho', color: 'bg-gray-100 text-gray-700' },
       'pendente_aprovacao': { label: 'Pendente', color: 'bg-yellow-100 text-yellow-700' },
       'aguarda_recibo': { label: 'Aguarda Recibo', color: 'bg-orange-100 text-orange-700' },
+      'em_analise': { label: 'Em Análise', color: 'bg-blue-100 text-blue-700' },
       'verificado': { label: 'Verificado', color: 'bg-green-100 text-green-700' },
       'pago': { label: 'Pago', color: 'bg-emerald-100 text-emerald-700' },
       'rejeitado': { label: 'Rejeitado', color: 'bg-red-100 text-red-700' },
     };
     const c = config[status] || { label: status, color: 'bg-gray-100 text-gray-700' };
     return <Badge className={c.color}>{c.label}</Badge>;
+  };
+
+  const handleAprovarAnalise = async (relatorioId) => {
+    if (!window.confirm('Aprovar recibo e liberar para pagamento?')) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API_URL}/api/relatorios/semanal/${relatorioId}/aprovar-analise`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Recibo aprovado! Pronto para pagamento.');
+      fetchData();
+    } catch (error) {
+      toast.error('Erro ao aprovar análise');
+    }
   };
 
   const filtrarRelatorios = (status) => {
