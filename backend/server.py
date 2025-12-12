@@ -6447,6 +6447,7 @@ async def importar_motoristas_csv(
                     "localidade": row.get('Localidade', ''),
                     
                     # Documents
+                    "tipo_documento": row.get('Tipo Documento', 'CC'),  # Padrão: Cartão de Cidadão
                     "numero_cc": row.get('CC', ''),
                     "validade_cc": row.get('Validade CC', ''),
                     "nif": row.get('NIF', ''),
