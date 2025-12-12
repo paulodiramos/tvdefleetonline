@@ -253,6 +253,48 @@ const Dashboard = ({ user, onLogout }) => {
           />
         </div>
 
+        {/* Ações Rápidas - Relatórios */}
+        {user.role === 'parceiro' && (
+          <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <FileText className="w-5 h-5 text-blue-600" />
+                <span>Relatórios Semanais</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button
+                  variant="outline"
+                  className="h-auto py-4 flex flex-col items-start hover:bg-blue-100"
+                  onClick={() => window.location.href = '/configuracao-relatorios'}
+                >
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Settings className="w-5 h-5 text-blue-600" />
+                    <span className="font-semibold">Configurar Relatórios</span>
+                  </div>
+                  <p className="text-xs text-slate-600 text-left">
+                    Personalize os campos dos relatórios semanais
+                  </p>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-auto py-4 flex flex-col items-start hover:bg-green-100"
+                  onClick={() => window.location.href = '/gerar-relatorio-semanal'}
+                >
+                  <div className="flex items-center space-x-2 mb-2">
+                    <FileText className="w-5 h-5 text-green-600" />
+                    <span className="font-semibold">Gerar Relatório</span>
+                  </div>
+                  <p className="text-xs text-slate-600 text-left">
+                    Crie relatórios semanais para os seus motoristas
+                  </p>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Próximas Intervenções - Summary Cards */}
         <Card className="card-hover">
           <CardHeader>
