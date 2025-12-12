@@ -965,6 +965,31 @@ const Motoristas = ({ user, onLogout }) => {
                         Aprovar
                       </Button>
                     )}
+                    {motorista.approved && (user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') && (
+                      <>
+                        {motorista.status === 'inativo' ? (
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="border-green-600 text-green-600 hover:bg-green-50"
+                            onClick={() => handleAtivarMotorista(motorista.id, motorista.name)}
+                            title="Ativar motorista"
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                          </Button>
+                        ) : (
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            className="border-red-600 text-red-600 hover:bg-red-50"
+                            onClick={() => handleDesativarMotorista(motorista.id, motorista.name)}
+                            title="Desativar motorista"
+                          >
+                            <Ban className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </>
+                    )}
                   </div>
                   
                   {/* Assign Partner Button - Only for Admin and Gestor */}
