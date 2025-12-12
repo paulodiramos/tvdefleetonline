@@ -6174,7 +6174,11 @@ async def download_csv_example(
     tipo: str,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Download CSV example file for motoristas or veiculos with parceiro ID"""
+    """Download CSV example file for motoristas or veiculos - SEMPRE usa ID do parceiro logado"""
+    logger.info(f"=== DOWNLOAD CSV EXEMPLO ===")
+    logger.info(f"User: {current_user.get('email')}, Role: {current_user['role']}, ID: {current_user['id']}")
+    logger.info(f"Tipo solicitado: {tipo}")
+    
     if tipo not in ["motoristas", "veiculos"]:
         raise HTTPException(status_code=400, detail="Tipo inválido. Use 'motoristas' ou 'veiculos'")
     
@@ -6187,11 +6191,19 @@ async def download_csv_example(
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()
     
-    # Get parceiro ID
-    parceiro_id = current_user["id"] if current_user["role"] == "parceiro" else "SEU_ID_PARCEIRO"
+    # SEMPRE usa o ID do user logado (para parceiro, admin ou gestão)
+    parceiro_id = current_user["id"]
+    user_email = current_user.get("email", "N/A")
+    user_name = current_user.get("name", "N/A")
+    
+    logger.info(f"Gerando CSV com ID do parceiro: {parceiro_id}")
     
     # Add comment with parceiro ID at the top
-    comment = f"# ID do Parceiro Logado: {parceiro_id}\n# Este ficheiro é um exemplo. Edite conforme necessário.\n"
+    comment = f"# ID do Parceiro: {parceiro_id}\n"
+    comment += f"# Email: {user_email}\n"
+    comment += f"# Nome: {user_name}\n"
+    comment += f"# Este ficheiro é um exemplo. Edite conforme necessário.\n"
+    comment += f"# IMPORTANTE: Ao importar, os dados serão associados automaticamente à sua conta.\n"
     modified_content = comment + content
     
     # Create temporary file with modified content
@@ -6200,10 +6212,12 @@ async def download_csv_example(
         tmp.write(modified_content)
         tmp_path = tmp.name
     
+    logger.info(f"CSV gerado com sucesso: exemplo_{tipo}_parceiro_{parceiro_id[:8]}.csv")
+    
     return FileResponse(
         path=tmp_path,
         media_type="text/csv",
-        filename=f"exemplo_{tipo}_parceiro_{parceiro_id[:8]}.csv"
+        filename=f"exemplo_{tipo}_{user_email.split('@')[0]}.csv"
     )
 
 @api_router.post("/parceiros/{parceiro_id}/importar-motoristas")
