@@ -34,8 +34,15 @@ const RelatoriosHub = ({ user, onLogout }) => {
     combustivel_total: 0,
     via_verde_total: 0,
     caucao_semanal: 0,
-    outros: 0
+    outros: 0,
+    divida_anterior: 0
   });
+
+  // Filtros
+  const [filtroDataInicio, setFiltroDataInicio] = useState('');
+  const [filtroDataFim, setFiltroDataFim] = useState('');
+  const [filtroSemana, setFiltroSemana] = useState('');
+  const [filtroAno, setFiltroAno] = useState('');
 
   // Modal de edição rápida
   const [showEditModal, setShowEditModal] = useState(false);
@@ -77,7 +84,16 @@ const RelatoriosHub = ({ user, onLogout }) => {
       parseFloat(dados.via_verde_total || 0) +
       parseFloat(dados.caucao_semanal || 0) +
       parseFloat(dados.outros || 0);
-    return { ganhos, despesas, total: ganhos - despesas };
+    const dividaAnterior = parseFloat(dados.divida_anterior || 0);
+    const total = ganhos - despesas - dividaAnterior;
+    
+    return { 
+      ganhos, 
+      despesas, 
+      dividaAnterior,
+      total,
+      proximaDivida: total < 0 ? Math.abs(total) : 0
+    };
   };
 
   const handleCriarRapido = async () => {
@@ -95,7 +111,9 @@ const RelatoriosHub = ({ user, onLogout }) => {
         ...novoRelatorio,
         ganhos_totais: totais.ganhos,
         total_despesas: totais.despesas,
+        divida_anterior: totais.dividaAnterior,
         total_recibo: totais.total,
+        proxima_divida: totais.proximaDivida,
         motorista_nome: motorista?.nome || '',
         veiculo_matricula: motorista?.veiculo_matricula || '',
         status: 'pendente_aprovacao',
@@ -116,12 +134,13 @@ const RelatoriosHub = ({ user, onLogout }) => {
         combustivel_total: 0,
         via_verde_total: 0,
         caucao_semanal: 0,
-        outros: 0
+        outros: 0,
+        divida_anterior: 0
       });
       fetchData();
     } catch (error) {
       console.error('Erro:', error);
-      toast.error('Erro ao criar relatório');
+      toast.error(error.response?.data?.detail || 'Erro ao criar relatório');
     }
   };
 
