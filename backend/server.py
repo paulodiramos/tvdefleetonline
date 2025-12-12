@@ -1771,6 +1771,14 @@ class MotoristaPlanoAssinatura(BaseModel):
 
 # ==================== RELATORIO CONFIGURATION MODELS ====================
 
+class RelatorioEnvio(BaseModel):
+    """Registro de envio de relatório"""
+    data_envio: datetime
+    metodo: str  # "email", "whatsapp", "ambos"
+    destinatario: str
+    status: str  # "enviado", "erro"
+    mensagem_erro: Optional[str] = None
+
 class RelatorioConfig(BaseModel):
     """Configuração de campos disponíveis para relatórios semanais do parceiro"""
     model_config = ConfigDict(extra="ignore")
