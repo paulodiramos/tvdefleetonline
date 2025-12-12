@@ -10822,13 +10822,17 @@ async def criar_relatorio_manual(
     }
     
     # Inserir no banco
-    await db.relatorios_semanais.insert_one(relatorio)
-    
-    return {
-        "message": "Relatório criado com sucesso",
-        "relatorio_id": relatorio_id,
-        "numero_relatorio": numero_relatorio
-    }
+    try:
+        await db.relatorios_semanais.insert_one(relatorio)
+        
+        return {
+            "message": "Relatório criado com sucesso",
+            "relatorio_id": relatorio_id,
+            "numero_relatorio": numero_relatorio
+        }
+    except Exception as e:
+        print(f"Erro ao inserir no banco: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao salvar no banco de dados: {str(e)}")
 
 @api_router.get("/relatorios/resumo-semanal")
 async def obter_resumo_semanal_motoristas(
