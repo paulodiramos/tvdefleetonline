@@ -381,9 +381,12 @@ const RelatoriosHub = ({ user, onLogout }) => {
     let filtrados = relatorios;
     
     // Filtro por status (tab)
-    if (status === 'pendentes') filtrados = filtrados.filter(r => r.status === 'pendente_aprovacao');
+    if (status === 'pendentes') filtrados = filtrados.filter(r => r.status === 'pendente' || r.status === 'pendente_aprovacao' || r.status === 'rascunho');
     else if (status === 'aguarda') filtrados = filtrados.filter(r => r.status === 'aguarda_recibo');
-    else if (status === 'pagamentos') filtrados = filtrados.filter(r => r.status === 'verificado' || r.status === 'pago');
+    else if (status === 'em_analise') filtrados = filtrados.filter(r => r.status === 'em_analise');
+    else if (status === 'aguarda_pagamento') filtrados = filtrados.filter(r => r.status === 'aguarda_pagamento' || r.status === 'verificado');
+    else if (status === 'pago') filtrados = filtrados.filter(r => r.status === 'pago');
+    else if (status === 'pagamentos') filtrados = filtrados.filter(r => r.status === 'verificado' || r.status === 'aguarda_pagamento' || r.status === 'pago');
     
     // Filtro por data
     if (filtroDataInicio) {
@@ -414,9 +417,11 @@ const RelatoriosHub = ({ user, onLogout }) => {
 
   const stats = {
     total: relatorios.length,
-    pendentes: relatorios.filter(r => r.status === 'pendente_aprovacao').length,
+    pendentes: relatorios.filter(r => r.status === 'pendente' || r.status === 'pendente_aprovacao' || r.status === 'rascunho').length,
     aguardaRecibo: relatorios.filter(r => r.status === 'aguarda_recibo').length,
-    paraPagar: relatorios.filter(r => r.status === 'verificado').length,
+    emAnalise: relatorios.filter(r => r.status === 'em_analise').length,
+    aguardaPagamento: relatorios.filter(r => r.status === 'aguarda_pagamento' || r.status === 'verificado').length,
+    pago: relatorios.filter(r => r.status === 'pago').length,
   };
 
   if (loading) {
