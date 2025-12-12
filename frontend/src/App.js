@@ -478,6 +478,24 @@ function App() {
             }
           />
           <Route
+            path="/criar-relatorio-opcoes"
+            element={
+              user && user.role === 'parceiro' ? <CriarRelatorioOpcoes user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
+            path="/relatorios-semanais-lista"
+            element={
+              user && user.role === 'parceiro' ? <RelatoriosSemanaisLista user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
+            path="/historico-relatorios"
+            element={
+              user && user.role === 'parceiro' ? <HistoricoRelatorios user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
             path="/vehicle-data"
             element={
               user ? <VehicleData user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
