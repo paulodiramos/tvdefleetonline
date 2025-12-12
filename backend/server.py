@@ -10548,6 +10548,193 @@ async def listar_relatorios_semanais_para_pagamento(
     
     return relatorios
 
+@api_router.get("/relatorios/semanais-todos")
+async def listar_relatorios_semanais_todos(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Listar todos os relatórios semanais"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    query = {}
+    
+    # Parceiro só vê seus relatórios
+    if current_user["role"] == UserRole.PARCEIRO:
+        query["parceiro_id"] = current_user["id"]
+    
+    relatorios = await db.relatorios_semanais.find(
+        query,
+        {"_id": 0}
+    ).sort("data_emissao", -1).to_list(500)
+    
+    # Add status field for frontend consistency
+    for rel in relatorios:
+        if "status" not in rel:
+            rel["status"] = rel.get("estado", "rascunho")
+    
+    return relatorios
+
+@api_router.put("/relatorios/semanal/{relatorio_id}")
+async def atualizar_relatorio_semanal(
+    relatorio_id: str,
+    data: Dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar dados de um relatório semanal"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verificar se o relatório existe
+    relatorio = await db.relatorios_semanais.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    
+    # Verificar permissões
+    if current_user["role"] == UserRole.PARCEIRO and relatorio.get("parceiro_id") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Não autorizado a editar este relatório")
+    
+    # Campos que podem ser atualizados
+    campos_atualizaveis = [
+        "ganhos_uber", "ganhos_bolt", "ganhos_totais",
+        "combustivel_total", "via_verde_total", "caucao_semanal", "outros",
+        "total_despesas", "total_recibo", "viagens_totais"
+    ]
+    
+    update_data = {}
+    for campo in campos_atualizaveis:
+        if campo in data:
+            update_data[campo] = data[campo]
+    
+    # Recalcular totais
+    if any(k in update_data for k in ["ganhos_uber", "ganhos_bolt"]):
+        update_data["ganhos_totais"] = update_data.get("ganhos_uber", relatorio.get("ganhos_uber", 0)) + \
+                                       update_data.get("ganhos_bolt", relatorio.get("ganhos_bolt", 0))
+    
+    if any(k in update_data for k in ["combustivel_total", "via_verde_total", "caucao_semanal", "outros"]):
+        update_data["total_despesas"] = (
+            update_data.get("combustivel_total", relatorio.get("combustivel_total", 0)) +
+            update_data.get("via_verde_total", relatorio.get("via_verde_total", 0)) +
+            update_data.get("caucao_semanal", relatorio.get("caucao_semanal", 0)) +
+            update_data.get("outros", relatorio.get("outros", 0))
+        )
+    
+    if "ganhos_totais" in update_data or "total_despesas" in update_data:
+        ganhos = update_data.get("ganhos_totais", relatorio.get("ganhos_totais", 0))
+        despesas = update_data.get("total_despesas", relatorio.get("total_despesas", 0))
+        update_data["total_recibo"] = ganhos - despesas
+    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    # Atualizar no banco
+    await db.relatorios_semanais.update_one(
+        {"id": relatorio_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Relatório atualizado com sucesso", "data": update_data}
+
+@api_router.post("/relatorios/semanal/{relatorio_id}/aprovar")
+async def aprovar_relatorio_semanal(
+    relatorio_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Aprovar um relatório semanal"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verificar se o relatório existe
+    relatorio = await db.relatorios_semanais.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    
+    # Verificar permissões
+    if current_user["role"] == UserRole.PARCEIRO and relatorio.get("parceiro_id") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Não autorizado a aprovar este relatório")
+    
+    # Atualizar status
+    await db.relatorios_semanais.update_one(
+        {"id": relatorio_id},
+        {
+            "$set": {
+                "estado": "aguarda_recibo",
+                "status": "aguarda_recibo",
+                "aprovado_por": current_user["id"],
+                "aprovado_em": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # TODO: Enviar notificação ao motorista
+    # await enviar_notificacao_motorista(relatorio["motorista_id"], "Relatório aprovado - anexe o recibo")
+    
+    return {"message": "Relatório aprovado! Motorista notificado para anexar recibo."}
+
+@api_router.post("/relatorios/semanal/{relatorio_id}/rejeitar")
+async def rejeitar_relatorio_semanal(
+    relatorio_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Rejeitar um relatório semanal"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verificar se o relatório existe
+    relatorio = await db.relatorios_semanais.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    
+    # Verificar permissões
+    if current_user["role"] == UserRole.PARCEIRO and relatorio.get("parceiro_id") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Não autorizado a rejeitar este relatório")
+    
+    # Atualizar status
+    await db.relatorios_semanais.update_one(
+        {"id": relatorio_id},
+        {
+            "$set": {
+                "estado": "rejeitado",
+                "status": "rejeitado",
+                "rejeitado_por": current_user["id"],
+                "rejeitado_em": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {"message": "Relatório rejeitado"}
+
+@api_router.get("/relatorios/historico")
+async def obter_historico_relatorios(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter histórico completo de relatórios, recibos e pagamentos"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    query = {}
+    
+    # Parceiro só vê seus relatórios
+    if current_user["role"] == UserRole.PARCEIRO:
+        query["parceiro_id"] = current_user["id"]
+    
+    # Buscar todos os relatórios
+    relatorios = await db.relatorios_semanais.find(
+        query,
+        {"_id": 0}
+    ).sort("data_emissao", -1).to_list(1000)
+    
+    # Add status field for frontend consistency
+    for rel in relatorios:
+        if "status" not in rel:
+            rel["status"] = rel.get("estado", "gerado")
+        
+        # Garantir que created_at existe
+        if "created_at" not in rel and "data_emissao" in rel:
+            rel["created_at"] = rel["data_emissao"]
+    
+    return relatorios
+
 @api_router.get("/relatorios/resumo-semanal")
 async def obter_resumo_semanal_motoristas(
     data_inicio: str,
