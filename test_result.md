@@ -407,15 +407,18 @@ backend:
 
   - task: "Geração de Relatório Semanal - /gerar-relatorio-semanal"
     implemented: true
-    working: "NA"
+    working: true
     file: "frontend/src/pages/GerarRelatorioSemanal.js"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "testing"
           comment: "Página implementada com formulário completo: seleção de motorista, datas (início/fim), semana/ano, extras. Card de resumo com número do relatório, dados do motorista/veículo, estatísticas (ganhos/despesas/total). Botão 'Baixar PDF' e sidebar 'Relatórios Anteriores'. Precisa ser testado com credenciais geral@zmbusines.com / ZmBusines_2024."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTE COMPLETO DA GERAÇÃO DE RELATÓRIO SEMANAL - 100% FUNCIONANDO! CREDENCIAIS: geral@zmbusines.com / ZmBusines_2024 ✅. RESULTADOS: 1) ✅ Página /gerar-relatorio-semanal carrega corretamente 2) ✅ Título 'Gerar Relatório Semanal' presente 3) ✅ Lista de motoristas carrega (10 motoristas disponíveis) 4) ✅ Seleção de motorista funcionando 5) ✅ Formulário preenchido conforme especificação: Data Início 2025-12-02, Data Fim 2025-12-08, Semana 49, Ano 2025, Extras 0 6) ✅ Botão 'Gerar Relatório' funcionando 7) ✅ Relatório gerado com sucesso - Número: 00004/2025 8) ✅ Card de resumo mostra: Motorista (Ariel Oliveira), Veículo, Período (Semana 49/2025), Total Viagens (0), Ganhos (€0.00), Despesas (€0.00), Total Recibo (€0.00) 9) ✅ Botão 'Baixar PDF' presente e funcionando 10) ✅ Sidebar 'Relatórios Anteriores' mostra relatórios gerados (00004/2025, 00003/2025, 00002/2025). Sistema 100% operacional!"
 
   - task: "Campos Via Verde ID e Cartão Frota ID na Ficha do Veículo"
     implemented: true
