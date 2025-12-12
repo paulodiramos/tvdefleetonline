@@ -6309,16 +6309,16 @@ async def importar_motoristas_csv(
                 6: 'Telefone Uber', 7: 'Email Uber', 8: 'ID Uber', 
                 9: 'Telefone Bolt', 10: 'Email Bolt', 11: 'ID Bolt', 
                 12: 'Morada', 13: 'Código Postal', 14: 'Localidade', 
-                15: 'CC', 16: 'Validade CC', 17: 'NIF',
-                18: 'Seg Social', 19: 'C Utente', 
-                20: 'Código Registo Criminal',
-                21: 'TVDE', 22: 'Validade TVDE',
-                23: 'Carta', 24: 'Desde Carta', 25: 'Validade Carta',
-                26: 'IBAN',
-                27: 'Contacto Emergência Nome', 28: 'Contacto Emergência Parentesco',
-                29: 'Contacto Emergência Telefone', 30: 'Contacto Emergência Email',
-                31: 'Contacto Emergência Morada', 32: 'Contacto Emergência Código Postal',
-                33: 'Contacto Emergência Localidade'
+                15: 'Tipo Documento', 16: 'CC', 17: 'Validade CC', 18: 'NIF',
+                19: 'Seg Social', 20: 'C Utente', 
+                21: 'Código Registo Criminal',
+                22: 'TVDE', 23: 'Validade TVDE',
+                24: 'Carta', 25: 'Desde Carta', 26: 'Validade Carta',
+                27: 'IBAN',
+                28: 'Contacto Emergência Nome', 29: 'Contacto Emergência Parentesco',
+                30: 'Contacto Emergência Telefone', 31: 'Contacto Emergência Email',
+                32: 'Contacto Emergência Morada', 33: 'Contacto Emergência Código Postal',
+                34: 'Contacto Emergência Localidade'
             }
             
             # Detect delimiter
@@ -6334,7 +6334,7 @@ async def importar_motoristas_csv(
             output_lines = []
             
             # Add header row
-            header_cols = [COLUMN_MAP.get(i, f'Col{i}') for i in range(34)]
+            header_cols = [COLUMN_MAP.get(i, f'Col{i}') for i in range(35)]
             output_lines.append(','.join(header_cols))
             
             # Convert data rows
@@ -6343,11 +6343,11 @@ async def importar_motoristas_csv(
                     continue
                 
                 converted_row = []
-                for i in range(34):  # Updated to 34 columns
+                for i in range(35):  # Updated to 35 columns
                     if i < len(row):
                         value = str(row[i]).strip()
-                        # Normalize phone numbers (columns 2, 3, 6, 9, 29)
-                        if i in [2, 3, 6, 9, 29]:
+                        # Normalize phone numbers (columns 2, 3, 6, 9, 30)
+                        if i in [2, 3, 6, 9, 30]:
                             value = normalize_phone(value)
                         converted_row.append(value)
                     else:
