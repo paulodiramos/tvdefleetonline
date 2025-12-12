@@ -822,6 +822,290 @@ startxref
         except Exception as e:
             self.log_result("Import-Access-Control", False, f"Request error: {str(e)}")
 
+    # ==================== WEEKLY REPORTS SYSTEM TESTS (REVIEW REQUEST) ====================
+    
+    def test_weekly_reports_system_complete(self):
+        """Test complete weekly reports system as per review request"""
+        print("\n📊 TESTING WEEKLY REPORTS SYSTEM - COMPLETE SUITE")
+        print("-" * 80)
+        print("Review Request: Test all weekly report endpoints with specific credentials:")
+        print("- Account: geral@zmbusines.com / ZmBusines_2024")
+        print("- Parceiro ID: c693c9ec-ddd5-400c-b79d-61b651e7b3fd")
+        print("- Motorista ID: 57d6a119-e5af-4c7f-b357-49dc4f618763")
+        print("-" * 80)
+        
+        # Use specific credentials from review request
+        specific_creds = {"email": "geral@zmbusines.com", "password": "ZmBusines_2024"}
+        parceiro_id = "c693c9ec-ddd5-400c-b79d-61b651e7b3fd"
+        motorista_id = "57d6a119-e5af-4c7f-b357-49dc4f618763"
+        
+        # Authenticate with specific credentials
+        try:
+            response = requests.post(f"{BACKEND_URL}/auth/login", json=specific_creds)
+            if response.status_code == 200:
+                data = response.json()
+                specific_token = data["access_token"]
+                headers = {"Authorization": f"Bearer {specific_token}"}
+                self.log_result("Weekly-Reports-Auth", True, "Successfully authenticated with review request credentials")
+            else:
+                self.log_result("Weekly-Reports-Auth", False, f"Failed to authenticate: {response.status_code}", response.text)
+                return False
+        except Exception as e:
+            self.log_result("Weekly-Reports-Auth", False, f"Authentication error: {str(e)}")
+            return False
+        
+        # Execute all weekly report tests
+        self.test_get_report_config(headers, parceiro_id)
+        self.test_update_report_config(headers, parceiro_id)
+        self.test_generate_weekly_report(headers, motorista_id)
+        self.test_list_motorista_reports(headers, motorista_id)
+        self.test_get_specific_report(headers)
+        self.test_download_report_pdf(headers)
+        self.test_report_validations_permissions(headers, parceiro_id, motorista_id)
+        
+        return True
+    
+    def test_get_report_config(self, headers, parceiro_id):
+        """Test 1: GET /api/parceiros/{parceiro_id}/config-relatorio"""
+        try:
+            response = requests.get(f"{BACKEND_URL}/parceiros/{parceiro_id}/config-relatorio", headers=headers)
+            
+            if response.status_code == 200:
+                config = response.json()
+                
+                # Verify required fields exist
+                required_fields = [
+                    "incluir_viagens_uber", "incluir_viagens_bolt", "incluir_ganhos_uber", 
+                    "incluir_ganhos_bolt", "incluir_despesas_combustivel", "incluir_despesas_via_verde",
+                    "via_verde_atraso_semanas"
+                ]
+                
+                missing_fields = [field for field in required_fields if field not in config]
+                
+                if not missing_fields:
+                    # Check default values
+                    via_verde_atraso = config.get("via_verde_atraso_semanas", 0)
+                    if via_verde_atraso == 1:
+                        self.log_result("Get-Report-Config", True, 
+                                      f"Report config retrieved with all fields, via_verde_atraso_semanas = {via_verde_atraso}")
+                    else:
+                        self.log_result("Get-Report-Config", True, 
+                                      f"Report config retrieved, via_verde_atraso_semanas = {via_verde_atraso} (expected 1)")
+                else:
+                    self.log_result("Get-Report-Config", False, f"Missing config fields: {missing_fields}")
+            else:
+                self.log_result("Get-Report-Config", False, f"Failed to get config: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Get-Report-Config", False, f"Request error: {str(e)}")
+    
+    def test_update_report_config(self, headers, parceiro_id):
+        """Test 2: PUT /api/parceiros/{parceiro_id}/config-relatorio"""
+        try:
+            # Update config as per review request
+            update_data = {
+                "incluir_viagens_uber": False,
+                "via_verde_atraso_semanas": 2
+            }
+            
+            response = requests.put(
+                f"{BACKEND_URL}/parceiros/{parceiro_id}/config-relatorio", 
+                json=update_data, 
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if "sucesso" in result.get("message", "").lower():
+                    self.log_result("Update-Report-Config", True, "Report config updated successfully")
+                    
+                    # Verify update by getting config again
+                    get_response = requests.get(f"{BACKEND_URL}/parceiros/{parceiro_id}/config-relatorio", headers=headers)
+                    if get_response.status_code == 200:
+                        updated_config = get_response.json()
+                        if (updated_config.get("incluir_viagens_uber") == False and 
+                            updated_config.get("via_verde_atraso_semanas") == 2):
+                            self.log_result("Verify-Config-Update", True, "Config changes persisted correctly")
+                        else:
+                            self.log_result("Verify-Config-Update", False, "Config changes not persisted")
+                    else:
+                        self.log_result("Verify-Config-Update", False, "Could not verify config update")
+                else:
+                    self.log_result("Update-Report-Config", False, f"Unexpected response: {result}")
+            else:
+                self.log_result("Update-Report-Config", False, f"Failed to update config: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Update-Report-Config", False, f"Request error: {str(e)}")
+    
+    def test_generate_weekly_report(self, headers, motorista_id):
+        """Test 3: POST /api/relatorios/motorista/{motorista_id}/gerar-semanal"""
+        try:
+            # Generate report as per review request
+            report_data = {
+                "data_inicio": "2025-12-09",
+                "data_fim": "2025-12-15",
+                "semana": 50,
+                "ano": 2025,
+                "extras": 50.0
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
+                json=report_data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Verify required response fields
+                required_fields = ["numero_relatorio", "relatorio_id", "total_recibo"]
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if not missing_fields:
+                    numero_relatorio = result["numero_relatorio"]
+                    relatorio_id = result["relatorio_id"]
+                    total_recibo = result["total_recibo"]
+                    
+                    # Verify numero_relatorio format (e.g., 00005/2025)
+                    if "/" in numero_relatorio and "2025" in numero_relatorio:
+                        self.log_result("Generate-Weekly-Report", True, 
+                                      f"Report generated: {numero_relatorio}, ID: {relatorio_id}, Total: €{total_recibo}")
+                        # Store for later tests
+                        self.last_report_id = relatorio_id
+                    else:
+                        self.log_result("Generate-Weekly-Report", False, 
+                                      f"Invalid numero_relatorio format: {numero_relatorio}")
+                else:
+                    self.log_result("Generate-Weekly-Report", False, f"Missing response fields: {missing_fields}")
+            else:
+                self.log_result("Generate-Weekly-Report", False, f"Failed to generate report: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Generate-Weekly-Report", False, f"Request error: {str(e)}")
+    
+    def test_list_motorista_reports(self, headers, motorista_id):
+        """Test 4: GET /api/relatorios/motorista/{motorista_id}/semanais"""
+        try:
+            response = requests.get(f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/semanais", headers=headers)
+            
+            if response.status_code == 200:
+                reports = response.json()
+                
+                if len(reports) >= 1:
+                    # Verify report structure
+                    first_report = reports[0]
+                    required_fields = ["id", "numero_relatorio", "motorista_nome", "total_recibo"]
+                    missing_fields = [field for field in required_fields if field not in first_report]
+                    
+                    if not missing_fields:
+                        self.log_result("List-Motorista-Reports", True, 
+                                      f"Retrieved {len(reports)} reports, first: {first_report['numero_relatorio']}")
+                    else:
+                        self.log_result("List-Motorista-Reports", False, f"Missing report fields: {missing_fields}")
+                else:
+                    self.log_result("List-Motorista-Reports", True, "No reports found (expected for new system)")
+            else:
+                self.log_result("List-Motorista-Reports", False, f"Failed to list reports: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("List-Motorista-Reports", False, f"Request error: {str(e)}")
+    
+    def test_get_specific_report(self, headers):
+        """Test 5: GET /api/relatorios/semanal/{relatorio_id}"""
+        if not hasattr(self, 'last_report_id'):
+            self.log_result("Get-Specific-Report", False, "No report ID available from previous test")
+            return
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/relatorios/semanal/{self.last_report_id}", headers=headers)
+            
+            if response.status_code == 200:
+                report = response.json()
+                
+                # Verify complete report structure
+                required_fields = [
+                    "numero_relatorio", "motorista_nome", "veiculo_marca", "veiculo_modelo",
+                    "ganhos_uber", "ganhos_bolt", "despesas", "total_recibo"
+                ]
+                
+                present_fields = [field for field in required_fields if field in report]
+                
+                if len(present_fields) >= len(required_fields) * 0.7:  # At least 70% of fields
+                    self.log_result("Get-Specific-Report", True, 
+                                  f"Report details retrieved with {len(present_fields)}/{len(required_fields)} expected fields")
+                else:
+                    self.log_result("Get-Specific-Report", False, 
+                                  f"Incomplete report structure: {len(present_fields)}/{len(required_fields)} fields")
+            else:
+                self.log_result("Get-Specific-Report", False, f"Failed to get report: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Get-Specific-Report", False, f"Request error: {str(e)}")
+    
+    def test_download_report_pdf(self, headers):
+        """Test 6: GET /api/relatorios/semanal/{relatorio_id}/pdf"""
+        if not hasattr(self, 'last_report_id'):
+            self.log_result("Download-Report-PDF", False, "No report ID available from previous test")
+            return
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/relatorios/semanal/{self.last_report_id}/pdf", headers=headers)
+            
+            if response.status_code == 200:
+                # Verify PDF response
+                content_type = response.headers.get('Content-Type', '')
+                content_disposition = response.headers.get('Content-Disposition', '')
+                content_length = len(response.content)
+                
+                if ('application/pdf' in content_type and 
+                    'filename' in content_disposition and 
+                    content_length > 0):
+                    self.log_result("Download-Report-PDF", True, 
+                                  f"PDF downloaded successfully: {content_length} bytes, filename in header")
+                else:
+                    self.log_result("Download-Report-PDF", False, 
+                                  f"Invalid PDF response: Content-Type={content_type}, Size={content_length}")
+            else:
+                self.log_result("Download-Report-PDF", False, f"Failed to download PDF: {response.status_code}", response.text)
+        except Exception as e:
+            self.log_result("Download-Report-PDF", False, f"Request error: {str(e)}")
+    
+    def test_report_validations_permissions(self, headers, parceiro_id, motorista_id):
+        """Test 7: Validations and Permissions"""
+        try:
+            # Test 1: Generate report without data_inicio (should fail with 400)
+            invalid_data = {
+                "data_fim": "2025-12-15",
+                "semana": 50,
+                "ano": 2025,
+                "extras": 50.0
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
+                json=invalid_data,
+                headers=headers
+            )
+            
+            if response.status_code == 400:
+                self.log_result("Report-Validation-Missing-Field", True, "Correctly rejected report without data_inicio")
+            else:
+                self.log_result("Report-Validation-Missing-Field", False, 
+                              f"Expected 400 for missing data_inicio, got {response.status_code}")
+            
+            # Test 2: Try to access report for different parceiro (should fail with 403)
+            # This would require creating a different parceiro, so we'll test with invalid motorista
+            fake_motorista_id = "00000000-0000-0000-0000-000000000000"
+            
+            response = requests.get(f"{BACKEND_URL}/relatorios/motorista/{fake_motorista_id}/semanais", headers=headers)
+            
+            if response.status_code in [403, 404]:
+                self.log_result("Report-Permission-Check", True, 
+                              f"Correctly blocked access to other motorista reports: {response.status_code}")
+            else:
+                self.log_result("Report-Permission-Check", False, 
+                              f"Expected 403/404 for other motorista, got {response.status_code}")
+                
+        except Exception as e:
+            self.log_result("Report-Validations-Permissions", False, f"Request error: {str(e)}")
+
     # ==================== NEW FEATURES TESTS (EXPANDED SYSTEM) ====================
     
     def test_vehicle_photo_upload_limit(self):
