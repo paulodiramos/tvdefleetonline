@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { Input } from '../components/ui/input';
 import { Badge } from '../components/ui/badge';
-import { FileText, CheckCircle, Upload, Eye, Send } from 'lucide-react';
+import { FileText, CheckCircle, Upload, Eye, Send, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -108,21 +108,32 @@ const VerificarRecibos = ({ user, onLogout }) => {
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <FileText className="w-8 h-8 text-orange-600" />
-            <div>
-              <h1 className="text-3xl font-bold text-slate-800">
-                Verificar Recibos
-              </h1>
-              <p className="text-slate-600">
-                Relatórios enviados aguardando verificação de recibo
-              </p>
+        <div className="mb-6">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/dashboard')}
+            className="mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar ao Dashboard
+          </Button>
+          
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <FileText className="w-8 h-8 text-orange-600" />
+              <div>
+                <h1 className="text-3xl font-bold text-slate-800">
+                  Verificar Recibos
+                </h1>
+                <p className="text-slate-600">
+                  Relatórios enviados aguardando verificação de recibo
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="text-right">
-            <p className="text-3xl font-bold text-orange-600">{relatorios.length}</p>
-            <p className="text-sm text-slate-600">Pendentes</p>
+            <div className="text-right">
+              <p className="text-3xl font-bold text-orange-600">{relatorios.length}</p>
+              <p className="text-sm text-slate-600">Pendentes</p>
+            </div>
           </div>
         </div>
 
