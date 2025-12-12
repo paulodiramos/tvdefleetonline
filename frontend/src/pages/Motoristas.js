@@ -1653,34 +1653,44 @@ const Motoristas = ({ user, onLogout }) => {
                         )}
                       </div>
 
-                      {/* Atribuição de Parceiro (Admin e Gestor) */}
-                      {(user.role === 'admin' || user.role === 'gestao') && (
-                        <div>
-                          <Label>Parceiro Atribuído</Label>
-                          {isEditing ? (
-                            <select 
-                              className="w-full p-2 border rounded-md" 
-                              value={editForm.parceiro_atribuido || ''} 
-                              onChange={(e) => {
-                                setEditForm({...editForm, parceiro_atribuido: e.target.value, veiculo_atribuido: ''});
-                                if (e.target.value) fetchVeiculosByParceiro(e.target.value);
-                                else setVeiculos([]);
-                              }}
-                            >
-                              <option value="">Nenhum</option>
-                              {parceiros.map(p => (
-                                <option key={p.id} value={p.id}>{p.nome}</option>
-                              ))}
-                            </select>
-                          ) : (
-                            <p className="font-medium">
-                              {selectedMotorista.parceiro_atribuido 
-                                ? parceiros.find(p => p.id === selectedMotorista.parceiro_atribuido)?.nome || 'N/A'
-                                : 'Nenhum'}
-                            </p>
-                          )}
-                        </div>
-                      )}
+                      {/* Parceiro Atribuído - Todos podem ver */}
+                      <div className="border rounded-lg p-4 bg-blue-50">
+                        <Label className="font-semibold text-blue-900">Parceiro Responsável</Label>
+                        <p className="text-sm text-blue-700 mt-1">Parceiro que inseriu/importou este motorista</p>
+                        {(user.role === 'admin' || user.role === 'gestao') && isEditing ? (
+                          <select 
+                            className="w-full p-2 border rounded-md mt-2" 
+                            value={editForm.parceiro_atribuido || ''} 
+                            onChange={(e) => {
+                              setEditForm({...editForm, parceiro_atribuido: e.target.value, veiculo_atribuido: ''});
+                              if (e.target.value) fetchVeiculosByParceiro(e.target.value);
+                              else setVeiculos([]);
+                            }}
+                          >
+                            <option value="">Nenhum</option>
+                            {parceiros.map(p => (
+                              <option key={p.id} value={p.id}>{p.nome}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <p className="font-medium text-lg mt-2">
+                            {selectedMotorista.parceiro_atribuido 
+                              ? parceiros.find(p => p.id === selectedMotorista.parceiro_atribuido)?.nome || selectedMotorista.parceiro_atribuido_nome || 'N/A'
+                              : 'Nenhum'}
+                          </p>
+                        )}
+                        {selectedMotorista.created_at && (
+                          <p className="text-xs text-slate-600 mt-2">
+                            Inserido em: {new Date(selectedMotorista.created_at).toLocaleDateString('pt-PT', { 
+                              day: '2-digit', 
+                              month: '2-digit', 
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        )}
+                      </div>
 
                       {/* Atribuição de Veículo */}
                       {(user.role === 'admin' || user.role === 'gestao') && (
