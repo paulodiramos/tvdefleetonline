@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { Input } from '../components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { FileText, Download, Calendar, TrendingUp, DollarSign, Fuel, CreditCard } from 'lucide-react';
+import { FileText, Download, Calendar, TrendingUp, DollarSign, Fuel, CreditCard, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
@@ -160,7 +160,16 @@ const GerarRelatorioSemanal = ({ user, onLogout }) => {
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/dashboard')}
+            className="mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Voltar ao Dashboard
+          </Button>
+          
           <div className="flex items-center space-x-3">
             <FileText className="w-8 h-8 text-blue-600" />
             <div>
