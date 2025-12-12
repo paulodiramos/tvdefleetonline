@@ -6302,8 +6302,23 @@ async def importar_motoristas_csv(
             # Auto-convert CSV without headers
             logger.info("CSV sem cabeçalhos detectado - convertendo automaticamente...")
             
-            # Expected column mapping
-            COLUMN_MAP = {
+            # Expected column mapping (formato ANTIGO sem Data Nascimento e Tipo Documento)
+            COLUMN_MAP_OLD = {
+                0: 'Nome', 1: 'Email', 2: 'Telefone', 3: 'WhatsApp', 4: 'Nacionalidade',
+                5: 'Telefone Uber', 6: 'Email Uber', 7: 'ID Uber', 
+                8: 'Telefone Bolt', 9: 'Email Bolt', 10: 'ID Bolt', 
+                11: 'Morada', 12: 'Código Postal', 13: 'Localidade', 
+                14: 'CC', 15: 'Validade CC', 16: 'NIF',
+                17: 'Seg Social', 18: 'C Utente', 
+                19: 'TVDE', 20: 'Validade TVDE',
+                21: 'Carta', 22: 'Desde Carta', 23: 'Validade Carta',
+                24: 'IBAN',
+                25: 'Contacto Emergência Nome', 26: 'Contacto Emergência Telefone',
+                27: 'Contacto Emergência Morada', 28: 'Contacto Emergência Código Postal'
+            }
+            
+            # Expected column mapping (formato NOVO com Data Nascimento, Tipo Documento, etc)
+            COLUMN_MAP_NEW = {
                 0: 'Nome', 1: 'Email', 2: 'Telefone', 3: 'WhatsApp', 4: 'Nacionalidade',
                 5: 'Data Nascimento',
                 6: 'Telefone Uber', 7: 'Email Uber', 8: 'ID Uber', 
@@ -6320,6 +6335,15 @@ async def importar_motoristas_csv(
                 32: 'Contacto Emergência Morada', 33: 'Contacto Emergência Código Postal',
                 34: 'Contacto Emergência Localidade'
             }
+            
+            # Detect format based on number of columns
+            reader_temp = csv.reader(clean_lines, delimiter=';' if clean_lines[0].count(';') > clean_lines[0].count(',') else ',')
+            first_row = next(reader_temp)
+            num_cols = len(first_row)
+            
+            # Use old format if less than 30 columns
+            COLUMN_MAP = COLUMN_MAP_OLD if num_cols < 30 else COLUMN_MAP_NEW
+            logger.info(f"Detected {num_cols} columns, using {'OLD' if num_cols < 30 else 'NEW'} format")
             
             # Detect delimiter
             sample = clean_lines[0] if clean_lines else ''
