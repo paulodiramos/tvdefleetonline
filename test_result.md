@@ -545,6 +545,10 @@ test_plan:
   importar_page_tested: true
   vehicles_flow_tested: true
   weekly_reports_testing_complete: true
+  weekly_reports_critical_flow_tested: true
+  all_8_critical_steps_passed: true
+  file_upload_download_system_working: true
+  state_transitions_working: true
 
 agent_communication:
     - agent: "testing"
