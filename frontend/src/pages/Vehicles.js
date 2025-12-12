@@ -763,7 +763,11 @@ const Vehicles = ({ user, onLogout }) => {
                       <span className="text-slate-600">Validade:</span>
                       <div className="flex items-center space-x-1">
                         <Calendar className="w-3 h-3 text-slate-500" />
-                        <span className="font-medium text-xs">{new Date(vehicle.validade_matricula).toLocaleDateString('pt-PT')}</span>
+                        <span className="font-medium text-xs">
+                          {vehicle.validade_matricula ? (
+                            parseDate(vehicle.validade_matricula)?.toLocaleDateString('pt-PT') || 'Data inválida'
+                          ) : 'N/A'}
+                        </span>
                       </div>
                     </div>
                   </div>
