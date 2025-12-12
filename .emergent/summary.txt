@@ -2,234 +2,172 @@
 O utilizador iniciou a sessão para corrigir um bug no fluxo de aprovação de parceiros. Após a correção, o utilizador solicitou uma série de novas funcionalidades e correções de bugs, incluindo:
 1.  **Gestão de Certidão Permanente:** Adicionar funcionalidade de upload, download e edição para a certidão permanente no perfil do parceiro.
 2.  **Melhorias nos Contratos:** Adicionar um conjunto completo de variáveis dinâmicas aos templates de contrato, corrigir um erro Method Not Allowed ao guardar templates e guardar uma cópia do contrato em PDF no perfil do motorista.
-3.  **Melhorias na UI de Templates:** Criar um pop-up de pré-visualização de impressão em formato A4 para os templates e garantir que a lista completa de variáveis esteja visível na UI de criação de templates.
-4.  **Importação em Massa via CSV:** Implementar um sistema para que os parceiros possam importar motoristas e veículos em massa através de ficheiros CSV, incluindo o download de ficheiros de exemplo. Esta funcionalidade foi solicitada para as páginas de Parceiros, Motoristas e Veículos.
-5.  **Correções de Bugs Recorrentes:** Resolver repetidamente um erro Erro ao carregar dados do parceiro causado por validações do Pydantic e um bug complexo na UI que impedia a abertura de um modal de importação.
-6.  **Associação de Dados:** Garantir que, quando um parceiro importa um CSV de motoristas, os novos motoristas são corretamente associados a esse parceiro.
+3.  **Importação em Massa via CSV:** Implementar um sistema para que os parceiros possam importar motoristas e veículos em massa através de ficheiros CSV, incluindo o download de ficheiros de exemplo. Esta funcionalidade foi solicitada para as páginas de Parceiros, Motoristas e Veículos.
+4.  **Correções de Bugs Recorrentes:** Resolver repetidamente um erro Erro ao carregar dados do parceiro e um erro crítico e recorrente Parceiro not found durante a importação de CSV, causado por múltiplos fatores (lógica incorreta, cache do browser, dados de utilizador inexistentes na base de dados).
+5.  **Criação de Entidade Parceiro:** O utilizador  não conseguia usar a funcionalidade de importação porque não tinha um registo correspondente na coleção . O utilizador forneceu os dados para criar este parceiro.
+6.  **Desativação de Motoristas:** Permitir que um parceiro possa desativar/eliminar motoristas da sua própria conta.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação possui um fluxo de aprovação de parceiros estável e verificado. O sistema de gestão de parceiros foi significativamente melhorado com uma nova funcionalidade para gerir a Certidão Permanente (upload/download/edição). O sistema de templates de contrato é agora muito mais robusto, suportando um grande número de variáveis dinâmicas, pré-visualização de impressão em formato A4 e download de templates em PDF. A funcionalidade de importação de CSV foi implementada nas páginas de  e , e o código para a página de  foi adicionado, mas está a passar por uma fase de correção de bugs de sintaxe. Um bug complexo de re-renderização do React que impedia a abertura do modal de importação foi resolvido movendo o modal para fora de um bloco de renderização condicional.
+A aplicação possui um fluxo de aprovação de parceiros estável e funcionalidade de gestão de certidões permanentes. O sistema de importação de CSV foi significativamente robustecido; o backend agora normaliza automaticamente ficheiros CSV, detetando delimitadores ( ou ), tratando múltiplos encodings (, ), e limpando dados (removendo comentários e convertendo números em notação científica). Uma nova página dedicada, , foi criada para centralizar esta funcionalidade. Um erro crítico e recorrente de Parceiro not found, causado por um ID de utilizador desatualizado no , foi corrigido forçando uma busca de dados atualizados do utilizador () antes de cada operação de importação. A funcionalidade de descarregar CSV de exemplo foi melhorada para incluir dinamicamente o ID do parceiro logado. Um endpoint de backend para parceiros desativarem motoristas foi criado, mas a interface de utilizador (UI) para esta ação ainda não foi implementada.
 
 **Last working item**:
-- Last item agent was working: Corrigir uma série de erros de sintaxe no ficheiro  após tentar implementar a funcionalidade de importação de CSV. Os erros incluíam Unexpected keyword await, Missing semicolon e Unexpected keyword const.
-- Status: IN PROGRESS
+- Last item agent was working: O agente estava prestes a criar um novo registo de parceiro para o utilizador , que não conseguia utilizar a funcionalidade de importação de CSV por não existir na coleção . O utilizador forneceu os dados necessários: Nome da Empresa: zeny macaia unipessoal lda, NIF: 987654321, Nome do Responsável: Zeny macaia.
+- Status: NOT STARTED
 - Agent Testing Done: N
-- Which testing method agent to use? Frontend testing agent. O agente deve ser usado para verificar se a página  carrega sem erros de compilação e se a nova funcionalidade de Importar CSV (botão e modal) funciona como esperado.
+- Which testing method agent to use? Both. Primeiro, o agente de backend deve criar o parceiro e verificar a sua existência na base de dados. Depois, o agente de frontend deve fazer login como  e confirmar que a funcionalidade de importação de CSV funciona sem o erro Parceiro not found.
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
-- Issue 1: (P0) Finalizar e verificar a funcionalidade de importação de CSV na página de Veículos.
-- Issue 2: (P1) Corrigir a lógica de importação de motoristas por CSV para o parceiro logado.
-- Issue 3: (P1) Corrigir o formulário de criação de contrato que não tem o campo parceiro.
-- Issue 4: (P2) Erro recorrente de validação Pydantic no modelo .
-- Issue 5: (P3) Extração de dados do scraper da Via Verde está incompleta.
-- Issue 6: (P3) Refatoração do monólito .
-- Issue 7: (P4) Funcionalidade de envio de relatórios por Email/WhatsApp está simulada.
+- Issue 1: (P0) Finalizar a criação do parceiro .
+- Issue 2: (P1) Implementar a interface de utilizador (UI) para a funcionalidade de desativação de motoristas.
+- Issue 3: (P2) Erro recorrente de validação Pydantic no modelo .
+- Issue 4: (P3) Extração de dados do scraper da Via Verde está incompleta.
+- Issue 5: (P3) Refatoração do monólito .
+- Issue 6: (P4) Funcionalidade de envio de relatórios por Email/WhatsApp está simulada.
 
 Issues Detail:
 - Issue 1:
-    - Attempted fixes: O agente adicionou o código para a funcionalidade de importação em , mas introduziu múltiplos erros de sintaxe. O agente corrigiu um erro  ao adicionar  à função .
+    - Attempted fixes: O agente diagnosticou que o utilizador  não tinha um registo na coleção , o que causava o erro Parceiro not found. O agente obteve os dados necessários do utilizador para criar o registo.
     - Next debug checklist:
-        1. Verificar o terminal para confirmar que o erro de compilação reportado pelo utilizador (Unexpected reserved word await) foi o último e está resolvido.
-        2. Se houver mais erros, corrigi-los em .
-        3. Após a compilação bem-sucedida, usar o  para testar o fluxo completo de importação de CSV na página de veículos.
-    - Why fix this issue and what will be achieved with the fix? Completará a implementação da funcionalidade de importação em massa, tornando-a consistente em todas as secções relevantes (Parceiros, Motoristas, Veículos).
-    - Status: IN PROGRESS
-    - Is recurring issue? Y (O agente introduziu erros de sintaxe semelhantes em ).
-    - Should Test frontend/backend/both after fix? Frontend
+        1. Executar um comando para criar um novo documento na coleção  com os dados fornecidos pelo utilizador (, , , ). Certificar-se de que o uid=0(root) gid=0(root) groups=0(root) do novo parceiro corresponde ao uid=0(root) gid=0(root) groups=0(root) do utilizador  na coleção .
+        2. Testar o fluxo de login e importação de CSV com a conta .
+    - Why fix this issue and what will be achieved with the fix? Irá desbloquear um utilizador principal e confirmar que a arquitetura de resolução de bugs implementada está correta.
+    - Status: NOT STARTED
+    - Is recurring issue? Y (O sintoma Parceiro not found é recorrente, embora a causa raiz seja nova).
+    - Should Test frontend/backend/both after fix? Both
     - Blocked on other issue: None
 - Issue 2:
-    - Attempted fixes: Nenhum. O agente identificou o problema, mas adiou a correção.
+    - Attempted fixes: O agente criou o endpoint de backend  que permite a um parceiro alterar o estado de um motorista para inativo.
     - Next debug checklist:
-        1. Rever o endpoint  em .
-        2. Modificar a lógica para que, se a role do  for , use o  associado a esse utilizador para atribuir os novos motoristas, em vez de depender de um ID passado no URL ou no payload.
-        3. Testar o fluxo de importação fazendo login como um parceiro.
-    - Why fix this issue and what will be achieved with the fix? Permitirá que os parceiros usem a funcionalidade de importação de forma autónoma, sem a intervenção de um administrador.
+        1. Modificar o componente .
+        2. Adicionar um botão de Desativar (ou um ícone) na linha de cada motorista na tabela.
+        3. A ação de clique deve chamar o novo endpoint e, em caso de sucesso, atualizar a UI para refletir o novo estado do motorista.
+    - Why fix this issue and what will be achieved with the fix? Completará uma funcionalidade solicitada pelo utilizador, dando aos parceiros mais autonomia na gestão das suas contas.
     - Status: NOT STARTED
     - Is recurring issue? N
     - Should Test frontend/backend/both after fix? Both
     - Blocked on other issue: None
-- Issue 3:
-    - Attempted fixes: Nenhum.
-    - Next debug checklist:
-        1. Investigar o componente frontend responsável pela criação de contratos (provavelmente em  ou um componente dedicado como ).
-        2. Verificar por que o campo de seleção de parceiro está em falta ou não funciona quando um administrador/gestor cria um contrato.
-        3. Corrigir o formulário para incluir e popular corretamente a lista de parceiros.
-    - Why fix this issue and what will be achieved with the fix? Restaurará a capacidade dos administradores de criar contratos para parceiros específicos.
-    - Status: NOT STARTED
-    - Is recurring issue? N
-    - Should Test frontend/backend/both after fix? Frontend
-    - Blocked on other issue: None
-- Issue 4:
-    - Attempted fixes: O agente corrigiu este erro duas vezes tornando campos (, , ) como  no modelo .
-    - Next debug checklist:
-        1. Rever todos os pontos de criação/atualização de motoristas.
-        2. Garantir que todos os campos obrigatórios do modelo Pydantic  recebem um valor padrão na criação.
-        3. Considerar a criação de um script de migração para corrigir documentos antigos na base de dados que não possuam estes campos.
-    - Why fix this issue and what will be achieved with the fix? Irá eliminar uma fonte recorrente de bugs e tornar a aplicação mais robusta contra inconsistências de dados.
-    - Status: NOT STARTED
-    - Is recurring issue? Y
-    - Should Test frontend/backend/both after fix? Backend
-    - Blocked on other issue: None
-- Issue 5:
-    - Attempted fixes: Nenhuma nesta sessão.
-    - Next debug checklist: Clarificar com o utilizador se a conta de teste é de Particulares ou Empresas e ajustar o fluxo de navegação pós-login.
-    - Why fix this issue and what will be achieved with the fix? Automatizar uma tarefa manual importante para o utilizador.
-    - Status: NOT STARTED
-    - Is recurring issue? Y
-    - Should Test frontend/backend/both after fix? Backend
-    - Blocked on other issue: None
-- Issue 6:
-    - Attempted fixes: Nenhuma.
-    - Next debug checklist: Começar a migrar um conjunto de rotas (ex: ) para um  num novo ficheiro.
-    - Why fix this issue and what will be achieved with the fix? Reduzir a complexidade, melhorar a manutenibilidade e prevenir bugs futuros.
-    - Status: NOT STARTED
-    - Is recurring issue? Y
-    - Should Test frontend/backend/both after fix? Both
-    - Blocked on other issue: None
-- Issue 7:
-    - Attempted fixes: Nenhum.
-    - Next debug checklist: Obter chaves de API do utilizador e integrar um serviço de envio de email.
-    - Why fix this issue and what will be achieved with the fix? Completar uma funcionalidade do sistema.
-    - Status: NOT STARTED
-    - Is recurring issue? N
-    - Should Test frontend/backend/both after fix? Backend
-    - Blocked on other issue: Aguarda input do utilizador.
 
 **In progress Task List**:
-- Task 1: (P0) Implementar a funcionalidade de importação de CSV na página .
-    - Where to resume: O agente acabou de corrigir múltiplos erros de sintaxe no ficheiro . O próximo passo é confirmar que o frontend compila sem erros e depois testar a funcionalidade.
-    - What will be achieved with this? Uniformizar a funcionalidade de importação em massa em todas as secções relevantes da aplicação.
-    - Status: IN PROGRESS
-    - Should Test frontend/backend/both after fix? Frontend
+- Task 1: (P0) Criar o registo de parceiro para .
+    - Where to resume: Utilizar um script ou um comando  para interagir com o endpoint de criação de parceiros () e inserir os dados fornecidos pelo utilizador na base de dados.
+    - What will be achieved with this? Resolverá o bloqueio principal do utilizador .
+    - Status: NOT STARTED
+    - Should Test frontend/backend/both after fix? Both
     - Blocked on something: None
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   (P1) **Lógica de Backend para Importação de Parceiro:** Corrigir a lógica de importação de CSV de motoristas para que os motoristas sejam automaticamente associados ao parceiro que está logado. ()
-    *   (P1) **Correção do Formulário de Contrato:** Adicionar o campo de seleção de parceiro em falta no formulário de criação de contrato. (Frontend)
-    *   (P2) **Sistema Unificado de Templates:** Criar um sistema de templates de contrato globais/únicos, como solicitado pelo utilizador.
+    *   (P1) **UI para Desativar Motorista:** Implementar o botão e a lógica no frontend para que os parceiros possam desativar motoristas.
+    *   (P2) **Sistema Unificado de Templates:** Criar um sistema de templates de contrato globais/únicos.
 *   **Future Tasks:**
     *   (P2) **Finalizar o Scraper da Via Verde:** Implementar a lógica de extração de dados.
     *   (P2) **Refatorar :** Dividir o ficheiro monolítico em múltiplos routers.
     *   (P3) Implementar parsers para outros formatos de CSV/plataformas.
     *   (P3) Integrar um serviço real de envio de relatórios por Email/WhatsApp.
     *   (P3) Implementar Relatório de Faturação Mensal para Parceiros.
-    - (P3) Teste ponta-a-ponta da integração com Moloni.
-    - (P3) Integrar na UI o custo associado à alteração de planos.
+    *   (P3) Teste ponta-a-ponta da integração com Moloni.
 
 **Completed work in this session**
-- **Correção do Fluxo de Aprovação de Parceiros (DONE):** O bug crítico que impedia a aprovação correta de parceiros foi resolvido e verificado com agentes de teste de backend e frontend.
-- **Gestão de Certidão Permanente (DONE):** Implementada uma nova secção no perfil do parceiro para upload, download, e edição do código/validade da certidão permanente, com suporte de backend e frontend.
-- **Melhorias Abrangentes no Sistema de Contratos (DONE):**
-    - Adicionada uma lista completa de variáveis dinâmicas ao backend e à UI de criação de templates.
-    - Corrigido um bug Method Not Allowed que impedia parceiros de criar templates.
-    - Implementada a funcionalidade para guardar uma cópia do contrato em PDF no perfil do motorista.
-    - Criado um modal de pré-visualização de template em formato de impressão A4.
-    - Adicionada a capacidade de descarregar templates em formato PDF.
-- **Implementação de Importação CSV (DONE for Parceiros/Motoristas):**
-    - Criados endpoints de backend e componentes de frontend para permitir a importação em massa de motoristas e veículos.
-    - Criados e disponibilizados ficheiros CSV de exemplo para download.
-    - Implementada a funcionalidade nas páginas  e .
-- **Resolução de Bugs Críticos na UI (DONE):**
-    - Resolvido um bug complexo de re-renderização no React que impedia a abertura do modal de importação CSV.
-    - Corrigido um erro recorrente de  ao tornar mais campos opcionais no modelo .
+- **Robustez da Importação CSV (DONE):**
+    - Corrigido erro de decoding  implementando uma tentativa de múltiplos encodings (, ).
+    - Adicionada deteção automática de delimitador de CSV ( ou ).
+    - Criada uma função de normalização de CSV () que remove comentários e converte números em notação científica.
+- **Nova Página de Importação CSV (DONE):**
+    - Criada e implementada uma nova página dedicada  com uma interface unificada.
+- **Correção de Parceiro not found (DONE):**
+    - Diagnosticado e corrigido um bug crítico onde o frontend enviava um  desatualizado do . A solução foi implementar uma chamada ao endpoint  para obter dados atualizados do utilizador antes de cada importação.
+- **Melhorias nos Ficheiros de Exemplo CSV (DONE):**
+    - O endpoint de download de exemplos agora gera o ficheiro dinamicamente, incluindo o ID do parceiro logado no cabeçalho.
+    - Adicionada a coluna Validade de CC ao exemplo de motoristas e a coluna Localidade ao exemplo de veículos, com a respetiva lógica de processamento no backend.
+- **Correções de Bugs de Frontend (DONE):**
+    - Resolvido um erro de runtime .
+    - Corrigido o download de ficheiros de exemplo que falhava por falta de token de autenticação.
+    - Corrigidos múltiplos Script errors genéricos através da correção de erros de lint, utilização da biblioteca de toast correta () e padronização da importação da variável de ambiente da API.
+- **Endpoint de Desativação de Motorista (Backend DONE):**
+    - Criado o endpoint  para permitir que parceiros desativem motoristas.
 
 **Earlier issues found/mentioned but not fixed**
--   Issue 1: A refatoração do  continua pendente e é uma dívida técnica crítica.
--   Issue 2: A extração de dados do scraper da Via Verde continua por resolver.
+-   A refatoração do  continua pendente e é uma dívida técnica crítica.
+-   A extração de dados do scraper da Via Verde continua por resolver.
 
 **Known issue recurrence from previous fork**
--   Issue recurrence in previous fork: A complexidade do ficheiro  foi mencionada em handoffs anteriores e continua a ser um risco.
--   Recurrence count: Elevado
--   Status: NOT STARTED
+-   **Parceiro not found:** Este erro foi a questão central desta sessão. Ocorreu várias vezes com diferentes causas (lógica de ID, cache, dados inexistentes). A última causa foi um registo de parceiro em falta, que está prestes a ser corrigido. A sua natureza recorrente exige atenção.
+-   **Recurrence count:** Muito Elevado
+-   **Status:** IN PROGRESS (a causa raiz final está a ser tratada).
 
 **Code Architecture**
-
+getInitials
 
 **Key Technical Concepts**
-- **Frontend Debugging (React):** O agente demonstrou resiliência ao depurar um problema complexo de estado e re-renderização no React, tentando várias abordagens (logs, , , CSS) até encontrar a solução correta (mover o componente para fora de um bloco de renderização condicional).
-- **Backend (FastAPI):** O agente adicionou múltiplos endpoints complexos, incluindo upload de ficheiros (), download de ficheiros (), e manipulação de dados em várias coleções MongoDB.
-- **PDF Generation (reportlab):** O agente modificou e criou novas funções para gerar PDFs a partir de templates de texto, substituindo placeholders dinamicamente e formatando o layout.
-- **Sintaxe JavaScript/React:** O agente demonstrou uma fraqueza ao introduzir repetidamente os mesmos erros de sintaxe ao copiar/colar código entre componentes (, ), necessitando de múltiplas iterações de correção.
+- **Normalização de Dados (Python):** O agente implementou uma função robusta () no backend para pré-processar ficheiros CSV, lidando com diferentes delimitadores, encodings, comentários e formatos de dados.
+- **Gestão de Estado no Frontend (React):** O agente diagnosticou com sucesso um problema complexo de estado obsoleto no  e implementou uma solução sólida ao forçar a obtenção de dados atualizados do utilizador a partir de um endpoint () antes de operações críticas.
+- **Depuração de Erros (React):** O agente demonstrou competência na resolução de erros genéricos de frontend (Script error, Network Error), usando um processo metódico de verificação de linting, importações, props e estado.
 
 **key DB schema**
-- **parceiros**: 
-- **motoristas**: . O modelo Pydantic associado () foi modificado para ter mais campos  para evitar .
-- **templates_contratos**: 
+-   **users**: 
+-   **parceiros**:  (O utilizador  não existe nesta coleção).
+-   **motoristas**:  (O campo  foi adicionado para suportar a desativação).
 
 **changes in tech stack**
-- Nenhuma alteração fundamental, mas uso intensivo de  para geração de PDF e  de FastAPI para importação de CSV.
+-   Nenhuma.
 
 **All files of reference**
-- **Criados**:
-    - 
-    - 
-- **Atualizados Criticamente**:
-    - : Adição de múltiplos endpoints para importação, PDFs e gestão de certidões.
-    - : Múltiplos campos tornados opcionais.
-    - : Corrigido bug do modal, adicionadas novas funcionalidades.
-    - : Adicionada funcionalidade de importação CSV, corrigidos erros de sintaxe.
-    - : Em processo de adição da funcionalidade de importação CSV, com correções de sintaxe em andamento.
-    - : Adicionada visualização de templates.
-    - : Melhorada a UI de variáveis.
+-   **Criados**:
+    -   
+-   **Atualizados Criticamente**:
+    -   : Lógica de importação de CSV, novo endpoint de desativação.
+    -   : Múltiplas correções de bugs (download, importação, estado do utilizador).
+    -   : Adicionada nova rota.
+    -   : Adicionado novo item de menu.
 
 **Areas that need refactoring**:
-- ****: Continua a ser a maior dívida técnica. A sua complexidade aumenta a cada nova funcionalidade.
-- ** e **: O agente introduziu erros de sintaxe por copiar código sem o cuidado necessário. Uma revisão do código recém-adicionado pode ser benéfica.
+-   ****: Continua a ser a maior dívida técnica, com a sua complexidade a crescer a cada nova funcionalidade.
+-   ****: Sendo um ficheiro novo e intensamente modificado, beneficiaria de uma refatoração para melhorar a clareza e talvez extrair lógica reutilizável.
 
 **key api endpoints**
-- **Novos:**
-    - 
-    - 
-    - 
-    - 
-    - 
-    - 
-    - 
-- **Modificados:**
-    - : Lógica de permissão corrigida.
-    - : Lógica de substituição de variáveis e gravação do PDF no motorista adicionada.
+-   **Novos:**
+    -   
+-   **Modificados:**
+    -    (lógica de normalização adicionada)
+    -    (lógica de normalização adicionada)
+    -    (agora gera dinamicamente com ID do parceiro)
+    -    (agora usado pelo frontend para obter dados atualizados do utilizador)
 
 **Critical Info for New Agent**
-- **Prioridade Imediata:** A sua primeira tarefa é resolver os erros de compilação em . O agente anterior estava a meio da correção de uma série de erros de sintaxe. Verifique os logs do frontend e corrija o que for necessário para que a aplicação compile.
-- **Testar Funcionalidade Inacabada:** Após corrigir os erros de sintaxe, teste exaustivamente a funcionalidade de importação de CSV na página de Veículos.
-- **Atender Pedidos Pendentes do Utilizador:** O utilizador reportou dois problemas importantes que foram adiados: a importação de CSV por um parceiro não associa os motoristas corretamente (backend), e o formulário de criação de contrato não tem o campo de parceiro (frontend). Estes devem ser os próximos itens na sua lista.
-- **Cuidado com Erros Recorrentes:** O agente anterior cometeu repetidamente os mesmos erros de sintaxe ao copiar código entre componentes. Tenha cuidado extra ao reutilizar código. Além disso, o erro de validação Pydantic no modelo  já ocorreu várias vezes; esteja preparado para enfrentá-lo novamente e considere uma solução mais definitiva.
+-   **Prioridade Imediata:** A sua primeira tarefa é criar o registo de parceiro para a conta . O utilizador está completamente bloqueado sem isto. Use os dados fornecidos: Nome da Empresa: , NIF: , Nome do Responsável: . O email é . Certifique-se de que o uid=0(root) gid=0(root) groups=0(root) do parceiro criado corresponde ao uid=0(root) gid=0(root) groups=0(root) do utilizador existente na coleção .
+-   **Funcionalidade Inacabada:** O utilizador pediu para poder desativar motoristas. O backend está pronto (), mas a UI não existe. Esta é a sua próxima tarefa de alta prioridade após resolver o problema do .
+-   **Atenção ao Parceiro not found:** Este erro foi extremamente recorrente. Embora a causa raiz pareça agora estar identificada (um registo de parceiro em falta), esteja preparado para que o erro possa ressurgir se houver outras inconsistências de dados.
 
 **Last 10 User Messages and any pending user messages**
-1.  **User**: Pede para corrigir a importação CSV em  e  porque não funciona. **Status**: IN PROGRESS (agente está a corrigir erros de sintaxe).
-2.  **User**: Reporta que, após clicar no botão de importar, o pop-up só aparece depois de navegar para outra página e voltar. **Status**: RESOLVED (agente diagnosticou e corrigiu o bug de re-renderização do React).
-3.  **User**: Pede para adicionar importação CSV na página de  e um sistema de templates único. **Status**: IN PROGRESS (importação em  foi implementada, mas com bugs de sintaxe. Sistema de template único pendente).
-4.  **User**: Reporta que clicar no botão de importar CSV não faz nada. **Status**: RESOLVED.
-5.  **User**: Pede para adicionar um botão de download de PDF para templates ativos. **Status**: COMPLETED.
-6.  **User**: Reporta que a importação de motoristas/veículos não funciona. **Status**: IN PROGRESS.
-7.  **User**: Pede para adicionar a lista completa de variáveis à UI de criação de templates e mostrar os templates no perfil do parceiro. **Status**: COMPLETED.
-8.  **User**: Reporta novamente o Erro ao carregar perfil do parceiro e lista todas as variáveis de contrato em falta. **Status**: RESOLVED (agente tornou mais campos opcionais e adicionou as variáveis ao backend).
-9.  **User**: Reporta Method Not Allowed ao criar contrato e pede para adicionar mais variáveis de motorista e guardar o PDF no perfil. **Status**: COMPLETED.
-10. **User**: Solicita que a importação de CSV para veículos seja adicionada, que a importação de motoristas funcione para o parceiro logado e que o campo parceiro seja adicionado à criação de contrato. **Status**: PENDING (esta é a tarefa atual).
+1.  **User**: Pede para o exemplo de CSV usar sempre o ID do parceiro logado. **Status: COMPLETED**.
+2.  **User**: Informa que o sistema só funciona para  e não para , anexando um screenshot. **Status: IN PROGRESS**.
+3.  **User**: Pergunta se  já não é um parceiro ativo. **Status: IN PROGRESS**.
+4.  **User**: Fornece os dados para criar o parceiro . **Status: PENDING (Current Task)**.
 
 **Project Health Check:**
-- **Broken**: A página  não está a compilar devido a erros de sintaxe. A lógica de backend para importação de CSV por um parceiro está incorreta. O formulário de criação de contrato está incompleto.
-- **Mocked**: O envio de relatórios por Email/WhatsApp.
+-   **Broken**: A conta do utilizador  não é funcional para tarefas essenciais (como importação) porque não tem um registo de parceiro associado na base de dados.
+-   **Mocked**: Envio de relatórios por Email/WhatsApp.
 
 **3rd Party Integrations**
-- **Playwright**: Utilizada para web scraping (atualmente com sucesso parcial).
-- **Moloni**: Integração existente, mas funcionalidade de faturação ainda por testar.
-- **openpyxl**: Dependência para ler ficheiros .
-- **reportlab**: Utilizada intensivamente para gerar PDFs de contratos e templates.
+-   Playwright
+-   Moloni
+-   openpyxl
+-   reportlab
 
 **Testing status**
-- Testing agent used after significant changes: YES
-- Troubleshoot agent used after agent stuck in loop: NO
-- Test files created: []
-- Known regressions: O formulário de criação de contrato parece ter perdido o campo parceiro, o que pode ser considerado uma regressão.
+-   Testing agent used after significant changes: YES
+-   Troubleshoot agent used after agent stuck in loop: NO
+-   Test files created: []
+-   Known regressions: Nenhuma.
 
 **Credentials to test flow:**
-- **Credenciais da Aplicação:** Disponíveis em . Usar  para tarefas de administração.
+-   As credenciais estão em .
+-   **Utilizador com problemas:**  (Senha: )
+-   **Utilizador funcional:**  (Senha: )
 
 **What agent forgot to execute**
-- O agente não conseguiu implementar a funcionalidade de importação de CSV em  sem introduzir múltiplos erros de sintaxe, o que atrasou a tarefa.
-- O agente adiou a correção de dois pedidos importantes do utilizador: a lógica de backend para importação de CSV por parceiros e a correção do formulário de criação de contrato.</analysis>
+-   O agente anterior não chegou a criar o registo de parceiro para  depois de receber os dados.
+-   O agente implementou o backend para a desativação de motoristas, mas esqueceu-se de implementar a interface de utilizador correspondente no frontend, deixando a funcionalidade incompleta.</analysis>
