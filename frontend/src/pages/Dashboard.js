@@ -263,7 +263,7 @@ const Dashboard = ({ user, onLogout }) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Button
                   variant="outline"
                   className="h-auto py-4 flex flex-col items-start hover:bg-blue-100"
@@ -271,10 +271,10 @@ const Dashboard = ({ user, onLogout }) => {
                 >
                   <div className="flex items-center space-x-2 mb-2">
                     <Settings className="w-5 h-5 text-blue-600" />
-                    <span className="font-semibold">Configurar Relatórios</span>
+                    <span className="font-semibold">Configurar</span>
                   </div>
                   <p className="text-xs text-slate-600 text-left">
-                    Personalize os campos dos relatórios semanais
+                    Personalize os campos dos relatórios
                   </p>
                 </Button>
                 <Button
@@ -287,7 +287,62 @@ const Dashboard = ({ user, onLogout }) => {
                     <span className="font-semibold">Gerar Relatório</span>
                   </div>
                   <p className="text-xs text-slate-600 text-left">
-                    Crie relatórios semanais para os seus motoristas
+                    Crie relatórios semanais
+                  </p>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-auto py-4 flex flex-col items-start hover:bg-purple-100"
+                  onClick={() => window.location.href = '/pagamentos-relatorios-semanais'}
+                >
+                  <div className="flex items-center space-x-2 mb-2">
+                    <DollarSign className="w-5 h-5 text-purple-600" />
+                    <span className="font-semibold">Pagamentos</span>
+                  </div>
+                  <p className="text-xs text-slate-600 text-left">
+                    Gerir pagamentos de relatórios
+                  </p>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Painel de Controle - Gestão */}
+        {user.role === 'parceiro' && (
+          <Card className="border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Settings className="w-5 h-5 text-purple-600" />
+                <span>Painel de Controle</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Button
+                  variant="outline"
+                  className="h-auto py-4 flex flex-col items-start hover:bg-orange-100"
+                  onClick={() => window.location.href = '/importar-motoristas-veiculos'}
+                >
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Upload className="w-5 h-5 text-orange-600" />
+                    <span className="font-semibold">Importar Dados</span>
+                  </div>
+                  <p className="text-xs text-slate-600 text-left">
+                    Importar motoristas e veículos via CSV
+                  </p>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-auto py-4 flex flex-col items-start hover:bg-indigo-100"
+                  onClick={() => window.location.href = '/gestao-credenciais'}
+                >
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Key className="w-5 h-5 text-indigo-600" />
+                    <span className="font-semibold">Credenciais</span>
+                  </div>
+                  <p className="text-xs text-slate-600 text-left">
+                    Gerir credenciais de plataformas
                   </p>
                 </Button>
               </div>
