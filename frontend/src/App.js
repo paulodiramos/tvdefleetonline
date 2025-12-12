@@ -77,6 +77,7 @@ import ConfiguracaoPlanos from "@/pages/ConfiguracaoPlanos";
 import ConfiguracaoRelatorios from "@/pages/ConfiguracaoRelatorios";
 import GerarRelatorioSemanal from "@/pages/GerarRelatorioSemanal";
 import VerificarRecibos from "@/pages/VerificarRecibos";
+import PagamentosRelatoriosSemanais from "@/pages/PagamentosRelatoriosSemanais";
 import MeusPlanos from "@/pages/MeusPlanos";
 import MeusRecibosGanhos from "@/pages/MeusRecibosGanhos";
 import ValidacaoDocumentosMotorista from "@/pages/ValidacaoDocumentosMotorista";
