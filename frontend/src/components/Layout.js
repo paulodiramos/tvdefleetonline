@@ -63,6 +63,7 @@ const Layout = ({ children, user, onLogout }) => {
           submenu: [
             { path: '/gerar-relatorio-semanal', label: 'Gerar Relatório Semanal' },
             { path: '/verificar-recibos', label: 'Verificar Recibos' },
+            { path: '/pagamentos-relatorios-semanais', label: 'Gerir Pagamentos' },
             { path: '/configuracao-relatorios', label: 'Configurar Relatórios' },
             { path: '/criar-relatorio-semanal', label: 'Criar Relatório' },
             { path: '/gestao-pagamentos-recibos', label: 'Pagamentos & Recibos' },
