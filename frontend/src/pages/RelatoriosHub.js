@@ -739,7 +739,42 @@ const RelatoriosHub = ({ user, onLogout }) => {
                               </Button>
                             </>
                           )}
-                          {rel.status !== 'verificado' && (
+                          {rel.status === 'pago' && (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDownloadPDF(rel.id)}
+                                className="bg-blue-50 hover:bg-blue-100"
+                              >
+                                <Download className="w-3 h-3 mr-1" />
+                                Relatório
+                              </Button>
+                              {rel.recibo_url && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDownloadRecibo(rel.recibo_url)}
+                                  className="bg-orange-50 hover:bg-orange-100"
+                                >
+                                  <Download className="w-3 h-3 mr-1" />
+                                  Recibo
+                                </Button>
+                              )}
+                              {rel.comprovativo_pagamento_url && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleDownloadComprovativo(rel.comprovativo_pagamento_url)}
+                                  className="bg-green-50 hover:bg-green-100"
+                                >
+                                  <Download className="w-3 h-3 mr-1" />
+                                  Comprovativo
+                                </Button>
+                              )}
+                            </>
+                          )}
+                          {rel.status !== 'verificado' && rel.status !== 'aguarda_pagamento' && rel.status !== 'pago' && (
                             <Button
                               size="sm"
                               variant="outline"
