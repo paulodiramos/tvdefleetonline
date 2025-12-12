@@ -8478,3 +8478,152 @@ agent_communication:
         ✅ Fluxo de atribuir planos está 100% operacional e atende todos os requisitos
         ✅ Sistema pronto para produção - funcionalidade crítica funcionando
         ✅ Apenas correção menor nos contadores de badges recomendada
+
+
+---
+
+## NOVA SESSÃO DE TESTES - 2025-12-12 (Fork Agent)
+
+### Contexto da Sessão
+**Agente:** Fork Agent (novo agente a partir do job anterior)
+**Data:** 2025-12-12
+**Prioridade:** P0 - CRÍTICO
+
+### Bugs Críticos Corrigidos ANTES do Teste
+
+1. **❌ BUG CORRIGIDO: Estado incorreto na aprovação de análise**
+   - **Problema:** Endpoint `/api/relatorios/semanal/{relatorio_id}/aprovar-analise` mudava estado para `verificado` em vez de `aguarda_pagamento`
+   - **Impacto:** Quebrava o fluxo esperado do ciclo de vida do relatório
+   - **Solução:** Corrigido em `/app/backend/server.py` linha ~10825
+   - **Estado Esperado:** `em_analise` → `aguarda_pagamento`
+
+2. **❌ BUG CORRIGIDO: Endpoint de download de recibos não existia**
+   - **Problema:** Backend não tinha endpoint `GET /api/relatorios/recibos/{filename}`
+   - **Impacto:** Download de recibos resultaria em erro 404
+   - **Solução:** Criado novo endpoint em `/app/backend/server.py` linha ~10804
+   - **Funcionalidade:** Serve ficheiros PDF/JPG/PNG com autenticação
+
+3. **❌ BUG CORRIGIDO: Endpoint de download de comprovativos não existia**
+   - **Problema:** Backend não tinha endpoint `GET /api/relatorios/comprovativos/{filename}`
+   - **Impacto:** Download de comprovativos de pagamento resultaria em erro 404
+   - **Solução:** Criado novo endpoint em `/app/backend/server.py` linha ~10944
+   - **Funcionalidade:** Serve ficheiros de comprovativo com autenticação
+
+4. **❌ BUG CORRIGIDO: URLs incorretas para ficheiros**
+   - **Problema:** Backend retornava `/uploads/recibos/{filename}` mas não havia endpoint para servir
+   - **Impacto:** Frontend não conseguiria aceder aos ficheiros
+   - **Solução:** Backend agora retorna `/api/relatorios/recibos/{filename}` (linha ~10774)
+   - **Solução Frontend:** URLs construídas com `${API_URL}${rel.recibo_url}` em RelatoriosHub.js
+
+### Fluxo Completo a Testar (CICLO DE VIDA DO RELATÓRIO)
+
+**CREDENCIAIS:** `parceiro@tvdefleet.com` / `UQ1B6DXU`
+
+**ETAPAS DO FLUXO:**
+
+1. **✅ Login como Parceiro**
+   - URL: `/login`
+   - Verificar: Redirecionamento para dashboard
+
+2. **✅ Navegação para Hub de Relatórios**
+   - URL: `/relatorios-hub`
+   - Verificar: Página carrega sem erros
+
+3. **✅ Criar Relatório Rápido**
+   - Ação: Criar novo relatório para um motorista
+   - Verificar: Relatório criado com estado `rascunho` ou `pendente`
+
+4. **✅ Editar Relatório e Upload de Recibo**
+   - Ação: Editar relatório, fazer upload de um ficheiro PDF/JPG como recibo
+   - Endpoint: `POST /api/relatorios/{relatorio_id}/upload-recibo`
+   - **CRÍTICO:** Verificar se estado muda para `em_analise`
+   - **CRÍTICO:** Verificar se `recibo_url` contém `/api/relatorios/recibos/{filename}`
+
+5. **✅ Download do Recibo**
+   - Ação: Clicar em "Ver Recibo"
+   - Endpoint: `GET /api/relatorios/recibos/{filename}`
+   - **CRÍTICO:** Verificar se ficheiro abre/faz download corretamente
+   - **CRÍTICO:** Verificar se não retorna 404 ou página em branco
+
+6. **✅ Aprovar Análise do Recibo**
+   - Ação: Clicar em "Aprovar Análise"
+   - Endpoint: `POST /api/relatorios/semanal/{relatorio_id}/aprovar-analise`
+   - **CRÍTICO:** Verificar se estado muda para `aguarda_pagamento` (NÃO `verificado`)
+
+7. **✅ Iniciar Pagamento com Upload de Comprovativo**
+   - Ação: Clicar em "Pagar", fazer upload de comprovativo, confirmar pagamento
+   - Endpoints:
+     - `POST /api/relatorios/semanal/{relatorio_id}/upload-comprovativo`
+     - `POST /api/relatorios/semanal/{relatorio_id}/marcar-pago`
+   - **CRÍTICO:** Verificar se estado muda para `pago`
+   - **CRÍTICO:** Verificar se `comprovativo_pagamento_url` está preenchido
+
+8. **✅ Download do Comprovativo de Pagamento**
+   - Ação: Verificar histórico e tentar fazer download do comprovativo
+   - Endpoint: `GET /api/relatorios/comprovativos/{filename}`
+   - **CRÍTICO:** Verificar se ficheiro abre/faz download corretamente
+
+### Áreas Críticas para Validação
+
+**Backend:**
+- ✅ Transições de estado corretas: `pendente` → `aguarda_recibo` → `em_analise` → `aguarda_pagamento` → `pago`
+- ✅ Upload de ficheiros funcional (recibos e comprovativos)
+- ✅ Novos endpoints de download funcionais
+- ✅ Autenticação e autorização nos endpoints de ficheiros
+
+**Frontend:**
+- ✅ URLs de ficheiros construídas corretamente com `API_URL`
+- ✅ Botões de ação aparecem conforme o estado do relatório
+- ✅ Modais de confirmação funcionam corretamente
+- ✅ Download de ficheiros não resulta em página em branco
+
+**Integração (E2E):**
+- ✅ Fluxo completo de criação até pagamento funciona sem erros
+- ✅ Estados mudam corretamente em cada etapa
+- ✅ Ficheiros são guardados e recuperados corretamente
+- ✅ Dados persistem na base de dados
+
+### Ficheiros Modificados nesta Sessão
+
+**Backend:**
+- `/app/backend/server.py`:
+  - Linha ~10825: Corrigido estado na aprovação de análise (`aguarda_pagamento`)
+  - Linha ~10804: Criado endpoint `GET /api/relatorios/recibos/{filename}`
+  - Linha ~10944: Criado endpoint `GET /api/relatorios/comprovativos/{filename}`
+  - Linha ~10774: URL do recibo corrigida para `/api/relatorios/recibos/{filename}`
+  - Linha ~10916: URL do comprovativo corrigida para `/api/relatorios/comprovativos/{filename}`
+
+**Frontend:**
+- `/app/frontend/src/pages/RelatoriosHub.js`:
+  - Linha ~633: URL do recibo com `${API_URL}${rel.recibo_url}`
+  - Linha ~665: URL do recibo com `${API_URL}${rel.recibo_url}`
+  - Linha ~987: URL do recibo no modal de pagamento com `${API_URL}`
+
+### Próximos Passos após Testes
+
+**Se testes passarem:**
+1. Implementar criação de relatórios "Semi-Manual" (via CSV)
+2. Implementar criação de relatórios "Automático" (sincronização agendada)
+
+**Se testes falharem:**
+1. Analisar logs de erro do agente de testes
+2. Corrigir bugs identificados
+3. Re-testar até todos os testes passarem
+
+### Instruções para o Agente de Testes
+
+**OBJETIVO:** Validar o fluxo completo de gestão de relatórios semanais, especialmente:
+- Upload e download de recibos
+- Transições de estado corretas
+- Upload e download de comprovativos de pagamento
+
+**MÉTODO:** Frontend testing (Playwright) + Backend testing (curl)
+
+**FOCO:** As 8 etapas do ciclo de vida descritas acima
+
+**CREDENCIAIS:** `parceiro@tvdefleet.com` / `UQ1B6DXU`
+
+**NOTA IMPORTANTE:** Este é o teste mais crítico do sistema. O agente anterior implementou estas funcionalidades SEM TESTES. Qualquer falha deve ser reportada com detalhes completos (logs, screenshots, erro).
+
+---
+
