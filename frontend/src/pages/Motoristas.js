@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Users, CheckCircle, Clock, FileText, Plus, Mail, Phone, MapPin, CreditCard, Edit, X, Save, Trash2, Download, Package, Upload, AlertTriangle, XCircle } from 'lucide-react';
+import { Users, CheckCircle, Clock, FileText, Plus, Mail, Phone, MapPin, CreditCard, Edit, X, Save, Trash2, Download, Package, Upload, AlertTriangle, XCircle, Ban, CheckCircle2 } from 'lucide-react';
 
 const Motoristas = ({ user, onLogout }) => {
   const navigate = useNavigate();
