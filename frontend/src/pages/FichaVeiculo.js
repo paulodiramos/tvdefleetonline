@@ -1303,6 +1303,27 @@ const FichaVeiculo = ({ user, onLogout }) => {
                       )}
                     </div>
                     <div>
+                      <Label className="text-slate-600">Motorista Atribuído</Label>
+                      {canEdit && editMode ? (
+                        <select
+                          value={vehicle.motorista_atribuido || ''}
+                          onChange={(e) => setVehicle({...vehicle, motorista_atribuido: e.target.value})}
+                          className="w-full p-2 border rounded-md"
+                        >
+                          <option value="">Nenhum</option>
+                          {motoristasDisponiveis.map((m) => (
+                            <option key={m.id} value={m.id}>
+                              {m.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <p className="font-medium">
+                          {vehicle.motorista_atribuido_nome || 'Não atribuído'}
+                        </p>
+                      )}
+                    </div>
+                    <div>
                       <Label className="text-slate-600">Status</Label>
                       {canEdit && editMode ? (
                         <select
