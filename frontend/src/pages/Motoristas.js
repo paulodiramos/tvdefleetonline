@@ -1309,6 +1309,84 @@ const Motoristas = ({ user, onLogout }) => {
                     </div>
                   </TabsContent>
 
+                  <TabsContent value="emergencia" className="space-y-4">
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                      <h4 className="font-semibold text-red-800 mb-2">Contacto de Emergência</h4>
+                      <p className="text-sm text-red-600">Informações para contacto em caso de emergência</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Nome Completo</Label>
+                        {isEditing ? (
+                          <Input value={editForm.emergencia_nome || ''} onChange={(e) => setEditForm({...editForm, emergencia_nome: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.emergencia_nome || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Parentesco</Label>
+                        {isEditing ? (
+                          <select 
+                            className="w-full p-2 border rounded-md" 
+                            value={editForm.emergencia_parentesco || ''} 
+                            onChange={(e) => setEditForm({...editForm, emergencia_parentesco: e.target.value})}
+                          >
+                            <option value="">Selecione</option>
+                            <option value="pai">Pai</option>
+                            <option value="mae">Mãe</option>
+                            <option value="conjuge">Cônjuge</option>
+                            <option value="irmao">Irmão/Irmã</option>
+                            <option value="filho">Filho/Filha</option>
+                            <option value="amigo">Amigo/Amiga</option>
+                            <option value="outro">Outro</option>
+                          </select>
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.emergencia_parentesco || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Telefone</Label>
+                        {isEditing ? (
+                          <Input value={editForm.emergencia_telefone || ''} onChange={(e) => setEditForm({...editForm, emergencia_telefone: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.emergencia_telefone || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Email (opcional)</Label>
+                        {isEditing ? (
+                          <Input value={editForm.emergencia_email || ''} onChange={(e) => setEditForm({...editForm, emergencia_email: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.emergencia_email || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div className="col-span-2">
+                        <Label>Morada</Label>
+                        {isEditing ? (
+                          <Input value={editForm.emergencia_morada || ''} onChange={(e) => setEditForm({...editForm, emergencia_morada: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.emergencia_morada || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Código Postal</Label>
+                        {isEditing ? (
+                          <Input value={editForm.emergencia_codigo_postal || ''} onChange={(e) => setEditForm({...editForm, emergencia_codigo_postal: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.emergencia_codigo_postal || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Localidade</Label>
+                        {isEditing ? (
+                          <Input value={editForm.emergencia_localidade || ''} onChange={(e) => setEditForm({...editForm, emergencia_localidade: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.emergencia_localidade || 'N/A'}</p>
+                        )}
+                      </div>
+                    </div>
+                  </TabsContent>
+
                   {/* Tab de Uploads de Documentos */}
                   <TabsContent value="uploads" className="space-y-4">
                     <div className="space-y-4">
