@@ -10597,7 +10597,8 @@ async def atualizar_relatorio_semanal(
     campos_atualizaveis = [
         "ganhos_uber", "ganhos_bolt", "ganhos_totais",
         "combustivel_total", "via_verde_total", "caucao_semanal", "outros",
-        "total_despesas", "total_recibo", "viagens_totais"
+        "total_despesas", "total_recibo", "viagens_totais",
+        "divida_anterior", "proxima_divida", "status", "estado", "recibo_url"
     ]
     
     update_data = {}
@@ -10789,6 +10790,10 @@ async def criar_relatorio_manual(
         
         # Danos
         "danos": data.get("danos", []),
+        
+        # Dívida
+        "divida_anterior": float(data.get("divida_anterior", 0)),
+        "proxima_divida": float(data.get("proxima_divida", 0)),
         
         # Observações
         "observacoes": data.get("observacoes", ""),
