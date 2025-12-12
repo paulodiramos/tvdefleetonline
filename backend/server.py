@@ -6313,7 +6313,12 @@ async def importar_motoristas_csv(
                 18: 'Seg Social', 19: 'C Utente', 
                 20: 'Código Registo Criminal',
                 21: 'TVDE', 22: 'Validade TVDE',
-                23: 'Carta', 24: 'Desde Carta', 25: 'Validade Carta'
+                23: 'Carta', 24: 'Desde Carta', 25: 'Validade Carta',
+                26: 'IBAN',
+                27: 'Contacto Emergência Nome', 28: 'Contacto Emergência Parentesco',
+                29: 'Contacto Emergência Telefone', 30: 'Contacto Emergência Email',
+                31: 'Contacto Emergência Morada', 32: 'Contacto Emergência Código Postal',
+                33: 'Contacto Emergência Localidade'
             }
             
             # Detect delimiter
@@ -6329,7 +6334,7 @@ async def importar_motoristas_csv(
             output_lines = []
             
             # Add header row
-            header_cols = [COLUMN_MAP.get(i, f'Col{i}') for i in range(26)]
+            header_cols = [COLUMN_MAP.get(i, f'Col{i}') for i in range(34)]
             output_lines.append(','.join(header_cols))
             
             # Convert data rows
@@ -6338,11 +6343,11 @@ async def importar_motoristas_csv(
                     continue
                 
                 converted_row = []
-                for i in range(26):  # Updated from 24 to 26
+                for i in range(34):  # Updated to 34 columns
                     if i < len(row):
                         value = str(row[i]).strip()
-                        # Normalize phone numbers (columns 2, 3, 6, 9)
-                        if i in [2, 3, 6, 9]:
+                        # Normalize phone numbers (columns 2, 3, 6, 9, 29)
+                        if i in [2, 3, 6, 9, 29]:
                             value = normalize_phone(value)
                         converted_row.append(value)
                     else:
