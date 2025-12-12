@@ -513,6 +513,18 @@ backend:
           agent: "testing"
           comment: "✅ TESTADO: Todos os 5 novos tipos de documentos de motorista funcionando perfeitamente. Testados: cartao_cidadao_foto, carta_conducao_foto, licenca_tvde_foto, comprovativo_morada, iban_comprovativo. Todas as imagens JPG/PNG convertidas automaticamente para PDF. Arquivos salvos em /app/backend/uploads/motoristas/."
 
+  - task: "Sistema de Relatórios Semanais - Fluxo Completo de Gestão"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🎯 TESTE CRÍTICO COMPLETO DO SISTEMA DE RELATÓRIOS SEMANAIS - 100% FUNCIONANDO! CONTEXTO: Teste completo do fluxo de gestão de relatórios semanais conforme review request com 8 etapas críticas. CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU ✅. BUGS CORRIGIDOS CONFIRMADOS: 1) ✅ Estado em_analise → aguarda_pagamento (NÃO verificado) 2) ✅ Endpoint GET /api/relatorios/recibos/{filename} funcionando 3) ✅ Endpoint GET /api/relatorios/comprovativos/{filename} funcionando 4) ✅ URLs corrigidas no backend e frontend. RESULTADOS DOS 8 PASSOS CRÍTICOS: STEP 1 ✅ Login e navegação para hub de relatórios funcionando (2 relatórios encontrados) STEP 2 ✅ Criação de relatório manual via POST /api/relatorios/criar-manual funcionando (REL-2025-S49-D3C75B08) STEP 3 ✅ Upload de recibo via POST /api/relatorios/semanal/{id}/upload-recibo funcionando, estado mudou para 'em_analise' STEP 4 ✅ Download de recibo via GET /api/relatorios/recibos/{filename} funcionando (328 bytes) STEP 5 ✅ Aprovação de análise via POST /api/relatorios/semanal/{id}/aprovar-analise funcionando, estado mudou para 'aguarda_pagamento' (CORRETO) STEP 6 ✅ Upload de comprovativo via POST /api/relatorios/semanal/{id}/upload-comprovativo funcionando, URL: /api/relatorios/comprovativos/{filename} STEP 7 ✅ Marcar como pago via POST /api/relatorios/semanal/{id}/marcar-pago funcionando, estado mudou para 'pago' STEP 8 ✅ Download de comprovativo via GET /api/relatorios/comprovativos/{filename} funcionando (825 bytes). TESTES ADICIONAIS: ✅ GET /api/relatorios/semanais-todos funcionando (3 relatórios com URLs corretas) ✅ GET /api/relatorios/semanal/{id} funcionando (4/4 campos esperados) ✅ GET /api/relatorios/historico funcionando (3 entradas). RESULTADO FINAL: 12/12 TESTES PASSARAM (100% SUCESSO). Sistema de relatórios semanais está COMPLETAMENTE FUNCIONAL e pronto para produção!"
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
