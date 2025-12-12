@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { toast } from 'sonner';
 import { 
   Car, User, Shield, ClipboardCheck, Wrench, Calendar, 
-  TrendingUp, History, Edit, Save, X, Plus, FileText, Upload, Download, Trash2, AlertCircle 
+  TrendingUp, History, Edit, Save, X, Plus, FileText, Upload, Download, Trash2, AlertCircle, Bell, CheckCircle 
 } from 'lucide-react';
 
 // Helper function to parse DD/MM/YYYY dates
