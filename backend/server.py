@@ -10735,6 +10735,87 @@ async def obter_historico_relatorios(
     
     return relatorios
 
+@api_router.post("/relatorios/criar-manual")
+async def criar_relatorio_manual(
+    data: Dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Criar relatório semanal manualmente"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Validações
+    if not data.get("motorista_id"):
+        raise HTTPException(status_code=400, detail="Motorista é obrigatório")
+    
+    if not data.get("semana") or not data.get("ano"):
+        raise HTTPException(status_code=400, detail="Semana e ano são obrigatórios")
+    
+    # Buscar info do motorista
+    motorista = await db.motoristas.find_one({"id": data["motorista_id"]}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Gerar ID do relatório
+    relatorio_id = str(uuid4())
+    numero_relatorio = f"REL-{data['ano']}-S{data['semana']}-{relatorio_id[:8].upper()}"
+    
+    # Criar relatório
+    relatorio = {
+        "id": relatorio_id,
+        "numero_relatorio": numero_relatorio,
+        "parceiro_id": data.get("parceiro_id", current_user["id"]),
+        "motorista_id": data["motorista_id"],
+        "motorista_nome": motorista.get("nome", ""),
+        "semana": int(data["semana"]),
+        "ano": int(data["ano"]),
+        "data_inicio": data.get("data_inicio", ""),
+        "data_fim": data.get("data_fim", ""),
+        
+        # Ganhos
+        "ganhos_uber": float(data.get("ganhos_uber", 0)),
+        "ganhos_bolt": float(data.get("ganhos_bolt", 0)),
+        "ganhos_totais": float(data.get("ganhos_totais", 0)),
+        "viagens_totais": int(data.get("viagens_totais", 0)),
+        
+        # Despesas
+        "combustivel_total": float(data.get("combustivel_total", 0)),
+        "via_verde_total": float(data.get("via_verde_total", 0)),
+        "caucao_semanal": float(data.get("caucao_semanal", 0)),
+        "gps_custo": float(data.get("gps_custo", 0)),
+        "outros": float(data.get("outros", 0)),
+        "total_despesas": float(data.get("total_despesas", 0)),
+        "total_recibo": float(data.get("total_recibo", 0)),
+        
+        # Danos
+        "danos": data.get("danos", []),
+        
+        # Observações
+        "observacoes": data.get("observacoes", ""),
+        
+        # Status
+        "estado": data.get("estado", "rascunho"),
+        "status": data.get("status", "rascunho"),
+        
+        # Veículo (se disponível)
+        "veiculo_matricula": motorista.get("veiculo_matricula", ""),
+        
+        # Metadados
+        "data_emissao": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "criado_por": current_user["id"]
+    }
+    
+    # Inserir no banco
+    await db.relatorios_semanais.insert_one(relatorio)
+    
+    return {
+        "message": "Relatório criado com sucesso",
+        "relatorio_id": relatorio_id,
+        "numero_relatorio": numero_relatorio
+    }
+
 @api_router.get("/relatorios/resumo-semanal")
 async def obter_resumo_semanal_motoristas(
     data_inicio: str,
