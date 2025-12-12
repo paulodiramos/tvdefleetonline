@@ -281,6 +281,27 @@ const RelatoriosHub = ({ user, onLogout }) => {
   const confirmarPagamento = async () => {
     try {
       const token = localStorage.getItem('token');
+      
+      // Se há comprovativo para fazer upload
+      if (relatorioPagando.comprovativo_file) {
+        const formData = new FormData();
+        formData.append('file', relatorioPagando.comprovativo_file);
+
+        await axios.post(
+          `${API_URL}/api/relatorios/semanal/${relatorioPagando.id}/upload-comprovativo`,
+          formData,
+          {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
+        
+        toast.success('Comprovativo anexado!');
+      }
+      
+      // Registar pagamento
       await axios.post(`${API_URL}/api/relatorios/semanal/${relatorioPagando.id}/marcar-pago`, {
         data_pagamento: dataPagamento,
         metodo_pagamento: metodoPagamento,
