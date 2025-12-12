@@ -10258,6 +10258,57 @@ async def gerar_relatorio_semanal(
         "total_recibo": total_recibo
     }
 
+@api_router.get("/relatorios/motorista/{motorista_id}/semanais")
+async def listar_relatorios_semanais(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Listar relatórios semanais de um motorista"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO, UserRole.GESTAO, UserRole.MOTORISTA]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get motorista data
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0, "parceiro_atribuido": 1})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Check permissions
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != motorista.get("parceiro_atribuido"):
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    if current_user["role"] == UserRole.MOTORISTA and current_user["id"] != motorista_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get relatorios
+    relatorios = await db.relatorios_semanais.find(
+        {"motorista_id": motorista_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    return relatorios
+
+@api_router.get("/relatorios/semanal/{relatorio_id}")
+async def obter_relatorio_semanal(
+    relatorio_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter detalhes de um relatório semanal"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO, UserRole.GESTAO, UserRole.MOTORISTA]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    relatorio = await db.relatorios_semanais.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    
+    # Check permissions
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != relatorio.get("parceiro_id"):
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    if current_user["role"] == UserRole.MOTORISTA and current_user["id"] != relatorio.get("motorista_id"):
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    return relatorio
+
 # ==================== ENDPOINTS DE CONTRATOS ====================
 
 @api_router.get("/parceiros/{parceiro_id}/templates-contrato")
