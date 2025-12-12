@@ -825,19 +825,16 @@ startxref
     # ==================== WEEKLY REPORTS SYSTEM TESTS (REVIEW REQUEST) ====================
     
     def test_weekly_reports_system_complete(self):
-        """Test complete weekly reports system as per review request"""
-        print("\n📊 TESTING WEEKLY REPORTS SYSTEM - COMPLETE SUITE")
+        """Test complete weekly reports management flow as per review request"""
+        print("\n📊 TESTING WEEKLY REPORTS SYSTEM - COMPLETE FLOW")
         print("-" * 80)
-        print("Review Request: Test all weekly report endpoints with specific credentials:")
-        print("- Account: geral@zmbusines.com / ZmBusines_2024")
-        print("- Parceiro ID: c693c9ec-ddd5-400c-b79d-61b651e7b3fd")
-        print("- Motorista ID: 57d6a119-e5af-4c7f-b357-49dc4f618763")
+        print("Review Request: Test complete weekly reports lifecycle with 8 critical steps:")
+        print("- Credentials: parceiro@tvdefleet.com / UQ1B6DXU")
+        print("- Backend URL: Using REACT_APP_BACKEND_URL from frontend/.env")
         print("-" * 80)
         
         # Use specific credentials from review request
-        specific_creds = {"email": "geral@zmbusines.com", "password": "ZmBusines_2024"}
-        parceiro_id = "c693c9ec-ddd5-400c-b79d-61b651e7b3fd"
-        motorista_id = "57d6a119-e5af-4c7f-b357-49dc4f618763"
+        specific_creds = {"email": "parceiro@tvdefleet.com", "password": "UQ1B6DXU"}
         
         # Authenticate with specific credentials
         try:
@@ -846,7 +843,7 @@ startxref
                 data = response.json()
                 specific_token = data["access_token"]
                 headers = {"Authorization": f"Bearer {specific_token}"}
-                self.log_result("Weekly-Reports-Auth", True, "Successfully authenticated with review request credentials")
+                self.log_result("Weekly-Reports-Auth", True, "Successfully authenticated as parceiro")
             else:
                 self.log_result("Weekly-Reports-Auth", False, f"Failed to authenticate: {response.status_code}", response.text)
                 return False
@@ -854,14 +851,20 @@ startxref
             self.log_result("Weekly-Reports-Auth", False, f"Authentication error: {str(e)}")
             return False
         
-        # Execute all weekly report tests
-        self.test_get_report_config(headers, parceiro_id)
-        self.test_update_report_config(headers, parceiro_id)
-        self.test_generate_weekly_report(headers, motorista_id)
-        self.test_list_motorista_reports(headers, motorista_id)
-        self.test_get_specific_report(headers)
-        self.test_download_report_pdf(headers)
-        self.test_report_validations_permissions(headers, parceiro_id, motorista_id)
+        # Execute the complete 8-step flow
+        self.test_step_1_login_navigation(headers)
+        self.test_step_2_create_quick_report(headers)
+        self.test_step_3_upload_receipt(headers)
+        self.test_step_4_download_receipt(headers)
+        self.test_step_5_approve_analysis(headers)
+        self.test_step_6_upload_payment_proof(headers)
+        self.test_step_7_mark_as_paid(headers)
+        self.test_step_8_download_payment_proof(headers)
+        
+        # Additional backend tests
+        self.test_list_all_reports(headers)
+        self.test_get_specific_report_backend(headers)
+        self.test_report_history(headers)
         
         return True
     
