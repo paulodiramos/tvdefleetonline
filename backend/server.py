@@ -10521,6 +10521,33 @@ async def listar_relatorios_para_pagar(
     
     return relatorios
 
+@api_router.get("/relatorios/semanais-para-pagamento")
+async def listar_relatorios_semanais_para_pagamento(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Listar todos os relatórios semanais (verificados e pagos) para gestão de pagamentos"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Query para pegar relatórios verificados e pagos
+    query = {"$or": [{"estado": "recibo_verificado"}, {"estado": "pago"}]}
+    
+    # Parceiro só vê seus relatórios
+    if current_user["role"] == UserRole.PARCEIRO:
+        query["parceiro_id"] = current_user["id"]
+    
+    relatorios = await db.relatorios_semanais.find(
+        query,
+        {"_id": 0}
+    ).sort("data_emissao", -1).to_list(200)
+    
+    # Add status field for frontend consistency
+    for rel in relatorios:
+        if "status" not in rel:
+            rel["status"] = rel.get("estado", "gerado")
+    
+    return relatorios
+
 @api_router.get("/relatorios/resumo-semanal")
 async def obter_resumo_semanal_motoristas(
     data_inicio: str,
