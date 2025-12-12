@@ -6429,6 +6429,9 @@ async def importar_motoristas_csv(
                     "email_bolt": row.get('Email Bolt', ''),
                     "identificador_motorista_bolt": row.get('ID Bolt', ''),
                     
+                    # Personal Data
+                    "data_nascimento": row.get('Data Nascimento', ''),
+                    
                     # Address
                     "morada_completa": row.get('Morada', ''),
                     "codigo_postal": row.get('Código Postal', ''),
@@ -6440,6 +6443,7 @@ async def importar_motoristas_csv(
                     "nif": row.get('NIF', ''),
                     "numero_seguranca_social": row.get('Seg Social', ''),
                     "numero_cartao_utente": row.get('C Utente', ''),
+                    "codigo_registo_criminal": row.get('Código Registo Criminal', ''),
                     
                     # TVDE License
                     "licenca_tvde_numero": row.get('TVDE', ''),
@@ -6447,6 +6451,7 @@ async def importar_motoristas_csv(
                     
                     # Driving License
                     "carta_conducao_numero": row.get('Carta', ''),
+                    "carta_conducao_emissao": row.get('Desde Carta', ''),
                     "data_emissao_carta": row.get('Desde Carta', ''),
                     "carta_conducao_validade": row.get('Validade Carta', ''),
                     
