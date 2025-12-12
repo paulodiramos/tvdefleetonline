@@ -6125,8 +6125,16 @@ async def get_parceiros(current_user: Dict = Depends(get_current_user)):
     
     parceiros = await db.parceiros.find(query, {"_id": 0}).to_list(1000)
     for p in parceiros:
-        if isinstance(p["created_at"], str):
+        # Fix created_at and updated_at if missing or invalid
+        if "created_at" in p and isinstance(p["created_at"], str):
             p["created_at"] = datetime.fromisoformat(p["created_at"])
+        elif "created_at" not in p:
+            p["created_at"] = datetime.now(timezone.utc)
+        
+        if "updated_at" in p and isinstance(p["updated_at"], str):
+            p["updated_at"] = datetime.fromisoformat(p["updated_at"])
+        elif "updated_at" not in p:
+            p["updated_at"] = datetime.now(timezone.utc)
         
         # Backward compatibility: map old fields to new fields if new fields are missing
         if "nome_empresa" not in p:
