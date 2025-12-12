@@ -97,8 +97,17 @@ const RelatoriosHub = ({ user, onLogout }) => {
   };
 
   const handleCriarRapido = async () => {
-    if (!novoRelatorio.motorista_id || !novoRelatorio.semana) {
-      toast.error('Preencha motorista e semana');
+    console.log('=== Iniciando criação de relatório ===');
+    console.log('Dados do formulário:', novoRelatorio);
+    console.log('Total de motoristas disponíveis:', motoristas.length);
+    
+    if (!novoRelatorio.motorista_id) {
+      toast.error('Selecione um motorista');
+      return;
+    }
+    
+    if (!novoRelatorio.semana) {
+      toast.error('Preencha a semana');
       return;
     }
 
@@ -106,24 +115,41 @@ const RelatoriosHub = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       const totais = calcularTotais(novoRelatorio);
       const motorista = motoristas.find(m => m.id === novoRelatorio.motorista_id);
+      
+      console.log('Motorista encontrado:', motorista);
+      console.log('Totais calculados:', totais);
 
-      await axios.post(`${API_URL}/api/relatorios/criar-manual`, {
-        ...novoRelatorio,
+      const payload = {
+        motorista_id: novoRelatorio.motorista_id,
+        semana: parseInt(novoRelatorio.semana),
+        ano: parseInt(novoRelatorio.ano),
+        ganhos_uber: parseFloat(novoRelatorio.ganhos_uber) || 0,
+        ganhos_bolt: parseFloat(novoRelatorio.ganhos_bolt) || 0,
+        combustivel_total: parseFloat(novoRelatorio.combustivel_total) || 0,
+        via_verde_total: parseFloat(novoRelatorio.via_verde_total) || 0,
+        caucao_semanal: parseFloat(novoRelatorio.caucao_semanal) || 0,
+        outros: parseFloat(novoRelatorio.outros) || 0,
+        divida_anterior: parseFloat(novoRelatorio.divida_anterior) || 0,
         ganhos_totais: totais.ganhos,
         total_despesas: totais.despesas,
-        divida_anterior: totais.dividaAnterior,
         total_recibo: totais.total,
         proxima_divida: totais.proximaDivida,
-        motorista_nome: motorista?.nome || '',
+        motorista_nome: motorista?.nome || motorista?.email || '',
         veiculo_matricula: motorista?.veiculo_matricula || '',
         status: 'pendente_aprovacao',
         estado: 'pendente_aprovacao',
         parceiro_id: user.id
-      }, {
+      };
+      
+      console.log('Payload a enviar:', payload);
+
+      const response = await axios.post(`${API_URL}/api/relatorios/criar-manual`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      console.log('Resposta do servidor:', response.data);
 
-      toast.success('Relatório criado!');
+      toast.success('Relatório criado com sucesso!');
       setShowCriarModal(false);
       setNovoRelatorio({
         motorista_id: '',
@@ -139,8 +165,14 @@ const RelatoriosHub = ({ user, onLogout }) => {
       });
       fetchData();
     } catch (error) {
-      console.error('Erro:', error);
-      toast.error(error.response?.data?.detail || 'Erro ao criar relatório');
+      console.error('=== ERRO COMPLETO ===');
+      console.error('Error object:', error);
+      console.error('Response:', error.response);
+      console.error('Response data:', error.response?.data);
+      console.error('Response status:', error.response?.status);
+      
+      const errorMsg = error.response?.data?.detail || error.message || 'Erro ao criar relatório';
+      toast.error(errorMsg);
     }
   };
 
