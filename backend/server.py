@@ -3972,7 +3972,7 @@ async def ativar_motorista(
     # Update motorista status to active
     await db.motoristas.update_one(
         {"id": motorista_id},
-        {"$set": {"status": "ativo", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"status": "ativo", "status_motorista": "ativo", "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
     
     # Also activate user account
