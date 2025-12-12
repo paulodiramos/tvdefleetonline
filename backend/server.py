@@ -9888,6 +9888,115 @@ async def trocar_plano(
     
     return response
 
+# ==================== RELATORIO CONFIGURATION ENDPOINTS ====================
+
+@api_router.get("/parceiros/{parceiro_id}/config-relatorio", response_model=RelatorioConfig)
+async def get_config_relatorio(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter configuração de relatórios do parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Se é parceiro, só pode ver sua própria configuração
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    config = await db.relatorio_config.find_one({"parceiro_id": parceiro_id}, {"_id": 0})
+    
+    if not config:
+        # Criar configuração padrão se não existir
+        config = {
+            "id": str(uuid.uuid4()),
+            "parceiro_id": parceiro_id,
+            "incluir_numero_relatorio": True,
+            "incluir_data_emissao": True,
+            "incluir_periodo": True,
+            "incluir_nome_parceiro": True,
+            "incluir_nome_motorista": True,
+            "incluir_veiculo": True,
+            "incluir_viagens_bolt": True,
+            "incluir_viagens_uber": True,
+            "incluir_viagens_totais": True,
+            "incluir_horas_bolt": True,
+            "incluir_horas_uber": True,
+            "incluir_horas_totais": True,
+            "incluir_ganhos_uber": True,
+            "incluir_ganhos_bolt": True,
+            "incluir_ganhos_totais": True,
+            "incluir_valor_aluguer": True,
+            "incluir_combustivel": True,
+            "incluir_via_verde": True,
+            "via_verde_atraso_semanas": 1,
+            "incluir_caucao": True,
+            "incluir_caucao_parcelada": True,
+            "incluir_danos": True,
+            "incluir_danos_acumulados": True,
+            "incluir_danos_descricao": True,
+            "incluir_danos_parcelados": True,
+            "incluir_extras": True,
+            "incluir_total_recibo": True,
+            "incluir_tabela_combustivel": True,
+            "incluir_combustivel_matricula": True,
+            "incluir_combustivel_local": True,
+            "incluir_combustivel_data_hora": True,
+            "incluir_combustivel_cartao": True,
+            "incluir_combustivel_quantidade": True,
+            "incluir_combustivel_valor": True,
+            "formato_numero_relatorio": "xxxxx/ano",
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc)
+        }
+        await db.relatorio_config.insert_one(config)
+    
+    # Fix datetime fields
+    if isinstance(config["created_at"], str):
+        config["created_at"] = datetime.fromisoformat(config["created_at"])
+    if isinstance(config["updated_at"], str):
+        config["updated_at"] = datetime.fromisoformat(config["updated_at"])
+    
+    return config
+
+@api_router.put("/parceiros/{parceiro_id}/config-relatorio")
+async def update_config_relatorio(
+    parceiro_id: str,
+    updates: RelatorioConfigUpdate,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar configuração de relatórios do parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Se é parceiro, só pode editar sua própria configuração
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Build update document
+    update_doc = {k: v for k, v in updates.model_dump(exclude_unset=True).items() if v is not None}
+    update_doc["updated_at"] = datetime.now(timezone.utc)
+    
+    # Check if config exists
+    config = await db.relatorio_config.find_one({"parceiro_id": parceiro_id})
+    
+    if not config:
+        # Create new config with provided updates
+        config = {
+            "id": str(uuid.uuid4()),
+            "parceiro_id": parceiro_id,
+            "created_at": datetime.now(timezone.utc),
+            **update_doc
+        }
+        await db.relatorio_config.insert_one(config)
+    else:
+        # Update existing config
+        await db.relatorio_config.update_one(
+            {"parceiro_id": parceiro_id},
+            {"$set": update_doc}
+        )
+    
+    return {"message": "Configuração de relatórios atualizada com sucesso"}
+
 # ==================== ENDPOINTS DE CONTRATOS ====================
 
 @api_router.get("/parceiros/{parceiro_id}/templates-contrato")
