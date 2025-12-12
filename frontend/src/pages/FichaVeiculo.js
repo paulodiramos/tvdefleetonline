@@ -199,10 +199,23 @@ const FichaVeiculo = ({ user, onLogout }) => {
   useEffect(() => {
     fetchVehicleData();
     fetchCategorias();
+    fetchMotoristasDisponiveis();
     if (user.role === 'parceiro') {
       checkModuloEventos();
     }
   }, [vehicleId]);
+  
+  const fetchMotoristasDisponiveis = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/motoristas`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setMotoristasDisponiveis(response.data);
+    } catch (error) {
+      console.error('Erro ao carregar motoristas:', error);
+    }
+  };
 
   const fetchCategorias = async () => {
     try {
