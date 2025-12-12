@@ -1271,7 +1271,11 @@ const Motoristas = ({ user, onLogout }) => {
                         {isEditing ? (
                           <Input type="date" value={editForm.carta_conducao_emissao || ''} onChange={(e) => setEditForm({...editForm, carta_conducao_emissao: e.target.value})} />
                         ) : (
-                          <p className="font-medium">{selectedMotorista.carta_conducao_emissao ? new Date(selectedMotorista.carta_conducao_emissao).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                          <p className="font-medium">
+                            {selectedMotorista.carta_conducao_emissao && selectedMotorista.carta_conducao_emissao !== '' 
+                              ? selectedMotorista.carta_conducao_emissao 
+                              : 'N/A'}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -1279,7 +1283,11 @@ const Motoristas = ({ user, onLogout }) => {
                         {isEditing ? (
                           <Input type="date" value={editForm.carta_conducao_validade || ''} onChange={(e) => setEditForm({...editForm, carta_conducao_validade: e.target.value})} />
                         ) : (
-                          <p className="font-medium">{selectedMotorista.carta_conducao_validade ? new Date(selectedMotorista.carta_conducao_validade).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                          <p className="font-medium">
+                            {selectedMotorista.carta_conducao_validade && selectedMotorista.carta_conducao_validade !== '' 
+                              ? selectedMotorista.carta_conducao_validade 
+                              : 'N/A'}
+                          </p>
                         )}
                       </div>
                       <div>
@@ -1295,7 +1303,11 @@ const Motoristas = ({ user, onLogout }) => {
                         {isEditing ? (
                           <Input type="date" value={editForm.licenca_tvde_validade || ''} onChange={(e) => setEditForm({...editForm, licenca_tvde_validade: e.target.value})} />
                         ) : (
-                          <p className="font-medium">{selectedMotorista.licenca_tvde_validade ? new Date(selectedMotorista.licenca_tvde_validade).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                          <p className="font-medium">
+                            {selectedMotorista.licenca_tvde_validade && selectedMotorista.licenca_tvde_validade !== '' 
+                              ? selectedMotorista.licenca_tvde_validade 
+                              : 'N/A'}
+                          </p>
                         )}
                       </div>
                       <div className="col-span-2">
