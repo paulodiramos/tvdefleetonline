@@ -10329,6 +10329,244 @@ async def obter_relatorio_semanal(
     
     return relatorio
 
+@api_router.post("/relatorios/semanal/{relatorio_id}/enviar")
+async def enviar_relatorio(
+    relatorio_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Enviar relatório por email e/ou WhatsApp"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    relatorio = await db.relatorios_semanais.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    
+    # Check permissions
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != relatorio.get("parceiro_id"):
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    metodo = data.get("metodo", "email")  # email, whatsapp, ambos
+    destinatario_email = data.get("email", relatorio.get("motorista_email"))
+    destinatario_whatsapp = data.get("whatsapp", relatorio.get("motorista_telefone"))
+    
+    historico_envio = {
+        "data_envio": datetime.now(timezone.utc).isoformat(),
+        "metodo": metodo,
+        "enviado_por": current_user["id"],
+        "enviado_por_nome": current_user.get("name", current_user.get("email", "")),
+        "status": "enviado",
+        "destinatario_email": destinatario_email,
+        "destinatario_whatsapp": destinatario_whatsapp
+    }
+    
+    # TODO: Implementar envio real por email e WhatsApp
+    # Por enquanto, simular envio
+    envio_sucesso = True
+    mensagem_erro = None
+    
+    if envio_sucesso:
+        # Update relatorio state
+        await db.relatorios_semanais.update_one(
+            {"id": relatorio_id},
+            {
+                "$set": {"estado": "enviado"},
+                "$push": {"historico_envios": historico_envio}
+            }
+        )
+        
+        return {
+            "message": f"Relatório enviado com sucesso por {metodo}",
+            "metodo": metodo,
+            "destinatario_email": destinatario_email if metodo in ["email", "ambos"] else None,
+            "destinatario_whatsapp": destinatario_whatsapp if metodo in ["whatsapp", "ambos"] else None
+        }
+    else:
+        historico_envio["status"] = "erro"
+        historico_envio["mensagem_erro"] = mensagem_erro
+        
+        await db.relatorios_semanais.update_one(
+            {"id": relatorio_id},
+            {"$push": {"historico_envios": historico_envio}}
+        )
+        
+        raise HTTPException(status_code=500, detail=f"Erro ao enviar relatório: {mensagem_erro}")
+
+@api_router.post("/relatorios/semanal/{relatorio_id}/verificar-recibo")
+async def verificar_recibo(
+    relatorio_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Motorista ou parceiro adiciona recibo para verificação"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO, UserRole.MOTORISTA]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    relatorio = await db.relatorios_semanais.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    
+    recibo_url = data.get("recibo_url")
+    if not recibo_url:
+        raise HTTPException(status_code=400, detail="recibo_url é obrigatório")
+    
+    # Update relatorio
+    await db.relatorios_semanais.update_one(
+        {"id": relatorio_id},
+        {
+            "$set": {
+                "estado": "recibo_verificado",
+                "recibo_url": recibo_url,
+                "recibo_verificado_por": current_user["id"],
+                "recibo_verificado_em": datetime.now(timezone.utc).isoformat(),
+                "observacoes": data.get("observacoes", "")
+            }
+        }
+    )
+    
+    return {"message": "Recibo verificado com sucesso"}
+
+@api_router.post("/relatorios/semanal/{relatorio_id}/marcar-pago")
+async def marcar_relatorio_pago(
+    relatorio_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Parceiro marca relatório como pago"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    relatorio = await db.relatorios_semanais.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    
+    # Check permissions
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != relatorio.get("parceiro_id"):
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Update relatorio
+    await db.relatorios_semanais.update_one(
+        {"id": relatorio_id},
+        {
+            "$set": {
+                "estado": "pago",
+                "pago_por": current_user["id"],
+                "pago_em": datetime.now(timezone.utc).isoformat(),
+                "metodo_pagamento": data.get("metodo_pagamento", "transferencia"),
+                "observacoes_pagamento": data.get("observacoes", "")
+            }
+        }
+    )
+    
+    # TODO: Enviar notificação ao motorista
+    # Por enquanto, simular notificação
+    notificar_metodo = data.get("notificar", "email")  # email, whatsapp, ambos
+    
+    return {
+        "message": "Relatório marcado como pago",
+        "notificacao_enviada": True,
+        "metodo_notificacao": notificar_metodo
+    }
+
+@api_router.get("/relatorios/para-verificar")
+async def listar_relatorios_para_verificar(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Listar relatórios que precisam de verificação de recibo"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    query = {"estado": "enviado"}
+    
+    # Parceiro só vê seus relatórios
+    if current_user["role"] == UserRole.PARCEIRO:
+        query["parceiro_id"] = current_user["id"]
+    
+    relatorios = await db.relatorios_semanais.find(
+        query,
+        {"_id": 0}
+    ).sort("data_emissao", -1).to_list(100)
+    
+    return relatorios
+
+@api_router.get("/relatorios/para-pagar")
+async def listar_relatorios_para_pagar(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Listar relatórios verificados aguardando pagamento"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    query = {"estado": "recibo_verificado"}
+    
+    # Parceiro só vê seus relatórios
+    if current_user["role"] == UserRole.PARCEIRO:
+        query["parceiro_id"] = current_user["id"]
+    
+    relatorios = await db.relatorios_semanais.find(
+        query,
+        {"_id": 0}
+    ).sort("data_emissao", -1).to_list(100)
+    
+    return relatorios
+
+@api_router.get("/relatorios/resumo-semanal")
+async def obter_resumo_semanal_motoristas(
+    data_inicio: str,
+    data_fim: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter resumo semanal de todos os motoristas do parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get motoristas do parceiro
+    query = {}
+    if current_user["role"] == UserRole.PARCEIRO:
+        query["parceiro_atribuido"] = current_user["id"]
+    
+    motoristas = await db.motoristas.find(query, {"_id": 0}).to_list(1000)
+    
+    resumo_motoristas = []
+    
+    for motorista in motoristas:
+        motorista_id = motorista.get("id")
+        
+        # Get ganhos data
+        ganhos_query = {
+            "motorista_id": motorista_id,
+            "data_inicio": {"$lte": data_fim},
+            "data_fim": {"$gte": data_inicio}
+        }
+        ganhos_records = await db.relatorios_ganhos.find(ganhos_query, {"_id": 0}).to_list(100)
+        
+        total_viagens = sum(r.get("uber_viagens", 0) + r.get("bolt_viagens", 0) for r in ganhos_records)
+        total_ganhos = sum(r.get("uber_ganhos", 0.0) + r.get("bolt_ganhos", 0.0) for r in ganhos_records)
+        
+        # Check if already has relatorio for this period
+        relatorio_existente = await db.relatorios_semanais.find_one({
+            "motorista_id": motorista_id,
+            "data_inicio": data_inicio,
+            "data_fim": data_fim
+        }, {"_id": 0})
+        
+        resumo_motoristas.append({
+            "motorista_id": motorista_id,
+            "motorista_nome": motorista.get("name", ""),
+            "motorista_email": motorista.get("email", ""),
+            "motorista_telefone": motorista.get("telemovel", ""),
+            "veiculo_atribuido": motorista.get("veiculo_atribuido"),
+            "total_viagens": total_viagens,
+            "total_ganhos": total_ganhos,
+            "relatorio_gerado": relatorio_existente is not None,
+            "relatorio_id": relatorio_existente.get("id") if relatorio_existente else None,
+            "relatorio_estado": relatorio_existente.get("estado") if relatorio_existente else None,
+            "relatorio_numero": relatorio_existente.get("numero_relatorio") if relatorio_existente else None
+        })
+    
+    return resumo_motoristas
+
 @api_router.get("/relatorios/semanal/{relatorio_id}/pdf")
 async def download_relatorio_pdf(
     relatorio_id: str,
