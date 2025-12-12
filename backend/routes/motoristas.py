@@ -98,9 +98,16 @@ async def get_motoristas(current_user: Dict = Depends(get_current_user)):
     
     motoristas = await db.motoristas.find(query, {"_id": 0}).to_list(length=None)
     
+    # Enrich with parceiro name
     for m in motoristas:
         if isinstance(m.get("created_at"), str):
             m["created_at"] = datetime.fromisoformat(m["created_at"])
+        
+        # Add parceiro name
+        if m.get("parceiro_atribuido"):
+            parceiro = await db.parceiros.find_one({"id": m["parceiro_atribuido"]}, {"_id": 0})
+            if parceiro:
+                m["parceiro_atribuido_nome"] = parceiro.get("nome_empresa", parceiro.get("nome", "N/A"))
     
     return [Motorista(**m) for m in motoristas]
 
