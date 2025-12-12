@@ -79,7 +79,6 @@ import GerarRelatorioSemanal from "@/pages/GerarRelatorioSemanal";
 import VerificarRecibos from "@/pages/VerificarRecibos";
 import MeusPlanos from "@/pages/MeusPlanos";
 import MeusRecibosGanhos from "@/pages/MeusRecibosGanhos";
-import VerificarRecibos from "@/pages/VerificarRecibos";
 import ValidacaoDocumentosMotorista from "@/pages/ValidacaoDocumentosMotorista";
 import MotoristaDocumentos from "@/pages/MotoristaDocumentos";
 import Notificacoes from "@/pages/Notificacoes";
