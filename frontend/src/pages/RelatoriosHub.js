@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { 
   FileText, Plus, Edit, Check, X, Download, ArrowLeft,
-  Calendar, User, DollarSign, TrendingUp, Eye
+  Calendar, User, DollarSign, TrendingUp, Eye, CheckCircle, Upload
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -186,6 +186,33 @@ const RelatoriosHub = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       const totais = calcularTotais(relatorioEditando);
 
+      // Se há ficheiro de recibo para fazer upload
+      if (relatorioEditando.recibo_file) {
+        const formData = new FormData();
+        formData.append('file', relatorioEditando.recibo_file);
+        formData.append('relatorio_id', relatorioEditando.id);
+
+        // Upload do recibo
+        const uploadResponse = await axios.post(
+          `${API_URL}/api/relatorios/semanal/${relatorioEditando.id}/upload-recibo`,
+          formData,
+          {
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'multipart/form-data'
+            }
+          }
+        );
+
+        // Atualizar URL do recibo e estado
+        relatorioEditando.recibo_url = uploadResponse.data.recibo_url;
+        relatorioEditando.status = 'verificado';
+        relatorioEditando.estado = 'verificado';
+        
+        toast.success('Recibo anexado com sucesso!');
+      }
+
+      // Atualizar dados do relatório
       await axios.put(`${API_URL}/api/relatorios/semanal/${relatorioEditando.id}`, {
         ...relatorioEditando,
         ganhos_totais: totais.ganhos,
@@ -194,12 +221,13 @@ const RelatoriosHub = ({ user, onLogout }) => {
         total_recibo: totais.total,
         proxima_divida: totais.proximaDivida,
         status: relatorioEditando.status,
-        estado: relatorioEditando.estado
+        estado: relatorioEditando.estado,
+        recibo_url: relatorioEditando.recibo_url
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      toast.success('Relatório atualizado!');
+      toast.success('Relatório atualizado com sucesso!');
       setShowEditModal(false);
       fetchData();
     } catch (error) {
