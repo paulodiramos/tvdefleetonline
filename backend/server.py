@@ -9279,10 +9279,16 @@ async def get_planos(current_user: Dict = Depends(get_current_user)):
     planos = await db.planos.find({}, {"_id": 0}).to_list(100)
     
     for plano in planos:
-        if isinstance(plano["created_at"], str):
+        # Fix created_at and updated_at if missing or invalid
+        if "created_at" in plano and isinstance(plano["created_at"], str):
             plano["created_at"] = datetime.fromisoformat(plano["created_at"])
-        if isinstance(plano["updated_at"], str):
+        elif "created_at" not in plano:
+            plano["created_at"] = datetime.now(timezone.utc)
+            
+        if "updated_at" in plano and isinstance(plano["updated_at"], str):
             plano["updated_at"] = datetime.fromisoformat(plano["updated_at"])
+        elif "updated_at" not in plano:
+            plano["updated_at"] = datetime.now(timezone.utc)
     
     return planos
 
