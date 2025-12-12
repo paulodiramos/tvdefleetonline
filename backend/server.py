@@ -10767,7 +10767,7 @@ async def criar_relatorio_manual(
         raise HTTPException(status_code=500, detail=f"Erro na validação: {str(e)}")
     
     # Gerar ID do relatório
-    relatorio_id = str(uuid4())
+    relatorio_id = str(uuid.uuid4())
     numero_relatorio = f"REL-{data['ano']}-S{data['semana']}-{relatorio_id[:8].upper()}"
     
     # Criar relatório
