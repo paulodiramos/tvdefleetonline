@@ -10705,6 +10705,80 @@ async def rejeitar_relatorio_semanal(
     
     return {"message": "Relatório rejeitado"}
 
+@api_router.post("/relatorios/semanal/{relatorio_id}/upload-recibo")
+async def upload_recibo_relatorio(
+    relatorio_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload de recibo por parceiro/gestor"""
+    try:
+        if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO, UserRole.GESTAO]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Verificar se o relatório existe
+        relatorio = await db.relatorios_semanais.find_one({"id": relatorio_id}, {"_id": 0})
+        if not relatorio:
+            raise HTTPException(status_code=404, detail="Relatório não encontrado")
+        
+        # Verificar permissões
+        if current_user["role"] == UserRole.PARCEIRO and relatorio.get("parceiro_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Não autorizado")
+        
+        # Validar tamanho do arquivo (máx 5MB)
+        content = await file.read()
+        if len(content) > 5 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="Arquivo muito grande (máx 5MB)")
+        
+        await file.seek(0)  # Reset file pointer
+        
+        # Validar tipo de arquivo
+        allowed_types = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
+        if file.content_type not in allowed_types:
+            raise HTTPException(status_code=400, detail="Tipo de arquivo não permitido. Use JPG, PNG ou PDF")
+        
+        # Criar diretório se não existir
+        upload_dir = Path("/app/uploads/recibos")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Gerar nome único para o arquivo
+        file_extension = Path(file.filename).suffix
+        unique_filename = f"{relatorio_id}_{uuid.uuid4()}{file_extension}"
+        file_path = upload_dir / unique_filename
+        
+        # Salvar arquivo
+        with open(file_path, "wb") as f:
+            f.write(content)
+        
+        # URL relativa para acesso
+        recibo_url = f"/uploads/recibos/{unique_filename}"
+        
+        # Atualizar relatório
+        await db.relatorios_semanais.update_one(
+            {"id": relatorio_id},
+            {
+                "$set": {
+                    "recibo_url": recibo_url,
+                    "recibo_anexado_por": current_user["id"],
+                    "recibo_anexado_em": datetime.now(timezone.utc).isoformat(),
+                    "estado": "verificado",
+                    "status": "verificado",
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+            }
+        )
+        
+        return {
+            "message": "Recibo enviado com sucesso",
+            "recibo_url": recibo_url
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Erro ao fazer upload: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao fazer upload: {str(e)}")
+
 @api_router.get("/relatorios/historico")
 async def obter_historico_relatorios(
     current_user: Dict = Depends(get_current_user)
