@@ -630,7 +630,7 @@ const RelatoriosHub = ({ user, onLogout }) => {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => window.open(rel.recibo_url, '_blank')}
+                                  onClick={() => window.open(`${API_URL}${rel.recibo_url}`, '_blank')}
                                   className="bg-orange-50 hover:bg-orange-100"
                                 >
                                   <Eye className="w-3 h-3 mr-1" />
@@ -662,7 +662,7 @@ const RelatoriosHub = ({ user, onLogout }) => {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => window.open(rel.recibo_url, '_blank')}
+                                  onClick={() => window.open(`${API_URL}${rel.recibo_url}`, '_blank')}
                                   className="bg-orange-50 hover:bg-orange-100"
                                 >
                                   <Eye className="w-3 h-3 mr-1" />
@@ -984,7 +984,7 @@ const RelatoriosHub = ({ user, onLogout }) => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(relatorioPagando.recibo_url, '_blank')}
+                        onClick={() => window.open(`${API_URL}${relatorioPagando.recibo_url}`, '_blank')}
                         className="flex-1"
                       >
                         <Eye className="w-4 h-4 mr-2" />
