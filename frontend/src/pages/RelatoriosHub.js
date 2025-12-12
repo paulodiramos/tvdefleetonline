@@ -603,6 +603,38 @@ const RelatoriosHub = ({ user, onLogout }) => {
                               Aprovar
                             </Button>
                           )}
+                          {rel.status === 'em_analise' && (
+                            <>
+                              {rel.recibo_url && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => window.open(rel.recibo_url, '_blank')}
+                                  className="bg-orange-50 hover:bg-orange-100"
+                                >
+                                  <Eye className="w-3 h-3 mr-1" />
+                                  Ver Recibo
+                                </Button>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDownloadPDF(rel.id)}
+                                className="bg-blue-50 hover:bg-blue-100"
+                              >
+                                <Eye className="w-3 h-3 mr-1" />
+                                Ver Relatório
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="bg-green-600 hover:bg-green-700"
+                                onClick={() => handleAprovarAnalise(rel.id)}
+                              >
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Aprovar
+                              </Button>
+                            </>
+                          )}
                           {rel.status === 'verificado' && (
                             <>
                               {rel.recibo_url && (
