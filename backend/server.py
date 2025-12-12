@@ -1505,9 +1505,9 @@ class Vehicle(BaseModel):
     combustivel: str
     caixa: str
     lugares: int
-    tipo_contrato: TipoContrato
-    categorias_uber: CategoriasUber
-    categorias_bolt: CategoriasBolt
+    tipo_contrato: Optional[TipoContrato] = None
+    categorias_uber: Optional[CategoriasUber] = None
+    categorias_bolt: Optional[CategoriasBolt] = None
     via_verde_disponivel: bool = False
     via_verde_id: Optional[str] = None  # ID do Via Verde
     cartao_frota_disponivel: bool = False
@@ -1520,8 +1520,8 @@ class Vehicle(BaseModel):
     extintor: Optional[VehicleExtinguisher] = None
     inspecoes: List[VehicleInspection] = []
     inspection: Optional[VehicleInspection] = None  # Single inspection field with valor
-    disponibilidade: VehicleAvailability
-    km_atual: int = 0
+    disponibilidade: Optional[VehicleAvailability] = None
+    km_atual: Optional[int] = 0
     km_aviso_manutencao: int = 5000
     alertas_manutencao: List[str] = []
     fotos: List[str] = []  # URLs das fotos (máximo 3, convertidas para PDF)
@@ -1537,7 +1537,6 @@ class Vehicle(BaseModel):
     motorista_atribuido: Optional[str] = None  # ID do motorista
     motorista_atribuido_nome: Optional[str] = None  # Nome do motorista
     status: str = "disponivel"  # disponivel, atribuido, manutencao, venda, condicoes
-    km_atual: Optional[int] = None  # KM atual do veículo
     ultima_revisao_km: Optional[int] = None  # KM da última revisão
     data_seguro_ate: Optional[str] = None  # Validade do seguro (alias para insurance.data_validade)
     data_inspecao_ate: Optional[str] = None  # Validade da inspeção (alias para inspection.proxima_inspecao)
