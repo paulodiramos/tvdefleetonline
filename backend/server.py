@@ -10186,8 +10186,9 @@ async def gerar_relatorio_semanal(
     numero_relatorio = formato.replace("xxxxx", str(count + 1).zfill(5)).replace("ano", str(ano))
     
     # Build relatorio document
+    relatorio_id = str(uuid.uuid4())
     relatorio = {
-        "id": str(uuid.uuid4()),
+        "id": relatorio_id,
         "numero_relatorio": numero_relatorio,
         "parceiro_id": parceiro_id,
         "parceiro_nome": parceiro.get("nome_empresa", ""),
@@ -10247,12 +10248,14 @@ async def gerar_relatorio_semanal(
     # Save relatorio
     await db.relatorios_semanais.insert_one(relatorio)
     
+    # Remove MongoDB _id from relatorio for response
+    relatorio_response = {k: v for k, v in relatorio.items() if k != "_id"}
+    
     return {
         "message": "Relatório semanal gerado com sucesso",
-        "relatorio_id": relatorio["id"],
+        "relatorio_id": relatorio_id,
         "numero_relatorio": numero_relatorio,
-        "total_recibo": total_recibo,
-        "relatorio": relatorio
+        "total_recibo": total_recibo
     }
 
 # ==================== ENDPOINTS DE CONTRATOS ====================
