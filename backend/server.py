@@ -6678,23 +6678,47 @@ async def importar_veiculos_csv(
                 data_matricula = row.get('Data de Matrícula', '')
                 validade_matricula = row.get('Validade da Matrícula', '')
                 
+                # Parse km_atual safely
+                km_str = row.get('KM Atual', '').replace(' km', '').replace('.', '').replace(',', '').strip()
+                km_atual = int(km_str) if km_str and km_str.isdigit() else 0
+                
+                # Parse ano safely
+                ano_str = row.get('Ano', '').strip()
+                ano = int(ano_str) if ano_str and ano_str.isdigit() else None
+                
+                # Parse lugares safely
+                lugares_str = row.get('Lugares', '5').strip()
+                lugares = int(lugares_str) if lugares_str and lugares_str.isdigit() else 5
+                
+                # Normalize status (fix encoding issues: disponível -> disponivel)
+                status_raw = row.get('Status', 'disponivel').lower().strip()
+                status_map = {
+                    'disponível': 'disponivel',
+                    'disponã­vel': 'disponivel',
+                    'atribuído': 'atribuido',
+                    'atribuã­do': 'atribuido',
+                    'manutenção': 'manutencao',
+                    'manutenã§ã£o': 'manutencao'
+                }
+                status = status_map.get(status_raw, status_raw)
+                
                 # Create vehicle document
                 veiculo_doc = {
                     "id": str(uuid.uuid4()),
                     "marca": row['Marca'],
                     "modelo": row.get('Modelo', ''),
                     "versao": row.get('Versão', ''),
-                    "ano": row.get('Ano', ''),
+                    "ano": ano,
                     "matricula": row['Matrícula'],
                     "data_matricula": data_matricula,
                     "validade_matricula": validade_matricula,
                     "cor": row.get('Cor', ''),
                     "combustivel": row.get('Combustível', ''),
                     "caixa": row.get('Caixa', ''),
-                    "lugares": row.get('Lugares', '5'),
+                    "lugares": lugares,
                     "localidade": row.get('Localidade', ''),
-                    "km_atual": row.get('KM Atual', '').replace(' km', '').strip(),
-                    "status": row.get('Status', 'disponivel').lower().replace('í', 'i').replace('á', 'a'),
+                    "km_atual": km_atual,
+                    "status": status,
                     
                     # Assignment
                     "parceiro_id": parceiro_id,
