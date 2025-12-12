@@ -9997,6 +9997,264 @@ async def update_config_relatorio(
     
     return {"message": "Configuração de relatórios atualizada com sucesso"}
 
+@api_router.post("/relatorios/motorista/{motorista_id}/gerar-semanal")
+async def gerar_relatorio_semanal(
+    motorista_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Gerar relatório semanal para motorista baseado na configuração do parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get parameters
+    data_inicio = data.get("data_inicio")  # YYYY-MM-DD
+    data_fim = data.get("data_fim")  # YYYY-MM-DD
+    semana = data.get("semana", 1)
+    ano = data.get("ano", datetime.now().year)
+    
+    if not data_inicio or not data_fim:
+        raise HTTPException(status_code=400, detail="data_inicio e data_fim são obrigatórios")
+    
+    # Get motorista data
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    parceiro_id = motorista.get("parceiro_atribuido")
+    if not parceiro_id:
+        raise HTTPException(status_code=400, detail="Motorista não tem parceiro atribuído")
+    
+    # Check permissions - parceiro só pode gerar relatórios dos seus motoristas
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get parceiro data
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    # Get vehicle data
+    veiculo_id = motorista.get("veiculo_atribuido")
+    veiculo = None
+    if veiculo_id:
+        veiculo = await db.vehicles.find_one({"id": veiculo_id}, {"_id": 0})
+    
+    # Get contrato data
+    contrato = await db.contratos.find_one({
+        "motorista_id": motorista_id,
+        "ativo": True
+    }, {"_id": 0})
+    
+    # Get relatorio configuration
+    config = await db.relatorio_config.find_one({"parceiro_id": parceiro_id}, {"_id": 0})
+    if not config:
+        # Use default config
+        config = {
+            "incluir_numero_relatorio": True,
+            "incluir_data_emissao": True,
+            "incluir_periodo": True,
+            "incluir_nome_parceiro": True,
+            "incluir_nome_motorista": True,
+            "incluir_veiculo": True,
+            "incluir_viagens_bolt": True,
+            "incluir_viagens_uber": True,
+            "incluir_viagens_totais": True,
+            "incluir_horas_bolt": True,
+            "incluir_horas_uber": True,
+            "incluir_horas_totais": True,
+            "incluir_ganhos_uber": True,
+            "incluir_ganhos_bolt": True,
+            "incluir_ganhos_totais": True,
+            "incluir_valor_aluguer": True,
+            "incluir_combustivel": True,
+            "incluir_via_verde": True,
+            "via_verde_atraso_semanas": 1,
+            "incluir_caucao": True,
+            "incluir_caucao_parcelada": True,
+            "incluir_danos": True,
+            "incluir_extras": True,
+            "incluir_total_recibo": True,
+            "incluir_tabela_combustivel": True,
+            "formato_numero_relatorio": "xxxxx/ano"
+        }
+    
+    # Calculate data inicio/fim for via verde (with delay)
+    via_verde_atraso = config.get("via_verde_atraso_semanas", 1)
+    data_inicio_via_verde = (datetime.fromisoformat(data_inicio) - timedelta(weeks=via_verde_atraso)).strftime("%Y-%m-%d")
+    data_fim_via_verde = (datetime.fromisoformat(data_fim) - timedelta(weeks=via_verde_atraso)).strftime("%Y-%m-%d")
+    
+    # Get ganhos data (from relatorios_ganhos collection)
+    ganhos_query = {
+        "motorista_id": motorista_id,
+        "data_inicio": {"$lte": data_fim},
+        "data_fim": {"$gte": data_inicio}
+    }
+    ganhos_records = await db.relatorios_ganhos.find(ganhos_query, {"_id": 0}).to_list(100)
+    
+    # Calculate totals
+    total_viagens_uber = 0
+    total_viagens_bolt = 0
+    total_horas_uber = 0.0
+    total_horas_bolt = 0.0
+    total_ganhos_uber = 0.0
+    total_ganhos_bolt = 0.0
+    
+    for record in ganhos_records:
+        total_viagens_uber += record.get("uber_viagens", 0)
+        total_viagens_bolt += record.get("bolt_viagens", 0)
+        total_horas_uber += record.get("uber_horas", 0.0)
+        total_horas_bolt += record.get("bolt_horas", 0.0)
+        total_ganhos_uber += record.get("uber_ganhos", 0.0)
+        total_ganhos_bolt += record.get("bolt_ganhos", 0.0)
+    
+    # Get combustivel data
+    combustivel_query = {
+        "veiculo_id": veiculo_id,
+        "data": {"$gte": data_inicio, "$lte": data_fim}
+    } if veiculo_id else {}
+    
+    combustivel_records = []
+    total_combustivel = 0.0
+    if veiculo_id and config.get("incluir_combustivel", True):
+        combustivel_cursor = db.abastecimentos.find(combustivel_query, {"_id": 0})
+        combustivel_records = await combustivel_cursor.to_list(1000)
+        total_combustivel = sum(record.get("valor_com_iva", 0.0) for record in combustivel_records)
+    
+    # Get via verde data (with delay)
+    via_verde_records = []
+    total_via_verde = 0.0
+    if config.get("incluir_via_verde", True):
+        via_verde_query = {
+            "veiculo_id": veiculo_id,
+            "data": {"$gte": data_inicio_via_verde, "$lte": data_fim_via_verde}
+        } if veiculo_id else {}
+        
+        if veiculo_id:
+            via_verde_cursor = db.via_verde.find(via_verde_query, {"_id": 0})
+            via_verde_records = await via_verde_cursor.to_list(1000)
+            total_via_verde = sum(record.get("valor", 0.0) for record in via_verde_records)
+    
+    # Calculate valor aluguer/comissao
+    valor_aluguer = 0.0
+    if contrato:
+        tipo_contrato = contrato.get("tipo_contrato", "aluguer_normal")
+        if tipo_contrato == "comissao":
+            # Comissão sobre ganhos
+            comissao_percentual = contrato.get("comissao_percentual", 0.0)
+            valor_aluguer = (total_ganhos_uber + total_ganhos_bolt) * (comissao_percentual / 100)
+        else:
+            # Aluguer fixo semanal
+            valor_aluguer = contrato.get("valor_semanal", 0.0)
+    
+    # Get caucao data
+    caucao_acumulada = contrato.get("caucao_total", 0.0) if contrato else 0.0
+    caucao_semanal = 0.0
+    if contrato and contrato.get("caucao_parcelada", False):
+        caucao_parcelas = contrato.get("caucao_parcelas", 1)
+        caucao_semanal = caucao_acumulada / caucao_parcelas if caucao_parcelas > 0 else 0.0
+    
+    # Get danos data
+    danos_records = []
+    total_danos_acumulados = 0.0
+    danos_semanal = 0.0
+    if config.get("incluir_danos", True) and veiculo_id:
+        danos_cursor = db.danos.find({
+            "veiculo_id": veiculo_id,
+            "motorista_id": motorista_id,
+            "ativo": True
+        }, {"_id": 0})
+        danos_records = await danos_cursor.to_list(100)
+        total_danos_acumulados = sum(d.get("valor_total", 0.0) for d in danos_records)
+        danos_semanal = sum(d.get("valor_semanal", 0.0) for d in danos_records)
+    
+    # Get extras
+    extras = data.get("extras", 0.0)
+    
+    # Calculate totals
+    total_ganhos = total_ganhos_uber + total_ganhos_bolt
+    total_despesas = valor_aluguer + total_combustivel + total_via_verde + caucao_semanal + danos_semanal - extras
+    total_recibo = total_ganhos - total_despesas
+    
+    # Generate numero relatorio
+    formato = config.get("formato_numero_relatorio", "xxxxx/ano")
+    # Count existing reports for this year
+    count = await db.relatorios_semanais.count_documents({
+        "parceiro_id": parceiro_id,
+        "ano": ano
+    })
+    numero_relatorio = formato.replace("xxxxx", str(count + 1).zfill(5)).replace("ano", str(ano))
+    
+    # Build relatorio document
+    relatorio = {
+        "id": str(uuid.uuid4()),
+        "numero_relatorio": numero_relatorio,
+        "parceiro_id": parceiro_id,
+        "parceiro_nome": parceiro.get("nome_empresa", ""),
+        "motorista_id": motorista_id,
+        "motorista_nome": motorista.get("name", ""),
+        "veiculo_id": veiculo_id,
+        "veiculo_marca": veiculo.get("marca", "") if veiculo else "",
+        "veiculo_modelo": veiculo.get("modelo", "") if veiculo else "",
+        "veiculo_matricula": veiculo.get("matricula", "") if veiculo else "",
+        "data_emissao": datetime.now(timezone.utc).isoformat(),
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "semana": semana,
+        "ano": ano,
+        
+        # Statistics
+        "viagens_uber": total_viagens_uber,
+        "viagens_bolt": total_viagens_bolt,
+        "viagens_totais": total_viagens_uber + total_viagens_bolt,
+        "horas_uber": total_horas_uber,
+        "horas_bolt": total_horas_bolt,
+        "horas_totais": total_horas_uber + total_horas_bolt,
+        
+        # Ganhos
+        "ganhos_uber": total_ganhos_uber,
+        "ganhos_bolt": total_ganhos_bolt,
+        "ganhos_totais": total_ganhos,
+        
+        # Despesas
+        "valor_aluguer": valor_aluguer,
+        "tipo_contrato": contrato.get("tipo_contrato", "") if contrato else "",
+        "combustivel": total_combustivel,
+        "via_verde": total_via_verde,
+        "caucao_acumulada": caucao_acumulada,
+        "caucao_semanal": caucao_semanal,
+        "danos_acumulados": total_danos_acumulados,
+        "danos_semanal": danos_semanal,
+        "danos_descricao": [d.get("descricao", "") for d in danos_records],
+        "extras": extras,
+        
+        # Totals
+        "total_despesas": total_despesas,
+        "total_recibo": total_recibo,
+        
+        # Detailed lists
+        "combustivel_detalhes": combustivel_records,
+        "via_verde_detalhes": via_verde_records,
+        "danos_detalhes": danos_records,
+        
+        # Configuration used
+        "config": config,
+        
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"]
+    }
+    
+    # Save relatorio
+    await db.relatorios_semanais.insert_one(relatorio)
+    
+    return {
+        "message": "Relatório semanal gerado com sucesso",
+        "relatorio_id": relatorio["id"],
+        "numero_relatorio": numero_relatorio,
+        "total_recibo": total_recibo,
+        "relatorio": relatorio
+    }
+
 # ==================== ENDPOINTS DE CONTRATOS ====================
 
 @api_router.get("/parceiros/{parceiro_id}/templates-contrato")
