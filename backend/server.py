@@ -6301,6 +6301,76 @@ async def importar_motoristas_csv(
                     pass
             return value.replace(' ', '').replace('-', '')
         
+        # Auto-convert CSV if it doesn't have proper headers
+        def auto_convert_csv(content_str):
+            """Auto-convert CSV format if needed"""
+            lines = content_str.split('\n')
+            clean_lines = [line for line in lines if not line.strip().startswith('#')]
+            
+            if len(clean_lines) < 2:
+                return content_str
+            
+            # Check if first non-comment line has expected headers
+            first_line = clean_lines[0].lower()
+            has_headers = 'nome' in first_line and 'email' in first_line and 'telefone' in first_line
+            
+            if has_headers:
+                # Already in correct format
+                return content_str
+            
+            # Need to convert - assuming data without headers
+            logger.info("CSV sem cabeçalhos detectado - convertendo automaticamente...")
+            
+            # Expected column mapping (0-indexed positions)
+            COLUMN_MAP = {
+                0: 'Nome', 1: 'Email', 2: 'Telefone', 3: 'WhatsApp', 4: 'Nacionalidade',
+                5: 'Telefone Uber', 6: 'Email Uber', 7: 'ID Uber', 8: 'Telefone Bolt',
+                9: 'Email Bolt', 10: 'ID Bolt', 11: 'Morada', 12: 'Código Postal',
+                13: 'Localidade', 14: 'CC', 15: 'Validade CC', 16: 'NIF',
+                17: 'Seg Social', 18: 'C Utente', 19: 'TVDE', 20: 'Validade TVDE',
+                21: 'Carta', 22: 'Desde Carta', 23: 'Validade Carta'
+            }
+            
+            # Detect delimiter from first data line
+            sample = clean_lines[0] if clean_lines else ''
+            data_delimiter = ';' if sample.count(';') > sample.count(',') else ','
+            
+            # Parse existing data
+            import csv as csv_module
+            reader = csv_module.reader(clean_lines, delimiter=data_delimiter)
+            data_rows = list(reader)
+            
+            # Build new CSV with headers
+            output_lines = []
+            
+            # Add header row
+            header_cols = [COLUMN_MAP.get(i, f'Col{i}') for i in range(24)]
+            output_lines.append(','.join(header_cols))
+            
+            # Convert data rows
+            for row in data_rows:
+                if len(row) == 0 or not row[0].strip():
+                    continue
+                
+                converted_row = []
+                for i in range(24):
+                    if i < len(row):
+                        value = str(row[i]).strip()
+                        # Normalize phone numbers (columns 2, 3, 5, 8)
+                        if i in [2, 3, 5, 8]:
+                            value = normalize_phone(value)
+                        converted_row.append(value)
+                    else:
+                        converted_row.append('')
+                
+                output_lines.append(','.join(converted_row))
+            
+            logger.info(f"CSV convertido: {len(data_rows)} linhas de dados")
+            return '\n'.join(output_lines)
+        
+        # Apply auto-conversion
+        decoded = auto_convert_csv(decoded)
+        
         motoristas_criados = 0
         erros = []
         
