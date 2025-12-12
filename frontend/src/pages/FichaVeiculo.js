@@ -1261,6 +1261,35 @@ const FichaVeiculo = ({ user, onLogout }) => {
                       )}
                     </div>
                     <div>
+                      <Label className="text-slate-600">Via Verde ID</Label>
+                      {canEdit && editMode ? (
+                        <Input
+                          value={vehicle.via_verde_id || ''}
+                          onChange={(e) => setVehicle({...vehicle, via_verde_id: e.target.value})}
+                          placeholder="Ex: 1234567890"
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.via_verde_id || 'N/A'}</p>
+                      )}
+                    </div>
+                    <div>
+                      <Label className="text-slate-600">Cartão Frota ID</Label>
+                      {canEdit && editMode ? (
+                        <Input
+                          value={vehicle.cartao_frota_id || ''}
+                          onChange={(e) => setVehicle({...vehicle, cartao_frota_id: e.target.value})}
+                          placeholder="Ex: CF-123456"
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.cartao_frota_id || 'N/A'}</p>
+                      )}
+                      {vehicle.cartao_frota_id && vehicle.motorista_atribuido_nome && (
+                        <p className="text-xs text-slate-500 mt-1">
+                          Associado a: {vehicle.motorista_atribuido_nome}
+                        </p>
+                      )}
+                    </div>
+                    <div>
                       <Label className="text-slate-600">Status</Label>
                       {canEdit && editMode ? (
                         <select
