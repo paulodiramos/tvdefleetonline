@@ -253,7 +253,7 @@ const Dashboard = ({ user, onLogout }) => {
           />
         </div>
 
-        {/* Ações Rápidas - Relatórios */}
+        {/* Ações Rápidas - Relatórios SIMPLIFICADO */}
         {user.role === 'parceiro' && (
           <Card className="border-blue-200 bg-gradient-to-r from-blue-50 to-cyan-50">
             <CardHeader>
@@ -263,44 +263,27 @@ const Dashboard = ({ user, onLogout }) => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Button
                   variant="outline"
-                  className="h-auto py-4 flex flex-col items-start hover:bg-blue-100"
-                  onClick={() => window.location.href = '/configuracao-relatorios'}
+                  className="h-auto py-6 flex flex-col items-center hover:bg-blue-100"
+                  onClick={() => window.location.href = '/relatorios'}
                 >
-                  <div className="flex items-center space-x-2 mb-2">
-                    <Settings className="w-5 h-5 text-blue-600" />
-                    <span className="font-semibold">Configurar</span>
-                  </div>
-                  <p className="text-xs text-slate-600 text-left">
-                    Personalize os campos dos relatórios
+                  <FileText className="w-8 h-8 text-blue-600 mb-2" />
+                  <span className="font-bold text-lg">Gerir Relatórios</span>
+                  <p className="text-xs text-slate-600 text-center mt-1">
+                    Criar, editar, aprovar e pagar - tudo num só lugar
                   </p>
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-auto py-4 flex flex-col items-start hover:bg-green-100"
-                  onClick={() => window.location.href = '/gerar-relatorio-semanal'}
+                  className="h-auto py-6 flex flex-col items-center hover:bg-purple-100"
+                  onClick={() => window.location.href = '/historico-relatorios'}
                 >
-                  <div className="flex items-center space-x-2 mb-2">
-                    <FileText className="w-5 h-5 text-green-600" />
-                    <span className="font-semibold">Gerar Relatório</span>
-                  </div>
-                  <p className="text-xs text-slate-600 text-left">
-                    Crie relatórios semanais
-                  </p>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="h-auto py-4 flex flex-col items-start hover:bg-purple-100"
-                  onClick={() => window.location.href = '/pagamentos-relatorios-semanais'}
-                >
-                  <div className="flex items-center space-x-2 mb-2">
-                    <DollarSign className="w-5 h-5 text-purple-600" />
-                    <span className="font-semibold">Pagamentos</span>
-                  </div>
-                  <p className="text-xs text-slate-600 text-left">
-                    Gerir pagamentos de relatórios
+                  <Clock className="w-8 h-8 text-purple-600 mb-2" />
+                  <span className="font-bold text-lg">Histórico</span>
+                  <p className="text-xs text-slate-600 text-center mt-1">
+                    Ver todos os relatórios e pagamentos
                   </p>
                 </Button>
               </div>
