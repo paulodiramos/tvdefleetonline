@@ -10309,6 +10309,295 @@ async def obter_relatorio_semanal(
     
     return relatorio
 
+@api_router.get("/relatorios/semanal/{relatorio_id}/pdf")
+async def download_relatorio_pdf(
+    relatorio_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Download do relatório semanal em PDF"""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.lib.units import cm
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
+    from io import BytesIO
+    
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO, UserRole.GESTAO, UserRole.MOTORISTA]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    relatorio = await db.relatorios_semanais.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    
+    # Check permissions
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != relatorio.get("parceiro_id"):
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    if current_user["role"] == UserRole.MOTORISTA and current_user["id"] != relatorio.get("motorista_id"):
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get config
+    config = relatorio.get("config", {})
+    
+    # Create PDF in memory
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, topMargin=2*cm, bottomMargin=2*cm)
+    elements = []
+    styles = getSampleStyleSheet()
+    
+    # Custom styles
+    title_style = ParagraphStyle(
+        'CustomTitle',
+        parent=styles['Heading1'],
+        fontSize=18,
+        textColor=colors.HexColor('#1e40af'),
+        spaceAfter=20,
+        alignment=TA_CENTER
+    )
+    
+    header_style = ParagraphStyle(
+        'CustomHeader',
+        parent=styles['Heading2'],
+        fontSize=14,
+        textColor=colors.HexColor('#1e40af'),
+        spaceAfter=10
+    )
+    
+    # Title
+    elements.append(Paragraph("RELATÓRIO SEMANAL", title_style))
+    elements.append(Spacer(1, 0.5*cm))
+    
+    # Header information
+    if config.get("incluir_numero_relatorio", True):
+        elements.append(Paragraph(f"<b>Relatório nº:</b> {relatorio.get('numero_relatorio', 'N/A')}", styles['Normal']))
+    
+    if config.get("incluir_data_emissao", True):
+        data_emissao = datetime.fromisoformat(relatorio.get('data_emissao', datetime.now().isoformat()))
+        elements.append(Paragraph(f"<b>Data de Emissão:</b> {data_emissao.strftime('%d/%m/%Y')}", styles['Normal']))
+    
+    if config.get("incluir_periodo", True):
+        elements.append(Paragraph(
+            f"<b>Período:</b> Semana {relatorio.get('semana', 0)}/{relatorio.get('ano', 0)} "
+            f"({relatorio.get('data_inicio', '')} a {relatorio.get('data_fim', '')})",
+            styles['Normal']
+        ))
+    
+    if config.get("incluir_nome_parceiro", True):
+        elements.append(Paragraph(f"<b>Parceiro:</b> {relatorio.get('parceiro_nome', 'N/A')}", styles['Normal']))
+    
+    if config.get("incluir_nome_motorista", True):
+        elements.append(Paragraph(f"<b>Motorista:</b> {relatorio.get('motorista_nome', 'N/A')}", styles['Normal']))
+    
+    if config.get("incluir_veiculo", True):
+        veiculo_info = f"{relatorio.get('veiculo_marca', '')} {relatorio.get('veiculo_modelo', '')} ({relatorio.get('veiculo_matricula', '')})"
+        elements.append(Paragraph(f"<b>Veículo:</b> {veiculo_info}", styles['Normal']))
+    
+    elements.append(Spacer(1, 1*cm))
+    
+    # Statistics section
+    if any([config.get(f"incluir_{k}", True) for k in ["viagens_uber", "viagens_bolt", "viagens_totais", "horas_uber", "horas_bolt", "horas_totais"]]):
+        elements.append(Paragraph("ESTATÍSTICAS DE VIAGENS E HORAS", header_style))
+        
+        stats_data = []
+        if config.get("incluir_viagens_uber", True):
+            stats_data.append(["Número de Viagens Uber", str(relatorio.get('viagens_uber', 0))])
+        if config.get("incluir_viagens_bolt", True):
+            stats_data.append(["Número de Viagens Bolt", str(relatorio.get('viagens_bolt', 0))])
+        if config.get("incluir_viagens_totais", True):
+            stats_data.append(["Viagens Totais da Semana", str(relatorio.get('viagens_totais', 0))])
+        if config.get("incluir_horas_uber", True):
+            stats_data.append(["Horas Totais Uber", f"{relatorio.get('horas_uber', 0):.2f}h"])
+        if config.get("incluir_horas_bolt", True):
+            stats_data.append(["Horas Totais Bolt", f"{relatorio.get('horas_bolt', 0):.2f}h"])
+        if config.get("incluir_horas_totais", True):
+            stats_data.append(["Horas Totais da Semana", f"{relatorio.get('horas_totais', 0):.2f}h"])
+        
+        if stats_data:
+            stats_table = Table(stats_data, colWidths=[12*cm, 4*cm])
+            stats_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f1f5f9')),
+                ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+                ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+                ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+                ('FONTNAME', (0, 0), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            elements.append(stats_table)
+            elements.append(Spacer(1, 0.5*cm))
+    
+    # Ganhos section
+    if any([config.get(f"incluir_ganhos_{k}", True) for k in ["uber", "bolt", "totais"]]):
+        elements.append(Paragraph("GANHOS", header_style))
+        
+        ganhos_data = [["Descrição", "Valor (€)"]]
+        if config.get("incluir_ganhos_uber", True):
+            ganhos_data.append(["Ganhos Uber", f"€{relatorio.get('ganhos_uber', 0):.2f}"])
+        if config.get("incluir_ganhos_bolt", True):
+            ganhos_data.append(["Ganhos Bolt", f"€{relatorio.get('ganhos_bolt', 0):.2f}"])
+        if config.get("incluir_ganhos_totais", True):
+            ganhos_data.append(["TOTAL GANHOS", f"€{relatorio.get('ganhos_totais', 0):.2f}"])
+        
+        ganhos_table = Table(ganhos_data, colWidths=[12*cm, 4*cm])
+        ganhos_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#10b981')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#d1fae5')),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(ganhos_table)
+        elements.append(Spacer(1, 0.5*cm))
+    
+    # Despesas section
+    elements.append(Paragraph("DESPESAS", header_style))
+    
+    despesas_data = [["Descrição", "Valor (€)"]]
+    if config.get("incluir_valor_aluguer", True):
+        tipo = relatorio.get('tipo_contrato', 'aluguer')
+        despesas_data.append([f"Valor Aluguer/Comissão ({tipo})", f"€{relatorio.get('valor_aluguer', 0):.2f}"])
+    
+    if config.get("incluir_combustivel", True):
+        despesas_data.append(["Combustível", f"€{relatorio.get('combustivel', 0):.2f}"])
+    
+    if config.get("incluir_via_verde", True):
+        atraso = config.get('via_verde_atraso_semanas', 1)
+        despesas_data.append([f"Via Verde (atraso {atraso} semana{'s' if atraso > 1 else ''})", f"€{relatorio.get('via_verde', 0):.2f}"])
+    
+    if config.get("incluir_caucao", True):
+        despesas_data.append(["Caução Acumulada", f"€{relatorio.get('caucao_acumulada', 0):.2f}"])
+    
+    if config.get("incluir_caucao_parcelada", True):
+        despesas_data.append(["Caução Parcelada (semanal)", f"€{relatorio.get('caucao_semanal', 0):.2f}"])
+    
+    if config.get("incluir_danos_acumulados", True):
+        despesas_data.append(["Danos Acumulados", f"€{relatorio.get('danos_acumulados', 0):.2f}"])
+    
+    if config.get("incluir_danos_parcelados", True):
+        despesas_data.append(["Danos Parcelados (semanal)", f"€{relatorio.get('danos_semanal', 0):.2f}"])
+    
+    if config.get("incluir_extras", True):
+        extras = relatorio.get('extras', 0)
+        label = "Extras (Crédito)" if extras > 0 else "Extras (Débito)"
+        despesas_data.append([label, f"€{abs(extras):.2f}"])
+    
+    despesas_data.append(["TOTAL DESPESAS", f"€{relatorio.get('total_despesas', 0):.2f}"])
+    
+    despesas_table = Table(despesas_data, colWidths=[12*cm, 4*cm])
+    despesas_table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#ef4444')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#fee2e2')),
+        ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('TOPPADDING', (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+    ]))
+    elements.append(despesas_table)
+    elements.append(Spacer(1, 0.5*cm))
+    
+    # Total section
+    if config.get("incluir_total_recibo", True):
+        elements.append(Paragraph("TOTAL DO RECIBO", header_style))
+        
+        total_data = [
+            ["Ganhos Totais", f"€{relatorio.get('ganhos_totais', 0):.2f}"],
+            ["(-) Despesas Totais", f"€{relatorio.get('total_despesas', 0):.2f}"],
+            ["= TOTAL A RECEBER", f"€{relatorio.get('total_recibo', 0):.2f}"]
+        ]
+        
+        total_table = Table(total_data, colWidths=[12*cm, 4*cm])
+        total_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#3b82f6')),
+            ('TEXTCOLOR', (0, -1), (-1, -1), colors.white),
+            ('ALIGN', (0, 0), (0, -1), 'LEFT'),
+            ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 12),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('TOPPADDING', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+        ]))
+        elements.append(total_table)
+    
+    # Combustivel details table
+    if config.get("incluir_tabela_combustivel", True):
+        combustivel_detalhes = relatorio.get("combustivel_detalhes", [])
+        if combustivel_detalhes:
+            elements.append(Spacer(1, 1*cm))
+            elements.append(Paragraph("DETALHES DE COMBUSTÍVEL", header_style))
+            
+            combustivel_headers = []
+            if config.get("incluir_combustivel_matricula", True):
+                combustivel_headers.append("Matrícula")
+            if config.get("incluir_combustivel_local", True):
+                combustivel_headers.append("Local")
+            if config.get("incluir_combustivel_data_hora", True):
+                combustivel_headers.append("Data/Hora")
+            if config.get("incluir_combustivel_cartao", True):
+                combustivel_headers.append("Cartão")
+            if config.get("incluir_combustivel_quantidade", True):
+                combustivel_headers.append("Qtd (L)")
+            if config.get("incluir_combustivel_valor", True):
+                combustivel_headers.append("Valor (€)")
+            
+            combustivel_data = [combustivel_headers]
+            
+            for record in combustivel_detalhes:
+                row = []
+                if config.get("incluir_combustivel_matricula", True):
+                    row.append(record.get("matricula", "N/A"))
+                if config.get("incluir_combustivel_local", True):
+                    row.append(record.get("local", "N/A"))
+                if config.get("incluir_combustivel_data_hora", True):
+                    row.append(record.get("data_hora", "N/A"))
+                if config.get("incluir_combustivel_cartao", True):
+                    row.append(record.get("cartao", "N/A"))
+                if config.get("incluir_combustivel_quantidade", True):
+                    row.append(f"{record.get('quantidade', 0):.2f}")
+                if config.get("incluir_combustivel_valor", True):
+                    row.append(f"€{record.get('valor_com_iva', 0):.2f}")
+                combustivel_data.append(row)
+            
+            if len(combustivel_data) > 1:
+                combustivel_table = Table(combustivel_data)
+                combustivel_table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#3b82f6')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                    ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('FONTSIZE', (0, 0), (-1, -1), 8),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                    ('TOPPADDING', (0, 0), (-1, -1), 6),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+                ]))
+                elements.append(combustivel_table)
+    
+    # Build PDF
+    doc.build(elements)
+    buffer.seek(0)
+    
+    return Response(
+        content=buffer.getvalue(),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=relatorio_{relatorio.get('numero_relatorio', relatorio_id)}.pdf"
+        }
+    )
+
 # ==================== ENDPOINTS DE CONTRATOS ====================
 
 @api_router.get("/parceiros/{parceiro_id}/templates-contrato")
