@@ -1682,13 +1682,17 @@ class PlanoAssinatura(BaseModel):
     model_config = ConfigDict(extra="ignore")
     id: str
     nome: str  # Ex: "Parceiro Base", "Operacional Premium"
-    tipo_usuario: str  # "parceiro", "operacional"
-    preco_por_unidade: float  # Por veículo (parceiro) ou por motorista (operacional)
+    tipo_usuario: Optional[str] = "parceiro"  # "parceiro", "operacional"
+    preco_por_unidade: Optional[float] = 0.0  # Por veículo (parceiro) ou por motorista (operacional)
     descricao: str
-    features: List[str]  # Lista de features habilitadas
+    features: Optional[List[str]] = []  # Lista de features habilitadas (mapeia de funcionalidades se existir)
+    funcionalidades: Optional[List[str]] = []  # Backward compatibility
     ativo: bool = True
     created_at: datetime
     updated_at: datetime
+    # Additional fields for compatibility
+    preco_mensal: Optional[float] = None
+    preco_anual: Optional[float] = None
 
 class PlanoCreate(BaseModel):
     nome: str
