@@ -10804,7 +10804,7 @@ async def aprovar_analise_recibo(
     relatorio_id: str,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Aprovar análise do recibo - muda para verificado"""
+    """Aprovar análise do recibo - muda para aguarda_pagamento"""
     if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
@@ -10817,13 +10817,13 @@ async def aprovar_analise_recibo(
     if current_user["role"] == UserRole.PARCEIRO and relatorio.get("parceiro_id") != current_user["id"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
-    # Atualizar status
+    # Atualizar status para aguarda_pagamento
     await db.relatorios_semanais.update_one(
         {"id": relatorio_id},
         {
             "$set": {
-                "estado": "verificado",
-                "status": "verificado",
+                "estado": "aguarda_pagamento",
+                "status": "aguarda_pagamento",
                 "analise_aprovada_por": current_user["id"],
                 "analise_aprovada_em": datetime.now(timezone.utc).isoformat(),
                 "updated_at": datetime.now(timezone.utc).isoformat()
@@ -10831,7 +10831,45 @@ async def aprovar_analise_recibo(
         }
     )
     
-    return {"message": "Recibo aprovado! Relatório pronto para pagamento."}
+    return {"message": "Recibo aprovado! Relatório aguarda pagamento."}
+
+@api_router.get("/relatorios/recibos/{filename}")
+async def download_recibo_file(
+    filename: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Download de recibo do relatório semanal"""
+    try:
+        # Construir caminho do arquivo
+        file_path = Path("/app/uploads/recibos") / filename
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Recibo não encontrado")
+        
+        # Validar permissões (simplificado - pode ser refinado)
+        if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO, UserRole.GESTAO, UserRole.MOTORISTA]:
+            raise HTTPException(status_code=403, detail="Não autorizado")
+        
+        # Determinar o tipo MIME baseado na extensão
+        content_type = "application/octet-stream"
+        if filename.lower().endswith('.pdf'):
+            content_type = "application/pdf"
+        elif filename.lower().endswith(('.jpg', '.jpeg')):
+            content_type = "image/jpeg"
+        elif filename.lower().endswith('.png'):
+            content_type = "image/png"
+        
+        return FileResponse(
+            path=file_path,
+            media_type=content_type,
+            filename=filename
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Erro ao fazer download do recibo: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao fazer download: {str(e)}")
 
 @api_router.post("/relatorios/semanal/{relatorio_id}/upload-comprovativo")
 async def upload_comprovativo_pagamento(
