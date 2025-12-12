@@ -10789,8 +10789,110 @@ async def upload_recibo_relatorio(
         )
         
         return {
-            "message": "Recibo enviado com sucesso",
+            "message": "Recibo enviado com sucesso. Relatório em análise.",
             "recibo_url": recibo_url
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Erro ao fazer upload: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao fazer upload: {str(e)}")
+
+@api_router.post("/relatorios/semanal/{relatorio_id}/aprovar-analise")
+async def aprovar_analise_recibo(
+    relatorio_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Aprovar análise do recibo - muda para verificado"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verificar se o relatório existe
+    relatorio = await db.relatorios_semanais.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    
+    # Verificar permissões
+    if current_user["role"] == UserRole.PARCEIRO and relatorio.get("parceiro_id") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Atualizar status
+    await db.relatorios_semanais.update_one(
+        {"id": relatorio_id},
+        {
+            "$set": {
+                "estado": "verificado",
+                "status": "verificado",
+                "analise_aprovada_por": current_user["id"],
+                "analise_aprovada_em": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {"message": "Recibo aprovado! Relatório pronto para pagamento."}
+
+@api_router.post("/relatorios/semanal/{relatorio_id}/upload-comprovativo")
+async def upload_comprovativo_pagamento(
+    relatorio_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload de comprovativo de pagamento"""
+    try:
+        if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO, UserRole.GESTAO]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Verificar se o relatório existe
+        relatorio = await db.relatorios_semanais.find_one({"id": relatorio_id}, {"_id": 0})
+        if not relatorio:
+            raise HTTPException(status_code=404, detail="Relatório não encontrado")
+        
+        # Validar tamanho do arquivo (máx 10MB)
+        content = await file.read()
+        if len(content) > 10 * 1024 * 1024:
+            raise HTTPException(status_code=400, detail="Arquivo muito grande (máx 10MB)")
+        
+        await file.seek(0)
+        
+        # Validar tipo de arquivo
+        allowed_types = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
+        if file.content_type not in allowed_types:
+            raise HTTPException(status_code=400, detail="Tipo de arquivo não permitido. Use JPG, PNG ou PDF")
+        
+        # Criar diretório se não existir
+        upload_dir = Path("/app/uploads/comprovativo_pagamento")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Gerar nome único
+        file_extension = Path(file.filename).suffix
+        unique_filename = f"{relatorio_id}_{uuid.uuid4()}{file_extension}"
+        file_path = upload_dir / unique_filename
+        
+        # Salvar arquivo
+        with open(file_path, "wb") as f:
+            f.write(content)
+        
+        # URL relativa
+        comprovativo_url = f"/uploads/comprovativo_pagamento/{unique_filename}"
+        
+        # Atualizar relatório
+        await db.relatorios_semanais.update_one(
+            {"id": relatorio_id},
+            {
+                "$set": {
+                    "comprovativo_pagamento_url": comprovativo_url,
+                    "comprovativo_anexado_por": current_user["id"],
+                    "comprovativo_anexado_em": datetime.now(timezone.utc).isoformat(),
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+            }
+        )
+        
+        return {
+            "message": "Comprovativo de pagamento enviado com sucesso",
+            "comprovativo_url": comprovativo_url
         }
         
     except HTTPException:
