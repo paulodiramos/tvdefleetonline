@@ -1178,13 +1178,23 @@ const Motoristas = ({ user, onLogout }) => {
                         <p className="font-medium">{selectedMotorista.morada_completa || 'N/A'}</p>
                       )}
                     </div>
-                    <div>
-                      <Label>Código Postal</Label>
-                      {isEditing ? (
-                        <Input value={editForm.codigo_postal || ''} onChange={(e) => setEditForm({...editForm, codigo_postal: e.target.value})} />
-                      ) : (
-                        <p className="font-medium">{selectedMotorista.codigo_postal || 'N/A'}</p>
-                      )}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Código Postal</Label>
+                        {isEditing ? (
+                          <Input value={editForm.codigo_postal || ''} onChange={(e) => setEditForm({...editForm, codigo_postal: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.codigo_postal || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Localidade</Label>
+                        {isEditing ? (
+                          <Input value={editForm.localidade || ''} onChange={(e) => setEditForm({...editForm, localidade: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.localidade || 'N/A'}</p>
+                        )}
+                      </div>
                     </div>
                   </TabsContent>
 
