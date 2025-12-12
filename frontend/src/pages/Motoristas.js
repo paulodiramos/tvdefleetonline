@@ -450,6 +450,54 @@ const Motoristas = ({ user, onLogout }) => {
     }
   };
 
+  const handleDesativarMotorista = async (motoristaId, motoristaNome) => {
+    if (!window.confirm(`Tem certeza que deseja desativar o motorista ${motoristaNome}?`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/motoristas/${motoristaId}/desativar`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success('Motorista desativado com sucesso!');
+      fetchMotoristas();
+      
+      // Update selected motorista if in detail dialog
+      if (selectedMotorista && selectedMotorista.id === motoristaId) {
+        const response = await axios.get(`${API}/motoristas/${motoristaId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSelectedMotorista(response.data);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao desativar motorista');
+    }
+  };
+
+  const handleAtivarMotorista = async (motoristaId, motoristaNome) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/motoristas/${motoristaId}/ativar`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success('Motorista ativado com sucesso!');
+      fetchMotoristas();
+      
+      // Update selected motorista if in detail dialog
+      if (selectedMotorista && selectedMotorista.id === motoristaId) {
+        const response = await axios.get(`${API}/motoristas/${motoristaId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setSelectedMotorista(response.data);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao ativar motorista');
+    }
+  };
+
   const handleOpenAtribuirModal = (motorista) => {
     setSelectedMotorista(motorista);
     setAtribuicaoData({
