@@ -57,11 +57,14 @@ const RelatoriosHub = ({ user, onLogout }) => {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
-      setRelatorios(relRes.data);
-      setMotoristas(motRes.data);
+      setRelatorios(relRes.data || []);
+      setMotoristas(motRes.data || []);
+      console.log('Motoristas carregados:', motRes.data?.length || 0);
     } catch (error) {
-      console.error('Erro:', error);
+      console.error('Erro ao carregar dados:', error);
       toast.error('Erro ao carregar dados');
+      setRelatorios([]);
+      setMotoristas([]);
     } finally {
       setLoading(false);
     }
