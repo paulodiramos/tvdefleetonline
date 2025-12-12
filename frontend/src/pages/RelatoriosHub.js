@@ -324,6 +324,64 @@ const RelatoriosHub = ({ user, onLogout }) => {
           </Card>
         </div>
 
+        {/* Filtros */}
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div>
+                <Label>Data Início</Label>
+                <Input
+                  type="date"
+                  value={filtroDataInicio}
+                  onChange={(e) => setFiltroDataInicio(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Data Fim</Label>
+                <Input
+                  type="date"
+                  value={filtroDataFim}
+                  onChange={(e) => setFiltroDataFim(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Semana</Label>
+                <Input
+                  type="number"
+                  placeholder="1-52"
+                  min="1"
+                  max="52"
+                  value={filtroSemana}
+                  onChange={(e) => setFiltroSemana(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>Ano</Label>
+                <Input
+                  type="number"
+                  placeholder="2024"
+                  value={filtroAno}
+                  onChange={(e) => setFiltroAno(e.target.value)}
+                />
+              </div>
+              <div className="flex items-end">
+                <Button 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => {
+                    setFiltroDataInicio('');
+                    setFiltroDataFim('');
+                    setFiltroSemana('');
+                    setFiltroAno('');
+                  }}
+                >
+                  Limpar Filtros
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-4">
