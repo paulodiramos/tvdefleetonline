@@ -6377,12 +6377,25 @@ async def importar_motoristas_csv(
                 # Generate user ID
                 user_id = str(uuid.uuid4())
                 
-                # Normalize phone numbers
-                telefone_normalizado = normalize_phone(row.get('Telefone', ''))
-                whatsapp_normalizado = normalize_phone(row.get('WhatsApp', row.get('Telefone', '')))
-                telefone_uber_normalizado = normalize_phone(row.get('Telefone Uber', ''))
-                telefone_bolt_normalizado = normalize_phone(row.get('Telefone Bolt', ''))
-                emergencia_telefone_normalizado = normalize_phone(row.get('Contacto Emergência Telefone', ''))
+                # Helper to add country code +351 if not present
+                def add_country_code(phone):
+                    if not phone:
+                        return ''
+                    phone = phone.strip()
+                    # If phone doesn't start with + or 00, add +351
+                    if phone and not phone.startswith('+') and not phone.startswith('00'):
+                        # Remove leading 0 if present
+                        if phone.startswith('0'):
+                            phone = phone[1:]
+                        phone = '+351' + phone
+                    return phone
+                
+                # Normalize phone numbers and add country code
+                telefone_normalizado = add_country_code(normalize_phone(row.get('Telefone', '')))
+                whatsapp_normalizado = add_country_code(normalize_phone(row.get('WhatsApp', row.get('Telefone', ''))))
+                telefone_uber_normalizado = add_country_code(normalize_phone(row.get('Telefone Uber', '')))
+                telefone_bolt_normalizado = add_country_code(normalize_phone(row.get('Telefone Bolt', '')))
+                emergencia_telefone_normalizado = add_country_code(normalize_phone(row.get('Contacto Emergência Telefone', '')))
                 
                 # Create user document
                 user_doc = {
