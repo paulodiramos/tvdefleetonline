@@ -390,6 +390,41 @@ backend:
           agent: "main"
           comment: "Dashboard atualizado com seção de alertas urgentes. Exibe alertas de alta prioridade com botões para resolver/ignorar."
 
+  - task: "Configuração de Relatórios Semanais - /configuracao-relatorios"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/ConfiguracaoRelatorios.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Página implementada com todas as seções: Cabeçalho (6 campos), Estatísticas de Viagens (6 campos), Ganhos (3 campos), Despesas (10 campos incluindo Via Verde com atraso), Total Recibo, Tabela de Combustível (6 subcampos). Campo 'Atraso Via Verde' com valor padrão 1 semana. Precisa ser testado com credenciais geral@zmbusines.com / ZmBusines_2024."
+
+  - task: "Geração de Relatório Semanal - /gerar-relatorio-semanal"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/GerarRelatorioSemanal.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Página implementada com formulário completo: seleção de motorista, datas (início/fim), semana/ano, extras. Card de resumo com número do relatório, dados do motorista/veículo, estatísticas (ganhos/despesas/total). Botão 'Baixar PDF' e sidebar 'Relatórios Anteriores'. Precisa ser testado com credenciais geral@zmbusines.com / ZmBusines_2024."
+
+  - task: "Campos Via Verde ID e Cartão Frota ID na Ficha do Veículo"
+    implemented: true
+    working: "NA"
+    file: "frontend/src/pages/FichaVeiculo.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "Campos 'Via Verde ID' e 'Cartão Frota ID' implementados na ficha do veículo (linhas 1264-1286). Campos são editáveis quando em modo edição. Precisa ser testado para verificar se estão visíveis e funcionais."
 backend:
   - task: "Veículos - Part Time com 4 horários livres"
     implemented: true
