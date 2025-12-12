@@ -1010,6 +1010,34 @@ const RelatoriosHub = ({ user, onLogout }) => {
                       </select>
                     </div>
                     <div>
+                      <Label>Comprovativo de Pagamento (opcional)</Label>
+                      <Input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={(e) => {
+                          if (e.target.files && e.target.files[0]) {
+                            setRelatorioPagando({ 
+                              ...relatorioPagando, 
+                              comprovativo_file: e.target.files[0] 
+                            });
+                          }
+                        }}
+                      />
+                      <p className="text-xs text-slate-600 mt-1">
+                        Anexe comprovativo de transferência, recibo, etc. (PDF, JPG, PNG - máx. 10MB)
+                      </p>
+                      {relatorioPagando.comprovativo_file && (
+                        <div className="mt-2 p-2 bg-green-50 rounded">
+                          <p className="text-sm font-medium">
+                            📎 {relatorioPagando.comprovativo_file.name}
+                          </p>
+                          <p className="text-xs text-slate-600">
+                            {(relatorioPagando.comprovativo_file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                    <div>
                       <Label>Observações</Label>
                       <Input
                         placeholder="Observações sobre o pagamento (opcional)"
