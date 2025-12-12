@@ -1122,6 +1122,7 @@ const RelatoriosHub = ({ user, onLogout }) => {
                     <option value="rascunho">Rascunho</option>
                     <option value="pendente_aprovacao">Pendente Aprovação</option>
                     <option value="aguarda_recibo">Aguarda Recibo</option>
+                    <option value="em_analise">Em Análise</option>
                     <option value="verificado">Verificado</option>
                     <option value="pago">Pago</option>
                     <option value="rejeitado">Rejeitado</option>
