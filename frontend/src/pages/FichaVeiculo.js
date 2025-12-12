@@ -2450,10 +2450,22 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
                     {/* Tab Alertas */}
                     <TabsContent value="alertas" className="space-y-4">
+                      {user.role === 'parceiro' && editMode && (
+                        <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
+                          <p className="text-sm text-green-800 flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4" />
+                            <strong>Modo Edição Ativo:</strong> Pode configurar os alertas deste veículo
+                          </p>
+                        </div>
+                      )}
                       <div className="bg-amber-50 p-4 rounded-lg">
-                        <h4 className="font-semibold text-amber-900 mb-3">Configurar Alertas para este Veículo</h4>
+                        <h4 className="font-semibold text-amber-900 mb-3 flex items-center gap-2">
+                          <Bell className="w-5 h-5" />
+                          Configurar Alertas para este Veículo
+                        </h4>
                         <p className="text-xs text-amber-700 mb-4">
-                          Configure quantos dias/km antes você quer ser alertado sobre vencimentos e manutenções
+                          Configure quantos dias/km antes você quer ser alertado sobre vencimentos e manutenções. 
+                          Ative o modo edição para fazer alterações.
                         </p>
                         
                         <div className="space-y-4">
@@ -2535,10 +2547,22 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
                     {/* Tab Plano de Manutenção */}
                     <TabsContent value="plano" className="space-y-4">
+                      {user.role === 'parceiro' && editMode && (
+                        <div className="bg-green-50 border border-green-200 p-3 rounded-lg">
+                          <p className="text-sm text-green-800 flex items-center gap-2">
+                            <CheckCircle className="w-4 h-4" />
+                            <strong>Modo Edição Ativo:</strong> Pode configurar o plano de manutenção deste veículo
+                          </p>
+                        </div>
+                      )}
                       <div className="bg-blue-50 p-4 rounded-lg">
-                        <h4 className="font-semibold text-blue-900 mb-3">Plano de Manutenções Periódicas (baseado em KM)</h4>
+                        <h4 className="font-semibold text-blue-900 mb-3 flex items-center gap-2">
+                          <Wrench className="w-5 h-5" />
+                          Plano de Manutenções Periódicas (baseado em KM)
+                        </h4>
                         <p className="text-xs text-blue-700 mb-4">
-                          Configure os intervalos de manutenção específicos para este veículo. Desative itens não aplicáveis (ex: carros elétricos não levam óleo).
+                          Configure os intervalos de manutenção específicos para este veículo. Desative itens não aplicáveis (ex: carros elétricos não têm mudanças de óleo).
+                          Ative o modo edição para fazer alterações.
                         </p>
 
                         <div className="space-y-3">
