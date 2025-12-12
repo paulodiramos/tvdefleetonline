@@ -81,6 +81,7 @@ import PagamentosRelatoriosSemanais from "@/pages/PagamentosRelatoriosSemanais";
 import CriarRelatorioOpcoes from "@/pages/CriarRelatorioOpcoes";
 import RelatoriosSemanaisLista from "@/pages/RelatoriosSemanaisLista";
 import HistoricoRelatorios from "@/pages/HistoricoRelatorios";
+import CriarRelatorioManual from "@/pages/CriarRelatorioManual";
 import MeusPlanos from "@/pages/MeusPlanos";
 import MeusRecibosGanhos from "@/pages/MeusRecibosGanhos";
 import ValidacaoDocumentosMotorista from "@/pages/ValidacaoDocumentosMotorista";
@@ -493,6 +494,12 @@ function App() {
             path="/historico-relatorios"
             element={
               user && user.role === 'parceiro' ? <HistoricoRelatorios user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
+            path="/criar-relatorio-manual"
+            element={
+              user && user.role === 'parceiro' ? <CriarRelatorioManual user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
             }
           />
           <Route
