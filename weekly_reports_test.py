@@ -343,7 +343,17 @@ startxref
             
             if response.status_code == 200:
                 result = response.json()
-                self.comprovativo_filename = result.get("filename")
+                # Extract filename from response - could be in different fields
+                self.comprovativo_filename = result.get("filename") or result.get("comprovativo_filename")
+                
+                # If still no filename, try to extract from comprovativo_url in the report
+                if not self.comprovativo_filename:
+                    report_response = requests.get(f"{BACKEND_URL}/relatorios/semanal/{self.created_report_id}", headers=headers)
+                    if report_response.status_code == 200:
+                        report = report_response.json()
+                        comprovativo_url = report.get("comprovativo_pagamento_url", "")
+                        if comprovativo_url and "/api/relatorios/comprovativos/" in comprovativo_url:
+                            self.comprovativo_filename = comprovativo_url.split("/api/relatorios/comprovativos/")[-1]
                 
                 # Verify comprovativo_pagamento_url is filled
                 report_response = requests.get(f"{BACKEND_URL}/relatorios/semanal/{self.created_report_id}", headers=headers)
