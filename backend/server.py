@@ -6272,18 +6272,6 @@ async def importar_motoristas_csv(
         if decoded is None:
             raise HTTPException(status_code=400, detail="Não foi possível ler o ficheiro CSV. Tente guardar o ficheiro como UTF-8.")
         
-        # Remove comment lines starting with #
-        lines = decoded.split('\n')
-        clean_lines = [line for line in lines if not line.strip().startswith('#')]
-        decoded = '\n'.join(clean_lines)
-        
-        # Detect delimiter (Portuguese Excel often uses semicolon)
-        sample = decoded[:1000]
-        delimiter = ';' if sample.count(';') > sample.count(',') else ','
-        logger.info(f"Detected CSV delimiter: '{delimiter}'")
-        
-        csv_reader = csv.DictReader(io.StringIO(decoded), delimiter=delimiter)
-        
         # Helper function to normalize phone numbers from scientific notation
         def normalize_phone(value):
             if not value:
@@ -6301,27 +6289,20 @@ async def importar_motoristas_csv(
                     pass
             return value.replace(' ', '').replace('-', '')
         
-        # Auto-convert CSV if it doesn't have proper headers
-        def auto_convert_csv(content_str):
-            """Auto-convert CSV format if needed"""
-            lines = content_str.split('\n')
-            clean_lines = [line for line in lines if not line.strip().startswith('#')]
-            
-            if len(clean_lines) < 2:
-                return content_str
-            
-            # Check if first non-comment line has expected headers
-            first_line = clean_lines[0].lower()
-            has_headers = 'nome' in first_line and 'email' in first_line and 'telefone' in first_line
-            
-            if has_headers:
-                # Already in correct format
-                return content_str
-            
-            # Need to convert - assuming data without headers
+        # Remove comment lines starting with #
+        lines = decoded.split('\n')
+        clean_lines = [line for line in lines if not line.strip().startswith('#')]
+        decoded = '\n'.join(clean_lines)
+        
+        # Check if CSV has proper headers
+        first_line_lower = clean_lines[0].lower() if clean_lines else ''
+        has_proper_headers = 'nome' in first_line_lower and 'email' in first_line_lower and 'telefone' in first_line_lower
+        
+        if not has_proper_headers and len(clean_lines) > 0:
+            # Auto-convert CSV without headers
             logger.info("CSV sem cabeçalhos detectado - convertendo automaticamente...")
             
-            # Expected column mapping (0-indexed positions)
+            # Expected column mapping
             COLUMN_MAP = {
                 0: 'Nome', 1: 'Email', 2: 'Telefone', 3: 'WhatsApp', 4: 'Nacionalidade',
                 5: 'Telefone Uber', 6: 'Email Uber', 7: 'ID Uber', 8: 'Telefone Bolt',
@@ -6331,13 +6312,13 @@ async def importar_motoristas_csv(
                 21: 'Carta', 22: 'Desde Carta', 23: 'Validade Carta'
             }
             
-            # Detect delimiter from first data line
+            # Detect delimiter
             sample = clean_lines[0] if clean_lines else ''
             data_delimiter = ';' if sample.count(';') > sample.count(',') else ','
+            logger.info(f"Detected data delimiter: '{data_delimiter}'")
             
             # Parse existing data
-            import csv as csv_module
-            reader = csv_module.reader(clean_lines, delimiter=data_delimiter)
+            reader = csv.reader(clean_lines, delimiter=data_delimiter)
             data_rows = list(reader)
             
             # Build new CSV with headers
@@ -6356,7 +6337,7 @@ async def importar_motoristas_csv(
                 for i in range(24):
                     if i < len(row):
                         value = str(row[i]).strip()
-                        # Normalize phone numbers (columns 2, 3, 5, 8)
+                        # Normalize phone numbers
                         if i in [2, 3, 5, 8]:
                             value = normalize_phone(value)
                         converted_row.append(value)
@@ -6365,14 +6346,17 @@ async def importar_motoristas_csv(
                 
                 output_lines.append(','.join(converted_row))
             
-            logger.info(f"CSV convertido: {len(data_rows)} linhas de dados")
-            return '\n'.join(output_lines)
+            decoded = '\n'.join(output_lines)
+            delimiter = ','
+            logger.info(f"CSV convertido com sucesso: {len(data_rows)} linhas de dados")
+        else:
+            # Use detected delimiter for properly formatted CSV
+            sample = decoded[:1000]
+            delimiter = ';' if sample.count(';') > sample.count(',') else ','
+            logger.info(f"CSV com cabeçalhos detectado, delimiter: '{delimiter}'")
         
-        # Apply auto-conversion
-        decoded = auto_convert_csv(decoded)
-        
-        # After conversion, use comma as delimiter
-        delimiter = ','
+        # Create CSV reader with appropriate delimiter
+        csv_reader = csv.DictReader(io.StringIO(decoded), delimiter=delimiter)
         
         motoristas_criados = 0
         erros = []
