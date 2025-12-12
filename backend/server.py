@@ -4695,6 +4695,10 @@ async def get_vehicle(vehicle_id: str, current_user: Dict = Depends(get_current_
         vehicle["created_at"] = datetime.fromisoformat(vehicle["created_at"])
     if isinstance(vehicle["updated_at"], str):
         vehicle["updated_at"] = datetime.fromisoformat(vehicle["updated_at"])
+    # Fix km_atual if it's empty string or invalid
+    if "km_atual" in vehicle:
+        if isinstance(vehicle["km_atual"], str):
+            vehicle["km_atual"] = int(vehicle["km_atual"]) if vehicle["km_atual"].strip().isdigit() else 0
     
     return Vehicle(**vehicle)
 
