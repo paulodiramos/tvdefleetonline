@@ -123,6 +123,12 @@ async def get_motorista(
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista not found")
     
+    # Add parceiro name
+    if motorista.get("parceiro_atribuido"):
+        parceiro = await db.parceiros.find_one({"id": motorista["parceiro_atribuido"]}, {"_id": 0})
+        if parceiro:
+            motorista["parceiro_atribuido_nome"] = parceiro.get("nome_empresa", parceiro.get("nome", "N/A"))
+    
     # Check permissions
     if current_user["role"] == UserRole.PARCEIRO:
         if motorista.get("parceiro_atribuido") != current_user["id"]:
