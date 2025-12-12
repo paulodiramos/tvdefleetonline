@@ -134,8 +134,8 @@ const RelatoriosHub = ({ user, onLogout }) => {
         total_despesas: totais.despesas,
         total_recibo: totais.total,
         proxima_divida: totais.proximaDivida,
-        motorista_nome: motorista?.nome || motorista?.email || '',
-        veiculo_matricula: motorista?.veiculo_matricula || '',
+        motorista_nome: motorista?.name || motorista?.nome || motorista?.email || '',
+        veiculo_matricula: motorista?.veiculo_matricula || motorista?.matricula || '',
         status: 'pendente_aprovacao',
         estado: 'pendente_aprovacao',
         parceiro_id: user.id
@@ -564,11 +564,11 @@ const RelatoriosHub = ({ user, onLogout }) => {
                     <option value="">Selecione um motorista</option>
                     {motoristas && motoristas.length > 0 ? (
                       motoristas.map(m => {
-                        const nome = m.nome || m.email || 'Sem nome';
-                        const matricula = m.veiculo_matricula || m.matricula || 'Sem matrícula';
+                        const nome = m.name || m.nome || m.email || 'Sem nome';
+                        const matricula = m.veiculo_matricula || m.matricula || 'S/M';
                         return (
                           <option key={m.id} value={m.id}>
-                            {nome} - {matricula}
+                            {nome} {matricula !== 'S/M' ? `- ${matricula}` : ''}
                           </option>
                         );
                       })
