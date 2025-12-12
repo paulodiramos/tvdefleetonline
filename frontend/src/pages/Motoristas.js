@@ -967,7 +967,7 @@ const Motoristas = ({ user, onLogout }) => {
                     )}
                     {motorista.approved && (user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') && (
                       <>
-                        {motorista.status === 'inativo' ? (
+                        {(motorista.status === 'inativo' || motorista.status_motorista === 'desativo') ? (
                           <Button 
                             size="sm" 
                             variant="outline"
