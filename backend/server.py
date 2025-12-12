@@ -10446,13 +10446,23 @@ async def marcar_relatorio_pago(
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Update relatorio
+    data_pagamento = data.get("data_pagamento")
+    if data_pagamento:
+        # Convert to datetime if string
+        if isinstance(data_pagamento, str):
+            data_pagamento = datetime.fromisoformat(data_pagamento.replace('Z', '+00:00')).isoformat()
+    else:
+        data_pagamento = datetime.now(timezone.utc).isoformat()
+    
     await db.relatorios_semanais.update_one(
         {"id": relatorio_id},
         {
             "$set": {
                 "estado": "pago",
+                "status": "pago",  # Add status field for frontend consistency
                 "pago_por": current_user["id"],
                 "pago_em": datetime.now(timezone.utc).isoformat(),
+                "data_pagamento": data_pagamento,
                 "metodo_pagamento": data.get("metodo_pagamento", "transferencia"),
                 "observacoes_pagamento": data.get("observacoes", "")
             }
