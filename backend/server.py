@@ -6294,9 +6294,13 @@ async def importar_motoristas_csv(
         clean_lines = [line for line in lines if not line.strip().startswith('#')]
         decoded = '\n'.join(clean_lines)
         
-        # Check if CSV has proper headers
+        # Check if CSV has proper headers (check for multiple variations due to encoding issues)
         first_line_lower = clean_lines[0].lower() if clean_lines else ''
-        has_proper_headers = 'nome' in first_line_lower and 'email' in first_line_lower and 'telefone' in first_line_lower
+        has_proper_headers = (
+            'nome' in first_line_lower and 
+            'email' in first_line_lower and 
+            ('telefone' in first_line_lower or 'tel' in first_line_lower)
+        )
         
         if not has_proper_headers and len(clean_lines) > 0:
             # Auto-convert CSV without headers
