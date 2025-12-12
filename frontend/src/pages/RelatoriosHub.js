@@ -516,6 +516,19 @@ const RelatoriosHub = ({ user, onLogout }) => {
                     onChange={(e) => setNovoRelatorio({ ...novoRelatorio, outros: e.target.value })}
                   />
                 </div>
+                <div className="col-span-2">
+                  <Label>Dívida Anterior (€)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={novoRelatorio.divida_anterior}
+                    onChange={(e) => setNovoRelatorio({ ...novoRelatorio, divida_anterior: e.target.value })}
+                    placeholder="0.00"
+                  />
+                  <p className="text-xs text-slate-500 mt-1">
+                    Dívida da semana anterior (se existir)
+                  </p>
+                </div>
               </div>
 
               <div className="p-4 bg-blue-50 rounded-lg">
@@ -531,12 +544,27 @@ const RelatoriosHub = ({ user, onLogout }) => {
                     €{calcularTotais(novoRelatorio).despesas.toFixed(2)}
                   </span>
                 </div>
+                {calcularTotais(novoRelatorio).dividaAnterior > 0 && (
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>Dívida Anterior:</span>
+                    <span className="font-bold text-orange-600">
+                      €{calcularTotais(novoRelatorio).dividaAnterior.toFixed(2)}
+                    </span>
+                  </div>
+                )}
                 <div className="flex justify-between pt-2 border-t">
                   <span className="font-semibold">Total:</span>
-                  <span className="text-lg font-bold text-blue-600">
+                  <span className={`text-lg font-bold ${calcularTotais(novoRelatorio).total < 0 ? 'text-red-600' : 'text-blue-600'}`}>
                     €{calcularTotais(novoRelatorio).total.toFixed(2)}
                   </span>
                 </div>
+                {calcularTotais(novoRelatorio).total < 0 && (
+                  <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
+                    <p className="text-xs text-red-700">
+                      ⚠️ Valor negativo! Próxima dívida: €{calcularTotais(novoRelatorio).proximaDivida.toFixed(2)}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
             <DialogFooter>
