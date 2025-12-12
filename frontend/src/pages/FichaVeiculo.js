@@ -1164,7 +1164,11 @@ const FichaVeiculo = ({ user, onLogout }) => {
                           onChange={(e) => setVehicle({...vehicle, data_matricula: e.target.value})}
                         />
                       ) : (
-                        <p className="font-medium">{vehicle.data_matricula ? new Date(vehicle.data_matricula).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                        <p className="font-medium">
+                          {vehicle.data_matricula ? (
+                            parseDate(vehicle.data_matricula)?.toLocaleDateString('pt-PT') || 'Data inválida'
+                          ) : 'N/A'}
+                        </p>
                       )}
                     </div>
                     <div>
@@ -1176,7 +1180,11 @@ const FichaVeiculo = ({ user, onLogout }) => {
                           onChange={(e) => setVehicle({...vehicle, validade_matricula: e.target.value})}
                         />
                       ) : (
-                        <p className="font-medium">{vehicle.validade_matricula ? new Date(vehicle.validade_matricula).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                        <p className="font-medium">
+                          {vehicle.validade_matricula ? (
+                            parseDate(vehicle.validade_matricula)?.toLocaleDateString('pt-PT') || 'Data inválida'
+                          ) : 'N/A'}
+                        </p>
                       )}
                     </div>
                     <div>
