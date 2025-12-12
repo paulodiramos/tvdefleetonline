@@ -16,6 +16,27 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Plus, Car, Trash2, AlertCircle, Calendar, Fuel, FileText, User, Upload, Download, XCircle, AlertTriangle } from 'lucide-react';
 
+// Helper function to parse DD/MM/YYYY dates
+const parseDate = (dateStr) => {
+  if (!dateStr || dateStr.trim() === '') return null;
+  
+  // If already a Date object, return it
+  if (dateStr instanceof Date) return dateStr;
+  
+  // Check if it's DD/MM/YYYY format
+  const parts = dateStr.split('/');
+  if (parts.length === 3) {
+    const day = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // Month is 0-indexed
+    const year = parseInt(parts[2], 10);
+    return new Date(year, month, day);
+  }
+  
+  // Otherwise try standard Date parsing
+  const parsed = new Date(dateStr);
+  return isNaN(parsed.getTime()) ? null : parsed;
+};
+
 const Vehicles = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const [vehicles, setVehicles] = useState([]);
