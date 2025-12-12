@@ -1035,7 +1035,7 @@ const Motoristas = ({ user, onLogout }) => {
                       </Button>
                       {(user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') && selectedMotorista && (
                         <>
-                          {selectedMotorista.status === 'inativo' ? (
+                          {(selectedMotorista.status === 'inativo' || selectedMotorista.status_motorista === 'desativo') ? (
                             <Button 
                               onClick={() => handleAtivarMotorista(selectedMotorista.id, selectedMotorista.name)} 
                               variant="outline"
