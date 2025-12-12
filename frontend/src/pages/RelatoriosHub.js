@@ -158,7 +158,11 @@ const RelatoriosHub = ({ user, onLogout }) => {
         ...relatorioEditando,
         ganhos_totais: totais.ganhos,
         total_despesas: totais.despesas,
-        total_recibo: totais.total
+        divida_anterior: totais.dividaAnterior,
+        total_recibo: totais.total,
+        proxima_divida: totais.proximaDivida,
+        status: relatorioEditando.status,
+        estado: relatorioEditando.estado
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -167,7 +171,8 @@ const RelatoriosHub = ({ user, onLogout }) => {
       setShowEditModal(false);
       fetchData();
     } catch (error) {
-      toast.error('Erro ao salvar');
+      console.error('Erro:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao salvar');
     }
   };
 
@@ -240,11 +245,36 @@ const RelatoriosHub = ({ user, onLogout }) => {
   };
 
   const filtrarRelatorios = (status) => {
-    if (status === 'todos') return relatorios;
-    if (status === 'pendentes') return relatorios.filter(r => r.status === 'pendente_aprovacao');
-    if (status === 'aguarda') return relatorios.filter(r => r.status === 'aguarda_recibo');
-    if (status === 'pagamentos') return relatorios.filter(r => r.status === 'verificado' || r.status === 'pago');
-    return relatorios;
+    let filtrados = relatorios;
+    
+    // Filtro por status (tab)
+    if (status === 'pendentes') filtrados = filtrados.filter(r => r.status === 'pendente_aprovacao');
+    else if (status === 'aguarda') filtrados = filtrados.filter(r => r.status === 'aguarda_recibo');
+    else if (status === 'pagamentos') filtrados = filtrados.filter(r => r.status === 'verificado' || r.status === 'pago');
+    
+    // Filtro por data
+    if (filtroDataInicio) {
+      filtrados = filtrados.filter(r => {
+        const dataRel = new Date(r.data_inicio || r.data_emissao);
+        return dataRel >= new Date(filtroDataInicio);
+      });
+    }
+    if (filtroDataFim) {
+      filtrados = filtrados.filter(r => {
+        const dataRel = new Date(r.data_fim || r.data_emissao);
+        return dataRel <= new Date(filtroDataFim);
+      });
+    }
+    
+    // Filtro por semana/ano
+    if (filtroSemana) {
+      filtrados = filtrados.filter(r => r.semana?.toString() === filtroSemana);
+    }
+    if (filtroAno) {
+      filtrados = filtrados.filter(r => r.ano?.toString() === filtroAno);
+    }
+    
+    return filtrados;
   };
 
   const relatoriosFiltrados = filtrarRelatorios(activeTab);
