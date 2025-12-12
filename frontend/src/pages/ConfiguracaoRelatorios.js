@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { Label } from '../components/ui/label';
 import { Input } from '../components/ui/input';
-import { FileText, Save, Settings } from 'lucide-react';
+import { FileText, Save, Settings, ArrowLeft, X } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
@@ -69,6 +69,16 @@ const ConfiguracaoRelatorios = ({ user, onLogout }) => {
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-7xl mx-auto">
+        {/* Botão Voltar */}
+        <Button 
+          variant="outline" 
+          onClick={() => navigate('/dashboard')}
+          className="mb-4"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Voltar ao Dashboard
+        </Button>
+
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -82,10 +92,19 @@ const ConfiguracaoRelatorios = ({ user, onLogout }) => {
               </p>
             </div>
           </div>
-          <Button onClick={handleSave} disabled={saving}>
-            <Save className="w-4 h-4 mr-2" />
-            {saving ? 'A guardar...' : 'Guardar Configuração'}
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/dashboard')}
+            >
+              <X className="w-4 h-4 mr-2" />
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} disabled={saving}>
+              <Save className="w-4 h-4 mr-2" />
+              {saving ? 'A guardar...' : 'Guardar'}
+            </Button>
+          </div>
         </div>
 
         {/* Cabeçalho do Relatório */}
@@ -354,17 +373,29 @@ const ConfiguracaoRelatorios = ({ user, onLogout }) => {
                 <span>Extras (Débitos/Créditos)</span>
               </label>
             </div>
-            <div className="mt-4">
-              <Label>Atraso Via Verde (semanas)</Label>
-              <Input
-                type="number"
-                value={config?.via_verde_atraso_semanas || 1}
-                onChange={(e) =>
-                  setConfig({ ...config, via_verde_atraso_semanas: parseInt(e.target.value) })
-                }
-                className="w-32"
-                min="0"
-              />
+            <div className="mt-6 pt-4 border-t">
+              <Label className="text-base font-semibold mb-2 block">Atraso Via Verde (semanas)</Label>
+              <p className="text-sm text-slate-600 mb-3">
+                Define quantas semanas de atraso considerar para os custos da Via Verde no relatório
+              </p>
+              <div className="flex items-center gap-4">
+                <Input
+                  type="number"
+                  value={config?.via_verde_atraso_semanas || 1}
+                  onChange={(e) =>
+                    setConfig({ ...config, via_verde_atraso_semanas: parseInt(e.target.value) || 1 })
+                  }
+                  className="w-32"
+                  min="0"
+                  max="10"
+                />
+                <span className="text-sm text-slate-600">
+                  {config?.via_verde_atraso_semanas === 1 ? '1 semana' : `${config?.via_verde_atraso_semanas || 1} semanas`} de atraso
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-2">
+                Os custos da Via Verde serão considerados com este atraso em relação ao período do relatório
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -503,12 +534,30 @@ const ConfiguracaoRelatorios = ({ user, onLogout }) => {
           </CardContent>
         </Card>
 
-        {/* Botão de Guardar (Bottom) */}
-        <div className="mt-6 flex justify-end">
-          <Button onClick={handleSave} disabled={saving} size="lg">
-            <Save className="w-5 h-5 mr-2" />
-            {saving ? 'A guardar...' : 'Guardar Configuração'}
+        {/* Botões de Ação (Bottom) */}
+        <div className="mt-6 flex justify-between items-center">
+          <Button 
+            variant="outline" 
+            onClick={() => navigate('/dashboard')}
+            size="lg"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2" />
+            Voltar ao Dashboard
           </Button>
+          <div className="flex gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/dashboard')}
+              size="lg"
+            >
+              <X className="w-5 h-5 mr-2" />
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} disabled={saving} size="lg" className="min-w-[200px]">
+              <Save className="w-5 h-5 mr-2" />
+              {saving ? 'A guardar...' : 'Guardar Configuração'}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
