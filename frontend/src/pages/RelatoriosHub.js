@@ -211,12 +211,12 @@ const RelatoriosHub = ({ user, onLogout }) => {
           }
         );
 
-        // Atualizar URL do recibo e estado
+        // Atualizar URL do recibo e estado para "em_analise"
         relatorioEditando.recibo_url = uploadResponse.data.recibo_url;
-        relatorioEditando.status = 'verificado';
-        relatorioEditando.estado = 'verificado';
+        relatorioEditando.status = 'em_analise';
+        relatorioEditando.estado = 'em_analise';
         
-        toast.success('Recibo anexado com sucesso!');
+        toast.success('Recibo anexado! Relatório em análise.');
       }
 
       // Atualizar dados do relatório
