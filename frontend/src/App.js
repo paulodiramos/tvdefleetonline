@@ -82,6 +82,7 @@ import CriarRelatorioOpcoes from "@/pages/CriarRelatorioOpcoes";
 import RelatoriosSemanaisLista from "@/pages/RelatoriosSemanaisLista";
 import HistoricoRelatorios from "@/pages/HistoricoRelatorios";
 import CriarRelatorioManual from "@/pages/CriarRelatorioManual";
+import RelatoriosHub from "@/pages/RelatoriosHub";
 import MeusPlanos from "@/pages/MeusPlanos";
 import MeusRecibosGanhos from "@/pages/MeusRecibosGanhos";
 import ValidacaoDocumentosMotorista from "@/pages/ValidacaoDocumentosMotorista";
@@ -500,6 +501,12 @@ function App() {
             path="/criar-relatorio-manual"
             element={
               user && user.role === 'parceiro' ? <CriarRelatorioManual user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
+            path="/relatorios"
+            element={
+              user && user.role === 'parceiro' ? <RelatoriosHub user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
             }
           />
           <Route
