@@ -10705,6 +10705,26 @@ async def rejeitar_relatorio_semanal(
     
     return {"message": "Relatório rejeitado"}
 
+@app.get("/uploads/recibos/{filename}")
+async def serve_recibo(filename: str):
+    """Servir ficheiros de recibo"""
+    file_path = Path(f"/app/uploads/recibos/{filename}")
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Ficheiro não encontrado")
+    
+    from fastapi.responses import FileResponse
+    return FileResponse(file_path)
+
+@app.get("/uploads/comprovativo_pagamento/{filename}")
+async def serve_comprovativo(filename: str):
+    """Servir ficheiros de comprovativo de pagamento"""
+    file_path = Path(f"/app/uploads/comprovativo_pagamento/{filename}")
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Ficheiro não encontrado")
+    
+    from fastapi.responses import FileResponse
+    return FileResponse(file_path)
+
 @api_router.post("/relatorios/semanal/{relatorio_id}/upload-recibo")
 async def upload_recibo_relatorio(
     relatorio_id: str,
