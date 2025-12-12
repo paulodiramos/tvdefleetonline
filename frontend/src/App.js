@@ -449,6 +449,12 @@ function App() {
             }
           />
           <Route
+            path="/configuracao-relatorios"
+            element={
+              user && user.role === 'parceiro' ? <ConfiguracaoRelatorios user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
             path="/vehicle-data"
             element={
               user ? <VehicleData user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
