@@ -10202,6 +10202,8 @@ async def gerar_relatorio_semanal(
         "parceiro_nome": parceiro.get("nome_empresa", ""),
         "motorista_id": motorista_id,
         "motorista_nome": motorista.get("name", ""),
+        "motorista_email": motorista.get("email", ""),
+        "motorista_telefone": motorista.get("telemovel", ""),
         "veiculo_id": veiculo_id,
         "veiculo_marca": veiculo.get("marca", "") if veiculo else "",
         "veiculo_modelo": veiculo.get("modelo", "") if veiculo else "",
@@ -10211,6 +10213,16 @@ async def gerar_relatorio_semanal(
         "data_fim": data_fim,
         "semana": semana,
         "ano": ano,
+        
+        # Estados do fluxo
+        "estado": "gerado",  # gerado, enviado, recibo_verificado, pago
+        "historico_envios": [],
+        "recibo_url": None,
+        "recibo_verificado_por": None,
+        "recibo_verificado_em": None,
+        "pago_por": None,
+        "pago_em": None,
+        "observacoes": "",
         
         # Statistics
         "viagens_uber": total_viagens_uber,
