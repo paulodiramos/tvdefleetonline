@@ -509,7 +509,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Fluxo completo da página de veículos para parceiro"
+    - "Configuração de Relatórios Semanais - /configuracao-relatorios"
+    - "Geração de Relatório Semanal - /gerar-relatorio-semanal"
+    - "Campos Via Verde ID e Cartão Frota ID na Ficha do Veículo"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -521,6 +523,7 @@ test_plan:
   csv_download_system_working: true
   importar_page_tested: true
   vehicles_flow_tested: true
+  weekly_reports_testing: true
 
 agent_communication:
     - agent: "testing"
