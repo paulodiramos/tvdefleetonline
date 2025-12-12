@@ -10770,8 +10770,8 @@ async def upload_recibo_relatorio(
         with open(file_path, "wb") as f:
             f.write(content)
         
-        # URL relativa para acesso
-        recibo_url = f"/uploads/recibos/{unique_filename}"
+        # URL para acesso via API endpoint
+        recibo_url = f"/api/relatorios/recibos/{unique_filename}"
         
         # Atualizar relatório - estado "em_analise" após anexar recibo
         await db.relatorios_semanais.update_one(
@@ -10912,8 +10912,8 @@ async def upload_comprovativo_pagamento(
         with open(file_path, "wb") as f:
             f.write(content)
         
-        # URL relativa
-        comprovativo_url = f"/uploads/comprovativo_pagamento/{unique_filename}"
+        # URL para acesso via API endpoint
+        comprovativo_url = f"/api/relatorios/comprovativos/{unique_filename}"
         
         # Atualizar relatório
         await db.relatorios_semanais.update_one(
