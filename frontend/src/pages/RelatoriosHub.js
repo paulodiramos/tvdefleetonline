@@ -554,18 +554,24 @@ const RelatoriosHub = ({ user, onLogout }) => {
                   <select
                     value={novoRelatorio.motorista_id}
                     onChange={(e) => {
-                      console.log('Motorista selecionado:', e.target.value);
-                      setNovoRelatorio({ ...novoRelatorio, motorista_id: e.target.value });
+                      const selectedId = e.target.value;
+                      const selectedMotorista = motoristas.find(m => m.id === selectedId);
+                      console.log('Motorista selecionado:', selectedMotorista);
+                      setNovoRelatorio({ ...novoRelatorio, motorista_id: selectedId });
                     }}
                     className="w-full border rounded-md p-2"
                   >
                     <option value="">Selecione um motorista</option>
                     {motoristas && motoristas.length > 0 ? (
-                      motoristas.map(m => (
-                        <option key={m.id} value={m.id}>
-                          {m.nome || m.email || 'Sem nome'}
-                        </option>
-                      ))
+                      motoristas.map(m => {
+                        const nome = m.nome || m.email || 'Sem nome';
+                        const matricula = m.veiculo_matricula || m.matricula || 'Sem matrícula';
+                        return (
+                          <option key={m.id} value={m.id}>
+                            {nome} - {matricula}
+                          </option>
+                        );
+                      })
                     ) : (
                       <option value="" disabled>Nenhum motorista disponível</option>
                     )}
@@ -573,6 +579,11 @@ const RelatoriosHub = ({ user, onLogout }) => {
                   {motoristas.length === 0 && (
                     <p className="text-xs text-red-600 mt-1">
                       ⚠️ Nenhum motorista encontrado. Verifique se existem motoristas cadastrados.
+                    </p>
+                  )}
+                  {motoristas.length > 0 && (
+                    <p className="text-xs text-slate-500 mt-1">
+                      Total: {motoristas.length} motorista(s) disponível(is)
                     </p>
                   )}
                 </div>
