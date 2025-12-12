@@ -707,7 +707,7 @@ const RelatoriosHub = ({ user, onLogout }) => {
                               </Button>
                             </>
                           )}
-                          {rel.status === 'verificado' && (
+                          {(rel.status === 'verificado' || rel.status === 'aguarda_pagamento') && (
                             <>
                               {rel.recibo_url && (
                                 <Button
