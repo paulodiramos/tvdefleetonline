@@ -1033,6 +1033,31 @@ const Motoristas = ({ user, onLogout }) => {
                         <Edit className="w-4 h-4 mr-2" />
                         Editar
                       </Button>
+                      {(user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') && selectedMotorista && (
+                        <>
+                          {selectedMotorista.status === 'inativo' ? (
+                            <Button 
+                              onClick={() => handleAtivarMotorista(selectedMotorista.id, selectedMotorista.name)} 
+                              variant="outline"
+                              size="sm"
+                              className="border-green-600 text-green-600 hover:bg-green-50"
+                            >
+                              <CheckCircle2 className="w-4 h-4 mr-2" />
+                              Ativar
+                            </Button>
+                          ) : (
+                            <Button 
+                              onClick={() => handleDesativarMotorista(selectedMotorista.id, selectedMotorista.name)} 
+                              variant="outline"
+                              size="sm"
+                              className="border-orange-600 text-orange-600 hover:bg-orange-50"
+                            >
+                              <Ban className="w-4 h-4 mr-2" />
+                              Desativar
+                            </Button>
+                          )}
+                        </>
+                      )}
                       {user.role === 'admin' && (
                         <Button onClick={handleDeleteMotorista} variant="destructive" size="sm">
                           <Trash2 className="w-4 h-4 mr-2" />
