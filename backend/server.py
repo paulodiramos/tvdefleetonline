@@ -1769,6 +1769,106 @@ class MotoristaPlanoAssinatura(BaseModel):
     updated_at: datetime
 
 
+# ==================== RELATORIO CONFIGURATION MODELS ====================
+
+class RelatorioConfig(BaseModel):
+    """Configuração de campos disponíveis para relatórios semanais do parceiro"""
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    parceiro_id: str
+    
+    # Campos do cabeçalho do relatório
+    incluir_numero_relatorio: bool = True
+    incluir_data_emissao: bool = True
+    incluir_periodo: bool = True
+    incluir_nome_parceiro: bool = True
+    incluir_nome_motorista: bool = True
+    incluir_veiculo: bool = True  # Marca, modelo e matrícula
+    
+    # Campos de estatísticas de viagens
+    incluir_viagens_bolt: bool = True
+    incluir_viagens_uber: bool = True
+    incluir_viagens_totais: bool = True
+    incluir_horas_bolt: bool = True
+    incluir_horas_uber: bool = True
+    incluir_horas_totais: bool = True
+    
+    # Campos de ganhos
+    incluir_ganhos_uber: bool = True
+    incluir_ganhos_bolt: bool = True
+    incluir_ganhos_totais: bool = True
+    
+    # Campos de despesas
+    incluir_valor_aluguer: bool = True  # Valor semanal/comissão/compra
+    incluir_combustivel: bool = True
+    incluir_via_verde: bool = True
+    via_verde_atraso_semanas: int = 1  # Atraso padrão de 1 semana
+    incluir_caucao: bool = True
+    incluir_caucao_parcelada: bool = True
+    incluir_danos: bool = True
+    incluir_danos_acumulados: bool = True
+    incluir_danos_descricao: bool = True
+    incluir_danos_parcelados: bool = True
+    incluir_extras: bool = True  # Débitos ou créditos extras
+    
+    # Campos de total
+    incluir_total_recibo: bool = True  # Ganhos - Despesas
+    
+    # Campos de combustível detalhado
+    incluir_tabela_combustivel: bool = True
+    incluir_combustivel_matricula: bool = True
+    incluir_combustivel_local: bool = True
+    incluir_combustivel_data_hora: bool = True
+    incluir_combustivel_cartao: bool = True
+    incluir_combustivel_quantidade: bool = True
+    incluir_combustivel_valor: bool = True
+    
+    # Configurações adicionais
+    formato_numero_relatorio: str = "xxxxx/ano"  # Formato do número do relatório
+    texto_observacoes_padrao: Optional[str] = None  # Texto padrão de observações
+    
+    created_at: datetime
+    updated_at: datetime
+
+class RelatorioConfigUpdate(BaseModel):
+    """Model para atualizar configuração de relatórios"""
+    incluir_numero_relatorio: Optional[bool] = None
+    incluir_data_emissao: Optional[bool] = None
+    incluir_periodo: Optional[bool] = None
+    incluir_nome_parceiro: Optional[bool] = None
+    incluir_nome_motorista: Optional[bool] = None
+    incluir_veiculo: Optional[bool] = None
+    incluir_viagens_bolt: Optional[bool] = None
+    incluir_viagens_uber: Optional[bool] = None
+    incluir_viagens_totais: Optional[bool] = None
+    incluir_horas_bolt: Optional[bool] = None
+    incluir_horas_uber: Optional[bool] = None
+    incluir_horas_totais: Optional[bool] = None
+    incluir_ganhos_uber: Optional[bool] = None
+    incluir_ganhos_bolt: Optional[bool] = None
+    incluir_ganhos_totais: Optional[bool] = None
+    incluir_valor_aluguer: Optional[bool] = None
+    incluir_combustivel: Optional[bool] = None
+    incluir_via_verde: Optional[bool] = None
+    via_verde_atraso_semanas: Optional[int] = None
+    incluir_caucao: Optional[bool] = None
+    incluir_caucao_parcelada: Optional[bool] = None
+    incluir_danos: Optional[bool] = None
+    incluir_danos_acumulados: Optional[bool] = None
+    incluir_danos_descricao: Optional[bool] = None
+    incluir_danos_parcelados: Optional[bool] = None
+    incluir_extras: Optional[bool] = None
+    incluir_total_recibo: Optional[bool] = None
+    incluir_tabela_combustivel: Optional[bool] = None
+    incluir_combustivel_matricula: Optional[bool] = None
+    incluir_combustivel_local: Optional[bool] = None
+    incluir_combustivel_data_hora: Optional[bool] = None
+    incluir_combustivel_cartao: Optional[bool] = None
+    incluir_combustivel_quantidade: Optional[bool] = None
+    incluir_combustivel_valor: Optional[bool] = None
+    formato_numero_relatorio: Optional[str] = None
+    texto_observacoes_padrao: Optional[str] = None
+
 # ==================== CONTRACT MODELS ====================
 
 class ContratoCreate(BaseModel):
