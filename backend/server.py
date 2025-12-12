@@ -6398,7 +6398,29 @@ async def importar_motoristas_csv(
             logger.info(f"CSV com cabeçalhos detectado, delimiter: '{delimiter}'")
         
         # Create CSV reader with appropriate delimiter
-        csv_reader = csv.DictReader(io.StringIO(decoded), delimiter=delimiter)
+        csv_reader_temp = csv.DictReader(io.StringIO(decoded), delimiter=delimiter)
+        
+        # Normalize header names (fix encoding issues)
+        def normalize_header(header):
+            """Normalize header names to fix encoding issues"""
+            replacements = {
+                'CÃ³digo': 'Código',
+                'CÃ¡lculo': 'Cálculo',
+                'EmergÃªncia': 'Emergência',
+                'NÃºmero': 'Número',
+                'c�digo': 'código',
+                'c�': 'có',
+            }
+            for old, new in replacements.items():
+                header = header.replace(old, new)
+            return header
+        
+        # Normalize all fieldnames
+        normalized_fieldnames = [normalize_header(f) for f in csv_reader_temp.fieldnames]
+        
+        # Create new reader with normalized headers
+        csv_reader = csv.DictReader(io.StringIO(decoded), fieldnames=normalized_fieldnames, delimiter=delimiter)
+        next(csv_reader)  # Skip original header row
         
         motoristas_criados = 0
         erros = []
