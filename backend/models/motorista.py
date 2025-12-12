@@ -144,6 +144,7 @@ class Motorista(BaseModel):
     
     # Emergency Contact
     emergencia_nome: Optional[str] = None
+    emergencia_parentesco: Optional[str] = None  # Parentesco/ligação
     emergencia_telefone: Optional[str] = None
     emergencia_email: Optional[str] = None
     emergencia_morada: Optional[str] = None
