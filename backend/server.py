@@ -10742,20 +10742,29 @@ async def criar_relatorio_manual(
     current_user: Dict = Depends(get_current_user)
 ):
     """Criar relatório semanal manualmente"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    
-    # Validações
-    if not data.get("motorista_id"):
-        raise HTTPException(status_code=400, detail="Motorista é obrigatório")
-    
-    if not data.get("semana") or not data.get("ano"):
-        raise HTTPException(status_code=400, detail="Semana e ano são obrigatórios")
-    
-    # Buscar info do motorista
-    motorista = await db.motoristas.find_one({"id": data["motorista_id"]}, {"_id": 0})
-    if not motorista:
-        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    try:
+        if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+        
+        # Validações com mensagens mais detalhadas
+        if not data.get("motorista_id"):
+            raise HTTPException(status_code=400, detail="Motorista é obrigatório")
+        
+        if not data.get("semana"):
+            raise HTTPException(status_code=400, detail="Semana é obrigatória")
+        
+        if not data.get("ano"):
+            raise HTTPException(status_code=400, detail="Ano é obrigatório")
+        
+        # Buscar info do motorista
+        motorista = await db.motoristas.find_one({"id": data["motorista_id"]}, {"_id": 0})
+        if not motorista:
+            raise HTTPException(status_code=404, detail=f"Motorista com ID {data['motorista_id']} não encontrado")
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Erro na validação: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro na validação: {str(e)}")
     
     # Gerar ID do relatório
     relatorio_id = str(uuid4())
