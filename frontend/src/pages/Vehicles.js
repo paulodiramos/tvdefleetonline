@@ -680,9 +680,11 @@ const Vehicles = ({ user, onLogout }) => {
                       <CardTitle className="text-lg">{vehicle.marca} {vehicle.modelo}</CardTitle>
                       <p className="text-sm text-slate-500 mt-1 font-mono">{vehicle.matricula}</p>
                       <div className="flex flex-wrap items-center gap-2 mt-2">
-                        <Badge className="bg-blue-100 text-blue-700">
-                          {getContratoLabel(vehicle.tipo_contrato.tipo)}
-                        </Badge>
+                        {vehicle.tipo_contrato && (
+                          <Badge className="bg-blue-100 text-blue-700">
+                            {getContratoLabel(vehicle.tipo_contrato.tipo)}
+                          </Badge>
+                        )}
                         {vehicle.status && (
                           <Badge className={
                             vehicle.status === 'disponivel' ? 'bg-green-100 text-green-700' :
