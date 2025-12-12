@@ -6358,7 +6358,8 @@ async def importar_motoristas_csv(
             output_lines = []
             
             # Add header row
-            header_cols = [COLUMN_MAP.get(i, f'Col{i}') for i in range(35)]
+            max_cols = max(COLUMN_MAP.keys()) + 1
+            header_cols = [COLUMN_MAP.get(i, f'Col{i}') for i in range(max_cols)]
             output_lines.append(','.join(header_cols))
             
             # Convert data rows
@@ -6367,12 +6368,16 @@ async def importar_motoristas_csv(
                     continue
                 
                 converted_row = []
-                for i in range(35):  # Updated to 35 columns
+                for i in range(max_cols):
                     if i < len(row):
                         value = str(row[i]).strip()
-                        # Normalize phone numbers (columns 2, 3, 6, 9, 30)
-                        if i in [2, 3, 6, 9, 30]:
-                            value = normalize_phone(value)
+                        # Normalize phone numbers (check both old and new positions)
+                        if num_cols < 30:  # Old format
+                            if i in [2, 3, 5, 8, 26]:  # Phone columns in old format
+                                value = normalize_phone(value)
+                        else:  # New format
+                            if i in [2, 3, 6, 9, 30]:  # Phone columns in new format
+                                value = normalize_phone(value)
                         converted_row.append(value)
                     else:
                         converted_row.append('')
