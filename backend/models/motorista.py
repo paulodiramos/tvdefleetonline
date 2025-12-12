@@ -117,6 +117,7 @@ class Motorista(BaseModel):
     
     # Assignment
     parceiro_atribuido: Optional[str] = None
+    parceiro_atribuido_nome: Optional[str] = None  # Nome do parceiro responsável
     veiculo_atribuido: Optional[str] = None
     status_motorista: Optional[str] = "pendente_documentos"
     tipo_motorista: Optional[str] = None
