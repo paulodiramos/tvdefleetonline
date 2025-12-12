@@ -6464,9 +6464,12 @@ async def importar_motoristas_csv(
                     
                     # Emergency Contact
                     "emergencia_nome": row.get('Contacto Emergência Nome', ''),
+                    "emergencia_parentesco": row.get('Contacto Emergência Parentesco', ''),
                     "emergencia_telefone": emergencia_telefone_normalizado,
+                    "emergencia_email": row.get('Contacto Emergência Email', ''),
                     "emergencia_morada": row.get('Contacto Emergência Morada', ''),
                     "emergencia_codigo_postal": row.get('Contacto Emergência Código Postal', ''),
+                    "emergencia_localidade": row.get('Contacto Emergência Localidade', ''),
                     
                     # Assignment
                     "parceiro_id": parceiro_id,
