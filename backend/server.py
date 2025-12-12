@@ -10773,7 +10773,7 @@ async def upload_recibo_relatorio(
         # URL relativa para acesso
         recibo_url = f"/uploads/recibos/{unique_filename}"
         
-        # Atualizar relatório
+        # Atualizar relatório - estado "em_analise" após anexar recibo
         await db.relatorios_semanais.update_one(
             {"id": relatorio_id},
             {
@@ -10781,8 +10781,8 @@ async def upload_recibo_relatorio(
                     "recibo_url": recibo_url,
                     "recibo_anexado_por": current_user["id"],
                     "recibo_anexado_em": datetime.now(timezone.utc).isoformat(),
-                    "estado": "verificado",
-                    "status": "verificado",
+                    "estado": "em_analise",
+                    "status": "em_analise",
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }
             }
