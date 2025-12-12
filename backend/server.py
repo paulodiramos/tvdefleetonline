@@ -6329,7 +6329,7 @@ async def importar_motoristas_csv(
             output_lines = []
             
             # Add header row
-            header_cols = [COLUMN_MAP.get(i, f'Col{i}') for i in range(24)]
+            header_cols = [COLUMN_MAP.get(i, f'Col{i}') for i in range(26)]
             output_lines.append(','.join(header_cols))
             
             # Convert data rows
