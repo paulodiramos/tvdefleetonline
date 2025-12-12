@@ -1127,9 +1127,10 @@ const Motoristas = ({ user, onLogout }) => {
                 </div>
 
                 <Tabs defaultValue="pessoal" className="w-full">
-                  <TabsList className="grid w-full grid-cols-5">
+                  <TabsList className="grid w-full grid-cols-6">
                     <TabsTrigger value="pessoal">Pessoal</TabsTrigger>
                     <TabsTrigger value="docs">Documentação</TabsTrigger>
+                    <TabsTrigger value="emergencia">Emergência</TabsTrigger>
                     <TabsTrigger value="uploads">Uploads</TabsTrigger>
                     <TabsTrigger value="atribuicoes">Atribuições</TabsTrigger>
                     <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
@@ -1235,6 +1236,22 @@ const Motoristas = ({ user, onLogout }) => {
                           <Input value={editForm.nif || ''} onChange={(e) => setEditForm({...editForm, nif: e.target.value})} />
                         ) : (
                           <p className="font-medium">{selectedMotorista.nif || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Nº Segurança Social</Label>
+                        {isEditing ? (
+                          <Input value={editForm.numero_seguranca_social || ''} onChange={(e) => setEditForm({...editForm, numero_seguranca_social: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.numero_seguranca_social || 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label>Nº Cartão de Utente</Label>
+                        {isEditing ? (
+                          <Input value={editForm.numero_cartao_utente || ''} onChange={(e) => setEditForm({...editForm, numero_cartao_utente: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.numero_cartao_utente || 'N/A'}</p>
                         )}
                       </div>
                       <div>
