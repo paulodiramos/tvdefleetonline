@@ -821,6 +821,181 @@ const RelatoriosHub = ({ user, onLogout }) => {
           </DialogContent>
         </Dialog>
 
+        {/* Modal Confirmar Pagamento */}
+        <Dialog open={showPagarModal} onOpenChange={setShowPagarModal}>
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Confirmar Pagamento do Relatório</DialogTitle>
+            </DialogHeader>
+            {relatorioPagando && (
+              <div className="space-y-6">
+                {/* Dados do Relatório */}
+                <div className="p-4 bg-slate-50 rounded-lg">
+                  <h3 className="font-bold text-lg mb-3">Dados do Relatório</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-slate-600">Motorista:</p>
+                      <p className="font-semibold">{relatorioPagando.motorista_nome}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-600">Período:</p>
+                      <p className="font-semibold">Semana {relatorioPagando.semana}/{relatorioPagando.ano}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-600">Número:</p>
+                      <p className="font-semibold">{relatorioPagando.numero_relatorio}</p>
+                    </div>
+                    <div>
+                      <p className="text-slate-600">Veículo:</p>
+                      <p className="font-semibold">{relatorioPagando.veiculo_matricula || 'N/A'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Valores Detalhados */}
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <h3 className="font-bold text-lg mb-3">Resumo Financeiro</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-700">Ganhos Uber:</span>
+                      <span className="font-semibold">€{(relatorioPagando.ganhos_uber || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-700">Ganhos Bolt:</span>
+                      <span className="font-semibold">€{(relatorioPagando.ganhos_bolt || 0).toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-semibold text-green-700 border-t pt-2">
+                      <span>Total Ganhos:</span>
+                      <span>€{(relatorioPagando.ganhos_totais || 0).toFixed(2)}</span>
+                    </div>
+                    
+                    <div className="border-t mt-3 pt-3">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-700">Combustível:</span>
+                        <span className="font-semibold">€{(relatorioPagando.combustivel_total || 0).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-700">Via Verde:</span>
+                        <span className="font-semibold">€{(relatorioPagando.via_verde_total || 0).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-700">Caução:</span>
+                        <span className="font-semibold">€{(relatorioPagando.caucao_semanal || 0).toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span className="text-slate-700">Outros:</span>
+                        <span className="font-semibold">€{(relatorioPagando.outros || 0).toFixed(2)}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between text-sm font-semibold text-red-700 border-t pt-2">
+                      <span>Total Despesas:</span>
+                      <span>€{(relatorioPagando.total_despesas || 0).toFixed(2)}</span>
+                    </div>
+
+                    {relatorioPagando.divida_anterior > 0 && (
+                      <div className="flex justify-between text-sm font-semibold text-orange-700 border-t pt-2">
+                        <span>Dívida Anterior:</span>
+                        <span>€{(relatorioPagando.divida_anterior || 0).toFixed(2)}</span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between text-lg font-bold text-blue-700 border-t-2 pt-3 mt-3">
+                      <span>Valor a Pagar:</span>
+                      <span>€{(relatorioPagando.total_recibo || 0).toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Documentos */}
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <h3 className="font-bold text-lg mb-3">Documentos</h3>
+                  <div className="flex gap-3">
+                    {relatorioPagando.recibo_url && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(relatorioPagando.recibo_url, '_blank')}
+                        className="flex-1"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Ver Recibo
+                      </Button>
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownloadPDF(relatorioPagando.id)}
+                      className="flex-1"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Ver Relatório PDF
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Dados do Pagamento */}
+                <div className="p-4 border-2 border-green-200 rounded-lg">
+                  <h3 className="font-bold text-lg mb-3">Dados do Pagamento</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Data de Pagamento *</Label>
+                      <Input
+                        type="date"
+                        value={dataPagamento}
+                        onChange={(e) => setDataPagamento(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Método de Pagamento *</Label>
+                      <select
+                        value={metodoPagamento}
+                        onChange={(e) => setMetodoPagamento(e.target.value)}
+                        className="w-full border rounded-md p-2"
+                      >
+                        <option value="transferencia">Transferência Bancária</option>
+                        <option value="dinheiro">Dinheiro</option>
+                        <option value="mbway">MB Way</option>
+                        <option value="multibanco">Multibanco</option>
+                        <option value="cheque">Cheque</option>
+                        <option value="outro">Outro</option>
+                      </select>
+                    </div>
+                    <div>
+                      <Label>Observações</Label>
+                      <Input
+                        placeholder="Observações sobre o pagamento (opcional)"
+                        value={observacoesPagamento}
+                        onChange={(e) => setObservacoesPagamento(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    ⚠️ <strong>Atenção:</strong> Ao confirmar, o relatório será marcado como pago e não poderá ser alterado. 
+                    Verifique todos os dados antes de confirmar.
+                  </p>
+                </div>
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowPagarModal(false)}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={confirmarPagamento}
+                className="bg-green-600 hover:bg-green-700"
+                disabled={!dataPagamento}
+              >
+                <Check className="w-4 h-4 mr-2" />
+                Confirmar Pagamento
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Modal Editar */}
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
           <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
