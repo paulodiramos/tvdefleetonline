@@ -1,245 +1,302 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import Layout from '@/components/Layout';
-import { API } from '@/App';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Label } from '../components/ui/label';
+import { Input } from '../components/ui/input';
+import { Badge } from '../components/ui/badge';
+import { FileText, CheckCircle, Upload, Eye, Send } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileText, CheckCircle, XCircle, Eye } from 'lucide-react';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const VerificarRecibos = ({ user, onLogout }) => {
-  const [recibos, setRecibos] = useState([]);
+  const navigate = useNavigate();
+  const [relatorios, setRelatorios] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [selectedRecibo, setSelectedRecibo] = useState(null);
-  const [verifyForm, setVerifyForm] = useState({
-    status: 'verificado',
-    observacoes: ''
-  });
+  const [uploadingRecibo, setUploadingRecibo] = useState(null);
+  const [reciboUrl, setReciboUrl] = useState('');
+  const [observacoes, setObservacoes] = useState('');
 
   useEffect(() => {
-    if (user?.role !== 'admin' && user?.role !== 'gestao' && user?.role !== 'parceiro') {
-      toast.error('Acesso negado');
-      window.location.href = '/dashboard';
-      return;
-    }
-    fetchRecibos();
-  }, [user]);
+    fetchRelatorios();
+  }, []);
 
-  const fetchRecibos = async () => {
+  const fetchRelatorios = async () => {
+    setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/recibos`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setRecibos(response.data);
+      const response = await axios.get(
+        `${API_URL}/api/relatorios/para-verificar`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setRelatorios(response.data);
     } catch (error) {
-      console.error('Error fetching recibos:', error);
-      toast.error('Erro ao carregar recibos');
+      console.error('Erro ao carregar relatórios:', error);
+      toast.error('Erro ao carregar relatórios');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleVerify = async () => {
+  const handleVerificarRecibo = async (relatorioId) => {
+    if (!reciboUrl) {
+      toast.error('Por favor, insira o URL do recibo');
+      return;
+    }
+
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/recibos/${selectedRecibo.id}/verificar`, verifyForm, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.post(
+        `${API_URL}/api/relatorios/semanal/${relatorioId}/verificar-recibo`,
+        {
+          recibo_url: reciboUrl,
+          observacoes: observacoes
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-      toast.success(`Recibo ${verifyForm.status}!`);
-      setShowVerifyModal(false);
-      setVerifyForm({ status: 'verificado', observacoes: '' });
-      fetchRecibos();
+      toast.success('Recibo verificado com sucesso!');
+      setUploadingRecibo(null);
+      setReciboUrl('');
+      setObservacoes('');
+      fetchRelatorios();
     } catch (error) {
-      console.error('Error verifying recibo:', error);
-      toast.error('Erro ao verificar recibo');
+      console.error('Erro ao verificar recibo:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao verificar recibo');
     }
   };
 
-  const getStatusBadge = (status) => {
-    const badges = {
-      pendente: 'bg-yellow-100 text-yellow-800',
-      verificado: 'bg-blue-100 text-blue-800',
-      pago: 'bg-green-100 text-green-800',
-      rejeitado: 'bg-red-100 text-red-800'
-    };
-    return badges[status] || badges.pendente;
+  const handleDownloadPDF = async (relatorioId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_URL}/api/relatorios/semanal/${relatorioId}/pdf`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
+      );
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `relatorio_${relatorioId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success('PDF baixado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao baixar PDF:', error);
+      toast.error('Erro ao baixar PDF');
+    }
   };
 
-  const recibosPendentes = recibos.filter(r => r.status === 'pendente');
-
   if (loading) {
-    return <Layout user={user} onLogout={onLogout}><div>Carregando...</div></Layout>;
+    return (
+      <div className="min-h-screen bg-slate-50 p-6">
+        <div className="max-w-7xl mx-auto">
+          <p>A carregar...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <Layout user={user} onLogout={onLogout}>
-      <div className="p-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-800">Verificar Recibos</h1>
-          <p className="text-slate-600 mt-1">Aprovar ou rejeitar recibos de motoristas</p>
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <FileText className="w-8 h-8 text-orange-600" />
+            <div>
+              <h1 className="text-3xl font-bold text-slate-800">
+                Verificar Recibos
+              </h1>
+              <p className="text-slate-600">
+                Relatórios enviados aguardando verificação de recibo
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-3xl font-bold text-orange-600">{relatorios.length}</p>
+            <p className="text-sm text-slate-600">Pendentes</p>
+          </div>
         </div>
 
-        {/* Alert para pendentes */}
-        {recibosPendentes.length > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-            <p className="text-yellow-800 font-semibold">
-              ⚠️ {recibosPendentes.length} recibo(s) aguardando verificação
-            </p>
-          </div>
-        )}
+        {/* Lista de Relatórios */}
+        {relatorios.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Tudo em dia!</h3>
+              <p className="text-slate-600">
+                Não há relatórios aguardando verificação de recibo
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-4">
+            {relatorios.map((relatorio) => (
+              <Card key={relatorio.id} className="hover:shadow-lg transition-shadow">
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                    {/* Info do Relatório */}
+                    <div className="lg:col-span-2">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="text-lg font-bold text-slate-800">
+                            {relatorio.motorista_nome}
+                          </h3>
+                          <p className="text-sm text-slate-600">
+                            {relatorio.numero_relatorio}
+                          </p>
+                        </div>
+                        <Badge className="bg-orange-100 text-orange-700">
+                          Aguardando Recibo
+                        </Badge>
+                      </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Todos os Recibos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {recibos.length === 0 ? (
-              <p className="text-center text-slate-500 py-8">Nenhum recibo encontrado</p>
-            ) : (
-              <div className="space-y-3">
-                {recibos.map((recibo) => (
-                  <div 
-                    key={recibo.id} 
-                    className={`border rounded-lg p-4 ${recibo.status === 'pendente' ? 'bg-yellow-50 border-yellow-300' : ''}`}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div>
-                        <div className="font-semibold text-lg">{recibo.motorista_nome}</div>
-                        <div className="text-sm text-slate-600">
-                          Parceiro: {recibo.parceiro_nome || 'N/A'}
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Período:</span>
+                          <span className="font-semibold">
+                            Semana {relatorio.semana}/{relatorio.ano}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Datas:</span>
+                          <span className="font-semibold">
+                            {new Date(relatorio.data_inicio).toLocaleDateString('pt-PT')} - {new Date(relatorio.data_fim).toLocaleDateString('pt-PT')}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Veículo:</span>
+                          <span className="font-semibold">
+                            {relatorio.veiculo_marca} {relatorio.veiculo_modelo} ({relatorio.veiculo_matricula})
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Email:</span>
+                          <span className="font-semibold">{relatorio.motorista_email}</span>
+                        </div>
+                        {relatorio.motorista_telefone && (
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Telefone:</span>
+                            <span className="font-semibold">{relatorio.motorista_telefone}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Histórico de Envios */}
+                      {relatorio.historico_envios && relatorio.historico_envios.length > 0 && (
+                        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                          <p className="text-xs font-semibold text-blue-800 mb-2">Histórico de Envios:</p>
+                          {relatorio.historico_envios.map((envio, idx) => (
+                            <div key={idx} className="text-xs text-blue-700">
+                              <Send className="w-3 h-3 inline mr-1" />
+                              Enviado por {envio.metodo} em {new Date(envio.data_envio).toLocaleString('pt-PT')}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Valores */}
+                    <div className="border-l pl-6">
+                      <h4 className="text-sm font-semibold text-slate-700 mb-3">Valores</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-slate-600">Viagens:</span>
+                          <span className="font-bold">{relatorio.viagens_totais}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-slate-600">Ganhos:</span>
+                          <span className="font-bold text-green-600">€{relatorio.ganhos_totais?.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-slate-600">Despesas:</span>
+                          <span className="font-bold text-red-600">€{relatorio.total_despesas?.toFixed(2)}</span>
+                        </div>
+                        <div className="border-t pt-2 flex justify-between items-center">
+                          <span className="text-sm font-semibold">Total:</span>
+                          <span className="text-lg font-bold text-blue-600">
+                            €{relatorio.total_recibo?.toFixed(2)}
+                          </span>
                         </div>
                       </div>
-                      <span className={`text-xs px-3 py-1 rounded ${getStatusBadge(recibo.status)}`}>
-                        {recibo.status}
-                      </span>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4 mb-3 text-sm">
-                      <div>
-                        <span className="text-slate-600">Mês:</span>
-                        <div className="font-semibold">{recibo.mes_referencia}</div>
-                      </div>
-                      <div>
-                        <span className="text-slate-600">Valor:</span>
-                        <div className="font-semibold text-green-600">€{recibo.valor.toFixed(2)}</div>
-                      </div>
-                      <div>
-                        <span className="text-slate-600">Data Envio:</span>
-                        <div className="font-semibold">{new Date(recibo.created_at).toLocaleDateString()}</div>
-                      </div>
-                    </div>
-
-                    {recibo.observacoes && (
-                      <div className="mb-3 p-2 bg-slate-100 rounded text-sm">
-                        <strong>Observações:</strong> {recibo.observacoes}
-                      </div>
-                    )}
-
-                    <div className="flex items-center space-x-2">
+                    {/* Ações */}
+                    <div className="flex flex-col space-y-2">
                       <Button
-                        size="sm"
                         variant="outline"
-                        onClick={() => window.open(recibo.ficheiro_url, '_blank')}
+                        size="sm"
+                        onClick={() => handleDownloadPDF(relatorio.id)}
                       >
-                        <Eye className="w-4 h-4 mr-1" />
-                        Ver Recibo
+                        <Eye className="w-4 h-4 mr-2" />
+                        Ver PDF
                       </Button>
 
-                      {recibo.status === 'pendente' && (
-                        <>
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setSelectedRecibo(recibo);
-                              setVerifyForm({ status: 'verificado', observacoes: '' });
-                              setShowVerifyModal(true);
-                            }}
-                            className="bg-green-600 hover:bg-green-700"
-                          >
-                            <CheckCircle className="w-4 h-4 mr-1" />
-                            Aprovar
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => {
-                              setSelectedRecibo(recibo);
-                              setVerifyForm({ status: 'rejeitado', observacoes: '' });
-                              setShowVerifyModal(true);
-                            }}
-                          >
-                            <XCircle className="w-4 h-4 mr-1" />
-                            Rejeitar
-                          </Button>
-                        </>
+                      {uploadingRecibo === relatorio.id ? (
+                        <div className="space-y-2">
+                          <Label className="text-xs">URL do Recibo *</Label>
+                          <Input
+                            placeholder="https://..."
+                            value={reciboUrl}
+                            onChange={(e) => setReciboUrl(e.target.value)}
+                            className="text-sm"
+                          />
+                          <Label className="text-xs">Observações</Label>
+                          <Input
+                            placeholder="Opcional"
+                            value={observacoes}
+                            onChange={(e) => setObservacoes(e.target.value)}
+                            className="text-sm"
+                          />
+                          <div className="flex space-x-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleVerificarRecibo(relatorio.id)}
+                              className="flex-1"
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Confirmar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setUploadingRecibo(null);
+                                setReciboUrl('');
+                                setObservacoes('');
+                              }}
+                            >
+                              Cancelar
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <Button
+                          size="sm"
+                          onClick={() => setUploadingRecibo(relatorio.id)}
+                          className="bg-orange-600 hover:bg-orange-700"
+                        >
+                          <Upload className="w-4 h-4 mr-2" />
+                          Adicionar Recibo
+                        </Button>
                       )}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Modal Verificar */}
-        <Dialog open={showVerifyModal} onOpenChange={setShowVerifyModal}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {verifyForm.status === 'verificado' ? 'Aprovar' : 'Rejeitar'} Recibo
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div className="bg-slate-100 p-3 rounded">
-                <p className="text-sm"><strong>Motorista:</strong> {selectedRecibo?.motorista_nome}</p>
-                <p className="text-sm"><strong>Mês:</strong> {selectedRecibo?.mes_referencia}</p>
-                <p className="text-sm"><strong>Valor:</strong> €{selectedRecibo?.valor.toFixed(2)}</p>
-              </div>
-
-              <div>
-                <Label htmlFor="status">Status</Label>
-                <Select value={verifyForm.status} onValueChange={(val) => setVerifyForm({...verifyForm, status: val})}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="verificado">Aprovado/Verificado</SelectItem>
-                    <SelectItem value="pago">Pago</SelectItem>
-                    <SelectItem value="rejeitado">Rejeitado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label htmlFor="obs">Observações (opcional)</Label>
-                <Input
-                  id="obs"
-                  value={verifyForm.observacoes}
-                  onChange={(e) => setVerifyForm({...verifyForm, observacoes: e.target.value})}
-                  placeholder="Adicione observações..."
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2">
-                <Button variant="outline" onClick={() => setShowVerifyModal(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={handleVerify}>
-                  Confirmar
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
-    </Layout>
+    </div>
   );
 };
 
