@@ -552,11 +552,13 @@ const RelatoriosHub = ({ user, onLogout }) => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="todos">Todos ({stats.total})</TabsTrigger>
-            <TabsTrigger value="pendentes">Pendentes ({stats.pendentes})</TabsTrigger>
-            <TabsTrigger value="aguarda">Aguarda Recibo ({stats.aguardaRecibo})</TabsTrigger>
-            <TabsTrigger value="pagamentos">Pagamentos ({stats.paraPagar})</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-6 gap-1">
+            <TabsTrigger value="todos" className="text-xs sm:text-sm px-2 py-1">Todos ({stats.total})</TabsTrigger>
+            <TabsTrigger value="pendentes" className="text-xs sm:text-sm px-2 py-1">Pendentes ({stats.pendentes})</TabsTrigger>
+            <TabsTrigger value="aguarda" className="text-xs sm:text-sm px-2 py-1">Aguarda Recibo ({stats.aguardaRecibo})</TabsTrigger>
+            <TabsTrigger value="em_analise" className="text-xs sm:text-sm px-2 py-1">Em Análise ({stats.emAnalise})</TabsTrigger>
+            <TabsTrigger value="aguarda_pagamento" className="text-xs sm:text-sm px-2 py-1">Aguarda Pag. ({stats.aguardaPagamento})</TabsTrigger>
+            <TabsTrigger value="pago" className="text-xs sm:text-sm px-2 py-1">Pago ({stats.pago})</TabsTrigger>
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-6">
