@@ -827,6 +827,76 @@ const RelatoriosHub = ({ user, onLogout }) => {
                   </div>
                 </div>
 
+                {/* Upload de Recibo */}
+                {(relatorioEditando.status === 'aguarda_recibo' || relatorioEditando.status === 'verificado') && (
+                  <div className="border-t pt-4">
+                    <h4 className="font-semibold mb-3 flex items-center gap-2">
+                      <FileText className="w-5 h-5 text-orange-600" />
+                      Anexar Recibo do Motorista
+                    </h4>
+                    
+                    {relatorioEditando.recibo_url ? (
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-sm font-semibold text-green-800 mb-2 flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4" />
+                          Recibo já anexado
+                        </p>
+                        <a 
+                          href={relatorioEditando.recibo_url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:underline flex items-center gap-1"
+                        >
+                          <Download className="w-4 h-4" />
+                          Ver recibo atual
+                        </a>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-2"
+                          onClick={() => setRelatorioEditando({ ...relatorioEditando, recibo_url: '' })}
+                        >
+                          Substituir recibo
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <Input
+                          type="file"
+                          accept="image/*,application/pdf"
+                          onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              setRelatorioEditando({ 
+                                ...relatorioEditando, 
+                                recibo_file: e.target.files[0] 
+                              });
+                            }
+                          }}
+                        />
+                        <p className="text-xs text-slate-600">
+                          Aceita: PDF, JPG, PNG (máx. 5MB)
+                        </p>
+                        {relatorioEditando.recibo_file && (
+                          <div className="p-3 bg-blue-50 rounded">
+                            <p className="text-sm font-medium">
+                              Ficheiro selecionado: {relatorioEditando.recibo_file.name}
+                            </p>
+                            <p className="text-xs text-slate-600">
+                              Tamanho: {(relatorioEditando.recibo_file.size / 1024 / 1024).toFixed(2)} MB
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                      <p className="text-xs text-blue-800">
+                        💡 Após anexar o recibo, o relatório ficará disponível para pagamento
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <div className="flex justify-between text-sm mb-2">
                     <span>Ganhos:</span>
