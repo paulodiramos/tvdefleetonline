@@ -5089,6 +5089,11 @@ async def atribuir_motorista_vehicle(
         if not motorista:
             raise HTTPException(status_code=404, detail="Motorista not found")
         
+        # Get vehicle data to copy cartao_frota_id
+        vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+        if not vehicle:
+            raise HTTPException(status_code=404, detail="Vehicle not found")
+        
         # Update vehicle
         await db.vehicles.update_one(
             {"id": vehicle_id},
@@ -5099,6 +5104,15 @@ async def atribuir_motorista_vehicle(
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }}
         )
+        
+        # If vehicle has cartao_frota_id, copy it to motorista
+        if vehicle.get("cartao_frota_id"):
+            await db.motoristas.update_one(
+                {"id": motorista_id},
+                {"$set": {
+                    "id_cartao_frota_combustivel": vehicle.get("cartao_frota_id")
+                }}
+            )
         
         return {"message": "Motorista atribuído com sucesso"}
     else:
