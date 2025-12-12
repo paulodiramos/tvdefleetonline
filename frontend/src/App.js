@@ -76,6 +76,7 @@ import GestaoPlanosMotorista from "@/pages/GestaoPlanosMotorista";
 import ConfiguracaoPlanos from "@/pages/ConfiguracaoPlanos";
 import ConfiguracaoRelatorios from "@/pages/ConfiguracaoRelatorios";
 import GerarRelatorioSemanal from "@/pages/GerarRelatorioSemanal";
+import VerificarRecibos from "@/pages/VerificarRecibos";
 import MeusPlanos from "@/pages/MeusPlanos";
 import MeusRecibosGanhos from "@/pages/MeusRecibosGanhos";
 import VerificarRecibos from "@/pages/VerificarRecibos";
@@ -459,6 +460,12 @@ function App() {
             path="/gerar-relatorio-semanal"
             element={
               user && user.role === 'parceiro' ? <GerarRelatorioSemanal user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
+            path="/verificar-recibos"
+            element={
+              user && user.role === 'parceiro' ? <VerificarRecibos user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
             }
           />
           <Route
