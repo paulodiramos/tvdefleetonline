@@ -1246,6 +1246,14 @@ const Motoristas = ({ user, onLogout }) => {
                         )}
                       </div>
                       <div>
+                        <Label>Emissão Carta Condução</Label>
+                        {isEditing ? (
+                          <Input type="date" value={editForm.carta_conducao_emissao || ''} onChange={(e) => setEditForm({...editForm, carta_conducao_emissao: e.target.value})} />
+                        ) : (
+                          <p className="font-medium">{selectedMotorista.carta_conducao_emissao ? new Date(selectedMotorista.carta_conducao_emissao).toLocaleDateString('pt-PT') : 'N/A'}</p>
+                        )}
+                      </div>
+                      <div>
                         <Label>Validade Carta</Label>
                         {isEditing ? (
                           <Input type="date" value={editForm.carta_conducao_validade || ''} onChange={(e) => setEditForm({...editForm, carta_conducao_validade: e.target.value})} />
