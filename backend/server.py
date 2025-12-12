@@ -4641,6 +4641,10 @@ async def get_vehicles(current_user: Dict = Depends(get_current_user)):
             v["created_at"] = datetime.fromisoformat(v["created_at"])
         if isinstance(v["updated_at"], str):
             v["updated_at"] = datetime.fromisoformat(v["updated_at"])
+        # Fix km_atual if it's empty string or invalid
+        if "km_atual" in v:
+            if isinstance(v["km_atual"], str):
+                v["km_atual"] = int(v["km_atual"]) if v["km_atual"].strip().isdigit() else 0
     return vehicles
 
 @api_router.get("/vehicles/available", response_model=List[Vehicle])
