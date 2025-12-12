@@ -9293,6 +9293,16 @@ async def get_planos(current_user: Dict = Depends(get_current_user)):
             plano["updated_at"] = datetime.fromisoformat(plano["updated_at"])
         elif "updated_at" not in plano:
             plano["updated_at"] = datetime.now(timezone.utc)
+        
+        # Map funcionalidades to features for backward compatibility
+        if "funcionalidades" in plano and "features" not in plano:
+            plano["features"] = plano["funcionalidades"]
+        
+        # Set default values for missing fields
+        if "tipo_usuario" not in plano:
+            plano["tipo_usuario"] = "parceiro"
+        if "preco_por_unidade" not in plano:
+            plano["preco_por_unidade"] = plano.get("preco_mensal", 0.0)
     
     return planos
 
