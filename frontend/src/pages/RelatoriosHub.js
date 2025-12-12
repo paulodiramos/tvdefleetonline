@@ -59,6 +59,50 @@ const RelatoriosHub = ({ user, onLogout }) => {
     fetchData();
   }, []);
 
+  const handleDownloadRecibo = async (reciboUrl) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}${reciboUrl}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', reciboUrl.split('/').pop());
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erro ao fazer download do recibo:', error);
+      toast.error('Erro ao fazer download do recibo');
+    }
+  };
+
+  const handleDownloadComprovativo = async (comprovantivoUrl) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}${comprovantivoUrl}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', comprovantivoUrl.split('/').pop());
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Erro ao fazer download do comprovativo:', error);
+      toast.error('Erro ao fazer download do comprovativo');
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -637,10 +681,10 @@ const RelatoriosHub = ({ user, onLogout }) => {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => window.open(`${API_URL}${rel.recibo_url}`, '_blank')}
+                                  onClick={() => handleDownloadRecibo(rel.recibo_url)}
                                   className="bg-orange-50 hover:bg-orange-100"
                                 >
-                                  <Eye className="w-3 h-3 mr-1" />
+                                  <Download className="w-3 h-3 mr-1" />
                                   Ver Recibo
                                 </Button>
                               )}
@@ -669,10 +713,10 @@ const RelatoriosHub = ({ user, onLogout }) => {
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => window.open(`${API_URL}${rel.recibo_url}`, '_blank')}
+                                  onClick={() => handleDownloadRecibo(rel.recibo_url)}
                                   className="bg-orange-50 hover:bg-orange-100"
                                 >
-                                  <Eye className="w-3 h-3 mr-1" />
+                                  <Download className="w-3 h-3 mr-1" />
                                   Ver Recibo
                                 </Button>
                               )}
@@ -991,7 +1035,7 @@ const RelatoriosHub = ({ user, onLogout }) => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => window.open(`${API_URL}${relatorioPagando.recibo_url}`, '_blank')}
+                        onClick={() => handleDownloadRecibo(relatorioPagando.recibo_url)}
                         className="flex-1"
                       >
                         <Eye className="w-4 h-4 mr-2" />
