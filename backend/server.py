@@ -3939,7 +3939,7 @@ async def desativar_motorista(
     # Update motorista status to inactive
     await db.motoristas.update_one(
         {"id": motorista_id},
-        {"$set": {"status": "inativo", "updated_at": datetime.now(timezone.utc).isoformat()}}
+        {"$set": {"status": "inativo", "status_motorista": "desativo", "updated_at": datetime.now(timezone.utc).isoformat()}}
     )
     
     # Also deactivate user account
