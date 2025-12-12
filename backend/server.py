@@ -6616,7 +6616,31 @@ async def importar_veiculos_csv(
         delimiter = ';' if sample.count(';') > sample.count(',') else ','
         logger.info(f"Detected CSV delimiter: '{delimiter}'")
         
-        csv_reader = csv.DictReader(io.StringIO(decoded), delimiter=delimiter)
+        # Create CSV reader with normalized headers
+        csv_reader_temp = csv.DictReader(io.StringIO(decoded), delimiter=delimiter)
+        
+        # Normalize header names (fix encoding issues)
+        def normalize_header(header):
+            """Normalize header names to fix encoding issues"""
+            replacements = {
+                'MatrÃ­cula': 'Matrícula',
+                'VersÃ£o': 'Versão',
+                'CombustÃ­vel': 'Combustível',
+                'DisponÃ­vel': 'Disponível',
+                'CÃ³digo': 'Código',
+                'Ã©': 'é',
+                'Ã§': 'ç',
+            }
+            for old, new in replacements.items():
+                header = header.replace(old, new)
+            return header
+        
+        # Normalize all fieldnames
+        normalized_fieldnames = [normalize_header(f) for f in csv_reader_temp.fieldnames]
+        
+        # Create new reader with normalized headers
+        csv_reader = csv.DictReader(io.StringIO(decoded), fieldnames=normalized_fieldnames, delimiter=delimiter)
+        next(csv_reader)  # Skip original header row
         
         # Helper function to normalize phone numbers from scientific notation
         def normalize_phone(value):
