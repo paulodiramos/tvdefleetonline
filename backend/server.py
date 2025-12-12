@@ -10939,6 +10939,44 @@ async def upload_comprovativo_pagamento(
         print(f"Erro ao fazer upload: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erro ao fazer upload: {str(e)}")
 
+@api_router.get("/relatorios/comprovativos/{filename}")
+async def download_comprovativo_file(
+    filename: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Download de comprovativo de pagamento do relatório semanal"""
+    try:
+        # Construir caminho do arquivo
+        file_path = Path("/app/uploads/comprovativo_pagamento") / filename
+        
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Comprovativo não encontrado")
+        
+        # Validar permissões
+        if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO, UserRole.GESTAO, UserRole.MOTORISTA]:
+            raise HTTPException(status_code=403, detail="Não autorizado")
+        
+        # Determinar o tipo MIME baseado na extensão
+        content_type = "application/octet-stream"
+        if filename.lower().endswith('.pdf'):
+            content_type = "application/pdf"
+        elif filename.lower().endswith(('.jpg', '.jpeg')):
+            content_type = "image/jpeg"
+        elif filename.lower().endswith('.png'):
+            content_type = "image/png"
+        
+        return FileResponse(
+            path=file_path,
+            media_type=content_type,
+            filename=filename
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Erro ao fazer download do comprovativo: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao fazer download: {str(e)}")
+
 @api_router.get("/relatorios/historico")
 async def obter_historico_relatorios(
     current_user: Dict = Depends(get_current_user)
