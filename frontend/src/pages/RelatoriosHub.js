@@ -580,7 +580,7 @@ const RelatoriosHub = ({ user, onLogout }) => {
 
         {/* Modal Editar */}
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Editar Relatório</DialogTitle>
             </DialogHeader>
@@ -591,6 +591,26 @@ const RelatoriosHub = ({ user, onLogout }) => {
                   <p className="text-sm text-slate-600">
                     Semana {relatorioEditando.semana}/{relatorioEditando.ano}
                   </p>
+                </div>
+
+                <div>
+                  <Label>Estado do Relatório</Label>
+                  <select
+                    value={relatorioEditando.status || relatorioEditando.estado}
+                    onChange={(e) => setRelatorioEditando({ 
+                      ...relatorioEditando, 
+                      status: e.target.value,
+                      estado: e.target.value
+                    })}
+                    className="w-full border rounded-md p-2"
+                  >
+                    <option value="rascunho">Rascunho</option>
+                    <option value="pendente_aprovacao">Pendente Aprovação</option>
+                    <option value="aguarda_recibo">Aguarda Recibo</option>
+                    <option value="verificado">Verificado</option>
+                    <option value="pago">Pago</option>
+                    <option value="rejeitado">Rejeitado</option>
+                  </select>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
@@ -648,15 +668,54 @@ const RelatoriosHub = ({ user, onLogout }) => {
                       onChange={(e) => setRelatorioEditando({ ...relatorioEditando, outros: e.target.value })}
                     />
                   </div>
+                  <div className="col-span-2">
+                    <Label>Dívida Anterior (€)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={relatorioEditando.divida_anterior || 0}
+                      onChange={(e) => setRelatorioEditando({ ...relatorioEditando, divida_anterior: e.target.value })}
+                    />
+                    <p className="text-xs text-slate-500 mt-1">
+                      Ajustar dívida da semana anterior manualmente
+                    </p>
+                  </div>
                 </div>
 
                 <div className="p-4 bg-blue-50 rounded-lg">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>Ganhos:</span>
+                    <span className="font-bold text-green-600">
+                      €{calcularTotais(relatorioEditando).ganhos.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span>Despesas:</span>
+                    <span className="font-bold text-red-600">
+                      €{calcularTotais(relatorioEditando).despesas.toFixed(2)}
+                    </span>
+                  </div>
+                  {calcularTotais(relatorioEditando).dividaAnterior > 0 && (
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Dívida Anterior:</span>
+                      <span className="font-bold text-orange-600">
+                        €{calcularTotais(relatorioEditando).dividaAnterior.toFixed(2)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between pt-2 border-t">
                     <span className="font-semibold">Total:</span>
-                    <span className="text-lg font-bold text-blue-600">
+                    <span className={`text-lg font-bold ${calcularTotais(relatorioEditando).total < 0 ? 'text-red-600' : 'text-blue-600'}`}>
                       €{calcularTotais(relatorioEditando).total.toFixed(2)}
                     </span>
                   </div>
+                  {calcularTotais(relatorioEditando).total < 0 && (
+                    <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
+                      <p className="text-xs text-red-700">
+                        ⚠️ Valor negativo! Próxima dívida: €{calcularTotais(relatorioEditando).proximaDivida.toFixed(2)}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -665,7 +724,7 @@ const RelatoriosHub = ({ user, onLogout }) => {
                 Cancelar
               </Button>
               <Button onClick={handleSalvarEdicao}>
-                Guardar
+                Guardar Alterações
               </Button>
             </DialogFooter>
           </DialogContent>
