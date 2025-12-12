@@ -6371,6 +6371,9 @@ async def importar_motoristas_csv(
         # Apply auto-conversion
         decoded = auto_convert_csv(decoded)
         
+        # After conversion, use comma as delimiter
+        delimiter = ','
+        
         motoristas_criados = 0
         erros = []
         
