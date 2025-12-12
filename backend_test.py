@@ -6605,6 +6605,11 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
         self.test_financial_import_system()
         self.test_import_feature_access_control()
         
+        # WEEKLY REPORTS SYSTEM (REVIEW REQUEST - CRITICAL)
+        print("\n📊 WEEKLY REPORTS SYSTEM (REVIEW REQUEST - CRITICAL)")
+        print("-" * 60)
+        self.test_weekly_reports_system_complete()
+        
         # PARTNER ALERT SYSTEM (NEW REQUEST)
         print("\n🔔 PARTNER ALERT SYSTEM (HIGH PRIORITY)")
         print("-" * 50)
