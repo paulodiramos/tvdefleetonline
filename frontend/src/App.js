@@ -75,6 +75,7 @@ import GestaoPlanos from "@/pages/GestaoPlanos";
 import GestaoPlanosMotorista from "@/pages/GestaoPlanosMotorista";
 import ConfiguracaoPlanos from "@/pages/ConfiguracaoPlanos";
 import ConfiguracaoRelatorios from "@/pages/ConfiguracaoRelatorios";
+import GerarRelatorioSemanal from "@/pages/GerarRelatorioSemanal";
 import MeusPlanos from "@/pages/MeusPlanos";
 import MeusRecibosGanhos from "@/pages/MeusRecibosGanhos";
 import VerificarRecibos from "@/pages/VerificarRecibos";
@@ -452,6 +453,12 @@ function App() {
             path="/configuracao-relatorios"
             element={
               user && user.role === 'parceiro' ? <ConfiguracaoRelatorios user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
+            path="/gerar-relatorio-semanal"
+            element={
+              user && user.role === 'parceiro' ? <GerarRelatorioSemanal user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
             }
           />
           <Route
