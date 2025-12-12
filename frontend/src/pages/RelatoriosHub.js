@@ -521,14 +521,28 @@ const RelatoriosHub = ({ user, onLogout }) => {
                   <Label>Motorista *</Label>
                   <select
                     value={novoRelatorio.motorista_id}
-                    onChange={(e) => setNovoRelatorio({ ...novoRelatorio, motorista_id: e.target.value })}
+                    onChange={(e) => {
+                      console.log('Motorista selecionado:', e.target.value);
+                      setNovoRelatorio({ ...novoRelatorio, motorista_id: e.target.value });
+                    }}
                     className="w-full border rounded-md p-2"
                   >
-                    <option value="">Selecione</option>
-                    {motoristas.map(m => (
-                      <option key={m.id} value={m.id}>{m.nome}</option>
-                    ))}
+                    <option value="">Selecione um motorista</option>
+                    {motoristas && motoristas.length > 0 ? (
+                      motoristas.map(m => (
+                        <option key={m.id} value={m.id}>
+                          {m.nome || m.email || 'Sem nome'}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="" disabled>Nenhum motorista disponível</option>
+                    )}
                   </select>
+                  {motoristas.length === 0 && (
+                    <p className="text-xs text-red-600 mt-1">
+                      ⚠️ Nenhum motorista encontrado. Verifique se existem motoristas cadastrados.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label>Semana *</Label>
