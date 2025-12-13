@@ -756,6 +756,63 @@ agent_communication:
     
     - agent: "testing"
       message: |
+        🎯 TESTE CRÍTICO DA IMPORTAÇÃO CSV DA UBER COM FICHEIRO REAL - BUG IDENTIFICADO
+        
+        CONTEXTO DO TESTE:
+        Teste da importação de CSV da Uber com ficheiro real fornecido pelo utilizador conforme review request específico:
+        - Motorista alvo: Bruno Coelho (brunomccoelho@hotmail.com)
+        - UUID esperado: 35382cb7-236e-42c1-b0b4-e16bfabb8ff3
+        - CSV URL: https://customer-assets.emergentagent.com/job_weekly-report-sys/artifacts/vy8erxlu_20251201-20251208-payments_driver-ZENY_MACAIA_UNIPESSOAL_LDA%20%281%29.csv
+        
+        CREDENCIAIS TESTADAS:
+        - Admin: admin@tvdefleet.com / o72ocUHy ✅
+        
+        ✅ VERIFICAÇÕES INICIAIS - 100% FUNCIONANDO
+        
+        **VERIFICAÇÃO DO MOTORISTA:**
+        - ✅ Motorista Bruno Coelho encontrado na base de dados
+        - ✅ UUID correto no perfil: 35382cb7-236e-42c1-b0b4-e16bfabb8ff3
+        - ✅ Email correto: brunomccoelho@hotmail.com
+        - ✅ 11 motoristas têm UUID da Uber preenchido
+        
+        **VERIFICAÇÃO DO CSV:**
+        - ✅ CSV descarregado com sucesso (2866 bytes)
+        - ✅ CSV contém 26 campos incluindo 'UUID do motorista'
+        - ✅ Linha 3 contém Bruno: '35382cb7-236e-42c1-b0b4-e16bfabb8ff3,BRUNO MIGUEL,DO CARMO DA FONSECA COELHO'
+        
+        ❌ BUG CRÍTICO IDENTIFICADO - IMPORTAÇÃO FALHA
+        
+        **PROBLEMA:**
+        - ❌ Importação retorna: "Motorista 'BRUNO MIGUEL DO CARMO DA FONSECA COELHO' não encontrado (UUID: )"
+        - ❌ UUID chega vazio ao backend apesar de estar presente no CSV
+        - ❌ Apenas 4/11 registos importados com sucesso (36.4% taxa de sucesso)
+        
+        **CAUSA RAIZ IDENTIFICADA:**
+        Backend usa `content.decode('utf-8')` na linha 11278 de server.py, mas deveria usar `content.decode('utf-8-sig')` para remover BOM (Byte Order Mark) do ficheiro CSV da Uber.
+        
+        **PROVA DO BUG:**
+        - Quando testado com utf-8-sig: UUID lido corretamente ✅
+        - Quando testado com utf-8: UUID fica vazio ❌
+        - Logs do backend mostram: "✅ Motorista encontrado por UUID: None"
+        
+        **SOLUÇÃO NECESSÁRIA:**
+        Alterar linha 11278 em /app/backend/server.py:
+        ```python
+        # ANTES (com bug):
+        decoded = content.decode('utf-8')
+        
+        # DEPOIS (corrigido):
+        decoded = content.decode('utf-8-sig')
+        ```
+        
+        **IMPACTO:**
+        Este bug afeta todos os ficheiros CSV da Uber que contêm BOM, impedindo a correspondência correta por UUID e causando falhas na importação de motoristas válidos.
+        
+        **RECOMENDAÇÃO:**
+        ALTA PRIORIDADE - Corrigir encoding do CSV para suportar ficheiros reais da Uber com BOM.
+    
+    - agent: "testing"
+      message: |
         🎯 TESTE CRÍTICO DAS CORREÇÕES DE IMPORTAÇÃO CSV E SISTEMA DE TEMPLATES - RESULTADOS FINAIS
         
         CONTEXTO DO TESTE:
