@@ -7479,15 +7479,19 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
             success_count = 0
             
             for test_case in test_cases:
-                # Create CSV content with the test name variation
+                # Create CSV content with the test name variation using the actual motorista name
+                name_parts = test_case['csv_name'].split()
+                first_name = name_parts[0] if len(name_parts) > 0 else "Test"
+                last_name = name_parts[1] if len(name_parts) > 1 else "User"
+                
                 csv_content = f"""UUID do motorista,motorista_email,Nome próprio,Apelido,Pago a si,rendimentos,tarifa,taxa de serviço
-test-uuid-123456,joao.silva.test@example.com,{test_case['csv_name'].split()[0]},{test_case['csv_name'].split()[1]},25.50,20.40,25.50,5.10"""
+test-uuid-123456,joao.silva.test@example.com,{first_name},{last_name},25.50,20.40,25.50,5.10"""
                 
                 files = {
                     'file': ('test_uber_flexible.csv', csv_content.encode('utf-8'), 'text/csv')
                 }
                 
-                # Test the import endpoint
+                # Test the import endpoint (correct path)
                 response = requests.post(
                     f"{BACKEND_URL}/importar/uber",
                     files=files,
