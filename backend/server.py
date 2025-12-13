@@ -11287,18 +11287,50 @@ async def importar_plataforma(
         
         for row_num, row in enumerate(csv_reader, start=2):
             try:
-                # Buscar motorista por email
+                # Para Uber: tentar buscar por email, UUID ou nome
+                motorista = None
                 motorista_email = row.get('motorista_email', '').strip()
-                if not motorista_email:
-                    erros += 1
-                    erros_detalhes.append(f"Linha {row_num}: Email do motorista vazio")
-                    continue
                 
-                motorista = await db.motoristas.find_one({"email": motorista_email}, {"_id": 0})
-                if not motorista:
-                    erros += 1
-                    erros_detalhes.append(f"Linha {row_num}: Motorista {motorista_email} não encontrado")
-                    continue
+                if plataforma == 'uber':
+                    # Tentar por UUID do motorista
+                    uuid_motorista = row.get('UUID do motorista', '').strip()
+                    if uuid_motorista:
+                        motorista = await db.motoristas.find_one({"uber_uuid": uuid_motorista}, {"_id": 0})
+                    
+                    # Se não encontrou, tentar por nome completo
+                    if not motorista:
+                        nome_proprio = row.get('Nome próprio do motorista', '').strip()
+                        apelido = row.get('Apelido do motorista', '').strip()
+                        if nome_proprio and apelido:
+                            nome_completo = f"{nome_proprio} {apelido}"
+                            motorista = await db.motoristas.find_one(
+                                {"$or": [
+                                    {"name": {"$regex": f"^{nome_proprio}.*{apelido}$", "$options": "i"}},
+                                    {"nome": {"$regex": f"^{nome_proprio}.*{apelido}$", "$options": "i"}}
+                                ]},
+                                {"_id": 0}
+                            )
+                    
+                    # Se ainda não encontrou, criar erro informativo
+                    if not motorista:
+                        nome_info = f"{row.get('Nome próprio do motorista', '')} {row.get('Apelido do motorista', '')}"
+                        erros += 1
+                        erros_detalhes.append(f"Linha {row_num}: Motorista '{nome_info}' não encontrado (UUID: {uuid_motorista})")
+                        continue
+                else:
+                    # Para outras plataformas: usar email obrigatório
+                    if not motorista_email:
+                        erros += 1
+                        erros_detalhes.append(f"Linha {row_num}: Email do motorista vazio")
+                        continue
+                    
+                    motorista = await db.motoristas.find_one({"email": motorista_email}, {"_id": 0})
+                    if not motorista:
+                        erros += 1
+                        erros_detalhes.append(f"Linha {row_num}: Motorista {motorista_email} não encontrado")
+                        continue
+                
+                motorista_email = motorista.get("email", "")
                 
                 # Validar campo data (opcional para Uber que é semanal)
                 data = row.get('data', '').strip()
