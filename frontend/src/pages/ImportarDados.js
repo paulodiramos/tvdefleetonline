@@ -217,6 +217,26 @@ const ImportarDados = ({ user, onLogout }) => {
               </div>
             </div>
 
+            {/* Instruções para Relatórios Semanais */}
+            {plataforma === 'relatorios' && (
+              <Alert className="bg-blue-50 border-blue-200">
+                <AlertCircle className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-900">
+                  <p className="font-semibold mb-2">Formato do CSV para Relatórios Semanais:</p>
+                  <code className="block text-xs bg-white p-2 rounded border mb-2 overflow-x-auto">
+                    motorista_email,semana,ano,ganhos_uber,ganhos_bolt,combustivel,via_verde,caucao,outros,divida_anterior
+                  </code>
+                  <p className="text-xs">
+                    <strong>Exemplo:</strong> motorista@example.com,50,2025,500.00,300.00,100.00,50.00,200.00,0,0
+                  </p>
+                  <p className="text-xs mt-2">
+                    ⚠️ Os emails dos motoristas devem existir no sistema.
+                  </p>
+                </AlertDescription>
+              </Alert>
+            )}
+
+
             {/* Seleção de Parceiro (apenas admin/gestao) */}
             {(user.role === 'admin' || user.role === 'gestao') && (
               <div>
