@@ -4820,6 +4820,17 @@ async def update_vehicle(vehicle_id: str, updates: Dict[str, Any], current_user:
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
+    # Se motorista_atribuido foi alterado, sincronizar o nome do motorista
+    if "motorista_atribuido" in updates and updates["motorista_atribuido"]:
+        motorista = await db.motoristas.find_one({"id": updates["motorista_atribuido"]}, {"_id": 0, "name": 1})
+        if motorista:
+            updates["motorista_atribuido_nome"] = motorista.get("name")
+        else:
+            updates["motorista_atribuido_nome"] = None
+    elif "motorista_atribuido" in updates and not updates["motorista_atribuido"]:
+        # Se motorista foi removido, limpar o nome também
+        updates["motorista_atribuido_nome"] = None
+    
     # Auto-add to agenda when dates are filled
     if updates.get("insurance") and updates["insurance"].get("data_validade"):
         await auto_add_to_agenda(
