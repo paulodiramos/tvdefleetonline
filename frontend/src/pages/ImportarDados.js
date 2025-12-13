@@ -38,6 +38,7 @@ const ImportarDados = ({ user, onLogout }) => {
   const [historico, setHistorico] = useState([]);
 
   const plataformas = [
+    { value: 'relatorios', label: 'Relatórios Semanais', icon: FileText, color: 'bg-blue-100 text-blue-800' },
     { value: 'bolt', label: 'Bolt', icon: Car, color: 'bg-green-100 text-green-800' },
     { value: 'uber', label: 'Uber', icon: Car, color: 'bg-black text-white' },
     { value: 'via_verde', label: 'Via Verde', icon: CreditCard, color: 'bg-blue-100 text-blue-800' },
@@ -125,8 +126,13 @@ const ImportarDados = ({ user, onLogout }) => {
         formData.append('motorista_id', motoristaSelecionado);
       }
 
+      // Usar endpoint específico para relatórios
+      const endpoint = plataforma === 'relatorios' 
+        ? `${API}/api/relatorios/importar-csv`
+        : `${API}/import-csv/${plataforma}`;
+      
       const response = await axios.post(
-        `${API}/import-csv/${plataforma}`,
+        endpoint,
         formData,
         {
           headers: {
@@ -136,15 +142,25 @@ const ImportarDados = ({ user, onLogout }) => {
         }
       );
 
-      if (response.data.success) {
+      // Handle different response formats
+      if (plataforma === 'relatorios') {
+        // Response format: {message, sucesso, erros, erros_detalhes}
+        toast.success(
+          `${response.data.sucesso} relatório(s) importado(s)! ${response.data.erros} erro(s).`
+        );
+        if (response.data.erros > 0 && response.data.erros_detalhes) {
+          console.log('Erros:', response.data.erros_detalhes);
+        }
+      } else if (response.data.success) {
         toast.success(response.data.message);
-        setArquivo(null);
-        // Reset file input
-        document.getElementById('file-input').value = '';
-        fetchHistorico();
       } else {
         toast.error(response.data.message || 'Erro ao importar ficheiro');
       }
+      
+      setArquivo(null);
+      // Reset file input
+      document.getElementById('file-input').value = '';
+      fetchHistorico();
 
     } catch (error) {
       console.error('Error uploading file:', error);
