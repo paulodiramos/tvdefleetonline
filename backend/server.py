@@ -11117,6 +11117,127 @@ async def obter_resumo_semanal_motoristas(
     if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
+
+
+@api_router.post("/relatorios/importar-csv")
+async def importar_relatorios_csv(
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Importar relatórios semanais via CSV"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    try:
+        import csv
+        import io
+        
+        # Ler conteúdo do ficheiro
+        content = await file.read()
+        decoded = content.decode('utf-8')
+        csv_reader = csv.DictReader(io.StringIO(decoded))
+        
+        sucesso = 0
+        erros = 0
+        erros_detalhes = []
+        
+        for row_num, row in enumerate(csv_reader, start=2):  # start=2 porque linha 1 é header
+            try:
+                # Buscar motorista por email
+                motorista_email = row.get('motorista_email', '').strip()
+                if not motorista_email:
+                    erros += 1
+                    erros_detalhes.append(f"Linha {row_num}: Email do motorista vazio")
+                    continue
+                
+                motorista = await db.motoristas.find_one({"email": motorista_email}, {"_id": 0})
+                if not motorista:
+                    erros += 1
+                    erros_detalhes.append(f"Linha {row_num}: Motorista {motorista_email} não encontrado")
+                    continue
+                
+                # Validar campos obrigatórios
+                semana = row.get('semana', '').strip()
+                ano = row.get('ano', '').strip()
+                
+                if not semana or not ano:
+                    erros += 1
+                    erros_detalhes.append(f"Linha {row_num}: Semana ou ano em falta")
+                    continue
+                
+                # Converter valores numéricos
+                def to_float(value, default=0.0):
+                    try:
+                        return float(value.strip()) if value and value.strip() else default
+                    except:
+                        return default
+                
+                ganhos_uber = to_float(row.get('ganhos_uber', '0'))
+                ganhos_bolt = to_float(row.get('ganhos_bolt', '0'))
+                combustivel = to_float(row.get('combustivel', '0'))
+                via_verde = to_float(row.get('via_verde', '0'))
+                caucao = to_float(row.get('caucao', '0'))
+                outros = to_float(row.get('outros', '0'))
+                divida_anterior = to_float(row.get('divida_anterior', '0'))
+                
+                # Calcular totais
+                total_ganhos = ganhos_uber + ganhos_bolt
+                total_despesas = combustivel + via_verde + caucao + outros
+                total_liquido = total_ganhos - total_despesas - divida_anterior
+                
+                # Gerar ID do relatório
+                relatorio_id = str(uuid.uuid4())
+                numero_relatorio = f"REL-{ano}-S{semana}-{relatorio_id[:8].upper()}"
+                
+                # Criar relatório
+                relatorio = {
+                    "id": relatorio_id,
+                    "numero_relatorio": numero_relatorio,
+                    "parceiro_id": current_user["id"],
+                    "motorista_id": motorista["id"],
+                    "motorista_nome": motorista.get("name") or motorista.get("nome") or motorista_email,
+                    "semana": int(semana),
+                    "ano": int(ano),
+                    "ganhos_uber": ganhos_uber,
+                    "ganhos_bolt": ganhos_bolt,
+                    "total_ganhos": total_ganhos,
+                    "combustivel_total": combustivel,
+                    "via_verde_total": via_verde,
+                    "caucao_semanal": caucao,
+                    "outros": outros,
+                    "total_despesas": total_despesas,
+                    "divida_semana_anterior": divida_anterior,
+                    "total_liquido": total_liquido,
+                    "proxima_divida": abs(total_liquido) if total_liquido < 0 else 0,
+                    "status": "pendente",
+                    "estado": "pendente",
+                    "data_emissao": datetime.now(timezone.utc).isoformat(),
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "created_by": current_user["id"]
+                }
+                
+                await db.relatorios_semanais.insert_one(relatorio)
+                sucesso += 1
+                
+            except Exception as e:
+                erros += 1
+                erros_detalhes.append(f"Linha {row_num}: {str(e)}")
+                print(f"Erro ao processar linha {row_num}: {str(e)}")
+        
+        # Retornar resumo
+        resultado = {
+            "message": f"Importação concluída: {sucesso} sucesso(s), {erros} erro(s)",
+            "sucesso": sucesso,
+            "erros": erros,
+            "erros_detalhes": erros_detalhes[:10]  # Limitar a 10 erros para não sobrecarregar
+        }
+        
+        return resultado
+        
+    except Exception as e:
+        print(f"Erro ao importar CSV: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao processar ficheiro CSV: {str(e)}")
+
     # Get motoristas do parceiro
     query = {}
     if current_user["role"] == UserRole.PARCEIRO:
