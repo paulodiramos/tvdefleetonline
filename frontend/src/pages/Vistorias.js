@@ -148,8 +148,8 @@ const Vistorias = ({ user, onLogout }) => {
   const handleAgendarVistoria = async (e) => {
     e.preventDefault();
     
-    if (!agendamentoForm.veiculo_id || !agendamentoForm.data_agendada) {
-      toast.error('Preencha veículo e data');
+    if (!agendamentoForm.veiculo_id || !agendamentoForm.data_agendada || !agendamentoForm.hora_agendada) {
+      toast.error('Preencha veículo, data e hora');
       return;
     }
     
@@ -620,6 +620,7 @@ const Vistorias = ({ user, onLogout }) => {
                         <p className="text-sm text-slate-600">
                           {agenda.tipo_vistoria?.charAt(0).toUpperCase() + agenda.tipo_vistoria?.slice(1)} - {' '}
                           {new Date(agenda.data_agendada).toLocaleDateString('pt-PT')}
+                          {agenda.hora_agendada && ` às ${agenda.hora_agendada}`}
                         </p>
                         {agenda.notas && (
                           <p className="text-xs text-slate-500 mt-1">{agenda.notas}</p>
