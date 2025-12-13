@@ -198,6 +198,42 @@ backend:
         - working: true
           agent: "testing"
           comment: "✅ TESTADO COMPLETAMENTE: Endpoint POST /api/parceiros/{parceiro_id}/importar-motoristas funcionando perfeitamente. TESTE REALIZADO: 1) Autenticação como parceiro (parceiro@tvdefleet.com) ✅ 2) Criação de CSV com 2 motoristas de teste ✅ 3) Importação via endpoint com parceiro_id correto ✅ 4) Verificação da resposta: 2 motoristas criados, 0 erros ✅ 5) VERIFICAÇÃO CRÍTICA: Campo parceiro_atribuido corretamente definido com ID do parceiro logado ✅. RESULTADO: Motoristas são corretamente associados ao parceiro que fez o login. Campo parceiro_atribuido = ab2a25aa-4f70-4c7b-835d-9204b0cd0d7e (ID do parceiro). NOTA: Campo parceiro_id não está implementado no modelo atual, mas parceiro_atribuido funciona corretamente para associação."
+
+  - task: "Correção 1: UUID da Uber deve ser guardado e encontrado"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🎯 CORREÇÃO 1 - 100% FUNCIONANDO! CONTEXTO: Testada correção do UUID da Uber conforme review request específico. CREDENCIAIS: admin@tvdefleet.com / o72ocUHy ✅. TESTES REALIZADOS: 1) ✅ Bruno Coelho encontrado na base de dados (brunomccoelho@hotmail.com) 2) ✅ Campo uuid_motorista_uber atualizado com '35382cb7-236e-42c1-b0b4-e16bfabb8ff3' via PUT /api/motoristas/{id} 3) ✅ UUID persistido corretamente na base de dados (verificado via GET) 4) ✅ CSV real descarregado com sucesso (2866 bytes) 5) ✅ UUID do Bruno encontrado no CSV 6) ✅ Importação via POST /api/importar/uber executada com sucesso 7) ✅ Taxa de sucesso: 90.9% (≥90% objetivo atingido) 8) ✅ Bruno encontrado por UUID durante importação (não na lista de erros). RESULTADO: Sistema agora guarda e encontra corretamente o UUID da Uber nos perfis dos motoristas."
+
+  - task: "Correção 2: Veículo atribuído com informações completas"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🎯 CORREÇÃO 2 - 100% FUNCIONANDO! CONTEXTO: Testada correção das informações completas do veículo conforme review request. CREDENCIAIS: admin@tvdefleet.com / o72ocUHy ✅. TESTES REALIZADOS: 1) ✅ Motorista com veículo atribuído encontrado 2) ✅ Detalhes do veículo obtidos via GET /api/vehicles/{id} 3) ✅ Campo via_verde_id presente na resposta: 'VV123456789' 4) ✅ Campo cartao_frota_id presente na resposta: 'CF987654321' 5) ✅ Ambos os campos incluídos na estrutura da resposta. RESULTADO: Sistema agora retorna informações completas dos veículos, incluindo via_verde_id e cartao_frota_id conforme solicitado."
+
+  - task: "Correção 3: Importação de Combustível e Carregamentos"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🎯 CORREÇÃO 3 - 100% FUNCIONANDO! CONTEXTO: Testada correção da importação de combustível e carregamentos conforme review request. CREDENCIAIS: admin@tvdefleet.com / o72ocUHy ✅. TESTES REALIZADOS: 1) ✅ Endpoint POST /api/importar/combustivel suportado e funcionando 2) ✅ Endpoint POST /api/importar/carregamento suportado e funcionando 3) ✅ Ambos os endpoints processam estruturas de dados diferentes 4) ✅ Confirmado que usam coleções MongoDB separadas 5) ✅ Teste com dados específicos de combustível (posto, litros, valor_liquido) 6) ✅ Teste com dados específicos de carregamento (energia, duracao, total_com_iva). RESULTADO: Sistema agora suporta importação separada de dados de combustível fóssil e carregamentos elétricos via endpoints dedicados."
         - working: true
           agent: "testing"
           comment: "🎯 DIAGNÓSTICO COMPLETO REALIZADO: Problema reportado 'não encontra parceiro' e erro 404 NÃO CONFIRMADO. TESTE EXTENSIVO: 1) ✅ Login como parceiro (parceiro@tvdefleet.com/UQ1B6DXU) funcionando 2) ✅ Busca de dados do parceiro via GET /api/parceiros funcionando 3) ✅ Parceiro encontrado: ID=driver-import, Nome='Santos & Filhos Lda' 4) ✅ Importação CSV como PARCEIRO: Status 200, 1 motorista criado, 0 erros 5) ✅ Login como admin (admin@tvdefleet.com) funcionando 6) ✅ Importação CSV como ADMIN: Status 200, 1 motorista criado, 0 erros. CONCLUSÃO: Endpoint POST /api/parceiros/{id}/importar-motoristas está FUNCIONANDO CORRETAMENTE para ambos os perfis. O problema reportado pode ter sido causado por: formato CSV incorreto, dados inválidos, ou problema temporário já resolvido. SISTEMA OPERACIONAL."
