@@ -11332,7 +11332,19 @@ async def importar_plataforma(
                 }
                 
                 # Adicionar campos específicos por plataforma
-                if plataforma in ['uber', 'bolt']:
+                if plataforma == 'uber':
+                    documento.update({
+                        "uuid_motorista": row.get('UUID do motorista', '').strip(),
+                        "nome_proprio": row.get('Nome próprio do motorista', '').strip(),
+                        "apelido": row.get('Apelido do motorista', '').strip(),
+                        "pago_total": to_float(row.get('Pago a si', '0')),
+                        "rendimentos_total": to_float(row.get('Pago a si : Os seus rendimentos', '0')),
+                        "tarifa": to_float(row.get('Pago a si : Os seus rendimentos : Tarifa', '0')),
+                        "taxa_servico": to_float(row.get('Pago a si : Os seus rendimentos : Taxa de serviço', '0')),
+                        "plataforma": "uber"
+                    })
+                    
+                elif plataforma == 'bolt':
                     documento.update({
                         "hora": row.get('hora', '').strip(),
                         "origem": row.get('origem', '').strip(),
@@ -11342,7 +11354,7 @@ async def importar_plataforma(
                         "valor_bruto": to_float(row.get('valor_bruto', '0')),
                         "comissao": to_float(row.get('comissao', '0')),
                         "valor_liquido": to_float(row.get('valor_liquido', '0')),
-                        "plataforma": plataforma
+                        "plataforma": "bolt"
                     })
                     
                 elif plataforma == 'viaverde':
