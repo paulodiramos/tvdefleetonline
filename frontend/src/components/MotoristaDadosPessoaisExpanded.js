@@ -1139,6 +1139,19 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
             <div className="space-y-4">
               <h3 className="font-semibold text-slate-700">Uber</h3>
               <div>
+                <Label>UUID Motorista Uber</Label>
+                <Input
+                  value={formData.uuid_motorista_uber}
+                  onChange={(e) => handleChange('uuid_motorista_uber', e.target.value)}
+                  disabled={!editMode}
+                  placeholder="UUID fornecido pela Uber"
+                  className="font-mono text-xs"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  ℹ️ Necessário para importação de pagamentos da Uber
+                </p>
+              </div>
+              <div>
                 <Label>Email Uber</Label>
                 <Input
                   type="email"
