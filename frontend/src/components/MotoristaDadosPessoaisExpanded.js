@@ -656,13 +656,12 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
               />
               {errors.whatsapp && <p className="text-xs text-red-500 mt-1">{errors.whatsapp}</p>}
             </div>
-            {canEdit && (
-              <div>
-                <Label>Veículo Atribuído</Label>
+            <div>
+              <Label>Veículo Atribuído</Label>
+              {canEdit && editMode ? (
                 <Select 
                   value={formData.vehicle_assigned || ''} 
                   onValueChange={(val) => handleChange('vehicle_assigned', val)}
-                  disabled={!editMode}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecione um veículo" />
@@ -676,8 +675,20 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-            )}
+              ) : (
+                <Input
+                  value={
+                    formData.vehicle_assigned 
+                      ? veiculos.find(v => v.id === formData.vehicle_assigned)
+                        ? `${veiculos.find(v => v.id === formData.vehicle_assigned).marca} ${veiculos.find(v => v.id === formData.vehicle_assigned).modelo} - ${veiculos.find(v => v.id === formData.vehicle_assigned).matricula}`
+                        : 'Veículo não encontrado'
+                      : 'Nenhum'
+                  }
+                  disabled
+                  className="bg-slate-50"
+                />
+              )}
+            </div>
             <div className="md:col-span-2">
               <Label>Morada Completa *</Label>
               <Input
