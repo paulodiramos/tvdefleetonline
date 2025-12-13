@@ -11288,7 +11288,9 @@ async def importar_plataforma(
             'bolt': 'viagens_bolt',
             'viaverde': 'portagens_viaverde',
             'gps': 'trajetos_gps',
-            'abastecimento': 'abastecimentos'
+            'combustivel': 'abastecimentos_combustivel',
+            'carregamento': 'abastecimentos_eletrico',
+            'abastecimento': 'abastecimentos_combustivel'  # Mantido para retrocompatibilidade
         }
         
         if plataforma not in colecao_map:
