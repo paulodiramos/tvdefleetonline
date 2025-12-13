@@ -274,16 +274,21 @@ class ReviewRequestTester:
                 return
             
             driver_id = drivers[0]["id"]
-            driver_name = drivers[0]["name"]
+            driver_name = drivers[0].get("name") or "Test Driver"
             test_uuid = "12345678-1234-1234-1234-123456789abc"
             
             print(f"✅ Motorista encontrado: {driver_id} - {driver_name}")
             
-            # Step 2: Update driver with UUID
+            # Step 2: Update driver with UUID and name if needed
             update_data = {
                 "uuid_motorista_uber": test_uuid,
                 "email_uber": "test.driver@uber.com"
             }
+            
+            # If driver name is None or empty, update it too
+            if not driver_name or driver_name == "None":
+                driver_name = "João Silva"
+                update_data["name"] = driver_name
             
             update_response = requests.put(
                 f"{BACKEND_URL}/motoristas/{driver_id}",
@@ -299,8 +304,12 @@ class ReviewRequestTester:
             print(f"✅ Motorista atualizado com UUID: {test_uuid}")
             
             # Step 3: Create test CSV with UUID matching
+            name_parts = driver_name.split() if driver_name else ["João", "Silva"]
+            first_name = name_parts[0] if name_parts else "João"
+            last_name = name_parts[-1] if len(name_parts) > 1 else "Silva"
+            
             csv_content = f"""UUID do motorista,motorista_email,Nome próprio,Apelido,Pago a si,rendimentos,tarifa,taxa de serviço
-{test_uuid},test.driver@uber.com,{driver_name.split()[0]},{driver_name.split()[-1] if len(driver_name.split()) > 1 else 'Silva'},25.50,30.00,28.75,2.25"""
+{test_uuid},test.driver@uber.com,{first_name},{last_name},25.50,30.00,28.75,2.25"""
             
             files = {
                 'file': ('test_uber_uuid.csv', csv_content.encode('utf-8'), 'text/csv')
