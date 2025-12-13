@@ -277,23 +277,36 @@ const HistoricoRelatorios = ({ user, onLogout }) => {
                           {getStatusBadge(item.status)}
                         </td>
                         <td className="py-3">
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 flex-wrap">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => handleDownloadPDF(item.id)}
+                              className="bg-blue-50 hover:bg-blue-100"
                             >
                               <Download className="w-3 h-3 mr-1" />
-                              PDF
+                              Relatório
                             </Button>
                             {item.recibo_url && (
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleDownloadRecibo(item.recibo_url)}
+                                className="bg-orange-50 hover:bg-orange-100"
                               >
                                 <Receipt className="w-3 h-3 mr-1" />
                                 Recibo
+                              </Button>
+                            )}
+                            {item.comprovativo_pagamento_url && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDownloadComprovativo(item.comprovativo_pagamento_url)}
+                                className="bg-green-50 hover:bg-green-100"
+                              >
+                                <Download className="w-3 h-3 mr-1" />
+                                Comprovativo
                               </Button>
                             )}
                           </div>
