@@ -1407,14 +1407,9 @@ const RelatoriosHub = ({ user, onLogout }) => {
 };
 
 
+      </div>
+    </div>
+  );
+};
 
-        {/* Modal Escolher Método */}
-        <Dialog open={showMetodosModal} onOpenChange={setShowMetodosModal}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Métodos de Criação de Relatórios</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3">
-              <Card 
-                className="cursor-pointer hover:bg-slate-50 transition-colors"
-                onClick={() => {
+export default RelatoriosHub;
