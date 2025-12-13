@@ -921,9 +921,9 @@ startxref
                 result = response.json()
                 
                 # Check import results
-                total_importados = result.get("total_importados", 0)
-                total_erros = result.get("total_erros", 0)
-                total_linhas = result.get("total_linhas", 0)
+                total_importados = result.get("sucesso", 0)
+                total_erros = result.get("erros", 0)
+                total_linhas = total_importados + total_erros
                 
                 success_rate = (total_importados / total_linhas * 100) if total_linhas > 0 else 0
                 
