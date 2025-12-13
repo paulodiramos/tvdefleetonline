@@ -11241,6 +11241,155 @@ async def importar_relatorios_csv(
     # Get motoristas do parceiro
     query = {}
     if current_user["role"] == UserRole.PARCEIRO:
+
+
+@api_router.post("/importar/{plataforma}")
+async def importar_plataforma(
+    plataforma: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Importar dados de plataformas (Uber, Bolt, Via Verde, GPS, Abastecimentos)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    try:
+        import csv
+        import io
+        
+        # Ler conteúdo do ficheiro
+        content = await file.read()
+        decoded = content.decode('utf-8')
+        csv_reader = csv.DictReader(io.StringIO(decoded))
+        
+        sucesso = 0
+        erros = 0
+        erros_detalhes = []
+        
+        # Determinar coleção baseado na plataforma
+        colecao_map = {
+            'uber': 'viagens_uber',
+            'bolt': 'viagens_bolt',
+            'viaverde': 'portagens_viaverde',
+            'gps': 'trajetos_gps',
+            'abastecimento': 'abastecimentos'
+        }
+        
+        if plataforma not in colecao_map:
+            raise HTTPException(status_code=400, detail=f"Plataforma '{plataforma}' não suportada")
+        
+        colecao = colecao_map[plataforma]
+        
+        for row_num, row in enumerate(csv_reader, start=2):
+            try:
+                # Buscar motorista por email
+                motorista_email = row.get('motorista_email', '').strip()
+                if not motorista_email:
+                    erros += 1
+                    erros_detalhes.append(f"Linha {row_num}: Email do motorista vazio")
+                    continue
+                
+                motorista = await db.motoristas.find_one({"email": motorista_email}, {"_id": 0})
+                if not motorista:
+                    erros += 1
+                    erros_detalhes.append(f"Linha {row_num}: Motorista {motorista_email} não encontrado")
+                    continue
+                
+                # Validar campo data
+                data = row.get('data', '').strip()
+                if not data:
+                    erros += 1
+                    erros_detalhes.append(f"Linha {row_num}: Data em falta")
+                    continue
+                
+                # Converter valores numéricos
+                def to_float(value, default=0.0):
+                    try:
+                        return float(value.strip()) if value and value.strip() else default
+                    except:
+                        return default
+                
+                def to_int(value, default=0):
+                    try:
+                        return int(value.strip()) if value and value.strip() else default
+                    except:
+                        return default
+                
+                # Criar documento baseado na plataforma
+                documento = {
+                    "id": str(uuid.uuid4()),
+                    "motorista_id": motorista["id"],
+                    "motorista_email": motorista_email,
+                    "parceiro_id": current_user["id"],
+                    "data": data,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "created_by": current_user["id"]
+                }
+                
+                # Adicionar campos específicos por plataforma
+                if plataforma in ['uber', 'bolt']:
+                    documento.update({
+                        "hora": row.get('hora', '').strip(),
+                        "origem": row.get('origem', '').strip(),
+                        "destino": row.get('destino', '').strip(),
+                        "distancia_km": to_float(row.get('distancia_km', '0')),
+                        "duracao_min": to_int(row.get('duracao_min', '0')),
+                        "valor_bruto": to_float(row.get('valor_bruto', '0')),
+                        "comissao": to_float(row.get('comissao', '0')),
+                        "valor_liquido": to_float(row.get('valor_liquido', '0')),
+                        "plataforma": plataforma
+                    })
+                    
+                elif plataforma == 'viaverde':
+                    documento.update({
+                        "hora": row.get('hora', '').strip(),
+                        "portagem": row.get('portagem', '').strip(),
+                        "valor": to_float(row.get('valor', '0')),
+                        "via": row.get('via', '').strip(),
+                        "sentido": row.get('sentido', '').strip()
+                    })
+                    
+                elif plataforma == 'gps':
+                    documento.update({
+                        "km_inicial": to_float(row.get('km_inicial', '0')),
+                        "km_final": to_float(row.get('km_final', '0')),
+                        "km_percorridos": to_float(row.get('km_percorridos', '0')),
+                        "tempo_total_min": to_int(row.get('tempo_total_min', '0'))
+                    })
+                    
+                elif plataforma == 'abastecimento':
+                    documento.update({
+                        "hora": row.get('hora', '').strip(),
+                        "posto": row.get('posto', '').strip(),
+                        "combustivel": row.get('combustivel', '').strip(),
+                        "litros": to_float(row.get('litros', '0')),
+                        "valor_total": to_float(row.get('valor_total', '0')),
+                        "km_atual": to_int(row.get('km_atual', '0'))
+                    })
+                
+                # Inserir na coleção apropriada
+                await db[colecao].insert_one(documento)
+                sucesso += 1
+                
+            except Exception as e:
+                erros += 1
+                erros_detalhes.append(f"Linha {row_num}: {str(e)}")
+                print(f"Erro ao processar linha {row_num}: {str(e)}")
+        
+        # Retornar resumo
+        resultado = {
+            "message": f"Importação {plataforma}: {sucesso} sucesso(s), {erros} erro(s)",
+            "sucesso": sucesso,
+            "erros": erros,
+            "erros_detalhes": erros_detalhes[:10]  # Limitar a 10 erros
+        }
+        
+        return resultado
+        
+    except Exception as e:
+        print(f"Erro ao importar {plataforma}: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao processar ficheiro: {str(e)}")
+
         query["parceiro_atribuido"] = current_user["id"]
     
     motoristas = await db.motoristas.find(query, {"_id": 0}).to_list(1000)
