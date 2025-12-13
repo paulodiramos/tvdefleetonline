@@ -84,6 +84,7 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
   const [uploading, setUploading] = useState({});
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [veiculos, setVeiculos] = useState([]);
 
   const canEdit = ['admin', 'gestao', 'parceiro'].includes(userRole);
   const isMotorista = userRole === 'motorista';
