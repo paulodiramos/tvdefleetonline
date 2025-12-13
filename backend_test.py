@@ -865,7 +865,8 @@ startxref
                 bruno_uuid = None
                 
                 for motorista in motoristas:
-                    if "bruno" in motorista.get("name", "").lower() and "coelho" in motorista.get("name", "").lower():
+                    name = motorista.get("name") or ""
+                    if "bruno" in name.lower() and "coelho" in name.lower():
                         bruno_found = True
                         bruno_uuid = motorista.get("uuid_motorista_uber")
                         break
