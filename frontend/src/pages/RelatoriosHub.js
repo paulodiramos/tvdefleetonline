@@ -1406,10 +1406,4 @@ const RelatoriosHub = ({ user, onLogout }) => {
   );
 };
 
-
-      </div>
-    </div>
-  );
-};
-
 export default RelatoriosHub;
