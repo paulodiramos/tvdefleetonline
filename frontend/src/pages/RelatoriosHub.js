@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { 
   FileText, Plus, Edit, Check, X, Download, ArrowLeft,
-  Calendar, User, DollarSign, TrendingUp, Eye, CheckCircle, Upload
+  Calendar, User, DollarSign, TrendingUp, Eye, CheckCircle, Upload,
+  FileSpreadsheet
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -47,6 +48,11 @@ const RelatoriosHub = ({ user, onLogout }) => {
   // Modal de edição rápida
   const [showEditModal, setShowEditModal] = useState(false);
   const [relatorioEditando, setRelatorioEditando] = useState(null);
+  
+  // Modal de importação CSV
+  const [showImportarCSVModal, setShowImportarCSVModal] = useState(false);
+  const [csvFile, setCsvFile] = useState(null);
+  const [importandoCSV, setImportandoCSV] = useState(false);
   
   // Modal de confirmação de pagamento
   const [showPagarModal, setShowPagarModal] = useState(false);
@@ -502,10 +508,20 @@ const RelatoriosHub = ({ user, onLogout }) => {
               </p>
             </div>
           </div>
-          <Button onClick={() => setShowCriarModal(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Criar Relatório
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowCriarModal(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Criar Relatório
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowImportarCSVModal(true)}
+              className="bg-green-50 hover:bg-green-100 border-green-200"
+            >
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              Importar CSV
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
