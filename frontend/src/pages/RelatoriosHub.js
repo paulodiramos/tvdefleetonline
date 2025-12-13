@@ -553,7 +553,7 @@ const RelatoriosHub = ({ user, onLogout }) => {
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button onClick={() => setShowCriarModal(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Criar Relatório
@@ -564,7 +564,15 @@ const RelatoriosHub = ({ user, onLogout }) => {
               className="bg-green-50 hover:bg-green-100 border-green-200"
             >
               <FileSpreadsheet className="w-4 h-4 mr-2" />
-              Importar CSV
+              Importar Relatórios
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/importar-plataformas')}
+              className="bg-blue-50 hover:bg-blue-100 border-blue-200"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Importar Plataformas
             </Button>
           </div>
         </div>
