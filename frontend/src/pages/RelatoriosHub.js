@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { 
   FileText, Plus, Edit, Check, X, Download, ArrowLeft,
-  Calendar, User, DollarSign, TrendingUp, Eye, CheckCircle, Upload
+  Calendar, User, DollarSign, TrendingUp, Eye, CheckCircle, Upload,
+  FileSpreadsheet, Clock
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -47,6 +48,11 @@ const RelatoriosHub = ({ user, onLogout }) => {
   // Modal de edição rápida
   const [showEditModal, setShowEditModal] = useState(false);
   const [relatorioEditando, setRelatorioEditando] = useState(null);
+  
+  // Modais para métodos alternativos
+  const [showMetodosModal, setShowMetodosModal] = useState(false);
+  const [showImportarCSVModal, setShowImportarCSVModal] = useState(false);
+  const [csvFile, setCsvFile] = useState(null);
   
   // Modal de confirmação de pagamento
   const [showPagarModal, setShowPagarModal] = useState(false);
