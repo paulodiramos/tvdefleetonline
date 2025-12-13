@@ -192,15 +192,54 @@ backend:
 
   - task: "Sistema de Importação de Plataformas - Backend Endpoints"
     implemented: true
-    working: "NA"
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "testing"
           comment: "🎯 ANÁLISE COMPLETA DO BACKEND - SISTEMA 100% IMPLEMENTADO! CONTEXTO: Análise detalhada do endpoint de importação de plataformas conforme review request. VERIFICAÇÃO DO CÓDIGO: 1) ✅ CRÍTICO - Endpoint POST /api/importar/{plataforma} implementado (linha 11251) 2) ✅ CRÍTICO - Suporte às 5 plataformas: uber, bolt, viaverde, gps, abastecimento 3) ✅ CRÍTICO - Formato Uber ATUALIZADO com campos reais: UUID do motorista, Pago a si, rendimentos, tarifa, taxa de serviço 4) ✅ CRÍTICO - Validação de motoristas por email 5) ✅ CRÍTICO - Coleções MongoDB específicas: viagens_uber, viagens_bolt, portagens_viaverde, trajetos_gps, abastecimentos 6) ✅ CRÍTICO - Conversão automática de valores numéricos 7) ✅ CRÍTICO - Tratamento de erros detalhado com linha específica 8) ✅ CRÍTICO - Autorização por role (ADMIN, PARCEIRO, GESTAO) 9) ✅ CRÍTICO - Associação automática ao parceiro logado (current_user['id']). FUNCIONALIDADES CONFIRMADAS NO CÓDIGO: ✅ Processamento CSV com DictReader ✅ Validação de campos obrigatórios por plataforma ✅ Inserção em coleções MongoDB específicas ✅ Resposta estruturada com sucesso/erros/detalhes ✅ Limite de 10 erros nos detalhes para performance ✅ Logs de erro para debugging. OBSERVAÇÃO: Backend está completamente implementado e pronto para receber ficheiros CSV das 5 plataformas. Precisa de teste funcional end-to-end para confirmar funcionamento com frontend."
+        - working: true
+          agent: "testing"
+          comment: "✅ TESTADO COMPLETAMENTE: Endpoint POST /api/importar/uber funcionando perfeitamente com correspondência flexível de nomes de motoristas. TESTE REALIZADO: 1) Autenticação como admin (admin@tvdefleet.com) ✅ 2) Atualização de motorista existente com email_uber e uuid_motorista_uber ✅ 3) Teste de importação CSV com 4 variações de nome: lowercase, uppercase, espaços extra, sem acentos ✅ 4) VERIFICAÇÃO CRÍTICA: Todas as 4 variações funcionaram corretamente (1 sucesso, 0 erros) ✅. RESULTADO: Sistema de importação Uber agora suporta correspondência flexível de nomes (case-insensitive, ignora espaços extra, funciona com e sem acentos). Bug 3 do review request CORRIGIDO!"
+
+  - task: "Bug Fix 1: Campos de FichaVeiculo.js não são guardados"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ BUG CORRIGIDO: Campos Via Verde ID, Cartão Frota ID e Motorista Atribuído agora são guardados corretamente. TESTE REALIZADO: 1) Autenticação como admin (admin@tvdefleet.com) ✅ 2) Obtenção de veículo existente para teste ✅ 3) Atualização com dados de teste: via_verde_id='VV123456789', cartao_frota_id='CF987654321', motorista_atribuido=ID_real ✅ 4) VERIFICAÇÃO CRÍTICA: Todos os 3 campos foram salvos e persistidos corretamente ✅. RESULTADO: Bug 1 do review request CORRIGIDO - campos da ficha do veículo agora são guardados adequadamente."
+
+  - task: "Bug Fix 2: Status do veículo não atualiza"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ BUG CORRIGIDO: Status do veículo agora atualiza corretamente. TESTE REALIZADO: 1) Autenticação como admin (admin@tvdefleet.com) ✅ 2) Obtenção de veículo existente para teste ✅ 3) Teste de atualização de status para diferentes valores: atribuido, manutencao, disponivel, venda ✅ 4) VERIFICAÇÃO CRÍTICA: Status foi atualizado e persistido corretamente ✅. RESULTADO: Bug 2 do review request CORRIGIDO - status do veículo agora atualiza adequadamente."
+
+  - task: "Bug Fix 3: Importação CSV da Uber com correspondência flexível"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "✅ BUG CORRIGIDO: Importação CSV da Uber agora suporta correspondência flexível de nomes de motoristas. TESTE REALIZADO: 1) Autenticação como admin (admin@tvdefleet.com) ✅ 2) Configuração de motorista de teste com email_uber e uuid_motorista_uber ✅ 3) Teste com 4 variações de nome: 'joão silva' (lowercase), 'JOÃO SILVA' (uppercase), '  João  Silva  ' (espaços extra), 'joao silva' (sem acentos) ✅ 4) VERIFICAÇÃO CRÍTICA: Todas as 4 variações resultaram em 1 sucesso, 0 erros ✅. RESULTADO: Bug 3 do review request CORRIGIDO - sistema agora encontra motoristas independentemente de case, espaços extra ou acentos."
 
   - task: "Restrição de permissões - Parceiros não podem criar receitas"
     implemented: true
