@@ -11143,9 +11143,9 @@ async def importar_relatorios_csv(
         import csv
         import io
         
-        # Ler conteúdo do ficheiro
+        # Ler conteúdo do ficheiro (usar utf-8-sig para remover BOM se presente)
         content = await file.read()
-        decoded = content.decode('utf-8')
+        decoded = content.decode('utf-8-sig')
         csv_reader = csv.DictReader(io.StringIO(decoded))
         
         sucesso = 0
@@ -11273,9 +11273,9 @@ async def importar_plataforma(
         import csv
         import io
         
-        # Ler conteúdo do ficheiro
+        # Ler conteúdo do ficheiro (usar utf-8-sig para remover BOM se presente)
         content = await file.read()
-        decoded = content.decode('utf-8')
+        decoded = content.decode('utf-8-sig')
         csv_reader = csv.DictReader(io.StringIO(decoded))
         
         sucesso = 0
