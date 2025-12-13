@@ -8507,6 +8507,7 @@ async def agendar_vistoria(
             "id": str(uuid.uuid4()),
             "tipo": "vistoria",
             "data_agendada": agendamento.get("data_agendada"),
+            "hora_agendada": agendamento.get("hora_agendada"),
             "tipo_vistoria": agendamento.get("tipo_vistoria", "periodica"),
             "notas": agendamento.get("notas", ""),
             "parceiro_id": agendamento.get("parceiro_id"),
