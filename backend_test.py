@@ -7266,53 +7266,306 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
         self.print_summary()
         return self.get_test_summary()
 
+    # ==================== BUG FIX TESTS (REVIEW REQUEST) ====================
+    
+    def test_bug_fixes_review_request(self):
+        """Test the 3 specific bugs mentioned in the review request"""
+        print("\n🐛 TESTING 3 BUG FIXES FROM REVIEW REQUEST")
+        print("=" * 80)
+        print("Bug 1: Campos de FichaVeiculo.js não são guardados")
+        print("Bug 2: Status do veículo não atualiza")
+        print("Bug 3: Importação CSV da Uber")
+        print("Credentials: admin@tvdefleet.com / o72ocUHy")
+        print("=" * 80)
+        
+        # Authenticate as admin
+        admin_headers = self.get_headers("admin")
+        if not admin_headers:
+            self.log_result("Bug-Fix-Auth", False, "Failed to authenticate as admin")
+            return False
+        
+        # Test all 3 bugs
+        self.test_bug_1_vehicle_fields_not_saved(admin_headers)
+        self.test_bug_2_vehicle_status_not_updating(admin_headers)
+        self.test_bug_3_uber_csv_import_flexible_matching(admin_headers)
+        
+        return True
+    
+    def test_bug_1_vehicle_fields_not_saved(self, headers):
+        """Bug 1: Test that Via Verde ID, Cartão Frota ID, and Motorista Atribuído are saved correctly"""
+        try:
+            # First get a vehicle to test with
+            vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+            if vehicles_response.status_code != 200:
+                self.log_result("Bug-1-Vehicle-Fields", False, "Cannot get vehicles list")
+                return
+            
+            vehicles = vehicles_response.json()
+            if not vehicles:
+                self.log_result("Bug-1-Vehicle-Fields", False, "No vehicles available for testing")
+                return
+            
+            vehicle_id = vehicles[0]["id"]
+            
+            # Get a motorista to assign
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            motorista_id = None
+            if motoristas_response.status_code == 200:
+                motoristas = motoristas_response.json()
+                if motoristas:
+                    motorista_id = motoristas[0]["id"]
+            
+            # Test data for the fields that were not being saved
+            test_data = {
+                "via_verde_id": "VV123456789",
+                "cartao_frota_id": "CF987654321",
+                "motorista_atribuido": motorista_id if motorista_id else "test_motorista_id"
+            }
+            
+            # Update the vehicle with test data
+            update_response = requests.put(
+                f"{BACKEND_URL}/vehicles/{vehicle_id}",
+                json=test_data,
+                headers=headers
+            )
+            
+            if update_response.status_code == 200:
+                # Verify the fields were saved by getting the vehicle again
+                get_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}", headers=headers)
+                
+                if get_response.status_code == 200:
+                    updated_vehicle = get_response.json()
+                    
+                    # Check if all fields were saved correctly
+                    via_verde_saved = updated_vehicle.get("via_verde_id") == test_data["via_verde_id"]
+                    cartao_frota_saved = updated_vehicle.get("cartao_frota_id") == test_data["cartao_frota_id"]
+                    motorista_saved = updated_vehicle.get("motorista_atribuido") == test_data["motorista_atribuido"]
+                    
+                    if via_verde_saved and cartao_frota_saved and motorista_saved:
+                        self.log_result("Bug-1-Vehicle-Fields", True, 
+                                      "✅ BUG FIXED: All vehicle fields (Via Verde ID, Cartão Frota ID, Motorista Atribuído) are now saved correctly")
+                    else:
+                        failed_fields = []
+                        if not via_verde_saved:
+                            failed_fields.append("Via Verde ID")
+                        if not cartao_frota_saved:
+                            failed_fields.append("Cartão Frota ID")
+                        if not motorista_saved:
+                            failed_fields.append("Motorista Atribuído")
+                        
+                        self.log_result("Bug-1-Vehicle-Fields", False, 
+                                      f"❌ BUG STILL EXISTS: Fields not saved: {', '.join(failed_fields)}")
+                else:
+                    self.log_result("Bug-1-Vehicle-Fields", False, "Cannot verify vehicle update")
+            else:
+                self.log_result("Bug-1-Vehicle-Fields", False, 
+                              f"Failed to update vehicle: {update_response.status_code}", update_response.text)
+        except Exception as e:
+            self.log_result("Bug-1-Vehicle-Fields", False, f"Test error: {str(e)}")
+    
+    def test_bug_2_vehicle_status_not_updating(self, headers):
+        """Bug 2: Test that vehicle status updates correctly"""
+        try:
+            # Get a vehicle to test with
+            vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+            if vehicles_response.status_code != 200:
+                self.log_result("Bug-2-Vehicle-Status", False, "Cannot get vehicles list")
+                return
+            
+            vehicles = vehicles_response.json()
+            if not vehicles:
+                self.log_result("Bug-2-Vehicle-Status", False, "No vehicles available for testing")
+                return
+            
+            vehicle_id = vehicles[0]["id"]
+            original_vehicle = vehicles[0]
+            original_status = original_vehicle.get("status", "disponivel")
+            
+            # Test different status values
+            test_statuses = ["atribuido", "manutencao", "disponivel", "venda"]
+            
+            for new_status in test_statuses:
+                if new_status == original_status:
+                    continue  # Skip if it's the same as current
+                
+                # Update vehicle status
+                update_data = {"status": new_status}
+                update_response = requests.put(
+                    f"{BACKEND_URL}/vehicles/{vehicle_id}",
+                    json=update_data,
+                    headers=headers
+                )
+                
+                if update_response.status_code == 200:
+                    # Verify the status was updated
+                    get_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}", headers=headers)
+                    
+                    if get_response.status_code == 200:
+                        updated_vehicle = get_response.json()
+                        current_status = updated_vehicle.get("status")
+                        
+                        if current_status == new_status:
+                            self.log_result("Bug-2-Vehicle-Status", True, 
+                                          f"✅ BUG FIXED: Vehicle status successfully updated to '{new_status}'")
+                            return  # Test passed, exit
+                        else:
+                            self.log_result("Bug-2-Vehicle-Status", False, 
+                                          f"❌ BUG STILL EXISTS: Status not updated. Expected '{new_status}', got '{current_status}'")
+                            return
+                    else:
+                        self.log_result("Bug-2-Vehicle-Status", False, "Cannot verify status update")
+                        return
+                else:
+                    self.log_result("Bug-2-Vehicle-Status", False, 
+                                  f"Failed to update status: {update_response.status_code}")
+                    return
+            
+            # If we get here, all statuses were the same as original
+            self.log_result("Bug-2-Vehicle-Status", True, "Vehicle status appears to be working (no different status to test)")
+            
+        except Exception as e:
+            self.log_result("Bug-2-Vehicle-Status", False, f"Test error: {str(e)}")
+    
+    def test_bug_3_uber_csv_import_flexible_matching(self, headers):
+        """Bug 3: Test Uber CSV import with flexible driver name matching (case-insensitive, ignoring extra spaces)"""
+        try:
+            # First create a test motorista with a specific name and email
+            test_motorista_data = {
+                "email": "joao.silva.test@example.com",
+                "name": "João Silva",
+                "phone": "912345678",
+                "morada_completa": "Rua Teste, 123",
+                "codigo_postal": "1000-001",
+                "data_nascimento": "1990-01-01",
+                "nacionalidade": "Portuguesa",
+                "tipo_documento": "CC",
+                "numero_documento": "12345678",
+                "validade_documento": "2030-01-01",
+                "nif": "123456789",
+                "carta_conducao_numero": "PT123456",
+                "carta_conducao_validade": "2030-01-01",
+                "licenca_tvde_numero": "TVDE123456",
+                "licenca_tvde_validade": "2030-01-01",
+                "regime": "aluguer",
+                "whatsapp": "912345678",
+                "tipo_pagamento": "recibo_verde",
+                "email_uber": "joao.silva.test@example.com",
+                "uuid_motorista_uber": "test-uuid-123456"
+            }
+            
+            # Create the motorista
+            create_response = requests.post(f"{BACKEND_URL}/motoristas", json=test_motorista_data, headers=headers)
+            
+            if create_response.status_code != 200:
+                self.log_result("Bug-3-Uber-CSV-Import", False, "Cannot create test motorista")
+                return
+            
+            # Now test CSV import with different name variations
+            test_cases = [
+                {
+                    "csv_name": "joão silva",  # lowercase
+                    "description": "lowercase name"
+                },
+                {
+                    "csv_name": "JOÃO SILVA",  # uppercase
+                    "description": "uppercase name"
+                },
+                {
+                    "csv_name": "  João  Silva  ",  # extra spaces
+                    "description": "name with extra spaces"
+                },
+                {
+                    "csv_name": "joao silva",  # without accents
+                    "description": "name without accents"
+                }
+            ]
+            
+            success_count = 0
+            
+            for test_case in test_cases:
+                # Create CSV content with the test name variation
+                csv_content = f"""UUID do motorista,motorista_email,Nome próprio,Apelido,Pago a si,rendimentos,tarifa,taxa de serviço
+test-uuid-123456,joao.silva.test@example.com,{test_case['csv_name'].split()[0]},{test_case['csv_name'].split()[1]},25.50,20.40,25.50,5.10"""
+                
+                files = {
+                    'file': ('test_uber_flexible.csv', csv_content.encode('utf-8'), 'text/csv')
+                }
+                
+                # Test the import endpoint
+                response = requests.post(
+                    f"{BACKEND_URL}/importar/uber",
+                    files=files,
+                    headers=headers
+                )
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    
+                    # Check if motorista was found (no errors about motorista not found)
+                    erros = result.get("erros", [])
+                    motoristas_encontrados = result.get("motoristas_encontrados", 0)
+                    
+                    if motoristas_encontrados > 0 and not any("não encontrado" in erro.lower() for erro in erros):
+                        success_count += 1
+                        self.log_result(f"Bug-3-Uber-CSV-{test_case['description']}", True, 
+                                      f"✅ Flexible matching works for {test_case['description']}")
+                    else:
+                        self.log_result(f"Bug-3-Uber-CSV-{test_case['description']}", False, 
+                                      f"❌ Flexible matching failed for {test_case['description']}: {erros}")
+                else:
+                    self.log_result(f"Bug-3-Uber-CSV-{test_case['description']}", False, 
+                                  f"Import failed: {response.status_code}")
+            
+            # Overall result
+            if success_count == len(test_cases):
+                self.log_result("Bug-3-Uber-CSV-Import", True, 
+                              "✅ BUG FIXED: Uber CSV import now supports flexible driver name matching")
+            elif success_count > 0:
+                self.log_result("Bug-3-Uber-CSV-Import", False, 
+                              f"❌ BUG PARTIALLY FIXED: {success_count}/{len(test_cases)} name variations work")
+            else:
+                self.log_result("Bug-3-Uber-CSV-Import", False, 
+                              "❌ BUG STILL EXISTS: Uber CSV import does not support flexible name matching")
+            
+        except Exception as e:
+            self.log_result("Bug-3-Uber-CSV-Import", False, f"Test error: {str(e)}")
+
+
 if __name__ == "__main__":
     tester = TVDEFleetTester()
     
-    # Run CSV import test after code simplification as requested in review
-    print("🎯 TESTE IMPORTAÇÃO CSV DE MOTORISTAS APÓS SIMPLIFICAÇÃO DO CÓDIGO")
+    print("🎯 TESTE DOS 3 BUGS CORRIGIDOS NO SISTEMA TVDEFleet")
     print("=" * 80)
-    print("CONTEXTO:")
-    print("Simplifiquei o código para usar diretamente `user.id` como `parceiro_id`")
-    print("quando um parceiro está logado, em vez de buscar na lista de parceiros.")
-    print("")
-    print("CREDENCIAIS:")
-    print("- Parceiro: parceiro@tvdefleet.com / UQ1B6DXU")
-    print("")
-    print("TESTE:")
-    print("1. Login como parceiro")
-    print("2. Capturar user.id do response")
-    print("3. Criar CSV de teste")
-    print("4. Importar CSV usando user.id como parceiro_id")
-    print("5. Verificar se funciona")
+    print("Bug 1: Campos de FichaVeiculo.js não são guardados")
+    print("Bug 2: Status do veículo não atualiza")
+    print("Bug 3: Importação CSV da Uber")
+    print("Credentials: admin@tvdefleet.com / o72ocUHy")
     print("=" * 80)
     
-    # Authenticate first
-    if not tester.authenticate_user("parceiro"):
-        print("❌ FALHA: Não foi possível autenticar como parceiro")
+    # Authenticate as admin first
+    if not tester.authenticate_user("admin"):
+        print("❌ FALHA: Não foi possível autenticar como admin")
         exit(1)
     
-    # Run the corrected CSV import test
-    success = tester.test_csv_import_driver_association_corrected_backend()
+    # Run the bug fix tests
+    success = tester.test_bug_fixes_review_request()
     
     # Print summary
     tester.print_summary()
     summary = tester.get_test_summary()
     
-    print(f"\n🎯 RESULTADO FINAL")
+    print(f"\n🎯 RESULTADO FINAL DOS TESTES DE BUG FIXES")
     print(f"Total Tests: {summary['total']}")
     print(f"✅ Passed: {summary['passed']}")
     print(f"❌ Failed: {summary['failed']}")
     
     if summary["failed"] == 0 and success:
-        print("\n🎉 TESTE CONCLUÍDO COM SUCESSO!")
-        print("✅ Login bem-sucedido")
-        print("✅ user.id = parceiro_id na tabela parceiros")
-        print("✅ Importação funciona usando user.id diretamente")
-        print("✅ Motorista é criado e associado ao parceiro correto")
+        print("\n🎉 TODOS OS BUGS FORAM CORRIGIDOS COM SUCESSO!")
+        print("✅ Bug 1: Campos de veículo agora são guardados corretamente")
+        print("✅ Bug 2: Status do veículo atualiza corretamente")
+        print("✅ Bug 3: Importação CSV da Uber com correspondência flexível de nomes")
         exit(0)
     else:
-        print(f"\n🚨 TESTE FALHADO!")
-        print(f"❌ Algum problema foi encontrado durante o teste")
-        print(f"❌ Verificar logs acima para detalhes")
+        print(f"\n🚨 ALGUNS BUGS AINDA EXISTEM!")
+        print(f"❌ Verificar logs acima para detalhes dos bugs que ainda precisam ser corrigidos")
         exit(1)
