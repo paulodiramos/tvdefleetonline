@@ -158,15 +158,18 @@ frontend:
 
   - task: "Sistema de Importação de Plataformas com Formato Uber Real"
     implemented: true
-    working: "NA"
-    file: "frontend/src/pages/ImportarPlataformas.js"
-    stuck_count: 0
+    working: false
+    file: "backend/server.py"
+    stuck_count: 1
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
         - working: "NA"
           agent: "testing"
           comment: "🎯 ANÁLISE COMPLETA DO CÓDIGO FONTE - SISTEMA 100% IMPLEMENTADO E PRONTO PARA TESTE! CONTEXTO: Análise detalhada do sistema de importação de plataformas conforme review request em português. VERIFICAÇÃO DO CÓDIGO: 1) ✅ CRÍTICO - Página /importar-plataformas implementada (ImportarPlataformas.js) 2) ✅ CRÍTICO - 5 plataformas configuradas: Uber (preto), Bolt (verde), Via Verde (azul), GPS/Trajetos (roxo), Abastecimentos (vermelho) 3) ✅ CRÍTICO - Formato Uber ATUALIZADO com campos reais: UUID do motorista, motorista_email, Nome próprio, Apelido, Pago a si, rendimentos, tarifa, taxa de serviço 4) ✅ CRÍTICO - Botões de navegação implementados no RelatoriosHub.js: 'Criar Relatório', 'Importar Relatórios' (verde), 'Importar Plataformas' (azul) 5) ✅ CRÍTICO - Templates descarregáveis com 3 linhas de exemplo para cada plataforma 6) ✅ CRÍTICO - Interface de upload com validações (accept='.csv', avisos em amarelo, botão importar dinâmico) 7) ✅ CRÍTICO - Backend endpoint POST /api/importar/{plataforma} implementado com suporte completo às 5 plataformas 8) ✅ CRÍTICO - Botão 'Voltar' para retornar a /relatorios 9) ✅ CRÍTICO - Rota configurada em App.js (/importar-plataformas). FUNCIONALIDADES CONFIRMADAS NO CÓDIGO: ✅ Seleção visual de plataformas com cores corretas ✅ Formato CSV específico por plataforma ✅ Campos obrigatórios marcados (motorista_email, Pago a si para Uber) ✅ Download de templates com dados realistas ✅ Validação de ficheiros CSV ✅ Feedback de upload (nome + tamanho) ✅ Processamento backend com validação de motoristas ✅ Tratamento de erros detalhado. OBSERVAÇÃO: Sistema está completamente implementado no código mas precisa de teste funcional via browser para confirmar funcionamento end-to-end. Playwright teve problemas técnicos durante teste, mas análise do código confirma implementação completa conforme especificação."
+        - working: false
+          agent: "testing"
+          comment: "🎯 TESTE CRÍTICO COM FICHEIRO REAL DA UBER - BUG IDENTIFICADO! CONTEXTO: Testada importação com ficheiro CSV real fornecido pelo utilizador conforme review request detalhado. CREDENCIAIS: admin@tvdefleet.com / o72ocUHy ✅. RESULTADOS CRÍTICOS: 1) ✅ Motorista Bruno Coelho encontrado na base de dados com UUID correto: 35382cb7-236e-42c1-b0b4-e16bfabb8ff3 2) ✅ CSV descarregado com sucesso (2866 bytes) 3) ✅ CSV contém UUID na linha 3: '35382cb7-236e-42c1-b0b4-e16bfabb8ff3,BRUNO MIGUEL,DO CARMO DA FONSECA COELHO' 4) ❌ CRÍTICO: Importação falha para Bruno - erro 'Motorista BRUNO MIGUEL DO CARMO DA FONSECA COELHO não encontrado (UUID: )' 5) ❌ CRÍTICO: UUID chega vazio ao backend apesar de estar presente no CSV. CAUSA RAIZ IDENTIFICADA: Backend usa content.decode('utf-8') na linha 11278 mas deveria usar content.decode('utf-8-sig') para remover BOM (Byte Order Mark) do CSV. Quando testado com utf-8-sig, UUID é lido corretamente. IMPACTO: 4/11 registos importados com sucesso (36.4%), mas Bruno e outros motoristas com UUID não são encontrados devido ao BOM. SOLUÇÃO NECESSÁRIA: Alterar linha 11278 em server.py de 'utf-8' para 'utf-8-sig'."
 
   - task: "Sistema de Atribuição de Veículo no Perfil do Motorista"
     implemented: true
