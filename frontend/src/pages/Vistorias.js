@@ -69,6 +69,7 @@ const Vistorias = ({ user, onLogout }) => {
     veiculo_id: '',
     parceiro_id: '',
     data_agendada: '',
+    hora_agendada: '',
     tipo_vistoria: 'periodica',
     notas: ''
   });
@@ -909,17 +910,31 @@ const Vistorias = ({ user, onLogout }) => {
                 </select>
               </div>
 
-              <div>
-                <Label>
-                  Data Agendada <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  type="date"
-                  value={agendamentoForm.data_agendada}
-                  onChange={(e) => setAgendamentoForm({...agendamentoForm, data_agendada: e.target.value})}
-                  min={new Date().toISOString().split('T')[0]}
-                  required
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>
+                    Data Agendada <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    type="date"
+                    value={agendamentoForm.data_agendada}
+                    onChange={(e) => setAgendamentoForm({...agendamentoForm, data_agendada: e.target.value})}
+                    min={new Date().toISOString().split('T')[0]}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label>
+                    Hora <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    type="time"
+                    value={agendamentoForm.hora_agendada}
+                    onChange={(e) => setAgendamentoForm({...agendamentoForm, hora_agendada: e.target.value})}
+                    required
+                  />
+                </div>
               </div>
 
               <div>
