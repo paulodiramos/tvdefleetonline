@@ -1418,4 +1418,146 @@ const RelatoriosHub = ({ user, onLogout }) => {
   );
 };
 
+
+
+        {/* Modal Escolher Método */}
+        <Dialog open={showMetodosModal} onOpenChange={setShowMetodosModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Métodos de Criação de Relatórios</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Card 
+                className="cursor-pointer hover:bg-slate-50 transition-colors"
+                onClick={() => {
+                  setShowMetodosModal(false);
+                  setShowCriarModal(true);
+                }}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-blue-100 rounded-lg">
+                      <Plus className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-800">Manual</h3>
+                      <p className="text-sm text-slate-600">
+                        Criar relatório preenchendo os campos manualmente
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="cursor-pointer hover:bg-slate-50 transition-colors"
+                onClick={() => {
+                  setShowMetodosModal(false);
+                  setShowImportarCSVModal(true);
+                }}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-green-100 rounded-lg">
+                      <FileSpreadsheet className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-800">Semi-Manual (CSV)</h3>
+                      <p className="text-sm text-slate-600">
+                        Importar relatórios de um ficheiro CSV
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="cursor-pointer hover:bg-slate-50 transition-colors opacity-75"
+                title="Em breve"
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Clock className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-800">
+                        Automático 
+                        <Badge className="ml-2 text-xs bg-purple-100 text-purple-700">Em breve</Badge>
+                      </h3>
+                      <p className="text-sm text-slate-600">
+                        Sincronização agendada com plataformas (Uber, Bolt)
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowMetodosModal(false)}>
+                Fechar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal Importar CSV */}
+        <Dialog open={showImportarCSVModal} onOpenChange={setShowImportarCSVModal}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Importar Relatórios via CSV</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <h4 className="font-semibold text-blue-900 mb-2">📋 Formato do Ficheiro CSV</h4>
+                <p className="text-sm text-blue-800 mb-2">O ficheiro deve conter as seguintes colunas (separadas por vírgula):</p>
+                <code className="block text-xs bg-white p-2 rounded border text-slate-700">
+                  motorista_email,semana,ano,ganhos_uber,ganhos_bolt,combustivel,via_verde,caucao,outros,divida_anterior
+                </code>
+                <p className="text-xs text-blue-700 mt-2">
+                  <strong>Exemplo:</strong><br/>
+                  motorista@example.com,50,2025,500.00,300.00,100.00,50.00,200.00,0,0
+                </p>
+              </div>
+
+              <div>
+                <Label>Ficheiro CSV</Label>
+                <Input
+                  type="file"
+                  accept=".csv"
+                  onChange={(e) => setCsvFile(e.target.files[0])}
+                  className="cursor-pointer"
+                />
+                {csvFile && (
+                  <p className="text-sm text-green-600 mt-2">
+                    ✅ {csvFile.name} selecionado
+                  </p>
+                )}
+              </div>
+
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
+                <p className="text-xs text-yellow-800">
+                  ⚠️ <strong>Atenção:</strong> Os emails dos motoristas devem existir no sistema. 
+                  Relatórios com erros serão ignorados e um resumo será apresentado.
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => {
+                setShowImportarCSVModal(false);
+                setCsvFile(null);
+              }}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={() => {/* TODO: implementar */}}
+                disabled={!csvFile}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Importar Relatórios
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
 export default RelatoriosHub;
