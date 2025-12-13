@@ -160,8 +160,35 @@ const ImportarPlataformas = () => {
 
   const downloadTemplate = (plataforma) => {
     const p = plataformas.find(pl => pl.id === plataforma);
-    const csvContent = p.formato + '\n' + p.exemplo;
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    
+    // Criar conteúdo do CSV com múltiplas linhas de exemplo
+    let csvContent = p.formato + '\n';
+    
+    // Adicionar 3 linhas de exemplo
+    if (plataforma === 'uber') {
+      csvContent += 'db6721ba-0101-42b3-a842-2df199085f71,joao.silva@example.com,João,Silva,357.98,356.58,466.06,-110.98\n';
+      csvContent += '35382cb7-236e-42c1-b0b4-e16bfabb8ff3,maria.santos@example.com,Maria,Santos,114.66,112.51,144.21,-32.88\n';
+      csvContent += 'ccd82ed9-67b8-4bfd-ac80-d57b7a7388d6,pedro.costa@example.com,Pedro,Costa,63.10,63.10,81.45,-18.79\n';
+    } else if (plataforma === 'bolt') {
+      csvContent += '2025-01-15,14:30,joao@example.com,Rua A Lisboa,Rua B Lisboa,12.5,25,15.50,3.10,12.40\n';
+      csvContent += '2025-01-15,15:45,maria@example.com,Praça Comércio,Parque Nações,8.2,18,12.80,2.56,10.24\n';
+      csvContent += '2025-01-15,17:00,pedro@example.com,Av Liberdade,Benfica,15.3,32,18.90,3.78,15.12\n';
+    } else if (plataforma === 'viaverde') {
+      csvContent += '2025-01-15,16:20,joao@example.com,A1 Alverca,2.35,A1,Norte-Sul\n';
+      csvContent += '2025-01-15,18:45,maria@example.com,A2 Setúbal,3.50,A2,Sul-Norte\n';
+      csvContent += '2025-01-16,09:15,pedro@example.com,A5 Cascais,1.85,A5,Lisboa-Cascais\n';
+    } else if (plataforma === 'gps') {
+      csvContent += '2025-01-15,joao@example.com,45230,45385,155,480\n';
+      csvContent += '2025-01-15,maria@example.com,28450,28590,140,420\n';
+      csvContent += '2025-01-15,pedro@example.com,62100,62280,180,510\n';
+    } else if (plataforma === 'abastecimento') {
+      csvContent += '2025-01-15,18:00,joao@example.com,Galp Benfica,Gasolina 95,45.5,85.75,45385\n';
+      csvContent += '2025-01-16,08:30,maria@example.com,Repsol Lumiar,Diesel,38.2,68.50,28590\n';
+      csvContent += '2025-01-16,14:20,pedro@example.com,BP Amadora,Gasolina 95,42.8,80.60,62280\n';
+    }
+    
+    // Adicionar BOM para UTF-8
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
@@ -170,7 +197,7 @@ const ImportarPlataformas = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success(`Template ${p.nome} descarregado!`);
+    toast.success(`✅ Template ${p.nome} descarregado com 3 exemplos!`);
   };
 
   return (
