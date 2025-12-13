@@ -158,7 +158,7 @@ frontend:
 
   - task: "Sistema de Importação de Plataformas com Formato Uber Real"
     implemented: true
-    working: false
+    working: true
     file: "backend/server.py"
     stuck_count: 1
     priority: "high"
@@ -170,6 +170,9 @@ frontend:
         - working: false
           agent: "testing"
           comment: "🎯 TESTE CRÍTICO COM FICHEIRO REAL DA UBER - BUG IDENTIFICADO! CONTEXTO: Testada importação com ficheiro CSV real fornecido pelo utilizador conforme review request detalhado. CREDENCIAIS: admin@tvdefleet.com / o72ocUHy ✅. RESULTADOS CRÍTICOS: 1) ✅ Motorista Bruno Coelho encontrado na base de dados com UUID correto: 35382cb7-236e-42c1-b0b4-e16bfabb8ff3 2) ✅ CSV descarregado com sucesso (2866 bytes) 3) ✅ CSV contém UUID na linha 3: '35382cb7-236e-42c1-b0b4-e16bfabb8ff3,BRUNO MIGUEL,DO CARMO DA FONSECA COELHO' 4) ❌ CRÍTICO: Importação falha para Bruno - erro 'Motorista BRUNO MIGUEL DO CARMO DA FONSECA COELHO não encontrado (UUID: )' 5) ❌ CRÍTICO: UUID chega vazio ao backend apesar de estar presente no CSV. CAUSA RAIZ IDENTIFICADA: Backend usa content.decode('utf-8') na linha 11278 mas deveria usar content.decode('utf-8-sig') para remover BOM (Byte Order Mark) do CSV. Quando testado com utf-8-sig, UUID é lido corretamente. IMPACTO: 4/11 registos importados com sucesso (36.4%), mas Bruno e outros motoristas com UUID não são encontrados devido ao BOM. SOLUÇÃO NECESSÁRIA: Alterar linha 11278 em server.py de 'utf-8' para 'utf-8-sig'."
+        - working: true
+          agent: "testing"
+          comment: "🎯 TESTE CRÍTICO APÓS CORREÇÃO DO BOM - 100% FUNCIONANDO! CONTEXTO: Testada importação de CSV da Uber após correção do BOM (Byte Order Mark) conforme review request específico. CREDENCIAIS: admin@tvdefleet.com / o72ocUHy ✅. CORREÇÃO APLICADA: Backend agora usa utf-8-sig em vez de utf-8 para remover BOM nas linhas 11278 e 11148. RESULTADOS CRÍTICOS: 1) ✅ CSV real descarregado com sucesso (2866 bytes) da URL fornecida 2) ✅ Bruno Coelho encontrado na base de dados com UUID correto: 35382cb7-236e-42c1-b0b4-e16bfabb8ff3 3) ✅ UUID lido corretamente do CSV (linha 3) sem ficar vazio 4) ✅ Importação executada com sucesso: 10/11 registos (90.9% taxa de sucesso) 5) ✅ Bruno Coelho importado com sucesso (não está na lista de erros) 6) ✅ Logs do backend mostram: '✅ Motorista encontrado por UUID: Bruno Coelho' 7) ✅ Taxa de sucesso > 90% conforme objetivo (90.9% vs objetivo ≥90%). CENÁRIO DE SUCESSO ATINGIDO: ✅ UUID lido corretamente do CSV (sem ficar vazio) ✅ Motorista Bruno encontrado por UUID ✅ Taxa de sucesso > 90% (90.9% - 10/11 motoristas) ✅ Logs mostram correspondências por UUID funcionando ✅ Correção BOM funcionando perfeitamente. ÚNICO ERRO: 1 empresa 'ZENY MACAIA UNIPESSOAL Lda' não é motorista (comportamento correto). RESULTADO FINAL: Correção do BOM está 100% funcional e resolve o problema de importação CSV da Uber!"
 
   - task: "Sistema de Atribuição de Veículo no Perfil do Motorista"
     implemented: true
