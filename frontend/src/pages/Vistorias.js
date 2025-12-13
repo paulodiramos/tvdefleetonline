@@ -174,6 +174,7 @@ const Vistorias = ({ user, onLogout }) => {
         veiculo_id: '',
         parceiro_id: '',
         data_agendada: '',
+        hora_agendada: '',
         tipo_vistoria: 'periodica',
         notas: ''
       });
