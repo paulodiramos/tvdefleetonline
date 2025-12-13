@@ -7457,7 +7457,7 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
             create_response = requests.post(f"{BACKEND_URL}/motoristas", json=test_motorista_data, headers=headers)
             
             if create_response.status_code != 200:
-                self.log_result("Bug-3-Uber-CSV-Import", False, "Cannot create test motorista")
+                self.log_result("Bug-3-Uber-CSV-Import", False, f"Cannot create test motorista: {create_response.status_code} - {create_response.text}")
                 return
             
             # Now test CSV import with different name variations
