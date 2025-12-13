@@ -6975,6 +6975,11 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
         self.test_partner_dashboard_endpoints()
         self.test_user_details_functionality()
         
+        # UBER CSV IMPORT WITH REAL FILE (REVIEW REQUEST - CRITICAL)
+        print("\n🎯 UBER CSV IMPORT WITH REAL FILE (REVIEW REQUEST - CRITICAL)")
+        print("-" * 70)
+        self.test_uber_csv_import_with_real_file()
+        
         # Summary
         print("\n" + "=" * 80)
         print("TEST SUMMARY")
