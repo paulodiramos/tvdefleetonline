@@ -340,7 +340,7 @@ class ReviewRequestTester:
                     print("🔄 Testando correspondência por nome sem UUID...")
                     
                     csv_content_no_uuid = f"""UUID do motorista,motorista_email,Nome próprio,Apelido,Pago a si,rendimentos,tarifa,taxa de serviço
-,another.driver@uber.com,{driver_name.split()[0]},{driver_name.split()[-1] if len(driver_name.split()) > 1 else 'Silva'},15.75,20.00,18.50,1.50"""
+,another.driver@uber.com,{first_name},{last_name},15.75,20.00,18.50,1.50"""
                     
                     files_no_uuid = {
                         'file': ('test_uber_name.csv', csv_content_no_uuid.encode('utf-8'), 'text/csv')
