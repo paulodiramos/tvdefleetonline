@@ -76,6 +76,9 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
     seguro_numero_apolice: motoristaData?.seguro_numero_apolice || '',
     seguro_seguradora: motoristaData?.seguro_seguradora || '',
     seguro_validade: motoristaData?.seguro_validade || '',
+    
+    // Veículo Atribuído
+    vehicle_assigned: motoristaData?.vehicle_assigned || '',
   });
 
   const [uploading, setUploading] = useState({});
