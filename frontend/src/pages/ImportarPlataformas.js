@@ -27,19 +27,17 @@ const ImportarPlataformas = () => {
       nome: 'Uber',
       icon: Car,
       color: 'bg-black text-white',
-      formato: 'data,hora,motorista_email,origem,destino,distancia_km,duracao_min,valor_bruto,comissao,valor_liquido',
-      exemplo: '2025-01-15,14:30,motorista@example.com,Rua A Lisboa,Rua B Lisboa,12.5,25,15.50,3.10,12.40',
+      formato: 'UUID do motorista,motorista_email,Nome próprio do motorista,Apelido do motorista,Pago a si,Pago a si : Os seus rendimentos,Pago a si : Os seus rendimentos : Tarifa,Pago a si : Os seus rendimentos : Taxa de serviço',
+      exemplo: 'db6721ba-0101-42b3-a842-2df199085f71,motorista@example.com,João,Silva,357.98,356.58,466.06,-110.98',
       campos: [
-        { nome: 'data', tipo: 'Data', obrigatorio: true },
-        { nome: 'hora', tipo: 'Hora', obrigatorio: true },
+        { nome: 'UUID do motorista', tipo: 'Texto', obrigatorio: false },
         { nome: 'motorista_email', tipo: 'Email', obrigatorio: true },
-        { nome: 'origem', tipo: 'Texto', obrigatorio: false },
-        { nome: 'destino', tipo: 'Texto', obrigatorio: false },
-        { nome: 'distancia_km', tipo: 'Número', obrigatorio: true },
-        { nome: 'duracao_min', tipo: 'Número', obrigatorio: false },
-        { nome: 'valor_bruto', tipo: 'Número', obrigatorio: true },
-        { nome: 'comissao', tipo: 'Número', obrigatorio: false },
-        { nome: 'valor_liquido', tipo: 'Número', obrigatorio: true }
+        { nome: 'Nome próprio do motorista', tipo: 'Texto', obrigatorio: false },
+        { nome: 'Apelido do motorista', tipo: 'Texto', obrigatorio: false },
+        { nome: 'Pago a si', tipo: 'Número', obrigatorio: true },
+        { nome: 'Pago a si : Os seus rendimentos', tipo: 'Número', obrigatorio: false },
+        { nome: 'Pago a si : Os seus rendimentos : Tarifa', tipo: 'Número', obrigatorio: false },
+        { nome: 'Pago a si : Os seus rendimentos : Taxa de serviço', tipo: 'Número', obrigatorio: false }
       ]
     },
     {
