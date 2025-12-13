@@ -109,6 +109,51 @@ const RelatoriosHub = ({ user, onLogout }) => {
     }
   };
 
+  const handleImportarCSV = async () => {
+    if (!csvFile) {
+      toast.error('Selecione um ficheiro CSV');
+      return;
+    }
+
+    setImportandoCSV(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', csvFile);
+
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_URL}/api/relatorios/importar-csv`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      const { sucesso, erros, erros_detalhes } = response.data;
+      
+      if (erros === 0) {
+        toast.success(`✅ ${sucesso} relatório(s) importado(s) com sucesso!`);
+      } else {
+        toast.warning(`⚠️ ${sucesso} importado(s), ${erros} erro(s). Verifique a consola para detalhes.`);
+        if (erros_detalhes && erros_detalhes.length > 0) {
+          console.log('Detalhes dos erros:', erros_detalhes);
+        }
+      }
+      
+      setShowImportarCSVModal(false);
+      setCsvFile(null);
+      fetchData(); // Recarregar lista de relatórios
+    } catch (error) {
+      console.error('Erro ao importar CSV:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao importar ficheiro CSV');
+    } finally {
+      setImportandoCSV(false);
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
