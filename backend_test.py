@@ -7506,8 +7506,6 @@ test-uuid-123456,joao.silva.test@example.com,{first_name},{last_name},25.50,20.4
                     motoristas_encontrados = result.get("motoristas_encontrados", 0)
                     sucesso = result.get("sucesso", 0)
                     
-                    # Debug: print the full response
-                    print(f"DEBUG - Response for {test_case['description']}: {result}")
                     
                     if motoristas_encontrados > 0 or sucesso > 0:
                         success_count += 1
