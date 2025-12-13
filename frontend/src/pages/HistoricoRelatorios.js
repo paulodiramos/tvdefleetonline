@@ -70,11 +70,47 @@ const HistoricoRelatorios = ({ user, onLogout }) => {
 
   const handleDownloadRecibo = async (reciboUrl) => {
     try {
-      window.open(reciboUrl, '_blank');
-      toast.success('Recibo aberto!');
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}${reciboUrl}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', reciboUrl.split('/').pop());
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Recibo descarregado!');
     } catch (error) {
-      console.error('Erro ao abrir recibo:', error);
-      toast.error('Erro ao abrir recibo');
+      console.error('Erro ao fazer download do recibo:', error);
+      toast.error('Erro ao fazer download do recibo');
+    }
+  };
+
+  const handleDownloadComprovativo = async (comprovantivoUrl) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}${comprovantivoUrl}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', comprovantivoUrl.split('/').pop());
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Comprovativo descarregado!');
+    } catch (error) {
+      console.error('Erro ao fazer download do comprovativo:', error);
+      toast.error('Erro ao fazer download do comprovativo');
     }
   };
 
