@@ -11300,12 +11300,16 @@ async def importar_plataforma(
                     erros_detalhes.append(f"Linha {row_num}: Motorista {motorista_email} não encontrado")
                     continue
                 
-                # Validar campo data
+                # Validar campo data (opcional para Uber que é semanal)
                 data = row.get('data', '').strip()
-                if not data:
+                if not data and plataforma != 'uber':
                     erros += 1
                     erros_detalhes.append(f"Linha {row_num}: Data em falta")
                     continue
+                
+                # Para Uber, usar data da semana se não houver data específica
+                if not data and plataforma == 'uber':
+                    data = datetime.now(timezone.utc).strftime('%Y-%m-%d')
                 
                 # Converter valores numéricos
                 def to_float(value, default=0.0):
