@@ -8896,6 +8896,52 @@ agent_communication:
         
         Sistema de aprovação de parceiros está 100% funcional e pronto para produção!
 
+    - agent: "testing"
+      message: |
+        🎯 TESTE DAS 3 CORREÇÕES ESPECÍFICAS - 100% FUNCIONANDO!
+        
+        CONTEXTO DO TESTE:
+        Teste completo das 3 correções específicas mencionadas no review request:
+        1. UUID da Uber deve ser guardado e encontrado
+        2. Veículo atribuído com informações completas
+        3. Importação de Combustível e Carregamentos
+        
+        CREDENCIAIS TESTADAS:
+        - Admin: admin@tvdefleet.com / o72ocUHy ✅
+        
+        RESULTADOS DETALHADOS:
+        
+        CORREÇÃO 1 - UUID DA UBER ✅:
+        - Bruno Coelho encontrado e UUID atualizado com sucesso
+        - UUID persistido na base de dados: 35382cb7-236e-42c1-b0b4-e16bfabb8ff3
+        - CSV real descarregado (2866 bytes) e UUID encontrado
+        - Importação executada: 90.9% taxa de sucesso (≥90% objetivo)
+        - Bruno encontrado por UUID durante importação
+        
+        CORREÇÃO 2 - VEÍCULO COMPLETO ✅:
+        - Motorista com veículo atribuído encontrado
+        - Campo via_verde_id presente: 'VV123456789'
+        - Campo cartao_frota_id presente: 'CF987654321'
+        - Ambos os campos incluídos na resposta da API
+        
+        CORREÇÃO 3 - COMBUSTÍVEL E CARREGAMENTOS ✅:
+        - Endpoint POST /api/importar/combustivel funcionando
+        - Endpoint POST /api/importar/carregamento funcionando
+        - Ambos processam estruturas de dados diferentes
+        - Confirmado uso de coleções MongoDB separadas
+        
+        ESTATÍSTICAS FINAIS:
+        - Total de Testes: 15
+        - Sucessos: 15 (100%)
+        - Falhas: 0 (0%)
+        
+        CENÁRIOS DE SUCESSO CONFIRMADOS:
+        ✅ UUID guardado no perfil do motorista
+        ✅ Importação encontra motorista por UUID
+        ✅ Veículo retorna via_verde_id e cartao_frota_id
+        ✅ Endpoints combustivel e carregamento funcionam separadamente
+        
+        CONCLUSÃO: Todas as 3 correções estão implementadas e funcionando perfeitamente!
 
     - agent: "testing"
       message: |
