@@ -222,6 +222,25 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
     }
   };
 
+  // Carregar lista de veículos disponíveis
+  useEffect(() => {
+    const fetchVeiculos = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${API}/vehicles`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setVeiculos(response.data || []);
+      } catch (error) {
+        console.error('Erro ao carregar veículos:', error);
+      }
+    };
+    
+    if (canEdit) {
+      fetchVeiculos();
+    }
+  }, [canEdit]);
+
   // Exportar função para verificar mudanças não guardadas
   useEffect(() => {
     window.hasUnsavedChanges = () => hasUnsavedChanges;
