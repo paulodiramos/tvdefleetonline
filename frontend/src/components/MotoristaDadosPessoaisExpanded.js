@@ -657,7 +657,7 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
               />
               {errors.whatsapp && <p className="text-xs text-red-500 mt-1">{errors.whatsapp}</p>}
             </div>
-            <div>
+            <div className="md:col-span-2">
               <Label>Veículo Atribuído</Label>
               {canEdit && editMode ? (
                 <Select 
@@ -672,22 +672,37 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
                     {veiculos.map((veiculo) => (
                       <SelectItem key={veiculo.id} value={veiculo.id}>
                         {veiculo.marca} {veiculo.modelo} - {veiculo.matricula}
+                        {veiculo.via_verde_id && ` | Via Verde: ${veiculo.via_verde_id}`}
+                        {veiculo.cartao_frota_id && ` | Cartão Frota: ${veiculo.cartao_frota_id}`}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               ) : (
-                <Input
-                  value={
-                    formData.vehicle_assigned 
-                      ? veiculos.find(v => v.id === formData.vehicle_assigned)
-                        ? `${veiculos.find(v => v.id === formData.vehicle_assigned).marca} ${veiculos.find(v => v.id === formData.vehicle_assigned).modelo} - ${veiculos.find(v => v.id === formData.vehicle_assigned).matricula}`
-                        : 'Veículo não encontrado'
-                      : 'Nenhum'
-                  }
-                  disabled
-                  className="bg-slate-50"
-                />
+                <div className="border rounded-md p-3 bg-slate-50">
+                  {formData.vehicle_assigned && veiculos.find(v => v.id === formData.vehicle_assigned) ? (
+                    <div className="space-y-1">
+                      <p className="font-semibold text-slate-900">
+                        {veiculos.find(v => v.id === formData.vehicle_assigned).marca} {veiculos.find(v => v.id === formData.vehicle_assigned).modelo}
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        <span className="font-medium">Matrícula:</span> {veiculos.find(v => v.id === formData.vehicle_assigned).matricula}
+                      </p>
+                      {veiculos.find(v => v.id === formData.vehicle_assigned).via_verde_id && (
+                        <p className="text-sm text-slate-600">
+                          <span className="font-medium">Via Verde:</span> {veiculos.find(v => v.id === formData.vehicle_assigned).via_verde_id}
+                        </p>
+                      )}
+                      {veiculos.find(v => v.id === formData.vehicle_assigned).cartao_frota_id && (
+                        <p className="text-sm text-slate-600">
+                          <span className="font-medium">Cartão Frota:</span> {veiculos.find(v => v.id === formData.vehicle_assigned).cartao_frota_id}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-slate-500">Nenhum veículo atribuído</p>
+                  )}
+                </div>
               )}
             </div>
             <div className="md:col-span-2">
