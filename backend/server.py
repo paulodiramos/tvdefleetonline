@@ -11241,6 +11241,11 @@ async def importar_relatorios_csv(
     # Get motoristas do parceiro
     query = {}
     if current_user["role"] == UserRole.PARCEIRO:
+        query["parceiro_id"] = current_user["id"]
+    
+    motoristas = await db.motoristas.find(query, {"_id": 0}).to_list(1000)
+    
+    resumo_motoristas = []
 
 
 @api_router.post("/importar/{plataforma}")
