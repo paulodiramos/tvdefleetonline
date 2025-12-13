@@ -7520,11 +7520,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Sistema de Alertas do Parceiro - Backend"
-    - "Sistema de Alertas do Parceiro - Frontend"
+    - "Review Request Bug Fixes - COMPLETED ✅"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
+  review_request_bug_fixes_tested: true
+  bug_1_vehicle_driver_assignment_working: true
+  bug_2_driver_profile_vehicle_field_working: true
+  bug_3_uber_import_uuid_working: true
 
 agent_communication:
     - agent: "testing"
