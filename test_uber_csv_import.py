@@ -206,17 +206,17 @@ class UberCSVImportTester:
                     # Store results for verification
                     self.import_result = result
                     
-                    motoristas_encontrados = result.get("motoristas_encontrados", 0)
-                    motoristas_nao_encontrados = result.get("motoristas_nao_encontrados", 0)
-                    total_linhas = result.get("total_linhas", 0)
-                    erros = result.get("erros", [])
+                    sucesso = result.get("sucesso", 0)
+                    erros_count = result.get("erros", 0)
+                    erros_detalhes = result.get("erros_detalhes", [])
+                    message = result.get("message", "")
                     
                     self.log_result("Import-Real-CSV", True, 
-                                  f"CSV imported - Lines: {total_linhas}, Found: {motoristas_encontrados}, Not found: {motoristas_nao_encontrados}, Errors: {len(erros)}")
+                                  f"CSV imported - Success: {sucesso}, Errors: {erros_count}, Message: {message}")
                     
                     # Log first few errors if any
-                    if erros:
-                        print(f"   First 5 errors: {erros[:5]}")
+                    if erros_detalhes:
+                        print(f"   First 5 errors: {erros_detalhes[:5]}")
                     
                     return True
                 else:
