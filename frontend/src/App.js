@@ -28,6 +28,7 @@ import GestaoPagamentosRecibos from "@/pages/GestaoPagamentosRecibos";
 import ConfiguracaoSincronizacao from "@/pages/ConfiguracaoSincronizacao";
 import CredenciaisParceiros from "@/pages/CredenciaisParceiros";
 import ImportarDados from "@/pages/ImportarDados";
+import ImportarPlataformas from "@/pages/ImportarPlataformas";
 import ImportarMotoristasVeiculos from "@/pages/ImportarMotoristasVeiculos";
 import GestaoCredenciais from "@/pages/GestaoCredenciais";
 import PagamentosParceiro from "@/pages/PagamentosParceiro";
@@ -639,6 +640,16 @@ function App() {
             element={
               user ? (
                 <ImportarDados user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/importar-plataformas"
+            element={
+              user ? (
+                <ImportarPlataformas user={user} onLogout={handleLogout} />
               ) : (
                 <Navigate to="/login" />
               )
