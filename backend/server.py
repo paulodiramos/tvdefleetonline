@@ -11295,7 +11295,7 @@ async def importar_plataforma(
                     # Tentar por UUID do motorista
                     uuid_motorista = row.get('UUID do motorista', '').strip()
                     if uuid_motorista:
-                        motorista = await db.motoristas.find_one({"uber_uuid": uuid_motorista}, {"_id": 0})
+                        motorista = await db.motoristas.find_one({"uuid_motorista_uber": uuid_motorista}, {"_id": 0})
                     
                     # Se não encontrou, tentar por nome completo
                     if not motorista:
