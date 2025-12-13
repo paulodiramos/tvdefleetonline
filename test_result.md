@@ -569,7 +569,8 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Sistema de Importação de Plataformas com Formato Uber Real"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -586,6 +587,7 @@ test_plan:
   all_8_critical_steps_passed: true
   file_upload_download_system_working: true
   state_transitions_working: true
+  platform_import_system_needs_testing: true
 
 agent_communication:
     - agent: "testing"
