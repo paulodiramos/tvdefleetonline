@@ -11306,23 +11306,38 @@ async def importar_plataforma(
                             nome_proprio_norm = ' '.join(nome_proprio.split())
                             apelido_norm = ' '.join(apelido.split())
                             
-                            # Tentar várias combinações
+                            # Remover sufixos empresariais comuns do apelido para melhor correspondência
+                            sufixos_remover = ['Lda', 'LDA', 'UNIPESSOAL', 'Unipessoal', 'SA', 'S.A.', 'LTD']
+                            apelido_limpo = apelido_norm
+                            for sufixo in sufixos_remover:
+                                apelido_limpo = re.sub(rf'\b{re.escape(sufixo)}\b', '', apelido_limpo, flags=re.IGNORECASE).strip()
+                            
+                            # Construir queries de busca flexíveis
+                            queries = []
+                            
+                            # 1. Correspondência exata nome + apelido
+                            queries.append({"name": {"$regex": f"^{re.escape(nome_proprio_norm)}\\s+{re.escape(apelido_norm)}$", "$options": "i"}})
+                            
+                            # 2. Correspondência com apelido limpo (sem sufixos empresariais)
+                            if apelido_limpo and apelido_limpo != apelido_norm:
+                                queries.append({"name": {"$regex": f"^{re.escape(nome_proprio_norm)}\\s+{re.escape(apelido_limpo)}$", "$options": "i"}})
+                            
+                            # 3. Nome completo contém ambas as partes
+                            queries.append({"$and": [
+                                {"name": {"$regex": re.escape(nome_proprio_norm), "$options": "i"}},
+                                {"name": {"$regex": re.escape(apelido_norm.split()[0] if apelido_norm else ''), "$options": "i"}}
+                            ]})
+                            
+                            # 4. Buscar apenas pelo nome próprio se apelido for empresarial
+                            palavras_apelido = apelido_norm.upper().split()
+                            if any(sufixo in palavras_apelido for sufixo in ['LDA', 'UNIPESSOAL', 'SA']):
+                                queries.append({"name": {"$regex": f"^{re.escape(nome_proprio_norm)}", "$options": "i"}})
+                            
+                            # 5. Tentar com o campo 'nome' também
+                            queries.append({"nome": {"$regex": f"^{re.escape(nome_proprio_norm)}\\s+{re.escape(apelido_norm)}$", "$options": "i"}})
+                            
                             motorista = await db.motoristas.find_one(
-                                {"$or": [
-                                    # Correspondência exata (case insensitive)
-                                    {"name": {"$regex": f"^{re.escape(nome_proprio_norm)}\\s+{re.escape(apelido_norm)}$", "$options": "i"}},
-                                    # Nome completo contém ambos
-                                    {"$and": [
-                                        {"name": {"$regex": re.escape(nome_proprio_norm), "$options": "i"}},
-                                        {"name": {"$regex": re.escape(apelido_norm), "$options": "i"}}
-                                    ]},
-                                    # Tentar com o campo 'nome' também
-                                    {"nome": {"$regex": f"^{re.escape(nome_proprio_norm)}\\s+{re.escape(apelido_norm)}$", "$options": "i"}},
-                                    {"$and": [
-                                        {"nome": {"$regex": re.escape(nome_proprio_norm), "$options": "i"}},
-                                        {"nome": {"$regex": re.escape(apelido_norm), "$options": "i"}}
-                                    ]}
-                                ]},
+                                {"$or": queries},
                                 {"_id": 0}
                             )
                     
