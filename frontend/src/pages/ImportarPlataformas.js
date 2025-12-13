@@ -94,8 +94,8 @@ const ImportarPlataformas = () => {
       ]
     },
     {
-      id: 'abastecimento',
-      nome: 'Abastecimentos',
+      id: 'combustivel',
+      nome: 'Combustível (Fóssil)',
       icon: Fuel,
       color: 'bg-red-600 text-white',
       formato: 'data,hora,motorista_email,posto,combustivel,litros,valor_total,km_atual',
@@ -109,6 +109,24 @@ const ImportarPlataformas = () => {
         { nome: 'litros', tipo: 'Número', obrigatorio: true },
         { nome: 'valor_total', tipo: 'Número', obrigatorio: true },
         { nome: 'km_atual', tipo: 'Número', obrigatorio: false }
+      ]
+    },
+    {
+      id: 'carregamento',
+      nome: 'Carregamentos (Elétrico)',
+      icon: Fuel,
+      color: 'bg-green-500 text-white',
+      formato: 'data,hora,motorista_email,posto,kwh,valor_total,km_atual,duracao_min',
+      exemplo: '2025-01-15,18:00,motorista@example.com,Tesla Supercharger,45.5,12.50,45385,35',
+      campos: [
+        { nome: 'data', tipo: 'Data', obrigatorio: true },
+        { nome: 'hora', tipo: 'Hora', obrigatorio: true },
+        { nome: 'motorista_email', tipo: 'Email', obrigatorio: true },
+        { nome: 'posto', tipo: 'Texto', obrigatorio: false },
+        { nome: 'kwh', tipo: 'Número', obrigatorio: true },
+        { nome: 'valor_total', tipo: 'Número', obrigatorio: true },
+        { nome: 'km_atual', tipo: 'Número', obrigatorio: false },
+        { nome: 'duracao_min', tipo: 'Número', obrigatorio: false }
       ]
     }
   ];
