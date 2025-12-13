@@ -9377,3 +9377,73 @@ agent_communication:
 
 ---
 
+## TESTE DAS 3 CORREÇÕES ESPECÍFICAS (REVIEW REQUEST)
+
+### Data: 2025-01-15
+### Agente: testing_agent
+### Status: ✅ TODAS AS CORREÇÕES FUNCIONANDO CORRETAMENTE
+
+### Correção 1: UUID da Uber deve ser guardado e encontrado
+**Status: ✅ FUNCIONANDO**
+
+**Testes Realizados:**
+1. ✅ Buscar motorista Bruno Coelho (brunomccoelho@hotmail.com) - ENCONTRADO
+2. ✅ Atualizar com UUID "35382cb7-236e-42c1-b0b4-e16bfabb8ff3" - GUARDADO
+3. ✅ Verificar se UUID foi persistido na base de dados - CONFIRMADO
+4. ✅ Download do CSV real da Uber - SUCESSO (2866 bytes)
+5. ✅ Verificar se CSV contém UUID do Bruno - CONFIRMADO
+6. ✅ Importar CSV via POST /api/importar/uber - SUCESSO
+7. ✅ Taxa de sucesso ≥90% - ATINGIDA (90.9%)
+8. ✅ Bruno encontrado por UUID (não na lista de erros) - CONFIRMADO
+
+**Resultado:** O sistema agora guarda corretamente o campo `uuid_motorista_uber` no perfil do motorista e consegue encontrá-lo durante a importação de ficheiros CSV da Uber.
+
+### Correção 2: Veículo atribuído com informações completas
+**Status: ✅ FUNCIONANDO**
+
+**Testes Realizados:**
+1. ✅ Buscar motorista com veículo atribuído - ENCONTRADO
+2. ✅ Obter detalhes do veículo via GET /api/vehicles/{id} - SUCESSO
+3. ✅ Verificar campo `via_verde_id` presente - CONFIRMADO ('VV123456789')
+4. ✅ Verificar campo `cartao_frota_id` presente - CONFIRMADO ('CF987654321')
+5. ✅ Confirmar que resposta inclui ambos os campos - CONFIRMADO
+
+**Resultado:** O sistema agora retorna corretamente os campos `via_verde_id` e `cartao_frota_id` nas respostas dos veículos, fornecendo informações completas sobre veículos atribuídos.
+
+### Correção 3: Importação de Combustível e Carregamentos
+**Status: ✅ FUNCIONANDO**
+
+**Testes Realizados:**
+1. ✅ Testar endpoint POST /api/importar/combustivel - SUPORTADO
+2. ✅ Testar endpoint POST /api/importar/carregamento - SUPORTADO
+3. ✅ Verificar que ambos processam dados diferentes - CONFIRMADO
+4. ✅ Confirmar que usam coleções MongoDB diferentes - CONFIRMADO
+
+**Resultado:** O sistema agora suporta importação separada de dados de combustível (postos de gasolina) e carregamentos (postos elétricos), usando endpoints e coleções diferentes para cada tipo de dados.
+
+### Resumo Final dos Testes
+- **Total de Testes:** 15
+- **✅ Sucessos:** 15 (100%)
+- **❌ Falhas:** 0 (0%)
+
+### Cenários de Sucesso Confirmados
+✅ UUID guardado no perfil do motorista  
+✅ Importação encontra motorista por UUID  
+✅ Veículo retorna via_verde_id e cartao_frota_id  
+✅ Endpoints combustivel e carregamento funcionam separadamente  
+
+### Ficheiros de Teste Criados
+- `/app/test_3_corrections.py` - Script de teste específico para as 3 correções
+
+### Conclusão
+**🎉 TODAS AS 3 CORREÇÕES FORAM IMPLEMENTADAS E TESTADAS COM SUCESSO!**
+
+As correções solicitadas no review request estão funcionando corretamente:
+1. Sistema de UUID da Uber implementado e funcional
+2. Informações completas de veículos disponíveis via API
+3. Sistema de importação de combustível e carregamentos operacional
+
+**Recomendação:** O sistema está pronto para produção relativamente a estas 3 correções específicas.
+
+---
+
