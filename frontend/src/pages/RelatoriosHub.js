@@ -10,8 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { 
   FileText, Plus, Edit, Check, X, Download, ArrowLeft,
-  Calendar, User, DollarSign, TrendingUp, Eye, CheckCircle, Upload,
-  FileSpreadsheet, Clock
+  Calendar, User, DollarSign, TrendingUp, Eye, CheckCircle, Upload
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -48,11 +47,6 @@ const RelatoriosHub = ({ user, onLogout }) => {
   // Modal de edição rápida
   const [showEditModal, setShowEditModal] = useState(false);
   const [relatorioEditando, setRelatorioEditando] = useState(null);
-  
-  // Modais para métodos alternativos
-  const [showMetodosModal, setShowMetodosModal] = useState(false);
-  const [showImportarCSVModal, setShowImportarCSVModal] = useState(false);
-  const [csvFile, setCsvFile] = useState(null);
   
   // Modal de confirmação de pagamento
   const [showPagarModal, setShowPagarModal] = useState(false);
@@ -106,41 +100,6 @@ const RelatoriosHub = ({ user, onLogout }) => {
     } catch (error) {
       console.error('Erro ao fazer download do comprovativo:', error);
       toast.error('Erro ao fazer download do comprovativo');
-    }
-  };
-
-  const handleImportarCSV = async () => {
-    if (!csvFile) {
-      toast.error('Selecione um ficheiro CSV');
-      return;
-    }
-
-    try {
-      const formData = new FormData();
-      formData.append('file', csvFile);
-
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API_URL}/api/relatorios/importar-csv`,
-        formData,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
-
-      toast.success(
-        `Importação concluída! ${response.data.sucesso} relatório(s) criado(s), ${response.data.erros} erro(s)`
-      );
-      
-      setShowImportarCSVModal(false);
-      setCsvFile(null);
-      fetchData();
-    } catch (error) {
-      console.error('Erro ao importar CSV:', error);
-      toast.error(error.response?.data?.detail || 'Erro ao importar CSV');
     }
   };
 
@@ -543,16 +502,10 @@ const RelatoriosHub = ({ user, onLogout }) => {
               </p>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={() => setShowCriarModal(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Criar Relatório
-            </Button>
-            <Button variant="outline" onClick={() => setShowMetodosModal(true)}>
-              <FileSpreadsheet className="w-4 h-4 mr-2" />
-              Outros Métodos
-            </Button>
-          </div>
+          <Button onClick={() => setShowCriarModal(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Criar Relatório
+          </Button>
         </div>
 
         {/* Stats */}
