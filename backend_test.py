@@ -7429,35 +7429,31 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
     def test_bug_3_uber_csv_import_flexible_matching(self, headers):
         """Bug 3: Test Uber CSV import with flexible driver name matching (case-insensitive, ignoring extra spaces)"""
         try:
-            # First create a test motorista with a specific name and email
-            test_motorista_data = {
-                "email": "joao.silva.test@example.com",
-                "name": "João Silva",
-                "phone": "912345678",
-                "morada_completa": "Rua Teste, 123",
-                "codigo_postal": "1000-001",
-                "data_nascimento": "1990-01-01",
-                "nacionalidade": "Portuguesa",
-                "tipo_documento": "CC",
-                "numero_documento": "12345678",
-                "validade_documento": "2030-01-01",
-                "nif": "123456789",
-                "carta_conducao_numero": "PT123456",
-                "carta_conducao_validade": "2030-01-01",
-                "licenca_tvde_numero": "TVDE123456",
-                "licenca_tvde_validade": "2030-01-01",
-                "regime": "aluguer",
-                "whatsapp": "912345678",
-                "tipo_pagamento": "recibo_verde",
+            # Instead of creating a new motorista, let's use an existing one
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            if motoristas_response.status_code != 200:
+                self.log_result("Bug-3-Uber-CSV-Import", False, "Cannot get motoristas list")
+                return
+            
+            motoristas = motoristas_response.json()
+            if not motoristas:
+                self.log_result("Bug-3-Uber-CSV-Import", False, "No motoristas available for testing")
+                return
+            
+            # Use the first motorista and update their email_uber for testing
+            test_motorista = motoristas[0]
+            motorista_id = test_motorista["id"]
+            motorista_name = test_motorista["name"]
+            
+            # Update the motorista with test email_uber
+            update_data = {
                 "email_uber": "joao.silva.test@example.com",
                 "uuid_motorista_uber": "test-uuid-123456"
             }
             
-            # Create the motorista
-            create_response = requests.post(f"{BACKEND_URL}/motoristas", json=test_motorista_data, headers=headers)
-            
-            if create_response.status_code != 200:
-                self.log_result("Bug-3-Uber-CSV-Import", False, f"Cannot create test motorista: {create_response.status_code} - {create_response.text}")
+            update_response = requests.put(f"{BACKEND_URL}/motoristas/{motorista_id}", json=update_data, headers=headers)
+            if update_response.status_code != 200:
+                self.log_result("Bug-3-Uber-CSV-Import", False, f"Cannot update motorista for testing: {update_response.status_code}")
                 return
             
             # Now test CSV import with different name variations
