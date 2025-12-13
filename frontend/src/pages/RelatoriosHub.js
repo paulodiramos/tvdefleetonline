@@ -109,6 +109,41 @@ const RelatoriosHub = ({ user, onLogout }) => {
     }
   };
 
+  const handleImportarCSV = async () => {
+    if (!csvFile) {
+      toast.error('Selecione um ficheiro CSV');
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', csvFile);
+
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_URL}/api/relatorios/importar-csv`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+
+      toast.success(
+        `Importação concluída! ${response.data.sucesso} relatório(s) criado(s), ${response.data.erros} erro(s)`
+      );
+      
+      setShowImportarCSVModal(false);
+      setCsvFile(null);
+      fetchData();
+    } catch (error) {
+      console.error('Erro ao importar CSV:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao importar CSV');
+    }
+  };
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -1550,7 +1585,7 @@ const RelatoriosHub = ({ user, onLogout }) => {
                 Cancelar
               </Button>
               <Button 
-                onClick={() => {/* TODO: implementar */}}
+                onClick={handleImportarCSV}
                 disabled={!csvFile}
               >
                 <Upload className="w-4 h-4 mr-2" />
