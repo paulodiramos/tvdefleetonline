@@ -502,10 +502,16 @@ const RelatoriosHub = ({ user, onLogout }) => {
               </p>
             </div>
           </div>
-          <Button onClick={() => setShowCriarModal(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Criar Relatório
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => setShowCriarModal(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Criar Relatório
+            </Button>
+            <Button variant="outline" onClick={() => setShowMetodosModal(true)}>
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              Outros Métodos
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
