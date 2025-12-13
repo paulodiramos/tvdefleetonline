@@ -651,6 +651,50 @@ test_plan:
 agent_communication:
     - agent: "testing"
       message: |
+        🎯 TESTE CRÍTICO: CORREÇÃO BOM UBER CSV IMPORT - 100% FUNCIONANDO!
+        
+        CONTEXTO DO TESTE:
+        Teste específico da correção do BOM (Byte Order Mark) na importação de CSV da Uber conforme review request detalhado:
+        - Ficheiro CSV real da Uber com BOM
+        - Motorista alvo: Bruno Coelho (UUID: 35382cb7-236e-42c1-b0b4-e16bfabb8ff3)
+        - Objetivo: Taxa de sucesso ≥90% (idealmente 11/11)
+        
+        CREDENCIAIS TESTADAS:
+        - Admin: admin@tvdefleet.com / o72ocUHy ✅
+        
+        CORREÇÃO APLICADA:
+        - Backend alterado de utf-8 para utf-8-sig nas linhas 11278 e 11148
+        - Remove BOM automaticamente do ficheiro CSV da Uber
+        
+        ✅ RESULTADOS FINAIS - CORREÇÃO 100% FUNCIONAL:
+        
+        **DOWNLOAD E VERIFICAÇÃO:**
+        - ✅ CSV real descarregado: 2866 bytes
+        - ✅ Bruno Coelho encontrado na BD: UUID 35382cb7-236e-42c1-b0b4-e16bfabb8ff3
+        - ✅ UUID presente no CSV linha 3 (sem BOM)
+        
+        **IMPORTAÇÃO EXECUTADA:**
+        - ✅ Status: 200 OK
+        - ✅ Resultado: 10 sucessos, 1 erro
+        - ✅ Taxa de sucesso: 90.9% (≥90% objetivo atingido)
+        - ✅ Bruno Coelho: Importado com sucesso
+        
+        **LOGS DO BACKEND CONFIRMAM:**
+        - ✅ "Motorista encontrado por UUID: Bruno Coelho"
+        - ✅ UUID lido corretamente (não vazio)
+        - ✅ Correspondência por UUID funcionando
+        
+        **ÚNICO ERRO (COMPORTAMENTO CORRETO):**
+        - ❌ "ZENY MACAIA UNIPESSOAL Lda" não é motorista (é empresa)
+        
+        🎉 CORREÇÃO BOM ESTÁ 100% FUNCIONAL!
+        ✅ UUID lido corretamente do CSV
+        ✅ Bruno encontrado por UUID  
+        ✅ Taxa sucesso > 90% (90.9%)
+        ✅ Sistema pronto para produção
+        
+    - agent: "testing"
+      message: |
         🎯 TESTE COMPLETO: FLUXO DE PAGAMENTO E HISTÓRICO DE DOCUMENTOS - RESULTADOS FINAIS
         
         CONTEXTO DO TESTE:
