@@ -190,6 +190,18 @@ backend:
           agent: "testing"
           comment: "🎯 TESTE CRÍTICO APÓS CORREÇÃO DO BACKEND - 100% FUNCIONANDO! CONTEXTO: Backend foi corrigido para usar automaticamente current_user['id'] como parceiro_id quando um parceiro faz login e importa CSV. Não depende mais do que vem no path da URL. CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU ✅. TESTE CONFORME REVIEW REQUEST: 1) ✅ Login como parceiro bem-sucedido, user.id = ab2a25aa-4f70-4c7b-835d-9204b0cd0d7e 2) ✅ CSV de teste criado: Motorista Teste Backend, motorista.backend@test.com, 912345678 3) ✅ Importação via POST /api/parceiros/{qualquer_id}/importar-motoristas usando ID aleatório no path 4) ✅ Backend IGNOROU o ID do path e usou current_user['id'] automaticamente 5) ✅ Status 200 OK - NÃO HÁ MAIS ERRO 'Parceiro not found' 6) ✅ 1 motorista criado com sucesso, 0 erros 7) ✅ Motorista criado automaticamente com email como login e últimos 9 dígitos do telefone como senha. RESULTADO FINAL: A correção do backend está funcionando perfeitamente! O sistema agora usa automaticamente o current_user['id'] como parceiro_id, ignorando completamente o que vem no path da URL. Importação CSV funciona mesmo usando qualquer ID no path. Problema 'Parceiro not found' completamente resolvido!"
 
+  - task: "Sistema de Importação de Plataformas - Backend Endpoints"
+    implemented: true
+    working: "NA"
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+          agent: "testing"
+          comment: "🎯 ANÁLISE COMPLETA DO BACKEND - SISTEMA 100% IMPLEMENTADO! CONTEXTO: Análise detalhada do endpoint de importação de plataformas conforme review request. VERIFICAÇÃO DO CÓDIGO: 1) ✅ CRÍTICO - Endpoint POST /api/importar/{plataforma} implementado (linha 11251) 2) ✅ CRÍTICO - Suporte às 5 plataformas: uber, bolt, viaverde, gps, abastecimento 3) ✅ CRÍTICO - Formato Uber ATUALIZADO com campos reais: UUID do motorista, Pago a si, rendimentos, tarifa, taxa de serviço 4) ✅ CRÍTICO - Validação de motoristas por email 5) ✅ CRÍTICO - Coleções MongoDB específicas: viagens_uber, viagens_bolt, portagens_viaverde, trajetos_gps, abastecimentos 6) ✅ CRÍTICO - Conversão automática de valores numéricos 7) ✅ CRÍTICO - Tratamento de erros detalhado com linha específica 8) ✅ CRÍTICO - Autorização por role (ADMIN, PARCEIRO, GESTAO) 9) ✅ CRÍTICO - Associação automática ao parceiro logado (current_user['id']). FUNCIONALIDADES CONFIRMADAS NO CÓDIGO: ✅ Processamento CSV com DictReader ✅ Validação de campos obrigatórios por plataforma ✅ Inserção em coleções MongoDB específicas ✅ Resposta estruturada com sucesso/erros/detalhes ✅ Limite de 10 erros nos detalhes para performance ✅ Logs de erro para debugging. OBSERVAÇÃO: Backend está completamente implementado e pronto para receber ficheiros CSV das 5 plataformas. Precisa de teste funcional end-to-end para confirmar funcionamento com frontend."
+
   - task: "Restrição de permissões - Parceiros não podem criar receitas"
     implemented: true
     working: true
