@@ -11297,16 +11297,31 @@ async def importar_plataforma(
                     if uuid_motorista:
                         motorista = await db.motoristas.find_one({"uuid_motorista_uber": uuid_motorista}, {"_id": 0})
                     
-                    # Se não encontrou, tentar por nome completo
+                    # Se não encontrou, tentar por nome completo (mais flexível)
                     if not motorista:
                         nome_proprio = row.get('Nome próprio do motorista', '').strip()
                         apelido = row.get('Apelido do motorista', '').strip()
                         if nome_proprio and apelido:
-                            nome_completo = f"{nome_proprio} {apelido}"
+                            # Normalizar espaços
+                            nome_proprio_norm = ' '.join(nome_proprio.split())
+                            apelido_norm = ' '.join(apelido.split())
+                            
+                            # Tentar várias combinações
                             motorista = await db.motoristas.find_one(
                                 {"$or": [
-                                    {"name": {"$regex": f"^{nome_proprio}.*{apelido}$", "$options": "i"}},
-                                    {"nome": {"$regex": f"^{nome_proprio}.*{apelido}$", "$options": "i"}}
+                                    # Correspondência exata (case insensitive)
+                                    {"name": {"$regex": f"^{re.escape(nome_proprio_norm)}\\s+{re.escape(apelido_norm)}$", "$options": "i"}},
+                                    # Nome completo contém ambos
+                                    {"$and": [
+                                        {"name": {"$regex": re.escape(nome_proprio_norm), "$options": "i"}},
+                                        {"name": {"$regex": re.escape(apelido_norm), "$options": "i"}}
+                                    ]},
+                                    # Tentar com o campo 'nome' também
+                                    {"nome": {"$regex": f"^{re.escape(nome_proprio_norm)}\\s+{re.escape(apelido_norm)}$", "$options": "i"}},
+                                    {"$and": [
+                                        {"nome": {"$regex": re.escape(nome_proprio_norm), "$options": "i"}},
+                                        {"nome": {"$regex": re.escape(apelido_norm), "$options": "i"}}
+                                    ]}
                                 ]},
                                 {"_id": 0}
                             )
