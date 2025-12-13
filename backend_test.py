@@ -7359,6 +7359,11 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
         print("-" * 70)
         self.test_uber_csv_import_with_real_file()
         
+        # 3 SPECIFIC CORRECTIONS (CURRENT REVIEW REQUEST - CRITICAL)
+        print("\n🎯 3 SPECIFIC CORRECTIONS (CURRENT REVIEW REQUEST - CRITICAL)")
+        print("-" * 70)
+        self.test_review_request_corrections()
+        
         # Summary
         print("\n" + "=" * 80)
         print("TEST SUMMARY")
