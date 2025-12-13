@@ -11303,10 +11303,16 @@ async def importar_plataforma(
                 motorista_email = row.get('motorista_email', '').strip()
                 
                 if plataforma == 'uber':
-                    # Tentar por UUID do motorista
-                    uuid_motorista = row.get('UUID do motorista', '').strip()
+                    # Tentar por UUID do motorista (normalizar para comparação)
+                    uuid_motorista = row.get('UUID do motorista', '').strip().lower()
                     if uuid_motorista:
-                        motorista = await db.motoristas.find_one({"uuid_motorista_uber": uuid_motorista}, {"_id": 0})
+                        # Buscar com UUID normalizado (case-insensitive)
+                        motorista = await db.motoristas.find_one(
+                            {"$expr": {"$eq": [{"$toLower": "$uuid_motorista_uber"}, uuid_motorista]}}, 
+                            {"_id": 0}
+                        )
+                        if motorista:
+                            logger.info(f"✅ Motorista encontrado por UUID: {motorista.get('name')}")
                     
                     # Se não encontrou, tentar por nome completo (mais flexível)
                     if not motorista:
