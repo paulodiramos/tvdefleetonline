@@ -52,6 +52,7 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
     // Plataformas
     email_uber: motoristaData?.email_uber || '',
     telefone_uber: motoristaData?.telefone_uber || '',
+    uuid_motorista_uber: motoristaData?.uuid_motorista_uber || '',
     email_bolt: motoristaData?.email_bolt || '',
     telefone_bolt: motoristaData?.telefone_bolt || '',
 
