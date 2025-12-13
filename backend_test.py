@@ -939,27 +939,17 @@ startxref
                                   f"❌ Success rate {success_rate:.1f}% below target (≥90%)")
                 
                 # Step 6: Check for Bruno specifically in results
-                detalhes = result.get("detalhes", [])
-                bruno_success = False
+                erros_detalhes = result.get("erros_detalhes", [])
+                bruno_error = False
                 
-                for detalhe in detalhes:
-                    if "bruno" in detalhe.lower() and "sucesso" in detalhe.lower():
-                        bruno_success = True
+                for erro in erros_detalhes:
+                    if "bruno" in erro.lower():
+                        bruno_error = True
+                        self.log_result("Verify-Bruno-Import", False, f"❌ Bruno import failed: {erro}")
                         break
                 
-                if bruno_success:
-                    self.log_result("Verify-Bruno-Import", True, "✅ Bruno Coelho imported successfully")
-                else:
-                    # Check if Bruno was in errors
-                    bruno_error = False
-                    for detalhe in detalhes:
-                        if "bruno" in detalhe.lower() and ("erro" in detalhe.lower() or "não encontrado" in detalhe.lower()):
-                            bruno_error = True
-                            self.log_result("Verify-Bruno-Import", False, f"❌ Bruno import failed: {detalhe}")
-                            break
-                    
-                    if not bruno_error:
-                        self.log_result("Verify-Bruno-Import", True, "✅ Bruno not in error list (likely imported)")
+                if not bruno_error:
+                    self.log_result("Verify-Bruno-Import", True, "✅ Bruno Coelho imported successfully (not in error list)")
                 
                 return True
                 
