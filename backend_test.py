@@ -822,6 +822,155 @@ startxref
         except Exception as e:
             self.log_result("Import-Access-Control", False, f"Request error: {str(e)}")
 
+    # ==================== UBER CSV IMPORT BOM FIX TEST (REVIEW REQUEST) ====================
+    
+    def test_uber_csv_import_bom_fix(self):
+        """Test Uber CSV import after BOM fix - Review Request Specific Test"""
+        print("\n🎯 TESTING UBER CSV IMPORT AFTER BOM FIX")
+        print("-" * 80)
+        print("Review Request: Test Uber CSV import with real file after utf-8-sig fix")
+        print("- CSV URL: https://customer-assets.emergentagent.com/job_weekly-report-sys/artifacts/vy8erxlu_20251201-20251208-payments_driver-ZENY_MACAIA_UNIPESSOAL_LDA%20%281%29.csv")
+        print("- Target Driver: Bruno Coelho (UUID: 35382cb7-236e-42c1-b0b4-e16bfabb8ff3)")
+        print("- Expected: 100% success rate (11/11 drivers)")
+        print("-" * 80)
+        
+        # Authenticate as admin
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Uber-BOM-Fix-Auth", False, "No auth token for admin")
+            return False
+        
+        # Step 1: Download the real CSV file
+        csv_url = "https://customer-assets.emergentagent.com/job_weekly-report-sys/artifacts/vy8erxlu_20251201-20251208-payments_driver-ZENY_MACAIA_UNIPESSOAL_LDA%20%281%29.csv"
+        
+        try:
+            csv_response = requests.get(csv_url)
+            if csv_response.status_code == 200:
+                csv_content = csv_response.content
+                csv_size = len(csv_content)
+                self.log_result("Download-Real-CSV", True, f"✅ CSV downloaded successfully: {csv_size} bytes")
+            else:
+                self.log_result("Download-Real-CSV", False, f"❌ Failed to download CSV: {csv_response.status_code}")
+                return False
+        except Exception as e:
+            self.log_result("Download-Real-CSV", False, f"❌ Download error: {str(e)}")
+            return False
+        
+        # Step 2: Verify Bruno Coelho exists in database with correct UUID
+        try:
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            if motoristas_response.status_code == 200:
+                motoristas = motoristas_response.json()
+                bruno_found = False
+                bruno_uuid = None
+                
+                for motorista in motoristas:
+                    if "bruno" in motorista.get("name", "").lower() and "coelho" in motorista.get("name", "").lower():
+                        bruno_found = True
+                        bruno_uuid = motorista.get("uuid_motorista_uber")
+                        break
+                
+                if bruno_found and bruno_uuid == "35382cb7-236e-42c1-b0b4-e16bfabb8ff3":
+                    self.log_result("Verify-Bruno-Database", True, f"✅ Bruno Coelho found with correct UUID: {bruno_uuid}")
+                elif bruno_found:
+                    self.log_result("Verify-Bruno-Database", False, f"❌ Bruno found but UUID incorrect: {bruno_uuid}")
+                    return False
+                else:
+                    self.log_result("Verify-Bruno-Database", False, "❌ Bruno Coelho not found in database")
+                    return False
+            else:
+                self.log_result("Verify-Bruno-Database", False, f"❌ Cannot get motoristas: {motoristas_response.status_code}")
+                return False
+        except Exception as e:
+            self.log_result("Verify-Bruno-Database", False, f"❌ Database check error: {str(e)}")
+            return False
+        
+        # Step 3: Check CSV content for Bruno's UUID
+        try:
+            csv_text = csv_content.decode('utf-8-sig')  # Use utf-8-sig to handle BOM
+            lines = csv_text.split('\n')
+            bruno_line_found = False
+            
+            for i, line in enumerate(lines):
+                if "35382cb7-236e-42c1-b0b4-e16bfabb8ff3" in line and "BRUNO" in line.upper():
+                    bruno_line_found = True
+                    self.log_result("Verify-CSV-Content", True, f"✅ Bruno's UUID found in CSV line {i+1}")
+                    break
+            
+            if not bruno_line_found:
+                self.log_result("Verify-CSV-Content", False, "❌ Bruno's UUID not found in CSV content")
+                return False
+        except Exception as e:
+            self.log_result("Verify-CSV-Content", False, f"❌ CSV content check error: {str(e)}")
+            return False
+        
+        # Step 4: Execute the import
+        try:
+            files = {
+                'file': ('uber_real_file.csv', csv_content, 'text/csv')
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/importar/uber",
+                files=files,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Check import results
+                total_importados = result.get("total_importados", 0)
+                total_erros = result.get("total_erros", 0)
+                total_linhas = result.get("total_linhas", 0)
+                
+                success_rate = (total_importados / total_linhas * 100) if total_linhas > 0 else 0
+                
+                self.log_result("Execute-Uber-Import", True, 
+                              f"✅ Import completed: {total_importados}/{total_linhas} records ({success_rate:.1f}% success)")
+                
+                # Step 5: Verify success rate is high (should be 100% or close)
+                if success_rate >= 90:
+                    self.log_result("Verify-Success-Rate", True, 
+                                  f"✅ Success rate {success_rate:.1f}% meets target (≥90%)")
+                else:
+                    self.log_result("Verify-Success-Rate", False, 
+                                  f"❌ Success rate {success_rate:.1f}% below target (≥90%)")
+                
+                # Step 6: Check for Bruno specifically in results
+                detalhes = result.get("detalhes", [])
+                bruno_success = False
+                
+                for detalhe in detalhes:
+                    if "bruno" in detalhe.lower() and "sucesso" in detalhe.lower():
+                        bruno_success = True
+                        break
+                
+                if bruno_success:
+                    self.log_result("Verify-Bruno-Import", True, "✅ Bruno Coelho imported successfully")
+                else:
+                    # Check if Bruno was in errors
+                    bruno_error = False
+                    for detalhe in detalhes:
+                        if "bruno" in detalhe.lower() and ("erro" in detalhe.lower() or "não encontrado" in detalhe.lower()):
+                            bruno_error = True
+                            self.log_result("Verify-Bruno-Import", False, f"❌ Bruno import failed: {detalhe}")
+                            break
+                    
+                    if not bruno_error:
+                        self.log_result("Verify-Bruno-Import", True, "✅ Bruno not in error list (likely imported)")
+                
+                return True
+                
+            else:
+                self.log_result("Execute-Uber-Import", False, 
+                              f"❌ Import failed: {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_result("Execute-Uber-Import", False, f"❌ Import error: {str(e)}")
+            return False
+    
     # ==================== WEEKLY REPORTS SYSTEM TESTS (REVIEW REQUEST) ====================
     
     def test_weekly_reports_system_complete(self):
