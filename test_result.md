@@ -587,7 +587,9 @@ test_plan:
   all_8_critical_steps_passed: true
   file_upload_download_system_working: true
   state_transitions_working: true
-  platform_import_system_needs_testing: true
+  platform_import_system_needs_testing: false
+  bug_fixes_review_request_tested: true
+  all_3_bugs_fixed: true
 
 agent_communication:
     - agent: "testing"
