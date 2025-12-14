@@ -415,27 +415,72 @@ const ImportarPlataformas = () => {
 
                 {/* Campos de Período (Semana) */}
                 {['uber', 'bolt', 'viaverde'].includes(plataformaSelecionada) && (
-                  <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 border border-blue-200 rounded">
-                    <div>
-                      <Label htmlFor="periodo-inicio">Data Início *</Label>
-                      <Input
-                        id="periodo-inicio"
-                        type="date"
-                        value={periodoInicio}
-                        onChange={(e) => setPeriodoInicio(e.target.value)}
-                        className="mt-1"
-                      />
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded space-y-3">
+                    <p className="text-sm font-semibold text-blue-800">📅 Período de Importação</p>
+                    
+                    {/* Ano e Semana */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="ano">Ano *</Label>
+                        <Input
+                          id="ano"
+                          type="number"
+                          min="2020"
+                          max="2030"
+                          value={ano}
+                          onChange={(e) => {
+                            const novoAno = parseInt(e.target.value);
+                            setAno(novoAno);
+                            if (semana) calcularDatasFromSemana(novoAno, semana);
+                          }}
+                          className="mt-1"
+                          placeholder="2024"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="semana">Semana (1-53) *</Label>
+                        <Input
+                          id="semana"
+                          type="number"
+                          min="1"
+                          max="53"
+                          value={semana}
+                          onChange={(e) => {
+                            const novaSemana = parseInt(e.target.value);
+                            setSemana(novaSemana);
+                            if (ano && novaSemana >= 1 && novaSemana <= 53) {
+                              calcularDatasFromSemana(ano, novaSemana);
+                            }
+                          }}
+                          className="mt-1"
+                          placeholder="49"
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <Label htmlFor="periodo-fim">Data Fim *</Label>
-                      <Input
-                        id="periodo-fim"
-                        type="date"
-                        value={periodoFim}
-                        onChange={(e) => setPeriodoFim(e.target.value)}
-                        className="mt-1"
-                      />
-                    </div>
+                    
+                    {/* Datas Calculadas (read-only) */}
+                    {periodoInicio && periodoFim && (
+                      <div className="grid grid-cols-2 gap-4 pt-2 border-t border-blue-300">
+                        <div>
+                          <Label className="text-xs text-blue-700">Data Início</Label>
+                          <Input
+                            type="date"
+                            value={periodoInicio}
+                            onChange={(e) => setPeriodoInicio(e.target.value)}
+                            className="mt-1 bg-white text-sm"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs text-blue-700">Data Fim</Label>
+                          <Input
+                            type="date"
+                            value={periodoFim}
+                            onChange={(e) => setPeriodoFim(e.target.value)}
+                            className="mt-1 bg-white text-sm"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
