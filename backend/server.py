@@ -11289,10 +11289,11 @@ async def excluir_relatorio(
     
     # Verificar se pode ser excluído (apenas rascunho ou pendente)
     status_permitidos = ["rascunho", "pendente"]
-    if relatorio.get("status") not in status_permitidos:
+    estado_atual = relatorio.get("estado") or relatorio.get("status")
+    if estado_atual not in status_permitidos:
         raise HTTPException(
             status_code=400, 
-            detail=f"Apenas relatórios em rascunho ou pendente podem ser excluídos. Status atual: {relatorio.get('status')}"
+            detail=f"Apenas relatórios em rascunho ou pendente podem ser excluídos. Estado atual: {estado_atual}"
         )
     
     # Excluir relatório
