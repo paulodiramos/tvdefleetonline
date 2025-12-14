@@ -148,11 +148,23 @@ const ImportarPlataformas = () => {
       return;
     }
 
+    // Validar período para plataformas que requerem
+    if (['uber', 'bolt', 'viaverde'].includes(plataformaSelecionada)) {
+      if (!periodoInicio || !periodoFim) {
+        toast.error('Selecione o período (data início e fim)');
+        return;
+      }
+    }
+
     setUploading(true);
     try {
       const formData = new FormData();
       formData.append('file', csvFile);
       formData.append('plataforma', plataformaSelecionada);
+      
+      // Adicionar período se preenchido
+      if (periodoInicio) formData.append('periodo_inicio', periodoInicio);
+      if (periodoFim) formData.append('periodo_fim', periodoFim);
 
       const token = localStorage.getItem('token');
       const response = await axios.post(
