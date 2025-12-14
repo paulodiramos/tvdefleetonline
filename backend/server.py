@@ -11701,37 +11701,77 @@ async def importar_combustivel_excel(
                             return row[key]
                     return default
                 
-                # Create abastecimento record
-                abastecimento = CombustivelFossil(
-                    parceiro_id=current_user["id"],
-                    posto=get_value(['Posto', 'posto', 'Station']),
-                    pais=get_value(['País', 'pais', 'Country']),
-                    rede=get_value(['Rede', 'rede', 'Network']),
-                    data=get_value(['Data', 'data', 'Date']),
-                    hora=get_value(['Hora', 'hora', 'Time']),
-                    cartao=get_value(['Cartão', 'cartao', 'Card']),
-                    desc_cartao=get_value(['Desc Cartão', 'desc_cartao', 'Card Description']),
-                    estado=get_value(['Estado', 'estado', 'Status']),
-                    grupo_cartao=get_value(['Grupo Cartão', 'grupo_cartao', 'Card Group']),
-                    litros=float(get_value(['Litros', 'litros', 'Liters'], 0)),
-                    combustivel=get_value(['Combustível', 'combustivel', 'Fuel']),
-                    recibo=get_value(['Recibo', 'recibo', 'Receipt']),
-                    valor_liquido=float(get_value(['Valor Líquido', 'valor_liquido', 'Net Value'], 0)),
-                    iva=float(get_value(['IVA', 'iva', 'VAT'], 0)),
-                    kms=int(get_value(['KMs', 'kms', 'Kilometers'], 0)),
-                    id_condutor=get_value(['ID Condutor', 'id_condutor', 'Driver ID']),
-                    fatura=get_value(['Fatura', 'fatura', 'Invoice']),
-                    data_fatura=get_value(['Data Fatura', 'data_fatura', 'Invoice Date']),
-                    valor_unitario=float(get_value(['Valor Unitário', 'valor_unitario', 'Unit Value'], 0)),
-                    valor_ref=float(get_value(['Valor Ref', 'valor_ref', 'Reference Value'], 0)),
-                    valor_desc=float(get_value(['Valor Desc', 'valor_desc', 'Discount Value'], 0)),
-                    cliente=get_value(['Cliente', 'cliente', 'Client']),
-                    tipo_pagamento=get_value(['Tipo Pagamento', 'tipo_pagamento', 'Payment Type']),
-                    ficheiro_nome=f"combustivel_{current_user['id']}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.xlsx",
-                    importado_por=current_user["id"]
-                )
+                def to_float(value, default=0.0):
+                    if value is None or value == '':
+                        return default
+                    try:
+                        return float(str(value).replace(',', '.').strip())
+                    except:
+                        return default
                 
-                abastecimentos.append(abastecimento.dict())
+                def to_int(value, default=0):
+                    if value is None or value == '':
+                        return default
+                    try:
+                        return int(float(str(value).replace(',', '.').strip()))
+                    except:
+                        return default
+                
+                # Parse da data
+                data_transacao = get_value(['DATA', 'Data', 'data', 'DATE'])
+                if isinstance(data_transacao, datetime):
+                    data_transacao = data_transacao.strftime('%Y-%m-%d')
+                elif data_transacao:
+                    data_transacao = str(data_transacao).strip()
+                else:
+                    data_transacao = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                
+                # Parse da hora
+                hora = get_value(['HORA', 'Hora', 'hora', 'TIME'])
+                if isinstance(hora, datetime):
+                    hora = hora.strftime('%H:%M:%S')
+                elif hora:
+                    hora = str(hora).strip()
+                else:
+                    hora = '00:00:00'
+                
+                # Criar documento de abastecimento
+                documento = {
+                    "id": str(uuid.uuid4()),
+                    "vehicle_id": vehicle["id"],
+                    "matricula": desc_cartao if desc_cartao and '-' in desc_cartao else vehicle.get('matricula'),
+                    "cartao_via_verde": cartao_via_verde,
+                    "desc_cartao": desc_cartao,
+                    "obu": obu or vehicle.get("obu"),
+                    "via_verde_id": vehicle.get("via_verde_id"),
+                    "motorista_id": motorista["id"] if motorista else None,
+                    "motorista_email": motorista.get("email") if motorista else None,
+                    "parceiro_id": current_user["id"],
+                    "data": data_transacao,
+                    "hora": hora,
+                    "posto": str(get_value(['POSTO', 'Posto', 'posto', 'Station'])),
+                    "pais": str(get_value(['PAÍS', 'País', 'pais', 'Country'])),
+                    "rede": str(get_value(['REDE', 'Rede', 'rede', 'Network'])),
+                    "combustivel": str(get_value(['COMBUSTÍVEL', 'Combustível', 'combustivel', 'Fuel'])),
+                    "litros": to_float(get_value(['LITROS', 'Litros', 'litros', 'Liters'])),
+                    "valor_liquido": to_float(get_value(['VALOR LÍQUIDO', 'Valor Líquido', 'valor_liquido', 'Net Value'])),
+                    "iva": to_float(get_value(['IVA', 'iva', 'VAT'])),
+                    "km_atual": to_int(get_value(["KM'S", 'KMs', 'kms', 'Kilometers'])),
+                    "recibo": str(get_value(['RECIBO', 'Recibo', 'recibo', 'Receipt'])),
+                    "estado": str(get_value(['ESTADO', 'Estado', 'estado', 'Status'])),
+                    "grupo_cartao": str(get_value(['GRUPO CARTÃO', 'Grupo Cartão', 'grupo_cartao', 'Card Group'])),
+                    "id_condutor": str(get_value(['ID CONDUTOR', 'ID Condutor', 'id_condutor', 'Driver ID'])),
+                    "fatura": str(get_value(['FATURA', 'Fatura', 'fatura', 'Invoice'])),
+                    "cliente": str(get_value(['CLIENTE', 'Cliente', 'cliente', 'Client'])),
+                    "tipo_pagamento": str(get_value(['TIPO DE PAGAMENTO', 'Tipo Pagamento', 'tipo_pagamento', 'Payment Type'])),
+                    "periodo_inicio": periodo_inicio,
+                    "periodo_fim": periodo_fim,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "created_by": current_user["id"]
+                }
+                
+                # Inserir na coleção
+                await db.abastecimentos_combustivel.insert_one(documento)
                 sucesso += 1
                 
             except Exception as e:
