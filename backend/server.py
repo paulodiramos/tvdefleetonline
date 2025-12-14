@@ -11779,17 +11779,10 @@ async def importar_combustivel_excel(
                 erros_detalhes.append(f"Linha {row_num}: {str(e)}")
                 logger.error(f"Erro ao processar linha {row_num}: {str(e)}")
         
-        # Inserir na base de dados
-        if abastecimentos:
-            await db.abastecimentos_combustivel.insert_many(abastecimentos)
-        
         return {
+            "message": f"Importação combustível: {sucesso} sucesso(s), {erros} erro(s)",
             "sucesso": sucesso,
             "erros": erros,
-            "total_litros": sum(a.get('litros', 0) for a in abastecimentos),
-            "total_valor_eur": sum(a.get('valor_liquido', 0) for a in abastecimentos),
-            "periodo": f"{periodo_inicio} a {periodo_fim}" if periodo_inicio and periodo_fim else "Não especificado",
-            "ficheiro_salvo": True,
             "erros_detalhes": erros_detalhes[:20]
         }
         
