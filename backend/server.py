@@ -11575,6 +11575,7 @@ async def importar_combustivel_excel(
         sucesso = 0
         erros = 0
         erros_detalhes = []
+        abastecimentos = []
         
         # Ler linha 4 como cabeçalho (índice 4)
         header_row = list(sheet.iter_rows(min_row=4, max_row=4, values_only=True))[0]
