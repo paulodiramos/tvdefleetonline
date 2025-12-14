@@ -1378,9 +1378,12 @@ startxref
                 for expected in expected_drivers:
                     found = False
                     for motorista in motoristas:
-                        # Check by email or name
-                        if (motorista.get("email", "").lower() == expected["email"].lower() or
-                            expected["name"].lower() in motorista.get("name", "").lower()):
+                        # Check by email or name (safely handle None values)
+                        motorista_email = motorista.get("email", "") or ""
+                        motorista_name = motorista.get("name", "") or ""
+                        
+                        if (motorista_email.lower() == expected["email"].lower() or
+                            expected["name"].lower() in motorista_name.lower()):
                             found = True
                             found_drivers += 1
                             print(f"  ✅ {expected['name']} ({expected['email']}) - FOUND")
