@@ -12231,6 +12231,47 @@ async def importar_plataforma(
                             f"(Email: {motorista_email}, ID: {identificador_individual})"
                         )
                         continue
+                
+                elif plataforma == 'gps':
+                    # Para GPS: buscar veículo por matrícula e depois o motorista atribuído
+                    matricula_gps = row.get('Veículo', '').strip()
+                    
+                    if not matricula_gps:
+                        erros += 1
+                        erros_detalhes.append(f"Linha {row_num}: Matrícula do veículo vazia")
+                        continue
+                    
+                    # Extrair apenas a matrícula do formato "Modelo MATRÍCULA"
+                    # Ex: "AC-11-GA", "Citroen-C4 AX-38-FH", "EQB 250 BR-03-MZ"
+                    partes = matricula_gps.split()
+                    matricula_limpa = partes[-1] if partes else matricula_gps
+                    
+                    # Buscar veículo por matrícula
+                    vehicle = await db.vehicles.find_one(
+                        {"matricula": {"$regex": f"^{re.escape(matricula_limpa)}$", "$options": "i"}},
+                        {"_id": 0}
+                    )
+                    
+                    if not vehicle:
+                        erros += 1
+                        erros_detalhes.append(f"Linha {row_num}: Veículo com matrícula '{matricula_limpa}' não encontrado")
+                        continue
+                    
+                    # Buscar motorista atribuído ao veículo
+                    if vehicle.get('motorista_atribuido'):
+                        motorista = await db.motoristas.find_one(
+                            {"id": vehicle['motorista_atribuido']},
+                            {"_id": 0}
+                        )
+                        if motorista:
+                            motorista_email = motorista.get("email", "")
+                            logger.info(f"✅ GPS - Veículo {matricula_limpa}: motorista {motorista.get('name')} encontrado")
+                    
+                    # Se não houver motorista atribuído, permitir importação com motorista None
+                    if not motorista:
+                        logger.warning(f"⚠️ GPS - Veículo {matricula_limpa}: sem motorista atribuído")
+                        motorista = {"id": None, "email": None}
+                        motorista_email = ""
                         
                 else:
                     # Para outras plataformas: usar email obrigatório
