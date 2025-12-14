@@ -11919,9 +11919,15 @@ async def importar_plataforma(
                     
                     if not motorista and not vehicle:
                         erros += 1
+                        identificadores = []
+                        if card_code:
+                            identificadores.append(f"CardCode: {card_code}")
+                        if cartao_viaverde:
+                            identificadores.append(f"MobileCard: {cartao_viaverde}")
+                        if matricula_viaverde:
+                            identificadores.append(f"Matrícula: {matricula_viaverde}")
                         erros_detalhes.append(
-                            f"Linha {row_num}: Veículo não encontrado "
-                            f"(Matrícula: {matricula_viaverde}, Cartão: {cartao_viaverde})"
+                            f"Linha {row_num}: Veículo não encontrado ({', '.join(identificadores) if identificadores else 'Sem identificadores'})"
                         )
                         continue
                 
