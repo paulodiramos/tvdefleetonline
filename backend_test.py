@@ -1400,9 +1400,9 @@ startxref
                     if line.strip():
                         parts = line.split(',')
                         if len(parts) >= 3:
-                            # Assuming CardID is in column 1 and ServiceType in column 2
-                            cardid = parts[1].strip().strip('"')
-                            servicetype = parts[2].strip().strip('"')
+                            # CardCode is in column 1, MobileCard is in column 2
+                            cardid = parts[1].strip().strip('"')  # CardCode (PTPRIO...)
+                            servicetype = parts[2].strip().strip('"')  # MobileCard (EZeny2, Gestor Conta, etc.)
                             
                             if cardid and cardid not in cardid_examples:
                                 cardid_examples.append(cardid)
