@@ -11146,7 +11146,10 @@ async def importar_relatorios_csv(
         # Ler conteúdo do ficheiro (usar utf-8-sig para remover BOM se presente)
         content = await file.read()
         decoded = content.decode('utf-8-sig')
-        csv_reader = csv.DictReader(io.StringIO(decoded))
+        
+        # Detectar delimitador (vírgula ou ponto e vírgula)
+        delimiter = ';' if ';' in decoded.split('\n')[0] else ','
+        csv_reader = csv.DictReader(io.StringIO(decoded), delimiter=delimiter)
         
         sucesso = 0
         erros = 0
