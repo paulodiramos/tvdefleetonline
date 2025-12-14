@@ -598,14 +598,21 @@ const RelatoriosHub = ({ user, onLogout }) => {
             </div>
           </div>
           <div className="flex gap-2 flex-wrap">
+            <Button 
+              onClick={() => setShowGerarMassaModal(true)}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              Gerar Relatórios Semanais
+            </Button>
             <Button onClick={() => setShowCriarModal(true)}>
               <Plus className="w-4 h-4 mr-2" />
-              Criar Relatório
+              Criar Individual
             </Button>
             <Button 
               variant="outline" 
               onClick={() => setShowImportarCSVModal(true)}
-              className="bg-green-50 hover:bg-green-100 border-green-200"
+              className="bg-blue-50 hover:bg-blue-100 border-blue-200"
             >
               <FileSpreadsheet className="w-4 h-4 mr-2" />
               Importar Relatórios
