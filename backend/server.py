@@ -11576,14 +11576,14 @@ async def importar_combustivel_excel(
         erros = 0
         erros_detalhes = []
         
-        # Ler linha 1 como cabeçalho
-        header_row = list(sheet.iter_rows(min_row=1, max_row=1, values_only=True))[0]
+        # Ler linha 4 como cabeçalho (primeiras 3 linhas são ignoradas)
+        header_row = list(sheet.iter_rows(min_row=4, max_row=4, values_only=True))[0]
         header = [str(cell).strip() if cell else '' for cell in header_row]
         
         logger.info(f"📄 Cabeçalho Excel combustível: {header}")
         
-        # Processar linhas a partir da linha 2
-        for row_num, row_values in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+        # Processar linhas a partir da linha 5
+        for row_num, row_values in enumerate(sheet.iter_rows(min_row=5, values_only=True), start=5):
             try:
                 # Criar dicionário da linha
                 row = dict(zip(header, row_values))
