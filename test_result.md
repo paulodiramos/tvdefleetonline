@@ -7940,7 +7940,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Teste de Importação GPS - Busca por Matrícula - COMPLETED ✅"
+    - "Teste de Importação Via Verde CSV - Carregamentos com CardID - COMPLETED ✅"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -7950,6 +7950,7 @@ test_plan:
   bug_3_uber_import_uuid_working: true
   via_verde_excel_import_tested: true
   via_verde_obu_validation_working: true
+  via_verde_csv_cardid_import_tested: true
   fuel_import_excel_desc_cartao_tested: true
   fuel_import_desc_cartao_logic_working: true
   gps_import_matricula_tested: true
