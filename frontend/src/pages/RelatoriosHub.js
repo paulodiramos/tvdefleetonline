@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { 
   FileText, Plus, Edit, Check, X, Download, ArrowLeft,
   Calendar, User, DollarSign, TrendingUp, Eye, CheckCircle, Upload,
-  FileSpreadsheet, Loader2
+  FileSpreadsheet, Loader2, Trash2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -238,6 +238,29 @@ const RelatoriosHub = ({ user, onLogout }) => {
         status: 'pendente_aprovacao',
         estado: 'pendente_aprovacao',
         parceiro_id: user.id
+
+  const handleExcluirRelatorio = async (relatorioId) => {
+    if (!window.confirm('Tem certeza que deseja excluir este relatório? Esta ação não pode ser desfeita.')) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(
+        `${API_URL}/api/relatorios/${relatorioId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success('Relatório excluído com sucesso!');
+      
+      // Recarregar relatórios
+      await fetchData();
+    } catch (error) {
+      console.error('Erro ao excluir relatório:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao excluir relatório');
+    }
+  };
+
       };
       
       console.log('Payload a enviar:', payload);
