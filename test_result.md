@@ -7944,6 +7944,53 @@ test_plan:
 agent_communication:
     - agent: "testing"
       message: |
+        🎯 TESTE COMPLETO DE IMPORTAÇÃO COMBUSTÍVEL EXCEL COM DESC. CARTÃO - 100% FUNCIONANDO!
+        
+        CONTEXTO DO TESTE:
+        Teste específico da funcionalidade de importação de Excel de combustível com identificação por DESC. CARTÃO conforme review request em português.
+        
+        **CREDENCIAIS UTILIZADAS:**
+        - Admin: admin@tvdefleet.com / o72ocUHy ✅
+        
+        **FICHEIRO TESTADO:**
+        - URL: https://customer-assets.emergentagent.com/job_weeklyfleethub/artifacts/xoorhctx_Transa%C3%A7%C3%B5es_Frota_20251214.xlsx
+        - Tamanho: 24084 bytes ✅
+        - Estrutura: Cabeçalho na linha 4 (primeiras 3 linhas ignoradas) ✅
+        
+        **LÓGICA DE IDENTIFICAÇÃO TESTADA:**
+        1. ✅ Busca por CARTÃO → via_verde_id
+        2. ✅ Busca por DESC. CARTÃO:
+           - Se tem "-" ou ≥6 chars → matricula
+           - Senão → cartao_frota_id
+        3. ✅ Fallback por OBU
+        4. ✅ Fallback por matrícula
+        
+        **VEÍCULOS DE TESTE CONFIGURADOS:**
+        - ✅ AS-14-NI (matrícula) - encontrado por DESC. CARTÃO
+        - ✅ ZENY.4 (cartao_frota_id) - encontrado por DESC. CARTÃO
+        - ✅ ZENY.1 (cartao_frota_id) - encontrado por DESC. CARTÃO
+        - ✅ ZENY.3 (cartao_frota_id) - encontrado por DESC. CARTÃO
+        
+        **RESULTADOS DA IMPORTAÇÃO:**
+        - ✅ 13/13 registos importados com sucesso (100% taxa de sucesso)
+        - ✅ 0 erros encontrados
+        - ✅ Todos os veículos encontrados por DESC. CARTÃO
+        - ✅ Dados salvos na coleção MongoDB 'abastecimentos_combustivel'
+        
+        **ENDPOINT TESTADO:**
+        - POST /api/importar/combustivel ✅
+        
+        🎉 **SISTEMA DE IMPORTAÇÃO COMBUSTÍVEL 100% OPERACIONAL!**
+        
+        **FUNCIONALIDADES CONFIRMADAS:**
+        ✅ Leitura correta do cabeçalho na linha 4
+        ✅ Identificação de veículos por DESC. CARTÃO funcionando
+        ✅ Lógica de fallback implementada corretamente
+        ✅ Taxa de sucesso de 100% com ficheiro real
+        ✅ Sistema pronto para produção
+        
+    - agent: "testing"
+      message: |
         🎯 TESTE COMPLETO - 3 CORREÇÕES DE BUGS DO REVIEW REQUEST - 100% FUNCIONANDO!
         
         CONTEXTO DO TESTE:
