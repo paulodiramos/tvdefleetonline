@@ -12219,18 +12219,6 @@ async def importar_plataforma(
             return await importar_viaverde_excel(content, current_user, periodo_inicio, periodo_fim)
         
         # Para CSV: tentar múltiplas codificações
-    plataforma: str,
-    periodo_inicio: str,
-    periodo_fim: str,
-    parceiro_id: str,
-    db
-):
-    """
-    Cria relatórios de rascunho automaticamente após importação de dados
-    Agrupa por motorista + semana/ano
-    """
-    try:
-        if not periodo_inicio or not periodo_fim:
             logger.warning("Período não fornecido, não é possível criar rascunhos")
             return {"rascunhos_criados": 0, "message": "Período não fornecido"}
         
