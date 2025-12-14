@@ -11624,18 +11624,14 @@ async def importar_combustivel_excel(
                 vehicle = None
                 
                 # 1. Tentar por Cartão (número longo como 7824731736480003)
+                # CARTÃO do combustível vai para cartao_frota_id
                 if cartao_via_verde:
-                    # Números longos de cartão podem estar em via_verde_id ou cartao_frota_id
                     vehicle = await db.vehicles.find_one(
-                        {"$or": [
-                            {"via_verde_id": cartao_via_verde},
-                            {"cartao_frota_id": cartao_via_verde},
-                            {"cartao_via_verde": cartao_via_verde}
-                        ]},
+                        {"cartao_frota_id": cartao_via_verde},
                         {"_id": 0}
                     )
                     if vehicle:
-                        logger.info(f"✅ Combustível - Veículo encontrado por Cartão: {cartao_via_verde}")
+                        logger.info(f"✅ Combustível - Veículo encontrado por CARTÃO (cartao_frota_id): {cartao_via_verde}")
                 
                 # 2. Tentar por DESC. CARTÃO (pode ser matrícula como "AS-14-NI" ou ID)
                 if not vehicle and desc_cartao:
