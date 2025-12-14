@@ -561,6 +561,9 @@ startxref
         self.test_combustivel_eletrico_excel_import(headers)
         self.test_combustivel_fossil_excel_import(headers)
         
+        # Test specific Via Verde Excel import with validation (Review Request)
+        self.test_via_verde_excel_import_with_validation()
+        
         return True
     
     def test_uber_csv_import(self, headers):
