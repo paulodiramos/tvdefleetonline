@@ -1599,10 +1599,13 @@ const RelatoriosHub = ({ user, onLogout }) => {
                 </ul>
               </div>
               
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <p className="text-sm text-amber-900">
-                  ⚠️ <strong>Atenção Via Verde:</strong> Os dados da Via Verde normalmente têm 1 semana de atraso. 
-                  Certifique-se de importar o ficheiro Via Verde da semana anterior para corresponder aos ganhos Uber/Bolt da semana atual.
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                <p className="text-sm text-green-900">
+                  ✅ <strong>Via Verde Automático:</strong> O sistema busca automaticamente Via Verde da semana anterior. 
+                  Para relatório da semana 45, importa Via Verde da semana 44 - será incluído automaticamente!
+                </p>
+                <p className="text-xs text-green-800 mt-1">
+                  Exemplo: Relatório Sem 45 (04-10 Nov) → Uber/Bolt Sem 45 + Via Verde Sem 44 (28 Out-03 Nov)
                 </p>
               </div>
               
