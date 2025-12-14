@@ -612,14 +612,6 @@ const RelatoriosHub = ({ user, onLogout }) => {
             </Button>
             <Button 
               variant="outline" 
-              onClick={() => setShowImportarCSVModal(true)}
-              className="bg-blue-50 hover:bg-blue-100 border-blue-200"
-            >
-              <FileSpreadsheet className="w-4 h-4 mr-2" />
-              Importar Relatórios
-            </Button>
-            <Button 
-              variant="outline" 
               onClick={() => navigate('/importar-plataformas')}
               className="bg-blue-50 hover:bg-blue-100 border-blue-200"
             >
