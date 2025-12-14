@@ -701,8 +701,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Sistema de Geração de Relatórios Semanais em Massa - Novo Endpoint"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -732,6 +731,11 @@ test_plan:
   bulk_weekly_reports_generation_tested: true
   new_endpoint_gerar_em_massa_working: true
   all_4_bulk_tests_passed: true
+  bolt_csv_import_real_format_tested: true
+  bolt_csv_import_working: true
+  bolt_weekly_summary_format_supported: true
+  all_expected_bolt_drivers_found: true
+  bolt_mongodb_collection_verified: true
 
 agent_communication:
     - agent: "testing"
