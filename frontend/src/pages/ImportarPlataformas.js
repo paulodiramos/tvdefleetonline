@@ -358,11 +358,13 @@ const ImportarPlataformas = () => {
             <Card>
               <CardContent className="p-6 space-y-4">
                 <div>
-                  <Label htmlFor="file-input">Ficheiro CSV</Label>
+                  <Label htmlFor="file-input">
+                    Ficheiro {plataformaSelecionada === 'combustivel' ? 'Excel (.xlsx)' : 'CSV'}
+                  </Label>
                   <Input
                     id="file-input"
                     type="file"
-                    accept=".csv"
+                    accept={plataformaSelecionada === 'combustivel' ? '.xlsx,.xls' : '.csv'}
                     onChange={handleFileChange}
                     className="cursor-pointer mt-2"
                   />
@@ -373,6 +375,32 @@ const ImportarPlataformas = () => {
                     </p>
                   )}
                 </div>
+
+                {/* Campos de Período (Semana) */}
+                {['uber', 'bolt', 'viaverde'].includes(plataformaSelecionada) && (
+                  <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 border border-blue-200 rounded">
+                    <div>
+                      <Label htmlFor="periodo-inicio">Data Início *</Label>
+                      <Input
+                        id="periodo-inicio"
+                        type="date"
+                        value={periodoInicio}
+                        onChange={(e) => setPeriodoInicio(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="periodo-fim">Data Fim *</Label>
+                      <Input
+                        id="periodo-fim"
+                        type="date"
+                        value={periodoFim}
+                        onChange={(e) => setPeriodoFim(e.target.value)}
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 <div className="p-3 bg-yellow-50 border border-yellow-200 rounded flex gap-3">
                   <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
