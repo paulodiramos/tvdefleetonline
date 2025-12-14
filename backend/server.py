@@ -11278,7 +11278,7 @@ async def excluir_relatorio(
     current_user: Dict = Depends(get_current_user)
 ):
     """Excluir relatório (apenas rascunho ou pendente)"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     # Buscar relatório
