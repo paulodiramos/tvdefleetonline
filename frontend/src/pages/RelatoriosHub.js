@@ -1655,8 +1655,7 @@ const RelatoriosHub = ({ user, onLogout }) => {
           </DialogContent>
         </Dialog>
 
-        {/* Modal Importar CSV */}
-        <Dialog open={showImportarCSVModal} onOpenChange={setShowImportarCSVModal}>
+        {/* Modal Importar CSV - Removido */}
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Importar Relatórios via CSV</DialogTitle>
