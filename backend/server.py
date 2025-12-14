@@ -12362,6 +12362,8 @@ async def importar_plataforma(
                     # Não precisa de validação de motorista aqui - o motorista virá do veículo
                     motorista = {"id": None, "email": ""}  # Placeholder - será preenchido depois
                     motorista_email = ""
+                    # IMPORTANTE: pular para a criação do documento sem validar email
+                    # (a validação específica de Via Verde está na secção de documento)
                 
                 elif plataforma == 'bolt':
                     # Para Bolt: buscar por identificador_individual, email ou nome
