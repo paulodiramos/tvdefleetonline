@@ -12146,7 +12146,14 @@ async def criar_relatorios_rascunho_apos_importacao(
                     "periodo_inicio": periodo_inicio,
                     "periodo_fim": periodo_fim
                 }, {"_id": 0}).to_list(1000)
-                portagens_viaverde = sum(d.get('liquid_value', 0) or d.get('valor_total_com_taxas', 0) for d in dados)
+                # Via Verde pode ter: liquid_value, valor_total_com_taxas, valor_carregamento
+                for d in dados:
+                    portagens_viaverde += (
+                        float(d.get('liquid_value') or 0) or
+                        float(d.get('valor_total_com_taxas') or 0) or
+                        float(d.get('valor_carregamento') or 0) or
+                        float(d.get('valor') or 0)
+                    )
             
             elif plataforma == 'combustivel':
                 dados = await db.abastecimentos_combustivel.find({
@@ -12154,7 +12161,9 @@ async def criar_relatorios_rascunho_apos_importacao(
                     "periodo_inicio": periodo_inicio,
                     "periodo_fim": periodo_fim
                 }, {"_id": 0}).to_list(1000)
-                combustivel_total = sum(d.get('valor_liquido', 0) or d.get('valor_total', 0) for d in dados)
+                # Combustível pode ter: valor_liquido, valor_total
+                for d in dados:
+                    combustivel_total += float(d.get('valor_liquido') or d.get('valor_total') or 0)
             
             elif plataforma == 'gps':
                 dados = await db.viagens_gps.find({
