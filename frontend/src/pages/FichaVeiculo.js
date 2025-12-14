@@ -308,6 +308,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
         motorista_atribuido: vehicle.motorista_atribuido || null,
         via_verde_id: vehicle.via_verde_id || null,
         cartao_frota_id: vehicle.cartao_frota_id || null,
+        cartao_frota_eletric_id: vehicle.cartao_frota_eletric_id || null,
         tipo_contrato: {
           tipo: infoForm.tipo,
           periodicidade: infoForm.periodicidade,
