@@ -699,6 +699,9 @@ test_plan:
   correction_1_uber_uuid_working: true
   correction_2_vehicle_complete_info_working: true
   correction_3_fuel_charging_imports_working: true
+  uber_uuid_investigation_complete: true
+  uuid_backend_system_working: true
+  uuid_issue_identified_frontend_problem: true
 
 agent_communication:
     - agent: "testing"
