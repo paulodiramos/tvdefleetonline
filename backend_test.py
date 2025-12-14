@@ -8849,7 +8849,13 @@ if __name__ == "__main__":
     print("=" * 80)
     tester.test_uber_uuid_investigation()
     
-    # Run NEW BULK WEEKLY REPORTS GENERATION TEST (Current Review Request)
+    # Run BOLT CSV IMPORT TEST (Current Review Request)
+    print("\n🎯 CURRENT REVIEW REQUEST: BOLT CSV IMPORT TEST")
+    print("=" * 80)
+    tester.test_bolt_csv_import_real_format()
+    tester.test_bolt_csv_mongodb_verification()
+    
+    # Run NEW BULK WEEKLY REPORTS GENERATION TEST (Previous Review Request)
     print("\n📊 NEW FEATURE: BULK WEEKLY REPORTS GENERATION")
     print("=" * 80)
     tester.test_bulk_weekly_reports_generation()
