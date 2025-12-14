@@ -12004,6 +12004,21 @@ async def importar_viaverde_excel(
             response["total_avisos"] = len(avisos)
             response["message"] += f", {len(avisos)} aviso(s) de validação"
         
+        # Criar relatórios de rascunho automaticamente
+        info_rascunhos = None
+        if sucesso > 0 and periodo_inicio and periodo_fim:
+            info_rascunhos = await criar_relatorios_rascunho_apos_importacao(
+                plataforma='viaverde',
+                periodo_inicio=periodo_inicio,
+                periodo_fim=periodo_fim,
+                parceiro_id=current_user["id"],
+                db=db
+            )
+            
+            if info_rascunhos and info_rascunhos.get("rascunhos_criados", 0) > 0:
+                response["mensagem_info"] = f"✅ {info_rascunhos['rascunhos_criados']} relatório(s) criado(s)!"
+                response["rascunhos"] = info_rascunhos
+        
         return response
         
     except Exception as e:
