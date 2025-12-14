@@ -1162,8 +1162,8 @@ startxref
             self.log_result("Uber-BOM-Fix-Auth", False, "No auth token for admin")
             return False
         
-        # Step 1: Download the real CSV file
-        csv_url = "https://customer-assets.emergentagent.com/job_weekly-report-sys/artifacts/vy8erxlu_20251201-20251208-payments_driver-ZENY_MACAIA_UNIPESSOAL_LDA%20%281%29.csv"
+        # Step 1: Download the real CSV file with semicolon delimiter
+        csv_url = "https://customer-assets.emergentagent.com/job_weekly-report-sys/artifacts/da5fp805_20251201-20251208-payments_driver-ZENY_MACAIA_UNIPESSOAL_LDA%20%281%29.csv"
         
         try:
             csv_response = requests.get(csv_url)
