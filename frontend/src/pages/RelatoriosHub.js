@@ -1475,24 +1475,72 @@ const RelatoriosHub = ({ user, onLogout }) => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Data Início *</Label>
-                  <Input
-                    type="date"
-                    value={geracaoMassaData.data_inicio}
-                    onChange={(e) => setGeracaoMassaData({...geracaoMassaData, data_inicio: e.target.value})}
-                    required
-                  />
+              <div className="space-y-4">
+                {/* Seleção de Semana */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Semana do Ano</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="53"
+                      placeholder="Ex: 49"
+                      onChange={(e) => {
+                        const semana = parseInt(e.target.value);
+                        if (semana >= 1 && semana <= 53) {
+                          // Calcular datas da semana (segunda a domingo)
+                          const ano = new Date().getFullYear();
+                          const primeiraSegunda = new Date(ano, 0, 1 + (semana - 1) * 7);
+                          const diaSemana = primeiraSegunda.getDay();
+                          const diasAteSegunda = diaSemana === 0 ? -6 : 1 - diaSemana;
+                          primeiraSegunda.setDate(primeiraSegunda.getDate() + diasAteSegunda);
+                          
+                          const ultimoDomingo = new Date(primeiraSegunda);
+                          ultimoDomingo.setDate(primeiraSegunda.getDate() + 6);
+                          
+                          setGeracaoMassaData({
+                            ...geracaoMassaData,
+                            data_inicio: primeiraSegunda.toISOString().split('T')[0],
+                            data_fim: ultimoDomingo.toISOString().split('T')[0]
+                          });
+                        }
+                      }}
+                    />
+                    <p className="text-xs text-slate-500 mt-1">
+                      Preencha para calcular datas automaticamente
+                    </p>
+                  </div>
+                  <div>
+                    <Label>Ano</Label>
+                    <Input
+                      type="number"
+                      value={new Date().getFullYear()}
+                      readOnly
+                      className="bg-slate-50"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label>Data Fim *</Label>
-                  <Input
-                    type="date"
-                    value={geracaoMassaData.data_fim}
-                    onChange={(e) => setGeracaoMassaData({...geracaoMassaData, data_fim: e.target.value})}
-                    required
-                  />
+
+                {/* Datas Manuais */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Data Início *</Label>
+                    <Input
+                      type="date"
+                      value={geracaoMassaData.data_inicio}
+                      onChange={(e) => setGeracaoMassaData({...geracaoMassaData, data_inicio: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div>
+                    <Label>Data Fim *</Label>
+                    <Input
+                      type="date"
+                      value={geracaoMassaData.data_fim}
+                      onChange={(e) => setGeracaoMassaData({...geracaoMassaData, data_fim: e.target.value})}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
               
