@@ -12648,16 +12648,30 @@ async def importar_plataforma(
                             if vehicle:
                                 logger.info(f"✅ Via Verde - Veículo encontrado por MobileCard: {cartao_viaverde}")
                         
-                        if vehicle:
-                            # Atualizar motorista_id se veículo tem motorista atribuído
-                            if vehicle.get('motorista_atribuido'):
-                                motorista_temp = await db.motoristas.find_one(
-                                    {"id": vehicle['motorista_atribuido']},
-                                    {"_id": 0}
-                                )
-                                if motorista_temp:
-                                    motorista = motorista_temp
-                                    motorista_email = motorista.get("email", "")
+                        # Se veículo não encontrado, registar erro e continuar
+                        if not vehicle:
+                            erros += 1
+                            identificadores = []
+                            if card_id:
+                                identificadores.append(f"CardID: {card_id}")
+                            if service_type:
+                                identificadores.append(f"ServiceType: {service_type}")
+                            if matricula_viaverde:
+                                identificadores.append(f"Matrícula: {matricula_viaverde}")
+                            erros_detalhes.append(
+                                f"Linha {row_num}: Veículo não encontrado ({', '.join(identificadores) if identificadores else 'Sem identificadores'})"
+                            )
+                            continue
+                        
+                        # Atualizar motorista_id se veículo tem motorista atribuído
+                        if vehicle.get('motorista_atribuido'):
+                            motorista_temp = await db.motoristas.find_one(
+                                {"id": vehicle['motorista_atribuido']},
+                                {"_id": 0}
+                            )
+                            if motorista_temp:
+                                motorista = motorista_temp
+                                motorista_email = motorista.get("email", "")
                         
                         # Parse da data/hora (suportar Timestamp ou StartDate)
                         start_date_str = row.get('Timestamp', '').strip() or row.get('StartDate', '').strip()
