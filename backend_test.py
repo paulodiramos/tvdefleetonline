@@ -9599,6 +9599,32 @@ test-uuid-123456,joao.silva.test@example.com,{first_name},{last_name},25.50,20.4
             self.log_result("Bug-3-Uber-CSV-Import", False, f"Test error: {str(e)}")
 
 
+def run_gps_import_test_only():
+    """Run only the GPS import test for the review request"""
+    print("🎯 GPS IMPORT TEST - BUSCA POR MATRÍCULA - REVIEW REQUEST SPECIFIC")
+    print("=" * 80)
+    
+    tester = TVDEFleetTester()
+    
+    # Authenticate admin only
+    if tester.authenticate_user("admin"):
+        success = tester.test_gps_import_busca_por_matricula()
+        
+        # Print summary
+        tester.print_summary()
+        stats = tester.get_test_summary()
+        
+        if stats["failed"] == 0 and success:
+            print(f"\n✅ GPS IMPORT TEST COMPLETED SUCCESSFULLY ({stats['passed']}/{stats['total']} tests passed)")
+            return True
+        else:
+            print(f"\n❌ GPS IMPORT TEST FAILED ({stats['failed']}/{stats['total']} tests failed)")
+            return False
+    else:
+        print("❌ FALHA: Não foi possível autenticar como admin")
+        return False
+
+
 def run_uuid_investigation_only():
     """Run only the UUID investigation for the review request"""
     print("🔍 UBER UUID INVESTIGATION - REVIEW REQUEST SPECIFIC")
