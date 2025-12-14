@@ -11823,6 +11823,43 @@ async def importar_plataforma(
                         erros_detalhes.append(f"Linha {row_num}: Motorista '{nome_info}' não encontrado (UUID: {uuid_motorista})")
                         continue
                 
+                elif plataforma == 'viaverde':
+                    # Via Verde pode ter carregamentos elétricos sem email de motorista
+                    # Buscar por matrícula ou cartão Via Verde
+                    matricula_viaverde = row.get('MobileRegistration', '').strip()
+                    cartao_viaverde = row.get('MobileCard', '').strip()
+                    
+                    vehicle = None
+                    if matricula_viaverde:
+                        vehicle = await db.vehicles.find_one(
+                            {"matricula": {"$regex": f"^{re.escape(matricula_viaverde)}$", "$options": "i"}},
+                            {"_id": 0}
+                        )
+                    
+                    if not vehicle and cartao_viaverde:
+                        vehicle = await db.vehicles.find_one(
+                            {"via_verde_id": cartao_viaverde},
+                            {"_id": 0}
+                        )
+                    
+                    if not vehicle and motorista_email:
+                        # Fallback: buscar por email se fornecido
+                        motorista = await db.motoristas.find_one({"email": motorista_email}, {"_id": 0})
+                    elif vehicle and vehicle.get('motorista_atribuido'):
+                        # Buscar motorista atribuído ao veículo
+                        motorista = await db.motoristas.find_one(
+                            {"id": vehicle['motorista_atribuido']},
+                            {"_id": 0}
+                        )
+                    
+                    if not motorista and not vehicle:
+                        erros += 1
+                        erros_detalhes.append(
+                            f"Linha {row_num}: Veículo não encontrado "
+                            f"(Matrícula: {matricula_viaverde}, Cartão: {cartao_viaverde})"
+                        )
+                        continue
+                
                 elif plataforma == 'bolt':
                     # Para Bolt: buscar por identificador_individual, email ou nome
                     identificador_individual = row.get('Identificador individual', '').strip()
