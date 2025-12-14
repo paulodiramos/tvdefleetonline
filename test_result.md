@@ -7940,7 +7940,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Teste de Importação Combustível Excel - Identificação por DESC. CARTÃO - COMPLETED ✅"
+    - "Teste de Importação GPS - Busca por Matrícula - COMPLETED ✅"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -7952,6 +7952,8 @@ test_plan:
   via_verde_obu_validation_working: true
   fuel_import_excel_desc_cartao_tested: true
   fuel_import_desc_cartao_logic_working: true
+  gps_import_matricula_tested: true
+  gps_import_vehicle_lookup_working: true
 
 agent_communication:
     - agent: "testing"
