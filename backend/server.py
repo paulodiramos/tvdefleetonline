@@ -12676,19 +12676,22 @@ async def importar_plataforma(
                         
                         documento.update({
                             "vehicle_id": vehicle["id"] if vehicle else None,
-                            "matricula": matricula_viaverde,
+                            "matricula": matricula_viaverde or (vehicle.get("matricula") if vehicle else None),
                             "cartao_viaverde": cartao_viaverde,
-                            "card_code": card_code,
+                            "card_id": card_id,  # CardID principal
+                            "service_type": service_type,  # ServiceType (EZeny2, etc)
                             "obu": vehicle.get("obu") if vehicle else None,
-                            "via_verde_id": vehicle.get("via_verde_id") if vehicle else None,
-                            "estacao_id": row.get('IdChargingStation', '').strip(),
-                            "usage_id": row.get('IdUsage', '').strip(),
+                            "via_verde_id": vehicle.get("via_verde_id") if vehicle else card_id,
+                            "estacao_id": row.get('ChargingStationID', '').strip() or row.get('IdChargingStation', '').strip(),
+                            "estacao_nome": row.get('ChargingStation', '').strip(),
                             "duracao_minutos": to_float(row.get('TotalDuration', '0')),
                             "energia_kwh": to_float(row.get('Energy', '0')),
                             "energia_fora_vazio": to_float(row.get('EnergiaForaVazio', '0')),
+                            "energia_vazio_normal": to_float(row.get('EnergiaVazioNormal', '0')),
                             "energia_vazio": to_float(row.get('EnergiaVazio', '0')),
                             "energia_ponta": to_float(row.get('EnergiaPonta', '0')),
-                            "valor_carregamento": to_float(row.get('ChargingTotalValue', '0')),
+                            "energia_cheias": to_float(row.get('EnergiaCheias', '0')),
+                            "valor_carregamento": to_float(row.get('ChargingServiceValue', '0')) or to_float(row.get('ChargingTotalValue', '0')),
                             "valor_total_com_taxas": to_float(row.get('TotalValueWithTaxes', '0')),
                             "tipo_transacao": "carregamento_eletrico",
                             "plataforma": "viaverde"
