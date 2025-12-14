@@ -12631,17 +12631,40 @@ async def importar_plataforma(
                         matricula_viaverde = row.get('Plate', '').strip() or row.get('MobileRegistration', '').strip()
                         cartao_viaverde = row.get('MobileCard', '').strip()
                         
-                        # Buscar veículo por: 1) CardID, 2) ServiceType, 3) Matrícula, 4) MobileCard
+                        # Buscar veículo por: 1) CardID (múltiplos formatos), 2) ServiceType, 3) Matrícula
                         vehicle = None
                         
-                        # 1. Tentar por CardID (identificador principal)
+                        # 1. Tentar por CardID (3 formatos possíveis)
                         if card_id:
-                            vehicle = await db.vehicles.find_one(
-                                {"via_verde_id": card_id},
-                                {"_id": 0}
-                            )
-                            if vehicle:
-                                logger.info(f"✅ Via Verde - Veículo encontrado por CardID: {card_id}")
+                            # Formato 1: PTPRIO... (carregamentos elétricos) → cartao_frota_id
+                            if card_id.startswith('PTPRIO'):
+                                vehicle = await db.vehicles.find_one(
+                                    {"cartao_frota_id": card_id},
+                                    {"_id": 0}
+                                )
+                                if vehicle:
+                                    logger.info(f"✅ Via Verde - Veículo encontrado por CardID (PTPRIO/cartao_frota_id): {card_id}")
+                            
+                            # Formato 2: Começa com 60... (Via Verde ID tradicional)
+                            if not vehicle and card_id.startswith('60'):
+                                vehicle = await db.vehicles.find_one(
+                                    {"via_verde_id": card_id},
+                                    {"_id": 0}
+                                )
+                                if vehicle:
+                                    logger.info(f"✅ Via Verde - Veículo encontrado por CardID (60.../via_verde_id): {card_id}")
+                            
+                            # Formato 3: Outros números longos → buscar em ambos os campos
+                            if not vehicle:
+                                vehicle = await db.vehicles.find_one(
+                                    {"$or": [
+                                        {"via_verde_id": card_id},
+                                        {"cartao_frota_id": card_id}
+                                    ]},
+                                    {"_id": 0}
+                                )
+                                if vehicle:
+                                    logger.info(f"✅ Via Verde - Veículo encontrado por CardID (genérico): {card_id}")
                         
                         # 2. Tentar por ServiceType como cartao_frota_id (Ex: EZeny2, EZeny6)
                         if not vehicle and service_type:
