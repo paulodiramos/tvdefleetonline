@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { 
   FileText, Plus, Edit, Check, X, Download, ArrowLeft,
   Calendar, User, DollarSign, TrendingUp, Eye, CheckCircle, Upload,
-  FileSpreadsheet
+  FileSpreadsheet, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 
