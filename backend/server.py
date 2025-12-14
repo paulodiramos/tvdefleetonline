@@ -11725,17 +11725,48 @@ async def importar_plataforma(
                     })
                     
                 elif plataforma == 'bolt':
-                    documento.update({
-                        "hora": row.get('hora', '').strip(),
-                        "origem": row.get('origem', '').strip(),
-                        "destino": row.get('destino', '').strip(),
-                        "distancia_km": to_float(row.get('distancia_km', '0')),
-                        "duracao_min": to_int(row.get('duracao_min', '0')),
-                        "valor_bruto": to_float(row.get('valor_bruto', '0')),
-                        "comissao": to_float(row.get('comissao', '0')),
-                        "valor_liquido": to_float(row.get('valor_liquido', '0')),
-                        "plataforma": "bolt"
-                    })
+                    # Suportar 2 formatos: template simples (viagens) e exportação Bolt (ganhos semanais)
+                    # Formato 1: Template com viagens individuais
+                    # Formato 2: Exportação Bolt com resumo semanal por motorista
+                    
+                    if 'Ganhos líquidos|€' in row or 'Ganhos brutos (total)|€' in row:
+                        # Formato 2: Exportação real da Bolt (resumo semanal)
+                        def parse_float_bolt(value):
+                            if not value or value == '':
+                                return 0.0
+                            try:
+                                return float(value.strip().replace(',', '.'))
+                            except:
+                                return 0.0
+                        
+                        documento.update({
+                            "identificador_motorista_bolt": row.get('Identificador do motorista', '').strip(),
+                            "identificador_individual": row.get('Identificador individual', '').strip(),
+                            "nome_motorista": row.get('Motorista', '').strip(),
+                            "telemovel": row.get('Telemóvel', '').strip(),
+                            "ganhos_brutos_total": parse_float_bolt(row.get('Ganhos brutos (total)|€', '0')),
+                            "ganhos_liquidos": parse_float_bolt(row.get('Ganhos líquidos|€', '0')),
+                            "comissoes": parse_float_bolt(row.get('Comissões|€', '0')),
+                            "gorjetas": parse_float_bolt(row.get('Gorjetas dos passageiros|€', '0')),
+                            "total_taxas": parse_float_bolt(row.get('Total de taxas|€', '0')),
+                            "ganhos_liquidos_por_hora": parse_float_bolt(row.get('Ganhos líquidos por hora|€/h', '0')),
+                            "tipo_documento": "resumo_semanal",
+                            "plataforma": "bolt"
+                        })
+                    else:
+                        # Formato 1: Template simples com viagens individuais
+                        documento.update({
+                            "hora": row.get('hora', '').strip(),
+                            "origem": row.get('origem', '').strip(),
+                            "destino": row.get('destino', '').strip(),
+                            "distancia_km": to_float(row.get('distancia_km', '0')),
+                            "duracao_min": to_int(row.get('duracao_min', '0')),
+                            "valor_bruto": to_float(row.get('valor_bruto', '0')),
+                            "comissao": to_float(row.get('comissao', '0')),
+                            "valor_liquido": to_float(row.get('valor_liquido', '0')),
+                            "tipo_documento": "viagem_individual",
+                            "plataforma": "bolt"
+                        })
                     
                 elif plataforma == 'viaverde':
                     documento.update({
