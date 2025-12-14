@@ -619,6 +619,18 @@ backend:
           agent: "testing"
           comment: "🎯 TESTE COMPLETO DE IMPORTAÇÃO GPS - BUSCA POR MATRÍCULA - 100% FUNCIONANDO! CONTEXTO: Testada importação de GPS para buscar veículos por matrícula em vez de email conforme review request específico. CREDENCIAIS: admin@tvdefleet.com / o72ocUHy ✅. FICHEIRO TESTADO: URL https://customer-assets.emergentagent.com/job_weeklyfleethub/artifacts/j7g71cuv_Relat%C3%B3rio%20da%20dist%C3%A2ncia%20percorrida%5Bgeral%40zmbusines.com%5D%2801122025-07122025%29.csv (817 bytes). ESTRUTURA VERIFICADA: ✅ Headers corretos: Veículo, Condutor, Distância percorrida durante as horas do turno, Motor ligado, Motor ligado (minutos) ✅ Delimitador ponto e vírgula (;) detectado corretamente ✅ 11 veículos extraídos do CSV com lógica de extração de matrícula. LÓGICA IMPLEMENTADA: 1) ✅ Extrair matrícula da coluna 'Veículo' (ex: 'EQB 250 BR-03-MZ' → 'BR-03-MZ') 2) ✅ Buscar veículo por matrícula 3) ✅ Se veículo encontrado, buscar motorista atribuído 4) ✅ Se não houver motorista atribuído, permitir importação (motorista = None). VEÍCULOS VERIFICADOS: ✅ 9/11 veículos encontrados na base de dados por matrícula: AC-11-GA, AX-38-FH, BR-03-MZ, BJ-33-JD, AT-75-MH, AF-39-JA, AS-14-NI, AA-98-FX, BQ-32-RS ✅ 1 veículo com motorista atribuído, 8 sem motorista (permitido). RESULTADOS DA IMPORTAÇÃO: ✅ 9/11 registos importados com sucesso (81.8% taxa de sucesso) ✅ 2 erros apenas para veículos não encontrados na BD (66-XU-11, 84-VX-65) ✅ CRÍTICO: Erro 'Email do motorista vazio' completamente resolvido ✅ Dados salvos na coleção MongoDB 'viagens_gps'. CAMPOS SALVOS: matricula, condutor_nome, distancia_percorrida_km, motor_ligado_tempo, motor_ligado_minutos. RESULTADO FINAL: Sistema de importação GPS está 100% operacional e resolve o problema de busca por matrícula conforme especificação!"
 
+  - task: "Teste de Importação Via Verde CSV - Carregamentos com CardID"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "❌ CRITICAL ISSUE IDENTIFIED - Via Verde CSV import has NoneType errors in backend logic. CSV format is correct (CardCode/MobileCard), backend supports CardCode lookup, but there are 5 NoneType errors when vehicle is not found. Backend needs better error handling when vehicle is None. Data mismatch: CSV CardCode values (PTPRIO...) don't match database via_verde_id values (VV...). Import logic works but needs null-safe error handling."
+
   - task: "Teste de Importação Combustível Excel - Identificação por DESC. CARTÃO"
     implemented: true
     working: true
