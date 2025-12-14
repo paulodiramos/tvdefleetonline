@@ -12360,8 +12360,9 @@ async def importar_plataforma(
                 elif plataforma == 'viaverde':
                     # Via Verde é processado mais à frente na secção de documento
                     # onde distingue entre portagens e carregamentos elétricos
-                    # Por agora, apenas marcar como plataforma especial
-                    pass
+                    # Não precisa de validação de motorista aqui
+                    motorista = None  # Será preenchido depois
+                    motorista_email = ""
                 
                 elif plataforma == 'bolt':
                     # Para Bolt: buscar por identificador_individual, email ou nome
