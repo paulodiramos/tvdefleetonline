@@ -49,11 +49,6 @@ const RelatoriosHub = ({ user, onLogout }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [relatorioEditando, setRelatorioEditando] = useState(null);
   
-  // Modal de importação CSV
-  const [showImportarCSVModal, setShowImportarCSVModal] = useState(false);
-  const [csvFile, setCsvFile] = useState(null);
-  const [importandoCSV, setImportandoCSV] = useState(false);
-  
   // Modal de confirmação de pagamento
   const [showPagarModal, setShowPagarModal] = useState(false);
   const [relatorioPagando, setRelatorioPagando] = useState(null);
