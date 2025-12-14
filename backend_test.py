@@ -9680,13 +9680,18 @@ if __name__ == "__main__":
         print("❌ FALHA: Não foi possível autenticar como admin")
         exit(1)
     
-    # Run UUID Investigation first (Priority)
+    # Run GPS IMPORT TEST (Current Review Request)
+    print("\n🎯 CURRENT REVIEW REQUEST: GPS IMPORT TEST - BUSCA POR MATRÍCULA")
+    print("=" * 80)
+    tester.test_gps_import_busca_por_matricula()
+    
+    # Run UUID Investigation (Priority)
     print("\n🔍 PRIORITY: UBER UUID INVESTIGATION")
     print("=" * 80)
     tester.test_uber_uuid_investigation()
     
-    # Run BOLT CSV IMPORT TEST (Current Review Request)
-    print("\n🎯 CURRENT REVIEW REQUEST: BOLT CSV IMPORT TEST")
+    # Run BOLT CSV IMPORT TEST (Previous Review Request)
+    print("\n🎯 PREVIOUS REVIEW REQUEST: BOLT CSV IMPORT TEST")
     print("=" * 80)
     tester.test_bolt_csv_import_real_format()
     tester.test_bolt_csv_mongodb_verification()
