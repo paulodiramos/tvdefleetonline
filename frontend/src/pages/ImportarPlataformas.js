@@ -22,8 +22,45 @@ const ImportarPlataformas = () => {
   const [resultado, setResultado] = useState(null);
   
   // Campos de período (semana)
+  const [ano, setAno] = useState(new Date().getFullYear());
+  const [semana, setSemana] = useState('');
   const [periodoInicio, setPeriodoInicio] = useState('');
   const [periodoFim, setPeriodoFim] = useState('');
+  
+  // Calcular datas baseado no ano e semana
+  const calcularDatasFromSemana = (anoSelecionado, semanaSelecionada) => {
+    if (!anoSelecionado || !semanaSelecionada) return;
+    
+    // Encontrar a primeira segunda-feira do ano (início da semana 1)
+    const primeiroDiaAno = new Date(anoSelecionado, 0, 1);
+    const diaSemana = primeiroDiaAno.getDay(); // 0 = Domingo, 1 = Segunda, etc.
+    
+    // Ajustar para a primeira segunda-feira (semana 1 ISO)
+    let diasParaPrimeiraSegunda = (8 - diaSemana) % 7;
+    if (diaSemana === 0) diasParaPrimeiraSegunda = 1; // Se domingo, próxima segunda
+    
+    const primeiraSegunda = new Date(primeiroDiaAno);
+    primeiraSegunda.setDate(primeiroDiaAno.getDate() + diasParaPrimeiraSegunda);
+    
+    // Calcular o início da semana selecionada
+    const inicioSemana = new Date(primeiraSegunda);
+    inicioSemana.setDate(primeiraSegunda.getDate() + (semanaSelecionada - 1) * 7);
+    
+    // Fim da semana é 6 dias depois (segunda a domingo)
+    const fimSemana = new Date(inicioSemana);
+    fimSemana.setDate(inicioSemana.getDate() + 6);
+    
+    // Formatar para YYYY-MM-DD
+    const formatarData = (data) => {
+      const ano = data.getFullYear();
+      const mes = String(data.getMonth() + 1).padStart(2, '0');
+      const dia = String(data.getDate()).padStart(2, '0');
+      return `${ano}-${mes}-${dia}`;
+    };
+    
+    setPeriodoInicio(formatarData(inicioSemana));
+    setPeriodoFim(formatarData(fimSemana));
+  };
 
   const plataformas = [
     {
