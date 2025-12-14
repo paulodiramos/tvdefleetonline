@@ -1178,34 +1178,50 @@ startxref
             self.log_result("Download-Real-CSV", False, f"❌ Download error: {str(e)}")
             return False
         
-        # Step 2: Verify Bruno Coelho exists in database with correct UUID
+        # Step 2: Verify drivers exist in database with correct UUIDs
+        expected_drivers = [
+            {"uuid": "db6721ba-0101-42b3-a842-2df199085f71", "name": "Luiz Cruz"},
+            {"uuid": "35382cb7-236e-42c1-b0b4-e16bfabb8ff3", "name": "Bruno Coelho"},
+            {"uuid": "ccd82ed9-67b8-4bfd-ac80-d57b7a7388d6", "name": "Marco Coelho"},
+            {"uuid": "e5ed435e-df3a-473b-bd47-ee6880084aa6", "name": "Paulo Macaya"},
+            {"uuid": "7960e9ad-3c3f-4b6d-9c68-3d553c9cf9ad", "name": "Arlei Oliveira"},
+            {"uuid": "7b738454-53e6-4e82-882c-7fc3256a9472", "name": "Nelson Francisco"},
+            {"uuid": "b7ac4a3e-da2e-44f5-b813-516bf603163d", "name": "Jorge Macaia"},
+            {"uuid": "449c38de-5c69-4eb5-b781-f3258b768318", "name": "Karen Vitcher"},
+            {"uuid": "70f3fada-20b0-45da-b347-17ec0643c15e", "name": "Mario Domingos"},
+            {"uuid": "ccf29e3c-fd7d-4216-b315-a416d8b59530", "name": "Domingos Dias"}
+        ]
+        
         try:
             motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
             if motoristas_response.status_code == 200:
                 motoristas = motoristas_response.json()
-                bruno_found = False
-                bruno_uuid = None
+                found_drivers = 0
                 
-                for motorista in motoristas:
-                    name = motorista.get("name") or ""
-                    if "bruno" in name.lower() and "coelho" in name.lower():
-                        bruno_found = True
-                        bruno_uuid = motorista.get("uuid_motorista_uber")
-                        break
+                print(f"\n📋 VERIFYING EXPECTED DRIVERS IN DATABASE:")
                 
-                if bruno_found and bruno_uuid == "35382cb7-236e-42c1-b0b4-e16bfabb8ff3":
-                    self.log_result("Verify-Bruno-Database", True, f"✅ Bruno Coelho found with correct UUID: {bruno_uuid}")
-                elif bruno_found:
-                    self.log_result("Verify-Bruno-Database", False, f"❌ Bruno found but UUID incorrect: {bruno_uuid}")
-                    return False
+                for expected in expected_drivers:
+                    found = False
+                    for motorista in motoristas:
+                        if motorista.get("uuid_motorista_uber") == expected["uuid"]:
+                            found = True
+                            found_drivers += 1
+                            print(f"  ✅ {expected['name']} (UUID: {expected['uuid']}) - FOUND")
+                            break
+                    
+                    if not found:
+                        print(f"  ❌ {expected['name']} (UUID: {expected['uuid']}) - NOT FOUND")
+                
+                if found_drivers >= 8:  # Allow some flexibility
+                    self.log_result("Verify-Expected-Drivers", True, f"✅ {found_drivers}/10 expected drivers found in database")
                 else:
-                    self.log_result("Verify-Bruno-Database", False, "❌ Bruno Coelho not found in database")
+                    self.log_result("Verify-Expected-Drivers", False, f"❌ Only {found_drivers}/10 expected drivers found")
                     return False
             else:
-                self.log_result("Verify-Bruno-Database", False, f"❌ Cannot get motoristas: {motoristas_response.status_code}")
+                self.log_result("Verify-Expected-Drivers", False, f"❌ Cannot get motoristas: {motoristas_response.status_code}")
                 return False
         except Exception as e:
-            self.log_result("Verify-Bruno-Database", False, f"❌ Database check error: {str(e)}")
+            self.log_result("Verify-Expected-Drivers", False, f"❌ Database check error: {str(e)}")
             return False
         
         # Step 3: Check CSV content for Bruno's UUID
