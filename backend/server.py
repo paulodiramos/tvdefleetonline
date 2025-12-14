@@ -12317,6 +12317,18 @@ async def importar_plataforma(
                     except:
                         return default
                 
+                # Calcular ano e semana a partir do periodo_inicio
+                ano = None
+                semana = None
+                if periodo_inicio:
+                    try:
+                        dt = datetime.strptime(periodo_inicio, '%Y-%m-%d')
+                        ano = dt.year
+                        # Calcular semana ISO
+                        semana = dt.isocalendar()[1]
+                    except:
+                        pass
+                
                 # Criar documento baseado na plataforma
                 documento = {
                     "id": str(uuid.uuid4()),
@@ -12326,6 +12338,8 @@ async def importar_plataforma(
                     "data": data,
                     "periodo_inicio": periodo_inicio,
                     "periodo_fim": periodo_fim,
+                    "ano": ano,
+                    "semana": semana,
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "created_by": current_user["id"]
                 }
