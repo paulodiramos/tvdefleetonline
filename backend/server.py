@@ -11730,11 +11730,16 @@ async def importar_plataforma(
                 print(f"Erro ao processar linha {row_num}: {str(e)}")
         
         # Retornar resumo
+        mensagem_info = ""
+        if plataforma in ['uber', 'bolt'] and sucesso > 0:
+            mensagem_info = "💡 Use 'Gerar Relatórios Semanais' para criar rascunhos automaticamente."
+        
         resultado = {
             "message": f"Importação {plataforma}: {sucesso} sucesso(s), {erros} erro(s)",
             "sucesso": sucesso,
             "erros": erros,
-            "erros_detalhes": erros_detalhes[:10]  # Limitar a 10 erros
+            "erros_detalhes": erros_detalhes[:10],  # Limitar a 10 erros
+            "mensagem_info": mensagem_info
         }
         
         return resultado
