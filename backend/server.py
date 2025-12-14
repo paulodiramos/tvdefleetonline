@@ -12472,11 +12472,25 @@ async def importar_plataforma(
                         })
                     
                 elif plataforma == 'gps':
+                    # CSV real tem: Veículo, Condutor, Distância percorrida, Motor ligado, Motor ligado (minutos)
+                    matricula_gps = row.get('Veículo', '').strip()
+                    partes = matricula_gps.split()
+                    matricula_limpa = partes[-1] if partes else matricula_gps
+                    
+                    condutor = row.get('Condutor', '').strip()
+                    distancia = to_float(row.get('Distância percorrida durante as horas do turno', '0'))
+                    motor_ligado_str = row.get('Motor ligado', '').strip()
+                    motor_ligado_min = to_int(row.get('Motor ligado (minutos)', '0'))
+                    
                     documento.update({
-                        "km_inicial": to_float(row.get('km_inicial', '0')),
-                        "km_final": to_float(row.get('km_final', '0')),
-                        "km_percorridos": to_float(row.get('km_percorridos', '0')),
-                        "tempo_total_min": to_int(row.get('tempo_total_min', '0'))
+                        "vehicle_id": vehicle.get("id") if vehicle else None,
+                        "matricula": matricula_limpa,
+                        "condutor_nome": condutor,
+                        "distancia_percorrida_km": distancia,
+                        "motor_ligado_tempo": motor_ligado_str,
+                        "motor_ligado_minutos": motor_ligado_min,
+                        "periodo_inicio": periodo_inicio,
+                        "periodo_fim": periodo_fim
                     })
                     
                 elif plataforma == 'abastecimento':
