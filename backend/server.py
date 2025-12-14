@@ -11665,6 +11665,43 @@ async def importar_plataforma(
                         erros += 1
                         erros_detalhes.append(f"Linha {row_num}: Motorista '{nome_info}' não encontrado (UUID: {uuid_motorista})")
                         continue
+                
+                elif plataforma == 'bolt':
+                    # Para Bolt: buscar por identificador_individual, email ou nome
+                    identificador_individual = row.get('Identificador individual', '').strip()
+                    identificador_motorista_bolt = row.get('Identificador do motorista', '').strip()
+                    nome_motorista = row.get('Motorista', '').strip()
+                    
+                    # Prioridade: 1) Identificador individual, 2) Email, 3) Nome
+                    if identificador_individual:
+                        motorista = await db.motoristas.find_one(
+                            {"identificador_motorista_bolt": identificador_individual}, 
+                            {"_id": 0}
+                        )
+                        if motorista:
+                            logger.info(f"✅ Motorista encontrado por identificador Bolt: {motorista.get('name')}")
+                    
+                    if not motorista and motorista_email:
+                        motorista = await db.motoristas.find_one({"email": motorista_email}, {"_id": 0})
+                        if motorista:
+                            logger.info(f"✅ Motorista encontrado por email: {motorista.get('name')}")
+                    
+                    if not motorista and nome_motorista:
+                        motorista = await db.motoristas.find_one(
+                            {"name": {"$regex": f"^{re.escape(nome_motorista)}$", "$options": "i"}}, 
+                            {"_id": 0}
+                        )
+                        if motorista:
+                            logger.info(f"✅ Motorista encontrado por nome: {motorista.get('name')}")
+                    
+                    if not motorista:
+                        erros += 1
+                        erros_detalhes.append(
+                            f"Linha {row_num}: Motorista '{nome_motorista}' não encontrado "
+                            f"(Email: {motorista_email}, ID: {identificador_individual})"
+                        )
+                        continue
+                        
                 else:
                     # Para outras plataformas: usar email obrigatório
                     if not motorista_email:
