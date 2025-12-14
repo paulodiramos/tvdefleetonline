@@ -12285,8 +12285,11 @@ async def importar_plataforma(
                 # Para Uber: tentar buscar por email, UUID ou nome
                 motorista = None
                 # Para Bolt: suportar coluna "Email" (exportação real) ou "motorista_email" (template)
+                # Para Via Verde: não precisa de email (busca por veículo)
                 if plataforma == 'bolt':
                     motorista_email = row.get('Email', '').strip() or row.get('motorista_email', '').strip()
+                elif plataforma == 'viaverde':
+                    motorista_email = ""  # Via Verde não usa email
                 else:
                     motorista_email = row.get('motorista_email', '').strip()
                 
