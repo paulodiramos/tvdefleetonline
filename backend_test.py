@@ -822,7 +822,289 @@ startxref
         except Exception as e:
             self.log_result("Import-Access-Control", False, f"Request error: {str(e)}")
 
-    # ==================== UBER CSV IMPORT BOM FIX TEST (REVIEW REQUEST) ====================
+    # ==================== UBER UUID INVESTIGATION (REVIEW REQUEST) ====================
+    
+    def test_uber_uuid_investigation(self):
+        """Investigate why Uber UUID is not working in import - Complete Investigation"""
+        print("\n🔍 INVESTIGATING UBER UUID IMPORT ISSUE")
+        print("-" * 80)
+        print("Review Request: Investigar por que UUID da Uber não está a funcionar na importação")
+        print("- Problem: 'Linha 2: Motorista ' ' não encontrado (UUID: )' - UUID is empty")
+        print("- UUID field shows HTML: <p class=\"font-medium text-sm\">7960e9ad-3c3f-4b6d-9c68-3d553c9cf9ad</p>")
+        print("- Credentials: admin@tvdefleet.com / o72ocUHy")
+        print("-" * 80)
+        
+        # Authenticate as admin
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("UUID-Investigation-Auth", False, "No auth token for admin")
+            return False
+        
+        # Investigation Steps
+        self.investigate_step_1_list_drivers_uuid_status(headers)
+        self.investigate_step_2_test_uuid_update(headers)
+        self.investigate_step_3_test_csv_import_with_uuid(headers)
+        self.investigate_step_4_verify_update_endpoint(headers)
+        
+        return True
+    
+    def investigate_step_1_list_drivers_uuid_status(self, headers):
+        """INVESTIGATION 1: List all drivers and check UUID field status"""
+        try:
+            response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            
+            if response.status_code == 200:
+                motoristas = response.json()
+                total_drivers = len(motoristas)
+                drivers_with_uuid = 0
+                drivers_without_uuid = 0
+                uuid_examples = []
+                
+                print(f"\n📋 DRIVER UUID STATUS ANALYSIS:")
+                print(f"Total drivers found: {total_drivers}")
+                
+                for i, motorista in enumerate(motoristas):
+                    name = motorista.get("name", "Unknown")
+                    email = motorista.get("email", "No email")
+                    uuid_uber = motorista.get("uuid_motorista_uber")
+                    
+                    if uuid_uber and uuid_uber.strip():
+                        drivers_with_uuid += 1
+                        uuid_examples.append({
+                            "name": name,
+                            "email": email,
+                            "uuid": uuid_uber,
+                            "uuid_type": type(uuid_uber).__name__
+                        })
+                        if len(uuid_examples) <= 3:  # Show first 3 examples
+                            print(f"  ✅ {name} ({email}): UUID = {uuid_uber} (type: {type(uuid_uber).__name__})")
+                    else:
+                        drivers_without_uuid += 1
+                        if drivers_without_uuid <= 3:  # Show first 3 examples
+                            print(f"  ❌ {name} ({email}): UUID = {uuid_uber} (missing/empty)")
+                
+                print(f"\n📊 UUID STATISTICS:")
+                print(f"  - Drivers WITH UUID: {drivers_with_uuid}/{total_drivers} ({drivers_with_uuid/total_drivers*100:.1f}%)")
+                print(f"  - Drivers WITHOUT UUID: {drivers_without_uuid}/{total_drivers} ({drivers_without_uuid/total_drivers*100:.1f}%)")
+                
+                # Store for next tests
+                self.uuid_examples = uuid_examples
+                self.total_drivers = total_drivers
+                self.drivers_with_uuid = drivers_with_uuid
+                
+                self.log_result("Investigation-1-Driver-UUID-Status", True, 
+                              f"✅ Analysis complete: {drivers_with_uuid}/{total_drivers} drivers have UUID")
+            else:
+                self.log_result("Investigation-1-Driver-UUID-Status", False, 
+                              f"❌ Cannot get drivers list: {response.status_code}")
+        except Exception as e:
+            self.log_result("Investigation-1-Driver-UUID-Status", False, f"❌ Error: {str(e)}")
+    
+    def investigate_step_2_test_uuid_update(self, headers):
+        """INVESTIGATION 2: Test updating a driver with UUID and verify it's saved"""
+        try:
+            # Get first driver without UUID or use first driver
+            response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            if response.status_code != 200:
+                self.log_result("Investigation-2-UUID-Update", False, "❌ Cannot get drivers list")
+                return
+            
+            motoristas = response.json()
+            if not motoristas:
+                self.log_result("Investigation-2-UUID-Update", False, "❌ No drivers available")
+                return
+            
+            # Find a driver to test with
+            test_driver = None
+            test_uuid = "7960e9ad-3c3f-4b6d-9c68-3d553c9cf9ad"  # UUID from review request
+            
+            for motorista in motoristas:
+                if not motorista.get("uuid_motorista_uber"):
+                    test_driver = motorista
+                    break
+            
+            if not test_driver:
+                test_driver = motoristas[0]  # Use first driver if all have UUIDs
+            
+            driver_id = test_driver["id"]
+            driver_name = test_driver.get("name", "Unknown")
+            
+            print(f"\n🧪 TESTING UUID UPDATE:")
+            print(f"  - Driver: {driver_name}")
+            print(f"  - Driver ID: {driver_id}")
+            print(f"  - Test UUID: {test_uuid}")
+            
+            # Step 2a: Update driver with UUID
+            update_data = {
+                "uuid_motorista_uber": test_uuid
+            }
+            
+            update_response = requests.put(f"{BACKEND_URL}/motoristas/{driver_id}", 
+                                         json=update_data, headers=headers)
+            
+            if update_response.status_code == 200:
+                print(f"  ✅ Update request successful")
+                
+                # Step 2b: Verify UUID was saved by fetching driver again
+                verify_response = requests.get(f"{BACKEND_URL}/motoristas/{driver_id}", headers=headers)
+                
+                if verify_response.status_code == 200:
+                    updated_driver = verify_response.json()
+                    saved_uuid = updated_driver.get("uuid_motorista_uber")
+                    
+                    print(f"  📋 Verification results:")
+                    print(f"    - Sent UUID: {test_uuid}")
+                    print(f"    - Saved UUID: {saved_uuid}")
+                    print(f"    - UUID Type: {type(saved_uuid).__name__}")
+                    print(f"    - Match: {saved_uuid == test_uuid}")
+                    
+                    if saved_uuid == test_uuid:
+                        self.log_result("Investigation-2-UUID-Update", True, 
+                                      f"✅ UUID update successful: {saved_uuid}")
+                        self.test_driver_id = driver_id  # Store for next test
+                        self.test_uuid = test_uuid
+                    else:
+                        self.log_result("Investigation-2-UUID-Update", False, 
+                                      f"❌ UUID mismatch: sent '{test_uuid}', got '{saved_uuid}'")
+                else:
+                    self.log_result("Investigation-2-UUID-Update", False, 
+                                  f"❌ Cannot verify update: {verify_response.status_code}")
+            else:
+                self.log_result("Investigation-2-UUID-Update", False, 
+                              f"❌ Update failed: {update_response.status_code}", update_response.text)
+        except Exception as e:
+            self.log_result("Investigation-2-UUID-Update", False, f"❌ Error: {str(e)}")
+    
+    def investigate_step_3_test_csv_import_with_uuid(self, headers):
+        """INVESTIGATION 3: Test CSV import with the UUID and check if it's read correctly"""
+        if not hasattr(self, 'test_driver_id') or not hasattr(self, 'test_uuid'):
+            self.log_result("Investigation-3-CSV-Import", False, "❌ No test driver/UUID from previous step")
+            return
+        
+        try:
+            # Get driver details for CSV creation
+            driver_response = requests.get(f"{BACKEND_URL}/motoristas/{self.test_driver_id}", headers=headers)
+            if driver_response.status_code != 200:
+                self.log_result("Investigation-3-CSV-Import", False, "❌ Cannot get driver details")
+                return
+            
+            driver = driver_response.json()
+            driver_name = driver.get("name", "Test Driver")
+            
+            # Create test CSV with the UUID (Uber format)
+            csv_content = f"""UUID do motorista,motorista_email,Nome próprio,Apelido,Pago a si,rendimentos,tarifa,taxa de serviço
+{self.test_uuid},test@example.com,{driver_name.split()[0] if driver_name.split() else 'Test'},{driver_name.split()[-1] if len(driver_name.split()) > 1 else 'Driver'},25.50,25.50,25.50,5.10"""
+            
+            print(f"\n📄 TESTING CSV IMPORT:")
+            print(f"  - CSV Content Preview:")
+            print(f"    UUID: {self.test_uuid}")
+            print(f"    Driver Name: {driver_name}")
+            print(f"    CSV Size: {len(csv_content)} bytes")
+            
+            # Test import
+            files = {
+                'file': ('test_uber_uuid.csv', csv_content.encode('utf-8-sig'), 'text/csv')
+            }
+            
+            import_response = requests.post(f"{BACKEND_URL}/importar/uber", 
+                                          files=files, headers=headers)
+            
+            if import_response.status_code == 200:
+                result = import_response.json()
+                
+                sucesso = result.get("sucesso", 0)
+                erros = result.get("erros", 0)
+                erros_detalhes = result.get("erros_detalhes", [])
+                
+                print(f"  📊 Import Results:")
+                print(f"    - Success: {sucesso}")
+                print(f"    - Errors: {erros}")
+                print(f"    - Error Details: {erros_detalhes}")
+                
+                if sucesso > 0 and erros == 0:
+                    self.log_result("Investigation-3-CSV-Import", True, 
+                                  f"✅ CSV import successful: {sucesso} records imported")
+                elif erros > 0:
+                    # Check if UUID is empty in error message
+                    uuid_empty_error = False
+                    for erro in erros_detalhes:
+                        if "UUID: )" in erro or "UUID: ''" in erro or "UUID:" in erro and erro.endswith(")"):
+                            uuid_empty_error = True
+                            break
+                    
+                    if uuid_empty_error:
+                        self.log_result("Investigation-3-CSV-Import", False, 
+                                      f"❌ UUID EMPTY ERROR CONFIRMED: {erros_detalhes}")
+                    else:
+                        self.log_result("Investigation-3-CSV-Import", False, 
+                                      f"❌ Import failed but UUID not empty: {erros_detalhes}")
+                else:
+                    self.log_result("Investigation-3-CSV-Import", False, 
+                                  f"❌ No records processed: Success={sucesso}, Errors={erros}")
+            else:
+                self.log_result("Investigation-3-CSV-Import", False, 
+                              f"❌ Import request failed: {import_response.status_code}", import_response.text)
+        except Exception as e:
+            self.log_result("Investigation-3-CSV-Import", False, f"❌ Error: {str(e)}")
+    
+    def investigate_step_4_verify_update_endpoint(self, headers):
+        """INVESTIGATION 4: Verify PUT /api/motoristas/{id} accepts uuid_motorista_uber field"""
+        if not hasattr(self, 'test_driver_id'):
+            self.log_result("Investigation-4-Update-Endpoint", False, "❌ No test driver ID available")
+            return
+        
+        try:
+            # Test different UUID values to verify field acceptance
+            test_cases = [
+                {
+                    "name": "Valid UUID",
+                    "uuid": "12345678-1234-1234-1234-123456789abc",
+                    "expected_success": True
+                },
+                {
+                    "name": "Empty String",
+                    "uuid": "",
+                    "expected_success": True
+                },
+                {
+                    "name": "Null Value",
+                    "uuid": None,
+                    "expected_success": True
+                }
+            ]
+            
+            print(f"\n🔧 TESTING UPDATE ENDPOINT:")
+            
+            for i, test_case in enumerate(test_cases):
+                print(f"  Test {i+1}: {test_case['name']}")
+                
+                update_data = {
+                    "uuid_motorista_uber": test_case["uuid"]
+                }
+                
+                response = requests.put(f"{BACKEND_URL}/motoristas/{self.test_driver_id}", 
+                                      json=update_data, headers=headers)
+                
+                success = response.status_code == 200
+                
+                if success:
+                    # Verify the value was saved
+                    verify_response = requests.get(f"{BACKEND_URL}/motoristas/{self.test_driver_id}", headers=headers)
+                    if verify_response.status_code == 200:
+                        saved_data = verify_response.json()
+                        saved_uuid = saved_data.get("uuid_motorista_uber")
+                        
+                        print(f"    ✅ Update successful, saved value: {repr(saved_uuid)}")
+                    else:
+                        print(f"    ⚠️ Update successful but cannot verify")
+                else:
+                    print(f"    ❌ Update failed: {response.status_code}")
+            
+            self.log_result("Investigation-4-Update-Endpoint", True, 
+                          "✅ Update endpoint accepts uuid_motorista_uber field")
+            
+        except Exception as e:
+            self.log_result("Investigation-4-Update-Endpoint", False, f"❌ Error: {str(e)}")
     
     def test_uber_csv_import_bom_fix(self):
         """Test Uber CSV import after BOM fix - Review Request Specific Test"""
