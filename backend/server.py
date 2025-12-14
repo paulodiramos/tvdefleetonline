@@ -12366,14 +12366,28 @@ async def importar_plataforma(
                     identificador_motorista_bolt = row.get('Identificador do motorista', '').strip()
                     nome_motorista = row.get('Motorista', '').strip()
                     
-                    # Prioridade: 1) Identificador individual, 2) Email, 3) Nome
-                    if identificador_individual:
+                    # Prioridade: 1) Identificador do motorista (UUID), 2) Identificador individual, 3) Email, 4) Nome
+                    
+                    # 1. Tentar por "Identificador do motorista" (UUID como bc38e1c2-de73-45ed-ac13-1f94b5a5f053)
+                    if identificador_motorista_bolt:
+                        motorista = await db.motoristas.find_one(
+                            {"$or": [
+                                {"identificador_motorista_bolt": identificador_motorista_bolt},
+                                {"id": identificador_motorista_bolt}
+                            ]},
+                            {"_id": 0}
+                        )
+                        if motorista:
+                            logger.info(f"✅ Motorista encontrado por Identificador do motorista (UUID): {motorista.get('name')}")
+                    
+                    # 2. Tentar por "Identificador individual"
+                    if not motorista and identificador_individual:
                         motorista = await db.motoristas.find_one(
                             {"identificador_motorista_bolt": identificador_individual}, 
                             {"_id": 0}
                         )
                         if motorista:
-                            logger.info(f"✅ Motorista encontrado por identificador Bolt: {motorista.get('name')}")
+                            logger.info(f"✅ Motorista encontrado por identificador individual: {motorista.get('name')}")
                     
                     if not motorista and motorista_email:
                         motorista = await db.motoristas.find_one({"email": motorista_email}, {"_id": 0})
