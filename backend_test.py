@@ -1323,6 +1323,228 @@ startxref
             self.log_result("Execute-Uber-Import", False, f"❌ Import error: {str(e)}")
             return False
     
+    # ==================== VIA VERDE CSV IMPORT WITH MULTIPLE ENCODINGS TEST (REVIEW REQUEST) ====================
+    
+    def test_via_verde_csv_import_multiple_encodings(self):
+        """Test Via Verde CSV import with multiple encodings - Review Request Specific Test"""
+        print("\n🎯 TESTING VIA VERDE CSV IMPORT WITH MULTIPLE ENCODINGS")
+        print("-" * 80)
+        print("Review Request: Teste de Importação Via Verde CSV - Carregamentos Elétricos com Múltiplas Codificações")
+        print("- CSV URL: https://customer-assets.emergentagent.com/job_weeklyfleethub/artifacts/cvj6m22f_Transa%C3%A7%C3%B5es%20Detalhadas.csv")
+        print("- Previous Error: 'utf-8' codec can't decode byte 0xcd in position 8: invalid continuation byte")
+        print("- Fix Implemented: Automatic encoding detection (utf-8-sig, utf-8, latin-1, iso-8859-1, cp1252)")
+        print("- Headers: StartDate, CardCode, MobileCard, MobileRegistration, IdUsage, IdChargingStation, TotalDuration, Energy, etc.")
+        print("- Objective: Import Via Verde charging data successfully without encoding errors")
+        print("- Credentials: admin@tvdefleet.com / o72ocUHy")
+        print("-" * 80)
+        
+        # Authenticate as admin
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("ViaVerde-CSV-Auth", False, "No auth token for admin")
+            return False
+        
+        # Step 1: Download the real CSV file with encoding issues
+        csv_url = "https://customer-assets.emergentagent.com/job_weeklyfleethub/artifacts/cvj6m22f_Transa%C3%A7%C3%B5es%20Detalhadas.csv"
+        
+        try:
+            csv_response = requests.get(csv_url)
+            if csv_response.status_code == 200:
+                csv_content = csv_response.content
+                csv_size = len(csv_content)
+                self.log_result("Download-ViaVerde-CSV", True, f"✅ Via Verde CSV downloaded successfully: {csv_size} bytes")
+            else:
+                self.log_result("Download-ViaVerde-CSV", False, f"❌ Failed to download CSV: {csv_response.status_code}")
+                return False
+        except Exception as e:
+            self.log_result("Download-ViaVerde-CSV", False, f"❌ Download error: {str(e)}")
+            return False
+        
+        # Step 2: Test encoding detection by trying to decode with different encodings
+        try:
+            encoding_results = {}
+            encodings_to_test = ['utf-8-sig', 'utf-8', 'latin-1', 'iso-8859-1', 'cp1252']
+            
+            print(f"\n🔍 TESTING ENCODING DETECTION:")
+            
+            for encoding in encodings_to_test:
+                try:
+                    decoded_content = csv_content.decode(encoding)
+                    encoding_results[encoding] = {
+                        "success": True,
+                        "length": len(decoded_content),
+                        "first_line": decoded_content.split('\n')[0][:100] if decoded_content else ""
+                    }
+                    print(f"  ✅ {encoding}: Success - {len(decoded_content)} chars")
+                except UnicodeDecodeError as e:
+                    encoding_results[encoding] = {
+                        "success": False,
+                        "error": str(e)
+                    }
+                    print(f"  ❌ {encoding}: Failed - {str(e)}")
+            
+            # Find working encodings
+            working_encodings = [enc for enc, result in encoding_results.items() if result["success"]]
+            
+            if working_encodings:
+                self.log_result("Test-Encoding-Detection", True, 
+                              f"✅ {len(working_encodings)} encodings work: {', '.join(working_encodings)}")
+            else:
+                self.log_result("Test-Encoding-Detection", False, "❌ No encodings work for this CSV")
+                return False
+                
+        except Exception as e:
+            self.log_result("Test-Encoding-Detection", False, f"❌ Encoding test error: {str(e)}")
+            return False
+        
+        # Step 3: Analyze CSV structure and headers
+        try:
+            # Use the first working encoding to analyze structure
+            working_encoding = working_encodings[0]
+            csv_text = csv_content.decode(working_encoding)
+            lines = csv_text.split('\n')
+            
+            print(f"\n📄 CSV STRUCTURE ANALYSIS (using {working_encoding}):")
+            print(f"  - Total lines: {len(lines)}")
+            print(f"  - First line (header): {lines[0][:150]}...")
+            
+            # Check for expected headers
+            expected_headers = ['StartDate', 'CardCode', 'MobileCard', 'MobileRegistration', 
+                              'IdUsage', 'IdChargingStation', 'TotalDuration', 'Energy']
+            
+            header_line = lines[0] if lines else ""
+            found_headers = []
+            
+            for header in expected_headers:
+                if header in header_line:
+                    found_headers.append(header)
+            
+            print(f"  - Expected headers found: {len(found_headers)}/{len(expected_headers)}")
+            print(f"  - Found headers: {found_headers}")
+            
+            if len(found_headers) >= 6:  # At least 6 out of 8 expected headers
+                self.log_result("Analyze-CSV-Structure", True, 
+                              f"✅ CSV structure valid: {len(found_headers)}/{len(expected_headers)} headers found")
+            else:
+                self.log_result("Analyze-CSV-Structure", False, 
+                              f"❌ CSV structure invalid: only {len(found_headers)}/{len(expected_headers)} headers found")
+                return False
+                
+        except Exception as e:
+            self.log_result("Analyze-CSV-Structure", False, f"❌ CSV analysis error: {str(e)}")
+            return False
+        
+        # Step 4: Check if vehicles exist in database for Via Verde import
+        try:
+            vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+            if vehicles_response.status_code == 200:
+                vehicles = vehicles_response.json()
+                
+                # Count vehicles with Via Verde data
+                vehicles_with_viaverde = 0
+                vehicles_with_obu = 0
+                
+                for vehicle in vehicles:
+                    if vehicle.get('via_verde_id'):
+                        vehicles_with_viaverde += 1
+                    if vehicle.get('obu'):
+                        vehicles_with_obu += 1
+                
+                print(f"\n🚗 VEHICLE DATABASE ANALYSIS:")
+                print(f"  - Total vehicles: {len(vehicles)}")
+                print(f"  - Vehicles with Via Verde ID: {vehicles_with_viaverde}")
+                print(f"  - Vehicles with OBU: {vehicles_with_obu}")
+                
+                if len(vehicles) > 0:
+                    self.log_result("Check-Vehicle-Database", True, 
+                                  f"✅ {len(vehicles)} vehicles in database ({vehicles_with_viaverde} with Via Verde ID)")
+                else:
+                    self.log_result("Check-Vehicle-Database", False, "❌ No vehicles in database")
+                    return False
+                    
+            else:
+                self.log_result("Check-Vehicle-Database", False, f"❌ Cannot get vehicles: {vehicles_response.status_code}")
+                return False
+                
+        except Exception as e:
+            self.log_result("Check-Vehicle-Database", False, f"❌ Vehicle check error: {str(e)}")
+            return False
+        
+        # Step 5: Execute the Via Verde import
+        try:
+            files = {
+                'file': ('viaverde_transacoes_detalhadas.csv', csv_content, 'text/csv')
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/importar/viaverde",
+                files=files,
+                headers=headers
+            )
+            
+            print(f"\n📤 IMPORT EXECUTION:")
+            print(f"  - Endpoint: POST /api/importar/viaverde")
+            print(f"  - File size: {len(csv_content)} bytes")
+            print(f"  - Response status: {response.status_code}")
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Check import results
+                total_sucesso = result.get("sucesso", 0)
+                total_erros = result.get("erros", 0)
+                erros_detalhes = result.get("erros_detalhes", [])
+                
+                print(f"  - Success records: {total_sucesso}")
+                print(f"  - Error records: {total_erros}")
+                
+                if erros_detalhes:
+                    print(f"  - Error details (first 3):")
+                    for i, erro in enumerate(erros_detalhes[:3]):
+                        print(f"    {i+1}. {erro}")
+                
+                # The main objective is that the file is read without encoding errors
+                self.log_result("Execute-ViaVerde-Import", True, 
+                              f"✅ Import executed successfully: {total_sucesso} success, {total_erros} errors")
+                
+                # Step 6: Verify data was saved to portagens_viaverde collection
+                if total_sucesso > 0:
+                    self.log_result("Verify-Data-Saved", True, 
+                                  f"✅ {total_sucesso} records imported to portagens_viaverde collection")
+                else:
+                    self.log_result("Verify-Data-Saved", False, 
+                                  f"❌ No records imported (may be due to vehicle matching issues)")
+                
+                # Step 7: Check if encoding error was resolved
+                if "codec can't decode" not in str(result) and "UnicodeDecodeError" not in str(result):
+                    self.log_result("Verify-Encoding-Fix", True, 
+                                  "✅ No encoding errors - multiple encoding detection working")
+                else:
+                    self.log_result("Verify-Encoding-Fix", False, 
+                                  "❌ Encoding errors still present")
+                
+                return True
+                
+            elif response.status_code == 400:
+                # Check if it's an encoding error
+                error_text = response.text
+                if "codec can't decode" in error_text or "UnicodeDecodeError" in error_text:
+                    self.log_result("Execute-ViaVerde-Import", False, 
+                                  f"❌ ENCODING ERROR STILL EXISTS: {error_text}")
+                else:
+                    self.log_result("Execute-ViaVerde-Import", False, 
+                                  f"❌ Import failed with validation error: {error_text}")
+                return False
+                
+            else:
+                self.log_result("Execute-ViaVerde-Import", False, 
+                              f"❌ Import failed: {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_result("Execute-ViaVerde-Import", False, f"❌ Import error: {str(e)}")
+            return False
+
     # ==================== FUEL IMPORT EXCEL TEST (REVIEW REQUEST) ====================
     
     def test_fuel_import_excel_with_desc_cartao(self):
