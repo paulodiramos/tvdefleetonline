@@ -8204,7 +8204,37 @@ test-uuid-123456,joao.silva.test@example.com,{first_name},{last_name},25.50,20.4
             self.log_result("Bug-3-Uber-CSV-Import", False, f"Test error: {str(e)}")
 
 
+def run_uuid_investigation_only():
+    """Run only the UUID investigation for the review request"""
+    print("🔍 UBER UUID INVESTIGATION - REVIEW REQUEST SPECIFIC")
+    print("=" * 80)
+    
+    tester = TVDEFleetTester()
+    
+    # Authenticate admin only
+    if tester.authenticate_user("admin"):
+        tester.test_uber_uuid_investigation()
+        
+        # Print summary
+        tester.print_summary()
+        
+        # Get summary stats
+        stats = tester.get_test_summary()
+        print(f"\n🏁 INVESTIGATION RESULTS: {stats['passed']}/{stats['total']} tests passed")
+        
+        return stats['failed'] == 0
+    else:
+        print("❌ Failed to authenticate admin user")
+        return False
+
 if __name__ == "__main__":
+    import sys
+    
+    # Check if UUID investigation is requested
+    if len(sys.argv) > 1 and sys.argv[1] == "uuid":
+        success = run_uuid_investigation_only()
+        exit(0 if success else 1)
+    
     tester = TVDEFleetTester()
     
     print("🎯 TESTE DOS 3 BUGS CORRIGIDOS NO SISTEMA TVDEFleet")
@@ -8219,6 +8249,11 @@ if __name__ == "__main__":
     if not tester.authenticate_user("admin"):
         print("❌ FALHA: Não foi possível autenticar como admin")
         exit(1)
+    
+    # Run UUID Investigation first (Priority)
+    print("\n🔍 PRIORITY: UBER UUID INVESTIGATION")
+    print("=" * 80)
+    tester.test_uber_uuid_investigation()
     
     # Run the bug fix tests
     success = tester.test_bug_fixes_review_request()
