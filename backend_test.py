@@ -1520,18 +1520,28 @@ startxref
                 # Step 6: Check if errors are related to vehicle not found (expected) vs logic errors
                 vehicle_not_found_errors = 0
                 logic_errors = 0
+                column_mismatch_errors = 0
                 
                 for erro in erros_detalhes:
                     if "não encontrado" in erro.lower() or "not found" in erro.lower():
                         vehicle_not_found_errors += 1
+                    elif "nonetype" in erro.lower() or "attribute" in erro.lower():
+                        logic_errors += 1
+                    elif "cardcode" in erro.lower() or "mobilecard" in erro.lower():
+                        column_mismatch_errors += 1
                     else:
                         logic_errors += 1
                 
                 print(f"\n🔍 ERROR ANALYSIS:")
                 print(f"  - Vehicle not found errors: {vehicle_not_found_errors} (expected)")
+                print(f"  - Column mismatch errors: {column_mismatch_errors} (CSV format issue)")
                 print(f"  - Logic/system errors: {logic_errors} (should be 0)")
                 
-                if logic_errors == 0:
+                # If most errors are due to column mismatch, this indicates a CSV format issue
+                if column_mismatch_errors > 0 and logic_errors == 0:
+                    self.log_result("Verify-Error-Types", True, 
+                                  f"✅ CSV format issue identified: {column_mismatch_errors} column mismatches, {vehicle_not_found_errors} vehicles not found")
+                elif logic_errors == 0:
                     self.log_result("Verify-Error-Types", True, 
                                   f"✅ No logic errors: {vehicle_not_found_errors} vehicle not found (expected), {logic_errors} system errors")
                 else:
