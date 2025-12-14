@@ -607,6 +607,18 @@ backend:
           agent: "testing"
           comment: "🔍 INVESTIGAÇÃO COMPLETA DO UUID DA UBER - PROBLEMA IDENTIFICADO E RESOLVIDO! CONTEXTO: Investigação detalhada do problema reportado 'Linha 2: Motorista ' ' não encontrado (UUID: )' conforme review request específico. CREDENCIAIS: admin@tvdefleet.com / o72ocUHy ✅. INVESTIGAÇÃO REALIZADA: 1) ✅ ANÁLISE DA BASE DE DADOS: 11/12 motoristas (91.7%) têm UUID preenchido corretamente, incluindo Bruno Coelho (35382cb7-236e-42c1-b0b4-e16bfabb8ff3) e Arlei Oliveira (7960e9ad-3c3f-4b6d-9c68-3d553c9cf9ad) 2) ✅ TESTE DE ATUALIZAÇÃO: Campo uuid_motorista_uber aceita e guarda valores corretamente via PUT /api/motoristas/{id} 3) ✅ TESTE DE IMPORTAÇÃO CSV: Sistema funciona perfeitamente com CSV normal (BOM e sem BOM) 4) 🎯 CAUSA RAIZ IDENTIFICADA: O problema ocorre quando o campo UUID contém HTML em vez de UUID puro. CENÁRIOS TESTADOS: ✅ Cenário 1: CSV normal com BOM - 1 sucesso, 0 erros ✅ Cenário 2: CSV sem BOM - 1 sucesso, 0 erros ❌ Cenário 3: CSV com HTML no UUID - 0 sucessos, 1 erro: 'Linha 2: Motorista ' ' não encontrado (UUID: <p class=\"font-medium text-sm\">7960e9ad-3c3f-4b6d-9c68-3d553c9cf9ad</p>)'. CONCLUSÃO: O sistema backend está funcionando corretamente. O problema reportado é causado por HTML sendo inserido no campo UUID em vez do UUID puro. Quando o UUID contém tags HTML como '<p class=\"font-medium text-sm\">UUID</p>', o sistema não consegue fazer a correspondência. SOLUÇÃO: O problema está no frontend - o campo UUID está a mostrar HTML em vez do valor puro. Necessário corrigir o frontend para extrair apenas o UUID sem as tags HTML."
 
+  - task: "Teste de Importação Combustível Excel - Identificação por DESC. CARTÃO"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🎯 TESTE COMPLETO DE IMPORTAÇÃO COMBUSTÍVEL EXCEL COM DESC. CARTÃO - 100% FUNCIONANDO! CONTEXTO: Testada importação de Excel de combustível com identificação por DESC. CARTÃO conforme review request específico. CREDENCIAIS: admin@tvdefleet.com / o72ocUHy ✅. FICHEIRO TESTADO: URL https://customer-assets.emergentagent.com/job_weeklyfleethub/artifacts/xoorhctx_Transa%C3%A7%C3%B5es_Frota_20251214.xlsx (24084 bytes). ESTRUTURA VERIFICADA: ✅ Cabeçalho na linha 4 (primeiras 3 linhas ignoradas) ✅ Colunas principais: POSTO, PAÍS, REDE, DATA, HORA, CARTÃO, DESC. CARTÃO, ESTADO, GRUPO CARTÃO, LITROS. LÓGICA DE BUSCA IMPLEMENTADA: 1) ✅ Busca por CARTÃO → via_verde_id 2) ✅ Busca por DESC. CARTÃO: Se tem '-' ou ≥6 chars → matricula, Senão → cartao_frota_id 3) ✅ Fallback por OBU 4) ✅ Fallback por matrícula. VEÍCULOS VERIFICADOS: ✅ 4/4 veículos esperados encontrados na base de dados: AS-14-NI (matrícula), ZENY.4, ZENY.1, ZENY.3 (cartao_frota_id). RESULTADOS DA IMPORTAÇÃO: ✅ 13/13 registos importados com sucesso (100% taxa de sucesso) ✅ 0 erros encontrados ✅ Todos os veículos encontrados por DESC. CARTÃO ✅ Dados salvos na coleção MongoDB 'abastecimentos_combustivel'. ENDPOINT TESTADO: POST /api/importar/combustivel funcionando perfeitamente com lógica de identificação por DESC. CARTÃO. RESULTADO FINAL: Sistema de importação de combustível Excel está 100% operacional e identifica corretamente veículos por DESC. CARTÃO conforme especificação!"
+
   - task: "Veículos - Part Time com 4 horários livres"
     implemented: true
     working: true
