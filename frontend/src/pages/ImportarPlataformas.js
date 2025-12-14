@@ -20,6 +20,10 @@ const ImportarPlataformas = () => {
   const [csvFile, setCsvFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [resultado, setResultado] = useState(null);
+  
+  // Campos de período (semana)
+  const [periodoInicio, setPeriodoInicio] = useState('');
+  const [periodoFim, setPeriodoFim] = useState('');
 
   const plataformas = [
     {
