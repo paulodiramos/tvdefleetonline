@@ -564,6 +564,9 @@ startxref
         # Test specific Via Verde Excel import with validation (Review Request)
         self.test_via_verde_excel_import_with_validation()
         
+        # Test specific Via Verde CSV import with CardID as primary identifier (Review Request)
+        self.test_via_verde_csv_import_cardid_primary()
+        
         return True
     
     def test_uber_csv_import(self, headers):
