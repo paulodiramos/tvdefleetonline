@@ -11675,6 +11675,8 @@ async def importar_combustivel_excel(
                     identificadores = []
                     if cartao_via_verde:
                         identificadores.append(f"Cartão: {cartao_via_verde}")
+                    if desc_cartao:
+                        identificadores.append(f"DESC: {desc_cartao}")
                     if obu:
                         identificadores.append(f"OBU: {obu}")
                     if matricula:
