@@ -1468,6 +1468,194 @@ const RelatoriosHub = ({ user, onLogout }) => {
                     
                     <div className="mt-3 p-3 bg-blue-50 rounded-lg">
                       <p className="text-xs text-blue-800">
+
+
+      {/* Modal Gerar Relatórios em Massa */}
+      <Dialog open={showGerarMassaModal} onOpenChange={setShowGerarMassaModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Gerar Relatórios Semanais Automaticamente</DialogTitle>
+          </DialogHeader>
+          
+          {!resultadoGeracaoMassa ? (
+            <div className="space-y-4">
+              <p className="text-sm text-slate-600">
+                Esta função irá criar relatórios semanais para todos os motoristas ativos, 
+                sincronizando automaticamente os dados importados da Uber, Bolt, Via Verde e Combustível.
+              </p>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Data Início *</Label>
+                  <Input
+                    type="date"
+                    value={geracaoMassaData.data_inicio}
+                    onChange={(e) => setGeracaoMassaData({...geracaoMassaData, data_inicio: e.target.value})}
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Data Fim *</Label>
+                  <Input
+                    type="date"
+                    value={geracaoMassaData.data_fim}
+                    onChange={(e) => setGeracaoMassaData({...geracaoMassaData, data_fim: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="font-semibold">Incluir Dados de:</Label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="incluir_uber"
+                    checked={geracaoMassaData.incluir_uber}
+                    onChange={(e) => setGeracaoMassaData({...geracaoMassaData, incluir_uber: e.target.checked})}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="incluir_uber" className="text-sm">Uber</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="incluir_bolt"
+                    checked={geracaoMassaData.incluir_bolt}
+                    onChange={(e) => setGeracaoMassaData({...geracaoMassaData, incluir_bolt: e.target.checked})}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="incluir_bolt" className="text-sm">Bolt</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="incluir_viaverde"
+                    checked={geracaoMassaData.incluir_viaverde}
+                    onChange={(e) => setGeracaoMassaData({...geracaoMassaData, incluir_viaverde: e.target.checked})}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="incluir_viaverde" className="text-sm">Via Verde</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="incluir_combustivel"
+                    checked={geracaoMassaData.incluir_combustivel}
+                    onChange={(e) => setGeracaoMassaData({...geracaoMassaData, incluir_combustivel: e.target.checked})}
+                    className="w-4 h-4"
+                  />
+                  <label htmlFor="incluir_combustivel" className="text-sm">Combustível/Carregamentos</label>
+                </div>
+              </div>
+              
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-semibold text-blue-900 mb-2">ℹ️ Como Funciona:</h4>
+                <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
+                  <li>Sistema busca todos os motoristas ativos</li>
+                  <li>Agrega ganhos e despesas do período selecionado</li>
+                  <li>Calcula aluguer e caução automaticamente</li>
+                  <li>Cria relatórios em status "Rascunho"</li>
+                  <li>Você pode revisar e ajustar antes de enviar ao motorista</li>
+                </ul>
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowGerarMassaModal(false)}
+                  disabled={gerandoMassa}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleGerarEmMassa}
+                  disabled={gerandoMassa}
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  {gerandoMassa ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Gerando...
+                    </>
+                  ) : (
+                    <>
+                      <FileSpreadsheet className="w-4 h-4 mr-2" />
+                      Gerar Relatórios
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h3 className="font-semibold text-green-900 text-lg mb-2">
+                  ✅ Relatórios Gerados com Sucesso!
+                </h3>
+                <p className="text-green-800">
+                  {resultadoGeracaoMassa.sucesso} relatório(s) criado(s) em status "Rascunho"
+                </p>
+                {resultadoGeracaoMassa.erros > 0 && (
+                  <p className="text-amber-700 mt-2">
+                    ⚠️ {resultadoGeracaoMassa.erros} erro(s) encontrado(s)
+                  </p>
+                )}
+              </div>
+              
+              {resultadoGeracaoMassa.relatorios_criados && resultadoGeracaoMassa.relatorios_criados.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mb-2">Relatórios Criados:</h4>
+                  <div className="max-h-60 overflow-y-auto space-y-2">
+                    {resultadoGeracaoMassa.relatorios_criados.map((rel, idx) => (
+                      <div key={idx} className="bg-white border rounded p-3 text-sm">
+                        <p className="font-medium">{rel.motorista}</p>
+                        <p className="text-slate-600">
+                          Semana {rel.semana}/{rel.ano} - Ganhos: €{rel.ganhos_totais.toFixed(2)} - A Pagar: €{rel.total_a_pagar.toFixed(2)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {resultadoGeracaoMassa.erros_detalhes && resultadoGeracaoMassa.erros_detalhes.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-red-700 mb-2">Erros:</h4>
+                  <div className="max-h-40 overflow-y-auto space-y-2">
+                    {resultadoGeracaoMassa.erros_detalhes.map((erro, idx) => (
+                      <div key={idx} className="bg-red-50 border border-red-200 rounded p-2 text-sm text-red-800">
+                        <p className="font-medium">{erro.motorista}</p>
+                        <p>{erro.erro}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex justify-end gap-2">
+                <Button
+                  onClick={() => {
+                    setShowGerarMassaModal(false);
+                    setResultadoGeracaoMassa(null);
+                    setGeracaoMassaData({
+                      data_inicio: '',
+                      data_fim: '',
+                      incluir_uber: true,
+                      incluir_bolt: true,
+                      incluir_viaverde: true,
+                      incluir_combustivel: true
+                    });
+                  }}
+                >
+                  Fechar
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
                         💡 Após anexar o recibo, o relatório ficará disponível para pagamento
                       </p>
                     </div>
