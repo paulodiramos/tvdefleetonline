@@ -11555,6 +11555,8 @@ async def importar_relatorios_csv(
 async def importar_plataforma(
     plataforma: str,
     file: UploadFile = File(...),
+    periodo_inicio: Optional[str] = Form(None),
+    periodo_fim: Optional[str] = Form(None),
     current_user: Dict = Depends(get_current_user)
 ):
     """Importar dados de plataformas (Uber, Bolt, Via Verde, GPS, Abastecimentos)"""
@@ -11565,8 +11567,15 @@ async def importar_plataforma(
         import csv
         import io
         
-        # Ler conteúdo do ficheiro (usar utf-8-sig para remover BOM se presente)
+        # Ler conteúdo do ficheiro
         content = await file.read()
+        
+        # Para combustível em Excel (.xlsx), processar diferente
+        if plataforma == 'combustivel' and (file.filename.endswith('.xlsx') or file.filename.endswith('.xls')):
+            # Processar Excel de combustível
+            return await importar_combustivel_excel(content, current_user, periodo_inicio, periodo_fim)
+        
+        # Para CSV: usar utf-8-sig para remover BOM se presente
         decoded = content.decode('utf-8-sig')
         
         # Detectar delimitador (vírgula ou ponto e vírgula)
