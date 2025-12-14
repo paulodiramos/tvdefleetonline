@@ -489,29 +489,40 @@ const ImportarPlataformas = () => {
                       </div>
                     </div>
                     
-                    {/* Datas Calculadas (read-only) */}
-                    {periodoInicio && periodoFim && (
-                      <div className="grid grid-cols-2 gap-4 pt-2 border-t border-blue-300">
-                        <div>
-                          <Label className="text-xs text-blue-700">Data Início</Label>
-                          <Input
-                            type="date"
-                            value={periodoInicio}
-                            onChange={(e) => setPeriodoInicio(e.target.value)}
-                            className="mt-1 bg-white text-sm"
-                          />
-                        </div>
-                        <div>
-                          <Label className="text-xs text-blue-700">Data Fim</Label>
-                          <Input
-                            type="date"
-                            value={periodoFim}
-                            onChange={(e) => setPeriodoFim(e.target.value)}
-                            className="mt-1 bg-white text-sm"
-                          />
-                        </div>
+                    {/* Datas (editáveis e sincronizadas) */}
+                    <div className="grid grid-cols-2 gap-4 pt-2 border-t border-blue-300">
+                      <div>
+                        <Label className="text-xs text-blue-700">Data Início</Label>
+                        <Input
+                          type="date"
+                          value={periodoInicio}
+                          onChange={(e) => {
+                            const novaDataInicio = e.target.value;
+                            setPeriodoInicio(novaDataInicio);
+                            // Sincronizar: atualizar ano e semana baseado na data
+                            if (novaDataInicio) {
+                              calcularSemanaFromDatas(novaDataInicio);
+                              // Calcular data fim (6 dias depois)
+                              const dataInicio = new Date(novaDataInicio);
+                              const dataFim = new Date(dataInicio);
+                              dataFim.setDate(dataInicio.getDate() + 6);
+                              const dataFimFormatada = dataFim.toISOString().split('T')[0];
+                              setPeriodoFim(dataFimFormatada);
+                            }
+                          }}
+                          className="mt-1 bg-white text-sm"
+                        />
                       </div>
-                    )}
+                      <div>
+                        <Label className="text-xs text-blue-700">Data Fim</Label>
+                        <Input
+                          type="date"
+                          value={periodoFim}
+                          onChange={(e) => setPeriodoFim(e.target.value)}
+                          className="mt-1 bg-white text-sm"
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
 
