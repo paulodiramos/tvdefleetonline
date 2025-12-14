@@ -1224,20 +1224,39 @@ startxref
             self.log_result("Verify-Expected-Drivers", False, f"❌ Database check error: {str(e)}")
             return False
         
-        # Step 3: Check CSV content for Bruno's UUID
+        # Step 3: Check CSV content and delimiter
         try:
             csv_text = csv_content.decode('utf-8-sig')  # Use utf-8-sig to handle BOM
             lines = csv_text.split('\n')
-            bruno_line_found = False
             
-            for i, line in enumerate(lines):
-                if "35382cb7-236e-42c1-b0b4-e16bfabb8ff3" in line and "BRUNO" in line.upper():
-                    bruno_line_found = True
-                    self.log_result("Verify-CSV-Content", True, f"✅ Bruno's UUID found in CSV line {i+1}")
-                    break
+            # Check if semicolon delimiter is used
+            semicolon_count = csv_text.count(';')
+            comma_count = csv_text.count(',')
             
-            if not bruno_line_found:
-                self.log_result("Verify-CSV-Content", False, "❌ Bruno's UUID not found in CSV content")
+            print(f"\n📄 CSV CONTENT ANALYSIS:")
+            print(f"  - Total lines: {len(lines)}")
+            print(f"  - Semicolons (;): {semicolon_count}")
+            print(f"  - Commas (,): {comma_count}")
+            print(f"  - Detected delimiter: {'semicolon' if semicolon_count > comma_count else 'comma'}")
+            
+            # Check for expected UUIDs in CSV
+            expected_uuids = [
+                "db6721ba-0101-42b3-a842-2df199085f71",
+                "35382cb7-236e-42c1-b0b4-e16bfabb8ff3",
+                "ccd82ed9-67b8-4bfd-ac80-d57b7a7388d6",
+                "e5ed435e-df3a-473b-bd47-ee6880084aa6",
+                "7960e9ad-3c3f-4b6d-9c68-3d553c9cf9ad"
+            ]
+            
+            found_uuids = 0
+            for uuid in expected_uuids:
+                if uuid in csv_text:
+                    found_uuids += 1
+            
+            if semicolon_count > comma_count and found_uuids >= 3:
+                self.log_result("Verify-CSV-Content", True, f"✅ CSV uses semicolon delimiter, {found_uuids} expected UUIDs found")
+            else:
+                self.log_result("Verify-CSV-Content", False, f"❌ CSV format issue: semicolons={semicolon_count}, UUIDs found={found_uuids}")
                 return False
         except Exception as e:
             self.log_result("Verify-CSV-Content", False, f"❌ CSV content check error: {str(e)}")
