@@ -11248,6 +11248,44 @@ async def gerar_relatorios_em_massa(
             except Exception as e:
                 logger.error(f"Erro ao gerar relatório para motorista {motorista.get('name')}: {str(e)}")
                 erros.append({
+
+@api_router.delete("/relatorios/{relatorio_id}")
+async def excluir_relatorio(
+    relatorio_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Excluir relatório (apenas rascunho ou pendente)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Buscar relatório
+    relatorio = await db.relatorios_semanais.find_one({"id": relatorio_id}, {"_id": 0})
+    
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    
+    # Verificar se pode ser excluído (apenas rascunho ou pendente)
+    status_permitidos = ["rascunho", "pendente"]
+    if relatorio.get("status") not in status_permitidos:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Apenas relatórios em rascunho ou pendente podem ser excluídos. Status atual: {relatorio.get('status')}"
+        )
+    
+    # Excluir relatório
+    result = await db.relatorios_semanais.delete_one({"id": relatorio_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=500, detail="Erro ao excluir relatório")
+    
+    logger.info(f"Relatório {relatorio_id} excluído por {current_user['email']}")
+    
+    return {
+        "message": "Relatório excluído com sucesso",
+        "relatorio_id": relatorio_id
+    }
+
+
                     "motorista": motorista.get("name"),
                     "erro": str(e)
                 })
