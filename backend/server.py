@@ -11590,15 +11590,22 @@ async def importar_combustivel_excel(
                 row = dict(zip(header, row_values))
                 
                 # Extrair identificadores do veículo
-                # Prioridade: 1) Cartão Via Verde, 2) OBU, 3) Matrícula
+                # Prioridade: 1) Cartão Via Verde, 2) DESC. CARTÃO (pode ser matrícula/OBU), 3) Matrícula
                 cartao_via_verde = None
+                desc_cartao = None  # Pode ser matrícula ou identificador
                 obu = None
                 matricula = None
                 
-                # Buscar Cartão Via Verde
-                for key in ['Cartão', 'Cartao', 'CartaoViaVerde', 'Via Verde', 'CardCode']:
+                # Buscar Cartão Via Verde (número longo do cartão)
+                for key in ['CARTÃO', 'Cartão', 'Cartao', 'CartaoViaVerde', 'Via Verde', 'CardCode']:
                     if key in row and row[key]:
                         cartao_via_verde = str(row[key]).strip()
+                        break
+                
+                # Buscar DESC. CARTÃO (pode ser matrícula como "AS-14-NI" ou ID como "ZENY.4")
+                for key in ['DESC. CARTÃO', 'DESC CARTÃO', 'Desc. Cartão', 'Desc Cartao', 'Description']:
+                    if key in row and row[key]:
+                        desc_cartao = str(row[key]).strip()
                         break
                 
                 # Buscar OBU
@@ -11607,7 +11614,7 @@ async def importar_combustivel_excel(
                         obu = str(row[key]).strip()
                         break
                 
-                # Buscar Matrícula (fallback)
+                # Buscar Matrícula explícita (fallback)
                 for key in ['Matrícula', 'matricula', 'Matricula', 'MATRICULA']:
                     if key in row and row[key]:
                         matricula = str(row[key]).strip().upper()
