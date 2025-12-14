@@ -12513,7 +12513,7 @@ async def importar_plataforma(
                 # Criar documento baseado na plataforma
                 documento = {
                     "id": str(uuid.uuid4()),
-                    "motorista_id": motorista["id"],
+                    "motorista_id": motorista.get("id") if motorista else None,
                     "motorista_email": motorista_email,
                     "parceiro_id": current_user["id"],
                     "data": data,
