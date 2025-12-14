@@ -10090,5 +10090,35 @@ As correções solicitadas no review request estão funcionando corretamente:
 
 **Recomendação:** O sistema está pronto para produção relativamente a estas 3 correções específicas.
 
+agent_communication:
+    - agent: "testing"
+      message: |
+        🎯 VIA VERDE CSV IMPORT TESTING COMPLETED - CRITICAL ISSUE IDENTIFIED
+        
+        REVIEW REQUEST: Teste de Importação Via Verde CSV - Carregamentos com CardID
+        CSV URL: https://customer-assets.emergentagent.com/job_weeklyfleethub/artifacts/nk7d2hr8_Transa%C3%A7%C3%B5es%20Detalhadas.csv
+        
+        ✅ TESTING RESULTS:
+        - CSV Download: ✅ Successfully downloaded (11498 bytes)
+        - CSV Structure: ✅ Correct format (StartDate, CardCode, MobileCard, etc.)
+        - Backend Logic: ✅ CardCode lookup implemented via via_verde_id field
+        - Database Analysis: ✅ 14 vehicles with via_verde_id, 14 with cartao_frota_id
+        
+        ❌ CRITICAL ISSUE IDENTIFIED:
+        - Import Result: 0/35 records imported (0% success rate)
+        - NoneType Errors: 5 backend errors when vehicle is None
+        - Data Mismatch: CSV CardCode values (PTPRIO...) don't match DB via_verde_id values (VV...)
+        - Error Handling: Backend needs null-safe error handling when vehicle not found
+        
+        🔍 ROOT CAUSE ANALYSIS:
+        1. CSV format is correct (CardCode/MobileCard as expected)
+        2. Backend supports CardCode lookup (lines 12336-12347 in server.py)
+        3. Data mismatch: Real CardCode values don't match test via_verde_id values
+        4. Backend throws NoneType errors when continuing after vehicle not found
+        
+        🚨 RECOMMENDATION:
+        Fix NoneType errors in Via Verde import logic before production use.
+        Backend needs better error handling when vehicle is None.
+
 ---
 
