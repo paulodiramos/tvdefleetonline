@@ -11667,6 +11667,212 @@ async def importar_combustivel_excel(
                 # Extrair dados do abastecimento
                 def get_value(keys, default=''):
                     for key in keys:
+
+
+async def importar_viaverde_excel(
+    file_content: bytes,
+    current_user: Dict,
+    periodo_inicio: Optional[str] = None,
+    periodo_fim: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Importar ficheiro Excel de portagens Via Verde
+    - Formato: Excel (.xlsx) exportado da Via Verde
+    - Associa por OBU e confirma a matrícula
+    - Valida que ambos (OBU + matrícula) estão corretos
+    """
+    try:
+        import openpyxl
+        from io import BytesIO
+        
+        # Carregar workbook
+        wb = openpyxl.load_workbook(BytesIO(file_content))
+        sheet = wb.active
+        
+        sucesso = 0
+        erros = 0
+        erros_detalhes = []
+        avisos = []  # Avisos de validação (OBU/matrícula diferentes)
+        
+        # Ler linha 1 como cabeçalho
+        header_row = list(sheet.iter_rows(min_row=1, max_row=1, values_only=True))[0]
+        header = [str(cell).strip() if cell else '' for cell in header_row]
+        
+        logger.info(f"📄 Cabeçalho Excel Via Verde: {header}")
+        
+        # Processar linhas a partir da linha 2
+        for row_num, row_values in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+            try:
+                # Criar dicionário da linha
+                row = dict(zip(header, row_values))
+                
+                # Extrair License Plate e OBU
+                license_plate = str(row.get('License Plate', '')).strip() if row.get('License Plate') else None
+                obu = str(row.get('OBU', '')).strip() if row.get('OBU') else None
+                
+                if not obu:
+                    erros += 1
+                    erros_detalhes.append(f"Linha {row_num}: OBU não encontrado")
+                    continue
+                
+                # 1. BUSCAR VEÍCULO POR OBU (principal)
+                vehicle = await db.vehicles.find_one(
+                    {"obu": obu},
+                    {"_id": 0}
+                )
+                
+                # 2. VALIDAR MATRÍCULA se veículo encontrado por OBU
+                if vehicle and license_plate:
+                    matricula_bd = vehicle.get('matricula', '').strip().upper()
+                    matricula_csv = license_plate.strip().upper()
+                    
+                    if matricula_bd != matricula_csv:
+                        # AVISO: Matrícula diferente!
+                        avisos.append({
+                            "linha": row_num,
+                            "obu": obu,
+                            "matricula_csv": matricula_csv,
+                            "matricula_bd": matricula_bd,
+                            "mensagem": f"⚠️ OBU {obu}: Matrícula no CSV ({matricula_csv}) ≠ Base de Dados ({matricula_bd})"
+                        })
+                        logger.warning(f"⚠️ Linha {row_num}: OBU {obu} tem matrícula diferente - CSV: {matricula_csv}, BD: {matricula_bd}")
+                
+                # 3. Se não encontrou por OBU, tentar por matrícula (fallback)
+                if not vehicle and license_plate:
+                    vehicle = await db.vehicles.find_one(
+                        {"matricula": {"$regex": f"^{re.escape(license_plate)}$", "$options": "i"}},
+                        {"_id": 0}
+                    )
+                    
+                    if vehicle:
+                        obu_bd = vehicle.get('obu', '')
+                        if obu_bd and obu_bd != obu:
+                            # AVISO: OBU diferente!
+                            avisos.append({
+                                "linha": row_num,
+                                "matricula": license_plate,
+                                "obu_csv": obu,
+                                "obu_bd": obu_bd,
+                                "mensagem": f"⚠️ Matrícula {license_plate}: OBU no CSV ({obu}) ≠ Base de Dados ({obu_bd})"
+                            })
+                            logger.warning(f"⚠️ Linha {row_num}: Matrícula {license_plate} tem OBU diferente - CSV: {obu}, BD: {obu_bd}")
+                
+                if not vehicle:
+                    erros += 1
+                    erros_detalhes.append(
+                        f"Linha {row_num}: Veículo não encontrado (OBU: {obu}, Matrícula: {license_plate})"
+                    )
+                    continue
+                
+                # Buscar motorista atribuído ao veículo
+                motorista = None
+                if vehicle.get('motorista_atribuido'):
+                    motorista = await db.motoristas.find_one(
+                        {"id": vehicle['motorista_atribuido']},
+                        {"_id": 0}
+                    )
+                
+                # Extrair dados da portagem
+                def get_value(key, default=''):
+                    val = row.get(key)
+                    if val is None:
+                        return default
+                    return val
+                
+                def to_float(value, default=0.0):
+                    if value is None or value == '':
+                        return default
+                    try:
+                        return float(str(value).replace(',', '.').strip())
+                    except:
+                        return default
+                
+                # Parse das datas
+                entry_date = get_value('Entry Date')
+                exit_date = get_value('Exit Date')
+                payment_date = get_value('Payment Date')
+                
+                # Converter datas para formato YYYY-MM-DD
+                def parse_date(date_val):
+                    if isinstance(date_val, datetime):
+                        return date_val.strftime('%Y-%m-%d')
+                    elif date_val:
+                        try:
+                            dt = datetime.strptime(str(date_val), '%Y-%m-%d %H:%M:%S')
+                            return dt.strftime('%Y-%m-%d')
+                        except:
+                            return str(date_val).split()[0] if date_val else None
+                    return None
+                
+                entry_date_formatted = parse_date(entry_date)
+                exit_date_formatted = parse_date(exit_date)
+                
+                # Extrair valores
+                value = to_float(get_value('Value'), 0)
+                liquid_value = to_float(get_value('Liquid Value'), 0)
+                discount_vv = to_float(get_value('Discount VV'), 0)
+                
+                # Criar documento
+                documento = {
+                    "id": str(uuid.uuid4()),
+                    "vehicle_id": vehicle["id"],
+                    "matricula": license_plate,
+                    "obu": obu,
+                    "via_verde_id": vehicle.get("via_verde_id"),
+                    "motorista_id": motorista["id"] if motorista else None,
+                    "motorista_email": motorista.get("email") if motorista else None,
+                    "parceiro_id": current_user["id"],
+                    "data": entry_date_formatted or datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+                    "entry_date": entry_date_formatted,
+                    "exit_date": exit_date_formatted,
+                    "entry_point": str(get_value('Entry Point')),
+                    "exit_point": str(get_value('Exit Point')),
+                    "service": str(get_value('Service')),
+                    "service_description": str(get_value('Service Description')),
+                    "market": str(get_value('Market')),
+                    "value": value,
+                    "liquid_value": liquid_value,
+                    "discount_vv": discount_vv,
+                    "is_payed": str(get_value('Is Payed')),
+                    "payment_date": payment_date,
+                    "payment_method": str(get_value('Payment Method')),
+                    "periodo_inicio": periodo_inicio,
+                    "periodo_fim": periodo_fim,
+                    "tipo_transacao": "portagem",
+                    "plataforma": "viaverde",
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "created_by": current_user["id"]
+                }
+                
+                # Inserir na coleção
+                await db.portagens_viaverde.insert_one(documento)
+                sucesso += 1
+                
+            except Exception as e:
+                erros += 1
+                erros_detalhes.append(f"Linha {row_num}: {str(e)}")
+                logger.error(f"Erro ao processar linha {row_num}: {str(e)}")
+        
+        # Preparar resposta com avisos
+        response = {
+            "message": f"Importação Via Verde: {sucesso} sucesso(s), {erros} erro(s)",
+            "sucesso": sucesso,
+            "erros": erros,
+            "erros_detalhes": erros_detalhes[:20]
+        }
+        
+        if avisos:
+            response["avisos"] = avisos[:10]
+            response["total_avisos"] = len(avisos)
+            response["message"] += f", {len(avisos)} aviso(s) de validação"
+        
+        return response
+        
+    except Exception as e:
+        logger.error(f"Erro ao importar Excel Via Verde: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao processar ficheiro Excel: {str(e)}")
+
+
                         if key in row and row[key] is not None:
                             return row[key]
                     return default
