@@ -11551,6 +11551,154 @@ async def importar_relatorios_csv(
     resumo_motoristas = []
 
 
+
+async def importar_combustivel_excel(
+    file_content: bytes, 
+    current_user: Dict,
+    periodo_inicio: Optional[str] = None,
+    periodo_fim: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Importar ficheiro Excel de combustível fóssil
+    - Primeiras 3 linhas são ignoradas
+    - Linha 4 é o cabeçalho
+    - Ligação ao veículo por matrícula
+    """
+    try:
+        import openpyxl
+        from io import BytesIO
+        
+        # Carregar workbook
+        wb = openpyxl.load_workbook(BytesIO(file_content))
+        sheet = wb.active
+        
+        sucesso = 0
+        erros = 0
+        erros_detalhes = []
+        
+        # Ler linha 4 como cabeçalho (índice 4)
+        header_row = list(sheet.iter_rows(min_row=4, max_row=4, values_only=True))[0]
+        header = [str(cell).strip() if cell else '' for cell in header_row]
+        
+        logger.info(f"📄 Cabeçalho Excel combustível: {header}")
+        
+        # Processar linhas a partir da linha 5
+        for row_num, row_values in enumerate(sheet.iter_rows(min_row=5, values_only=True), start=5):
+            try:
+                # Criar dicionário da linha
+                row = dict(zip(header, row_values))
+                
+                # Extrair matrícula (ajustar nome da coluna conforme Excel real)
+                matricula = None
+                for key in ['Matrícula', 'matricula', 'Matricula', 'MATRICULA', 'Cartão']:
+                    if key in row and row[key]:
+                        matricula = str(row[key]).strip().upper()
+                        break
+                
+                if not matricula:
+                    erros += 1
+                    erros_detalhes.append(f"Linha {row_num}: Matrícula não encontrada")
+                    continue
+                
+                # Buscar veículo por matrícula
+                vehicle = await db.vehicles.find_one(
+                    {"matricula": {"$regex": f"^{re.escape(matricula)}$", "$options": "i"}},
+                    {"_id": 0}
+                )
+                
+                if not vehicle:
+                    erros += 1
+                    erros_detalhes.append(f"Linha {row_num}: Veículo com matrícula '{matricula}' não encontrado")
+                    continue
+                
+                # Buscar motorista atribuído ao veículo
+                motorista = None
+                if vehicle.get('motorista_atribuido'):
+                    motorista = await db.motoristas.find_one(
+                        {"id": vehicle['motorista_atribuido']},
+                        {"_id": 0}
+                    )
+                
+                # Extrair dados do abastecimento
+                def get_value(keys, default=''):
+                    for key in keys:
+                        if key in row and row[key] is not None:
+                            return row[key]
+                    return default
+                
+                def to_float(value, default=0.0):
+                    if value is None or value == '':
+                        return default
+                    try:
+                        return float(str(value).replace(',', '.').strip())
+                    except:
+                        return default
+                
+                # Data pode estar em várias colunas
+                data_transacao = get_value(['Data', 'data', 'DATA', 'Data Transação'])
+                if isinstance(data_transacao, datetime):
+                    data_transacao = data_transacao.strftime('%Y-%m-%d')
+                elif data_transacao:
+                    data_transacao = str(data_transacao).strip()
+                else:
+                    data_transacao = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                
+                hora = get_value(['Hora', 'hora', 'HORA', 'Hora Transação'])
+                if isinstance(hora, datetime):
+                    hora = hora.strftime('%H:%M')
+                elif hora:
+                    hora = str(hora).strip()
+                else:
+                    hora = '00:00'
+                
+                posto = str(get_value(['Posto', 'posto', 'POSTO', 'Local', 'Estação']))
+                combustivel_tipo = str(get_value(['Combustível', 'combustivel', 'COMBUSTIVEL', 'Produto']))
+                litros = to_float(get_value(['Litros', 'litros', 'LITROS', 'Quantidade']), 0)
+                valor_total = to_float(get_value(['Valor', 'valor', 'VALOR', 'Total', 'Montante']), 0)
+                km_atual = to_float(get_value(['Km', 'km', 'KM', 'Quilómetros', 'Odómetro']), 0)
+                
+                # Criar documento
+                documento = {
+                    "id": str(uuid.uuid4()),
+                    "vehicle_id": vehicle["id"],
+                    "matricula": matricula,
+                    "motorista_id": motorista["id"] if motorista else None,
+                    "motorista_email": motorista.get("email") if motorista else None,
+                    "parceiro_id": current_user["id"],
+                    "data": data_transacao,
+                    "hora": hora,
+                    "posto": posto,
+                    "combustivel": combustivel_tipo,
+                    "litros": litros,
+                    "valor_total": valor_total,
+                    "km_atual": int(km_atual) if km_atual > 0 else None,
+                    "periodo_inicio": periodo_inicio,
+                    "periodo_fim": periodo_fim,
+                    "created_at": datetime.now(timezone.utc).isoformat(),
+                    "created_by": current_user["id"]
+                }
+                
+                # Inserir na coleção
+                await db.abastecimentos_combustivel.insert_one(documento)
+                sucesso += 1
+                
+            except Exception as e:
+                erros += 1
+                erros_detalhes.append(f"Linha {row_num}: {str(e)}")
+                logger.error(f"Erro ao processar linha {row_num}: {str(e)}")
+        
+        return {
+            "message": f"Importação combustível: {sucesso} sucesso(s), {erros} erro(s)",
+            "sucesso": sucesso,
+            "erros": erros,
+            "erros_detalhes": erros_detalhes[:20]
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao importar Excel combustível: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao processar ficheiro Excel: {str(e)}")
+
+
 @api_router.post("/importar/{plataforma}")
 async def importar_plataforma(
     plataforma: str,
