@@ -12601,10 +12601,12 @@ async def importar_plataforma(
                     # Formato 1: Portagens tradicionais (template simples)
                     # Formato 2: Carregamentos elétricos (exportação real)
                     
-                    if 'StartDate' in row and 'Energy' in row:
+                    if ('StartDate' in row or 'Timestamp' in row) and 'Energy' in row:
                         # Formato 2: Carregamentos elétricos Via Verde
-                        # Identificar veículo por MobileRegistration ou MobileCard
-                        matricula_viaverde = row.get('MobileRegistration', '').strip()
+                        # Identificar veículo por CardID (principal), ServiceType, MobileRegistration ou MobileCard
+                        card_id = row.get('CardID', '').strip()  # Ex: PTPRIO6087131736480003
+                        service_type = row.get('ServiceType', '').strip()  # Ex: EZeny2
+                        matricula_viaverde = row.get('Plate', '').strip() or row.get('MobileRegistration', '').strip()
                         cartao_viaverde = row.get('MobileCard', '').strip()
                         
                         # Buscar veículo por matrícula ou cartão Via Verde
