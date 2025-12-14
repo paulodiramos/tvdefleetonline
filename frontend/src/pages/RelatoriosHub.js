@@ -240,14 +240,10 @@ const RelatoriosHub = ({ user, onLogout }) => {
         parceiro_id: user.id
       };
 
-      // Criar relatório no backend
-      const response = await axios.post(`${API_URL}/api/relatorios/semanal`, novoRelatorio, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      console.log('Payload a enviar:', payload);
+      console.log('Payload a enviar:', novoRelatorio);
 
-      const response = await axios.post(`${API_URL}/api/relatorios/criar-manual`, payload, {
+      // Criar relatório no backend
+      const response = await axios.post(`${API_URL}/api/relatorios/criar-manual`, novoRelatorio, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
