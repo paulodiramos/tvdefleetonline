@@ -12752,49 +12752,6 @@ async def importar_plataforma(
         print(f"Erro ao importar {plataforma}: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erro ao processar ficheiro: {str(e)}")
 
-        query["parceiro_atribuido"] = current_user["id"]
-    
-    motoristas = await db.motoristas.find(query, {"_id": 0}).to_list(1000)
-    
-    resumo_motoristas = []
-    
-    for motorista in motoristas:
-        motorista_id = motorista.get("id")
-        
-        # Get ganhos data
-        ganhos_query = {
-            "motorista_id": motorista_id,
-            "data_inicio": {"$lte": data_fim},
-            "data_fim": {"$gte": data_inicio}
-        }
-        ganhos_records = await db.relatorios_ganhos.find(ganhos_query, {"_id": 0}).to_list(100)
-        
-        total_viagens = sum(r.get("uber_viagens", 0) + r.get("bolt_viagens", 0) for r in ganhos_records)
-        total_ganhos = sum(r.get("uber_ganhos", 0.0) + r.get("bolt_ganhos", 0.0) for r in ganhos_records)
-        
-        # Check if already has relatorio for this period
-        relatorio_existente = await db.relatorios_semanais.find_one({
-            "motorista_id": motorista_id,
-            "data_inicio": data_inicio,
-            "data_fim": data_fim
-        }, {"_id": 0})
-        
-        resumo_motoristas.append({
-            "motorista_id": motorista_id,
-            "motorista_nome": motorista.get("name", ""),
-            "motorista_email": motorista.get("email", ""),
-            "motorista_telefone": motorista.get("telemovel", ""),
-            "veiculo_atribuido": motorista.get("veiculo_atribuido"),
-            "total_viagens": total_viagens,
-            "total_ganhos": total_ganhos,
-            "relatorio_gerado": relatorio_existente is not None,
-            "relatorio_id": relatorio_existente.get("id") if relatorio_existente else None,
-            "relatorio_estado": relatorio_existente.get("estado") if relatorio_existente else None,
-            "relatorio_numero": relatorio_existente.get("numero_relatorio") if relatorio_existente else None
-        })
-    
-    return resumo_motoristas
-
 @api_router.get("/relatorios/semanal/{relatorio_id}/pdf")
 async def download_relatorio_pdf(
     relatorio_id: str,
