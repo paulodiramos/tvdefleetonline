@@ -8628,6 +8628,11 @@ if __name__ == "__main__":
     print("=" * 80)
     tester.test_uber_uuid_investigation()
     
+    # Run NEW BULK WEEKLY REPORTS GENERATION TEST (Current Review Request)
+    print("\n📊 NEW FEATURE: BULK WEEKLY REPORTS GENERATION")
+    print("=" * 80)
+    tester.test_bulk_weekly_reports_generation()
+    
     # Run the bug fix tests
     success = tester.test_bug_fixes_review_request()
     
