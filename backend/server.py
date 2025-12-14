@@ -11931,50 +11931,6 @@ async def importar_viaverde_excel(
     except Exception as e:
         logger.error(f"Erro ao importar Excel Via Verde: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erro ao processar ficheiro Excel: {str(e)}")
-                
-                # Criar documento
-                documento = {
-                    "id": str(uuid.uuid4()),
-                    "vehicle_id": vehicle["id"],
-                    "matricula": matricula,
-                    "cartao_via_verde": cartao_via_verde,
-                    "obu": obu,
-                    "via_verde_id": vehicle.get("via_verde_id") if vehicle else None,
-                    "motorista_id": motorista["id"] if motorista else None,
-                    "motorista_email": motorista.get("email") if motorista else None,
-                    "parceiro_id": current_user["id"],
-                    "data": data_transacao,
-                    "hora": hora,
-                    "posto": posto,
-                    "combustivel": combustivel_tipo,
-                    "litros": litros,
-                    "valor_total": valor_total,
-                    "km_atual": int(km_atual) if km_atual > 0 else None,
-                    "periodo_inicio": periodo_inicio,
-                    "periodo_fim": periodo_fim,
-                    "created_at": datetime.now(timezone.utc).isoformat(),
-                    "created_by": current_user["id"]
-                }
-                
-                # Inserir na coleção
-                await db.abastecimentos_combustivel.insert_one(documento)
-                sucesso += 1
-                
-            except Exception as e:
-                erros += 1
-                erros_detalhes.append(f"Linha {row_num}: {str(e)}")
-                logger.error(f"Erro ao processar linha {row_num}: {str(e)}")
-        
-        return {
-            "message": f"Importação combustível: {sucesso} sucesso(s), {erros} erro(s)",
-            "sucesso": sucesso,
-            "erros": erros,
-            "erros_detalhes": erros_detalhes[:20]
-        }
-        
-    except Exception as e:
-        logger.error(f"Erro ao importar Excel combustível: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Erro ao processar ficheiro Excel: {str(e)}")
 
 
 @api_router.post("/importar/{plataforma}")
