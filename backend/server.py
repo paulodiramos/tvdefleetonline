@@ -11670,6 +11670,58 @@ async def importar_combustivel_excel(
                         if key in row and row[key] is not None:
                             return row[key]
                     return default
+                
+                # Create abastecimento record
+                abastecimento = CombustivelFossil(
+                    parceiro_id=current_user["id"],
+                    posto=get_value(['Posto', 'posto', 'Station']),
+                    pais=get_value(['País', 'pais', 'Country']),
+                    rede=get_value(['Rede', 'rede', 'Network']),
+                    data=get_value(['Data', 'data', 'Date']),
+                    hora=get_value(['Hora', 'hora', 'Time']),
+                    cartao=get_value(['Cartão', 'cartao', 'Card']),
+                    desc_cartao=get_value(['Desc Cartão', 'desc_cartao', 'Card Description']),
+                    estado=get_value(['Estado', 'estado', 'Status']),
+                    grupo_cartao=get_value(['Grupo Cartão', 'grupo_cartao', 'Card Group']),
+                    litros=float(get_value(['Litros', 'litros', 'Liters'], 0)),
+                    combustivel=get_value(['Combustível', 'combustivel', 'Fuel']),
+                    recibo=get_value(['Recibo', 'recibo', 'Receipt']),
+                    valor_liquido=float(get_value(['Valor Líquido', 'valor_liquido', 'Net Value'], 0)),
+                    iva=float(get_value(['IVA', 'iva', 'VAT'], 0)),
+                    kms=int(get_value(['KMs', 'kms', 'Kilometers'], 0)),
+                    id_condutor=get_value(['ID Condutor', 'id_condutor', 'Driver ID']),
+                    fatura=get_value(['Fatura', 'fatura', 'Invoice']),
+                    data_fatura=get_value(['Data Fatura', 'data_fatura', 'Invoice Date']),
+                    valor_unitario=float(get_value(['Valor Unitário', 'valor_unitario', 'Unit Value'], 0)),
+                    valor_ref=float(get_value(['Valor Ref', 'valor_ref', 'Reference Value'], 0)),
+                    valor_desc=float(get_value(['Valor Desc', 'valor_desc', 'Discount Value'], 0)),
+                    cliente=get_value(['Cliente', 'cliente', 'Client']),
+                    tipo_pagamento=get_value(['Tipo Pagamento', 'tipo_pagamento', 'Payment Type']),
+                    ficheiro_nome=f"combustivel_{current_user['id']}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.xlsx",
+                    importado_por=current_user["id"]
+                )
+                
+                abastecimentos.append(abastecimento.dict())
+                sucesso += 1
+        
+        # Inserir na base de dados
+        if abastecimentos:
+            await db.abastecimentos_combustivel.insert_many(abastecimentos)
+        
+        return {
+            "sucesso": sucesso,
+            "erros": erros,
+            "total_litros": sum(a.get('litros', 0) for a in abastecimentos),
+            "total_valor_eur": sum(a.get('valor_liquido', 0) for a in abastecimentos),
+            "periodo": f"{periodo_inicio} a {periodo_fim}" if periodo_inicio and periodo_fim else "Não especificado",
+            "ficheiro_salvo": True,
+            "erros_detalhes": erros_detalhes[:20]
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao importar Excel combustível: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao processar ficheiro Excel: {str(e)}")
+
 
 async def importar_viaverde_excel(
     file_content: bytes,
