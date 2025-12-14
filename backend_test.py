@@ -1409,8 +1409,8 @@ startxref
                             if servicetype and servicetype not in servicetype_examples:
                                 servicetype_examples.append(servicetype)
                 
-                print(f"  - CardID examples found: {cardid_examples[:3]}")
-                print(f"  - ServiceType examples found: {servicetype_examples[:3]}")
+                print(f"  - CardCode examples found: {cardid_examples[:3]}")
+                print(f"  - MobileCard examples found: {servicetype_examples[:3]}")
                 
                 if len(found_headers) >= 6:  # At least 6 of 8 expected headers
                     self.log_result("Verify-CSV-Structure", True, f"✅ CSV structure valid: {len(found_headers)}/{len(expected_headers)} headers found")
