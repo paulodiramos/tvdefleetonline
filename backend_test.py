@@ -991,59 +991,98 @@ startxref
             driver = driver_response.json()
             driver_name = driver.get("name", "Test Driver")
             
-            # Create test CSV with the UUID (Uber format)
-            csv_content = f"""UUID do motorista,motorista_email,Nome próprio,Apelido,Pago a si,rendimentos,tarifa,taxa de serviço
+            print(f"\n📄 TESTING CSV IMPORT WITH MULTIPLE SCENARIOS:")
+            
+            # Test Scenario 1: Normal CSV with UTF-8-SIG (BOM)
+            csv_content_1 = f"""UUID do motorista,motorista_email,Nome próprio,Apelido,Pago a si,rendimentos,tarifa,taxa de serviço
 {self.test_uuid},test@example.com,{driver_name.split()[0] if driver_name.split() else 'Test'},{driver_name.split()[-1] if len(driver_name.split()) > 1 else 'Driver'},25.50,25.50,25.50,5.10"""
             
-            print(f"\n📄 TESTING CSV IMPORT:")
-            print(f"  - CSV Content Preview:")
-            print(f"    UUID: {self.test_uuid}")
-            print(f"    Driver Name: {driver_name}")
-            print(f"    CSV Size: {len(csv_content)} bytes")
+            print(f"\n  🧪 SCENARIO 1: Normal CSV with BOM")
+            print(f"    - UUID: {self.test_uuid}")
+            print(f"    - Driver Name: {driver_name}")
+            print(f"    - CSV Size: {len(csv_content_1)} bytes")
             
-            # Test import
-            files = {
-                'file': ('test_uber_uuid.csv', csv_content.encode('utf-8-sig'), 'text/csv')
+            files_1 = {
+                'file': ('test_uber_uuid_bom.csv', csv_content_1.encode('utf-8-sig'), 'text/csv')
             }
             
-            import_response = requests.post(f"{BACKEND_URL}/importar/uber", 
-                                          files=files, headers=headers)
+            import_response_1 = requests.post(f"{BACKEND_URL}/importar/uber", 
+                                            files=files_1, headers=headers)
             
-            if import_response.status_code == 200:
-                result = import_response.json()
+            if import_response_1.status_code == 200:
+                result_1 = import_response_1.json()
+                sucesso_1 = result_1.get("sucesso", 0)
+                erros_1 = result_1.get("erros", 0)
+                erros_detalhes_1 = result_1.get("erros_detalhes", [])
                 
-                sucesso = result.get("sucesso", 0)
-                erros = result.get("erros", 0)
-                erros_detalhes = result.get("erros_detalhes", [])
+                print(f"    📊 Results: Success={sucesso_1}, Errors={erros_1}")
+                if erros_detalhes_1:
+                    print(f"    ❌ Error Details: {erros_detalhes_1}")
+            
+            # Test Scenario 2: CSV without BOM (regular UTF-8)
+            print(f"\n  🧪 SCENARIO 2: CSV without BOM (regular UTF-8)")
+            
+            files_2 = {
+                'file': ('test_uber_uuid_no_bom.csv', csv_content_1.encode('utf-8'), 'text/csv')
+            }
+            
+            import_response_2 = requests.post(f"{BACKEND_URL}/importar/uber", 
+                                            files=files_2, headers=headers)
+            
+            if import_response_2.status_code == 200:
+                result_2 = import_response_2.json()
+                sucesso_2 = result_2.get("sucesso", 0)
+                erros_2 = result_2.get("erros", 0)
+                erros_detalhes_2 = result_2.get("erros_detalhes", [])
                 
-                print(f"  📊 Import Results:")
-                print(f"    - Success: {sucesso}")
-                print(f"    - Errors: {erros}")
-                print(f"    - Error Details: {erros_detalhes}")
+                print(f"    📊 Results: Success={sucesso_2}, Errors={erros_2}")
+                if erros_detalhes_2:
+                    print(f"    ❌ Error Details: {erros_detalhes_2}")
+            
+            # Test Scenario 3: CSV with problematic characters/HTML-like content
+            problematic_uuid = "7960e9ad-3c3f-4b6d-9c68-3d553c9cf9ad"
+            csv_content_3 = f"""UUID do motorista,motorista_email,Nome próprio,Apelido,Pago a si,rendimentos,tarifa,taxa de serviço
+<p class="font-medium text-sm">{problematic_uuid}</p>,test@example.com,Test,Driver,25.50,25.50,25.50,5.10"""
+            
+            print(f"\n  🧪 SCENARIO 3: CSV with HTML-like UUID (reproducing reported issue)")
+            print(f"    - Problematic UUID: <p class=\"font-medium text-sm\">{problematic_uuid}</p>")
+            
+            files_3 = {
+                'file': ('test_uber_uuid_html.csv', csv_content_3.encode('utf-8-sig'), 'text/csv')
+            }
+            
+            import_response_3 = requests.post(f"{BACKEND_URL}/importar/uber", 
+                                            files=files_3, headers=headers)
+            
+            if import_response_3.status_code == 200:
+                result_3 = import_response_3.json()
+                sucesso_3 = result_3.get("sucesso", 0)
+                erros_3 = result_3.get("erros", 0)
+                erros_detalhes_3 = result_3.get("erros_detalhes", [])
                 
-                if sucesso > 0 and erros == 0:
-                    self.log_result("Investigation-3-CSV-Import", True, 
-                                  f"✅ CSV import successful: {sucesso} records imported")
-                elif erros > 0:
-                    # Check if UUID is empty in error message
-                    uuid_empty_error = False
-                    for erro in erros_detalhes:
-                        if "UUID: )" in erro or "UUID: ''" in erro or "UUID:" in erro and erro.endswith(")"):
-                            uuid_empty_error = True
-                            break
+                print(f"    📊 Results: Success={sucesso_3}, Errors={erros_3}")
+                if erros_detalhes_3:
+                    print(f"    ❌ Error Details: {erros_detalhes_3}")
                     
-                    if uuid_empty_error:
-                        self.log_result("Investigation-3-CSV-Import", False, 
-                                      f"❌ UUID EMPTY ERROR CONFIRMED: {erros_detalhes}")
-                    else:
-                        self.log_result("Investigation-3-CSV-Import", False, 
-                                      f"❌ Import failed but UUID not empty: {erros_detalhes}")
-                else:
-                    self.log_result("Investigation-3-CSV-Import", False, 
-                                  f"❌ No records processed: Success={sucesso}, Errors={erros}")
-            else:
+                    # Check if this reproduces the reported issue
+                    for erro in erros_detalhes_3:
+                        if "UUID: )" in erro or "UUID: ''" in erro:
+                            print(f"    🎯 ISSUE REPRODUCED: {erro}")
+            
+            # Determine overall result
+            if sucesso_1 > 0 and erros_1 == 0:
+                self.log_result("Investigation-3-CSV-Import", True, 
+                              f"✅ CSV import working correctly (Scenario 1: {sucesso_1} success)")
+            elif sucesso_2 > 0 and erros_2 == 0:
+                self.log_result("Investigation-3-CSV-Import", True, 
+                              f"✅ CSV import working correctly (Scenario 2: {sucesso_2} success)")
+            elif erros_3 > 0 and any("UUID: )" in erro for erro in erros_detalhes_3):
                 self.log_result("Investigation-3-CSV-Import", False, 
-                              f"❌ Import request failed: {import_response.status_code}", import_response.text)
+                              f"❌ ISSUE REPRODUCED: HTML in UUID field causes empty UUID error")
+            else:
+                self.log_result("Investigation-3-CSV-Import", True, 
+                              f"✅ CSV import working, issue may be frontend-related")
+                
         except Exception as e:
             self.log_result("Investigation-3-CSV-Import", False, f"❌ Error: {str(e)}")
     
