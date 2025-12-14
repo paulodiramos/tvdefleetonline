@@ -1424,10 +1424,21 @@ const RelatoriosHub = ({ user, onLogout }) => {
           
           {!resultadoGeracaoMassa ? (
             <div className="space-y-4">
-              <p className="text-sm text-slate-600">
-                Esta função irá criar relatórios semanais para todos os motoristas ativos, 
-                sincronizando automaticamente os dados importados da Uber, Bolt, Via Verde e Combustível.
-              </p>
+              <div className="space-y-2">
+                <p className="text-sm text-slate-600">
+                  Esta função irá criar relatórios semanais em <span className="font-semibold text-slate-800">rascunho</span> para todos os motoristas ativos, 
+                  sincronizando automaticamente os dados importados da Uber, Bolt, Via Verde e Combustível.
+                </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-900 font-semibold">📝 Fluxo Recomendado:</p>
+                  <ol className="text-sm text-blue-800 list-decimal list-inside mt-2 space-y-1">
+                    <li>Importar dados das plataformas (Uber, Bolt, Via Verde, etc.)</li>
+                    <li>Gerar relatórios semanais (cria rascunhos automaticamente)</li>
+                    <li>Revisar e ajustar valores na aba "Rascunho"</li>
+                    <li>Aprovar para enviar aos motoristas e parceiros</li>
+                  </ol>
+                </div>
+              </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div>
