@@ -583,6 +583,18 @@ backend:
           agent: "testing"
           comment: "🎯 TESTE COMPLETO DA NOVA FUNCIONALIDADE DE GERAÇÃO EM MASSA - 100% FUNCIONANDO! CONTEXTO: Testada nova funcionalidade de gerar relatórios semanais em massa conforme review request específico. CREDENCIAIS: admin@tvdefleet.com / o72ocUHy ✅. ENDPOINT TESTADO: POST /api/relatorios/gerar-em-massa. TESTE 1 - ENDPOINT BACKEND: ✅ Endpoint responde corretamente com payload especificado (data_inicio: 2024-12-01, data_fim: 2024-12-08, incluir_uber: true, incluir_bolt: true, incluir_viaverde: true, incluir_combustivel: true) ✅ Campos de resposta corretos: 'sucesso' (1 relatório criado), 'erros' (0), 'relatorios_criados' (1 item), 'erros_detalhes' (0 itens). TESTE 2 - AGREGAÇÃO DE DADOS: ✅ Sistema busca dados de todas as 5 fontes corretamente: viagens_uber, viagens_bolt, portagens_viaverde, abastecimentos_combustivel, abastecimentos_eletrico ✅ Agregação por motorista funcionando. TESTE 3 - CÁLCULOS AUTOMÁTICOS: ✅ Cálculos automáticos implementados: ganhos_uber, ganhos_bolt, ganhos_totais (uber + bolt), via_verde_total, combustivel_total, valor_aluguer, caucao_semanal, total_a_pagar (ganhos - despesas). TESTE 4 - STATUS E DUPLICAÇÃO: ✅ Relatórios criados com status 'rascunho' ✅ Campo 'gerado_automaticamente': true ✅ Prevenção de duplicados funcionando (mesmo motorista + semana + ano) - 1 erro de duplicação detectado na segunda execução. RESULTADO FINAL: Nova funcionalidade de geração em massa está 100% operacional e atende todos os requisitos do review request!"
 
+  - task: "Importação CSV da Bolt - Formato Resumo Semanal Real"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🎯 TESTE COMPLETO DA IMPORTAÇÃO CSV DA BOLT - 100% FUNCIONANDO! CONTEXTO: Testada importação de CSV da Bolt com formato real de resumo semanal conforme review request específico em português. CREDENCIAIS: admin@tvdefleet.com / o72ocUHy ✅. FICHEIRO TESTADO: URL https://customer-assets.emergentagent.com/job_weekly-report-sys/artifacts/qdeohg4s_Ganhos%20por%20motorista-2025W49-Lisbon%20Fleet%20ZENY%20MACAIA%2C%20UNIPESSOAL%20LDA.csv (3777 bytes). ESTRUTURA VERIFICADA: ✅ Colunas principais encontradas: 'Motorista', 'Email', 'Telemóvel', 'Ganhos líquidos|€', 'Ganhos brutos (total)|€', 'Comissões|€', 'Identificador do motorista', 'Identificador individual' ✅ Delimitador vírgula (,) detectado corretamente ✅ Codificação UTF-8 com BOM suportada. MOTORISTAS VERIFICADOS: ✅ 5/5 motoristas esperados encontrados na base de dados: Arlei Oliveira (Arleijeffersonarlei@gmail.com), Bruno Coelho (brunomccoelho@hotmail.com), Domingos Dias (dmsdmuhongo@hotmail.com), Jorge Macaia (engmacaia@gmail.com), Karen Souza (karenviviane316@gmail.com). RESULTADOS DA IMPORTAÇÃO: ✅ 10/10 registos importados com sucesso (100% taxa de sucesso) ✅ 0 erros encontrados ✅ Todos os motoristas processados corretamente ✅ Dados salvos na coleção MongoDB 'viagens_bolt' com campo 'tipo_documento: resumo_semanal'. ENDPOINT TESTADO: POST /api/importar/bolt funcionando perfeitamente com formato real da Bolt. RESULTADO FINAL: Sistema de importação CSV da Bolt está 100% operacional e suporta o formato de exportação real da plataforma Bolt (resumo semanal por motorista)!"
+
   - task: "Investigação UUID da Uber - Review Request Específico"
     implemented: true
     working: true
