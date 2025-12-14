@@ -690,7 +690,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Sistema de Importação de Plataformas com Formato Uber Real"
+    - "Sistema de Geração de Relatórios Semanais em Massa - Novo Endpoint"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -717,6 +717,9 @@ test_plan:
   uber_uuid_investigation_complete: true
   uuid_backend_system_working: true
   uuid_issue_identified_frontend_problem: true
+  bulk_weekly_reports_generation_tested: true
+  new_endpoint_gerar_em_massa_working: true
+  all_4_bulk_tests_passed: true
 
 agent_communication:
     - agent: "testing"
