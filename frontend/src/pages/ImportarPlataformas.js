@@ -427,12 +427,12 @@ const ImportarPlataformas = () => {
               <CardContent className="p-6 space-y-4">
                 <div>
                   <Label htmlFor="file-input">
-                    Ficheiro {plataformaSelecionada === 'combustivel' ? 'Excel (.xlsx)' : 'CSV'}
+                    Ficheiro {['combustivel', 'viaverde'].includes(plataformaSelecionada) ? 'Excel (.xlsx) ou CSV' : 'CSV'}
                   </Label>
                   <Input
                     id="file-input"
                     type="file"
-                    accept={plataformaSelecionada === 'combustivel' ? '.xlsx,.xls' : '.csv'}
+                    accept={['combustivel', 'viaverde'].includes(plataformaSelecionada) ? '.xlsx,.xls,.csv' : '.csv'}
                     onChange={handleFileChange}
                     className="cursor-pointer mt-2"
                   />
