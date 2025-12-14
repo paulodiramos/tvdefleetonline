@@ -12118,7 +12118,13 @@ async def criar_relatorios_rascunho_apos_importacao(
                     "periodo_inicio": periodo_inicio,
                     "periodo_fim": periodo_fim
                 }, {"_id": 0}).to_list(1000)
-                ganhos_uber = sum(d.get('valor_liquido', 0) or d.get('ganhos_liquidos', 0) for d in dados)
+                # Uber pode ter: valor_liquido, ganhos_liquidos, ganhos_semanais
+                for d in dados:
+                    ganhos_uber += (
+                        float(d.get('valor_liquido') or 0) or
+                        float(d.get('ganhos_liquidos') or 0) or
+                        float(d.get('ganhos_semanais') or 0)
+                    )
             
             elif plataforma == 'bolt':
                 dados = await db.viagens_bolt.find({
@@ -12126,7 +12132,13 @@ async def criar_relatorios_rascunho_apos_importacao(
                     "periodo_inicio": periodo_inicio,
                     "periodo_fim": periodo_fim
                 }, {"_id": 0}).to_list(1000)
-                ganhos_bolt = sum(d.get('valor_liquido', 0) or d.get('ganhos_liquidos', 0) for d in dados)
+                # Bolt pode ter: valor_liquido, ganhos_liquidos, ganhos_semanais
+                for d in dados:
+                    ganhos_bolt += (
+                        float(d.get('valor_liquido') or 0) or
+                        float(d.get('ganhos_liquidos') or 0) or
+                        float(d.get('ganhos_semanais') or 0)
+                    )
             
             elif plataforma == 'viaverde':
                 dados = await db.portagens_viaverde.find({
