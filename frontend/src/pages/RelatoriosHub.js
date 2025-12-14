@@ -60,6 +60,19 @@ const RelatoriosHub = ({ user, onLogout }) => {
   const [dataPagamento, setDataPagamento] = useState(new Date().toISOString().split('T')[0]);
   const [metodoPagamento, setMetodoPagamento] = useState('transferencia');
   const [observacoesPagamento, setObservacoesPagamento] = useState('');
+  
+  // Modal de geração em massa
+  const [showGerarMassaModal, setShowGerarMassaModal] = useState(false);
+  const [gerandoMassa, setGerandoMassa] = useState(false);
+  const [geracaoMassaData, setGeracaoMassaData] = useState({
+    data_inicio: '',
+    data_fim: '',
+    incluir_uber: true,
+    incluir_bolt: true,
+    incluir_viaverde: true,
+    incluir_combustivel: true
+  });
+  const [resultadoGeracaoMassa, setResultadoGeracaoMassa] = useState(null);
 
   useEffect(() => {
     fetchData();
