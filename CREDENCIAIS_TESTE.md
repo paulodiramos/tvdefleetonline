@@ -58,7 +58,7 @@
 
 ### Login via Frontend
 ```
-1. Acesse: https://weekly-report-sys.preview.emergentagent.com/login
+1. Acesse: https://weeklyfleethub.preview.emergentagent.com/login
 2. Use qualquer credencial acima
 3. Navegue conforme as permissões do role
 ```
