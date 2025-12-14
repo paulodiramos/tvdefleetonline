@@ -11704,6 +11704,11 @@ async def importar_combustivel_excel(
                 
                 abastecimentos.append(abastecimento.dict())
                 sucesso += 1
+                
+            except Exception as e:
+                erros += 1
+                erros_detalhes.append(f"Linha {row_num}: {str(e)}")
+                logger.error(f"Erro ao processar linha {row_num}: {str(e)}")
         
         # Inserir na base de dados
         if abastecimentos:
