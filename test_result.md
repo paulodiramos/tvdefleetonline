@@ -768,6 +768,54 @@ agent_communication:
         
     - agent: "testing"
       message: |
+        🎯 TESTE COMPLETO DA NOVA FUNCIONALIDADE DE GERAÇÃO EM MASSA - 100% FUNCIONANDO!
+        
+        CONTEXTO DO TESTE:
+        Teste completo da nova funcionalidade de gerar relatórios semanais em massa conforme review request específico:
+        - Novo endpoint: POST /api/relatorios/gerar-em-massa
+        - Novo botão no frontend: "Gerar Relatórios Semanais"
+        - Modal para selecionar período e opções
+        - Credenciais: admin@tvdefleet.com / o72ocUHy
+        
+        ✅ RESULTADOS DOS 4 TESTES CRÍTICOS:
+        
+        **TESTE 1 - ENDPOINT BACKEND:**
+        - ✅ Endpoint POST /api/relatorios/gerar-em-massa funcionando
+        - ✅ Payload correto aceito: data_inicio, data_fim, incluir_uber, incluir_bolt, incluir_viaverde, incluir_combustivel
+        - ✅ Resposta com campos obrigatórios: sucesso (1), erros (0), relatorios_criados (1), erros_detalhes (0)
+        
+        **TESTE 2 - AGREGAÇÃO DE DADOS:**
+        - ✅ Sistema busca dados de viagens_uber pelo período
+        - ✅ Sistema busca dados de viagens_bolt pelo período
+        - ✅ Sistema busca dados de portagens_viaverde pelo período
+        - ✅ Sistema busca dados de abastecimentos_combustivel e abastecimentos_eletrico
+        - ✅ Agregação por motorista funcionando corretamente (5/5 fontes de dados)
+        
+        **TESTE 3 - CÁLCULOS AUTOMÁTICOS:**
+        - ✅ ganhos_uber: soma correta implementada
+        - ✅ ganhos_bolt: soma correta implementada
+        - ✅ ganhos_totais: uber + bolt calculado automaticamente
+        - ✅ via_verde_total: soma correta implementada
+        - ✅ combustivel_total: combustível + elétrico calculado
+        - ✅ valor_aluguer: obtido do contrato
+        - ✅ caucao_semanal: calculada corretamente
+        - ✅ total_a_pagar: ganhos - despesas calculado automaticamente
+        
+        **TESTE 4 - STATUS E DUPLICAÇÃO:**
+        - ✅ Relatórios criados com status "rascunho"
+        - ✅ Campo gerado_automaticamente: true
+        - ✅ Prevenção de duplicados funcionando (mesmo motorista + semana + ano)
+        - ✅ Segunda execução detectou 1 erro de duplicação corretamente
+        
+        🎉 NOVA FUNCIONALIDADE 100% OPERACIONAL!
+        ✅ Endpoint backend funcionando perfeitamente
+        ✅ Agregação de dados de todas as plataformas
+        ✅ Cálculos automáticos corretos
+        ✅ Status e prevenção de duplicados funcionando
+        ✅ Sistema pronto para produção
+        
+    - agent: "testing"
+      message: |
         🎯 TESTE FINAL UBER CSV DELIMITADOR PONTO E VÍRGULA - 100% SUCESSO!
         
         CONTEXTO DO TESTE:
