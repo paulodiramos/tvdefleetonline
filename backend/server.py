@@ -12599,18 +12599,18 @@ async def importar_plataforma(
                         matricula_viaverde = row.get('Plate', '').strip() or row.get('MobileRegistration', '').strip()
                         cartao_viaverde = row.get('MobileCard', '').strip()
                         
-                        # Buscar veículo por: 1) CardCode → cartao_frota_id, 2) ServiceType, 3) Matrícula
+                        # Buscar veículo por: 1) CardCode → cartao_frota_eletric_id, 2) ServiceType, 3) Matrícula
                         vehicle = None
                         
-                        # 1. Tentar por CardCode (identificador principal para carregamentos)
-                        # CardCode deve ir para cartao_frota_id (ex: PTPRIO6087131736480003)
+                        # 1. Tentar por CardCode (identificador principal para carregamentos ELÉTRICOS)
+                        # CardCode deve ir para cartao_frota_eletric_id (ex: PTPRIO6087131736480003)
                         if card_code:
                             vehicle = await db.vehicles.find_one(
-                                {"cartao_frota_id": card_code},
+                                {"cartao_frota_eletric_id": card_code},
                                 {"_id": 0}
                             )
                             if vehicle:
-                                logger.info(f"✅ Via Verde - Veículo encontrado por CardCode (cartao_frota_id): {card_code}")
+                                logger.info(f"✅ Via Verde - Veículo encontrado por CardCode (cartao_frota_eletric_id): {card_code}")
                         
                         # 2. Tentar por ServiceType como cartao_frota_id (Ex: EZeny2, EZeny6)
                         if not vehicle and service_type:
