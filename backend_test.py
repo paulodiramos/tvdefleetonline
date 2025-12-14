@@ -1375,8 +1375,8 @@ startxref
             csv_text = csv_content.decode('utf-8-sig')  # Handle BOM
             lines = csv_text.split('\n')
             
-            # Check for expected headers
-            expected_headers = ["Timestamp", "CardID", "ServiceType", "Plate", "ChargingStationID", "ChargingStation", "TotalDuration", "Energy"]
+            # Check for expected headers (based on actual CSV structure)
+            expected_headers = ["StartDate", "CardCode", "MobileCard", "MobileRegistration", "IdChargingStation", "TotalDuration", "Energy", "TotalValueWithTaxes"]
             
             if len(lines) > 0:
                 header_line = lines[0].strip()
