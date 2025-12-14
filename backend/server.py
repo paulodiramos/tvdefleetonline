@@ -12622,14 +12622,17 @@ async def importar_plataforma(
                             if vehicle:
                                 logger.info(f"✅ Via Verde - Veículo encontrado por CardID: {card_id}")
                         
-                        # 2. Tentar por ServiceType (pode ser cartao_frota_id)
+                        # 2. Tentar por ServiceType como cartao_frota_id (Ex: EZeny2, EZeny6)
                         if not vehicle and service_type:
                             vehicle = await db.vehicles.find_one(
-                                {"cartao_frota_id": service_type},
+                                {"$or": [
+                                    {"cartao_frota_id": service_type},
+                                    {"cartao_frota": service_type}
+                                ]},
                                 {"_id": 0}
                             )
                             if vehicle:
-                                logger.info(f"✅ Via Verde - Veículo encontrado por ServiceType: {service_type}")
+                                logger.info(f"✅ Via Verde - Veículo encontrado por ServiceType (cartao_frota): {service_type}")
                         
                         # 3. Tentar por Matrícula
                         if not vehicle and matricula_viaverde:
