@@ -10190,8 +10190,13 @@ if __name__ == "__main__":
         print("❌ FALHA: Não foi possível autenticar como admin")
         exit(1)
     
-    # Run GPS IMPORT TEST (Current Review Request)
-    print("\n🎯 CURRENT REVIEW REQUEST: GPS IMPORT TEST - BUSCA POR MATRÍCULA")
+    # Run VIA VERDE CSV IMPORT FINAL TEST (Current Review Request)
+    print("\n🎯 CURRENT REVIEW REQUEST: VIA VERDE CSV IMPORT - FINAL TEST")
+    print("=" * 80)
+    tester.test_via_verde_csv_import_final_test()
+    
+    # Run GPS IMPORT TEST (Previous Review Request)
+    print("\n🎯 PREVIOUS REVIEW REQUEST: GPS IMPORT TEST - BUSCA POR MATRÍCULA")
     print("=" * 80)
     tester.test_gps_import_busca_por_matricula()
     
