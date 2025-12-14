@@ -9401,8 +9401,43 @@ def run_uuid_investigation_only():
         print("❌ Failed to authenticate admin user")
         return False
 
+def run_via_verde_csv_test_only():
+    """Run only Via Verde CSV import test as requested in review"""
+    print("=" * 80)
+    print("TVDEFleet Backend Testing Suite - Via Verde CSV Import with Multiple Encodings")
+    print("=" * 80)
+    
+    tester = TVDEFleetTester()
+    
+    # Authenticate admin user
+    print("\n🔐 AUTHENTICATION PHASE")
+    print("-" * 40)
+    if not tester.authenticate_user("admin"):
+        return False
+    
+    # Run Via Verde CSV import test
+    print("\n🎯 VIA VERDE CSV IMPORT WITH MULTIPLE ENCODINGS TEST")
+    print("-" * 60)
+    tester.test_via_verde_csv_import_multiple_encodings()
+    
+    # Print summary
+    tester.print_summary()
+    stats = tester.get_test_summary()
+    
+    if stats['failed'] == 0:
+        print(f"\n✅ ALL TESTS PASSED ({stats['passed']}/{stats['total']})")
+        return True
+    else:
+        print(f"\n❌ SOME TESTS FAILED ({stats['failed']}/{stats['total']})")
+        return False
+
 if __name__ == "__main__":
     import sys
+    
+    # Check if Via Verde CSV test is requested
+    if len(sys.argv) > 1 and sys.argv[1] == "viaverde":
+        success = run_via_verde_csv_test_only()
+        exit(0 if success else 1)
     
     # Check if UUID investigation is requested
     if len(sys.argv) > 1 and sys.argv[1] == "uuid":
