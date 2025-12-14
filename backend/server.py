@@ -11020,6 +11020,251 @@ async def obter_historico_relatorios(
     
     return relatorios
 
+
+@api_router.post("/relatorios/gerar-em-massa")
+async def gerar_relatorios_em_massa(
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Gerar relatórios semanais para múltiplos motoristas com sincronização de dados importados"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Parâmetros
+    data_inicio = data.get("data_inicio")  # YYYY-MM-DD
+    data_fim = data.get("data_fim")  # YYYY-MM-DD
+    motorista_ids = data.get("motorista_ids", [])  # Lista de IDs ou vazio para todos
+    incluir_uber = data.get("incluir_uber", True)
+    incluir_bolt = data.get("incluir_bolt", True)
+    incluir_viaverde = data.get("incluir_viaverde", True)
+    incluir_combustivel = data.get("incluir_combustivel", True)
+    
+    if not data_inicio or not data_fim:
+        raise HTTPException(status_code=400, detail="data_inicio e data_fim são obrigatórios")
+    
+    try:
+        # Converter datas
+        from datetime import datetime
+        inicio = datetime.strptime(data_inicio, "%Y-%m-%d")
+        fim = datetime.strptime(data_fim, "%Y-%m-%d")
+        
+        # Buscar motoristas
+        if motorista_ids:
+            motoristas = await db.motoristas.find({"id": {"$in": motorista_ids}, "status": "ativo"}, {"_id": 0}).to_list(1000)
+        else:
+            motoristas = await db.motoristas.find({"status": "ativo"}, {"_id": 0}).to_list(1000)
+        
+        relatorios_criados = []
+        erros = []
+        
+        logger.info(f"Gerando relatórios para {len(motoristas)} motoristas de {data_inicio} a {data_fim}")
+        
+        for motorista in motoristas:
+            try:
+                motorista_id = motorista["id"]
+                motorista_email = motorista.get("email", "")
+                
+                # Inicializar totais
+                ganhos_uber = 0.0
+                ganhos_bolt = 0.0
+                via_verde_total = 0.0
+                combustivel_total = 0.0
+                
+                # 1. Agregar ganhos Uber
+                if incluir_uber:
+                    pipeline_uber = [
+                        {
+                            "$match": {
+                                "motorista_id": motorista_id,
+                                "data_viagem": {"$gte": data_inicio, "$lte": data_fim}
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": None,
+                                "total": {"$sum": {"$toDouble": "$valor_pago"}}
+                            }
+                        }
+                    ]
+                    
+                    result_uber = await db.viagens_uber.aggregate(pipeline_uber).to_list(None)
+                    if result_uber:
+                        ganhos_uber = result_uber[0].get("total", 0.0)
+                
+                # 2. Agregar ganhos Bolt
+                if incluir_bolt:
+                    pipeline_bolt = [
+                        {
+                            "$match": {
+                                "motorista_id": motorista_id,
+                                "data": {"$gte": data_inicio, "$lte": data_fim}
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": None,
+                                "total": {"$sum": {"$toDouble": "$valor_liquido"}}
+                            }
+                        }
+                    ]
+                    
+                    result_bolt = await db.viagens_bolt.aggregate(pipeline_bolt).to_list(None)
+                    if result_bolt:
+                        ganhos_bolt = result_bolt[0].get("total", 0.0)
+                
+                # 3. Agregar Via Verde
+                if incluir_viaverde:
+                    pipeline_viaverde = [
+                        {
+                            "$match": {
+                                "motorista_id": motorista_id,
+                                "data": {"$gte": data_inicio, "$lte": data_fim}
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": None,
+                                "total": {"$sum": {"$toDouble": "$valor"}}
+                            }
+                        }
+                    ]
+                    
+                    result_viaverde = await db.portagens_viaverde.aggregate(pipeline_viaverde).to_list(None)
+                    if result_viaverde:
+                        via_verde_total = result_viaverde[0].get("total", 0.0)
+                
+                # 4. Agregar Combustível
+                if incluir_combustivel:
+                    # Combustível fóssil
+                    pipeline_comb = [
+                        {
+                            "$match": {
+                                "motorista_id": motorista_id,
+                                "data": {"$gte": data_inicio, "$lte": data_fim}
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": None,
+                                "total": {"$sum": {"$toDouble": "$valor_total"}}
+                            }
+                        }
+                    ]
+                    
+                    result_comb = await db.abastecimentos_combustivel.aggregate(pipeline_comb).to_list(None)
+                    if result_comb:
+                        combustivel_total += result_comb[0].get("total", 0.0)
+                    
+                    # Carregamentos elétrico
+                    result_elet = await db.abastecimentos_eletrico.aggregate(pipeline_comb).to_list(None)
+                    if result_elet:
+                        combustivel_total += result_elet[0].get("total", 0.0)
+                
+                # 5. Buscar contrato e veículo para calcular aluguer
+                contrato = await db.contratos.find_one({
+                    "motorista_id": motorista_id,
+                    "ativo": True
+                }, {"_id": 0})
+                
+                valor_aluguer = 0.0
+                caucao_semanal = 0.0
+                
+                if contrato:
+                    tipo_contrato = contrato.get("tipo_contrato", {})
+                    valor_aluguer = float(tipo_contrato.get("valor_aluguer", 0) or 0)
+                    
+                    # Caução parcelada
+                    if tipo_contrato.get("valor_caucao") and tipo_contrato.get("numero_parcelas_caucao"):
+                        valor_caucao = float(tipo_contrato.get("valor_caucao", 0) or 0)
+                        num_parcelas = int(tipo_contrato.get("numero_parcelas_caucao", 1) or 1)
+                        caucao_semanal = valor_caucao / num_parcelas if num_parcelas > 0 else 0
+                
+                # 6. Calcular semana do ano
+                semana = inicio.isocalendar()[1]
+                ano = inicio.year
+                
+                # 7. Verificar se já existe relatório para este período
+                relatorio_existente = await db.relatorios_semanais.find_one({
+                    "motorista_id": motorista_id,
+                    "semana": semana,
+                    "ano": ano
+                }, {"_id": 0})
+                
+                if relatorio_existente:
+                    logger.info(f"Relatório já existe para {motorista.get('name')} - semana {semana}/{ano}")
+                    erros.append({
+                        "motorista": motorista.get("name"),
+                        "erro": f"Relatório já existe para semana {semana}/{ano}"
+                    })
+                    continue
+                
+                # 8. Criar relatório em rascunho
+                from uuid import uuid4
+                relatorio_id = str(uuid4())
+                
+                novo_relatorio = {
+                    "id": relatorio_id,
+                    "motorista_id": motorista_id,
+                    "motorista_nome": motorista.get("name"),
+                    "motorista_email": motorista_email,
+                    "parceiro_id": motorista.get("parceiro_atribuido"),
+                    "veiculo_id": motorista.get("veiculo_atribuido"),
+                    "semana": semana,
+                    "ano": ano,
+                    "data_inicio": data_inicio,
+                    "data_fim": data_fim,
+                    "ganhos_uber": round(ganhos_uber, 2),
+                    "ganhos_bolt": round(ganhos_bolt, 2),
+                    "ganhos_totais": round(ganhos_uber + ganhos_bolt, 2),
+                    "via_verde_total": round(via_verde_total, 2),
+                    "combustivel_total": round(combustivel_total, 2),
+                    "valor_aluguer": round(valor_aluguer, 2),
+                    "caucao_semanal": round(caucao_semanal, 2),
+                    "outros": 0.0,
+                    "divida_anterior": 0.0,
+                    "status": "rascunho",
+                    "criado_em": datetime.now(timezone.utc).isoformat(),
+                    "criado_por": current_user["id"],
+                    "gerado_automaticamente": True
+                }
+                
+                # Calcular total a pagar
+                total_despesas = (valor_aluguer + caucao_semanal + via_verde_total + 
+                                combustivel_total + novo_relatorio["outros"] + novo_relatorio["divida_anterior"])
+                novo_relatorio["total_a_pagar"] = round(novo_relatorio["ganhos_totais"] - total_despesas, 2)
+                
+                await db.relatorios_semanais.insert_one(novo_relatorio)
+                
+                relatorios_criados.append({
+                    "motorista": motorista.get("name"),
+                    "semana": semana,
+                    "ano": ano,
+                    "ganhos_totais": novo_relatorio["ganhos_totais"],
+                    "total_a_pagar": novo_relatorio["total_a_pagar"]
+                })
+                
+                logger.info(f"✅ Relatório criado para {motorista.get('name')} - Semana {semana}/{ano}")
+                
+            except Exception as e:
+                logger.error(f"Erro ao gerar relatório para motorista {motorista.get('name')}: {str(e)}")
+                erros.append({
+                    "motorista": motorista.get("name"),
+                    "erro": str(e)
+                })
+        
+        return {
+            "sucesso": len(relatorios_criados),
+            "erros": len(erros),
+            "relatorios_criados": relatorios_criados,
+            "erros_detalhes": erros,
+            "mensagem": f"{len(relatorios_criados)} relatórios criados com sucesso"
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao gerar relatórios em massa: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao gerar relatórios: {str(e)}")
+
+
 @api_router.post("/relatorios/criar-manual")
 async def criar_relatorio_manual(
     data: Dict,
