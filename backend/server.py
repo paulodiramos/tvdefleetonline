@@ -11588,23 +11588,59 @@ async def importar_combustivel_excel(
                 # Criar dicionário da linha
                 row = dict(zip(header, row_values))
                 
-                # Extrair matrícula (ajustar nome da coluna conforme Excel real)
+                # Extrair identificadores do veículo
+                # Prioridade: 1) Cartão Via Verde, 2) OBU, 3) Matrícula
+                cartao_via_verde = None
+                obu = None
                 matricula = None
-                for key in ['Matrícula', 'matricula', 'Matricula', 'MATRICULA', 'Cartão']:
+                
+                # Buscar Cartão Via Verde
+                for key in ['Cartão', 'Cartao', 'CartaoViaVerde', 'Via Verde', 'CardCode']:
+                    if key in row and row[key]:
+                        cartao_via_verde = str(row[key]).strip()
+                        break
+                
+                # Buscar OBU
+                for key in ['OBU', 'obu', 'OnBoardUnit', 'Dispositivo', 'Device']:
+                    if key in row and row[key]:
+                        obu = str(row[key]).strip()
+                        break
+                
+                # Buscar Matrícula (fallback)
+                for key in ['Matrícula', 'matricula', 'Matricula', 'MATRICULA']:
                     if key in row and row[key]:
                         matricula = str(row[key]).strip().upper()
                         break
                 
-                if not matricula:
-                    erros += 1
-                    erros_detalhes.append(f"Linha {row_num}: Matrícula não encontrada")
-                    continue
+                # Buscar veículo por múltiplos critérios
+                vehicle = None
                 
-                # Buscar veículo por matrícula
-                vehicle = await db.vehicles.find_one(
-                    {"matricula": {"$regex": f"^{re.escape(matricula)}$", "$options": "i"}},
-                    {"_id": 0}
-                )
+                # 1. Tentar por Cartão Via Verde
+                if cartao_via_verde:
+                    vehicle = await db.vehicles.find_one(
+                        {"via_verde_id": cartao_via_verde},
+                        {"_id": 0}
+                    )
+                    if vehicle:
+                        logger.info(f"✅ Veículo encontrado por Cartão Via Verde: {cartao_via_verde}")
+                
+                # 2. Tentar por OBU
+                if not vehicle and obu:
+                    vehicle = await db.vehicles.find_one(
+                        {"obu": obu},
+                        {"_id": 0}
+                    )
+                    if vehicle:
+                        logger.info(f"✅ Veículo encontrado por OBU: {obu}")
+                
+                # 3. Tentar por Matrícula
+                if not vehicle and matricula:
+                    vehicle = await db.vehicles.find_one(
+                        {"matricula": {"$regex": f"^{re.escape(matricula)}$", "$options": "i"}},
+                        {"_id": 0}
+                    )
+                    if vehicle:
+                        logger.info(f"✅ Veículo encontrado por Matrícula: {matricula}")
                 
                 if not vehicle:
                     erros += 1
