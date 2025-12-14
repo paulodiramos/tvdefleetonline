@@ -8779,6 +8779,11 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
         self.test_financial_import_system()
         self.test_import_feature_access_control()
         
+        # VIA VERDE CSV IMPORT WITH MULTIPLE ENCODINGS (REVIEW REQUEST - CRITICAL)
+        print("\n🎯 VIA VERDE CSV IMPORT WITH MULTIPLE ENCODINGS (REVIEW REQUEST - CRITICAL)")
+        print("-" * 80)
+        self.test_via_verde_csv_import_multiple_encodings()
+        
         # FUEL IMPORT EXCEL WITH DESC. CARTÃO (REVIEW REQUEST - CRITICAL)
         print("\n⛽ FUEL IMPORT EXCEL WITH DESC. CARTÃO (REVIEW REQUEST - CRITICAL)")
         print("-" * 70)
