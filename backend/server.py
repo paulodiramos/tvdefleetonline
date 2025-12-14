@@ -11667,7 +11667,9 @@ async def importar_combustivel_excel(
                 # Extrair dados do abastecimento
                 def get_value(keys, default=''):
                     for key in keys:
-
+                        if key in row and row[key] is not None:
+                            return row[key]
+                    return default
 
 async def importar_viaverde_excel(
     file_content: bytes,
