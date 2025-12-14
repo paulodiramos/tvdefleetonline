@@ -11778,11 +11778,28 @@ async def importar_combustivel_excel(
                 erros_detalhes.append(f"Linha {row_num}: {str(e)}")
                 logger.error(f"Erro ao processar linha {row_num}: {str(e)}")
         
+        # Criar relatórios de rascunho automaticamente
+        info_rascunhos = None
+        if sucesso > 0 and periodo_inicio and periodo_fim:
+            info_rascunhos = await criar_relatorios_rascunho_apos_importacao(
+                plataforma='combustivel',
+                periodo_inicio=periodo_inicio,
+                periodo_fim=periodo_fim,
+                parceiro_id=current_user["id"],
+                db=db
+            )
+        
+        mensagem_info = ""
+        if info_rascunhos and info_rascunhos.get("rascunhos_criados", 0) > 0:
+            mensagem_info = f"✅ {info_rascunhos['rascunhos_criados']} relatório(s) criado(s)!"
+        
         return {
             "message": f"Importação combustível: {sucesso} sucesso(s), {erros} erro(s)",
             "sucesso": sucesso,
             "erros": erros,
-            "erros_detalhes": erros_detalhes[:20]
+            "erros_detalhes": erros_detalhes[:20],
+            "mensagem_info": mensagem_info,
+            "rascunhos": info_rascunhos
         }
         
     except Exception as e:
