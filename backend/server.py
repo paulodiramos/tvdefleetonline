@@ -12629,8 +12629,8 @@ async def importar_plataforma(
                         if not vehicle:
                             erros += 1
                             identificadores = []
-                            if card_id:
-                                identificadores.append(f"CardID: {card_id}")
+                            if card_code:
+                                identificadores.append(f"CardCode: {card_code}")
                             if service_type:
                                 identificadores.append(f"ServiceType: {service_type}")
                             if matricula_viaverde:
