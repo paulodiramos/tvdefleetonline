@@ -238,9 +238,12 @@ const RelatoriosHub = ({ user, onLogout }) => {
         status: 'pendente_aprovacao',
         estado: 'pendente_aprovacao',
         parceiro_id: user.id
-      });
-
       };
+
+      // Criar relatório no backend
+      const response = await axios.post(`${API_URL}/api/relatorios/semanal`, novoRelatorio, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       console.log('Payload a enviar:', payload);
 
