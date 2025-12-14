@@ -11977,6 +11977,11 @@ async def importar_plataforma(
             # Processar Excel de combustível
             return await importar_combustivel_excel(content, current_user, periodo_inicio, periodo_fim)
         
+        # Para Via Verde em Excel (.xlsx), processar diferente
+        if plataforma == 'viaverde' and (file.filename.endswith('.xlsx') or file.filename.endswith('.xls')):
+            # Processar Excel de portagens Via Verde
+            return await importar_viaverde_excel(content, current_user, periodo_inicio, periodo_fim)
+        
         # Para CSV: usar utf-8-sig para remover BOM se presente
         decoded = content.decode('utf-8-sig')
         
