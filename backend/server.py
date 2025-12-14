@@ -12690,17 +12690,29 @@ async def criar_relatorios_rascunho_apos_importacao(
                 erros_detalhes.append(f"Linha {row_num}: {str(e)}")
                 print(f"Erro ao processar linha {row_num}: {str(e)}")
         
+        # Criar relatórios de rascunho automaticamente se houver sucesso
+        info_rascunhos = None
+        if sucesso > 0 and periodo_inicio and periodo_fim:
+            info_rascunhos = await criar_relatorios_rascunho_apos_importacao(
+                plataforma=plataforma,
+                periodo_inicio=periodo_inicio,
+                periodo_fim=periodo_fim,
+                parceiro_id=current_user["id"],
+                db=db
+            )
+        
         # Retornar resumo
         mensagem_info = ""
-        if plataforma in ['uber', 'bolt'] and sucesso > 0:
-            mensagem_info = "💡 Use 'Gerar Relatórios Semanais' para criar rascunhos automaticamente."
+        if info_rascunhos and info_rascunhos.get("rascunhos_criados", 0) > 0:
+            mensagem_info = f"✅ {info_rascunhos['rascunhos_criados']} relatório(s) de rascunho criado(s) automaticamente!"
         
         resultado = {
             "message": f"Importação {plataforma}: {sucesso} sucesso(s), {erros} erro(s)",
             "sucesso": sucesso,
             "erros": erros,
             "erros_detalhes": erros_detalhes[:10],  # Limitar a 10 erros
-            "mensagem_info": mensagem_info
+            "mensagem_info": mensagem_info,
+            "rascunhos": info_rascunhos
         }
         
         return resultado
