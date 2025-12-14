@@ -199,36 +199,6 @@ const RelatoriosHub = ({ user, onLogout }) => {
       parseFloat(dados.via_verde_total || 0) +
       parseFloat(dados.caucao_semanal || 0) +
 
-  const handleGerarEmMassa = async () => {
-    if (!geracaoMassaData.data_inicio || !geracaoMassaData.data_fim) {
-      toast.error('Por favor, preencha as datas de início e fim');
-      return;
-    }
-
-    setGerandoMassa(true);
-    setResultadoGeracaoMassa(null);
-
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API_URL}/api/relatorios/gerar-em-massa`,
-        geracaoMassaData,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setResultadoGeracaoMassa(response.data);
-      toast.success(response.data.mensagem || 'Relatórios gerados com sucesso!');
-      
-      // Recarregar relatórios
-      await fetchData();
-    } catch (error) {
-      console.error('Erro ao gerar relatórios em massa:', error);
-      toast.error(error.response?.data?.detail || 'Erro ao gerar relatórios');
-    } finally {
-      setGerandoMassa(false);
-    }
-  };
-
       parseFloat(dados.outros || 0);
     const dividaAnterior = parseFloat(dados.divida_anterior || 0);
     const total = ganhos - despesas - dividaAnterior;
