@@ -11909,6 +11909,8 @@ async def importar_plataforma(
                     "motorista_email": motorista_email,
                     "parceiro_id": current_user["id"],
                     "data": data,
+                    "periodo_inicio": periodo_inicio,
+                    "periodo_fim": periodo_fim,
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "created_by": current_user["id"]
                 }
