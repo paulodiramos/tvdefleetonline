@@ -11644,7 +11644,16 @@ async def importar_combustivel_excel(
                 
                 if not vehicle:
                     erros += 1
-                    erros_detalhes.append(f"Linha {row_num}: Veículo com matrícula '{matricula}' não encontrado")
+                    identificadores = []
+                    if cartao_via_verde:
+                        identificadores.append(f"Cartão: {cartao_via_verde}")
+                    if obu:
+                        identificadores.append(f"OBU: {obu}")
+                    if matricula:
+                        identificadores.append(f"Matrícula: {matricula}")
+                    erros_detalhes.append(
+                        f"Linha {row_num}: Veículo não encontrado ({', '.join(identificadores) if identificadores else 'Sem identificadores'})"
+                    )
                     continue
                 
                 # Buscar motorista atribuído ao veículo
