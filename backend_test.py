@@ -1145,14 +1145,15 @@ startxref
         except Exception as e:
             self.log_result("Investigation-4-Update-Endpoint", False, f"❌ Error: {str(e)}")
     
-    def test_uber_csv_import_bom_fix(self):
-        """Test Uber CSV import after BOM fix - Review Request Specific Test"""
-        print("\n🎯 TESTING UBER CSV IMPORT AFTER BOM FIX")
+    def test_uber_csv_import_semicolon_delimiter(self):
+        """Test Uber CSV import with semicolon delimiter - Review Request Specific Test"""
+        print("\n🎯 TESTING UBER CSV IMPORT WITH SEMICOLON DELIMITER")
         print("-" * 80)
-        print("Review Request: Test Uber CSV import with real file after utf-8-sig fix")
-        print("- CSV URL: https://customer-assets.emergentagent.com/job_weekly-report-sys/artifacts/vy8erxlu_20251201-20251208-payments_driver-ZENY_MACAIA_UNIPESSOAL_LDA%20%281%29.csv")
-        print("- Target Driver: Bruno Coelho (UUID: 35382cb7-236e-42c1-b0b4-e16bfabb8ff3)")
-        print("- Expected: 100% success rate (11/11 drivers)")
+        print("Review Request: Test Uber CSV import with real file using semicolon delimiter")
+        print("- CSV URL: https://customer-assets.emergentagent.com/job_weekly-report-sys/artifacts/da5fp805_20251201-20251208-payments_driver-ZENY_MACAIA_UNIPESSOAL_LDA%20%281%29.csv")
+        print("- Delimiter: semicolon (;)")
+        print("- Expected: 100% success rate (10/10 drivers)")
+        print("- Backend correction: Lines 11149 and 11279 - automatic delimiter detection")
         print("-" * 80)
         
         # Authenticate as admin
