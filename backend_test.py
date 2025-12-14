@@ -9681,6 +9681,11 @@ def run_via_verde_csv_test_only():
 if __name__ == "__main__":
     import sys
     
+    # Check if GPS import test is requested
+    if len(sys.argv) > 1 and sys.argv[1] == "gps":
+        success = run_gps_import_test_only()
+        exit(0 if success else 1)
+    
     # Check if Via Verde CSV test is requested
     if len(sys.argv) > 1 and sys.argv[1] == "viaverde":
         success = run_via_verde_csv_test_only()
