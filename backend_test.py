@@ -8557,6 +8557,11 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
         self.test_financial_import_system()
         self.test_import_feature_access_control()
         
+        # FUEL IMPORT EXCEL WITH DESC. CARTÃO (REVIEW REQUEST - CRITICAL)
+        print("\n⛽ FUEL IMPORT EXCEL WITH DESC. CARTÃO (REVIEW REQUEST - CRITICAL)")
+        print("-" * 70)
+        self.test_fuel_import_excel_with_desc_cartao()
+        
         # WEEKLY REPORTS SYSTEM (REVIEW REQUEST - CRITICAL)
         print("\n📊 WEEKLY REPORTS SYSTEM (REVIEW REQUEST - CRITICAL)")
         print("-" * 60)
