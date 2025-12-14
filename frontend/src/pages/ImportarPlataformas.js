@@ -61,6 +61,33 @@ const ImportarPlataformas = () => {
     setPeriodoInicio(formatarData(inicioSemana));
     setPeriodoFim(formatarData(fimSemana));
   };
+  
+  // Calcular ano e semana baseado nas datas (sincronização reversa)
+  const calcularSemanaFromDatas = (dataInicio) => {
+    if (!dataInicio) return;
+    
+    const data = new Date(dataInicio);
+    const anoData = data.getFullYear();
+    
+    // Encontrar a primeira segunda-feira do ano
+    const primeiroDiaAno = new Date(anoData, 0, 1);
+    const diaSemana = primeiroDiaAno.getDay();
+    let diasParaPrimeiraSegunda = (8 - diaSemana) % 7;
+    if (diaSemana === 0) diasParaPrimeiraSegunda = 1;
+    
+    const primeiraSegunda = new Date(primeiroDiaAno);
+    primeiraSegunda.setDate(primeiroDiaAno.getDate() + diasParaPrimeiraSegunda);
+    
+    // Calcular diferença em dias
+    const diffEmDias = Math.floor((data - primeiraSegunda) / (1000 * 60 * 60 * 24));
+    const semanaCalculada = Math.floor(diffEmDias / 7) + 1;
+    
+    // Atualizar ano e semana
+    setAno(anoData);
+    if (semanaCalculada >= 1 && semanaCalculada <= 53) {
+      setSemana(semanaCalculada);
+    }
+  };
 
   const plataformas = [
     {
