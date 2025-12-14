@@ -12609,19 +12609,44 @@ async def importar_plataforma(
                         matricula_viaverde = row.get('Plate', '').strip() or row.get('MobileRegistration', '').strip()
                         cartao_viaverde = row.get('MobileCard', '').strip()
                         
-                        # Buscar veículo por matrícula ou cartão Via Verde
+                        # Buscar veículo por: 1) CardID, 2) ServiceType, 3) Matrícula, 4) MobileCard
                         vehicle = None
-                        if matricula_viaverde:
+                        
+                        # 1. Tentar por CardID (identificador principal)
+                        if card_id:
+                            vehicle = await db.vehicles.find_one(
+                                {"via_verde_id": card_id},
+                                {"_id": 0}
+                            )
+                            if vehicle:
+                                logger.info(f"✅ Via Verde - Veículo encontrado por CardID: {card_id}")
+                        
+                        # 2. Tentar por ServiceType (pode ser cartao_frota_id)
+                        if not vehicle and service_type:
+                            vehicle = await db.vehicles.find_one(
+                                {"cartao_frota_id": service_type},
+                                {"_id": 0}
+                            )
+                            if vehicle:
+                                logger.info(f"✅ Via Verde - Veículo encontrado por ServiceType: {service_type}")
+                        
+                        # 3. Tentar por Matrícula
+                        if not vehicle and matricula_viaverde:
                             vehicle = await db.vehicles.find_one(
                                 {"matricula": {"$regex": f"^{re.escape(matricula_viaverde)}$", "$options": "i"}},
                                 {"_id": 0}
                             )
+                            if vehicle:
+                                logger.info(f"✅ Via Verde - Veículo encontrado por Matrícula: {matricula_viaverde}")
                         
+                        # 4. Tentar por MobileCard (fallback)
                         if not vehicle and cartao_viaverde:
                             vehicle = await db.vehicles.find_one(
                                 {"via_verde_id": cartao_viaverde},
                                 {"_id": 0}
                             )
+                            if vehicle:
+                                logger.info(f"✅ Via Verde - Veículo encontrado por MobileCard: {cartao_viaverde}")
                         
                         if vehicle:
                             # Atualizar motorista_id se veículo tem motorista atribuído
