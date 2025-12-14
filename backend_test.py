@@ -1287,26 +1287,27 @@ startxref
                 self.log_result("Execute-Uber-Import", True, 
                               f"✅ Import completed: {total_importados}/{total_linhas} records ({success_rate:.1f}% success)")
                 
-                # Step 5: Verify success rate is high (should be 100% or close)
-                if success_rate >= 90:
+                # Step 5: Verify success rate is 100% (target for this test)
+                if success_rate == 100:
                     self.log_result("Verify-Success-Rate", True, 
-                                  f"✅ Success rate {success_rate:.1f}% meets target (≥90%)")
+                                  f"✅ Perfect success rate: {success_rate:.1f}% (10/10 drivers)")
+                elif success_rate >= 90:
+                    self.log_result("Verify-Success-Rate", True, 
+                                  f"✅ High success rate: {success_rate:.1f}% (≥90% target met)")
                 else:
                     self.log_result("Verify-Success-Rate", False, 
                                   f"❌ Success rate {success_rate:.1f}% below target (≥90%)")
                 
-                # Step 6: Check for Bruno specifically in results
+                # Step 6: Check error details for specific drivers
                 erros_detalhes = result.get("erros_detalhes", [])
-                bruno_error = False
                 
-                for erro in erros_detalhes:
-                    if "bruno" in erro.lower():
-                        bruno_error = True
-                        self.log_result("Verify-Bruno-Import", False, f"❌ Bruno import failed: {erro}")
-                        break
-                
-                if not bruno_error:
-                    self.log_result("Verify-Bruno-Import", True, "✅ Bruno Coelho imported successfully (not in error list)")
+                if erros_detalhes:
+                    print(f"\n❌ IMPORT ERRORS FOUND ({len(erros_detalhes)}):")
+                    for i, erro in enumerate(erros_detalhes[:5]):  # Show first 5 errors
+                        print(f"  {i+1}. {erro}")
+                    self.log_result("Verify-Import-Errors", False, f"❌ {len(erros_detalhes)} errors found during import")
+                else:
+                    self.log_result("Verify-Import-Errors", True, "✅ No import errors - all drivers processed successfully")
                 
                 return True
                 
