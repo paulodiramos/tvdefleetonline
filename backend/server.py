@@ -12359,8 +12359,8 @@ async def importar_plataforma(
                 elif plataforma == 'viaverde':
                     # Via Verde é processado mais à frente na secção de documento
                     # onde distingue entre portagens e carregamentos elétricos
-                    # Não precisa de validação de motorista aqui
-                    motorista = None  # Será preenchido depois
+                    # Não precisa de validação de motorista aqui - o motorista virá do veículo
+                    motorista = {"id": None, "email": ""}  # Placeholder - será preenchido depois
                     motorista_email = ""
                 
                 elif plataforma == 'bolt':
