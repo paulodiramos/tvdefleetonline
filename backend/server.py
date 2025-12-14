@@ -11301,23 +11301,6 @@ async def excluir_relatorio(
     }
 
 
-                    "motorista": motorista.get("name"),
-                    "erro": str(e)
-                })
-        
-        return {
-            "sucesso": len(relatorios_criados),
-            "erros": len(erros),
-            "relatorios_criados": relatorios_criados,
-            "erros_detalhes": erros,
-            "mensagem": f"{len(relatorios_criados)} relatórios criados com sucesso"
-        }
-        
-    except Exception as e:
-        logger.error(f"Erro ao gerar relatórios em massa: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Erro ao gerar relatórios: {str(e)}")
-
-
 @api_router.post("/relatorios/criar-manual")
 async def criar_relatorio_manual(
     data: Dict,
