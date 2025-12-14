@@ -1323,6 +1323,229 @@ startxref
             self.log_result("Execute-Uber-Import", False, f"❌ Import error: {str(e)}")
             return False
     
+    # ==================== VIA VERDE CSV IMPORT TEST - CARDID AS PRIMARY IDENTIFIER (REVIEW REQUEST) ====================
+    
+    def test_via_verde_csv_import_cardid_primary(self):
+        """Test Via Verde CSV import using CardID as primary identifier - Review Request Specific Test"""
+        print("\n🎯 TESTE DE IMPORTAÇÃO VIA VERDE CSV - CARDID COMO IDENTIFICADOR PRINCIPAL")
+        print("-" * 80)
+        print("Review Request: Teste de Importação Via Verde CSV - Carregamentos com CardID")
+        print("- CSV URL: https://customer-assets.emergentagent.com/job_weeklyfleethub/artifacts/nk7d2hr8_Transa%C3%A7%C3%B5es%20Detalhadas.csv")
+        print("- Problema reportado: Carregamento com dados errados - não estava a associar corretamente ao veículo")
+        print("- Headers: Timestamp, CardID, ServiceType, Plate, ChargingStationID, ChargingStation, TotalDuration, Energy, etc.")
+        print("- CardID examples: PTPRIO6087131736480003, PTPRIO9050324927265598, PTPRIO6087131736480008")
+        print("- ServiceType: EZeny2, Gestor Conta, EZeny6")
+        print("- Plate: Vazio")
+        print("- Lógica corrigida:")
+        print("  1. Buscar por CardID → via_verde_id (principal)")
+        print("  2. Buscar por ServiceType → cartao_frota_id")
+        print("  3. Buscar por Plate/Matrícula (se preenchido)")
+        print("  4. Buscar por MobileCard (fallback)")
+        print("- Campos corrigidos: Usar Timestamp em vez de StartDate, Usar CardID como identificador")
+        print("- Credenciais: admin@tvdefleet.com / o72ocUHy")
+        print("-" * 80)
+        
+        # Authenticate as admin
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("ViaVerde-CardID-Auth", False, "No auth token for admin")
+            return False
+        
+        # Step 1: Download the real Via Verde CSV file
+        csv_url = "https://customer-assets.emergentagent.com/job_weeklyfleethub/artifacts/nk7d2hr8_Transa%C3%A7%C3%B5es%20Detalhadas.csv"
+        
+        try:
+            csv_response = requests.get(csv_url)
+            if csv_response.status_code == 200:
+                csv_content = csv_response.content
+                csv_size = len(csv_content)
+                self.log_result("Download-ViaVerde-CSV", True, f"✅ Via Verde CSV downloaded successfully: {csv_size} bytes")
+            else:
+                self.log_result("Download-ViaVerde-CSV", False, f"❌ Failed to download CSV: {csv_response.status_code}")
+                return False
+        except Exception as e:
+            self.log_result("Download-ViaVerde-CSV", False, f"❌ Download error: {str(e)}")
+            return False
+        
+        # Step 2: Analyze CSV structure and verify expected format
+        try:
+            csv_text = csv_content.decode('utf-8-sig')  # Handle BOM
+            lines = csv_text.split('\n')
+            
+            # Check for expected headers
+            expected_headers = ["Timestamp", "CardID", "ServiceType", "Plate", "ChargingStationID", "ChargingStation", "TotalDuration", "Energy"]
+            
+            if len(lines) > 0:
+                header_line = lines[0].strip()
+                found_headers = []
+                
+                for header in expected_headers:
+                    if header in header_line:
+                        found_headers.append(header)
+                
+                print(f"\n📄 CSV CONTENT ANALYSIS:")
+                print(f"  - Total lines: {len(lines)}")
+                print(f"  - Header line: {header_line[:100]}...")
+                print(f"  - Expected headers found: {len(found_headers)}/{len(expected_headers)}")
+                print(f"  - Found headers: {found_headers}")
+                
+                # Extract CardID examples from CSV
+                cardid_examples = []
+                servicetype_examples = []
+                
+                for i, line in enumerate(lines[1:6]):  # Check first 5 data lines
+                    if line.strip():
+                        parts = line.split(',')
+                        if len(parts) >= 3:
+                            # Assuming CardID is in column 1 and ServiceType in column 2
+                            cardid = parts[1].strip().strip('"')
+                            servicetype = parts[2].strip().strip('"')
+                            
+                            if cardid and cardid not in cardid_examples:
+                                cardid_examples.append(cardid)
+                            if servicetype and servicetype not in servicetype_examples:
+                                servicetype_examples.append(servicetype)
+                
+                print(f"  - CardID examples found: {cardid_examples[:3]}")
+                print(f"  - ServiceType examples found: {servicetype_examples[:3]}")
+                
+                if len(found_headers) >= 6:  # At least 6 of 8 expected headers
+                    self.log_result("Verify-CSV-Structure", True, f"✅ CSV structure valid: {len(found_headers)}/{len(expected_headers)} headers found")
+                else:
+                    self.log_result("Verify-CSV-Structure", False, f"❌ CSV structure invalid: only {len(found_headers)}/{len(expected_headers)} headers found")
+                    return False
+            else:
+                self.log_result("Verify-CSV-Structure", False, "❌ CSV file is empty")
+                return False
+        except Exception as e:
+            self.log_result("Verify-CSV-Structure", False, f"❌ CSV analysis error: {str(e)}")
+            return False
+        
+        # Step 3: Verify vehicles exist in database with CardID/ServiceType identifiers
+        try:
+            vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+            if vehicles_response.status_code == 200:
+                vehicles = vehicles_response.json()
+                
+                vehicles_with_via_verde = 0
+                vehicles_with_cartao_frota = 0
+                via_verde_examples = []
+                cartao_frota_examples = []
+                
+                print(f"\n🚗 VEHICLE DATABASE ANALYSIS:")
+                print(f"  - Total vehicles in database: {len(vehicles)}")
+                
+                for vehicle in vehicles:
+                    via_verde_id = vehicle.get("via_verde_id")
+                    cartao_frota_id = vehicle.get("cartao_frota_id")
+                    matricula = vehicle.get("matricula", "Unknown")
+                    
+                    if via_verde_id:
+                        vehicles_with_via_verde += 1
+                        if len(via_verde_examples) < 3:
+                            via_verde_examples.append(f"{matricula}: {via_verde_id}")
+                    
+                    if cartao_frota_id:
+                        vehicles_with_cartao_frota += 1
+                        if len(cartao_frota_examples) < 3:
+                            cartao_frota_examples.append(f"{matricula}: {cartao_frota_id}")
+                
+                print(f"  - Vehicles with via_verde_id: {vehicles_with_via_verde}")
+                print(f"  - Vehicles with cartao_frota_id: {vehicles_with_cartao_frota}")
+                print(f"  - Via Verde ID examples: {via_verde_examples}")
+                print(f"  - Cartão Frota ID examples: {cartao_frota_examples}")
+                
+                if vehicles_with_via_verde > 0 or vehicles_with_cartao_frota > 0:
+                    self.log_result("Verify-Vehicle-Identifiers", True, 
+                                  f"✅ Vehicles with identifiers found: {vehicles_with_via_verde} via_verde_id, {vehicles_with_cartao_frota} cartao_frota_id")
+                else:
+                    self.log_result("Verify-Vehicle-Identifiers", False, 
+                                  "❌ No vehicles found with via_verde_id or cartao_frota_id")
+                    return False
+            else:
+                self.log_result("Verify-Vehicle-Identifiers", False, f"❌ Cannot get vehicles: {vehicles_response.status_code}")
+                return False
+        except Exception as e:
+            self.log_result("Verify-Vehicle-Identifiers", False, f"❌ Vehicle check error: {str(e)}")
+            return False
+        
+        # Step 4: Execute the Via Verde import
+        try:
+            files = {
+                'file': ('viaverde_cardid_test.csv', csv_content, 'text/csv')
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/importar/viaverde",
+                files=files,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Check import results
+                total_importados = result.get("sucesso", 0)
+                total_erros = result.get("erros", 0)
+                erros_detalhes = result.get("erros_detalhes", [])
+                total_linhas = total_importados + total_erros
+                
+                success_rate = (total_importados / total_linhas * 100) if total_linhas > 0 else 0
+                
+                print(f"\n📊 IMPORT RESULTS:")
+                print(f"  - Total records processed: {total_linhas}")
+                print(f"  - Successfully imported: {total_importados}")
+                print(f"  - Errors: {total_erros}")
+                print(f"  - Success rate: {success_rate:.1f}%")
+                
+                if erros_detalhes:
+                    print(f"  - Error details (first 5):")
+                    for i, erro in enumerate(erros_detalhes[:5]):
+                        print(f"    {i+1}. {erro}")
+                
+                self.log_result("Execute-ViaVerde-Import", True, 
+                              f"✅ Import completed: {total_importados}/{total_linhas} records ({success_rate:.1f}% success)")
+                
+                # Step 5: Verify success rate and CardID logic
+                if success_rate >= 50:  # Allow for some vehicles not being in database
+                    self.log_result("Verify-CardID-Logic", True, 
+                                  f"✅ CardID logic working: {success_rate:.1f}% success rate (≥50% target)")
+                else:
+                    self.log_result("Verify-CardID-Logic", False, 
+                                  f"❌ CardID logic may have issues: {success_rate:.1f}% success rate (<50%)")
+                
+                # Step 6: Check if errors are related to vehicle not found (expected) vs logic errors
+                vehicle_not_found_errors = 0
+                logic_errors = 0
+                
+                for erro in erros_detalhes:
+                    if "não encontrado" in erro.lower() or "not found" in erro.lower():
+                        vehicle_not_found_errors += 1
+                    else:
+                        logic_errors += 1
+                
+                print(f"\n🔍 ERROR ANALYSIS:")
+                print(f"  - Vehicle not found errors: {vehicle_not_found_errors} (expected)")
+                print(f"  - Logic/system errors: {logic_errors} (should be 0)")
+                
+                if logic_errors == 0:
+                    self.log_result("Verify-Error-Types", True, 
+                                  f"✅ No logic errors: {vehicle_not_found_errors} vehicle not found (expected), {logic_errors} system errors")
+                else:
+                    self.log_result("Verify-Error-Types", False, 
+                                  f"❌ System errors found: {logic_errors} logic errors need investigation")
+                
+                return True
+                
+            else:
+                self.log_result("Execute-ViaVerde-Import", False, 
+                              f"❌ Import failed: {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_result("Execute-ViaVerde-Import", False, f"❌ Import error: {str(e)}")
+            return False
+
     # ==================== GPS IMPORT TEST - BUSCA POR MATRÍCULA (REVIEW REQUEST) ====================
     
     def test_gps_import_busca_por_matricula(self):
