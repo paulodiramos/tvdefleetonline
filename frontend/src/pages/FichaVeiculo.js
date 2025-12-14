@@ -1290,12 +1290,12 @@ const FichaVeiculo = ({ user, onLogout }) => {
                       )}
                     </div>
                     <div>
-                      <Label className="text-slate-600">Cartão Frota ID</Label>
+                      <Label className="text-slate-600">Cartão Frota ID (Combustível)</Label>
                       {canEdit && editMode ? (
                         <Input
                           value={vehicle.cartao_frota_id || ''}
                           onChange={(e) => setVehicle({...vehicle, cartao_frota_id: e.target.value})}
-                          placeholder="Ex: CF-123456"
+                          placeholder="7824731736480003"
                         />
                       ) : (
                         <p className="font-medium">{vehicle.cartao_frota_id || 'N/A'}</p>
@@ -1304,6 +1304,19 @@ const FichaVeiculo = ({ user, onLogout }) => {
                         <p className="text-xs text-slate-500 mt-1">
                           Associado a: {vehicle.motorista_atribuido_nome}
                         </p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <Label className="text-slate-600">Cartão Frota Elétrico ID (Carregamentos)</Label>
+                      {canEdit && editMode ? (
+                        <Input
+                          value={vehicle.cartao_frota_eletric_id || ''}
+                          onChange={(e) => setVehicle({...vehicle, cartao_frota_eletric_id: e.target.value})}
+                          placeholder="PTPRIO6087131736480003"
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.cartao_frota_eletric_id || 'N/A'}</p>
                       )}
                     </div>
                     <div>
