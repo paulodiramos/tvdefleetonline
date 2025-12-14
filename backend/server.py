@@ -12023,8 +12023,18 @@ async def importar_plataforma(
             # Processar Excel de portagens Via Verde
             return await importar_viaverde_excel(content, current_user, periodo_inicio, periodo_fim)
         
-        # Para CSV: usar utf-8-sig para remover BOM se presente
-        decoded = content.decode('utf-8-sig')
+        # Para CSV: tentar múltiplas codificações
+        decoded = None
+        for encoding in ['utf-8-sig', 'utf-8', 'latin-1', 'iso-8859-1', 'cp1252']:
+            try:
+                decoded = content.decode(encoding)
+                logger.info(f"CSV decodificado com sucesso usando {encoding}")
+                break
+            except UnicodeDecodeError:
+                continue
+        
+        if decoded is None:
+            raise HTTPException(status_code=400, detail="Erro ao processar ficheiro: codificação não suportada")
         
         # Detectar delimitador (vírgula ou ponto e vírgula)
         delimiter = ';' if ';' in decoded.split('\n')[0] else ','
