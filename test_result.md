@@ -740,6 +740,40 @@ test_plan:
 agent_communication:
     - agent: "testing"
       message: |
+        🎯 TESTE CRÍTICO COMPLETO: IMPORTAÇÃO CSV DA BOLT - 100% FUNCIONANDO!
+        
+        CONTEXTO DO TESTE:
+        Teste específico da importação de CSV da Bolt com formato real de resumo semanal conforme review request detalhado em português:
+        - Ficheiro CSV real da Bolt descarregado com sucesso (3777 bytes)
+        - Formato: Resumo semanal por motorista (2025W49)
+        - Estrutura: Colunas principais verificadas (Motorista, Email, Telemóvel, Ganhos líquidos|€, etc.)
+        - Delimitador: Vírgula (,) detectado corretamente
+        - Codificação: UTF-8 com BOM suportada
+        
+        CREDENCIAIS TESTADAS:
+        - Admin: admin@tvdefleet.com / o72ocUHy ✅
+        
+        MOTORISTAS VERIFICADOS:
+        ✅ 5/5 motoristas esperados encontrados na base de dados:
+        - Arlei Oliveira (Arleijeffersonarlei@gmail.com)
+        - Bruno Coelho (brunomccoelho@hotmail.com) 
+        - Domingos Dias (dmsdmuhongo@hotmail.com)
+        - Jorge Macaia (engmacaia@gmail.com)
+        - Karen Souza (karenviviane316@gmail.com)
+        
+        RESULTADOS DA IMPORTAÇÃO:
+        ✅ Endpoint POST /api/importar/bolt funcionando perfeitamente
+        ✅ 10/10 registos importados com sucesso (100% taxa de sucesso)
+        ✅ 0 erros encontrados durante a importação
+        ✅ Todos os motoristas processados corretamente
+        ✅ Dados salvos na coleção MongoDB 'viagens_bolt'
+        ✅ Campo 'tipo_documento: resumo_semanal' adicionado corretamente
+        
+        CONCLUSÃO:
+        O sistema de importação CSV da Bolt está 100% operacional e suporta perfeitamente o formato de exportação real da plataforma Bolt (resumo semanal por motorista). A correção implementada para suportar o formato real da Bolt está funcionando corretamente.
+        
+    - agent: "testing"
+      message: |
         🎯 TESTE CRÍTICO: CORREÇÃO BOM UBER CSV IMPORT - 100% FUNCIONANDO!
         
         CONTEXTO DO TESTE:
