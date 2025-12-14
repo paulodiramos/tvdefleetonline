@@ -827,6 +827,17 @@ const RelatoriosHub = ({ user, onLogout }) => {
                               </Button>
                             </>
                           )}
+                          {(rel.status === 'rascunho' || rel.status === 'pendente') && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleExcluirRelatorio(rel.id)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                            >
+                              <Trash2 className="w-3 h-3 mr-1" />
+                              Excluir
+                            </Button>
+                          )}
                           {rel.status === 'pago' && (
                             <>
                               <Button
