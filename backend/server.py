@@ -11931,42 +11931,6 @@ async def importar_viaverde_excel(
     except Exception as e:
         logger.error(f"Erro ao importar Excel Via Verde: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erro ao processar ficheiro Excel: {str(e)}")
-
-
-                        if key in row and row[key] is not None:
-                            return row[key]
-                    return default
-                
-                def to_float(value, default=0.0):
-                    if value is None or value == '':
-                        return default
-                    try:
-                        return float(str(value).replace(',', '.').strip())
-                    except:
-                        return default
-                
-                # Data pode estar em várias colunas
-                data_transacao = get_value(['Data', 'data', 'DATA', 'Data Transação'])
-                if isinstance(data_transacao, datetime):
-                    data_transacao = data_transacao.strftime('%Y-%m-%d')
-                elif data_transacao:
-                    data_transacao = str(data_transacao).strip()
-                else:
-                    data_transacao = datetime.now(timezone.utc).strftime('%Y-%m-%d')
-                
-                hora = get_value(['Hora', 'hora', 'HORA', 'Hora Transação'])
-                if isinstance(hora, datetime):
-                    hora = hora.strftime('%H:%M')
-                elif hora:
-                    hora = str(hora).strip()
-                else:
-                    hora = '00:00'
-                
-                posto = str(get_value(['Posto', 'posto', 'POSTO', 'Local', 'Estação']))
-                combustivel_tipo = str(get_value(['Combustível', 'combustivel', 'COMBUSTIVEL', 'Produto']))
-                litros = to_float(get_value(['Litros', 'litros', 'LITROS', 'Quantidade']), 0)
-                valor_total = to_float(get_value(['Valor', 'valor', 'VALOR', 'Total', 'Montante']), 0)
-                km_atual = to_float(get_value(['Km', 'km', 'KM', 'Quilómetros', 'Odómetro']), 0)
                 
                 # Criar documento
                 documento = {
