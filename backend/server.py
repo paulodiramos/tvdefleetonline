@@ -12358,67 +12358,10 @@ async def importar_plataforma(
                         continue
                 
                 elif plataforma == 'viaverde':
-                    # Via Verde pode ter carregamentos elétricos sem email de motorista
-                    # Buscar por: 1) Cartão Via Verde, 2) OBU, 3) Matrícula
-                    matricula_viaverde = row.get('MobileRegistration', '').strip()
-                    cartao_viaverde = row.get('MobileCard', '').strip()
-                    card_code = row.get('CardCode', '').strip()
-                    
-                    vehicle = None
-                    
-                    # 1. Tentar por CardCode (identificador principal Via Verde)
-                    if card_code:
-                        vehicle = await db.vehicles.find_one(
-                            {"via_verde_id": card_code},
-                            {"_id": 0}
-                        )
-                        if vehicle:
-                            logger.info(f"✅ Veículo encontrado por CardCode: {card_code}")
-                    
-                    # 2. Tentar por MobileCard (pode ser OBU ou outro identificador)
-                    if not vehicle and cartao_viaverde:
-                        vehicle = await db.vehicles.find_one(
-                            {"$or": [
-                                {"via_verde_id": cartao_viaverde},
-                                {"obu": cartao_viaverde}
-                            ]},
-                            {"_id": 0}
-                        )
-                        if vehicle:
-                            logger.info(f"✅ Veículo encontrado por MobileCard: {cartao_viaverde}")
-                    
-                    # 3. Tentar por Matrícula
-                    if not vehicle and matricula_viaverde:
-                        vehicle = await db.vehicles.find_one(
-                            {"matricula": {"$regex": f"^{re.escape(matricula_viaverde)}$", "$options": "i"}},
-                            {"_id": 0}
-                        )
-                        if vehicle:
-                            logger.info(f"✅ Veículo encontrado por Matrícula: {matricula_viaverde}")
-                    
-                    if not vehicle and motorista_email:
-                        # Fallback: buscar por email se fornecido
-                        motorista = await db.motoristas.find_one({"email": motorista_email}, {"_id": 0})
-                    elif vehicle and vehicle.get('motorista_atribuido'):
-                        # Buscar motorista atribuído ao veículo
-                        motorista = await db.motoristas.find_one(
-                            {"id": vehicle['motorista_atribuido']},
-                            {"_id": 0}
-                        )
-                    
-                    if not motorista and not vehicle:
-                        erros += 1
-                        identificadores = []
-                        if card_code:
-                            identificadores.append(f"CardCode: {card_code}")
-                        if cartao_viaverde:
-                            identificadores.append(f"MobileCard: {cartao_viaverde}")
-                        if matricula_viaverde:
-                            identificadores.append(f"Matrícula: {matricula_viaverde}")
-                        erros_detalhes.append(
-                            f"Linha {row_num}: Veículo não encontrado ({', '.join(identificadores) if identificadores else 'Sem identificadores'})"
-                        )
-                        continue
+                    # Via Verde é processado mais à frente na secção de documento
+                    # onde distingue entre portagens e carregamentos elétricos
+                    # Por agora, apenas marcar como plataforma especial
+                    pass
                 
                 elif plataforma == 'bolt':
                     # Para Bolt: buscar por identificador_individual, email ou nome
