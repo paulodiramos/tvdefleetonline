@@ -1815,7 +1815,12 @@ const Motoristas = ({ user, onLogout }) => {
                                   placeholder="Ex: 550e8400-e29b-41d4-a716-446655440000"
                                 />
                               ) : (
-                                <p className="font-medium text-sm">{selectedMotorista.uuid_motorista_uber || 'Não definido'}</p>
+                                <Input
+                                  value={selectedMotorista.uuid_motorista_uber || ''}
+                                  readOnly
+                                  className="font-mono text-xs bg-slate-50"
+                                  placeholder="Não definido"
+                                />
                               )}
                             </div>
                           </div>
