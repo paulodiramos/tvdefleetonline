@@ -11973,13 +11973,86 @@ async def importar_plataforma(
                         })
                     
                 elif plataforma == 'viaverde':
-                    documento.update({
-                        "hora": row.get('hora', '').strip(),
-                        "portagem": row.get('portagem', '').strip(),
-                        "valor": to_float(row.get('valor', '0')),
-                        "via": row.get('via', '').strip(),
-                        "sentido": row.get('sentido', '').strip()
-                    })
+                    # Suportar 2 formatos Via Verde:
+                    # Formato 1: Portagens tradicionais (template simples)
+                    # Formato 2: Carregamentos elétricos (exportação real)
+                    
+                    if 'StartDate' in row and 'Energy' in row:
+                        # Formato 2: Carregamentos elétricos Via Verde
+                        # Identificar veículo por MobileRegistration ou MobileCard
+                        matricula_viaverde = row.get('MobileRegistration', '').strip()
+                        cartao_viaverde = row.get('MobileCard', '').strip()
+                        
+                        # Buscar veículo por matrícula ou cartão Via Verde
+                        vehicle = None
+                        if matricula_viaverde:
+                            vehicle = await db.vehicles.find_one(
+                                {"matricula": {"$regex": f"^{re.escape(matricula_viaverde)}$", "$options": "i"}},
+                                {"_id": 0}
+                            )
+                        
+                        if not vehicle and cartao_viaverde:
+                            vehicle = await db.vehicles.find_one(
+                                {"via_verde_id": cartao_viaverde},
+                                {"_id": 0}
+                            )
+                        
+                        if vehicle:
+                            # Atualizar motorista_id se veículo tem motorista atribuído
+                            if vehicle.get('motorista_atribuido'):
+                                motorista_temp = await db.motoristas.find_one(
+                                    {"id": vehicle['motorista_atribuido']},
+                                    {"_id": 0}
+                                )
+                                if motorista_temp:
+                                    motorista = motorista_temp
+                                    motorista_email = motorista.get("email", "")
+                        
+                        # Parse da data/hora
+                        start_date_str = row.get('StartDate', '').strip()
+                        if start_date_str:
+                            # Formato: "12/7/2025 6:13:26 PM"
+                            try:
+                                data_hora = datetime.strptime(start_date_str, '%m/%d/%Y %I:%M:%S %p')
+                                data = data_hora.strftime('%Y-%m-%d')
+                                hora = data_hora.strftime('%H:%M:%S')
+                            except:
+                                data = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                                hora = '00:00:00'
+                        
+                        documento.update({
+                            "vehicle_id": vehicle["id"] if vehicle else None,
+                            "matricula": matricula_viaverde,
+                            "cartao_viaverde": cartao_viaverde,
+                            "card_code": row.get('CardCode', '').strip(),
+                            "estacao_id": row.get('IdChargingStation', '').strip(),
+                            "usage_id": row.get('IdUsage', '').strip(),
+                            "duracao_minutos": to_float(row.get('TotalDuration', '0')),
+                            "energia_kwh": to_float(row.get('Energy', '0')),
+                            "energia_fora_vazio": to_float(row.get('EnergiaForaVazio', '0')),
+                            "energia_vazio": to_float(row.get('EnergiaVazio', '0')),
+                            "energia_ponta": to_float(row.get('EnergiaPonta', '0')),
+                            "valor_carregamento": to_float(row.get('ChargingTotalValue', '0')),
+                            "valor_total_com_taxas": to_float(row.get('TotalValueWithTaxes', '0')),
+                            "tipo_transacao": "carregamento_eletrico",
+                            "plataforma": "viaverde"
+                        })
+                        
+                        # Atualizar data/hora no documento principal
+                        documento["data"] = data
+                        if 'hora' not in documento:
+                            documento["hora"] = hora
+                    else:
+                        # Formato 1: Portagens tradicionais
+                        documento.update({
+                            "hora": row.get('hora', '').strip(),
+                            "portagem": row.get('portagem', '').strip(),
+                            "valor": to_float(row.get('valor', '0')),
+                            "via": row.get('via', '').strip(),
+                            "sentido": row.get('sentido', '').strip(),
+                            "tipo_transacao": "portagem",
+                            "plataforma": "viaverde"
+                        })
                     
                 elif plataforma == 'gps':
                     documento.update({
