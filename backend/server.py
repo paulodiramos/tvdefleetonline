@@ -12669,10 +12669,11 @@ async def importar_plataforma(
                             "vehicle_id": vehicle["id"] if vehicle else None,
                             "matricula": matricula_viaverde or (vehicle.get("matricula") if vehicle else None),
                             "cartao_viaverde": cartao_viaverde,
-                            "card_id": card_id,  # CardID principal
+                            "card_code": card_code,  # CardCode do CSV → cartao_frota_id
                             "service_type": service_type,  # ServiceType (EZeny2, etc)
                             "obu": vehicle.get("obu") if vehicle else None,
-                            "via_verde_id": vehicle.get("via_verde_id") if vehicle else card_id,
+                            "via_verde_id": vehicle.get("via_verde_id") if vehicle else None,
+                            "cartao_frota_id": vehicle.get("cartao_frota_id") if vehicle else card_code,
                             "estacao_id": row.get('ChargingStationID', '').strip() or row.get('IdChargingStation', '').strip(),
                             "estacao_nome": row.get('ChargingStation', '').strip(),
                             "duracao_minutos": to_float(row.get('TotalDuration', '0')),
