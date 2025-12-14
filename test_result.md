@@ -554,7 +554,7 @@ backend:
           comment: "✅ TESTE COMPLETO DA GERAÇÃO DE RELATÓRIO SEMANAL - 100% FUNCIONANDO! CREDENCIAIS: geral@zmbusines.com / ZmBusines_2024 ✅. RESULTADOS: 1) ✅ Página /gerar-relatorio-semanal carrega corretamente 2) ✅ Título 'Gerar Relatório Semanal' presente 3) ✅ Lista de motoristas carrega (10 motoristas disponíveis) 4) ✅ Seleção de motorista funcionando 5) ✅ Formulário preenchido conforme especificação: Data Início 2025-12-02, Data Fim 2025-12-08, Semana 49, Ano 2025, Extras 0 6) ✅ Botão 'Gerar Relatório' funcionando 7) ✅ Relatório gerado com sucesso - Número: 00004/2025 8) ✅ Card de resumo mostra: Motorista (Ariel Oliveira), Veículo, Período (Semana 49/2025), Total Viagens (0), Ganhos (€0.00), Despesas (€0.00), Total Recibo (€0.00) 9) ✅ Botão 'Baixar PDF' presente e funcionando 10) ✅ Sidebar 'Relatórios Anteriores' mostra relatórios gerados (00004/2025, 00003/2025, 00002/2025). Sistema 100% operacional!"
         - working: true
           agent: "testing"
-          comment: "🎯 TESTE E2E COMPLETO CONFORME REVIEW REQUEST - 100% FUNCIONANDO! CONTEXTO: Teste completo do fluxo de gerar relatório semanal conforme especificação em português do review request. CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU ✅. URL: https://weeklyfleethub.preview.emergentagent.com ✅. RESULTADOS DETALHADOS: 1) ✅ LOGIN COMO PARCEIRO: Login bem-sucedido, redirecionamento para dashboard correto, usuário 'Maria Santos - Parceira' logado 2) ✅ NAVEGAÇÃO PARA GERAR RELATÓRIO: Página /gerar-relatorio-semanal carrega corretamente, título 'Gerar Relatório Semanal' presente 3) ✅ SELEÇÃO DE MOTORISTA: Dropdown funciona, 1 motorista disponível ('Motorista Teste Backend - Sem veículo'), seleção bem-sucedida 4) ✅ PREENCHIMENTO DE DADOS: Data Início 2025-12-02 preenchida, Data Fim 2025-12-08 preenchida automaticamente, Semana 49/Ano 2025 calculados automaticamente, Extras 0 preenchido 5) ✅ GERAÇÃO DE RELATÓRIO: Botão 'Gerar Relatório' funcionando, relatório gerado com sucesso (Número: 00001/2025), card verde de sucesso aparece 6) ✅ VALIDAÇÃO DE DADOS: Todos os campos presentes - Motorista: 'Motorista Teste Backend', Veículo: '()', Período: 'Semana 49/2025', Total Viagens: 0, Ganhos: €0.00, Despesas: €0.00, Total Recibo: €0.00 7) ✅ DOWNLOAD PDF: Botão 'Baixar PDF' presente e funcionando, toast de sucesso 'PDF baixado com sucesso!' aparece 8) ✅ RELATÓRIOS ANTERIORES: Sidebar presente, relatório recém-gerado (00001/2025) aparece na lista com detalhes corretos. SISTEMA 100% OPERACIONAL E ATENDE TODOS OS REQUISITOS DO REVIEW REQUEST!"
+          comment: "🎯 TESTE E2E COMPLETO CONFORME REVIEW REQUEST - 100% FUNCIONANDO! CONTEXTO: Teste completo do fluxo de gerar relatório semanal conforme especificação em português do review request. CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU ✅. URL: https://weeklyfleethub-1.preview.emergentagent.com ✅. RESULTADOS DETALHADOS: 1) ✅ LOGIN COMO PARCEIRO: Login bem-sucedido, redirecionamento para dashboard correto, usuário 'Maria Santos - Parceira' logado 2) ✅ NAVEGAÇÃO PARA GERAR RELATÓRIO: Página /gerar-relatorio-semanal carrega corretamente, título 'Gerar Relatório Semanal' presente 3) ✅ SELEÇÃO DE MOTORISTA: Dropdown funciona, 1 motorista disponível ('Motorista Teste Backend - Sem veículo'), seleção bem-sucedida 4) ✅ PREENCHIMENTO DE DADOS: Data Início 2025-12-02 preenchida, Data Fim 2025-12-08 preenchida automaticamente, Semana 49/Ano 2025 calculados automaticamente, Extras 0 preenchido 5) ✅ GERAÇÃO DE RELATÓRIO: Botão 'Gerar Relatório' funcionando, relatório gerado com sucesso (Número: 00001/2025), card verde de sucesso aparece 6) ✅ VALIDAÇÃO DE DADOS: Todos os campos presentes - Motorista: 'Motorista Teste Backend', Veículo: '()', Período: 'Semana 49/2025', Total Viagens: 0, Ganhos: €0.00, Despesas: €0.00, Total Recibo: €0.00 7) ✅ DOWNLOAD PDF: Botão 'Baixar PDF' presente e funcionando, toast de sucesso 'PDF baixado com sucesso!' aparece 8) ✅ RELATÓRIOS ANTERIORES: Sidebar presente, relatório recém-gerado (00001/2025) aparece na lista com detalhes corretos. SISTEMA 100% OPERACIONAL E ATENDE TODOS OS REQUISITOS DO REVIEW REQUEST!"
 
   - task: "Campos Via Verde ID e Cartão Frota ID na Ficha do Veículo"
     implemented: true
@@ -1037,7 +1037,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE 1: LOGIN E NAVEGAÇÃO - 100% FUNCIONANDO
         
@@ -1199,7 +1199,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE 1: LOGIN COMO PARCEIRO - 100% FUNCIONANDO
         
@@ -1284,7 +1284,7 @@ agent_communication:
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         - Motorista: motorista@tvdefleet.com / 2rEFuwQO ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TEST 1: PERFIL ADMIN - 100% FUNCIONANDO
         
@@ -1400,7 +1400,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Admin: admin@tvdefleet.com / o72ocUHy ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE BUG 1: CAMPOS DE VEÍCULO NÃO GUARDADOS - 100% CORRIGIDO
         
@@ -1469,7 +1469,7 @@ agent_communication:
         CREDENCIAIS PARA TESTE:
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ ANÁLISE 1: FRONTEND COMPLETAMENTE IMPLEMENTADO
         
@@ -1583,7 +1583,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com/api ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com/api ✅
         
         BUGS CORRIGIDOS CONFIRMADOS:
         ✅ Estado incorreto: em_analise agora vai para aguarda_pagamento (não verificado)
@@ -1716,7 +1716,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ STEP 1: LOGIN COMO PARCEIRO - 100% FUNCIONANDO
         
@@ -1821,7 +1821,7 @@ agent_communication:
         **CONFORMIDADE COM REVIEW REQUEST:**
         ✅ Todas as 8 etapas do teste executadas com sucesso
         ✅ Credenciais específicas utilizadas (parceiro@tvdefleet.com)
-        ✅ URL correta testada (https://weeklyfleethub.preview.emergentagent.com)
+        ✅ URL correta testada (https://weeklyfleethub-1.preview.emergentagent.com)
         ✅ Dados de teste conforme especificação (2025-12-02)
         ✅ Todos os resultados esperados confirmados
         
@@ -1842,7 +1842,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ❌ PROBLEMA INICIAL IDENTIFICADO E RESOLVIDO:
         
@@ -1950,7 +1950,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU PASS
         
-        URL: https://weeklyfleethub.preview.emergentagent.com PASS
+        URL: https://weeklyfleethub-1.preview.emergentagent.com PASS
         
         TESTE 1: DOWNLOAD CSV MOTORISTAS - 100% FUNCIONANDO
         
@@ -2022,7 +2022,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TEST 1: LOGIN E NAVEGAÇÃO - 100% FUNCIONANDO
         
@@ -2110,7 +2110,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Admin: admin@tvdefleet.com / o72ocUHy ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ❌ PROBLEMA CRÍTICO IDENTIFICADO: PÁGINA DE VALIDAÇÃO NÃO CARREGA CORRETAMENTE
         
@@ -2155,7 +2155,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Admin: admin@tvdefleet.com / o72ocUHy ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE 1: VERIFICAÇÃO CRÍTICA - ERRO "ERRO AO CARREGAR DADOS DO PARCEIRO" - 100% RESOLVIDO
         
@@ -2312,7 +2312,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Parceiro: geral@zmbusines.com / ZmBusines_2024 ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE 1: LOGIN COMO PARCEIRO - 100% FUNCIONANDO
         
@@ -2546,7 +2546,7 @@ agent_communication:
         - Admin: admin@tvdefleet.com / o72ocUHy ✅
         - Motorista: motorista@tvdefleet.com / 2rEFuwQO ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE 1: BOTÃO "DOCUMENTOS" NA TABELA DE USUÁRIOS - 100% FUNCIONANDO
         
@@ -2722,7 +2722,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         
-        URL BACKEND: https://weeklyfleethub.preview.emergentagent.com/api ✅
+        URL BACKEND: https://weeklyfleethub-1.preview.emergentagent.com/api ✅
         
         ✅ TESTE DA CORREÇÃO DO BACKEND - 100% FUNCIONANDO
         
@@ -2794,7 +2794,7 @@ agent_communication:
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         - Admin: admin@tvdefleet.com / o72ocUHy ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE 1: PERFIL DO PARCEIRO - ERRO RESOLVIDO (100% SUCESSO)
         
@@ -2867,7 +2867,7 @@ agent_communication:
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         - Admin: admin@tvdefleet.com / admin123 ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE 1: LOGIN E AUTENTICAÇÃO - 100% FUNCIONANDO
         
@@ -2953,7 +2953,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TODOS OS TESTES PASSARAM COM SUCESSO (7/7)
         
@@ -3087,7 +3087,7 @@ agent_communication:
         - Admin: admin@tvdefleet.com / admin123 ✅
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ ANÁLISE DO CÓDIGO FONTE - CAMPO PARCEIRO IMPLEMENTADO CORRETAMENTE
         
@@ -3176,7 +3176,7 @@ agent_communication:
         CONTEXTO DO TESTE:
         Teste completo do fluxo de criação de contrato conforme review request, validando todos os 12 passos especificados com credenciais admin@tvdefleet.com/o72ocUHy.
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE COMPLETO: TODOS OS 12 PASSOS FUNCIONANDO PERFEITAMENTE
         
@@ -4045,7 +4045,7 @@ agent_communication:
         - Admin: admin@tvdefleet.com / o72ocUHy ✅
         - Motorista: motorista@tvdefleet.com / 2rEFuwQO ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE 1: BOTÃO "VALIDAR DOCUMENTOS" NA PÁGINA DE USUÁRIOS
         
@@ -4141,7 +4141,7 @@ agent_communication:
         Teste completo do sistema de bloqueio de edição após aprovação de documentos no Perfil do Motorista conforme review request em português.
         
         CREDENCIAIS TESTADAS: motorista@tvdefleet.com / 2rEFuwQO ✅
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ CENÁRIO 1: MOTORISTA SEM DOCUMENTOS APROVADOS (documentos_aprovados = false)
         
@@ -4230,7 +4230,7 @@ agent_communication:
         Teste da funcionalidade de guardar dados do Perfil do Motorista após as correções de permissões, conforme review request em português.
         
         CREDENCIAIS TESTADAS: motorista@tvdefleet.com / 2rEFuwQO ✅
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ RESULTADOS ESPERADOS ALCANÇADOS:
         
@@ -4350,7 +4350,7 @@ agent_communication:
         Teste completo da funcionalidade do Perfil do Motorista conforme review request em português, incluindo validações de campos, funcionalidade de guardar dados e confirmação de mudança de aba.
         
         CREDENCIAIS TESTADAS: motorista@tvdefleet.com / 2rEFuwQO ✅
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ FUNCIONALIDADES TESTADAS COM SUCESSO:
         
@@ -4539,7 +4539,7 @@ agent_communication:
         
         ✅ CREDENCIAIS TESTADAS COM SUCESSO:
         - **Motorista:** motorista@tvdefleet.com / 2rEFuwQO ✅ FUNCIONANDO
-        - **URL:** https://weeklyfleethub.preview.emergentagent.com ✅ ACESSÍVEL
+        - **URL:** https://weeklyfleethub-1.preview.emergentagent.com ✅ ACESSÍVEL
         
         ✅ 1. LOGIN E ACESSO AO PERFIL:
         - ✅ Login como motorista: FUNCIONANDO
@@ -4830,7 +4830,7 @@ agent_communication:
         - Gestor: gestor@tvdefleet.com / OrR44xJ1 ✅
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE 1: BOTÃO "SEMANA ATUAL" - 100% FUNCIONANDO
         
@@ -4933,7 +4933,7 @@ agent_communication:
         ✅ CREDENCIAIS TESTADAS:
         - Email: motorista@tvdefleet.com
         - Senha: 2rEFuwQO
-        - URL: https://weeklyfleethub.preview.emergentagent.com
+        - URL: https://weeklyfleethub-1.preview.emergentagent.com
         
         ✅ FLUXO COMPLETO TESTADO COM SUCESSO:
         
@@ -4949,7 +4949,7 @@ agent_communication:
         
         **3. REDIRECIONAMENTO:**
         - ✅ Redirecionamento automático para /profile: FUNCIONANDO
-        - ✅ URL final correta: https://weeklyfleethub.preview.emergentagent.com/profile
+        - ✅ URL final correta: https://weeklyfleethub-1.preview.emergentagent.com/profile
         - ✅ Sem erros de navegação: FUNCIONANDO
         
         **4. CARREGAMENTO DA PÁGINA DE PERFIL:**
@@ -6069,7 +6069,7 @@ agent_communication:
         - GET /api/vehicles
         - POST /api/contratos/gerar
         
-        URL: https://weeklyfleethub.preview.emergentagent.com
+        URL: https://weeklyfleethub-1.preview.emergentagent.com
         
         Starting comprehensive test of contract generation flow...
     
@@ -8262,7 +8262,7 @@ agent_communication:
         - Admin: admin@tvdefleet.com / o72ocUHy ✅
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE 1: ADMIN - USER MANAGEMENT API ENDPOINTS - 100% FUNCIONANDO
         
@@ -8498,7 +8498,7 @@ agent_communication:
         CREDENTIALS TESTED:
         - Admin: admin@tvdefleet.com / o72ocUHy ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TEST SCENARIO 1: EXISTING USERS HAVE PLANS ASSIGNED
         
@@ -8571,7 +8571,7 @@ agent_communication:
         CONTEXTO DO TESTE:
         Teste completo dos 4 bugs críticos relacionados com permissões de acesso (403/500 errors) conforme review request em português.
         
-        URL TESTADA: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL TESTADA: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         CREDENCIAIS TESTADAS:
         - Gestor: gestor@tvdefleet.com / OrR44xJ1 ✅
@@ -8648,7 +8648,7 @@ agent_communication:
         - Gestor: gestor@tvdefleet.com / OrR44xJ1
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU
         
-        URL: https://weeklyfleethub.preview.emergentagent.com
+        URL: https://weeklyfleethub-1.preview.emergentagent.com
         
         TESTES A REALIZAR:
         1. Acesso à página de vistorias
@@ -8673,7 +8673,7 @@ agent_communication:
         - Gestor: gestor@tvdefleet.com / OrR44xJ1 ✅
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE 1: ACESSO À PÁGINA DE VISTORIAS - 100% FUNCIONANDO
         
@@ -8803,7 +8803,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Admin: admin@tvdefleet.com / o72ocUHy ✅
         
-        URL BACKEND: https://weeklyfleethub.preview.emergentagent.com/api ✅
+        URL BACKEND: https://weeklyfleethub-1.preview.emergentagent.com/api ✅
         
         FICHEIRO EXCEL TESTADO:
         - URL: https://customer-assets.emergentagent.com/job_weeklyfleethub/artifacts/drtzrcy9_Movimento_13_12_2025_00_53_39.xlsx
@@ -8879,7 +8879,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Admin: admin@tvdefleet.com / o72ocUHy ✅
         
-        URL BACKEND: https://weeklyfleethub.preview.emergentagent.com/api ✅
+        URL BACKEND: https://weeklyfleethub-1.preview.emergentagent.com/api ✅
         
         FICHEIRO CSV TESTADO:
         - URL: https://customer-assets.emergentagent.com/job_weeklyfleethub/artifacts/cvj6m22f_Transa%C3%A7%C3%B5es%20Detalhadas.csv
@@ -8967,7 +8967,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Gestor: gestor@tvdefleet.com / OrR44xJ1 ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE 1: FILTROS NA PÁGINA DE VEÍCULOS - 100% FUNCIONANDO
         
@@ -9073,7 +9073,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Admin: admin@tvdefleet.com / o72ocUHy ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com/api ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com/api ✅
         
         DATABASE: tvdefleet_db ✅
         COLLECTIONS: planos_sistema, motoristas, users ✅
@@ -9512,7 +9512,7 @@ agent_communication:
         CONTEXTO DO TESTE:
         Teste completo da funcionalidade de importação de CSV de motoristas e veículos conforme review request em português, validando todos os 5 cenários especificados com credenciais admin@tvdefleet.com/o72ocUHy.
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ PARTE 1: ACESSO À FUNCIONALIDADE - 100% FUNCIONANDO
         
@@ -9618,7 +9618,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU (Santos & Filhos Lda / Zeny Macaia) ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE 1: IMPORTAÇÃO VIA PÁGINA MOTORISTAS - 100% FUNCIONANDO
         
@@ -9699,7 +9699,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Parceiro: parceiro@tvdefleet.com / UQ1B6DXU ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE COMPLETO - 100% FUNCIONANDO
         
@@ -9770,7 +9770,7 @@ agent_communication:
         CREDENCIAIS TESTADAS:
         - Admin: admin@tvdefleet.com / o72ocUHy ✅
         
-        URL: https://weeklyfleethub.preview.emergentagent.com ✅
+        URL: https://weeklyfleethub-1.preview.emergentagent.com ✅
         
         ✅ TESTE 1: LOGIN COMO ADMIN - 100% FUNCIONANDO
         
