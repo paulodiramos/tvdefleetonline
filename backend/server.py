@@ -12023,6 +12023,170 @@ async def importar_plataforma(
             # Processar Excel de portagens Via Verde
             return await importar_viaverde_excel(content, current_user, periodo_inicio, periodo_fim)
         
+
+
+async def criar_relatorios_rascunho_apos_importacao(
+    plataforma: str,
+    periodo_inicio: str,
+    periodo_fim: str,
+    parceiro_id: str,
+    db
+):
+    """
+    Cria relatórios de rascunho automaticamente após importação de dados
+    Agrupa por motorista + semana/ano
+    """
+    try:
+        if not periodo_inicio or not periodo_fim:
+            logger.warning("Período não fornecido, não é possível criar rascunhos")
+            return {"rascunhos_criados": 0, "message": "Período não fornecido"}
+        
+        # Calcular ano e semana
+        dt_inicio = datetime.strptime(periodo_inicio, '%Y-%m-%d')
+        ano = dt_inicio.year
+        semana = dt_inicio.isocalendar()[1]
+        
+        # Mapear plataforma para coleção
+        colecao_map = {
+            'uber': 'viagens_uber',
+            'bolt': 'viagens_bolt',
+            'viaverde': 'portagens_viaverde',
+            'gps': 'viagens_gps',
+            'combustivel': 'abastecimentos_combustivel'
+        }
+        
+        if plataforma not in colecao_map:
+            return {"rascunhos_criados": 0, "message": f"Plataforma {plataforma} não suportada"}
+        
+        colecao_nome = colecao_map[plataforma]
+        
+        # Buscar todos os motoristas únicos dos dados importados
+        pipeline = [
+            {
+                "$match": {
+                    "periodo_inicio": periodo_inicio,
+                    "periodo_fim": periodo_fim,
+                    "parceiro_id": parceiro_id,
+                    "motorista_id": {"$ne": None}
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$motorista_id",
+                    "motorista_email": {"$first": "$motorista_email"}
+                }
+            }
+        ]
+        
+        motoristas_com_dados = await db[colecao_nome].aggregate(pipeline).to_list(1000)
+        
+        rascunhos_criados = 0
+        rascunhos_existentes = 0
+        
+        for motorista_info in motoristas_com_dados:
+            motorista_id = motorista_info["_id"]
+            
+            # Verificar se já existe relatório para este motorista/semana/ano
+            relatorio_existente = await db.relatorios_semanais.find_one({
+                "motorista_id": motorista_id,
+                "ano": ano,
+                "semana": semana,
+                "parceiro_id": parceiro_id
+            }, {"_id": 0})
+            
+            if relatorio_existente:
+                rascunhos_existentes += 1
+                continue
+            
+            # Buscar motorista completo
+            motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+            if not motorista:
+                continue
+            
+            # Agregar dados por plataforma
+            ganhos_uber = 0
+            ganhos_bolt = 0
+            portagens_viaverde = 0
+            combustivel_total = 0
+            km_percorridos = 0
+            
+            if plataforma == 'uber':
+                dados = await db.viagens_uber.find({
+                    "motorista_id": motorista_id,
+                    "periodo_inicio": periodo_inicio,
+                    "periodo_fim": periodo_fim
+                }, {"_id": 0}).to_list(1000)
+                ganhos_uber = sum(d.get('valor_liquido', 0) or d.get('ganhos_liquidos', 0) for d in dados)
+            
+            elif plataforma == 'bolt':
+                dados = await db.viagens_bolt.find({
+                    "motorista_id": motorista_id,
+                    "periodo_inicio": periodo_inicio,
+                    "periodo_fim": periodo_fim
+                }, {"_id": 0}).to_list(1000)
+                ganhos_bolt = sum(d.get('valor_liquido', 0) or d.get('ganhos_liquidos', 0) for d in dados)
+            
+            elif plataforma == 'viaverde':
+                dados = await db.portagens_viaverde.find({
+                    "motorista_id": motorista_id,
+                    "periodo_inicio": periodo_inicio,
+                    "periodo_fim": periodo_fim
+                }, {"_id": 0}).to_list(1000)
+                portagens_viaverde = sum(d.get('liquid_value', 0) or d.get('valor_total_com_taxas', 0) for d in dados)
+            
+            elif plataforma == 'combustivel':
+                dados = await db.abastecimentos_combustivel.find({
+                    "motorista_id": motorista_id,
+                    "periodo_inicio": periodo_inicio,
+                    "periodo_fim": periodo_fim
+                }, {"_id": 0}).to_list(1000)
+                combustivel_total = sum(d.get('valor_liquido', 0) or d.get('valor_total', 0) for d in dados)
+            
+            elif plataforma == 'gps':
+                dados = await db.viagens_gps.find({
+                    "motorista_id": motorista_id,
+                    "periodo_inicio": periodo_inicio,
+                    "periodo_fim": periodo_fim
+                }, {"_id": 0}).to_list(1000)
+                km_percorridos = sum(d.get('distancia_percorrida_km', 0) for d in dados)
+            
+            # Criar relatório de rascunho
+            relatorio = {
+                "id": str(uuid.uuid4()),
+                "motorista_id": motorista_id,
+                "motorista_nome": motorista.get("name"),
+                "motorista_email": motorista.get("email"),
+                "parceiro_id": parceiro_id,
+                "ano": ano,
+                "semana": semana,
+                "data_inicio": periodo_inicio,
+                "data_fim": periodo_fim,
+                "estado": "pendente",  # Estado inicial: pendente
+                "ganhos_uber": ganhos_uber,
+                "ganhos_bolt": ganhos_bolt,
+                "portagens_viaverde": portagens_viaverde,
+                "combustivel_total": combustivel_total,
+                "km_percorridos": km_percorridos,
+                "total_ganhos": ganhos_uber + ganhos_bolt,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_by": parceiro_id
+            }
+            
+            await db.relatorios_semanais.insert_one(relatorio)
+            rascunhos_criados += 1
+            logger.info(f"✅ Rascunho criado: {motorista.get('name')} - Semana {semana}/{ano}")
+        
+        return {
+            "rascunhos_criados": rascunhos_criados,
+            "rascunhos_existentes": rascunhos_existentes,
+            "message": f"{rascunhos_criados} relatório(s) de rascunho criado(s)"
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao criar rascunhos: {str(e)}")
+        return {"rascunhos_criados": 0, "message": f"Erro: {str(e)}"}
+
+
         # Para CSV: tentar múltiplas codificações
         decoded = None
         for encoding in ['utf-8-sig', 'utf-8', 'latin-1', 'iso-8859-1', 'cp1252']:
