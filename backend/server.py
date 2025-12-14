@@ -12055,9 +12055,7 @@ async def importar_plataforma(
             # Processar Excel de portagens Via Verde
             return await importar_viaverde_excel(content, current_user, periodo_inicio, periodo_fim)
         
-
-
-async def criar_relatorios_rascunho_apos_importacao(
+        # Para CSV: tentar múltiplas codificações
     plataforma: str,
     periodo_inicio: str,
     periodo_fim: str,
