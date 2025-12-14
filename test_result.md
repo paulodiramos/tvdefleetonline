@@ -571,6 +571,18 @@ backend:
           agent: "testing"
           comment: "✅ TESTE DOS CAMPOS NA FICHA DO VEÍCULO - 90% FUNCIONANDO! CREDENCIAIS: geral@zmbusines.com / ZmBusines_2024 ✅. RESULTADOS: 1) ✅ Navegação para /vehicles funcionando 2) ✅ Acesso à ficha do veículo funcionando (Peugeot 308 SW - AS-14-NI) 3) ✅ Campo 'Via Verde ID' encontrado e visível (valor: N/A) 4) ❌ Campo 'Cartão Frota ID' não encontrado pelo seletor de texto (pode estar com nome ligeiramente diferente) 5) ✅ Ficha do veículo mostra todos os dados básicos: Marca, Modelo, Matrícula, Ano, Combustível, etc. OBSERVAÇÃO: Campo 'Via Verde ID' está presente e funcional, mas 'Cartão Frota ID' pode ter nome diferente no frontend (possivelmente 'Cartão Frota' sem 'ID'). Sistema 90% operacional!"
 backend:
+  - task: "Sistema de Geração de Relatórios Semanais em Massa - Novo Endpoint"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🎯 TESTE COMPLETO DA NOVA FUNCIONALIDADE DE GERAÇÃO EM MASSA - 100% FUNCIONANDO! CONTEXTO: Testada nova funcionalidade de gerar relatórios semanais em massa conforme review request específico. CREDENCIAIS: admin@tvdefleet.com / o72ocUHy ✅. ENDPOINT TESTADO: POST /api/relatorios/gerar-em-massa. TESTE 1 - ENDPOINT BACKEND: ✅ Endpoint responde corretamente com payload especificado (data_inicio: 2024-12-01, data_fim: 2024-12-08, incluir_uber: true, incluir_bolt: true, incluir_viaverde: true, incluir_combustivel: true) ✅ Campos de resposta corretos: 'sucesso' (1 relatório criado), 'erros' (0), 'relatorios_criados' (1 item), 'erros_detalhes' (0 itens). TESTE 2 - AGREGAÇÃO DE DADOS: ✅ Sistema busca dados de todas as 5 fontes corretamente: viagens_uber, viagens_bolt, portagens_viaverde, abastecimentos_combustivel, abastecimentos_eletrico ✅ Agregação por motorista funcionando. TESTE 3 - CÁLCULOS AUTOMÁTICOS: ✅ Cálculos automáticos implementados: ganhos_uber, ganhos_bolt, ganhos_totais (uber + bolt), via_verde_total, combustivel_total, valor_aluguer, caucao_semanal, total_a_pagar (ganhos - despesas). TESTE 4 - STATUS E DUPLICAÇÃO: ✅ Relatórios criados com status 'rascunho' ✅ Campo 'gerado_automaticamente': true ✅ Prevenção de duplicados funcionando (mesmo motorista + semana + ano) - 1 erro de duplicação detectado na segunda execução. RESULTADO FINAL: Nova funcionalidade de geração em massa está 100% operacional e atende todos os requisitos do review request!"
+
   - task: "Investigação UUID da Uber - Review Request Específico"
     implemented: true
     working: true
