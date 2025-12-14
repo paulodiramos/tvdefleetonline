@@ -11112,13 +11112,19 @@ async def gerar_relatorios_em_massa(
                     if result_bolt:
                         ganhos_bolt = result_bolt[0].get("total", 0.0)
                 
-                # 3. Agregar Via Verde
+                # 3. Agregar Via Verde (BUSCA SEMANA ANTERIOR - 1 semana de atraso)
                 if incluir_viaverde:
+                    # Via Verde tem datas com 1 semana de atraso
+                    # Para relatório da semana 45, buscar dados da semana 44
+                    from datetime import timedelta
+                    data_inicio_viaverde = (inicio - timedelta(days=7)).strftime("%Y-%m-%d")
+                    data_fim_viaverde = (fim - timedelta(days=7)).strftime("%Y-%m-%d")
+                    
                     pipeline_viaverde = [
                         {
                             "$match": {
                                 "motorista_id": motorista_id,
-                                "data": {"$gte": data_inicio, "$lte": data_fim}
+                                "data": {"$gte": data_inicio_viaverde, "$lte": data_fim_viaverde}
                             }
                         },
                         {
@@ -11132,6 +11138,8 @@ async def gerar_relatorios_em_massa(
                     result_viaverde = await db.portagens_viaverde.aggregate(pipeline_viaverde).to_list(None)
                     if result_viaverde:
                         via_verde_total = result_viaverde[0].get("total", 0.0)
+                    
+                    logger.info(f"Via Verde para {motorista.get('name')}: Período ajustado {data_inicio_viaverde} a {data_fim_viaverde} (1 semana atrás) = €{via_verde_total:.2f}")
                 
                 # 4. Agregar Combustível
                 if incluir_combustivel:
