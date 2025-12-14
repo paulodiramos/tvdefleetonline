@@ -166,6 +166,16 @@ const ImportarPlataformas = () => {
       toast.success(
         `✅ ${response.data.sucesso} registo(s) importado(s) com sucesso!`
       );
+      
+      // Informar sobre próximos passos
+      if (plataformaSelecionada === 'uber' || plataformaSelecionada === 'bolt') {
+        setTimeout(() => {
+          toast.info('💡 Dados importados! Agora vá para Relatórios → Gerar Relatórios Semanais para criar rascunhos.', {
+            duration: 10000
+          });
+        }, 2000);
+      }
+      
       setCsvFile(null);
       document.getElementById('file-input').value = '';
     } catch (error) {
