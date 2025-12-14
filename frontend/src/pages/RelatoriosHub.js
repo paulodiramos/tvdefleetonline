@@ -1599,6 +1599,13 @@ const RelatoriosHub = ({ user, onLogout }) => {
                 </ul>
               </div>
               
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-sm text-amber-900">
+                  ⚠️ <strong>Atenção Via Verde:</strong> Os dados da Via Verde normalmente têm 1 semana de atraso. 
+                  Certifique-se de importar o ficheiro Via Verde da semana anterior para corresponder aos ganhos Uber/Bolt da semana atual.
+                </p>
+              </div>
+              
               <div className="flex justify-end gap-2">
                 <Button
                   variant="outline"
