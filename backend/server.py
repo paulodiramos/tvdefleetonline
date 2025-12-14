@@ -12659,8 +12659,8 @@ async def importar_plataforma(
                                     motorista = motorista_temp
                                     motorista_email = motorista.get("email", "")
                         
-                        # Parse da data/hora
-                        start_date_str = row.get('StartDate', '').strip()
+                        # Parse da data/hora (suportar Timestamp ou StartDate)
+                        start_date_str = row.get('Timestamp', '').strip() or row.get('StartDate', '').strip()
                         if start_date_str:
                             # Formato: "12/7/2025 6:13:26 PM"
                             try:
@@ -12670,6 +12670,9 @@ async def importar_plataforma(
                             except:
                                 data = datetime.now(timezone.utc).strftime('%Y-%m-%d')
                                 hora = '00:00:00'
+                        else:
+                            data = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                            hora = '00:00:00'
                         
                         documento.update({
                             "vehicle_id": vehicle["id"] if vehicle else None,
