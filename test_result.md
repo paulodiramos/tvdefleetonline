@@ -10504,17 +10504,17 @@ agent_communication:
           agent: "testing"
           comment: "✅ TESTE COMPLETO DO SISTEMA DE IMPORTAÇÃO DE CARREGAMENTOS SIMPLIFICADO - 100% FUNCIONANDO! REVIEW REQUEST: TESTE COMPLETO: Sistema de Importação de Carregamentos Simplificado. CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU ✅. FICHEIRO TESTADO: https://customer-assets.emergentagent.com/job_weeklyfleethub-1/artifacts/55m8eo52_Transa%C3%A7%C3%B5es%20Detalhadas.csv. RESULTADOS DOS 4 TESTES: 1) ✅ TESTE 1 - Importação com Campos Essenciais: 100% sucesso (35/35 registos importados) via endpoint /api/importar/viaverde. CSV baixado com sucesso (11498 bytes). Estrutura de resposta correta. 2) ✅ TESTE 2 - Relatório Semanal com Carregamentos: Campo 'carregamentos_eletricos' encontrado com valor €95.23. Carregamentos separados corretamente de portagens (€0). 3) ✅ TESTE 3 - Associação Veículo → Motorista: Veículo com CardCode PTPRIO9050324927265598 tem motorista atribuído (Motorista Teste Backend). Detalhes do motorista verificados com sucesso. 4) ✅ TESTE 4 - Cálculo de Totais no Relatório: Total de carregamentos calculado corretamente (€95.23). Valor aparenta estar correto para múltiplos carregamentos. FUNCIONALIDADES CONFIRMADAS: ✅ Importação via Via Verde endpoint funciona com dados de carregamento ✅ Campos essenciais salvos: CardCode, StartDate, IdChargingStation, TotalDuration, Energy, TotalValueWithTaxes ✅ Campo carregamentos_eletricos presente nos relatórios semanais ✅ Separação correta entre carregamentos elétricos e portagens Via Verde ✅ Associação CardCode → Veículo → Motorista funcionando ✅ Cálculo correto de totais baseado em TotalValueWithTaxes. OBSERVAÇÃO TÉCNICA: Sistema completamente implementado e operacional. Todos os 4 testes do review request passaram com sucesso. Importação simplificada funcionando perfeitamente com apenas campos essenciais."
 
-  - task: "Importação de Carregamentos via Excel (.xlsx) - NOVA FUNCIONALIDADE"
+  - task: "Importação de Carregamentos via Excel (.xlsx) - REFATORAÇÃO COMPLETA"
     implemented: true
-    working: true
+    working: false
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: false
+    needs_retesting: true
     status_history:
-        - working: true
-          agent: "testing"
-          comment: "✅ 100% FUNCIONANDO! Função importar_carregamentos_excel testada com sucesso. Endpoint detecta automaticamente Excel de carregamentos via cabeçalho 'Nº. CARTÃO'. Busca por CardCode→Veículo→Motorista funcionando. Mensagens de erro claras. Sistema pronto para produção."
+        - working: false
+          agent: "main"
+          comment: "🔄 REFATORAÇÃO COMPLETA - Função importar_carregamentos_excel (linha 11837) foi completamente refatorada para suportar o formato oficial Excel (Transações_Eletrico_YYYYMMDD.xlsx). Novos campos: ID CARREGAMENTO, POSTO, ENERGIA, DURAÇÃO, CUSTO, TOTAL c/ IVA. Relatório detalhado com totais e despesas por motorista. Aguarda teste com ficheiro oficial."
 
 ---
 
