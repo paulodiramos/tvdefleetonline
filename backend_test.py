@@ -2303,10 +2303,10 @@ startxref
         for role in ["admin", "parceiro", "gestor", "operacional", "motorista"]:
             self.authenticate_user(role)
         
-        # CRITICAL TEST: CSV Import Bug Fix (Review Request Priority)
-        print("\n🎯 TESTE CRÍTICO: CSV IMPORT BUG FIX (REVIEW REQUEST PRIORITY)")
+        # CRITICAL TEST: Email Motorista Vazio Bug Fix (Review Request Priority)
+        print("\n🚨 TESTE CRÍTICO FINAL: BUG 'EMAIL MOTORISTA VAZIO' (REVIEW REQUEST PRIORITY)")
         print("=" * 80)
-        self.test_csv_import_carregamentos_bug_fix()
+        self.test_critical_bug_fix_email_motorista_vazio()
         
         # Phase 1: Permission restrictions
         print("\n📋 FASE 1: RESTRIÇÕES DE PERMISSÕES")
