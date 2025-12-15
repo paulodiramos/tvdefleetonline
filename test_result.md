@@ -785,7 +785,8 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Novo Formato de Carregamentos (Simplificado) - CONCLUÍDO ✅"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -805,6 +806,11 @@ test_plan:
   platform_import_system_needs_testing: false
   bug_fixes_review_request_tested: true
   all_3_bugs_fixed: true
+  new_simplified_csv_format_tested: true
+  semicolon_delimiter_working: true
+  date_conversion_working: true
+  field_mapping_working: true
+  cardcode_vehicle_matching_working: true
   review_request_3_corrections_tested: true
   correction_1_uber_uuid_working: true
   correction_2_vehicle_complete_info_working: true
