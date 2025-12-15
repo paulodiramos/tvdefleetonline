@@ -13107,7 +13107,82 @@ async def importar_plataforma(
                             energia_kwh = to_float(row.get('Energy', '0'))
                             valor_total = to_float(row.get('TotalValueWithTaxes', '0'))
                         
-                        # CAMPOS ESSENCIAIS PARA RELATÓRIO (ambos os formatos)
+                        else:
+                            # Formato CSV oficial: DATA;Nº. CARTÃO;NOME;DESCRIÇÃO;MATRÍCULA;ID CARREGAMENTO;POSTO;ENERGIA;DURAÇÃO;CUSTO OPC;IEC;TOTAL;TOTAL c/ IVA;FATURA
+                            # Extrair DATA (pode estar em formato DD/MM/YYYY HH:MM:SS ou DD/MM/YYYY)
+                            data_str = str(row.get('DATA', '')).strip()
+                            
+                            # Parse da data no formato DD/MM/YYYY HH:MM:SS ou DD/MM/YYYY
+                            try:
+                                if data_str and data_str.lower() != 'none':
+                                    if ' ' in data_str:
+                                        # Formato: DD/MM/YYYY HH:MM:SS
+                                        partes_data_hora = data_str.split(' ')
+                                        data_parte = partes_data_hora[0]
+                                        hora_parte = partes_data_hora[1] if len(partes_data_hora) > 1 else '00:00:00'
+                                    else:
+                                        # Formato: DD/MM/YYYY
+                                        data_parte = data_str
+                                        hora_parte = '00:00:00'
+                                    
+                                    # Converter DD/MM/YYYY para YYYY-MM-DD
+                                    if '/' in data_parte:
+                                        partes = data_parte.split('/')
+                                        if len(partes) == 3:
+                                            dia, mes, ano = partes
+                                            data = f"{ano}-{mes.zfill(2)}-{dia.zfill(2)}"
+                                        else:
+                                            data = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                                    else:
+                                        data = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                                    
+                                    hora = hora_parte
+                                else:
+                                    data = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                                    hora = '00:00:00'
+                            except Exception as e:
+                                logger.warning(f"⚠️ Erro ao parse data CSV oficial: {e}")
+                                data = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                                hora = '00:00:00'
+                            
+                            # Extrair campos do CSV oficial
+                            def extract_campo(row, *possible_keys):
+                                """Extrair campo tentando múltiplas variações de nome"""
+                                for key in possible_keys:
+                                    for row_key in row.keys():
+                                        if key.upper() in row_key.upper():
+                                            value = str(row.get(row_key, '')).strip()
+                                            if value and value.lower() != 'none':
+                                                return value
+                                return ''
+                            
+                            # Extrair campos com nomes flexíveis
+                            posto = extract_campo(row, 'POSTO', 'ID CARREGAMENTO', 'IdChargingStation')
+                            energia_str = extract_campo(row, 'ENERGIA', 'Energy')
+                            duracao_str = extract_campo(row, 'DURAÇÃO', 'DURACAO', 'TotalDuration')
+                            valor_str = extract_campo(row, 'TOTAL c/ IVA', 'TOTAL C/ IVA', 'TotalValueWithTaxes')
+                            
+                            # Converter para float (aceita vírgula como decimal)
+                            def parse_numero(valor_str):
+                                if not valor_str:
+                                    return 0.0
+                                try:
+                                    # Remover símbolo de moeda e espaços
+                                    valor_str = valor_str.replace('€', '').replace('�', '').replace(' ', '').strip()
+                                    # Substituir vírgula por ponto
+                                    valor_str = valor_str.replace(',', '.')
+                                    return float(valor_str)
+                                except:
+                                    return 0.0
+                            
+                            estacao_id = posto
+                            duracao_minutos = parse_numero(duracao_str)
+                            energia_kwh = parse_numero(energia_str)
+                            valor_total = parse_numero(valor_str)
+                            
+                            logger.info(f"📊 CSV Oficial - Linha {row_num}: {energia_kwh}kWh, €{valor_total}, Duração:{duracao_minutos}min")
+                        
+                        # CAMPOS ESSENCIAIS PARA RELATÓRIO (todos os formatos)
                         documento.update({
                             "vehicle_id": vehicle["id"] if vehicle else None,
                             "motorista_id": motorista.get("id") if motorista else None,  # Associado através do veículo
