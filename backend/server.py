@@ -12150,14 +12150,20 @@ async def criar_relatorios_rascunho_apos_importacao(
                     "periodo_inicio": periodo_inicio,
                     "periodo_fim": periodo_fim
                 }, {"_id": 0}).to_list(1000)
-                # Via Verde pode ter: liquid_value, valor_total_com_taxas, valor_carregamento
+                
+                # Separar carregamentos elétricos de portagens
+                carregamentos_total = 0
                 for d in dados:
-                    portagens_viaverde += (
-                        float(d.get('liquid_value') or 0) or
-                        float(d.get('valor_total_com_taxas') or 0) or
-                        float(d.get('valor_carregamento') or 0) or
-                        float(d.get('valor') or 0)
-                    )
+                    if d.get('tipo_transacao') == 'carregamento_eletrico':
+                        # Carregamentos elétricos usam TotalValueWithTaxes
+                        carregamentos_total += float(d.get('valor_total_com_taxas') or 0)
+                    else:
+                        # Portagens usam liquid_value
+                        portagens_viaverde += (
+                            float(d.get('liquid_value') or 0) or
+                            float(d.get('valor_total_com_taxas') or 0) or
+                            float(d.get('valor') or 0)
+                        )
             
             elif plataforma == 'combustivel':
                 dados = await db.abastecimentos_combustivel.find({
