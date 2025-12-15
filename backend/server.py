@@ -12506,7 +12506,7 @@ async def importar_plataforma(
                     if plataforma not in ['viaverde', 'gps']:
                         if not motorista_email:
                             erros += 1
-                            erros_detalhes.append(f"Linha {row_num}: Email do motorista vazio")
+                            erros_detalhes.append(f"Linha {row_num}: Email do motorista vazio (use CardCode para carregamentos)")
                             continue
                         
                         motorista = await db.motoristas.find_one({"email": motorista_email}, {"_id": 0})
@@ -12515,7 +12515,11 @@ async def importar_plataforma(
                             erros_detalhes.append(f"Linha {row_num}: Motorista {motorista_email} não encontrado")
                             continue
                 
-                motorista_email = motorista.get("email", "")
+                # Garantir que motorista_email está definido
+                if motorista:
+                    motorista_email = motorista.get("email", "")
+                else:
+                    motorista_email = ""
                 
                 # Validar campo data (opcional para Uber e Bolt resumo semanal)
                 data = row.get('data', '').strip()
