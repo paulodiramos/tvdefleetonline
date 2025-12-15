@@ -9616,8 +9616,13 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
             # Expected total from CSV example in review request
             expected_total = 31.24  # 14.08 + 8.58 + 8.58
             
+            # Use admin credentials to see all reports
+            admin_headers = self.get_headers("admin")
+            if not admin_headers:
+                admin_headers = headers  # Fallback to parceiro headers
+            
             # Get weekly reports to verify calculations
-            response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos", headers=headers)
+            response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos", headers=admin_headers)
             
             if response.status_code == 200:
                 relatorios = response.json()
