@@ -10245,9 +10245,17 @@ async def gerar_relatorio_semanal(
         "horas_bolt": total_horas_bolt,
         "horas_totais": total_horas_uber + total_horas_bolt,
         
-        # Ganhos
+        # Ganhos Uber
         "ganhos_uber": total_ganhos_uber,
+        "gorjetas_uber": 0,  # Será preenchido se disponível nos dados
+        "portagens_uber": 0,  # Será preenchido se disponível nos dados
+        
+        # Ganhos Bolt
         "ganhos_bolt": total_ganhos_bolt,
+        "gorjetas_bolt": 0,  # Será preenchido se disponível nos dados
+        "portagens_bolt": 0,  # Será preenchido se disponível nos dados
+        
+        # Totais
         "ganhos_totais": total_ganhos,
         
         # Despesas
