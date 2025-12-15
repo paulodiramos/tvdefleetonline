@@ -126,15 +126,43 @@ class P0CorrectionsTester:
             return False
         
         try:
-            # Step 1: Create a simple CSV for import to trigger report creation
-            csv_content = """UUID do motorista,motorista_email,Nome próprio,Apelido,Pago a si,rendimentos,tarifa,taxa de serviço
-test-uuid-123,test@example.com,Test,Driver,25.50,25.50,25.50,5.10"""
+            # Step 1: Get existing motorist and set UUID
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            if motoristas_response.status_code != 200:
+                self.log_result("P0-Test-1-Get-Motoristas", False, f"❌ Cannot get motoristas: {motoristas_response.status_code}")
+                return False
+            
+            motoristas = motoristas_response.json()
+            if not motoristas:
+                self.log_result("P0-Test-1-No-Motoristas", False, "❌ No motoristas available for test")
+                return False
+            
+            # Use first motorist and set UUID
+            test_motorista = motoristas[0]
+            motorista_id = test_motorista["id"]
+            motorista_name = test_motorista.get("name", "Test Driver")
+            test_uuid = "test-uuid-rascunho-123"
+            
+            # Update motorist with UUID
+            update_motorista_data = {"uuid_motorista_uber": test_uuid}
+            update_motorista_response = requests.put(f"{BACKEND_URL}/motoristas/{motorista_id}", 
+                                                   json=update_motorista_data, headers=headers)
+            
+            if update_motorista_response.status_code != 200:
+                self.log_result("P0-Test-1-Update-Motorista", False, f"❌ Cannot update motorista: {update_motorista_response.status_code}")
+                return False
+            
+            print(f"  👤 Motorista configurado: {motorista_name} (UUID: {test_uuid})")
+            
+            # Step 2: Create CSV with real motorist data
+            csv_content = f"""UUID do motorista,motorista_email,Nome próprio,Apelido,Pago a si,rendimentos,tarifa,taxa de serviço
+{test_uuid},{test_motorista.get('email', 'test@example.com')},{motorista_name.split()[0] if motorista_name.split() else 'Test'},{motorista_name.split()[-1] if len(motorista_name.split()) > 1 else 'Driver'},25.50,25.50,25.50,5.10"""
             
             files = {
                 'file': ('test_relatorio_rascunho.csv', csv_content.encode('utf-8-sig'), 'text/csv')
             }
             
-            # Step 2: Import CSV to trigger report creation
+            # Step 3: Import CSV to trigger report creation
             import_response = requests.post(f"{BACKEND_URL}/importar/uber", files=files, headers=headers)
             
             if import_response.status_code == 200:
