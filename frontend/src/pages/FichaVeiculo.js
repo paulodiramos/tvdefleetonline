@@ -290,8 +290,10 @@ const FichaVeiculo = ({ user, onLogout }) => {
   // Save all changes with confirmation
   const handleSaveInfo = async (silent = false) => {
     try {
+      console.log('🔍 handleSaveInfo iniciado', { silent, vehicle, infoForm });
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/vehicles/${vehicleId}`, {
+      
+      const payload = {
         // Campos básicos do veículo
         marca: vehicle.marca,
         modelo: vehicle.modelo,
@@ -338,16 +340,23 @@ const FichaVeiculo = ({ user, onLogout }) => {
         },
         categorias_uber: infoForm.categorias_uber,
         categorias_bolt: infoForm.categorias_bolt
-      }, {
+      };
+      
+      console.log('📤 Payload a enviar:', payload);
+      
+      const response = await axios.put(`${API}/vehicles/${vehicleId}`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      console.log('✅ Resposta do servidor:', response.data);
 
       if (!silent) {
         toast.success('Informações atualizadas com sucesso!');
         fetchVehicleData();
       }
     } catch (error) {
-      console.error('Error saving info:', error);
+      console.error('❌ Error saving info:', error);
+      console.error('❌ Error details:', error.response?.data);
       if (!silent) toast.error('Erro ao salvar informações');
       throw error;
     }
