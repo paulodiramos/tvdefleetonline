@@ -9512,8 +9512,13 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
         print("-" * 60)
         
         try:
+            # Use admin credentials to see all reports (parceiro can only see their own)
+            admin_headers = self.get_headers("admin")
+            if not admin_headers:
+                admin_headers = headers  # Fallback to parceiro headers
+            
             # Get weekly reports to check if charging data is separated correctly
-            response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos", headers=headers)
+            response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos", headers=admin_headers)
             
             if response.status_code == 200:
                 relatorios = response.json()
