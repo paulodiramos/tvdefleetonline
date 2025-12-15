@@ -12516,10 +12516,11 @@ async def importar_plataforma(
                         pass
                 
                 # Criar documento baseado na plataforma
+                # NOTA: Para Via Verde carregamentos, motorista_id será atribuído na secção específica
                 documento = {
                     "id": str(uuid.uuid4()),
                     "motorista_id": motorista.get("id") if motorista else None,
-                    "motorista_email": motorista_email,
+                    "motorista_email": motorista_email if motorista_email else "",
                     "parceiro_id": current_user["id"],
                     "data": data,
                     "periodo_inicio": periodo_inicio,
