@@ -12594,16 +12594,16 @@ async def importar_plataforma(
                     
                     if ('StartDate' in row or 'Timestamp' in row) and 'Energy' in row:
                         # Formato 2: Carregamentos elétricos Via Verde
-                        # Identificar veículo por CardCode (principal), MobileCard, MobileRegistration
+                        # Identificar veículo APENAS por CardCode (coluna B do ficheiro)
                         card_code = row.get('CardCode', '').strip()  # Ex: PTPRIO6087131736480003 → cartao_frota_eletric_id (COLUNA B)
-                        mobile_card = row.get('MobileCard', '').strip()  # Ex: EZeny2, EZeny6, E (COLUNA C)
-                        matricula_viaverde = row.get('Plate', '').strip() or row.get('MobileRegistration', '').strip()  # COLUNA D
+                        mobile_card = row.get('MobileCard', '').strip()  # Ex: EZeny2, EZeny6, E (COLUNA C) - apenas para info
+                        matricula_viaverde = row.get('Plate', '').strip() or row.get('MobileRegistration', '').strip()  # COLUNA D - apenas para info
                         
-                        # Buscar veículo por: 1) CardCode → cartao_frota_eletric_id, 2) MobileCard, 3) Matrícula
+                        # Buscar veículo APENAS por CardCode → cartao_frota_eletric_id
                         vehicle = None
                         
-                        # 1. Tentar por CardCode (identificador principal para carregamentos ELÉTRICOS)
-                        # CardCode (coluna B) deve procurar em cartao_frota_eletric_id (ex: PTPRIO6087131736480003)
+                        # IMPORTANTE: Procurar APENAS por CardCode (coluna B do ficheiro)
+                        # O campo "Cartão Frota Elétrico ID (Carregamentos)" na interface deve conter este valor PTPRIO...
                         if card_code:
                             vehicle = await db.vehicles.find_one(
                                 {"cartao_frota_eletric_id": card_code},
@@ -12611,42 +12611,21 @@ async def importar_plataforma(
                             )
                             if vehicle:
                                 logger.info(f"✅ Carregamento - Veículo encontrado por CardCode (cartao_frota_eletric_id): {card_code}")
-                        
-                        # 2. Tentar por MobileCard (coluna C) como identificador alternativo (Ex: EZeny2, EZeny6, E)
-                        if not vehicle and mobile_card:
-                            vehicle = await db.vehicles.find_one(
-                                {"$or": [
-                                    {"cartao_frota_eletric_id": mobile_card},
-                                    {"via_verde_id": mobile_card},
-                                    {"cartao_frota_id": mobile_card}
-                                ]},
-                                {"_id": 0}
-                            )
-                            if vehicle:
-                                logger.info(f"✅ Carregamento - Veículo encontrado por MobileCard: {mobile_card}")
-                        
-                        # 3. Tentar por Matrícula (MobileRegistration - coluna D)
-                        if not vehicle and matricula_viaverde:
-                            vehicle = await db.vehicles.find_one(
-                                {"matricula": {"$regex": f"^{re.escape(matricula_viaverde)}$", "$options": "i"}},
-                                {"_id": 0}
-                            )
-                            if vehicle:
-                                logger.info(f"✅ Carregamento - Veículo encontrado por Matrícula: {matricula_viaverde}")
+                        else:
+                            logger.warning(f"⚠️ Linha {row_num}: CardCode vazio - não é possível identificar veículo")
                         
                         # Se veículo não encontrado, registar erro e continuar
                         if not vehicle:
                             erros += 1
-                            identificadores = []
                             if card_code:
-                                identificadores.append(f"CardCode: {card_code}")
-                            if mobile_card:
-                                identificadores.append(f"MobileCard: {mobile_card}")
-                            if matricula_viaverde:
-                                identificadores.append(f"Matrícula: {matricula_viaverde}")
-                            erros_detalhes.append(
-                                f"Linha {row_num}: Veículo não encontrado ({', '.join(identificadores) if identificadores else 'Sem identificadores'})"
-                            )
+                                erros_detalhes.append(
+                                    f"Linha {row_num}: Veículo não encontrado com CardCode '{card_code}'. "
+                                    f"Deve criar veículo e preencher campo 'Cartão Frota Elétrico ID (Carregamentos)' com este valor."
+                                )
+                            else:
+                                erros_detalhes.append(
+                                    f"Linha {row_num}: CardCode vazio no ficheiro - não é possível identificar veículo"
+                                )
                             continue
                         
                         # Atualizar motorista_id se veículo tem motorista atribuído
