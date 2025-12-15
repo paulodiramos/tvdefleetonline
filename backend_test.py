@@ -1500,11 +1500,14 @@ startxref
             if response.status_code == 200:
                 result = response.json()
                 
+                print(f"  📋 Resposta da API: {list(result.keys())}")
+                
                 # Check required response fields
                 required_fields = ['sucesso', 'erros', 'message', 'totais', 'despesas_por_motorista']
                 missing_fields = [field for field in required_fields if field not in result]
                 
                 if missing_fields:
+                    print(f"  📋 Resposta completa: {result}")
                     self.log_result("Test-2-Import-API", False, f"❌ Campos em falta na resposta: {missing_fields}")
                     return False
                 
