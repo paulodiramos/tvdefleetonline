@@ -10123,5 +10123,32 @@ agent_communication:
         Fix NoneType errors in Via Verde import logic before production use.
         Backend needs better error handling when vehicle is None.
 
+    - agent: "main"
+      date: "2025-01-15"
+      message: |
+        🎯 CORREÇÕES P0 IMPLEMENTADAS - TESTE NECESSÁRIO
+        
+        ✅ ALTERAÇÕES REALIZADAS:
+        
+        1. **Estado de Rascunho Corrigido** (linha 12190 de server.py)
+           - Problema: Relatórios importados criados como "pendente"
+           - Solução: Alterado para "rascunho"
+           - Impacto: Relatórios de importação aparecem como Rascunho
+        
+        2. **Campo cartao_frota_eletric_id Implementado** (linha 1515 de server.py)
+           - Adicionado ao modelo Vehicle
+           - Diferenciação: cartao_frota_id (combustível) vs cartao_frota_eletric_id (elétrico)
+           - Lógica de importação JÁ funcional (linha 12609)
+           - Frontend JÁ envia campo (linha 311 FichaVeiculo.js)
+        
+        🔍 FICHEIROS MODIFICADOS:
+        - /app/backend/server.py (2 alterações)
+        
+        ⚠️ PRÓXIMOS PASSOS:
+        1. Testar criação de rascunhos após importação
+        2. Testar gravação de cartao_frota_eletric_id em FichaVeiculo
+        3. Testar importação de carregamentos usando novo campo
+        4. Investigar bug de gravação em formulários (Issue P0 recorrente)
+
 ---
 
