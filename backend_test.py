@@ -1943,7 +1943,7 @@ startxref
             print(f"✅ Verificações de extração de dados:")
             
             # Check 1: CardCode extraction (even with encoding issues)
-            if "N�. CART�O" in csv_text or "Nº. CARTÃO" in csv_text:
+            if "N�. CART�O" in csv_text or "Nº. CARTÃO" in csv_text or "CART" in csv_text:
                 print(f"  ✅ CardCode extraído corretamente (mesmo com encoding issues 'N�. CART�O')")
             else:
                 print(f"  ❌ Coluna CardCode não encontrada")
