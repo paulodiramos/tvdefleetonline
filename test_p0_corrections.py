@@ -141,7 +141,7 @@ test-uuid-123,test@example.com,Test,Driver,25.50,25.50,25.50,5.10"""
                 self.log_result("P0-Test-1-Import", True, "✅ CSV import successful - should trigger report creation")
                 
                 # Step 3: Check if reports were created with 'rascunho' status
-                relatorios_response = requests.get(f"{BACKEND_URL}/relatorios", headers=headers)
+                relatorios_response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos", headers=headers)
                 
                 if relatorios_response.status_code == 200:
                     relatorios = relatorios_response.json()
