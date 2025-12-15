@@ -9520,6 +9520,11 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
         print("-" * 70)
         self.test_review_request_corrections()
         
+        # SIMPLIFIED CHARGING IMPORT SYSTEM (NEW REVIEW REQUEST - CRITICAL)
+        print("\n🔋 SIMPLIFIED CHARGING IMPORT SYSTEM (NEW REVIEW REQUEST - CRITICAL)")
+        print("-" * 80)
+        self.test_simplified_charging_import_system()
+        
         # Summary
         print("\n" + "=" * 80)
         print("TEST SUMMARY")
