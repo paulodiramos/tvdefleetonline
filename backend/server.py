@@ -12727,10 +12727,18 @@ async def importar_plataforma(
                     # O campo "Cartão Frota Elétrico ID (Carregamentos)" deve estar preenchido no veículo
                     
                     # 🔍 DETECTAR SE É CARREGAMENTO (para não validar email depois)
+                    # Detectar múltiplos formatos:
+                    # 1. Formato simplificado: data;hora;CardCode;posto;kwh;valor_total;duracao_min
+                    # 2. Formato completo API: StartDate,CardCode,Energy,TotalValueWithTaxes
+                    # 3. Formato CSV oficial: DATA;Nº. CARTÃO (ou N�. CART�O);NOME;ENERGIA;TOTAL c/ IVA
+                    
                     is_formato_simplificado_check = 'data' in row and 'hora' in row and 'kwh' in row and 'valor_total' in row
                     is_formato_completo_check = ('StartDate' in row or 'Timestamp' in row) and 'Energy' in row
-                    if is_formato_simplificado_check or is_formato_completo_check:
+                    is_formato_oficial_csv = any(key for key in row.keys() if 'CART' in key.upper() or 'ENERGIA' in key.upper())
+                    
+                    if is_formato_simplificado_check or is_formato_completo_check or is_formato_oficial_csv:
                         is_carregamento_eletrico = True  # ✅ Marcar como carregamento ANTES da validação de email
+                        logger.info(f"🔋 Linha {row_num}: Detectado como carregamento elétrico (formato CSV oficial)")
                     
                     motorista = {"id": None, "email": ""}  # Placeholder - será atribuído via veículo
                     motorista_email = ""
