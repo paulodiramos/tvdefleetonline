@@ -1288,6 +1288,161 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
         </CardContent>
       </Card>
 
+      {/* 8.5. CONFIGURAÇÕES DE CONTRATO E GANHOS/GASTOS */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <CreditCard className="w-5 h-5 text-purple-600" />
+            <CardTitle>Configurações de Contrato e Ganhos/Gastos</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Tipo de Contrato */}
+          <div>
+            <Label>Tipo de Contrato *</Label>
+            <Select
+              value={formData.tipo_contrato}
+              onValueChange={(value) => handleChange('tipo_contrato', value)}
+              disabled={!canEdit || !editMode}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o tipo de contrato" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="comissao">Comissão</SelectItem>
+                <SelectItem value="aluguer">Aluguer</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-slate-500 mt-1">
+              {formData.tipo_contrato === 'comissao' 
+                ? 'Motorista paga comissão sobre os ganhos' 
+                : 'Motorista paga valor fixo de aluguer do veículo'}
+            </p>
+          </div>
+
+          {/* Configuração Portagens Uber */}
+          <div className="border-t pt-4">
+            <h4 className="font-semibold text-sm mb-3 text-blue-600">🚗 Uber - Portagens</h4>
+            <div>
+              <Label>Como são tratadas as portagens Uber?</Label>
+              <Select
+                value={formData.portagens_uber_config}
+                onValueChange={(value) => handleChange('portagens_uber_config', value)}
+                disabled={!canEdit || !editMode}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="motorista_paga">Motorista paga (deduz dos ganhos)</SelectItem>
+                  <SelectItem value="empresa_paga">Empresa paga (não deduz)</SelectItem>
+                  <SelectItem value="acumula">Acumula (até débito Via Verde)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-slate-500 mt-1">
+                {formData.portagens_uber_config === 'motorista_paga' && '❌ Portagens são deduzidas dos ganhos do motorista'}
+                {formData.portagens_uber_config === 'empresa_paga' && '✅ Empresa assume as portagens, não deduz'}
+                {formData.portagens_uber_config === 'acumula' && '📊 Valor fica registado até débito da Via Verde'}
+              </p>
+            </div>
+          </div>
+
+          {/* Configuração Portagens Bolt */}
+          <div className="border-t pt-4">
+            <h4 className="font-semibold text-sm mb-3 text-green-600">⚡ Bolt - Portagens</h4>
+            <div>
+              <Label>Como são tratadas as portagens Bolt?</Label>
+              <Select
+                value={formData.portagens_bolt_config}
+                onValueChange={(value) => handleChange('portagens_bolt_config', value)}
+                disabled={!canEdit || !editMode}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="motorista_paga">Motorista paga (deduz dos ganhos)</SelectItem>
+                  <SelectItem value="empresa_paga">Empresa paga (não deduz)</SelectItem>
+                  <SelectItem value="acumula">Acumula (até débito Via Verde)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-slate-500 mt-1">
+                {formData.portagens_bolt_config === 'motorista_paga' && '❌ Portagens são deduzidas dos ganhos do motorista'}
+                {formData.portagens_bolt_config === 'empresa_paga' && '✅ Empresa assume as portagens, não deduz'}
+                {formData.portagens_bolt_config === 'acumula' && '📊 Valor fica registado até débito da Via Verde'}
+              </p>
+            </div>
+          </div>
+
+          {/* Gorjetas Uber */}
+          <div className="border-t pt-4">
+            <h4 className="font-semibold text-sm mb-3 text-blue-600">💰 Uber - Gorjetas</h4>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="gorjetas_uber"
+                checked={formData.gorjetas_uber_recebe}
+                onChange={(e) => handleChange('gorjetas_uber_recebe', e.target.checked)}
+                disabled={!canEdit || !editMode}
+                className="w-4 h-4"
+              />
+              <Label htmlFor="gorjetas_uber" className="cursor-pointer">
+                Motorista recebe as gorjetas Uber?
+              </Label>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              {formData.gorjetas_uber_recebe 
+                ? '✅ Gorjetas são adicionadas aos ganhos do motorista' 
+                : '❌ Gorjetas não são incluídas nos ganhos'}
+            </p>
+          </div>
+
+          {/* Gorjetas Bolt */}
+          <div className="border-t pt-4">
+            <h4 className="font-semibold text-sm mb-3 text-green-600">💰 Bolt - Gorjetas</h4>
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="gorjetas_bolt"
+                checked={formData.gorjetas_bolt_recebe}
+                onChange={(e) => handleChange('gorjetas_bolt_recebe', e.target.checked)}
+                disabled={!canEdit || !editMode}
+                className="w-4 h-4"
+              />
+              <Label htmlFor="gorjetas_bolt" className="cursor-pointer">
+                Motorista recebe as gorjetas Bolt?
+              </Label>
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              {formData.gorjetas_bolt_recebe 
+                ? '✅ Gorjetas são adicionadas aos ganhos do motorista' 
+                : '❌ Gorjetas não são incluídas nos ganhos'}
+            </p>
+          </div>
+
+          {/* IDs Herdados do Veículo (Read-only) */}
+          {(formData.cartao_frota_eletric_id || formData.cartao_viaverde_id || formData.id_cartao_frota_combustivel) && (
+            <div className="border-t pt-4 bg-slate-50 p-4 rounded">
+              <h4 className="font-semibold text-sm mb-3 text-slate-700">🔗 IDs Associados ao Veículo (Automático)</h4>
+              <div className="space-y-2 text-xs">
+                {formData.id_cartao_frota_combustivel && (
+                  <p>⛽ <strong>Cartão Combustível:</strong> {formData.id_cartao_frota_combustivel}</p>
+                )}
+                {formData.cartao_frota_eletric_id && (
+                  <p>🔋 <strong>Cartão Elétrico:</strong> {formData.cartao_frota_eletric_id}</p>
+                )}
+                {formData.cartao_viaverde_id && (
+                  <p>🛣️ <strong>Cartão Via Verde:</strong> {formData.cartao_viaverde_id}</p>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 mt-2 italic">
+                Estes IDs são copiados automaticamente quando um veículo é atribuído ao motorista.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* 9. TIPO DE PAGAMENTO */}
       <Card>
         <CardHeader>
