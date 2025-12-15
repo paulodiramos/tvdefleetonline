@@ -12326,8 +12326,12 @@ async def importar_plataforma(
         
         for row_num, row in enumerate(csv_reader, start=2):
             try:
-                # Para Uber: tentar buscar por email, UUID ou nome
+                # Inicializar variáveis para cada linha
                 motorista = None
+                motorista_email = ""
+                is_carregamento_eletrico = False  # Flag para identificar carregamentos (não valida email)
+                
+                # Para Uber: tentar buscar por email, UUID ou nome
                 # Para Bolt: suportar coluna "Email" (exportação real) ou "motorista_email" (template)
                 # Para Via Verde: não precisa de email (busca por veículo)
                 if plataforma == 'bolt':
