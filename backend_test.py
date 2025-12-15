@@ -1748,8 +1748,88 @@ startxref
         except Exception as e:
             self.log_result("Test-5-Weekly-Reports", False, f"❌ Erro: {str(e)}")
             return False
+
+    # ==================== MAIN TEST RUNNER ====================
+    
+    def run_all_tests(self):
+        """Run all tests in sequence"""
+        print("🚀 INICIANDO TESTES DO SISTEMA TVDEFLEET")
+        print("=" * 80)
+        
+        # Authenticate all users
+        print("\n🔐 AUTENTICAÇÃO DE UTILIZADORES")
+        print("-" * 40)
+        for role in ["admin", "parceiro", "gestor", "operacional", "motorista"]:
+            self.authenticate_user(role)
+        
+        # Phase 1: Permission restrictions
+        print("\n📋 FASE 1: RESTRIÇÕES DE PERMISSÕES")
+        print("-" * 40)
+        self.test_parceiro_cannot_create_revenue()
+        self.test_parceiro_cannot_create_expense()
+        self.test_parceiro_can_read_revenues_expenses()
+        self.test_admin_can_create_revenues_expenses()
+        
+        # Phase 2: File upload system
+        print("\n📁 FASE 2: SISTEMA DE UPLOAD DE FICHEIROS")
+        print("-" * 40)
+        self.test_motorista_document_upload()
+        self.test_pagamento_document_upload()
+        self.test_file_serving_endpoint()
+        
+        # Phase 3: Alert system
+        print("\n🚨 FASE 3: SISTEMA DE ALERTAS")
+        print("-" * 40)
+        self.test_alertas_list_endpoint()
+        self.test_alertas_dashboard_stats()
+        self.test_alertas_verificar_manual()
+        self.test_alertas_resolver_ignorar()
+        self.test_background_task_logs()
+        
+        # Phase 4: Financial import system
+        print("\n💰 FASE 4: SISTEMA DE IMPORTAÇÃO FINANCEIRA")
+        print("-" * 40)
+        self.test_financial_import_system()
+        
+        # Phase 5: Excel import for electric charging (Review Request)
+        print("\n⚡ FASE 5: IMPORTAÇÃO EXCEL CARREGAMENTOS ELÉTRICOS")
+        print("-" * 40)
+        self.test_excel_import_carregamentos_eletricos()
+        
+        # Print final summary
+        self.print_summary()
+        
+        return self.get_test_summary()
+
+
+def main():
+    """Main function to run tests"""
+    tester = TVDEFleetTester()
+    
+    try:
+        summary = tester.run_all_tests()
+        
+        print(f"\n🎯 RESUMO FINAL")
+        print("=" * 50)
+        print(f"Total de testes: {summary['total']}")
+        print(f"✅ Sucessos: {summary['passed']}")
+        print(f"❌ Falhas: {summary['failed']}")
+        print(f"Taxa de sucesso: {summary['passed']/summary['total']*100:.1f}%")
+        
+        if summary['failed'] == 0:
+            print("\n🎉 TODOS OS TESTES PASSARAM!")
+            return 0
+        else:
+            print(f"\n⚠️ {summary['failed']} TESTES FALHARAM")
+            return 1
             
-            response = requests.post(
+    except Exception as e:
+        print(f"\n💥 ERRO CRÍTICO: {str(e)}")
+        return 1
+
+
+if __name__ == "__main__":
+    exit(main())
                 f"{BACKEND_URL}/importar/viaverde",
                 files=files,
                 data=data,
