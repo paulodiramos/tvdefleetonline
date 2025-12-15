@@ -1511,7 +1511,8 @@ class Vehicle(BaseModel):
     via_verde_disponivel: bool = False
     via_verde_id: Optional[str] = None  # ID do Via Verde
     cartao_frota_disponivel: bool = False
-    cartao_frota_id: Optional[str] = None  # ID do Cartão Frota (associado ao motorista quando veículo é atribuído)
+    cartao_frota_id: Optional[str] = None  # ID do Cartão Frota COMBUSTÍVEL (associado ao motorista quando veículo é atribuído)
+    cartao_frota_eletric_id: Optional[str] = None  # ID do Cartão Frota ELÉTRICO (para carregamentos Via Verde)
     # Garantia
     tem_garantia: bool = False
     stand_responsavel: Optional[str] = None
