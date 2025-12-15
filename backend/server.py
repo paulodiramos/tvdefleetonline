@@ -12689,6 +12689,18 @@ async def importar_plataforma(
                 motorista_email = ""
                 is_carregamento_eletrico = False  # Flag para identificar carregamentos (não valida email)
                 
+                # 🔋 DETECÇÃO PRECOCE DE CARREGAMENTOS ELÉTRICOS (ANTES DE QUALQUER VALIDAÇÃO)
+                # Verificar se é Via Verde com formato de carregamentos
+                if plataforma == 'viaverde':
+                    # Detectar se é carregamento elétrico IMEDIATAMENTE
+                    is_formato_simplificado_check = 'data' in row and 'hora' in row and 'kwh' in row and 'valor_total' in row
+                    is_formato_completo_check = ('StartDate' in row or 'Timestamp' in row) and 'Energy' in row
+                    is_formato_oficial_csv = any(key for key in row.keys() if 'CART' in key.upper() or 'ENERGIA' in key.upper())
+                    
+                    if is_formato_simplificado_check or is_formato_completo_check or is_formato_oficial_csv:
+                        is_carregamento_eletrico = True
+                        logger.info(f"🔋 Linha {row_num}: CARREGAMENTO ELÉTRICO detectado - pulando validação de email")
+                
                 # Para Uber: tentar buscar por email, UUID ou nome
                 # Para Bolt: suportar coluna "Email" (exportação real) ou "motorista_email" (template)
                 # Para Via Verde: não precisa de email (busca por veículo)
