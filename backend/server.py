@@ -12187,7 +12187,7 @@ async def criar_relatorios_rascunho_apos_importacao(
                 "semana": semana,
                 "data_inicio": periodo_inicio,
                 "data_fim": periodo_fim,
-                "estado": "pendente",  # Estado inicial: pendente
+                "estado": "rascunho",  # Estado inicial: rascunho (correção aplicada)
                 "ganhos_uber": ganhos_uber,
                 "ganhos_bolt": ganhos_bolt,
                 "portagens_viaverde": portagens_viaverde,
