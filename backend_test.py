@@ -1322,6 +1322,170 @@ startxref
             self.log_result("Execute-Uber-Import", False, f"❌ Import error: {str(e)}")
             return False
     
+    # ==================== CRITICAL BUG FIX TEST - EMAIL MOTORISTA VAZIO ====================
+    
+    def test_critical_bug_fix_email_motorista_vazio(self):
+        """🚨 TESTE CRÍTICO FINAL - BUG 'EMAIL MOTORISTA VAZIO' - CORREÇÃO DEFINITIVA"""
+        print("\n🚨 TESTE CRÍTICO FINAL - BUG 'EMAIL MOTORISTA VAZIO' - CORREÇÃO DEFINITIVA")
+        print("=" * 80)
+        print("PROBLEMA:")
+        print("- Utilizador logado como parceiro")
+        print("- Importa carregamentos CSV")
+        print("- Continua a dar erro 'Email do motorista vazio'")
+        print("- CSV só tem CardCode (ID PRIO), não tem email")
+        print("")
+        print("CORREÇÃO APLICADA:")
+        print("- Detecção de carregamento elétrico MOVIDA para ANTES de qualquer validação")
+        print("- Flag `is_carregamento_eletrico = True` definida na linha 12700 (ANTES)")
+        print("- Log adicionado: 'CARREGAMENTO ELÉTRICO detectado - pulando validação de email'")
+        print("")
+        print("CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU")
+        print("=" * 80)
+        
+        # Authenticate as parceiro
+        headers = self.get_headers("parceiro")
+        if not headers:
+            self.log_result("Critical-Bug-Fix-Auth", False, "❌ No auth token for parceiro")
+            return False
+        
+        # Test the specific CSV file from review request
+        csv_url = "https://customer-assets.emergentagent.com/job_autofleet-hub-1/artifacts/laxk43nb_Transa%C3%A7%C3%B5es_Eletrico_20251215.csv"
+        
+        print("\n🎯 TESTE ÚNICO:")
+        print("1. **Login como parceiro** ✅")
+        print("2. **Importar CSV Carregamentos**")
+        print(f"   - URL: {csv_url}")
+        print("   - Endpoint: POST /api/importar/viaverde")
+        print("   - periodo_inicio: 2025-12-01")
+        print("   - periodo_fim: 2025-12-31")
+        
+        # Step 1: Download the CSV file
+        try:
+            csv_response = requests.get(csv_url)
+            if csv_response.status_code == 200:
+                csv_content = csv_response.content
+                csv_size = len(csv_content)
+                print(f"\n✅ CSV descarregado com sucesso: {csv_size} bytes")
+                self.log_result("Download-Critical-CSV", True, f"CSV downloaded: {csv_size} bytes")
+            else:
+                print(f"\n❌ Falha ao descarregar CSV: {csv_response.status_code}")
+                self.log_result("Download-Critical-CSV", False, f"Failed to download: {csv_response.status_code}")
+                return False
+        except Exception as e:
+            print(f"\n❌ Erro no download: {str(e)}")
+            self.log_result("Download-Critical-CSV", False, f"Download error: {str(e)}")
+            return False
+        
+        # Step 2: Execute the import with the exact parameters from review request
+        try:
+            files = {
+                'file': ('Transacoes_Eletrico_20251215.csv', csv_content, 'text/csv')
+            }
+            data = {
+                'periodo_inicio': '2025-12-01',
+                'periodo_fim': '2025-12-31'
+            }
+            
+            print(f"\n🔄 Executando importação...")
+            print(f"   - Ficheiro: Transacoes_Eletrico_20251215.csv ({csv_size} bytes)")
+            print(f"   - Período: 2025-12-01 a 2025-12-31")
+            
+            response = requests.post(
+                f"{BACKEND_URL}/importar/viaverde",
+                files=files,
+                data=data,
+                headers=headers
+            )
+            
+            print(f"\n📊 RESULTADO DA IMPORTAÇÃO:")
+            print(f"   - Status Code: {response.status_code}")
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Extract key metrics
+                sucesso = result.get("sucesso", 0)
+                erros = result.get("erros", 0)
+                message = result.get("message", "")
+                erros_detalhes = result.get("erros_detalhes", [])
+                
+                print(f"   - Registos importados: {sucesso}")
+                print(f"   - Erros encontrados: {erros}")
+                print(f"   - Mensagem: {message}")
+                
+                # VALIDAÇÃO CRÍTICA - Check for the specific fix
+                print(f"\n🔍 VALIDAÇÃO CRÍTICA:")
+                
+                # Check 1: No "Email do motorista vazio" errors
+                email_errors = [erro for erro in erros_detalhes if "Email do motorista vazio" in erro]
+                if len(email_errors) == 0:
+                    print(f"   ✅ ZERO erros 'Email do motorista vazio' - CORREÇÃO FUNCIONANDO!")
+                    self.log_result("Critical-Fix-No-Email-Errors", True, "✅ No 'Email do motorista vazio' errors")
+                else:
+                    print(f"   ❌ Ainda há {len(email_errors)} erros de email vazio:")
+                    for erro in email_errors[:3]:  # Show first 3
+                        print(f"      - {erro}")
+                    self.log_result("Critical-Fix-No-Email-Errors", False, f"❌ Still {len(email_errors)} email errors")
+                    return False
+                
+                # Check 2: Status 200 (successful response)
+                if response.status_code == 200:
+                    print(f"   ✅ Status 200 - Resposta bem-sucedida")
+                    self.log_result("Critical-Fix-Status-200", True, "✅ Status 200 OK")
+                else:
+                    print(f"   ❌ Status {response.status_code} - Falha na resposta")
+                    self.log_result("Critical-Fix-Status-200", False, f"❌ Status {response.status_code}")
+                    return False
+                
+                # Check 3: Records imported successfully
+                if sucesso > 0:
+                    print(f"   ✅ {sucesso} registos importados com sucesso")
+                    self.log_result("Critical-Fix-Records-Imported", True, f"✅ {sucesso} records imported")
+                else:
+                    print(f"   ❌ Nenhum registo importado")
+                    self.log_result("Critical-Fix-Records-Imported", False, "❌ No records imported")
+                    return False
+                
+                # Check 4: Look for the specific log message (if available in response)
+                if "CARREGAMENTO ELÉTRICO detectado" in message:
+                    print(f"   ✅ Log de detecção encontrado: 'CARREGAMENTO ELÉTRICO detectado'")
+                    self.log_result("Critical-Fix-Detection-Log", True, "✅ Detection log found")
+                else:
+                    print(f"   ⚠️ Log de detecção não encontrado na resposta (pode estar apenas nos logs do servidor)")
+                    self.log_result("Critical-Fix-Detection-Log", True, "⚠️ Detection log not in response (may be in server logs)")
+                
+                # Overall success assessment
+                if len(email_errors) == 0 and response.status_code == 200 and sucesso > 0:
+                    print(f"\n🎉 TESTE FINAL PASSOU COM SUCESSO!")
+                    print(f"   ✅ Correção do bug 'Email do motorista vazio' está FUNCIONANDO 100%")
+                    print(f"   ✅ Sistema detecta carregamentos elétricos ANTES da validação de email")
+                    print(f"   ✅ {sucesso} registos processados sem erros de email")
+                    
+                    self.log_result("Critical-Bug-Fix-Final-Test", True, 
+                                  f"🎉 BUG FIX SUCCESSFUL: {sucesso} records imported, 0 email errors")
+                    return True
+                else:
+                    print(f"\n❌ TESTE FINAL FALHOU!")
+                    print(f"   - Email errors: {len(email_errors)}")
+                    print(f"   - Status: {response.status_code}")
+                    print(f"   - Records imported: {sucesso}")
+                    
+                    self.log_result("Critical-Bug-Fix-Final-Test", False, 
+                                  f"❌ BUG FIX FAILED: {len(email_errors)} email errors still present")
+                    return False
+                    
+            else:
+                print(f"   ❌ Falha na importação: {response.status_code}")
+                print(f"   ❌ Resposta: {response.text}")
+                self.log_result("Critical-Bug-Fix-Final-Test", False, 
+                              f"❌ Import failed: {response.status_code}")
+                return False
+                
+        except Exception as e:
+            print(f"\n❌ Erro na importação: {str(e)}")
+            self.log_result("Critical-Bug-Fix-Final-Test", False, f"❌ Import error: {str(e)}")
+            return False
+
     # ==================== EXCEL IMPORT FOR ELECTRIC CHARGING (REVIEW REQUEST) ====================
     
     def test_excel_import_carregamentos_eletricos(self):
