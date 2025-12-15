@@ -11862,11 +11862,30 @@ async def importar_carregamentos_excel(
         erros_detalhes = []
         registos_importados = []
         
-        # Ler linha 1 como cabeçalho
-        header_row = list(sheet.iter_rows(min_row=1, max_row=1, values_only=True))[0]
-        header = [str(cell).strip() if cell else '' for cell in header_row]
+        # Procurar cabeçalho nas primeiras 10 linhas
+        header = []
+        header_row_num = 1
+        for row_num in range(1, 11):
+            try:
+                header_row = list(sheet.iter_rows(min_row=row_num, max_row=row_num, values_only=True))[0]
+                header_candidate = [str(cell).strip() if cell else '' for cell in header_row]
+                
+                # Se encontrar colunas típicas de carregamentos, usar esta linha como header
+                if any('DATA' in cell or 'CARTÃO' in cell or 'CARTAO' in cell for cell in header_candidate):
+                    header = header_candidate
+                    header_row_num = row_num
+                    logger.info(f"📄 Excel Carregamentos - Header encontrado na linha {row_num}: {header}")
+                    break
+            except:
+                continue
         
-        logger.info(f"📄 Excel Carregamentos - Cabeçalho: {header}")
+        # Se não encontrou header, usar linha 1 como fallback
+        if not header:
+            header_row = list(sheet.iter_rows(min_row=1, max_row=1, values_only=True))[0]
+            header = [str(cell).strip() if cell else '' for cell in header_row]
+            logger.info(f"📄 Excel Carregamentos - Cabeçalho (fallback linha 1): {header}")
+        
+        logger.info(f"📄 Excel Carregamentos - Cabeçalho final: {header}")
         
         # Mapear colunas do formato oficial
         col_map = {}
