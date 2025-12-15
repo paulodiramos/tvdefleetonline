@@ -12594,36 +12594,36 @@ async def importar_plataforma(
                     
                     if ('StartDate' in row or 'Timestamp' in row) and 'Energy' in row:
                         # Formato 2: Carregamentos elétricos Via Verde
-                        # Identificar veículo por CardCode (principal), ServiceType, MobileRegistration ou MobileCard
-                        card_code = row.get('CardCode', '').strip()  # Ex: PTPRIO6087131736480003 → cartao_frota_id
-                        service_type = row.get('ServiceType', '').strip()  # Ex: EZeny2
-                        matricula_viaverde = row.get('Plate', '').strip() or row.get('MobileRegistration', '').strip()
-                        cartao_viaverde = row.get('MobileCard', '').strip()
+                        # Identificar veículo por CardCode (principal), MobileCard, MobileRegistration
+                        card_code = row.get('CardCode', '').strip()  # Ex: PTPRIO6087131736480003 → cartao_frota_eletric_id (COLUNA B)
+                        mobile_card = row.get('MobileCard', '').strip()  # Ex: EZeny2, EZeny6, E (COLUNA C)
+                        matricula_viaverde = row.get('Plate', '').strip() or row.get('MobileRegistration', '').strip()  # COLUNA D
                         
-                        # Buscar veículo por: 1) CardCode → cartao_frota_eletric_id, 2) ServiceType, 3) Matrícula
+                        # Buscar veículo por: 1) CardCode → cartao_frota_eletric_id, 2) MobileCard, 3) Matrícula
                         vehicle = None
                         
                         # 1. Tentar por CardCode (identificador principal para carregamentos ELÉTRICOS)
-                        # CardCode deve ir para cartao_frota_eletric_id (ex: PTPRIO6087131736480003)
+                        # CardCode (coluna B) deve procurar em cartao_frota_eletric_id (ex: PTPRIO6087131736480003)
                         if card_code:
                             vehicle = await db.vehicles.find_one(
                                 {"cartao_frota_eletric_id": card_code},
                                 {"_id": 0}
                             )
                             if vehicle:
-                                logger.info(f"✅ Via Verde - Veículo encontrado por CardCode (cartao_frota_eletric_id): {card_code}")
+                                logger.info(f"✅ Carregamento - Veículo encontrado por CardCode (cartao_frota_eletric_id): {card_code}")
                         
-                        # 2. Tentar por ServiceType como cartao_frota_id (Ex: EZeny2, EZeny6)
-                        if not vehicle and service_type:
+                        # 2. Tentar por MobileCard (coluna C) como identificador alternativo (Ex: EZeny2, EZeny6, E)
+                        if not vehicle and mobile_card:
                             vehicle = await db.vehicles.find_one(
                                 {"$or": [
-                                    {"cartao_frota_id": service_type},
-                                    {"cartao_frota": service_type}
+                                    {"cartao_frota_eletric_id": mobile_card},
+                                    {"via_verde_id": mobile_card},
+                                    {"cartao_frota_id": mobile_card}
                                 ]},
                                 {"_id": 0}
                             )
                             if vehicle:
-                                logger.info(f"✅ Via Verde - Veículo encontrado por ServiceType (cartao_frota): {service_type}")
+                                logger.info(f"✅ Carregamento - Veículo encontrado por MobileCard: {mobile_card}")
                         
                         # 3. Tentar por Matrícula
                         if not vehicle and matricula_viaverde:
