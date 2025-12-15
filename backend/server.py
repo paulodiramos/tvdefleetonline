@@ -12034,12 +12034,34 @@ async def importar_carregamentos_excel(
                 logger.error(f"❌ Erro linha {row_num}: {str(e)}")
                 continue
         
+        # Calcular totais
+        total_despesas = sum(r['valor_total_com_taxas'] for r in registos_importados)
+        total_energia = sum(r['energia_kwh'] for r in registos_importados)
+        total_duracao = sum(r['duracao_minutos'] for r in registos_importados)
+        
+        # Agrupar por motorista
+        despesas_por_motorista = {}
+        for reg in registos_importados:
+            motorista_id = reg.get('motorista_id')
+            if motorista_id:
+                if motorista_id not in despesas_por_motorista:
+                    despesas_por_motorista[motorista_id] = {
+                        "motorista_nome": reg.get('motorista_nome'),
+                        "motorista_email": reg.get('motorista_email'),
+                        "total_despesas": 0,
+                        "total_energia": 0,
+                        "total_carregamentos": 0
+                    }
+                despesas_por_motorista[motorista_id]["total_despesas"] += reg['valor_total_com_taxas']
+                despesas_por_motorista[motorista_id]["total_energia"] += reg['energia_kwh']
+                despesas_por_motorista[motorista_id]["total_carregamentos"] += 1
+        
         # Criar relatórios de rascunho
         info_rascunhos = None
         if sucesso > 0:
             try:
                 info_rascunhos = await criar_relatorios_rascunho_apos_importacao(
-                    'viaverde',
+                    'carregamentos',
                     current_user["id"],
                     periodo_inicio,
                     periodo_fim,
@@ -12048,12 +12070,28 @@ async def importar_carregamentos_excel(
             except Exception as e:
                 logger.error(f"Erro ao criar rascunhos: {str(e)}")
         
+        # Relatório detalhado
+        logger.info(f"📊 RELATÓRIO DE IMPORTAÇÃO - CARREGAMENTOS ELÉTRICOS")
+        logger.info(f"✅ Total importado: {sucesso} registos")
+        logger.info(f"❌ Total erros: {erros}")
+        logger.info(f"💰 Total despesas: €{total_despesas:.2f}")
+        logger.info(f"⚡ Total energia: {total_energia:.2f} kWh")
+        logger.info(f"⏱️ Total duração: {total_duracao:.0f} minutos ({total_duracao/60:.1f} horas)")
+        logger.info(f"👥 Motoristas afetados: {len(despesas_por_motorista)}")
+        
         return {
-            "message": "Importação de carregamentos Excel concluída",
+            "message": f"Importação concluída: {sucesso} carregamentos importados",
             "sucesso": sucesso,
             "erros": erros,
-            "erros_detalhes": erros_detalhes[:20],
-            "relatorios_criados": info_rascunhos
+            "erros_detalhes": erros_detalhes[:20] if erros_detalhes else [],
+            "relatorios_criados": info_rascunhos,
+            "totais": {
+                "total_despesas": round(total_despesas, 2),
+                "total_energia_kwh": round(total_energia, 2),
+                "total_duracao_minutos": round(total_duracao, 0),
+                "total_duracao_horas": round(total_duracao / 60, 1)
+            },
+            "despesas_por_motorista": list(despesas_por_motorista.values())
         }
         
     except Exception as e:
