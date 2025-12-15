@@ -2139,6 +2139,11 @@ startxref
         for role in ["admin", "parceiro", "gestor", "operacional", "motorista"]:
             self.authenticate_user(role)
         
+        # CRITICAL TEST: CSV Import Bug Fix (Review Request Priority)
+        print("\n🎯 TESTE CRÍTICO: CSV IMPORT BUG FIX (REVIEW REQUEST PRIORITY)")
+        print("=" * 80)
+        self.test_csv_import_carregamentos_bug_fix()
+        
         # Phase 1: Permission restrictions
         print("\n📋 FASE 1: RESTRIÇÕES DE PERMISSÕES")
         print("-" * 40)
