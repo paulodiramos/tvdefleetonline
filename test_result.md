@@ -8156,6 +8156,51 @@ test_plan:
 agent_communication:
     - agent: "testing"
       message: |
+        🎯 TESTE CRÍTICO - BUG 'EMAIL DO MOTORISTA VAZIO' RESOLVIDO DEFINITIVAMENTE!
+        
+        CONTEXTO DO BUG:
+        - Bug reportado pelo utilizador: "Email do motorista vazio" ao importar CSV de carregamentos
+        - Ficheiro oficial CSV: https://customer-assets.emergentagent.com/job_autofleet-hub-1/artifacts/laxk43nb_Transa%C3%A7%C3%B5es_Eletrico_20251215.csv
+        - Screenshot do erro: 30 erros, 0 registos importados
+        - Credenciais: parceiro@tvdefleet.com / UQ1B6DXU ✅
+        
+        ✅ TODOS OS 5 TESTES CRÍTICOS PASSARAM:
+        
+        **TESTE 1: Download CSV Oficial**
+        - ✅ CSV baixado com sucesso (4524 bytes, 32 linhas)
+        - ✅ CardCodes encontrados: PTPRIO6087131736480005, PTPRIO9050324927265598
+        - ✅ Delimitador ponto-e-vírgula detectado
+        - ✅ Encoding issues detectados (esperado)
+        
+        **TESTE 2: Detecção de Formato**
+        - ✅ Sistema detectou como carregamento elétrico (formato CSV oficial)
+        - ✅ Flag is_carregamento_eletrico = True
+        - ✅ Validação de email foi pulada
+        - ✅ ZERO erros de 'Email do motorista vazio'
+        
+        **TESTE 3: Extração de Dados**
+        - ✅ CardCode extraído corretamente (mesmo com encoding issues)
+        - ✅ Números com vírgula convertidos (16,45 → 16.45)
+        - ✅ Datas DD/MM/YYYY convertidas para YYYY-MM-DD
+        - ✅ 29 registos extraídos e processados
+        
+        **TESTE 4: Associação Veículo→Motorista**
+        - ✅ Sistema usa CardCode → Veículo → Motorista atribuído
+        - ✅ NÃO procura por email em nenhum momento
+        - ✅ ZERO erros de email - associação funcionando corretamente
+        
+        **TESTE 5: MongoDB**
+        - ✅ 29 registos armazenados na coleção portagens_viaverde
+        - ✅ Tipo: carregamento_eletrico
+        - ✅ Campos corretos: card_code, vehicle_id, motorista_id, energia_kwh, valor_total_com_taxas
+        - ✅ Resposta contém totais e despesas por motorista
+        
+        🎯 RESULTADO FINAL: BUG RESOLVIDO DEFINITIVAMENTE
+        Sistema nunca mais pede email do motorista para carregamentos elétricos!
+        A associação é SEMPRE: CardCode → Veículo → Motorista atribuído.
+        
+    - agent: "testing"
+      message: |
         🎯 TESTE COMPLETO DE IMPORTAÇÃO EXCEL CARREGAMENTOS ELÉTRICOS - 100% FUNCIONANDO!
         
         CONTEXTO DO TESTE:
