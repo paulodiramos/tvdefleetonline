@@ -12015,13 +12015,10 @@ async def importar_carregamentos_excel(
         
     except Exception as e:
         logger.error(f"❌ Erro ao processar Excel de carregamentos: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Erro ao processar Excel: {str(e)}")async def importar_carregamentos_excel(
+        raise HTTPException(status_code=400, detail=f"Erro ao processar Excel: {str(e)}")
 
-    file_content: bytes,
-    current_user: dict,
-    periodo_inicio: str,
-    periodo_fim: str
-):
+
+async def importar_viaverde_excel(
     """
     Importar carregamentos elétricos de Excel (.xlsx)
     - Formato: Excel (.xlsx) com colunas portuguesas
