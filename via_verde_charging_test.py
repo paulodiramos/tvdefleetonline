@@ -288,10 +288,10 @@ class ViaVerdeChargingTester:
                 result = response.json()
                 
                 # Extract results
-                total_linhas = result.get("total_linhas", 0)
-                sucessos = result.get("sucessos", 0)
+                sucessos = result.get("sucesso", 0)
                 erros = result.get("erros", 0)
                 erros_detalhes = result.get("erros_detalhes", [])
+                total_linhas = sucessos + erros
                 
                 success_rate = (sucessos / total_linhas * 100) if total_linhas > 0 else 0
                 
