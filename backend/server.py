@@ -12601,20 +12601,22 @@ async def importar_plataforma(
                     # Formato 1: Portagens tradicionais (template simples)
                     # Formato 2: Carregamentos elétricos (exportação real)
                     
-                    if ('StartDate' in row or 'Timestamp' in row) and 'Energy' in row:
+                    # Detectar formato do CSV automaticamente
+                    is_formato_simplificado = 'data' in row and 'hora' in row and 'kwh' in row and 'valor_total' in row
+                    is_formato_completo = ('StartDate' in row or 'Timestamp' in row) and 'Energy' in row
+                    
+                    if is_formato_simplificado or is_formato_completo:
                         # ⚡ CARREGAMENTOS ELÉTRICOS VIA VERDE
                         # 
+                        # Suporta 2 formatos:
+                        # - Formato Simplificado: data;hora;CardCode;posto;kwh;valor_total;duracao_min
+                        # - Formato Completo: StartDate,CardCode,Energy,TotalValueWithTaxes,etc.
+                        #
                         # IDENTIFICAÇÃO: CardCode → Veículo → Motorista
                         # ❌ NÃO procura por email do motorista!
                         # ✅ Procura APENAS por "Cartão Frota Elétrico ID (Carregamentos)"
-                        #
-                        # Fluxo:
-                        # 1. Ler CardCode da coluna B do CSV
-                        # 2. Procurar veículo com cartao_frota_eletric_id = CardCode
-                        # 3. Obter motorista atribuído ao veículo (motorista_atribuido)
-                        # 4. Associar carregamento ao motorista
                         
-                        card_code = row.get('CardCode', '').strip()  # COLUNA B: Ex: PTPRIO6087131736480003
+                        card_code = row.get('CardCode', '').strip()  # Ex: PTPRIO6087131736480003
                         
                         # Buscar veículo APENAS por CardCode
                         vehicle = None
