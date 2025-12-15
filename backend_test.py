@@ -1393,9 +1393,23 @@ startxref
             wb = openpyxl.load_workbook(BytesIO(excel_content))
             sheet = wb.active
             
-            # Get header row
-            header_row = list(sheet.iter_rows(min_row=1, max_row=1, values_only=True))[0]
-            header = [str(cell).strip() if cell else '' for cell in header_row]
+            # Find header row (it might not be on row 1)
+            header = None
+            header_row_num = 1
+            
+            for row_num in range(1, 10):  # Check first 10 rows for header
+                row_values = list(sheet.iter_rows(min_row=row_num, max_row=row_num, values_only=True))[0]
+                row_text = [str(cell).strip() if cell else '' for cell in row_values]
+                
+                # Check if this looks like a header row (contains expected column names)
+                if any('DATA' in cell or 'CARTÃO' in cell or 'CARTAO' in cell for cell in row_text):
+                    header = row_text
+                    header_row_num = row_num
+                    break
+            
+            if not header:
+                self.log_result("Test-1-Structure", False, "❌ Cabeçalho não encontrado no ficheiro Excel")
+                return False
             
             print(f"  📋 Colunas encontradas: {header}")
             
