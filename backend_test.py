@@ -1372,17 +1372,168 @@ startxref
         
         return all_tests_passed
     
-    def test_1_excel_import_endpoint(self, headers):
-        """TEST 1: Importação de Excel via POST /api/importar/viaverde"""
+    def test_1_download_and_analyze_excel(self, headers):
+        """TESTE 1: Download e análise do ficheiro Excel oficial"""
         try:
-            print(f"\n📋 TESTE 1: Importação de Excel")
+            print(f"\n📋 TESTE 1: Download e análise do ficheiro Excel oficial")
             
-            # Read the test Excel file
-            with open('/tmp/carregamentos_test.xlsx', 'rb') as f:
-                excel_content = f.read()
+            # Download the official Excel file
+            excel_url = "https://customer-assets.emergentagent.com/job_autofleet-hub-1/artifacts/6zorlnh2_Transa%C3%A7%C3%B5es_Eletrico_20251215.xlsx"
+            
+            excel_response = requests.get(excel_url)
+            if excel_response.status_code != 200:
+                self.log_result("Test-1-Download", False, f"❌ Falha no download: {excel_response.status_code}")
+                return False
+            
+            excel_content = excel_response.content
+            excel_size = len(excel_content)
+            
+            print(f"  ✅ Ficheiro descarregado: {excel_size} bytes")
+            
+            # Analyze Excel structure
+            import openpyxl
+            from io import BytesIO
+            
+            wb = openpyxl.load_workbook(BytesIO(excel_content))
+            sheet = wb.active
+            
+            # Get header row
+            header_row = list(sheet.iter_rows(min_row=1, max_row=1, values_only=True))[0]
+            header = [str(cell).strip() if cell else '' for cell in header_row]
+            
+            print(f"  📋 Colunas encontradas: {header}")
+            
+            # Check for required columns
+            required_columns = ['DATA', 'Nº. CARTÃO', 'NOME', 'DESCRIÇÃO', 'MATRÍCULA', 'ID CARREGAMENTO', 'POSTO', 'ENERGIA', 'DURAÇÃO', 'CUSTO', 'TOTAL', 'TOTAL c/ IVA']
+            missing_columns = []
+            
+            for req_col in required_columns:
+                found = False
+                for col in header:
+                    if req_col.lower() in col.lower():
+                        found = True
+                        break
+                if not found:
+                    missing_columns.append(req_col)
+            
+            if missing_columns:
+                self.log_result("Test-1-Structure", False, f"❌ Colunas em falta: {missing_columns}")
+                return False
+            
+            # Count data rows
+            data_rows = 0
+            cardcodes_found = []
+            
+            for row_num, row_values in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+                if any(cell for cell in row_values):  # Non-empty row
+                    data_rows += 1
+                    # Extract CardCode from row
+                    row_dict = dict(zip(header, row_values))
+                    for col_name, value in row_dict.items():
+                        if 'cartão' in col_name.lower() or 'cartao' in col_name.lower():
+                            if value and str(value).strip():
+                                cardcode = str(value).strip()
+                                if cardcode not in cardcodes_found:
+                                    cardcodes_found.append(cardcode)
+                            break
+            
+            print(f"  📊 Linhas de dados: {data_rows}")
+            print(f"  🏷️ CardCodes únicos encontrados: {len(cardcodes_found)}")
+            
+            # Show some example CardCodes
+            example_cardcodes = cardcodes_found[:5]
+            for i, cardcode in enumerate(example_cardcodes):
+                print(f"    {i+1}. {cardcode}")
+            
+            # Store for next tests
+            self.excel_content = excel_content
+            self.data_rows_count = data_rows
+            self.cardcodes_found = cardcodes_found
+            
+            self.log_result("Test-1-Download-Analysis", True, 
+                          f"✅ Ficheiro analisado: {data_rows} linhas, {len(cardcodes_found)} CardCodes únicos")
+            return True
+            
+        except Exception as e:
+            self.log_result("Test-1-Download-Analysis", False, f"❌ Erro: {str(e)}")
+            return False
+    
+    def test_2_import_via_api(self, headers):
+        """TESTE 2: Importação via API POST /api/importar/viaverde"""
+        try:
+            print(f"\n📋 TESTE 2: Importação via API")
+            
+            if not hasattr(self, 'excel_content'):
+                self.log_result("Test-2-Import-API", False, "❌ Ficheiro Excel não disponível do teste anterior")
+                return False
             
             files = {
-                'file': ('carregamentos_test.xlsx', excel_content, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                'file': ('Transações_Eletrico_20251215.xlsx', self.excel_content, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            }
+            data = {
+                'periodo_inicio': '2025-12-01',
+                'periodo_fim': '2025-12-31'
+            }
+            
+            print(f"  🚀 Enviando ficheiro para importação...")
+            print(f"  📅 Período: {data['periodo_inicio']} a {data['periodo_fim']}")
+            
+            response = requests.post(
+                f"{BACKEND_URL}/importar/viaverde",
+                files=files,
+                data=data,
+                headers=headers
+            )
+            
+            print(f"  📡 Status da resposta: {response.status_code}")
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Check required response fields
+                required_fields = ['sucesso', 'erros', 'message', 'totais', 'despesas_por_motorista']
+                missing_fields = [field for field in required_fields if field not in result]
+                
+                if missing_fields:
+                    self.log_result("Test-2-Import-API", False, f"❌ Campos em falta na resposta: {missing_fields}")
+                    return False
+                
+                sucesso = result.get('sucesso', 0)
+                erros = result.get('erros', 0)
+                totais = result.get('totais', {})
+                despesas_por_motorista = result.get('despesas_por_motorista', [])
+                
+                print(f"  📊 Resultados da importação:")
+                print(f"    ✅ Sucessos: {sucesso}")
+                print(f"    ❌ Erros: {erros}")
+                print(f"    💰 Total despesas: €{totais.get('total_despesas', 0)}")
+                print(f"    ⚡ Total energia: {totais.get('total_energia_kwh', 0)} kWh")
+                print(f"    👥 Motoristas afetados: {len(despesas_por_motorista)}")
+                
+                # Store results for next tests
+                self.import_result = result
+                
+                if sucesso > 0:
+                    self.log_result("Test-2-Import-API", True, 
+                                  f"✅ Importação bem-sucedida: {sucesso} registos importados")
+                    return True
+                else:
+                    erros_detalhes = result.get('erros_detalhes', [])
+                    print(f"  ❌ Detalhes dos erros:")
+                    for i, erro in enumerate(erros_detalhes[:5]):
+                        print(f"    {i+1}. {erro}")
+                    
+                    self.log_result("Test-2-Import-API", False, 
+                                  f"❌ Nenhum registo importado com sucesso. Erros: {erros}")
+                    return False
+            else:
+                self.log_result("Test-2-Import-API", False, 
+                              f"❌ Falha na importação: {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_result("Test-2-Import-API", False, f"❌ Erro: {str(e)}")
+            return Falsexmlformats-officedocument.spreadsheetml.sheet')
             }
             data = {
                 'periodo_inicio': '2025-01-01',
