@@ -12655,6 +12655,9 @@ async def importar_plataforma(
                         # ❌ NÃO procura por email do motorista!
                         # ✅ Procura APENAS por "Cartão Frota Elétrico ID (Carregamentos)"
                         
+                        # FLAG: Marcar que este é um carregamento (não validar email depois)
+                        is_carregamento_eletrico = True
+                        
                         card_code = row.get('CardCode', '').strip()  # Ex: PTPRIO6087131736480003
                         
                         # Buscar veículo APENAS por CardCode
