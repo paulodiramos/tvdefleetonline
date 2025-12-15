@@ -12409,6 +12409,13 @@ async def importar_plataforma(
                     # NÃO procura por email do motorista!
                     # Identificação: CardCode (coluna B) → Veículo → Motorista atribuído
                     # O campo "Cartão Frota Elétrico ID (Carregamentos)" deve estar preenchido no veículo
+                    
+                    # 🔍 DETECTAR SE É CARREGAMENTO (para não validar email depois)
+                    is_formato_simplificado_check = 'data' in row and 'hora' in row and 'kwh' in row and 'valor_total' in row
+                    is_formato_completo_check = ('StartDate' in row or 'Timestamp' in row) and 'Energy' in row
+                    if is_formato_simplificado_check or is_formato_completo_check:
+                        is_carregamento_eletrico = True  # ✅ Marcar como carregamento ANTES da validação de email
+                    
                     motorista = {"id": None, "email": ""}  # Placeholder - será atribuído via veículo
                     motorista_email = ""
                     # A lógica completa está na secção de carregamentos elétricos abaixo
