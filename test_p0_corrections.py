@@ -162,8 +162,12 @@ class P0CorrectionsTester:
                 'file': ('test_relatorio_rascunho.csv', csv_content.encode('utf-8-sig'), 'text/csv')
             }
             
-            # Step 3: Import CSV to trigger report creation
-            import_response = requests.post(f"{BACKEND_URL}/importar/uber", files=files, headers=headers)
+            # Step 3: Import CSV to trigger report creation (with period parameters)
+            data = {
+                'periodo_inicio': '2025-12-15',
+                'periodo_fim': '2025-12-21'
+            }
+            import_response = requests.post(f"{BACKEND_URL}/importar/uber", files=files, data=data, headers=headers)
             
             if import_response.status_code == 200:
                 import_result = import_response.json()
