@@ -1747,12 +1747,7 @@ startxref
             
         except Exception as e:
             self.log_result("Test-5-Weekly-Reports", False, f"❌ Erro: {str(e)}")
-            return Falsexmlformats-officedocument.spreadsheetml.sheet')
-            }
-            data = {
-                'periodo_inicio': '2025-01-01',
-                'periodo_fim': '2025-01-31'
-            }
+            return False
             
             response = requests.post(
                 f"{BACKEND_URL}/importar/viaverde",
