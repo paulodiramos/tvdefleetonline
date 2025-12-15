@@ -12995,7 +12995,16 @@ async def importar_plataforma(
                         # FLAG: Marcar que este é um carregamento (não validar email depois)
                         is_carregamento_eletrico = True
                         
-                        card_code = row.get('CardCode', '').strip()  # Ex: PTPRIO6087131736480003
+                        # Extrair CardCode de múltiplos formatos possíveis
+                        card_code = None
+                        for key in row.keys():
+                            if 'CardCode' in key or 'CART' in key.upper():
+                                card_code = str(row.get(key, '')).strip()
+                                if card_code and card_code.lower() != 'none':
+                                    break
+                        
+                        if not card_code:
+                            card_code = row.get('CardCode', '').strip()  # Fallback
                         
                         # Buscar veículo APENAS por CardCode
                         vehicle = None
