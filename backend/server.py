@@ -12366,13 +12366,13 @@ async def importar_plataforma(
                         continue
                 
                 elif plataforma == 'viaverde':
-                    # Via Verde é processado mais à frente na secção de documento
-                    # onde distingue entre portagens e carregamentos elétricos
-                    # Não precisa de validação de motorista aqui - o motorista virá do veículo
-                    motorista = {"id": None, "email": ""}  # Placeholder - será preenchido depois
+                    # ⚡ CARREGAMENTOS ELÉTRICOS - Lógica Específica
+                    # NÃO procura por email do motorista!
+                    # Identificação: CardCode (coluna B) → Veículo → Motorista atribuído
+                    # O campo "Cartão Frota Elétrico ID (Carregamentos)" deve estar preenchido no veículo
+                    motorista = {"id": None, "email": ""}  # Placeholder - será atribuído via veículo
                     motorista_email = ""
-                    # IMPORTANTE: pular para a criação do documento sem validar email
-                    # (a validação específica de Via Verde está na secção de documento)
+                    # A lógica completa está na secção de carregamentos elétricos abaixo
                 
                 elif plataforma == 'bolt':
                     # Para Bolt: buscar por identificador_individual, email ou nome
@@ -12602,26 +12602,32 @@ async def importar_plataforma(
                     # Formato 2: Carregamentos elétricos (exportação real)
                     
                     if ('StartDate' in row or 'Timestamp' in row) and 'Energy' in row:
-                        # Formato 2: Carregamentos elétricos Via Verde
-                        # Identificar veículo APENAS por CardCode (coluna B do ficheiro)
-                        card_code = row.get('CardCode', '').strip()  # Ex: PTPRIO6087131736480003 → cartao_frota_eletric_id (COLUNA B)
-                        mobile_card = row.get('MobileCard', '').strip()  # Ex: EZeny2, EZeny6, E (COLUNA C) - apenas para info
-                        matricula_viaverde = row.get('Plate', '').strip() or row.get('MobileRegistration', '').strip()  # COLUNA D - apenas para info
+                        # ⚡ CARREGAMENTOS ELÉTRICOS VIA VERDE
+                        # 
+                        # IDENTIFICAÇÃO: CardCode → Veículo → Motorista
+                        # ❌ NÃO procura por email do motorista!
+                        # ✅ Procura APENAS por "Cartão Frota Elétrico ID (Carregamentos)"
+                        #
+                        # Fluxo:
+                        # 1. Ler CardCode da coluna B do CSV
+                        # 2. Procurar veículo com cartao_frota_eletric_id = CardCode
+                        # 3. Obter motorista atribuído ao veículo (motorista_atribuido)
+                        # 4. Associar carregamento ao motorista
                         
-                        # Buscar veículo APENAS por CardCode → cartao_frota_eletric_id
+                        card_code = row.get('CardCode', '').strip()  # COLUNA B: Ex: PTPRIO6087131736480003
+                        
+                        # Buscar veículo APENAS por CardCode
                         vehicle = None
                         
-                        # IMPORTANTE: Procurar APENAS por CardCode (coluna B do ficheiro)
-                        # O campo "Cartão Frota Elétrico ID (Carregamentos)" na interface deve conter este valor PTPRIO...
                         if card_code:
                             vehicle = await db.vehicles.find_one(
                                 {"cartao_frota_eletric_id": card_code},
                                 {"_id": 0}
                             )
                             if vehicle:
-                                logger.info(f"✅ Carregamento - Veículo encontrado por CardCode (cartao_frota_eletric_id): {card_code}")
+                                logger.info(f"✅ Carregamento - Veículo encontrado por Cartão Frota Elétrico ID: {card_code}")
                         else:
-                            logger.warning(f"⚠️ Linha {row_num}: CardCode vazio - não é possível identificar veículo")
+                            logger.warning(f"⚠️ Linha {row_num}: CardCode vazio no CSV")
                         
                         # Se veículo não encontrado, registar erro e continuar
                         if not vehicle:
@@ -12637,10 +12643,12 @@ async def importar_plataforma(
                                 )
                             continue
                         
-                        # IMPORTANTE: Associar motorista através do veículo (NÃO por email!)
-                        # Buscar motorista atribuído ao veículo encontrado
+                        # ✅ ASSOCIAR MOTORISTA ATRAVÉS DO VEÍCULO
+                        # ❌ NÃO procura por email!
+                        # ✅ Usa o campo motorista_atribuido do veículo
                         motorista = None
                         motorista_email = ""
+                        
                         if vehicle.get('motorista_atribuido'):
                             motorista_temp = await db.motoristas.find_one(
                                 {"id": vehicle['motorista_atribuido']},
@@ -12649,11 +12657,11 @@ async def importar_plataforma(
                             if motorista_temp:
                                 motorista = motorista_temp
                                 motorista_email = motorista.get("email", "")
-                                logger.info(f"✅ Carregamento - Motorista atribuído ao veículo: {motorista.get('name')}")
+                                logger.info(f"✅ Carregamento - Motorista atribuído: {motorista.get('name')} (via veículo)")
                         
-                        # Se não houver motorista atribuído, permitir importação sem motorista
+                        # Se veículo não tiver motorista, importar sem motorista (permitido)
                         if not motorista:
-                            logger.warning(f"⚠️ Carregamento - Veículo {vehicle.get('matricula')} sem motorista atribuído")
+                            logger.warning(f"⚠️ Carregamento - Veículo {vehicle.get('matricula')} sem motorista atribuído (importado sem motorista)")
                             motorista = {"id": None, "email": None}
                             motorista_email = ""
                         
