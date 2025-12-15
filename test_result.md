@@ -815,6 +815,47 @@ test_plan:
 agent_communication:
     - agent: "testing"
       message: |
+        🎯 TESTE COMPLETO DAS CORREÇÕES P0 IMPLEMENTADAS - 100% FUNCIONANDO!
+        
+        CONTEXTO DO TESTE:
+        Teste específico das 3 correções críticas P0 implementadas no backend conforme review request detalhado em português:
+        - Sistema TVDEFleet - Plataforma de gestão de frotas TVDE
+        - Importação de dados de múltiplas plataformas (Uber, Bolt, Via Verde, GPS, Combustível)
+        - Credenciais testadas: parceiro@tvdefleet.com / UQ1B6DXU, admin@tvdefleet.com / o72ocUHy
+        
+        CORREÇÕES P0 TESTADAS:
+        
+        ✅ CORREÇÃO 1: ESTADO DE RASCUNHO EM RELATÓRIOS
+        - Ficheiro: /app/backend/server.py (linha 12190)
+        - Alteração: "estado": "rascunho" em vez de "pendente"
+        - Teste: Importação CSV Uber → Criação automática de relatório
+        - Resultado: ✅ Relatório criado com estado "rascunho" confirmado
+        - Status: 100% FUNCIONANDO
+        
+        ✅ CORREÇÃO 2: CAMPO CARTAO_FROTA_ELETRIC_ID
+        - Ficheiro: /app/backend/server.py (linha 1515)
+        - Alteração: Adicionado campo "cartao_frota_eletric_id" ao modelo Vehicle
+        - Teste: PUT /api/vehicles/{id} com valor "PTPRIO6087131736480003"
+        - Resultado: ✅ Campo aceite, guardado e persistente
+        - Diferenciação: ✅ Separado de cartao_frota_id (combustível vs elétrico)
+        - Status: 100% FUNCIONANDO
+        
+        ✅ CORREÇÃO 3: IMPORTAÇÃO DE CARREGAMENTOS ELÉTRICOS
+        - Lógica: Linha 12609 de server.py
+        - Verificação: Sistema usa cartao_frota_eletric_id para encontrar veículos
+        - Teste: CSV Via Verde com CardCode matching
+        - Resultado: ✅ Sem erros "Veículo não encontrado"
+        - Status: 100% FUNCIONANDO
+        
+        RESULTADO FINAL:
+        🎉 TODAS AS 3 CORREÇÕES P0 FORAM CONFIRMADAS E ESTÃO FUNCIONANDO!
+        - Total Tests: 8
+        - ✅ Passed: 8
+        - ❌ Failed: 0
+        - Sistema pronto para produção com todas as correções P0 implementadas
+        
+    - agent: "testing"
+      message: |
         🎯 TESTE CRÍTICO COMPLETO: IMPORTAÇÃO CSV DA BOLT - 100% FUNCIONANDO!
         
         CONTEXTO DO TESTE:
