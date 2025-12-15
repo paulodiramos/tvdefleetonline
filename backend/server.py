@@ -12113,6 +12113,7 @@ async def criar_relatorios_rascunho_apos_importacao(
             ganhos_uber = 0
             ganhos_bolt = 0
             portagens_viaverde = 0
+            carregamentos_total = 0  # Carregamentos elétricos separados
             combustivel_total = 0
             km_percorridos = 0
             
@@ -12198,7 +12199,7 @@ async def criar_relatorios_rascunho_apos_importacao(
                 "ganhos_uber": ganhos_uber,
                 "ganhos_bolt": ganhos_bolt,
                 "portagens_viaverde": portagens_viaverde,
-                "carregamentos_eletricos": carregamentos_total if plataforma == 'viaverde' else 0,  # Total de carregamentos da semana
+                "carregamentos_eletricos": carregamentos_total,  # Total de carregamentos elétricos da semana
                 "combustivel_total": combustivel_total,
                 "km_percorridos": km_percorridos,
                 "total_ganhos": ganhos_uber + ganhos_bolt,
