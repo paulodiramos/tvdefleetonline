@@ -4832,11 +4832,42 @@ async def update_vehicle(vehicle_id: str, updates: Dict[str, Any], current_user:
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Se motorista_atribuido foi alterado, sincronizar o nome do motorista
+    # Se motorista_atribuido foi alterado, sincronizar o nome do motorista E COPIAR IDs DO VEÍCULO
     if "motorista_atribuido" in updates and updates["motorista_atribuido"]:
-        motorista = await db.motoristas.find_one({"id": updates["motorista_atribuido"]}, {"_id": 0, "name": 1})
+        motorista = await db.motoristas.find_one({"id": updates["motorista_atribuido"]}, {"_id": 0})
         if motorista:
             updates["motorista_atribuido_nome"] = motorista.get("name")
+            
+            # 🚗 ASSOCIAÇÃO AUTOMÁTICA: Copiar IDs do veículo para o motorista
+            vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+            if vehicle:
+                motorista_updates = {}
+                
+                # Copiar cartão de combustível
+                if vehicle.get("id_cartao_frota"):
+                    motorista_updates["id_cartao_frota_combustivel"] = vehicle["id_cartao_frota"]
+                    logger.info(f"🔗 Copiando cartão combustível do veículo para motorista: {vehicle['id_cartao_frota']}")
+                
+                # Copiar cartão elétrico
+                if vehicle.get("cartao_frota_eletric_id"):
+                    motorista_updates["cartao_frota_eletric_id"] = vehicle["cartao_frota_eletric_id"]
+                    logger.info(f"🔗 Copiando cartão elétrico do veículo para motorista: {vehicle['cartao_frota_eletric_id']}")
+                
+                # Copiar cartão Via Verde
+                if vehicle.get("identificador_viaverde"):
+                    motorista_updates["cartao_viaverde_id"] = vehicle["identificador_viaverde"]
+                    logger.info(f"🔗 Copiando cartão Via Verde do veículo para motorista: {vehicle['identificador_viaverde']}")
+                
+                # Copiar veículo atribuído
+                motorista_updates["veiculo_atribuido"] = vehicle_id
+                
+                # Atualizar motorista
+                if motorista_updates:
+                    await db.motoristas.update_one(
+                        {"id": updates["motorista_atribuido"]},
+                        {"$set": motorista_updates}
+                    )
+                    logger.info(f"✅ IDs do veículo {vehicle.get('matricula')} copiados para motorista {motorista.get('name')}")
         else:
             updates["motorista_atribuido_nome"] = None
     elif "motorista_atribuido" in updates and not updates["motorista_atribuido"]:
