@@ -11917,7 +11917,7 @@ async def importar_carregamentos_excel(
         logger.info(f"🗺️ Mapeamento de colunas: {col_map}")
         
         # Processar linhas a partir da linha 2
-        for row_num, row_values in enumerate(sheet.iter_rows(min_row=header_row_num+1, values_only=True), start=2):
+        for row_num, row_values in enumerate(sheet.iter_rows(min_row=header_row_num+1, values_only=True), start=header_row_num+1):
             try:
                 # Criar dicionário da linha
                 row = dict(zip(header, row_values))
