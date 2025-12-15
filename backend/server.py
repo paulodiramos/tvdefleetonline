@@ -12019,12 +12019,16 @@ async def importar_carregamentos_excel(
 
 
 async def importar_viaverde_excel(
+    file_content: bytes,
+    current_user: Dict,
+    periodo_inicio: Optional[str] = None,
+    periodo_fim: Optional[str] = None
+) -> Dict[str, Any]:
     """
-    Importar carregamentos elétricos de Excel (.xlsx)
-    - Formato: Excel (.xlsx) com colunas portuguesas
-    - Identificador: Nº. CARTÃO (CardCode) → cartao_frota_eletric_id
-    - Associa motorista via veículo (motorista_atribuido)
-    - NÃO usa email do motorista
+    Importar ficheiro Excel de portagens Via Verde
+    - Formato: Excel (.xlsx) exportado da Via Verde
+    - Associa por OBU e confirma a matrícula
+    - Valida que ambos (OBU + matrícula) estão corretos
     """
     try:
         import openpyxl
