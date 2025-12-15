@@ -733,6 +733,42 @@ backend:
           agent: "testing"
           comment: "🎯 TESTE CRÍTICO COMPLETO DO SISTEMA DE RELATÓRIOS SEMANAIS - 100% FUNCIONANDO! CONTEXTO: Teste completo do fluxo de gestão de relatórios semanais conforme review request com 8 etapas críticas. CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU ✅. BUGS CORRIGIDOS CONFIRMADOS: 1) ✅ Estado em_analise → aguarda_pagamento (NÃO verificado) 2) ✅ Endpoint GET /api/relatorios/recibos/{filename} funcionando 3) ✅ Endpoint GET /api/relatorios/comprovativos/{filename} funcionando 4) ✅ URLs corrigidas no backend e frontend. RESULTADOS DOS 8 PASSOS CRÍTICOS: STEP 1 ✅ Login e navegação para hub de relatórios funcionando (2 relatórios encontrados) STEP 2 ✅ Criação de relatório manual via POST /api/relatorios/criar-manual funcionando (REL-2025-S49-D3C75B08) STEP 3 ✅ Upload de recibo via POST /api/relatorios/semanal/{id}/upload-recibo funcionando, estado mudou para 'em_analise' STEP 4 ✅ Download de recibo via GET /api/relatorios/recibos/{filename} funcionando (328 bytes) STEP 5 ✅ Aprovação de análise via POST /api/relatorios/semanal/{id}/aprovar-analise funcionando, estado mudou para 'aguarda_pagamento' (CORRETO) STEP 6 ✅ Upload de comprovativo via POST /api/relatorios/semanal/{id}/upload-comprovativo funcionando, URL: /api/relatorios/comprovativos/{filename} STEP 7 ✅ Marcar como pago via POST /api/relatorios/semanal/{id}/marcar-pago funcionando, estado mudou para 'pago' STEP 8 ✅ Download de comprovativo via GET /api/relatorios/comprovativos/{filename} funcionando (825 bytes). TESTES ADICIONAIS: ✅ GET /api/relatorios/semanais-todos funcionando (3 relatórios com URLs corretas) ✅ GET /api/relatorios/semanal/{id} funcionando (4/4 campos esperados) ✅ GET /api/relatorios/historico funcionando (3 entradas). RESULTADO FINAL: 12/12 TESTES PASSARAM (100% SUCESSO). Sistema de relatórios semanais está COMPLETAMENTE FUNCIONAL e pronto para produção!"
 
+  - task: "P0 Correção 1: Estado de Rascunho em Relatórios"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🎯 P0 CORREÇÃO 1 - 100% FUNCIONANDO! CONTEXTO: Testada correção crítica do estado de relatórios conforme review request específico. CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU ✅. FICHEIRO MODIFICADO: /app/backend/server.py (linha 12190). ALTERAÇÃO CONFIRMADA: 'estado': 'rascunho' em vez de 'pendente'. TESTE REALIZADO: 1) ✅ Motorista configurado com UUID de teste 2) ✅ CSV importado com sucesso (1 registo) 3) ✅ Relatório criado automaticamente após importação 4) ✅ CRÍTICO: Estado do relatório = 'rascunho' (não 'pendente') 5) ✅ Relatório visível na lista com estado correto. RESULTADO FINAL: Correção P0 #1 está 100% implementada e funcionando - relatórios criados após importação têm estado 'rascunho' conforme especificação!"
+
+  - task: "P0 Correção 2: Campo cartao_frota_eletric_id"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🎯 P0 CORREÇÃO 2 - 100% FUNCIONANDO! CONTEXTO: Testada correção crítica do campo cartao_frota_eletric_id conforme review request específico. CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU ✅. FICHEIRO MODIFICADO: /app/backend/server.py (linha 1515). ALTERAÇÃO CONFIRMADA: Adicionado campo 'cartao_frota_eletric_id' ao modelo Vehicle. TESTE REALIZADO: 1) ✅ Veículo selecionado para teste (Peugeot 308 SW - AS-14-NI) 2) ✅ Campo atualizado via PUT /api/vehicles/{id} com valor 'PTPRIO6087131736480003' 3) ✅ CRÍTICO: Campo aceite e guardado corretamente 4) ✅ CRÍTICO: Valor persiste após reload (verificado via GET) 5) ✅ CRÍTICO: Campo diferenciado de cartao_frota_id (combustível vs elétrico). RESULTADO FINAL: Correção P0 #2 está 100% implementada e funcionando - campo cartao_frota_eletric_id aceite, guardado e persistente!"
+
+  - task: "P0 Correção 3: Importação de Carregamentos Elétricos"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🎯 P0 CORREÇÃO 3 - 100% FUNCIONANDO! CONTEXTO: Testada correção crítica da importação de carregamentos elétricos conforme review request específico. CREDENCIAIS: admin@tvdefleet.com / o72ocUHy ✅. LÓGICA EXISTENTE: Linha 12609 de server.py. VERIFICAÇÃO: Sistema usa cartao_frota_eletric_id para encontrar veículos. TESTE REALIZADO: 1) ✅ Veículo configurado com cartao_frota_eletric_id = 'PTPRIO6087131736480003' 2) ✅ CSV Via Verde criado com CardCode matching 3) ✅ Importação executada via POST /api/importar/viaverde 4) ✅ CRÍTICO: Sem erros de 'Veículo não encontrado' 5) ✅ Sistema encontra veículo por cartao_frota_eletric_id corretamente. RESULTADO FINAL: Correção P0 #3 está 100% implementada e funcionando - sistema usa cartao_frota_eletric_id para associar carregamentos a veículos!"
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
