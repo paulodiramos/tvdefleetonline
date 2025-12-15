@@ -8131,7 +8131,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Importação Excel de Carregamentos Elétricos - COMPLETED ✅"
+    - "CSV Import Bug Fix - Carregamentos Elétricos (Email do motorista vazio) - COMPLETED ✅"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -8148,6 +8148,8 @@ test_plan:
   gps_import_vehicle_lookup_working: true
   excel_carregamentos_eletricos_tested: true
   excel_carregamentos_detection_working: true
+  csv_carregamentos_bug_fix_tested: true
+  csv_carregamentos_email_validation_skipped: true
   excel_carregamentos_cardcode_lookup_working: true
   excel_carregamentos_error_messages_working: true
 
