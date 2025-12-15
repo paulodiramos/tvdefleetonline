@@ -12640,8 +12640,8 @@ async def importar_plataforma(
                             identificadores = []
                             if card_code:
                                 identificadores.append(f"CardCode: {card_code}")
-                            if service_type:
-                                identificadores.append(f"ServiceType: {service_type}")
+                            if mobile_card:
+                                identificadores.append(f"MobileCard: {mobile_card}")
                             if matricula_viaverde:
                                 identificadores.append(f"Matrícula: {matricula_viaverde}")
                             erros_detalhes.append(
@@ -12677,12 +12677,12 @@ async def importar_plataforma(
                         documento.update({
                             "vehicle_id": vehicle["id"] if vehicle else None,
                             "matricula": matricula_viaverde or (vehicle.get("matricula") if vehicle else None),
-                            "cartao_viaverde": cartao_viaverde,
-                            "card_code": card_code,  # CardCode do CSV → cartao_frota_id
-                            "service_type": service_type,  # ServiceType (EZeny2, etc)
+                            "card_code": card_code,  # CardCode do CSV (coluna B) → cartao_frota_eletric_id
+                            "mobile_card": mobile_card,  # MobileCard do CSV (coluna C) - Ex: EZeny2, EZeny6, E
                             "obu": vehicle.get("obu") if vehicle else None,
                             "via_verde_id": vehicle.get("via_verde_id") if vehicle else None,
-                            "cartao_frota_id": vehicle.get("cartao_frota_id") if vehicle else card_code,
+                            "cartao_frota_id": vehicle.get("cartao_frota_id") if vehicle else None,
+                            "cartao_frota_eletric_id": vehicle.get("cartao_frota_eletric_id") if vehicle else card_code,
                             "estacao_id": row.get('ChargingStationID', '').strip() or row.get('IdChargingStation', '').strip(),
                             "estacao_nome": row.get('ChargingStation', '').strip(),
                             "duracao_minutos": to_float(row.get('TotalDuration', '0')),
