@@ -9609,7 +9609,7 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
             expected_total = 31.24  # 14.08 + 8.58 + 8.58
             
             # Get weekly reports to verify calculations
-            response = requests.get(f"{BACKEND_URL}/relatorios-semanais", headers=headers)
+            response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos", headers=headers)
             
             if response.status_code == 200:
                 relatorios = response.json()
