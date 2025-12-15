@@ -10789,11 +10789,16 @@ if __name__ == "__main__":
     # Run the bug fix tests
     success = tester.test_bug_fixes_review_request()
     
-    # Run SIMPLIFIED CHARGING IMPORT SYSTEM TEST (NEW REVIEW REQUEST)
-    print("\n🔋 NEW REVIEW REQUEST: SIMPLIFIED CHARGING IMPORT SYSTEM")
+    # Run NEW SIMPLIFIED CSV FORMAT TEST (CURRENT REVIEW REQUEST)
+    print("\n🔋 CURRENT REVIEW REQUEST: NOVO FORMATO DE CARREGAMENTOS (SIMPLIFICADO)")
     print("=" * 80)
     # Authenticate parceiro for this test
     tester.authenticate_user("parceiro")
+    tester.test_new_simplified_csv_format_electric_charging()
+    
+    # Run SIMPLIFIED CHARGING IMPORT SYSTEM TEST (PREVIOUS REVIEW REQUEST)
+    print("\n🔋 PREVIOUS REVIEW REQUEST: SIMPLIFIED CHARGING IMPORT SYSTEM")
+    print("=" * 80)
     tester.test_simplified_charging_import_system()
     
     # Print summary
