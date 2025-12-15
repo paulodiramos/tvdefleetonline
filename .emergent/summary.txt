@@ -1,160 +1,155 @@
 <analysis>**original_problem_statement:**
 O utilizador iniciou com a necessidade de desenvolver um sistema robusto para a gestão de relatórios semanais de frotas. Os requisitos evoluíram para incluir:
-1.  **Gestão de Relatórios:** Um fluxo completo com os estados , , ,  e .
+1.  **Gestão de Relatórios:** Um fluxo completo com os estados , , ,  e . O estado  foi adicionado para dados importados.
 2.  **Criação de Relatórios:** Métodos de criação Manual, Semi-Manual (importação de CSV/Excel) e Automático (sincronização agendada).
-3.  **Importação de Dados:** Uma página dedicada para importar dados de várias plataformas (Uber, Bolt, Via Verde, GPS, Combustível, Carregamentos Elétricos), adaptando-se a diferentes formatos de ficheiro e criando relatórios de rascunho automaticamente.
-4.  **Lógica de Agregação:** Ao gerar relatórios para uma semana específica, o sistema deve agregar os dados da Uber e Bolt da semana atual com os dados da Via Verde da semana *anterior*.
-5.  **Correção de Bugs:** Múltiplos bugs foram reportados, principalmente relacionados com a falha na importação de ficheiros de diversas plataformas e a persistência de dados em formulários de edição de veículos e motoristas. O utilizador fornece feedback contínuo e ficheiros de exemplo para depuração.
+3.  **Importação de Dados:** Uma página dedicada para importar dados de várias plataformas (Uber, Bolt, Via Verde, GPS, Combustível, Carregamentos Elétricos), adaptando-se a diferentes formatos de ficheiro (múltiplos tipos de CSV e agora XLSX) e criando relatórios de rascunho automaticamente.
+4.  **Correção de Bugs:** Múltiplos bugs foram reportados e corrigidos, principalmente relacionados com a falha na importação de ficheiros, lógica de identificação de veículos (removendo a dependência de  para ), e problemas com o estado dos relatórios. Um bug persistente de gravação de dados nos formulários continua a ser um problema.
+5.  **Novos Campos:** Adicionar campos específicos para gorjetas e portagens de Uber e Bolt nos relatórios.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação full-stack (React + FastAPI) possui um Hub de Relatórios () e uma página de importação () altamente customizada. O sistema agora suporta a importação de dados de diversas fontes (Uber, Bolt, Via Verde Portagens, Via Verde Carregamentos, GPS, Combustível) através de uma lógica complexa no backend que lida com múltiplos formatos de ficheiro (CSV, XLSX), delimitadores, codificações e identificadores de veículos/motoristas (Matrícula, OBU, vários tipos de cartões, UUID, etc.). A página de importação foi melhorada com seletores de Ano/Semana que sincronizam bidirecionalmente com campos de data. A maior parte do trabalho recente focou-se em corrigir sucessivos bugs de importação reportados pelo utilizador. Um novo campo () foi adicionado ao frontend para diferenciar cartões de carregamento elétrico dos de combustível.
+A aplicação full-stack (React + FastAPI) tem um Hub de Relatórios e uma página de importação complexa. O backend, concentrado no monolítico , agora suporta múltiplos formatos de ficheiro para importação de carregamentos elétricos (dois tipos de CSV e um XLSX), usando uma lógica de identificação que prioriza o campo  (CardCode) em vez do email do motorista. O sistema agora cria relatórios de Rascunho corretamente após a importação e inclui novos campos para gorjetas e portagens da Uber e Bolt. Foi implementada uma nova função () para lidar com o formato Excel, separando-a da lógica principal de importação. No entanto, a funcionalidade de guardar alterações nos formulários de veículos e motoristas continua com um bug P0 recorrente.
 
 **Last working item**:
-- Last item agent was working: Implementação de um campo dedicado para cartões de carregamento elétrico. O utilizador solicitou a criação do campo  para distinguir do  (usado para combustível). O agente adicionou o campo com sucesso ao formulário do frontend em  e estava prestes a atualizar a lógica do backend para utilizá-lo.
+- Last item agent was working: O agente acabou de implementar o suporte para importação de carregamentos elétricos a partir de um ficheiro Excel (.xlsx). Foi criada uma nova função  em  e a rota principal de importação () foi atualizada para chamar esta função quando um ficheiro  ou  é detetado na plataforma .
 - Status: IN PROGRESS
 - Agent Testing Done: N
-- Which testing method agent to use? both. O agente deve:
-    1.  Atualizar o backend () para salvar o novo campo  no endpoint .
-    2.  Atualizar a lógica de importação de carregamentos elétricos para procurar veículos usando o novo campo .
-    3.  Usar o  para garantir que o novo campo pode ser editado e salvo corretamente na página .
-    4.  Usar o  com um ficheiro de carregamentos para confirmar que a importação associa corretamente os dados ao veículo através do novo campo.
+- Which testing method agent to use? backend testing agent. O agente deve usar o ficheiro fornecido pelo utilizador () para testar o endpoint . O teste deve validar que o ficheiro é lido corretamente, os dados são extraídos, associados ao veículo correto via , e salvos na base de dados na coleção .
 - User Testing Done: N
 
 **All Pending/In progress Issue list**:
--   Issue 1: (P0) Finalizar a implementação do .
--   Issue 2: (P0) Bugs recorrentes na gravação de dados nos formulários  e .
--   Issue 3: (P1) A criação de relatórios de Rascunho após a importação não está a funcionar como esperado; os relatórios são criados como Pendente.
--   Issue 4: (P3) Refatoração do ficheiro monolítico .
--   Issue 5: (P4) Perda intermitente de dados de teste na base de dados.
+-   Issue 1: (P0) Bug recorrente na gravação de dados nos formulários  e .
+-   Issue 2: (P0 / Last working item) Testar e validar a recém-implementada funcionalidade de importação de carregamentos via ficheiro Excel.
+-   Issue 3: (P2) O frontend precisa ser atualizado para exibir e permitir a edição dos novos campos de relatório: , , , .
 
 Issues Detail:
 -   Issue 1:
-    -   Attempted fixes: O campo foi adicionado ao frontend. A lógica do backend ainda não foi modificada.
+    -   Attempted fixes: O agente iniciou a investigação, adicionou logs no frontend () e confirmou o bug usando o  (o botão Guardar não dispara a função de save). No entanto, o agente foi interrompido por outros pedidos do utilizador e não concluiu a correção.
     -   Next debug checklist:
-        1.  Modificar o endpoint  em  para aceitar e guardar o campo .
-        2.  Na função  em , modificar a lógica de importação de carregamentos elétricos ( e ) para usar o  para encontrar o veículo correspondente.
-    -   Why fix this issue and what will be achieved with the fix? Vai permitir a correta distinção e associação de custos entre abastecimentos de combustível e carregamentos elétricos.
+        1.  Revisitar  e .
+        2.  Analisar os logs do console do browser durante a tentativa de salvar para identificar erros de JavaScript.
+        3.  Inspecionar os manipuladores de eventos (, ) associados aos botões de salvar para garantir que estão corretamente ligados e não há condições que os impeçam de executar.
+        4.  Verificar o estado dos formulários (, ) antes do envio para garantir que os dados estão corretos.
+    -   Why fix this issue and what will be achieved with the fix? Esta é uma funcionalidade central para a gestão da frota. A sua correção permitirá ao utilizador gerir veículos e motoristas de forma fiável.
     -   Status: IN PROGRESS
-    -   Is recurring issue? N
+    -   Is recurring issue? Y
     -   Should Test frontend/backend/both after fix? Both
     -   Blocked on other issue: None
 -   Issue 2:
-    -   Attempted fixes: Várias tentativas foram feitas em forks anteriores, mas o utilizador continua a reportar que os dados não são salvos de forma fiável. O problema foi adiado para corrigir bugs de importação mais urgentes.
+    -   Attempted fixes: O código foi implementado (), mas ainda não foi testado.
     -   Next debug checklist:
-        1.  Usar o  para executar um teste E2E rigoroso: editar todos os campos em  e , salvar, recarregar a página e verificar se os dados persistiram.
-        2.  Inspecionar os payloads das requisições  e as respostas do servidor no browser.
-        3.  Adicionar logging detalhado nos endpoints de atualização do backend ( e de motoristas) para verificar os dados recebidos e o resultado da operação no MongoDB.
-    -   Why fix this issue and what will be achieved with the fix? A gestão de veículos e motoristas é uma funcionalidade central e está atualmente inutilizável ou pouco fiável.
+        1.  Executar um teste com o , enviando o ficheiro  para o endpoint .
+        2.  Verificar os logs do backend para confirmar que a função  foi chamada.
+        3.  Verificar se os dados foram inseridos corretamente na coleção  no MongoDB, incluindo a associação com o motorista e veículo.
+    -   Why fix this issue and what will be achieved with the fix? Permitirá que o utilizador importe dados de carregamentos a partir do formato Excel fornecido.
     -   Status: NOT STARTED
-    -   Is recurring issue? Y
-    -   Should Test frontend/backend/both after fix? Both
+    -   Is recurring issue? N
+    -   Should Test frontend/backend/both after fix? Backend
     -   Blocked on other issue: None
 -   Issue 3:
-    -   Attempted fixes: O agente criou uma função  e chamou-a no final de cada fluxo de importação. No entanto, o utilizador reportou em  que os relatórios ainda não são criados como rascunho.
+    -   Attempted fixes: Nenhum. O backend foi preparado, mas o frontend não foi tocado.
     -   Next debug checklist:
-        1.  Rever a função  em  para garantir que o campo  está a ser definido como .
-        2.  Verificar no  se os relatórios estão a ser filtrados corretamente e se o estado  é exibido.
-        3.  Após uma importação bem-sucedida, verificar diretamente na base de dados MongoDB qual o estado do  criado.
-    -   Why fix this issue and what will be achieved with the fix? Corresponde a um requisito fundamental do fluxo de trabalho do utilizador: importar dados para rascunho e depois gerar o relatório final.
+        1.  Identificar os componentes React onde os detalhes do relatório são exibidos.
+        2.  Adicionar os novos campos (, etc.) à interface.
+        3.  Se os relatórios forem editáveis, adicionar os campos aos formulários de edição e garantir que são salvos corretamente.
+    -   Why fix this issue and what will be achieved with the fix? Fornecerá ao utilizador visibilidade total sobre os custos e ganhos, conforme solicitado.
     -   Status: NOT STARTED
-    -   Is recurring issue? Y
-    -   Should Test frontend/backend/both after fix? Both
+    -   Is recurring issue? N
+    -   Should Test frontend/backend/both after fix? Frontend
     -   Blocked on other issue: None
 
 **In progress Task List**:
--   Task 1: Concluir a implementação do campo 
-    -   Where to resume: No ficheiro . É necessário modificar o endpoint de atualização de veículos e o endpoint de importação de carregamentos.
-    -   What will be achieved with this? Separação clara entre os custos de combustível fóssil e carregamentos elétricos.
+-   Task 1: Testar e finalizar a importação de carregamentos via Excel.
+    -   Where to resume: Testar a função  em .
+    -   What will be achieved with this? Completar o requisito do utilizador de suportar a importação de carregamentos via XLSX.
     -   Status: IN PROGRESS
-    -   Should Test frontend/backend/both after fix? Both
+    -   Should Test frontend/backend/both after fix? Backend
     -   Blocked on something: None
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
     -   (P1) Implementar o método Automático de criação de relatórios (sincronização agendada).
+    -   (P2) Atualizar o frontend para exibir e editar os novos campos de gorjetas e portagens.
 -   **Future Tasks:**
-    -   (P2) Refatorar  em múltiplos ficheiros de rotas (ex: , ). Esta é uma necessidade crítica para a manutenibilidade.
-    -   (P3) Refatorar os componentes React  e  em componentes mais pequenos.
+    -   (P2) Refatorar  em múltiplos ficheiros de rotas.
+    -   (P3) Refatorar os componentes React  e .
     -   (P4) Investigar a causa da instabilidade da base de dados de teste.
 
 **Completed work in this session**
--   **Correção de Importação (Várias):** Corrigidos múltiplos bugs de importação para Bolt, GPS, Via Verde (Portagens e Carregamentos), e Combustível, ajustando a lógica para usar os identificadores corretos (UUID, matrícula, OBU, tipos de cartão) e lidar com diferentes formatos de ficheiro e codificações.
--   **Melhoria da UI de Importação:** Adicionados campos de Ano e Semana na página de importação, com lógica de JavaScript para calcular e sincronizar bidirecionalmente as datas de início e fim.
--   **Correção de Erro de Login:** Resolvido um  no backend que impedia o login.
--   **Correção de Autorização:** Ajustada a permissão no endpoint de exclusão de relatórios para permitir que parceiros possam excluir relatórios pendentes.
--   **Correção de Agregação:** Ajustada a lógica de criação de rascunhos para garantir que os valores monetários (ganhos, custos) são corretamente somados.
--   **Frontend:** Adicionado o campo  ao formulário em .
+-   **Correção de Bug de Email (Definitiva):** O erro recorrente Email do motorista vazio na importação de carregamentos foi eliminado. A lógica foi refatorada para detetar se um ficheiro é de carregamento elétrico no início do loop de processamento e usar uma flag () para contornar a validação de email.
+-   **Suporte a Múltiplos Formatos CSV:** A importação de carregamentos agora suporta dois formatos de CSV diferentes (um completo com delimitador de vírgula e um simplificado com ponto e vírgula).
+-   **Correção do Estado Rascunho:** Corrigido o bug que fazia com que relatórios importados fossem criados como pendente em vez de rascunho.
+-   **Correção de Exclusão de Relatório:** Corrigido um bug que impedia a exclusão de relatórios quando o campo  era .
+-   **Novos Campos de Relatório (Backend):** Adicionados os campos , ,  e  ao modelo de relatório e aos endpoints de criação.
+-   **UI de Importação Melhorada:** A interface de importação para carregamentos elétricos foi atualizada para solicitar o CardCode em vez de motorista_email.
+-   **Criação de Templates:** Foram gerados ficheiros CSV de template para os dois formatos de carregamento suportados.
 
 **Earlier issues found/mentioned but not fixed**
 -   A refatoração de  e dos componentes React continua pendente.
 -   A investigação sobre a instabilidade da base de dados não foi iniciada.
 
 **Known issue recurrence from previous fork**
--   **Perda de dados de teste:** A causa raiz deste problema, observado no fork anterior, continua por investigar.
--   **Bugs de gravação em formulários:** O problema de persistência de dados em  e  é um problema recorrente e de alta prioridade que ainda não foi resolvido.
--   Recurrence count: 2
--   Status: NOT STARTED
+-   **Bugs de gravação em formulários:** O problema de persistência de dados em  e  é um problema recorrente de alta prioridade que foi identificado, mas não resolvido.
+-   Recurrence count: 3+
+-   Status: IN PROGRESS
 
 **Code Architecture**
-
+importar_carregamentos_excel
 
 **Key Technical Concepts**
--   **Parsing de Ficheiros Dinâmico:** O endpoint  em  tornou-se um sistema extremamente complexo que tenta inferir o formato (CSV/Excel), delimitador, codificação e estrutura de múltiplos tipos de ficheiros de diferentes fontes, usando uma longa cadeia de .
--   **Mapeamento de Identificadores:** O sistema depende de uma lógica de mapeamento complexa para associar dados importados a veículos, usando uma hierarquia de identificadores: , , , , ,  e .
--   **Sincronização de Estado no Frontend:** A página  utiliza  para criar uma sincronização bidirecional entre os campos de Ano/Semana e os campos de Data Início/Fim, melhorando a usabilidade.
+-   **Parsing de Ficheiros Híbrido:** O endpoint  agora usa uma combinação de lógica inline para CSV e uma função dedicada () para XLSX, tudo dentro de um loop de processamento de ficheiros.
+-   **Controlo de Fluxo com Flags:** Uma flag  é definida no início do loop de processamento de linhas do ficheiro para controlar se a validação de email deve ser ignorada mais tarde no código, uma solução para a estrutura não linear do código.
+-   **Refatoração Seletiva:** A criação da função  representa um pequeno passo em direção à refatoração, isolando a lógica de parsing de Excel do bloco principal de .
 
 **key DB schema**
--   **vehicles**: Contém múltiplos identificadores como , , , . O campo  foi adicionado no frontend e precisa ser implementado no backend.
--   **motoristas**: Contém , , , etc.
--   **relatorios_semanais**: O estado () deve ser  após a importação, mas atualmente parece estar a ser definido como .
--   **Coleções de dados brutos**: , , , , etc., para armazenar os dados importados.
+-   **vehicles**: O campo  é o identificador principal para carregamentos elétricos.
+-   **relatorios_semanais**: Agora inclui , , , , e . O campo  é definido como  na criação via importação.
+-   **portagens_viaverde**: Coleção usada para armazenar tanto dados de portagens como os novos dados de carregamentos elétricos importados.
 
 **changes in tech stack**
 -   Nenhuma.
 
 **All files of reference**
--   
+-    (fortemente modificado)
 -   
 -   
 -   
 
 **Areas that need refactoring**:
--   ****: A refatoração é URGENTE. O ficheiro é excessivamente grande, tornando a depuração e a adição de novas funcionalidades extremamente propensas a erros e regressões. A lógica de importação deve ser dividida em módulos separados por plataforma.
--   ****: A lógica de estado e os handlers de importação podem ser extraídos para hooks customizados para melhorar a legibilidade.
+-   ****: A necessidade de refatoração é crítica. A lógica de importação principal () é extremamente complexa e frágil. A solução para o bug do email (usando uma flag  no início do loop) é um paliativo que evidencia a complexidade do código. A lógica deveria ser decomposta em funções menores e mais claras por plataforma e tipo de ficheiro.
 
 **key api endpoints**
--   : O endpoint central para todas as importações, massivamente modificado e complexo.
--   : Suspeito de conter bugs que impedem a gravação de dados.
--   : Corrigido para funcionar com o estado pendente e para a role PARCEIRO.
--   : Funcionalidade principal que depende da importação correta dos dados.
+-   : Endpoint principal para importação, agora lida com múltiplos formatos CSV e XLSX para a plataforma .
+-   : Corrigido para lidar com relatórios que não tinham o campo .
+-   : Suspeito de não estar a ser chamado corretamente pelo frontend devido ao bug nos formulários.
 
 **Critical Info for New Agent**
--   **Foco Imediato (P0):** A sua primeira tarefa é finalizar a implementação do campo  no backend (), tanto no endpoint de atualização do veículo quanto na lógica de importação de carregamentos elétricos.
--   **Próxima Prioridade (P0):** Imediatamente a seguir, deve dedicar-se a resolver de forma definitiva os bugs de gravação de dados em  e . Este é um problema antigo e uma grande fonte de frustração para o utilizador.
--   **Valide o Fluxo de Rascunho (P1):** Verifique por que motivo os relatórios importados não estão a ser criados com o estado  e corrija.
--   **Código Legado e Complexidade:** Esteja ciente de que o ficheiro  é extremamente frágil. As alterações devem ser feitas com muito cuidado. A lógica de importação tem muitos ramos () e é fácil introduzir regressões. Siga o feedback do utilizador de perto, pois ele é excelente a encontrar casos de borda.
+-   **Foco Imediato (P0):** A sua primeira tarefa é testar a função  para validar a importação de carregamentos via XLSX.
+-   **Próxima Prioridade (P0 Recorrente):** Imediatamente a seguir, deve dedicar-se a resolver de forma definitiva o bug de gravação de dados em  e . Este é o problema mais antigo e frustrante para o utilizador.
+-   **Código Frágil:** O ficheiro  é extremamente complexo. As múltiplas correções ao bug Email do motorista vazio demonstram como uma alteração pode ter efeitos inesperados. Teste exaustivamente após qualquer modificação na lógica de importação.
+-   **Contexto do Utilizador:** O utilizador é muito ativo na deteção de bugs e fornece feedback preciso com ficheiros de exemplo. Use este feedback para guiar a depuração.
 
 **documents created in this job**
--   Nenhum.
+-   
+-   
+-   
 
 **Last 10 User Messages and any pending user messages**
-1.  **User:** Reporta que a importação de carregamentos falha porque procura por  em vez de . **Status: ADDRESSED**.
-2.  **User:** Fornece o mapeamento exato de identificadores para cada tipo de importação. **Status: ADDRESSED**.
-3.  **User:** Aponta que o ID de Carregamento e Combustível é o mesmo (). **Status: ADDRESSED** (agente confirmou a configuração).
-4.  **User:** Reporta que a importação de carregamentos ainda falha porque está a ir buscar o email em vez do ID da frota. **Status: ADDRESSED**.
-5.  **User:** Reporta novamente o erro Email do motorista vazio na importação de carregamentos. **Status: ADDRESSED**.
-6.  **User:** Reclama que a mesma importação ainda dá o erro Email do motorista vazio. **Status: ADDRESSED** (agente encontrou a causa raiz e corrigiu a estrutura do ).
-7.  **User (LATEST PENDING TASK):** Pede para criar um campo  separado para carregamentos. **Status: IN PROGRESS**.
-8.  **User:** Reporta que o formulário está a associar o  (combustível) a carregamentos. **Status: ADDRESSED** (levou ao pedido de criação do novo campo).
-9.  **User:** Reporta que a importação de carregamentos elétricos dá erro porque está a procurar  em vez do . **Status: ADDRESSED**.
-10. **User:** Reporta que o login não funciona. **Status: RESOLVED**.
+1.  **User:** Pede para criar templates de exemplo para os ficheiros de importação. **Status: COMPLETED**.
+2.  **User:** Envia um ficheiro  e pede para suportar a sua importação. **Status: IN PROGRESS** (backend implementado, pendente de teste).
+3.  **User:** Confirma para avançar com a implementação do suporte a XLSX. **Status: ADDRESSED**.
+4.  **User:** Envia um screenshot e um ficheiro CSV, reportando novamente o erro Email do motorista vazio. **Status: COMPLETED** (agente corrigiu a ordem da lógica de deteção).
+5.  **User:** Reclama novamente sobre o erro Email do motorista vazio. **Status: COMPLETED** (agente encontrou e corrigiu um erro de variável não inicializada).
+6.  **User:** Reporta um erro . **Status: COMPLETED** (agente moveu a inicialização da variável para dentro do loop).
+7.  **User:** Reclama pela enésima vez do erro Email do motorista vazio. **Status: COMPLETED** (agente implementou a correção final usando uma flag no início do loop).
+8.  **User:** Pede para remover a lógica de email na importação de carregamentos. **Status: COMPLETED**.
+9.  **User:** Pede para criar campos de gorjetas e portagens para Uber e Bolt nos relatórios. **Status: COMPLETED** (no backend).
+10. **User:** Reporta um bug na exclusão de relatórios onde o estado é . **Status: COMPLETED**.
 
 **Project Health Check:**
 -   **Broken**:
     -   Funcionalidade de gravação de dados em  e .
-    -   Criação automática de relatórios de Rascunho (são criados como Pendente).
 -   **Mocked**:
     -   Nenhum.
 
@@ -162,15 +157,13 @@ Issues Detail:
 -   Nenhuma.
 
 **Testing status**
--   Testing agent used after significant changes: YES. O agente de testes foi usado várias vezes para validar as complexas lógicas de importação e foi fundamental para encontrar bugs (como  errors).
+-   Testing agent used after significant changes: YES. Foi usado para confirmar (mas não para corrigir) o bug de gravação nos formulários.
 -   Troubleshoot agent used after agent stuck in loop: NO.
--   Test files created: []
--   Known regressions: A funcionalidade de gravação de dados para veículos e motoristas regrediu ou nunca foi totalmente corrigida.
+-   Test files created: Nenhum ficheiro de teste automatizado persistente.
+-   Known regressions: A funcionalidade de gravação em formulários é uma regressão conhecida ou um bug que nunca foi resolvido.
 
 **Credentials to test flow:**
 -   Disponíveis no ficheiro .
 
 **What agent forgot to execute**
--   Resolver de forma definitiva o bug P0 de gravação de dados nos formulários, que foi adiado várias vezes.
--   Iniciar a implementação da criação Automática de relatórios, um requisito original do projeto.
--   Verificar e confirmar com o utilizador que a funcionalidade de criação de Rascunhos está a funcionar corretamente após a tentativa de correção.</analysis>
+-   O agente não resolveu de forma definitiva o bug P0 de gravação nos formulários  e , apesar de ter começado a investigar. A tarefa foi adiada várias vezes devido a outros pedidos do utilizador.</analysis>
