@@ -197,6 +197,12 @@ const FichaVeiculo = ({ user, onLogout }) => {
   const canEditPlanoManutencao = user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro';
   const canEditAlertas = user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro';
 
+  // Debug: Log user and permissions
+  console.log('🔍 FichaVeiculo - User:', user);
+  console.log('🔍 FichaVeiculo - User role:', user?.role);
+  console.log('🔍 FichaVeiculo - canEdit:', canEdit);
+  console.log('🔍 FichaVeiculo - editMode:', editMode);
+
   useEffect(() => {
     fetchVehicleData();
     fetchCategorias();
