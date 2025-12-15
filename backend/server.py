@@ -12628,7 +12628,10 @@ async def importar_plataforma(
                                 )
                             continue
                         
-                        # Atualizar motorista_id se veículo tem motorista atribuído
+                        # IMPORTANTE: Associar motorista através do veículo (NÃO por email!)
+                        # Buscar motorista atribuído ao veículo encontrado
+                        motorista = None
+                        motorista_email = ""
                         if vehicle.get('motorista_atribuido'):
                             motorista_temp = await db.motoristas.find_one(
                                 {"id": vehicle['motorista_atribuido']},
@@ -12637,6 +12640,13 @@ async def importar_plataforma(
                             if motorista_temp:
                                 motorista = motorista_temp
                                 motorista_email = motorista.get("email", "")
+                                logger.info(f"✅ Carregamento - Motorista atribuído ao veículo: {motorista.get('name')}")
+                        
+                        # Se não houver motorista atribuído, permitir importação sem motorista
+                        if not motorista:
+                            logger.warning(f"⚠️ Carregamento - Veículo {vehicle.get('matricula')} sem motorista atribuído")
+                            motorista = {"id": None, "email": None}
+                            motorista_email = ""
                         
                         # Parse da data/hora (suportar Timestamp ou StartDate)
                         start_date_str = row.get('Timestamp', '').strip() or row.get('StartDate', '').strip()
@@ -12655,24 +12665,27 @@ async def importar_plataforma(
                         
                         documento.update({
                             "vehicle_id": vehicle["id"] if vehicle else None,
+                            "motorista_id": motorista.get("id") if motorista else None,  # Associado através do veículo
+                            "motorista_email": motorista_email,
                             "matricula": matricula_viaverde or (vehicle.get("matricula") if vehicle else None),
                             "card_code": card_code,  # CardCode do CSV (coluna B) → cartao_frota_eletric_id
                             "mobile_card": mobile_card,  # MobileCard do CSV (coluna C) - Ex: EZeny2, EZeny6, E
+                            "id_usage": row.get('IdUsage', '').strip(),  # IdUsage (coluna E)
                             "obu": vehicle.get("obu") if vehicle else None,
                             "via_verde_id": vehicle.get("via_verde_id") if vehicle else None,
                             "cartao_frota_id": vehicle.get("cartao_frota_id") if vehicle else None,
                             "cartao_frota_eletric_id": vehicle.get("cartao_frota_eletric_id") if vehicle else card_code,
-                            "estacao_id": row.get('ChargingStationID', '').strip() or row.get('IdChargingStation', '').strip(),
+                            "estacao_id": row.get('ChargingStationID', '').strip() or row.get('IdChargingStation', '').strip(),  # IdChargingStation (coluna F)
                             "estacao_nome": row.get('ChargingStation', '').strip(),
-                            "duracao_minutos": to_float(row.get('TotalDuration', '0')),
-                            "energia_kwh": to_float(row.get('Energy', '0')),
+                            "duracao_minutos": to_float(row.get('TotalDuration', '0')),  # TotalDuration (coluna G)
+                            "energia_kwh": to_float(row.get('Energy', '0')),  # Energy (coluna M)
                             "energia_fora_vazio": to_float(row.get('EnergiaForaVazio', '0')),
                             "energia_vazio_normal": to_float(row.get('EnergiaVazioNormal', '0')),
                             "energia_vazio": to_float(row.get('EnergiaVazio', '0')),
                             "energia_ponta": to_float(row.get('EnergiaPonta', '0')),
                             "energia_cheias": to_float(row.get('EnergiaCheias', '0')),
                             "valor_carregamento": to_float(row.get('ChargingServiceValue', '0')) or to_float(row.get('ChargingTotalValue', '0')),
-                            "valor_total_com_taxas": to_float(row.get('TotalValueWithTaxes', '0')),
+                            "valor_total_com_taxas": to_float(row.get('TotalValueWithTaxes', '0')),  # TotalValueWithTaxes (última coluna)
                             "tipo_transacao": "carregamento_eletrico",
                             "plataforma": "viaverde"
                         })
