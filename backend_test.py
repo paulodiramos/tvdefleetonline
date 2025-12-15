@@ -1330,15 +1330,15 @@ startxref
     
     def test_excel_import_carregamentos_eletricos(self):
         """Test Excel import for electric vehicle charging data - Review Request Specific"""
-        print("\n🎯 TESTE DE IMPORTAÇÃO DE CARREGAMENTOS VIA EXCEL")
+        print("\n🎯 TESTE DE IMPORTAÇÃO DE CARREGAMENTOS ELÉTRICOS - FICHEIRO EXCEL OFICIAL")
         print("-" * 80)
         print("Review Request: Validar importação de ficheiros .xlsx com dados de carregamentos elétricos")
         print("- Função: importar_carregamentos_excel (linha 11837 de server.py)")
         print("- Endpoint: POST /api/importar/viaverde (detecta automaticamente se é carregamento Excel)")
         print("- Credenciais: parceiro@tvdefleet.com / UQ1B6DXU")
-        print("- Ficheiro: /tmp/carregamentos_test.xlsx")
-        print("- CardCode: PTPRIO6087131736480003")
-        print("- Formato esperado: Nº. CARTÃO, DATA, DURAÇÃO, POSTO ENERGIA, TOTAL c/ IVA, CUSTO ENERGIA, ENERGIA")
+        print("- Ficheiro oficial: https://customer-assets.emergentagent.com/job_autofleet-hub-1/artifacts/6zorlnh2_Transa%C3%A7%C3%B5es_Eletrico_20251215.xlsx")
+        print("- CardCodes esperados: PTPRIO6087131736480005, PTPRIO9050324927265598, etc.")
+        print("- Formato: DATA, Nº. CARTÃO, NOME, DESCRIÇÃO, MATRÍCULA, ID CARREGAMENTO, POSTO, ENERGIA, DURAÇÃO, CUSTO, OPC IEC, TOTAL, TOTAL c/ IVA, FATURA PTPRIO")
         print("-" * 80)
         
         # Authenticate as parceiro
@@ -1347,20 +1347,28 @@ startxref
             self.log_result("Excel-Carregamentos-Auth", False, "No auth token for parceiro")
             return False
         
-        # Execute all 4 tests from review request
-        test1_success = self.test_1_excel_import_endpoint(headers)
-        test2_success = self.test_2_mongodb_data_verification(headers) if test1_success else False
-        test3_success = self.test_3_vehicle_cardcode_verification(headers)
-        test4_success = self.test_4_error_messages_verification(headers)
+        # Execute all 5 tests from review request
+        test1_success = self.test_1_download_and_analyze_excel(headers)
+        test2_success = self.test_2_import_via_api(headers) if test1_success else False
+        test3_success = self.test_3_mongodb_validation(headers) if test2_success else False
+        test4_success = self.test_4_detailed_report_verification(headers) if test2_success else False
+        test5_success = self.test_5_weekly_reports_creation(headers) if test2_success else False
         
         # Overall result
-        all_tests_passed = test1_success and test3_success and test4_success
+        all_tests_passed = test1_success and test2_success and test3_success and test4_success and test5_success
         if all_tests_passed:
             self.log_result("Excel-Carregamentos-Overall", True, 
-                          "✅ Todos os testes de importação Excel passaram com sucesso")
+                          "✅ Todos os 5 testes de importação Excel passaram com sucesso")
         else:
+            failed_tests = []
+            if not test1_success: failed_tests.append("Download/Análise")
+            if not test2_success: failed_tests.append("Importação API")
+            if not test3_success: failed_tests.append("Validação MongoDB")
+            if not test4_success: failed_tests.append("Relatório Detalhado")
+            if not test5_success: failed_tests.append("Relatórios Semanais")
+            
             self.log_result("Excel-Carregamentos-Overall", False, 
-                          "❌ Alguns testes de importação Excel falharam")
+                          f"❌ Testes falhados: {', '.join(failed_tests)}")
         
         return all_tests_passed
     
