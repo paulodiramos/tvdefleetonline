@@ -12625,23 +12625,14 @@ async def importar_plataforma(
                             if vehicle:
                                 logger.info(f"✅ Carregamento - Veículo encontrado por MobileCard: {mobile_card}")
                         
-                        # 3. Tentar por Matrícula
+                        # 3. Tentar por Matrícula (MobileRegistration - coluna D)
                         if not vehicle and matricula_viaverde:
                             vehicle = await db.vehicles.find_one(
                                 {"matricula": {"$regex": f"^{re.escape(matricula_viaverde)}$", "$options": "i"}},
                                 {"_id": 0}
                             )
                             if vehicle:
-                                logger.info(f"✅ Via Verde - Veículo encontrado por Matrícula: {matricula_viaverde}")
-                        
-                        # 4. Tentar por MobileCard (fallback)
-                        if not vehicle and cartao_viaverde:
-                            vehicle = await db.vehicles.find_one(
-                                {"via_verde_id": cartao_viaverde},
-                                {"_id": 0}
-                            )
-                            if vehicle:
-                                logger.info(f"✅ Via Verde - Veículo encontrado por MobileCard: {cartao_viaverde}")
+                                logger.info(f"✅ Carregamento - Veículo encontrado por Matrícula: {matricula_viaverde}")
                         
                         # Se veículo não encontrado, registar erro e continuar
                         if not vehicle:
