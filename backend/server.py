@@ -13085,8 +13085,8 @@ async def importar_plataforma(
                             energia_kwh = to_float(row.get('kwh', '0'))
                             valor_total = to_float(row.get('valor_total', '0'))
                             
-                        else:
-                            # Formato completo: StartDate,CardCode,Energy,TotalValueWithTaxes,etc.
+                        elif is_formato_completo:
+                            # Formato completo API: StartDate,CardCode,Energy,TotalValueWithTaxes,etc.
                             start_date_str = row.get('Timestamp', '').strip() or row.get('StartDate', '').strip()
                             if start_date_str:
                                 # Formato: "12/7/2025 6:13:26 PM"
