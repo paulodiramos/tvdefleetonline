@@ -12480,8 +12480,8 @@ async def importar_plataforma(
                 # Para Bolt formato resumo semanal, a data pode ser inferida do nome do ficheiro ou usar data atual
                 is_bolt_resumo_semanal = plataforma == 'bolt' and ('Ganhos líquidos|€' in row or 'Ganhos brutos (total)|€' in row)
                 
-                # GPS não precisa de data específica, usa período de importação
-                if not data and plataforma not in ['uber', 'gps'] and not is_bolt_resumo_semanal:
+                # GPS e Via Verde não precisam de data específica, usam período de importação ou parsing próprio
+                if not data and plataforma not in ['uber', 'gps', 'viaverde'] and not is_bolt_resumo_semanal:
                     erros += 1
                     erros_detalhes.append(f"Linha {row_num}: Data em falta")
                     continue
