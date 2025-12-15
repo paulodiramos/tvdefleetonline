@@ -10236,6 +10236,37 @@ As correções solicitadas no review request estão funcionando corretamente:
 agent_communication:
     - agent: "testing"
       message: |
+        🚨 BUG P0 CRÍTICO CONFIRMADO - FICHAVEICULO NÃO GRAVA DADOS!
+        
+        REVIEW REQUEST: Bug de Gravação em FichaVeiculo
+        CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU
+        
+        ✅ TESTE EXECUTADO CONFORME ESPECIFICAÇÃO:
+        1. Login como parceiro ✅
+        2. Navegação para Veículos ✅  
+        3. Clique no primeiro veículo (Peugeot 308 SW - AS-14-NI) ✅
+        4. Ativação do modo de edição ✅
+        5. Alteração "Cartão Frota Elétrico ID" → "TEST-12345-EDIT" ✅
+        6. Alteração "Via Verde ID" → "VV-TEST-999" ✅
+        7. Clique em "Guardar" ✅
+        8. Reload da página (F5) ✅
+        
+        ❌ BUG CONFIRMADO:
+        - Campos editados com sucesso mas NÃO persistem após reload
+        - Nenhuma requisição PUT capturada pelo network monitor
+        - Nenhuma mensagem de sucesso visível
+        - Valores voltaram aos originais após reload
+        
+        🔍 CAUSA RAIZ IDENTIFICADA:
+        Botão "Guardar" não executa handleSaveInfo() ou handleSaveAllChanges()
+        Event handler do botão não está funcionando corretamente
+        
+        🚨 AÇÃO NECESSÁRIA:
+        Investigar e corrigir event handler do botão "Guardar" em FichaVeiculo.js
+        Este é um bug P0 que afeta funcionalidade core do sistema
+        
+    - agent: "testing"
+      message: |
         🎯 VIA VERDE CSV IMPORT TESTING COMPLETED - CRITICAL ISSUE IDENTIFIED
         
         REVIEW REQUEST: Teste de Importação Via Verde CSV - Carregamentos com CardID
