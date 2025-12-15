@@ -178,7 +178,10 @@ class P0CorrectionsTester:
                     self.log_result("P0-Test-1-Import", False, f"❌ CSV import failed - no records imported")
                     return False
                 
-                # Step 4: Check if reports were created with 'rascunho' status
+                # Step 4: Wait a moment for report creation, then check
+                import time
+                time.sleep(2)  # Wait 2 seconds for async report creation
+                
                 relatorios_response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos", headers=headers)
                 
                 if relatorios_response.status_code == 200:
@@ -188,10 +191,34 @@ class P0CorrectionsTester:
                     rascunho_reports = [r for r in relatorios if r.get("estado") == "rascunho"]
                     pendente_reports = [r for r in relatorios if r.get("estado") == "pendente"]
                     
+                    # Show all report states for debugging
+                    all_states = {}
+                    for r in relatorios:
+                        estado = r.get("estado", "unknown")
+                        all_states[estado] = all_states.get(estado, 0) + 1
+                    
                     print(f"  📊 Relatórios encontrados:")
                     print(f"    - Estado 'rascunho': {len(rascunho_reports)}")
                     print(f"    - Estado 'pendente': {len(pendente_reports)}")
                     print(f"    - Total relatórios: {len(relatorios)}")
+                    print(f"    - Todos os estados: {all_states}")
+                    
+                    # Show recent reports (created in last 5 minutes)
+                    from datetime import datetime, timezone, timedelta
+                    recent_cutoff = datetime.now(timezone.utc) - timedelta(minutes=5)
+                    recent_reports = []
+                    
+                    for r in relatorios:
+                        created_at_str = r.get("created_at", "")
+                        if created_at_str:
+                            try:
+                                created_at = datetime.fromisoformat(created_at_str.replace('Z', '+00:00'))
+                                if created_at > recent_cutoff:
+                                    recent_reports.append(r)
+                            except:
+                                pass
+                    
+                    print(f"    - Relatórios recentes (últimos 5 min): {len(recent_reports)}")
                     
                     if len(rascunho_reports) > 0:
                         self.log_result("P0-Test-1-Estado-Rascunho", True, 
@@ -205,6 +232,19 @@ class P0CorrectionsTester:
                         print(f"    - Motorista: {example_report.get('motorista_nome', 'N/A')}")
                         
                         return True
+                    elif len(recent_reports) > 0:
+                        # Check if recent reports have rascunho status
+                        recent_rascunho = [r for r in recent_reports if r.get("estado") == "rascunho"]
+                        if len(recent_rascunho) > 0:
+                            self.log_result("P0-Test-1-Estado-Rascunho", True, 
+                                          f"✅ CORREÇÃO CONFIRMADA: {len(recent_rascunho)} relatórios recentes com estado 'rascunho'")
+                            return True
+                        else:
+                            # Show what state the recent reports have
+                            recent_states = [r.get("estado", "unknown") for r in recent_reports]
+                            self.log_result("P0-Test-1-Estado-Rascunho", False, 
+                                          f"❌ CORREÇÃO NÃO CONFIRMADA: {len(recent_reports)} relatórios recentes, mas estados: {recent_states}")
+                            return False
                     else:
                         self.log_result("P0-Test-1-Estado-Rascunho", False, 
                                       f"❌ CORREÇÃO NÃO CONFIRMADA: Nenhum relatório com estado 'rascunho' encontrado")
