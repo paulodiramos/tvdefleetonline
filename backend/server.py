@@ -12550,16 +12550,34 @@ async def importar_plataforma(
         # Para Via Verde em Excel (.xlsx), processar diferente
         if plataforma == 'viaverde' and (file.filename.endswith('.xlsx') or file.filename.endswith('.xls')):
             # Detectar tipo de Excel (carregamentos ou portagens)
-            # Carregar para verificar colunas
+            # Carregar para verificar colunas - procurar header nas primeiras 10 linhas
             import openpyxl
             from io import BytesIO
             wb = openpyxl.load_workbook(BytesIO(content))
             sheet = wb.active
-            header_row = list(sheet.iter_rows(min_row=1, max_row=1, values_only=True))[0]
-            header = [str(cell).strip() if cell else '' for cell in header_row]
             
-            # Se tem "Nº. CARTÃO" ou "POSTO ENERGIA" é carregamentos elétricos
-            if 'Nº. CARTÃO' in header or 'POSTO ENERGIA' in header or 'Nº. Cartão' in header:
+            # Procurar header nas primeiras 10 linhas
+            header = []
+            for row_num in range(1, 11):
+                try:
+                    header_row = list(sheet.iter_rows(min_row=row_num, max_row=row_num, values_only=True))[0]
+                    header_candidate = [str(cell).strip() if cell else '' for cell in header_row]
+                    
+                    # Se encontrar colunas típicas, usar esta linha como header
+                    if any('DATA' in cell or 'CARTÃO' in cell or 'CARTAO' in cell or 'License Plate' in cell for cell in header_candidate):
+                        header = header_candidate
+                        logger.info(f"📄 Header encontrado na linha {row_num}: {header}")
+                        break
+                except:
+                    continue
+            
+            # Se não encontrou header, usar linha 1 como fallback
+            if not header:
+                header_row = list(sheet.iter_rows(min_row=1, max_row=1, values_only=True))[0]
+                header = [str(cell).strip() if cell else '' for cell in header_row]
+            
+            # Se tem "Nº. CARTÃO" ou "POSTO ENERGIA" ou "ENERGIA" é carregamentos elétricos
+            if 'Nº. CARTÃO' in header or 'POSTO ENERGIA' in header or 'Nº. Cartão' in header or ('POSTO' in header and 'ENERGIA' in header):
                 logger.info("📄 Detectado: Excel de Carregamentos Elétricos")
                 return await importar_carregamentos_excel(content, current_user, periodo_inicio, periodo_fim)
             else:
