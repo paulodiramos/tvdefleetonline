@@ -184,18 +184,18 @@ const ImportarPlataformas = () => {
       nome: 'Carregamentos (Elétrico)',
       icon: Fuel,
       color: 'bg-green-500 text-white',
-      formato: 'data,hora,motorista_email,posto,kwh,valor_total,km_atual,duracao_min',
-      exemplo: '2025-01-15,18:00,motorista@example.com,Tesla Supercharger,45.5,12.50,45385,35',
+      formato: 'data;hora;CardCode;posto;kwh;valor_total;duracao_min',
+      exemplo: '7/12/2025;18:13:26;PTPRIO6087131736480003;SJM-00051;33.356;14.08;46.94',
       campos: [
-        { nome: 'data', tipo: 'Data', obrigatorio: true },
-        { nome: 'hora', tipo: 'Hora', obrigatorio: true },
-        { nome: 'motorista_email', tipo: 'Email', obrigatorio: true },
-        { nome: 'posto', tipo: 'Texto', obrigatorio: false },
-        { nome: 'kwh', tipo: 'Número', obrigatorio: true },
-        { nome: 'valor_total', tipo: 'Número', obrigatorio: true },
-        { nome: 'km_atual', tipo: 'Número', obrigatorio: false },
-        { nome: 'duracao_min', tipo: 'Número', obrigatorio: false }
-      ]
+        { nome: 'data', tipo: 'Data (D/M/YYYY)', obrigatorio: true },
+        { nome: 'hora', tipo: 'Hora (HH:MM:SS)', obrigatorio: true },
+        { nome: 'CardCode', tipo: 'Cartão Frota Elétrico ID', obrigatorio: true },
+        { nome: 'posto', tipo: 'ID da Estação', obrigatorio: true },
+        { nome: 'kwh', tipo: 'Energia (kWh)', obrigatorio: true },
+        { nome: 'valor_total', tipo: 'Valor Total', obrigatorio: true },
+        { nome: 'duracao_min', tipo: 'Duração (min)', obrigatorio: false }
+      ],
+      observacao: '⚡ O veículo deve ter "Cartão Frota Elétrico ID (Carregamentos)" preenchido com o valor da coluna CardCode.'
     }
   ];
 
