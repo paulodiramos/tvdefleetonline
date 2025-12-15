@@ -12667,40 +12667,76 @@ async def importar_plataforma(
                             motorista = {"id": None, "email": None}
                             motorista_email = ""
                         
-                        # Parse da data/hora (suportar Timestamp ou StartDate)
-                        start_date_str = row.get('Timestamp', '').strip() or row.get('StartDate', '').strip()
-                        if start_date_str:
-                            # Formato: "12/7/2025 6:13:26 PM"
+                        # Parse da data/hora (adaptar ao formato do CSV)
+                        if is_formato_simplificado:
+                            # Formato simplificado: data;hora;CardCode;posto;kwh;valor_total;duracao_min
+                            # Exemplo: 7/12/2025;18:13:26;PTPRIO...;SJM-00051;33.356;14.08;46.94
+                            data_str = row.get('data', '').strip()
+                            hora_str = row.get('hora', '').strip()
+                            
+                            # Converter data de D/M/YYYY para YYYY-MM-DD
                             try:
-                                data_hora = datetime.strptime(start_date_str, '%m/%d/%Y %I:%M:%S %p')
-                                data = data_hora.strftime('%Y-%m-%d')
-                                hora = data_hora.strftime('%H:%M:%S')
+                                if '/' in data_str:
+                                    partes = data_str.split('/')
+                                    if len(partes) == 3:
+                                        dia, mes, ano = partes
+                                        data = f"{ano}-{mes.zfill(2)}-{dia.zfill(2)}"
+                                    else:
+                                        data = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                                else:
+                                    data = data_str if data_str else datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                                
+                                hora = hora_str if hora_str else '00:00:00'
                             except:
                                 data = datetime.now(timezone.utc).strftime('%Y-%m-%d')
                                 hora = '00:00:00'
+                            
+                            # Campos do formato simplificado
+                            estacao_id = row.get('posto', '').strip()
+                            duracao_minutos = to_float(row.get('duracao_min', '0'))
+                            energia_kwh = to_float(row.get('kwh', '0'))
+                            valor_total = to_float(row.get('valor_total', '0'))
+                            
                         else:
-                            data = datetime.now(timezone.utc).strftime('%Y-%m-%d')
-                            hora = '00:00:00'
+                            # Formato completo: StartDate,CardCode,Energy,TotalValueWithTaxes,etc.
+                            start_date_str = row.get('Timestamp', '').strip() or row.get('StartDate', '').strip()
+                            if start_date_str:
+                                # Formato: "12/7/2025 6:13:26 PM"
+                                try:
+                                    data_hora = datetime.strptime(start_date_str, '%m/%d/%Y %I:%M:%S %p')
+                                    data = data_hora.strftime('%Y-%m-%d')
+                                    hora = data_hora.strftime('%H:%M:%S')
+                                except:
+                                    data = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                                    hora = '00:00:00'
+                            else:
+                                data = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                                hora = '00:00:00'
+                            
+                            # Campos do formato completo
+                            estacao_id = row.get('ChargingStationID', '').strip() or row.get('IdChargingStation', '').strip()
+                            duracao_minutos = to_float(row.get('TotalDuration', '0'))
+                            energia_kwh = to_float(row.get('Energy', '0'))
+                            valor_total = to_float(row.get('TotalValueWithTaxes', '0'))
                         
-                        # CAMPOS ESSENCIAIS PARA RELATÓRIO (conforme solicitado)
+                        # CAMPOS ESSENCIAIS PARA RELATÓRIO (ambos os formatos)
                         documento.update({
                             "vehicle_id": vehicle["id"] if vehicle else None,
                             "motorista_id": motorista.get("id") if motorista else None,  # Associado através do veículo
                             "motorista_email": motorista_email,
                             "matricula": vehicle.get("matricula") if vehicle else None,
-                            "card_code": card_code,  # CardCode (coluna B) → ligação ao veículo
-                            "estacao_id": row.get('ChargingStationID', '').strip() or row.get('IdChargingStation', '').strip(),  # IdChargingStation
-                            "duracao_minutos": to_float(row.get('TotalDuration', '0')),  # TotalDuration
-                            "energia_kwh": to_float(row.get('Energy', '0')),  # Energy
-                            "valor_total_com_taxas": to_float(row.get('TotalValueWithTaxes', '0')),  # TotalValueWithTaxes → vai para relatório semanal
+                            "card_code": card_code,  # CardCode → ligação ao veículo
+                            "estacao_id": estacao_id,  # posto ou IdChargingStation
+                            "duracao_minutos": duracao_minutos,  # duracao_min ou TotalDuration
+                            "energia_kwh": energia_kwh,  # kwh ou Energy
+                            "valor_total_com_taxas": valor_total,  # valor_total ou TotalValueWithTaxes → vai para relatório semanal
                             "tipo_transacao": "carregamento_eletrico",
                             "plataforma": "viaverde"
                         })
                         
                         # Atualizar data/hora no documento principal
                         documento["data"] = data
-                        if 'hora' not in documento:
-                            documento["hora"] = hora
+                        documento["hora"] = hora
                     else:
                         # Formato 1: Portagens tradicionais
                         documento.update({
