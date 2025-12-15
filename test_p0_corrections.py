@@ -166,9 +166,19 @@ class P0CorrectionsTester:
             import_response = requests.post(f"{BACKEND_URL}/importar/uber", files=files, headers=headers)
             
             if import_response.status_code == 200:
-                self.log_result("P0-Test-1-Import", True, "✅ CSV import successful - should trigger report creation")
+                import_result = import_response.json()
+                sucesso = import_result.get("sucesso", 0)
+                erros = import_result.get("erros", 0)
                 
-                # Step 3: Check if reports were created with 'rascunho' status
+                print(f"  📊 Resultado da importação: {sucesso} sucessos, {erros} erros")
+                
+                if sucesso > 0:
+                    self.log_result("P0-Test-1-Import", True, f"✅ CSV import successful - {sucesso} records imported")
+                else:
+                    self.log_result("P0-Test-1-Import", False, f"❌ CSV import failed - no records imported")
+                    return False
+                
+                # Step 4: Check if reports were created with 'rascunho' status
                 relatorios_response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos", headers=headers)
                 
                 if relatorios_response.status_code == 200:
