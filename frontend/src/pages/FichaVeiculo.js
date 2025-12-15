@@ -363,23 +363,52 @@ const FichaVeiculo = ({ user, onLogout }) => {
   };
 
   const handleSaveAllChanges = async () => {
+    console.log('🚀 handleSaveAllChanges iniciado');
+    
     const confirmed = window.confirm('Tem certeza que deseja guardar todas as alterações?');
-    if (!confirmed) return;
+    console.log('👤 Confirmação do utilizador:', confirmed);
+    
+    if (!confirmed) {
+      console.log('❌ Utilizador cancelou operação');
+      return;
+    }
 
     try {
+      console.log('💾 Iniciando gravação de formulários...');
+      
       // Save all forms silently (no individual toasts)
+      console.log('1️⃣ Salvando Info...');
       await handleSaveInfo(true);
+      console.log('✅ Info salvo');
+      
+      console.log('2️⃣ Salvando Seguro...');
       await handleSaveSeguro(true);
+      console.log('✅ Seguro salvo');
+      
+      console.log('3️⃣ Salvando Inspeção...');
       await handleSaveInspecao(true);
+      console.log('✅ Inspeção salva');
+      
+      console.log('4️⃣ Salvando Revisão...');
       await handleSaveRevisao(true);
+      console.log('✅ Revisão salva');
+      
+      console.log('5️⃣ Salvando Extintor...');
       await handleSaveExtintor(true);
+      console.log('✅ Extintor salvo');
       
       // Refresh data and exit edit mode
+      console.log('🔄 Recarregando dados...');
       await fetchVehicleData();
+      console.log('✅ Dados recarregados');
+      
       setEditMode(false);
       toast.success('Todas as alterações foram guardadas com sucesso!');
+      console.log('🎉 Todas as alterações guardadas com sucesso!');
     } catch (error) {
-      console.error('Error saving changes:', error);
+      console.error('❌ Error saving changes:', error);
+      console.error('❌ Error stack:', error.stack);
+      console.error('❌ Error response:', error.response?.data);
       toast.error('Erro ao guardar algumas alterações');
     }
   };
