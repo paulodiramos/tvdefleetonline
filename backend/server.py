@@ -12664,29 +12664,17 @@ async def importar_plataforma(
                             data = datetime.now(timezone.utc).strftime('%Y-%m-%d')
                             hora = '00:00:00'
                         
+                        # CAMPOS ESSENCIAIS PARA RELATÓRIO (conforme solicitado)
                         documento.update({
                             "vehicle_id": vehicle["id"] if vehicle else None,
                             "motorista_id": motorista.get("id") if motorista else None,  # Associado através do veículo
                             "motorista_email": motorista_email,
-                            "matricula": matricula_viaverde or (vehicle.get("matricula") if vehicle else None),
-                            "card_code": card_code,  # CardCode do CSV (coluna B) → cartao_frota_eletric_id
-                            "mobile_card": mobile_card,  # MobileCard do CSV (coluna C) - Ex: EZeny2, EZeny6, E
-                            "id_usage": row.get('IdUsage', '').strip(),  # IdUsage (coluna E)
-                            "obu": vehicle.get("obu") if vehicle else None,
-                            "via_verde_id": vehicle.get("via_verde_id") if vehicle else None,
-                            "cartao_frota_id": vehicle.get("cartao_frota_id") if vehicle else None,
-                            "cartao_frota_eletric_id": vehicle.get("cartao_frota_eletric_id") if vehicle else card_code,
-                            "estacao_id": row.get('ChargingStationID', '').strip() or row.get('IdChargingStation', '').strip(),  # IdChargingStation (coluna F)
-                            "estacao_nome": row.get('ChargingStation', '').strip(),
-                            "duracao_minutos": to_float(row.get('TotalDuration', '0')),  # TotalDuration (coluna G)
-                            "energia_kwh": to_float(row.get('Energy', '0')),  # Energy (coluna M)
-                            "energia_fora_vazio": to_float(row.get('EnergiaForaVazio', '0')),
-                            "energia_vazio_normal": to_float(row.get('EnergiaVazioNormal', '0')),
-                            "energia_vazio": to_float(row.get('EnergiaVazio', '0')),
-                            "energia_ponta": to_float(row.get('EnergiaPonta', '0')),
-                            "energia_cheias": to_float(row.get('EnergiaCheias', '0')),
-                            "valor_carregamento": to_float(row.get('ChargingServiceValue', '0')) or to_float(row.get('ChargingTotalValue', '0')),
-                            "valor_total_com_taxas": to_float(row.get('TotalValueWithTaxes', '0')),  # TotalValueWithTaxes (última coluna)
+                            "matricula": vehicle.get("matricula") if vehicle else None,
+                            "card_code": card_code,  # CardCode (coluna B) → ligação ao veículo
+                            "estacao_id": row.get('ChargingStationID', '').strip() or row.get('IdChargingStation', '').strip(),  # IdChargingStation
+                            "duracao_minutos": to_float(row.get('TotalDuration', '0')),  # TotalDuration
+                            "energia_kwh": to_float(row.get('Energy', '0')),  # Energy
+                            "valor_total_com_taxas": to_float(row.get('TotalValueWithTaxes', '0')),  # TotalValueWithTaxes → vai para relatório semanal
                             "tipo_transacao": "carregamento_eletrico",
                             "plataforma": "viaverde"
                         })
