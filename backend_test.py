@@ -10399,6 +10399,11 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
         print("-" * 70)
         self.test_review_request_corrections()
         
+        # EXCEL IMPORT FOR ELECTRIC CHARGING (CURRENT REVIEW REQUEST - CRITICAL)
+        print("\n🔋 EXCEL IMPORT FOR ELECTRIC CHARGING (CURRENT REVIEW REQUEST - CRITICAL)")
+        print("-" * 80)
+        self.test_excel_import_carregamentos_eletricos()
+        
         # SIMPLIFIED CHARGING IMPORT SYSTEM (NEW REVIEW REQUEST - CRITICAL)
         print("\n🔋 SIMPLIFIED CHARGING IMPORT SYSTEM (NEW REVIEW REQUEST - CRITICAL)")
         print("-" * 80)
