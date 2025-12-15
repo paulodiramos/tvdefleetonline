@@ -10476,6 +10476,8 @@ if __name__ == "__main__":
     # Run SIMPLIFIED CHARGING IMPORT SYSTEM TEST (NEW REVIEW REQUEST)
     print("\n🔋 NEW REVIEW REQUEST: SIMPLIFIED CHARGING IMPORT SYSTEM")
     print("=" * 80)
+    # Authenticate parceiro for this test
+    tester.authenticate_user("parceiro")
     tester.test_simplified_charging_import_system()
     
     # Print summary
