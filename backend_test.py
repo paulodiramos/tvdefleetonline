@@ -9452,7 +9452,7 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
             }
             
             response = requests.post(
-                f"{BACKEND_URL}/importar/carregamento",
+                f"{BACKEND_URL}/importar/viaverde",
                 files=files,
                 headers=headers
             )
