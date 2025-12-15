@@ -12502,11 +12502,11 @@ async def importar_plataforma(
                         
                 else:
                     # Para outras plataformas: usar email obrigatório
-                    # EXCETO Via Verde e GPS que já foram processados acima
-                    if plataforma not in ['viaverde', 'gps']:
+                    # EXCETO Via Verde, GPS e carregamentos elétricos que já foram processados acima
+                    if plataforma not in ['viaverde', 'gps'] and not is_carregamento_eletrico:
                         if not motorista_email:
                             erros += 1
-                            erros_detalhes.append(f"Linha {row_num}: Email do motorista vazio (use CardCode para carregamentos)")
+                            erros_detalhes.append(f"Linha {row_num}: Email do motorista vazio")
                             continue
                         
                         motorista = await db.motoristas.find_one({"email": motorista_email}, {"_id": 0})
