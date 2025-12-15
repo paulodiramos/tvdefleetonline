@@ -11371,9 +11371,17 @@ async def criar_relatorio_manual(
         "data_inicio": data.get("data_inicio", ""),
         "data_fim": data.get("data_fim", ""),
         
-        # Ganhos
+        # Ganhos Uber
         "ganhos_uber": float(data.get("ganhos_uber", 0)),
+        "gorjetas_uber": float(data.get("gorjetas_uber", 0)),
+        "portagens_uber": float(data.get("portagens_uber", 0)),
+        
+        # Ganhos Bolt
         "ganhos_bolt": float(data.get("ganhos_bolt", 0)),
+        "gorjetas_bolt": float(data.get("gorjetas_bolt", 0)),
+        "portagens_bolt": float(data.get("portagens_bolt", 0)),
+        
+        # Totais
         "ganhos_totais": float(data.get("ganhos_totais", 0)),
         "viagens_totais": int(data.get("viagens_totais", 0)),
         
