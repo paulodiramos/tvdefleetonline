@@ -1430,11 +1430,11 @@ startxref
                 self.log_result("Test-1-Structure", False, f"❌ Colunas em falta: {missing_columns}")
                 return False
             
-            # Count data rows
+            # Count data rows (start after header row)
             data_rows = 0
             cardcodes_found = []
             
-            for row_num, row_values in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
+            for row_num, row_values in enumerate(sheet.iter_rows(min_row=header_row_num+1, values_only=True), start=header_row_num+1):
                 if any(cell for cell in row_values):  # Non-empty row
                     data_rows += 1
                     # Extract CardCode from row
