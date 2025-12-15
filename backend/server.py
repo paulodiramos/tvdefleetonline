@@ -12880,7 +12880,8 @@ async def importar_plataforma(
                 else:
                     # Para outras plataformas: usar email obrigatório
                     # EXCETO Via Verde, GPS e carregamentos elétricos que já foram processados acima
-                    if plataforma not in ['viaverde', 'gps'] and not is_carregamento_eletrico:
+                    # 🔴 IMPORTANTE: Se is_carregamento_eletrico=True, NÃO VALIDAR EMAIL!
+                    if not is_carregamento_eletrico and plataforma not in ['viaverde', 'gps']:
                         if not motorista_email:
                             erros += 1
                             erros_detalhes.append(f"Linha {row_num}: Email do motorista vazio")
