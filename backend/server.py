@@ -12202,13 +12202,26 @@ async def criar_relatorios_rascunho_apos_importacao(
                 "data_inicio": periodo_inicio,
                 "data_fim": periodo_fim,
                 "estado": "rascunho",  # Estado inicial: rascunho (correção aplicada)
+                
+                # Ganhos por plataforma
                 "ganhos_uber": ganhos_uber,
+                "gorjetas_uber": 0,  # Será calculado na geração final
+                "portagens_uber": 0,  # Será calculado na geração final
+                
                 "ganhos_bolt": ganhos_bolt,
+                "gorjetas_bolt": 0,  # Será calculado na geração final
+                "portagens_bolt": 0,  # Será calculado na geração final
+                
+                # Custos gerais
                 "portagens_viaverde": portagens_viaverde,
                 "carregamentos_eletricos": carregamentos_total,  # Total de carregamentos elétricos da semana
                 "combustivel_total": combustivel_total,
                 "km_percorridos": km_percorridos,
+                
+                # Totais
                 "total_ganhos": ganhos_uber + ganhos_bolt,
+                
+                # Metadados
                 "created_at": datetime.now(timezone.utc).isoformat(),
                 "created_by": parceiro_id
             }
