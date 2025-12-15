@@ -11909,7 +11909,6 @@ async def importar_carregamentos_excel(
                     continue  # Pular linhas sem CardCode
                 
                 card_code = str(card_code_raw).strip()
-                logger.info(f"🔍 Linha {row_num}: CardCode = '{card_code}'")
                 
                 # BUSCAR VEÍCULO POR CardCode → cartao_frota_eletric_id
                 vehicle = await db.vehicles.find_one(
@@ -11918,18 +11917,27 @@ async def importar_carregamentos_excel(
                 )
                 
                 if not vehicle:
+                    # Tentar encontrar sem o prefixo PTPRIO (caso o veículo só tenha os números)
+                    card_code_sem_prefixo = card_code.replace('PTPRIO', '').replace('PTEDP', '')
+                    vehicle = await db.vehicles.find_one(
+                        {"cartao_frota_eletric_id": card_code_sem_prefixo},
+                        {"_id": 0}
+                    )
+                
+                if not vehicle:
                     erros += 1
                     erros_detalhes.append(
-                        f"Linha {row_num}: Veículo não encontrado com CardCode '{card_code}'. "
-                        f"Preencher 'Cartão Frota Elétrico ID (Carregamentos)' no veículo."
+                        f"CardCode '{card_code}': Veículo não encontrado. "
+                        f"Configurar 'Cartão Frota Elétrico ID' na ficha do veículo."
                     )
                     continue
                 
-                logger.info(f"✅ Excel Carregamento - Veículo encontrado: {vehicle.get('matricula')} (CardCode: {card_code})")
+                logger.info(f"✅ Veículo encontrado: {vehicle.get('matricula')} (CardCode: {card_code})")
                 
                 # Buscar motorista atribuído ao veículo
                 motorista = None
                 motorista_email = ""
+                motorista_nome = ""
                 if vehicle.get('motorista_atribuido'):
                     motorista = await db.motoristas.find_one(
                         {"id": vehicle['motorista_atribuido']},
@@ -11937,7 +11945,8 @@ async def importar_carregamentos_excel(
                     )
                     if motorista:
                         motorista_email = motorista.get("email", "")
-                        logger.info(f"✅ Excel Carregamento - Motorista: {motorista.get('name')}")
+                        motorista_nome = motorista.get("name", "")
+                        logger.info(f"✅ Motorista associado: {motorista_nome}")
                 
                 # Processar data (pode ser serial do Excel)
                 data_valor = row.get(col_map.get('data', 'DATA'))
