@@ -11903,13 +11903,13 @@ async def importar_carregamentos_excel(
                 # Criar dicionário da linha
                 row = dict(zip(header, row_values))
                 
-                # Extrair CardCode (Nº. CARTÃO)
-                card_code = str(row.get(col_map.get('card_code', 'Nº. CARTÃO'), '')).strip() if row.get(col_map.get('card_code', 'Nº. CARTÃO')) else None
+                # Extrair CardCode (Nº. CARTÃO) - pode ter prefixo PTPRIO
+                card_code_raw = row.get(col_map.get('card_code', 'Nº. CARTÃO'))
+                if not card_code_raw or str(card_code_raw).strip() in ['', 'None', 'nan']:
+                    continue  # Pular linhas sem CardCode
                 
-                if not card_code or card_code == 'None':
-                    erros += 1
-                    erros_detalhes.append(f"Linha {row_num}: Nº. CARTÃO não encontrado")
-                    continue
+                card_code = str(card_code_raw).strip()
+                logger.info(f"🔍 Linha {row_num}: CardCode = '{card_code}'")
                 
                 # BUSCAR VEÍCULO POR CardCode → cartao_frota_eletric_id
                 vehicle = await db.vehicles.find_one(
