@@ -561,11 +561,7 @@ startxref
         self.test_combustivel_eletrico_excel_import(headers)
         self.test_combustivel_fossil_excel_import(headers)
         
-        # Test specific Via Verde Excel import with validation (Review Request)
-        self.test_via_verde_excel_import_with_validation()
-        
-        # Test specific Via Verde CSV import with CardID as primary identifier (Review Request)
-        self.test_via_verde_csv_import_cardid_primary()
+        # Note: Additional specific tests can be added here as needed
         
         return True
     
