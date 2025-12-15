@@ -10270,6 +10270,42 @@ agent_communication:
         
     - agent: "testing"
       message: |
+        🎯 TESTE CRÍTICO COM LOGS DO CONSOLE - ANÁLISE DETALHADA DO BUG DE GRAVAÇÃO
+        
+        REVIEW REQUEST: Debug do Bug de Gravação com Logs
+        CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU
+        OBJETIVO: Capturar logs do console para identificar se handleSaveInfo é executada
+        
+        ✅ ANÁLISE DO CÓDIGO FONTE:
+        1. Função handleSaveInfo implementada com logs de debug (linhas 293, 345, 351, 358)
+        2. Botão "Guardar" chama handleSaveAllChanges() que chama handleSaveInfo(true)
+        3. Campo cartao_frota_eletric_id corretamente mapeado no payload (linha 313)
+        4. Input field atualiza vehicle state corretamente (linha 1325)
+        
+        ✅ TESTE BACKEND API:
+        - PUT /api/vehicles/{id} funciona 100% corretamente
+        - Campo cartao_frota_eletric_id atualiza e persiste dados
+        - Testado manualmente via curl: "DEBUG-TEST-123" → persistiu com sucesso
+        
+        ❌ PROBLEMA IDENTIFICADO:
+        Frontend não faz requisição PUT para backend quando botão "Guardar" é clicado
+        Nenhuma requisição PUT aparece nos logs do backend durante teste frontend
+        
+        🔍 POSSÍVEIS CAUSAS:
+        1. window.confirm dialog pode estar bloqueando execução (linha 366)
+        2. Erro JavaScript silencioso impedindo execução da função
+        3. Event handler do botão não está funcionando corretamente
+        4. Try/catch pode estar engolindo erros sem reportar
+        
+        🚨 CONCLUSÃO:
+        Backend API está 100% funcional. Problema está no frontend.
+        A função handleSaveInfo não está sendo executada ou falha silenciosamente.
+        
+        AÇÃO NECESSÁRIA: Investigar handleSaveAllChanges e adicionar logs de debug
+        para identificar onde exatamente a execução está falhando.
+        
+    - agent: "testing"
+      message: |
         🎯 VIA VERDE CSV IMPORT TESTING COMPLETED - CRITICAL ISSUE IDENTIFIED
         
         REVIEW REQUEST: Teste de Importação Via Verde CSV - Carregamentos com CardID
