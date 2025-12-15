@@ -11948,31 +11948,39 @@ async def importar_carregamentos_excel(
                         motorista_nome = motorista.get("name", "")
                         logger.info(f"✅ Motorista associado: {motorista_nome}")
                 
-                # Processar data (pode ser serial do Excel)
+                # Processar data (pode ser serial do Excel ou datetime)
                 data_valor = row.get(col_map.get('data', 'DATA'))
-                if isinstance(data_valor, (int, float)):
-                    # Converter serial date do Excel para datetime
-                    from datetime import datetime, timedelta
-                    excel_epoch = datetime(1899, 12, 30)
-                    data_dt = excel_epoch + timedelta(days=data_valor)
-                    data = data_dt.strftime('%Y-%m-%d')
-                    hora = data_dt.strftime('%H:%M:%S')
-                elif isinstance(data_valor, datetime):
-                    data = data_valor.strftime('%Y-%m-%d')
-                    hora = data_valor.strftime('%H:%M:%S')
+                if data_valor:
+                    if isinstance(data_valor, (int, float)):
+                        # Converter serial date do Excel para datetime
+                        from datetime import timedelta
+                        excel_epoch = datetime(1899, 12, 30)
+                        data_dt = excel_epoch + timedelta(days=data_valor)
+                        data = data_dt.strftime('%Y-%m-%d')
+                        hora = data_dt.strftime('%H:%M:%S')
+                    elif isinstance(data_valor, datetime):
+                        data = data_valor.strftime('%Y-%m-%d')
+                        hora = data_valor.strftime('%H:%M:%S')
+                    else:
+                        # Tentar parse de string
+                        try:
+                            data_dt = datetime.strptime(str(data_valor), '%Y-%m-%d %H:%M:%S')
+                            data = data_dt.strftime('%Y-%m-%d')
+                            hora = data_dt.strftime('%H:%M:%S')
+                        except:
+                            data = periodo_inicio if periodo_inicio else datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                            hora = '00:00:00'
                 else:
-                    data = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                    data = periodo_inicio if periodo_inicio else datetime.now(timezone.utc).strftime('%Y-%m-%d')
                     hora = '00:00:00'
                 
                 # Extrair outros campos
-                duracao = float(row.get(col_map.get('duracao', 'DURAÇÃO'), 0) or 0)
-                posto = str(row.get(col_map.get('posto', 'POSTO ENERGIA'), '') or '').strip()
-                valor_total = float(row.get(col_map.get('valor_total', 'TOTAL c/ IVA'), 0) or 0)
+                id_carregamento = str(row.get(col_map.get('id_carregamento', 'ID CARREGAMENTO'), '') or '').strip()
+                posto = str(row.get(col_map.get('posto', 'POSTO'), '') or '').strip()
                 energia = float(row.get(col_map.get('energia', 'ENERGIA'), 0) or 0)
-                
-                # Se não tem energia mas tem custo, usar custo
-                if energia == 0 and col_map.get('custo'):
-                    energia = float(row.get(col_map.get('custo'), 0) or 0)
+                duracao = float(row.get(col_map.get('duracao', 'DURAÇÃO'), 0) or 0)
+                custo = float(row.get(col_map.get('custo', 'CUSTO'), 0) or 0)
+                valor_total = float(row.get(col_map.get('valor_total', 'TOTAL c/ IVA'), 0) or 0)
                 
                 # Criar documento
                 documento = {
