@@ -80,6 +80,18 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
     
     // Veículo Atribuído
     vehicle_assigned: motoristaData?.vehicle_assigned || '',
+    
+    // Configurações de Contrato e Ganhos/Gastos
+    tipo_contrato: motoristaData?.tipo_contrato || 'comissao',
+    portagens_uber_config: motoristaData?.portagens_uber_config || 'motorista_paga',
+    portagens_bolt_config: motoristaData?.portagens_bolt_config || 'motorista_paga',
+    gorjetas_uber_recebe: motoristaData?.gorjetas_uber_recebe ?? true,
+    gorjetas_bolt_recebe: motoristaData?.gorjetas_bolt_recebe ?? true,
+    
+    // IDs herdados do veículo (readonly)
+    cartao_frota_eletric_id: motoristaData?.cartao_frota_eletric_id || '',
+    cartao_viaverde_id: motoristaData?.cartao_viaverde_id || '',
+    id_cartao_frota_combustivel: motoristaData?.id_cartao_frota_combustivel || '',
   });
 
   const [uploading, setUploading] = useState({});
