@@ -11291,6 +11291,12 @@ async def excluir_relatorio(
     # Verificar se pode ser excluído (apenas rascunho ou pendente)
     status_permitidos = ["rascunho", "pendente"]
     estado_atual = relatorio.get("estado") or relatorio.get("status")
+    
+    # Se estado_atual for None, assumir como "rascunho" para relatórios antigos
+    if estado_atual is None:
+        logger.warning(f"Relatório {relatorio_id} sem campo 'estado' definido, assumindo 'rascunho'")
+        estado_atual = "rascunho"
+    
     if estado_atual not in status_permitidos:
         raise HTTPException(
             status_code=400, 
