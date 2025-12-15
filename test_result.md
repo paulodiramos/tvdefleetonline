@@ -10506,15 +10506,15 @@ agent_communication:
 
   - task: "Importação de Carregamentos via Excel (.xlsx) - NOVA FUNCIONALIDADE"
     implemented: true
-    working: false
+    working: true
     file: "backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
-        - working: false
-          agent: "main"
-          comment: "⏳ TESTE PENDENTE - Função importar_carregamentos_excel implementada (linha 11837), integrada no endpoint /api/importar/viaverde. Aguarda validação pelo testing agent. Ficheiro de teste criado: /tmp/carregamentos_test.xlsx com CardCode PTPRIO6087131736480003."
+        - working: true
+          agent: "testing"
+          comment: "✅ 100% FUNCIONANDO! Função importar_carregamentos_excel testada com sucesso. Endpoint detecta automaticamente Excel de carregamentos via cabeçalho 'Nº. CARTÃO'. Busca por CardCode→Veículo→Motorista funcionando. Mensagens de erro claras. Sistema pronto para produção."
 
 ---
 
