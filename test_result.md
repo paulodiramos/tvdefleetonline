@@ -264,15 +264,18 @@ backend:
 
   - task: "Bug Fix 1: Campos de FichaVeiculo.js não são guardados"
     implemented: true
-    working: true
-    file: "backend/server.py"
-    stuck_count: 0
+    working: false
+    file: "frontend/src/pages/FichaVeiculo.js"
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
         - working: true
           agent: "testing"
           comment: "✅ BUG CORRIGIDO: Campos Via Verde ID, Cartão Frota ID e Motorista Atribuído agora são guardados corretamente. TESTE REALIZADO: 1) Autenticação como admin (admin@tvdefleet.com) ✅ 2) Obtenção de veículo existente para teste ✅ 3) Atualização com dados de teste: via_verde_id='VV123456789', cartao_frota_id='CF987654321', motorista_atribuido=ID_real ✅ 4) VERIFICAÇÃO CRÍTICA: Todos os 3 campos foram salvos e persistidos corretamente ✅. RESULTADO: Bug 1 do review request CORRIGIDO - campos da ficha do veículo agora são guardados adequadamente."
+        - working: false
+          agent: "testing"
+          comment: "❌ BUG P0 CONFIRMADO - DADOS NÃO PERSISTEM NO FORMULÁRIO FICHAVEICULO! CONTEXTO: Teste completo conforme review request específico do bug de gravação. CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU ✅. TESTE REALIZADO: 1) ✅ Login como parceiro funcionando 2) ✅ Navegação para /vehicles funcionando 3) ✅ Clique em 'Ver Ficha' do primeiro veículo (Peugeot 308 SW - AS-14-NI) 4) ✅ Modo de edição ativado com sucesso 5) ✅ Campo 'Cartão Frota Elétrico ID' encontrado e preenchido com 'TEST-12345-EDIT' 6) ✅ Campo 'Via Verde ID' encontrado e preenchido com 'VV-TEST-999' 7) ✅ Botão 'Guardar' clicado 8) ❌ CRÍTICO: Nenhuma requisição PUT capturada pelo network monitor 9) ❌ CRÍTICO: Nenhuma mensagem de sucesso visível 10) ❌ CRÍTICO: Após reload, valores NÃO persistiram - campos voltaram aos valores originais. CAUSA RAIZ IDENTIFICADA: O botão 'Guardar' não está a executar a função handleSaveInfo() ou handleSaveAllChanges() corretamente. A requisição PUT não está sendo enviada para o backend. BUG CONFIRMADO: Dados editados na FichaVeiculo.js não são guardados de forma fiável conforme reportado múltiplas vezes."
 
   - task: "Bug Fix 2: Status do veículo não atualiza"
     implemented: true
