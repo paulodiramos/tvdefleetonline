@@ -12971,15 +12971,17 @@ async def importar_plataforma(
                         })
                     
                 elif plataforma == 'viaverde':
-                    # Suportar 2 formatos Via Verde:
+                    # Suportar 3 formatos Via Verde:
                     # Formato 1: Portagens tradicionais (template simples)
-                    # Formato 2: Carregamentos elétricos (exportação real)
+                    # Formato 2: Carregamentos elétricos simplificado (template)
+                    # Formato 3: Carregamentos elétricos CSV oficial (exportação real)
                     
                     # Detectar formato do CSV automaticamente
                     is_formato_simplificado = 'data' in row and 'hora' in row and 'kwh' in row and 'valor_total' in row
                     is_formato_completo = ('StartDate' in row or 'Timestamp' in row) and 'Energy' in row
+                    is_formato_oficial_csv = any(key for key in row.keys() if ('CART' in key.upper() and 'ENERGIA' in str(row.keys()).upper()))
                     
-                    if is_formato_simplificado or is_formato_completo:
+                    if is_formato_simplificado or is_formato_completo or is_formato_oficial_csv:
                         # ⚡ CARREGAMENTOS ELÉTRICOS VIA VERDE
                         # 
                         # Suporta 2 formatos:
