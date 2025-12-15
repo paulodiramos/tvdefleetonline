@@ -9510,7 +9510,7 @@ Maria Santos Test,maria.test.{timestamp}@example.com,923456789,Portuguesa"""
         
         try:
             # Get weekly reports to check if charging data is separated correctly
-            response = requests.get(f"{BACKEND_URL}/relatorios-semanais", headers=headers)
+            response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos", headers=headers)
             
             if response.status_code == 200:
                 relatorios = response.json()
