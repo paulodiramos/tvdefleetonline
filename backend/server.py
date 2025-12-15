@@ -11982,33 +11982,51 @@ async def importar_carregamentos_excel(
                 custo = float(row.get(col_map.get('custo', 'CUSTO'), 0) or 0)
                 valor_total = float(row.get(col_map.get('valor_total', 'TOTAL c/ IVA'), 0) or 0)
                 
-                # Criar documento
+                # Se não tem valor total mas tem custo, usar custo
+                if valor_total == 0 and custo > 0:
+                    valor_total = custo
+                
+                # Extrair nome e descrição para referência
+                nome = str(row.get(col_map.get('nome', 'NOME'), '') or '').strip()
+                descricao = str(row.get(col_map.get('descricao', 'DESCRIÇÃO'), '') or '').strip()
+                matricula_ficheiro = str(row.get(col_map.get('matricula', 'MATRÍCULA'), '') or '').strip()
+                
+                # Criar documento detalhado
                 documento = {
                     "id": str(uuid.uuid4()),
                     "vehicle_id": vehicle["id"],
                     "motorista_id": motorista.get("id") if motorista else None,
                     "motorista_email": motorista_email,
+                    "motorista_nome": motorista_nome,
                     "matricula": vehicle.get("matricula"),
                     "card_code": card_code,
+                    "id_carregamento": id_carregamento,
                     "estacao_id": posto,
-                    "duracao_minutos": duracao,
                     "energia_kwh": energia,
+                    "duracao_minutos": duracao,
+                    "custo_base": custo,
                     "valor_total_com_taxas": valor_total,
                     "data": data,
                     "hora": hora,
+                    "nome_cartao": nome,
+                    "descricao_veiculo": descricao,
+                    "matricula_ficheiro": matricula_ficheiro,
                     "tipo_transacao": "carregamento_eletrico",
-                    "plataforma": "viaverde",
+                    "plataforma": "carregamentos",
                     "periodo_inicio": periodo_inicio,
                     "periodo_fim": periodo_fim,
-                    "ano": int(periodo_inicio.split('-')[0]) if periodo_inicio else datetime.now(timezone.utc).year,
-                    "semana": datetime.strptime(periodo_inicio, '%Y-%m-%d').isocalendar()[1] if periodo_inicio else datetime.now(timezone.utc).isocalendar()[1],
+                    "ano": int(data.split('-')[0]) if data else datetime.now(timezone.utc).year,
+                    "semana": datetime.strptime(data, '%Y-%m-%d').isocalendar()[1] if data else datetime.now(timezone.utc).isocalendar()[1],
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "created_by": current_user["id"]
                 }
                 
                 # Inserir no MongoDB
                 await db.portagens_viaverde.insert_one(documento)
+                registos_importados.append(documento)
                 sucesso += 1
+                
+                logger.info(f"✅ Importado: {matricula_ficheiro or vehicle.get('matricula')} - €{valor_total:.2f} - {energia}kWh")
                 
             except Exception as e:
                 erros += 1
