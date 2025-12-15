@@ -8116,7 +8116,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Teste de Importação Via Verde CSV - Carregamentos com CardID - COMPLETED ✅"
+    - "Importação Excel de Carregamentos Elétricos - COMPLETED ✅"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -8131,6 +8131,10 @@ test_plan:
   fuel_import_desc_cartao_logic_working: true
   gps_import_matricula_tested: true
   gps_import_vehicle_lookup_working: true
+  excel_carregamentos_eletricos_tested: true
+  excel_carregamentos_detection_working: true
+  excel_carregamentos_cardcode_lookup_working: true
+  excel_carregamentos_error_messages_working: true
 
 agent_communication:
     - agent: "testing"
