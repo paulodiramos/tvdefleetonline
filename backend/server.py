@@ -11841,11 +11841,12 @@ async def importar_carregamentos_excel(
     periodo_fim: str
 ):
     """
-    Importar carregamentos elétricos de Excel (.xlsx)
-    - Formato: Excel (.xlsx) com colunas portuguesas
-    - Identificador: Nº. CARTÃO (CardCode) → cartao_frota_eletric_id
+    Importar carregamentos elétricos de Excel (.xlsx) - FORMATO OFICIAL
+    - Ficheiro oficial: Transações_Eletrico_YYYYMMDD.xlsx
+    - Colunas: DATA, Nº. CARTÃO, NOME, DESCRIÇÃO, MATRÍCULA, ID CARREGAMENTO, POSTO, ENERGIA, DURAÇÃO, CUSTO, OPC IEC, TOTAL, TOTAL c/ IVA, FATURA PTPRIO
+    - Identificador: Nº. CARTÃO (CardCode) → cartao_frota_eletric_id no veículo
     - Associa motorista via veículo (motorista_atribuido)
-    - NÃO usa email do motorista
+    - Cria relatório detalhado após importação
     """
     try:
         import openpyxl
@@ -11859,33 +11860,40 @@ async def importar_carregamentos_excel(
         sucesso = 0
         erros = 0
         erros_detalhes = []
+        registos_importados = []
         
         # Ler linha 1 como cabeçalho
         header_row = list(sheet.iter_rows(min_row=1, max_row=1, values_only=True))[0]
         header = [str(cell).strip() if cell else '' for cell in header_row]
         
-        logger.info(f"📄 Cabeçalho Excel Carregamentos: {header}")
+        logger.info(f"📄 Excel Carregamentos - Cabeçalho: {header}")
         
-        # Mapear nomes de colunas (podem variar)
+        # Mapear colunas do formato oficial
         col_map = {}
         for i, col in enumerate(header):
-            col_lower = col.lower()
-            if 'cartão' in col_lower or 'cartao' in col_lower:
+            col_clean = col.lower().strip()
+            if 'cartão' in col_clean or 'cartao' in col_clean:
                 col_map['card_code'] = col
-            elif 'matrícula' in col_lower or 'matricula' in col_lower:
-                col_map['matricula'] = col
-            elif 'data' in col_lower and 'descrição' not in col_lower:
+            elif col_clean == 'data':
                 col_map['data'] = col
-            elif 'duração' in col_lower or 'duracao' in col_lower:
-                col_map['duracao'] = col
-            elif 'posto' in col_lower and 'energia' in col_lower:
+            elif 'matrícula' in col_clean or 'matricula' in col_clean:
+                col_map['matricula'] = col
+            elif col_clean == 'nome':
+                col_map['nome'] = col
+            elif 'descrição' in col_clean or 'descricao' in col_clean:
+                col_map['descricao'] = col
+            elif 'id carregamento' in col_clean or 'id_carregamento' in col_clean:
+                col_map['id_carregamento'] = col
+            elif col_clean == 'posto':
                 col_map['posto'] = col
-            elif 'total' in col_lower and 'iva' in col_lower:
-                col_map['valor_total'] = col
-            elif 'custo' in col_lower:
-                col_map['custo'] = col
-            elif 'energia' in col_lower and 'posto' not in col_lower:
+            elif col_clean == 'energia':
                 col_map['energia'] = col
+            elif 'duração' in col_clean or 'duracao' in col_clean:
+                col_map['duracao'] = col
+            elif col_clean == 'custo':
+                col_map['custo'] = col
+            elif 'total' in col_clean and 'iva' in col_clean:
+                col_map['valor_total'] = col
         
         logger.info(f"🗺️ Mapeamento de colunas: {col_map}")
         
