@@ -1830,9 +1830,6 @@ def main():
 
 if __name__ == "__main__":
     exit(main())
-                f"{BACKEND_URL}/importar/viaverde",
-                files=files,
-                data=data,
                 headers=headers
             )
             
