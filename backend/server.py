@@ -12284,8 +12284,22 @@ async def importar_plataforma(
         
         # Para Via Verde em Excel (.xlsx), processar diferente
         if plataforma == 'viaverde' and (file.filename.endswith('.xlsx') or file.filename.endswith('.xls')):
-            # Processar Excel de portagens Via Verde
-            return await importar_viaverde_excel(content, current_user, periodo_inicio, periodo_fim)
+            # Detectar tipo de Excel (carregamentos ou portagens)
+            # Carregar para verificar colunas
+            import openpyxl
+            from io import BytesIO
+            wb = openpyxl.load_workbook(BytesIO(content))
+            sheet = wb.active
+            header_row = list(sheet.iter_rows(min_row=1, max_row=1, values_only=True))[0]
+            header = [str(cell).strip() if cell else '' for cell in header_row]
+            
+            # Se tem "Nº. CARTÃO" ou "POSTO ENERGIA" é carregamentos elétricos
+            if 'Nº. CARTÃO' in header or 'POSTO ENERGIA' in header or 'Nº. Cartão' in header:
+                logger.info("📄 Detectado: Excel de Carregamentos Elétricos")
+                return await importar_carregamentos_excel(content, current_user, periodo_inicio, periodo_fim)
+            else:
+                logger.info("📄 Detectado: Excel de Portagens Via Verde")
+                return await importar_viaverde_excel(content, current_user, periodo_inicio, periodo_fim)
         
         # Para CSV: tentar múltiplas codificações
         decoded = None
