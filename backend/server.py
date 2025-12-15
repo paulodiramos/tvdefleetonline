@@ -12772,6 +12772,10 @@ async def importar_plataforma(
                         # Atualizar data/hora no documento principal
                         documento["data"] = data
                         documento["hora"] = hora
+                        
+                        # ✅ IMPORTANTE: Não validar email para carregamentos!
+                        # O motorista já foi associado via veículo, então skip da validação de email abaixo
+                        
                     else:
                         # Formato 1: Portagens tradicionais
                         documento.update({
