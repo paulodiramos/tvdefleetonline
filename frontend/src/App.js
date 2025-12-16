@@ -45,6 +45,7 @@ import Pagamentos from "@/pages/Pagamentos";
 import UploadCSV from "@/pages/UploadCSV";
 import Planos from "@/pages/Planos";
 import Configuracoes from "@/pages/Configuracoes";
+import CartoesFrota from "@/pages/CartoesFrota";
 import Integracoes from "@/pages/Integracoes";
 import Comunicacoes from "@/pages/Comunicacoes";
 import ConfiguracaoComunicacoes from "@/pages/ConfiguracaoComunicacoes";
