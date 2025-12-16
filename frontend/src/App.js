@@ -440,6 +440,12 @@ function App() {
           />
           <Route path="/configuracoes-comunicacao" element={<Navigate to="/comunicacoes" replace />} />
           <Route 
+            path="/cartoes-frota" 
+            element={
+              user ? <CartoesFrota user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            } 
+          />
+          <Route 
             path="/termos-privacidade" 
             element={
               user && user.role === 'admin' ? <TermosPrivacidadeAdmin user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
