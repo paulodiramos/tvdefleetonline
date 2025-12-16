@@ -1268,7 +1268,6 @@ class Motorista(BaseModel):
     whatsapp: Optional[str] = None
     tipo_pagamento: Optional[str] = None
     tipo_pagamento_outro: Optional[str] = None
-    id_cartao_frota_combustivel: Optional[str] = None  # ID automático do cartão frota (gerado)
     
     # Configurações de Contrato e Ganhos/Gastos
     tipo_contrato: Optional[str] = "comissao"  # "aluguer" | "comissao"
@@ -1277,9 +1276,14 @@ class Motorista(BaseModel):
     gorjetas_uber_recebe: Optional[bool] = True  # Se motorista recebe gorjetas Uber
     gorjetas_bolt_recebe: Optional[bool] = True  # Se motorista recebe gorjetas Bolt
     
-    # IDs herdados do veículo (preenchidos automaticamente ao atribuir veículo)
-    cartao_frota_eletric_id: Optional[str] = None  # Herdado do veículo para carregamentos
-    cartao_viaverde_id: Optional[str] = None  # Herdado do veículo para portagens
+    # 🆕 NOVA ARQUITETURA: Cartões de Frota (atribuídos diretamente ao motorista)
+    cartao_combustivel_id: Optional[str] = None  # ID do CartaoFrota (tipo: combustivel)
+    cartao_eletrico_id: Optional[str] = None  # ID do CartaoFrota (tipo: eletrico)
+    cartao_viaverde_id: Optional[str] = None  # ID do CartaoFrota (tipo: viaverde)
+    
+    # LEGACY: Manter para compatibilidade (deprecated - usar cartao_*_id)
+    id_cartao_frota_combustivel: Optional[str] = None  # DEPRECATED
+    cartao_frota_eletric_id: Optional[str] = None  # DEPRECATED
     
     # Localidade
     localidade: Optional[str] = None
