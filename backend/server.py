@@ -2247,6 +2247,26 @@ class Alerta(BaseModel):
     criado_em: datetime
     resolvido_em: Optional[datetime] = None
 
+class CartaoFrotaCreate(BaseModel):
+    numero_cartao: str
+    tipo: str  # "combustivel", "eletrico", "viaverde"
+    fornecedor: Optional[str] = None
+    observacoes: Optional[str] = None
+
+class CartaoFrota(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    numero_cartao: str
+    tipo: str  # "combustivel", "eletrico", "viaverde"
+    fornecedor: Optional[str] = None
+    status: str = "ativo"  # "ativo", "inativo"
+    motorista_atribuido: Optional[str] = None  # ID do motorista
+    motorista_nome: Optional[str] = None
+    observacoes: Optional[str] = None
+    created_at: str
+    created_by: str
+    updated_at: Optional[str] = None
+
 # ==================== AUTH UTILITIES ====================
 
 def hash_password(password: str) -> str:
