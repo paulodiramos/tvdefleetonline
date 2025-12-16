@@ -267,6 +267,11 @@ const Layout = ({ children, user, onLogout }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link to="/cartoes-frota" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>Cartões de Frota</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to="/termos-privacidade" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>Termos & Privacidade</span>
                         </Link>
