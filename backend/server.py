@@ -13117,20 +13117,14 @@ async def importar_plataforma(
                         # 3. Obter veículo do motorista (opcional, para informação)
                         motorista_email = motorista.get("email", "")
                         if motorista.get('veiculo_atribuido'):
-                            vehicle_temp = await db.vehicles.find_one(
+                            vehicle = await db.vehicles.find_one(
                                 {"id": motorista['veiculo_atribuido']},
                                 {"_id": 0}
                             )
-                            if motorista_temp:
-                                motorista = motorista_temp
-                                motorista_email = motorista.get("email", "")
-                                logger.info(f"✅ Carregamento - Motorista atribuído: {motorista.get('name')} (via veículo)")
-                        
-                        # Se veículo não tiver motorista, importar sem motorista (permitido)
-                        if not motorista:
-                            logger.warning(f"⚠️ Carregamento - Veículo {vehicle.get('matricula')} sem motorista atribuído (importado sem motorista)")
-                            motorista = {"id": None, "email": None}
-                            motorista_email = ""
+                            if vehicle:
+                                logger.info(f"✅ Carregamento - Veículo: {vehicle.get('matricula')}")
+                        else:
+                            logger.info(f"ℹ️ Carregamento - Motorista {motorista.get('name')} sem veículo atribuído")
                         
                         # Parse da data/hora (adaptar ao formato do CSV)
                         if is_formato_simplificado:
