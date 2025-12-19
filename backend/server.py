@@ -13062,42 +13062,63 @@ async def importar_plataforma(
                         if not card_code:
                             card_code = row.get('CardCode', '').strip()  # Fallback
                         
-                        # Buscar veículo APENAS por CardCode
+                        # 🆕 NOVA ARQUITETURA: Buscar CARTÃO DE FROTA primeiro, depois MOTORISTA
+                        cartao_frota = None
+                        motorista = None
                         vehicle = None
                         
                         if card_code:
-                            vehicle = await db.vehicles.find_one(
-                                {"cartao_frota_eletric_id": card_code},
+                            # 1. Buscar cartão de frota pelo número
+                            cartao_frota = await db.cartoes_frota.find_one(
+                                {"numero_cartao": card_code, "tipo": "eletrico"},
                                 {"_id": 0}
                             )
-                            if vehicle:
-                                logger.info(f"✅ Carregamento - Veículo encontrado por Cartão Frota Elétrico ID: {card_code}")
+                            
+                            if cartao_frota:
+                                logger.info(f"✅ Cartão de frota encontrado: {card_code}")
+                                
+                                # 2. Buscar motorista pelo cartão
+                                if cartao_frota.get('motorista_atribuido'):
+                                    motorista_temp = await db.motoristas.find_one(
+                                        {"id": cartao_frota['motorista_atribuido']},
+                                        {"_id": 0}
+                                    )
+                                    if motorista_temp:
+                                        motorista = motorista_temp
+                                        logger.info(f"✅ Motorista encontrado via cartão: {motorista.get('name')}")
+                                else:
+                                    logger.warning(f"⚠️ Cartão {card_code} não está atribuído a nenhum motorista")
+                            else:
+                                # Fallback: Tentar buscar motorista diretamente (novo campo)
+                                motorista_temp = await db.motoristas.find_one(
+                                    {"cartao_eletrico_id": card_code},
+                                    {"_id": 0}
+                                )
+                                if motorista_temp:
+                                    motorista = motorista_temp
+                                    logger.info(f"✅ Motorista encontrado diretamente por cartao_eletrico_id: {motorista.get('name')}")
                         else:
                             logger.warning(f"⚠️ Linha {row_num}: CardCode vazio no CSV")
                         
-                        # Se veículo não encontrado, registar erro e continuar
-                        if not vehicle:
+                        # Se motorista não encontrado, registar erro e continuar
+                        if not motorista:
                             erros += 1
                             if card_code:
                                 erros_detalhes.append(
-                                    f"Linha {row_num}: Veículo não encontrado com CardCode '{card_code}'. "
-                                    f"Deve criar veículo e preencher campo 'Cartão Frota Elétrico ID (Carregamentos)' com este valor."
+                                    f"Linha {row_num}: Cartão '{card_code}' não encontrado ou não atribuído. "
+                                    f"Criar cartão em 'Configurações → Cartões de Frota' e atribuir ao motorista."
                                 )
                             else:
                                 erros_detalhes.append(
-                                    f"Linha {row_num}: CardCode vazio no ficheiro - não é possível identificar veículo"
+                                    f"Linha {row_num}: CardCode vazio no ficheiro - não é possível identificar motorista"
                                 )
                             continue
                         
-                        # ✅ ASSOCIAR MOTORISTA ATRAVÉS DO VEÍCULO
-                        # ❌ NÃO procura por email!
-                        # ✅ Usa o campo motorista_atribuido do veículo
-                        motorista = None
-                        motorista_email = ""
-                        
-                        if vehicle.get('motorista_atribuido'):
-                            motorista_temp = await db.motoristas.find_one(
-                                {"id": vehicle['motorista_atribuido']},
+                        # 3. Obter veículo do motorista (opcional, para informação)
+                        motorista_email = motorista.get("email", "")
+                        if motorista.get('veiculo_atribuido'):
+                            vehicle_temp = await db.vehicles.find_one(
+                                {"id": motorista['veiculo_atribuido']},
                                 {"_id": 0}
                             )
                             if motorista_temp:
