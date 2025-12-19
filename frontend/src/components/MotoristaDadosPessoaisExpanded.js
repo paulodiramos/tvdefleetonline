@@ -1449,26 +1449,98 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
             </p>
           </div>
 
-          {/* IDs Herdados do Veículo (Read-only) */}
-          {(formData.cartao_frota_eletric_id || formData.cartao_viaverde_id || formData.id_cartao_frota_combustivel) && (
-            <div className="border-t pt-4 bg-slate-50 p-4 rounded">
-              <h4 className="font-semibold text-sm mb-3 text-slate-700">🔗 IDs Associados ao Veículo (Automático)</h4>
-              <div className="space-y-2 text-xs">
-                {formData.id_cartao_frota_combustivel && (
-                  <p>⛽ <strong>Cartão Combustível:</strong> {formData.id_cartao_frota_combustivel}</p>
-                )}
-                {formData.cartao_frota_eletric_id && (
-                  <p>🔋 <strong>Cartão Elétrico:</strong> {formData.cartao_frota_eletric_id}</p>
-                )}
-                {formData.cartao_viaverde_id && (
-                  <p>🛣️ <strong>Cartão Via Verde:</strong> {formData.cartao_viaverde_id}</p>
-                )}
-              </div>
-              <p className="text-xs text-slate-500 mt-2 italic">
-                Estes IDs são copiados automaticamente quando um veículo é atribuído ao motorista.
+        </CardContent>
+      </Card>
+
+      {/* 8.6. CARTÕES DE FROTA ATRIBUÍDOS */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center space-x-2">
+            <CreditCard className="w-5 h-5 text-indigo-600" />
+            <CardTitle>Cartões de Frota Atribuídos</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Cartão Combustível */}
+          <div>
+            <Label>⛽ Cartão de Combustível</Label>
+            <Select
+              value={formData.cartao_combustivel_id}
+              onValueChange={(value) => handleChange('cartao_combustivel_id', value)}
+              disabled={!canEdit || !editMode || isMotorista}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um cartão de combustível" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Nenhum</SelectItem>
+                {cartoesCombustivel.map((cartao) => (
+                  <SelectItem key={cartao.id} value={cartao.id}>
+                    {cartao.numero_cartao} {cartao.fornecedor && `- ${cartao.fornecedor}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {isMotorista && (
+              <p className="text-xs text-slate-500 mt-1">
+                ℹ️ Apenas admin/gestão/parceiro pode atribuir cartões
               </p>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Cartão Elétrico */}
+          <div>
+            <Label>🔋 Cartão Elétrico (Carregamentos)</Label>
+            <Select
+              value={formData.cartao_eletrico_id}
+              onValueChange={(value) => handleChange('cartao_eletrico_id', value)}
+              disabled={!canEdit || !editMode || isMotorista}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um cartão elétrico" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Nenhum</SelectItem>
+                {cartoesEletrico.map((cartao) => (
+                  <SelectItem key={cartao.id} value={cartao.id}>
+                    {cartao.numero_cartao} {cartao.fornecedor && `- ${cartao.fornecedor}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Cartão Via Verde */}
+          <div>
+            <Label>🛣️ Cartão Via Verde (Portagens)</Label>
+            <Select
+              value={formData.cartao_viaverde_id}
+              onValueChange={(value) => handleChange('cartao_viaverde_id', value)}
+              disabled={!canEdit || !editMode || isMotorista}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um cartão Via Verde" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Nenhum</SelectItem>
+                {cartoesViaverde.map((cartao) => (
+                  <SelectItem key={cartao.id} value={cartao.id}>
+                    {cartao.numero_cartao} {cartao.fornecedor && `- ${cartao.fornecedor}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="border-t pt-4 bg-blue-50 p-4 rounded">
+            <h4 className="font-semibold text-sm mb-2 text-blue-700">💡 Como funciona?</h4>
+            <ul className="text-xs text-slate-700 space-y-1">
+              <li>• Os cartões são geridos em <strong>Configurações → Cartões de Frota</strong></li>
+              <li>• Quando importa ficheiros CSV/Excel, o sistema associa automaticamente pelo número do cartão</li>
+              <li>• Combustível, carregamentos e portagens são associados diretamente ao motorista</li>
+              <li>• Veículos mostram os cartões do motorista (apenas visualização)</li>
+            </ul>
+          </div>
         </CardContent>
       </Card>
 
