@@ -88,10 +88,10 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
     gorjetas_uber_recebe: motoristaData?.gorjetas_uber_recebe ?? true,
     gorjetas_bolt_recebe: motoristaData?.gorjetas_bolt_recebe ?? true,
     
-    // IDs herdados do veículo (readonly)
-    cartao_frota_eletric_id: motoristaData?.cartao_frota_eletric_id || '',
+    // 🆕 Cartões de Frota Atribuídos
+    cartao_combustivel_id: motoristaData?.cartao_combustivel_id || '',
+    cartao_eletrico_id: motoristaData?.cartao_eletrico_id || '',
     cartao_viaverde_id: motoristaData?.cartao_viaverde_id || '',
-    id_cartao_frota_combustivel: motoristaData?.id_cartao_frota_combustivel || '',
   });
 
   const [uploading, setUploading] = useState({});
