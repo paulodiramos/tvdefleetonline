@@ -252,8 +252,34 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
       }
     };
     
+    const fetchCartoes = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        
+        // Carregar todos os cartões disponíveis (não atribuídos) por tipo
+        const [combustivelRes, eletricoRes, viaverdeRes] = await Promise.all([
+          axios.get(`${API}/cartoes-frota/disponiveis/combustivel`, {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get(`${API}/cartoes-frota/disponiveis/eletrico`, {
+            headers: { Authorization: `Bearer ${token}` }
+          }),
+          axios.get(`${API}/cartoes-frota/disponiveis/viaverde`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+        ]);
+        
+        setCartoesCombustivel(combustivelRes.data || []);
+        setCartoesEletrico(eletricoRes.data || []);
+        setCartoesViaverde(viaverdeRes.data || []);
+      } catch (error) {
+        console.error('Erro ao carregar cartões:', error);
+      }
+    };
+    
     if (canEdit) {
       fetchVeiculos();
+      fetchCartoes();
     }
   }, [canEdit]);
 
