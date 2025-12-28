@@ -13007,16 +13007,78 @@ async def importar_plataforma(
                 
                 # Adicionar campos específicos por plataforma
                 if plataforma == 'uber':
+                    # Extrair valores com parsing flexível
+                    def parse_uber_valor(row, *keys):
+                        """Extrair e converter valor de múltiplas possíveis colunas"""
+                        for key in keys:
+                            valor = row.get(key, '').strip()
+                            if valor:
+                                try:
+                                    # Remover €, espaços, converter vírgula para ponto
+                                    valor_limpo = valor.replace('€', '').replace(' ', '').replace(',', '.')
+                                    return float(valor_limpo)
+                                except:
+                                    continue
+                        return 0.0
+                    
+                    # 1. GANHOS TOTAIS (já inclui gorjetas)
+                    ganhos_totais = parse_uber_valor(
+                        row,
+                        'Pago a si : Os seus rendimentos',
+                        'Pago a si: Os seus rendimentos',
+                        'rendimentos_total'
+                    )
+                    
+                    # 2. GORJETAS (separadas para controlo)
+                    gorjetas = parse_uber_valor(
+                        row,
+                        'Pago a si:Os seus rendimentos:Gratificação',
+                        'Pago a si : Os seus rendimentos : Gratificação',
+                        'gorjetas',
+                        'gratificacao'
+                    )
+                    
+                    # 3. PORTAGENS = Reembolsos:Portagem + Impostos:Imposto sobre a tarifa
+                    portagem_reembolso = parse_uber_valor(
+                        row,
+                        'Pago a si:Saldo da viagem:Reembolsos:Portagem',
+                        'Pago a si : Saldo da viagem : Reembolsos : Portagem'
+                    )
+                    
+                    portagem_imposto = parse_uber_valor(
+                        row,
+                        'Pago a si:Saldo da viagem:Impostos:Imposto sobre a tarifa',
+                        'Pago a si : Saldo da viagem : Impostos : Imposto sobre a tarifa'
+                    )
+                    
+                    portagens_total = portagem_reembolso + portagem_imposto
+                    
+                    # Ganhos SEM gorjetas (para cálculos)
+                    ganhos_base = ganhos_totais - gorjetas
+                    
                     documento.update({
                         "uuid_motorista": row.get('UUID do motorista', '').strip(),
                         "nome_proprio": row.get('Nome próprio do motorista', '').strip(),
                         "apelido": row.get('Apelido do motorista', '').strip(),
-                        "pago_total": to_float(row.get('Pago a si', '0')),
-                        "rendimentos_total": to_float(row.get('Pago a si : Os seus rendimentos', '0')),
-                        "tarifa": to_float(row.get('Pago a si : Os seus rendimentos : Tarifa', '0')),
-                        "taxa_servico": to_float(row.get('Pago a si : Os seus rendimentos : Taxa de serviço', '0')),
+                        "pago_total": parse_uber_valor(row, 'Pago a si', 'pago_total'),
+                        
+                        # Novos campos detalhados
+                        "ganhos_totais": ganhos_totais,  # Inclui gorjetas
+                        "ganhos_base": ganhos_base,  # SEM gorjetas
+                        "gorjetas": gorjetas,
+                        "portagens_reembolso": portagem_reembolso,
+                        "portagens_imposto": portagem_imposto,
+                        "portagens_total": portagens_total,
+                        
+                        # Campos antigos (manter compatibilidade)
+                        "rendimentos_total": ganhos_totais,
+                        "tarifa": parse_uber_valor(row, 'Pago a si : Os seus rendimentos : Tarifa'),
+                        "taxa_servico": parse_uber_valor(row, 'Pago a si : Os seus rendimentos : Taxa de serviço'),
+                        
                         "plataforma": "uber"
                     })
+                    
+                    logger.info(f"💰 Uber - Ganhos: €{ganhos_base:.2f} + Gorjetas: €{gorjetas:.2f} + Portagens: €{portagens_total:.2f}")
                     
                 elif plataforma == 'bolt':
                     # Suportar 2 formatos: template simples (viagens) e exportação Bolt (ganhos semanais)
