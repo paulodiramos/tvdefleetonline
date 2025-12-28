@@ -12606,6 +12606,9 @@ async def criar_relatorios_rascunho_apos_importacao(
                 "combustivel_total": combustivel_total,
                 "km_percorridos": km_percorridos,
                 
+                # Aluguer de Veículo (se aplicável)
+                "aluguer_veiculo": motorista.get('valor_aluguer_semanal', 0) if motorista.get('aluguer_ativo') else 0,
+                
                 # Totais
                 "total_ganhos": ganhos_uber + ganhos_bolt,
                 
