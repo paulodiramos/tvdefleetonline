@@ -1370,6 +1370,30 @@ const RelatoriosHub = ({ user, onLogout }) => {
                       onChange={(e) => setRelatorioEditando({ ...relatorioEditando, outros: e.target.value })}
                     />
                   </div>
+                  <div>
+                    <Label>Aluguer/Comissão Veículo (€)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={relatorioEditando.aluguer_veiculo || 0}
+                      onChange={(e) => setRelatorioEditando({ ...relatorioEditando, aluguer_veiculo: e.target.value })}
+                    />
+                    <p className="text-xs text-slate-500 mt-1">
+                      Valor semanal fixo de aluguer ou comissão
+                    </p>
+                  </div>
+                  <div>
+                    <Label>KM Efetuados</Label>
+                    <Input
+                      type="number"
+                      step="1"
+                      value={relatorioEditando.km_percorridos || 0}
+                      onChange={(e) => setRelatorioEditando({ ...relatorioEditando, km_percorridos: e.target.value })}
+                    />
+                    <p className="text-xs text-slate-500 mt-1">
+                      Quilómetros percorridos na semana
+                    </p>
+                  </div>
                   <div className="col-span-2">
                     <Label>Dívida Anterior (€)</Label>
                     <Input
