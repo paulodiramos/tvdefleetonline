@@ -1275,6 +1275,7 @@ class Motorista(BaseModel):
     portagens_bolt_config: Optional[str] = "motorista_paga"  # "motorista_paga" | "empresa_paga" | "acumula"
     gorjetas_uber_recebe: Optional[bool] = True  # Se motorista recebe gorjetas Uber
     gorjetas_bolt_recebe: Optional[bool] = True  # Se motorista recebe gorjetas Bolt
+    viaverde_config: Optional[str] = "motorista_paga"  # "motorista_paga" (recebe e desconta) | "acumula" (parceiro desconta depois)
     
     # 🆕 NOVA ARQUITETURA: Cartões de Frota (atribuídos diretamente ao motorista)
     cartao_combustivel_id: Optional[str] = None  # ID do CartaoFrota (tipo: combustivel)
