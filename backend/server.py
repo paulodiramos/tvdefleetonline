@@ -12493,18 +12493,30 @@ async def criar_relatorios_rascunho_apos_importacao(
             km_percorridos = 0
             
             if plataforma == 'uber':
-                dados = await db.viagens_uber.find({
+                dados = await db.ganhos_uber.find({
                     "motorista_id": motorista_id,
                     "periodo_inicio": periodo_inicio,
                     "periodo_fim": periodo_fim
                 }, {"_id": 0}).to_list(1000)
-                # Uber pode ter: valor_liquido, ganhos_liquidos, ganhos_semanais
+                
+                # Calcular ganhos conforme configuração do motorista
                 for d in dados:
-                    ganhos_uber += (
-                        float(d.get('valor_liquido') or 0) or
-                        float(d.get('ganhos_liquidos') or 0) or
-                        float(d.get('ganhos_semanais') or 0)
-                    )
+                    # Usar ganhos_base (sem gorjetas) como ponto de partida
+                    ganho_linha = float(d.get('ganhos_base') or d.get('ganhos_totais') or d.get('rendimentos_total') or 0)
+                    
+                    # Adicionar gorjetas se motorista recebe
+                    if motorista.get('gorjetas_uber_recebe', True):
+                        ganho_linha += float(d.get('gorjetas') or 0)
+                    
+                    # Portagens - conforme configuração
+                    portagens = float(d.get('portagens_total') or 0)
+                    if motorista.get('portagens_uber_config') == 'empresa_paga':
+                        ganho_linha += portagens
+                    elif motorista.get('portagens_uber_config') == 'motorista_paga':
+                        ganho_linha -= portagens
+                    # Se 'acumula', não afeta ganhos (será abatido em Via Verde)
+                    
+                    ganhos_uber += ganho_linha
             
             elif plataforma == 'bolt':
                 dados = await db.viagens_bolt.find({
