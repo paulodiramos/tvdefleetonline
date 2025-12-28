@@ -12739,8 +12739,14 @@ async def importar_plataforma(
                     motorista_email = row.get('motorista_email', '').strip()
                 
                 if plataforma == 'uber':
-                    # Tentar por UUID do motorista (normalizar para comparação)
-                    uuid_motorista = row.get('UUID do motorista', '').strip().lower()
+                    # Tentar por UUID do motorista (múltiplas variações de nome da coluna)
+                    # Coluna pode ser: "UUID do motorista", "Identificador do motorista", "uuid_motorista"
+                    uuid_motorista = (
+                        row.get('Identificador do motorista', '').strip() or 
+                        row.get('UUID do motorista', '').strip() or 
+                        row.get('uuid_motorista', '').strip()
+                    ).lower()
+                    
                     if uuid_motorista:
                         # Buscar com UUID normalizado (case-insensitive)
                         motorista = await db.motoristas.find_one(
@@ -12748,7 +12754,11 @@ async def importar_plataforma(
                             {"_id": 0}
                         )
                         if motorista:
-                            logger.info(f"✅ Motorista encontrado por UUID: {motorista.get('name')}")
+                            logger.info(f"✅ Uber - Motorista encontrado por UUID: {motorista.get('name')} (UUID: {uuid_motorista})")
+                        else:
+                            logger.warning(f"⚠️ Uber - UUID '{uuid_motorista}' não encontrado no sistema")
+                    else:
+                        logger.warning(f"⚠️ Linha {row_num}: Coluna 'Identificador do motorista' ou 'UUID do motorista' vazia")
                     
                     # Se não encontrou, tentar por nome completo (mais flexível)
                     if not motorista:
