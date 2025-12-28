@@ -1277,6 +1277,12 @@ class Motorista(BaseModel):
     gorjetas_bolt_recebe: Optional[bool] = True  # Se motorista recebe gorjetas Bolt
     viaverde_config: Optional[str] = "motorista_paga"  # "motorista_paga" (recebe e desconta) | "acumula" (parceiro desconta depois)
     
+    # Contrato de Aluguer de Veículo
+    valor_aluguer_semanal: Optional[float] = None  # Valor semanal fixo de aluguer do veículo (€)
+    condicoes_aluguer: Optional[str] = None  # Condições do contrato de aluguer
+    data_inicio_aluguer: Optional[str] = None  # Data de início do contrato
+    aluguer_ativo: Optional[bool] = False  # Se o aluguer está ativo (deduz automaticamente)
+    
     # 🆕 NOVA ARQUITETURA: Cartões de Frota (atribuídos diretamente ao motorista)
     cartao_combustivel_id: Optional[str] = None  # ID do CartaoFrota (tipo: combustivel)
     cartao_eletrico_id: Optional[str] = None  # ID do CartaoFrota (tipo: eletrico)
