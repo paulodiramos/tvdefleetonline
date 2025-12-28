@@ -12584,6 +12584,21 @@ async def criar_relatorios_rascunho_apos_importacao(
                 }, {"_id": 0}).to_list(1000)
                 km_percorridos = sum(d.get('distancia_percorrida_km', 0) for d in dados)
             
+            # Buscar veículo atribuído ao motorista para obter dados de aluguer/comissão
+            aluguer_veiculo_valor = 0
+            tipo_contrato_veiculo = None
+            
+            if motorista.get('veiculo_atribuido'):
+                veiculo = await db.vehicles.find_one(
+                    {"id": motorista['veiculo_atribuido']},
+                    {"_id": 0, "tipo_contrato_veiculo": 1, "valor_semanal": 1, "matricula": 1}
+                )
+                if veiculo:
+                    tipo_contrato_veiculo = veiculo.get('tipo_contrato_veiculo')
+                    aluguer_veiculo_valor = float(veiculo.get('valor_semanal') or 0)
+                    if aluguer_veiculo_valor > 0:
+                        logger.info(f"💰 Veículo {veiculo.get('matricula')} - {tipo_contrato_veiculo}: €{aluguer_veiculo_valor}/semana")
+            
             # Criar relatório de rascunho
             relatorio = {
                 "id": str(uuid.uuid4()),
