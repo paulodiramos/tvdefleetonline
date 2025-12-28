@@ -15338,6 +15338,98 @@ async def listar_cartoes_disponiveis(tipo: str, current_user: Dict = Depends(get
     ).to_list(None)
     return cartoes
 
+# ==================== FICHEIROS IMPORTADOS ENDPOINTS ====================
+
+@api_router.get("/ficheiros-importados", response_model=List[FicheiroImportado])
+async def listar_ficheiros_importados(
+    plataforma: Optional[str] = None,
+    status: Optional[str] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Listar todos os ficheiros importados com filtros opcionais"""
+    filtro = {}
+    
+    if plataforma:
+        filtro["plataforma"] = plataforma
+    if status:
+        filtro["status"] = status
+    
+    ficheiros = await db.ficheiros_importados.find(filtro, {"_id": 0}).sort("data_importacao", -1).to_list(None)
+    return ficheiros
+
+@api_router.get("/ficheiros-importados/{ficheiro_id}", response_model=FicheiroImportado)
+async def obter_ficheiro_importado(ficheiro_id: str, current_user: Dict = Depends(get_current_user)):
+    """Obter detalhes de um ficheiro importado"""
+    ficheiro = await db.ficheiros_importados.find_one({"id": ficheiro_id}, {"_id": 0})
+    if not ficheiro:
+        raise HTTPException(status_code=404, detail="Ficheiro não encontrado")
+    return ficheiro
+
+@api_router.put("/ficheiros-importados/{ficheiro_id}/aprovar")
+async def aprovar_ficheiro_importado(ficheiro_id: str, observacoes: Optional[str] = None, current_user: Dict = Depends(get_current_user)):
+    """Aprovar um ficheiro importado"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    ficheiro = await db.ficheiros_importados.find_one({"id": ficheiro_id}, {"_id": 0})
+    if not ficheiro:
+        raise HTTPException(status_code=404, detail="Ficheiro não encontrado")
+    
+    if ficheiro["status"] == "aprovado":
+        raise HTTPException(status_code=400, detail="Ficheiro já está aprovado")
+    
+    updates = {
+        "status": "aprovado",
+        "aprovado_por": current_user["id"],
+        "aprovado_por_nome": current_user.get("name", current_user["email"]),
+        "data_aprovacao": datetime.now(timezone.utc).isoformat()
+    }
+    
+    if observacoes:
+        updates["observacoes"] = observacoes
+    
+    await db.ficheiros_importados.update_one({"id": ficheiro_id}, {"$set": updates})
+    
+    logger.info(f"✅ Ficheiro {ficheiro['nome_ficheiro']} aprovado por {current_user.get('name')}")
+    return {"message": "Ficheiro aprovado com sucesso", "ficheiro": {**ficheiro, **updates}}
+
+@api_router.put("/ficheiros-importados/{ficheiro_id}/rejeitar")
+async def rejeitar_ficheiro_importado(ficheiro_id: str, observacoes: str, current_user: Dict = Depends(get_current_user)):
+    """Rejeitar um ficheiro importado"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    ficheiro = await db.ficheiros_importados.find_one({"id": ficheiro_id}, {"_id": 0})
+    if not ficheiro:
+        raise HTTPException(status_code=404, detail="Ficheiro não encontrado")
+    
+    updates = {
+        "status": "rejeitado",
+        "aprovado_por": current_user["id"],
+        "aprovado_por_nome": current_user.get("name", current_user["email"]),
+        "data_aprovacao": datetime.now(timezone.utc).isoformat(),
+        "observacoes": observacoes
+    }
+    
+    await db.ficheiros_importados.update_one({"id": ficheiro_id}, {"$set": updates})
+    
+    logger.info(f"❌ Ficheiro {ficheiro['nome_ficheiro']} rejeitado por {current_user.get('name')}")
+    return {"message": "Ficheiro rejeitado", "ficheiro": {**ficheiro, **updates}}
+
+@api_router.delete("/ficheiros-importados/{ficheiro_id}")
+async def deletar_ficheiro_importado(ficheiro_id: str, current_user: Dict = Depends(get_current_user)):
+    """Deletar um ficheiro importado (apenas admin/gestão)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Apenas admin/gestão pode deletar")
+    
+    ficheiro = await db.ficheiros_importados.find_one({"id": ficheiro_id}, {"_id": 0})
+    if not ficheiro:
+        raise HTTPException(status_code=404, detail="Ficheiro não encontrado")
+    
+    await db.ficheiros_importados.delete_one({"id": ficheiro_id})
+    logger.info(f"🗑️ Ficheiro {ficheiro['nome_ficheiro']} deletado")
+    return {"message": "Ficheiro deletado com sucesso"}
+
 # ==================== FILE SERVING ENDPOINT ====================
 from fastapi.responses import FileResponse, StreamingResponse
 
