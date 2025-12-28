@@ -12707,7 +12707,7 @@ async def importar_plataforma(
         
         # Determinar coleção baseado na plataforma
         colecao_map = {
-            'uber': 'viagens_uber',
+            'uber': 'ganhos_uber',  # Corrigido!
             'bolt': 'viagens_bolt',
             'viaverde': 'portagens_viaverde',
             'gps': 'trajetos_gps',
