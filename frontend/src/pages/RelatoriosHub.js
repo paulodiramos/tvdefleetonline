@@ -49,10 +49,6 @@ const RelatoriosHub = ({ user, onLogout }) => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [relatorioEditando, setRelatorioEditando] = useState(null);
   
-  // Modal de geração em massa
-  const [showGerarMassaModal, setShowGerarMassaModal] = useState(false);
-  const [resultadoGeracaoMassa, setResultadoGeracaoMassa] = useState(null);
-  
   // Modal de confirmação de pagamento
   const [showPagarModal, setShowPagarModal] = useState(false);
   const [relatorioPagando, setRelatorioPagando] = useState(null);
