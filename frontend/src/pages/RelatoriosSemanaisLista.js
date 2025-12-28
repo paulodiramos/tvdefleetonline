@@ -443,6 +443,30 @@ const RelatoriosSemanaisLista = ({ user, onLogout }) => {
                       })}
                     />
                   </div>
+                  <div>
+                    <Label>Aluguer/Comissão Veículo</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={relatorioEditando.aluguer_veiculo || 0}
+                      onChange={(e) => setRelatorioEditando({
+                        ...relatorioEditando,
+                        aluguer_veiculo: parseFloat(e.target.value) || 0
+                      })}
+                    />
+                  </div>
+                  <div>
+                    <Label>KM Efetuados</Label>
+                    <Input
+                      type="number"
+                      step="1"
+                      value={relatorioEditando.km_percorridos || 0}
+                      onChange={(e) => setRelatorioEditando({
+                        ...relatorioEditando,
+                        km_percorridos: parseInt(e.target.value) || 0
+                      })}
+                    />
+                  </div>
                 </div>
               </div>
             )}
