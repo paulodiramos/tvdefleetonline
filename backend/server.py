@@ -1561,6 +1561,12 @@ class Vehicle(BaseModel):
     motorista_atribuido: Optional[str] = None  # ID do motorista
     motorista_atribuido_nome: Optional[str] = None  # Nome do motorista
     status: str = "disponivel"  # disponivel, atribuido, manutencao, venda, condicoes
+    
+    # Contrato de Aluguer/Comissão do Veículo
+    tipo_contrato_veiculo: Optional[str] = None  # "aluguer" | "comissao" | None (sem contrato)
+    valor_semanal: Optional[float] = None  # Valor semanal do aluguer ou comissão (€)
+    condicoes_contrato: Optional[str] = None  # Condições do contrato
+    
     ultima_revisao_km: Optional[int] = None  # KM da última revisão
     data_seguro_ate: Optional[str] = None  # Validade do seguro (alias para insurance.data_validade)
     data_inspecao_ate: Optional[str] = None  # Validade da inspeção (alias para inspection.proxima_inspecao)
