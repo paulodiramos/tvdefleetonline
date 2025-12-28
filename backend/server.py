@@ -12429,7 +12429,7 @@ async def criar_relatorios_rascunho_apos_importacao(
         
         # Mapear plataforma para coleção
         colecao_map = {
-            'uber': 'viagens_uber',
+            'uber': 'ganhos_uber',  # Corrigido: era 'viagens_uber'
             'bolt': 'viagens_bolt',
             'viaverde': 'portagens_viaverde',
             'gps': 'viagens_gps',
