@@ -12628,8 +12628,8 @@ async def criar_relatorios_rascunho_apos_importacao(
                 "km_percorridos": km_percorridos,
                 
                 # Aluguer/Comissão de Veículo - buscar do veículo atribuído ao motorista
-                "aluguer_veiculo": 0,  # Será preenchido abaixo
-                "tipo_contrato_veiculo": None,  # Tipo de contrato do veículo
+                "aluguer_veiculo": aluguer_veiculo_valor,  # Valor semanal do veículo
+                "tipo_contrato_veiculo": tipo_contrato_veiculo,  # "aluguer" ou "comissao"
                 
                 # Totais
                 "total_ganhos": ganhos_uber + ganhos_bolt,
