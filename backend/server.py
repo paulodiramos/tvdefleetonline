@@ -2271,6 +2271,32 @@ class CartaoFrota(BaseModel):
     created_by: str
     updated_at: Optional[str] = None
 
+class FicheiroImportadoCreate(BaseModel):
+    nome_ficheiro: str
+    plataforma: str  # "uber", "bolt", "viaverde", "combustivel", "gps", "carregamentos"
+    periodo_inicio: str
+    periodo_fim: str
+
+class FicheiroImportado(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    nome_ficheiro: str
+    plataforma: str  # "uber", "bolt", "viaverde", "combustivel", "gps", "carregamentos"
+    data_importacao: str
+    periodo_inicio: str
+    periodo_fim: str
+    status: str = "pendente"  # "pendente", "aprovado", "rejeitado"
+    registos_importados: int = 0
+    total_valor: Optional[float] = None  # Total de ganhos ou despesas
+    motoristas_afetados: List[str] = []  # IDs dos motoristas
+    observacoes: Optional[str] = None
+    importado_por: str  # User ID
+    importado_por_nome: str  # User name
+    aprovado_por: Optional[str] = None
+    aprovado_por_nome: Optional[str] = None
+    data_aprovacao: Optional[str] = None
+    created_at: str
+
 # ==================== AUTH UTILITIES ====================
 
 def hash_password(password: str) -> str:
