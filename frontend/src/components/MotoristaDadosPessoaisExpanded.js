@@ -1450,6 +1450,31 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
             </p>
           </div>
 
+          {/* 🆕 Via Verde Config */}
+          <div className="border-t pt-4">
+            <h4 className="font-semibold text-sm mb-3 text-teal-600">🛣️ Via Verde - Configuração</h4>
+            <Label>Como são tratadas as portagens Via Verde?</Label>
+            <Select
+              value={formData.viaverde_config}
+              onValueChange={(value) => handleChange('viaverde_config', value)}
+              disabled={!canEdit || !editMode}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="motorista_paga">Motorista paga (deduz do relatório)</SelectItem>
+                <SelectItem value="empresa_paga">Empresa/Parceiro paga</SelectItem>
+                <SelectItem value="acumula">Acumula (débito posterior)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-slate-500 mt-1">
+              {formData.viaverde_config === 'motorista_paga' && '❌ Portagens Via Verde são deduzidas automaticamente dos ganhos'}
+              {formData.viaverde_config === 'empresa_paga' && '✅ Empresa assume as portagens, não são deduzidas'}
+              {formData.viaverde_config === 'acumula' && '📊 Valor fica registado até débito da Via Verde (parceiro desconta depois)'}
+            </p>
+          </div>
+
         </CardContent>
       </Card>
 
