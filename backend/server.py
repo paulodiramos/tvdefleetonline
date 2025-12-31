@@ -11320,9 +11320,9 @@ async def gerar_relatorios_em_massa(
                     "gerado_automaticamente": True
                 }
                 
-                # Calcular total a pagar
+                # Calcular total a pagar (incluir carregamentos elétricos nas despesas)
                 total_despesas = (valor_aluguer + caucao_semanal + via_verde_total + 
-                                combustivel_total + novo_relatorio["outros"] + novo_relatorio["divida_anterior"])
+                                carregamentos_total + combustivel_total + novo_relatorio["outros"] + novo_relatorio["divida_anterior"])
                 novo_relatorio["total_a_pagar"] = round(novo_relatorio["ganhos_totais"] - total_despesas, 2)
                 
                 await db.relatorios_semanais.insert_one(novo_relatorio)
