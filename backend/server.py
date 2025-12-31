@@ -13509,13 +13509,36 @@ async def importar_plataforma(
         if info_rascunhos and info_rascunhos.get("rascunhos_criados", 0) > 0:
             mensagem_info = f"✅ {info_rascunhos['rascunhos_criados']} relatório(s) de rascunho criado(s) automaticamente!"
         
+        # 🆕 Criar registo de ficheiro importado para sistema de aprovação
+        ficheiro_importado = {
+            "id": str(uuid.uuid4()),
+            "nome_ficheiro": file.filename,
+            "plataforma": plataforma,
+            "periodo_inicio": periodo_inicio,
+            "periodo_fim": periodo_fim,
+            "total_registos": sucesso + erros,
+            "registos_sucesso": sucesso,
+            "registos_erro": erros,
+            "status": "pendente",  # pendente | aprovado | rejeitado
+            "data_importacao": datetime.now(timezone.utc).isoformat(),
+            "importado_por": current_user["id"],
+            "importado_por_nome": current_user.get("name", current_user["email"]),
+            "aprovado_por": None,
+            "aprovado_por_nome": None,
+            "data_aprovacao": None,
+            "observacoes": None
+        }
+        await db.ficheiros_importados.insert_one(ficheiro_importado)
+        logger.info(f"📄 Ficheiro importado registado: {file.filename} ({plataforma}) - {sucesso} sucessos, {erros} erros")
+        
         resultado = {
             "message": f"Importação {plataforma}: {sucesso} sucesso(s), {erros} erro(s)",
             "sucesso": sucesso,
             "erros": erros,
             "erros_detalhes": erros_detalhes[:10],  # Limitar a 10 erros
             "mensagem_info": mensagem_info,
-            "rascunhos": info_rascunhos
+            "rascunhos": info_rascunhos,
+            "ficheiro_importado_id": ficheiro_importado["id"]  # ID para referência
         }
         
         return resultado
