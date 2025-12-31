@@ -1728,7 +1728,7 @@ startxref
         except Exception as e:
             print(f"\n❌ ERRO NA EXECUÇÃO: {str(e)}")
             self.log_result("Critical-Bug-Fix", False, f"❌ Erro na execução: {str(e)}")
-            return Falseameters from review request
+            return False
         try:
             files = {
                 'file': ('Transacoes_Eletrico_20251215.csv', csv_content, 'text/csv')
