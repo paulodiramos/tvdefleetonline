@@ -1325,22 +1325,22 @@ startxref
     # ==================== REVIEW REQUEST CRITICAL TESTS ====================
     
     def test_review_request_critical_tests(self):
-        """🎯 VERIFICAÇÃO FINAL: Confirmar que todos os bugs críticos foram resolvidos"""
-        print("\n🎯 VERIFICAÇÃO FINAL: Confirmar que todos os bugs críticos foram resolvidos")
+        """🎯 VERIFICAÇÃO FINAL: Tarefas 2, 3 e 4 implementadas"""
+        print("\n🎯 VERIFICAÇÃO FINAL: Tarefas 2, 3 e 4 implementadas")
         print("=" * 80)
         print("CREDENCIAIS:")
         print("- Parceiro: parceiro@tvdefleet.com / UQ1B6DXU")
         print("- Admin: admin@tvdefleet.com / o72ocUHy")
-        print("\nTESTES A REALIZAR:")
-        print("1. BUG P0 - Importação de Carregamentos")
-        print("2. BUG P1 - Relatórios com Carregamentos")
-        print("3. BUG P2 - Atualização de Veículo")
+        print("\nTAREFAS A TESTAR:")
+        print("TAREFA 2 - Página Ficheiros Importados")
+        print("TAREFA 3 - Campo Via Verde Config no Backend")
+        print("TAREFA 4 - Importação de Combustível com Cartões de Frota")
         print("=" * 80)
         
         # Execute all critical tests
-        self.test_bug_p0_importacao_carregamentos()
-        self.test_bug_p1_relatorios_carregamentos()
-        self.test_bug_p2_atualizacao_veiculo()
+        self.test_tarefa_2_ficheiros_importados()
+        self.test_tarefa_3_viaverde_config()
+        self.test_tarefa_4_cartoes_frota_combustivel()
         
         return True
     
