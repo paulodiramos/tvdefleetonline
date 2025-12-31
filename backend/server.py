@@ -11161,6 +11161,7 @@ async def gerar_relatorios_em_massa(
                 ganhos_bolt = 0.0
                 via_verde_total = 0.0
                 combustivel_total = 0.0
+                carregamentos_total = 0.0  # Carregamentos elétricos
                 
                 # 1. Agregar ganhos Uber (CORRIGIDO: usar ganhos_uber em vez de viagens_uber)
                 if incluir_uber:
