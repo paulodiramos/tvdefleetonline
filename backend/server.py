@@ -11186,55 +11186,41 @@ async def gerar_relatorios_em_massa(
                         
                         ganhos_uber += ganho_linha
                 
-                # 2. Agregar ganhos Bolt
+                # 2. Agregar ganhos Bolt (CORRIGIDO: usar periodo_inicio)
                 if incluir_bolt:
-                    pipeline_bolt = [
-                        {
-                            "$match": {
-                                "motorista_id": motorista_id,
-                                "data": {"$gte": data_inicio, "$lte": data_fim}
-                            }
-                        },
-                        {
-                            "$group": {
-                                "_id": None,
-                                "total": {"$sum": {"$toDouble": "$valor_liquido"}}
-                            }
-                        }
-                    ]
+                    dados_bolt = await db.viagens_bolt.find({
+                        "motorista_id": motorista_id,
+                        "periodo_inicio": {"$gte": data_inicio, "$lte": data_fim}
+                    }, {"_id": 0}).to_list(1000)
                     
-                    result_bolt = await db.viagens_bolt.aggregate(pipeline_bolt).to_list(None)
-                    if result_bolt:
-                        ganhos_bolt = result_bolt[0].get("total", 0.0)
+                    for d in dados_bolt:
+                        ganhos_bolt += (
+                            float(d.get('valor_liquido') or 0) or
+                            float(d.get('ganhos_liquidos') or 0) or
+                            float(d.get('ganhos_semanais') or 0)
+                        )
                 
-                # 3. Agregar Via Verde (BUSCA SEMANA ANTERIOR - 1 semana de atraso)
+                # 3. Agregar Via Verde (portagens e carregamentos)
                 if incluir_viaverde:
-                    # Via Verde tem datas com 1 semana de atraso
-                    # Para relatório da semana 45, buscar dados da semana 44
-                    from datetime import timedelta
-                    data_inicio_viaverde = (inicio - timedelta(days=7)).strftime("%Y-%m-%d")
-                    data_fim_viaverde = (fim - timedelta(days=7)).strftime("%Y-%m-%d")
+                    dados_viaverde = await db.portagens_viaverde.find({
+                        "motorista_id": motorista_id,
+                        "periodo_inicio": {"$gte": data_inicio, "$lte": data_fim}
+                    }, {"_id": 0}).to_list(1000)
                     
-                    pipeline_viaverde = [
-                        {
-                            "$match": {
-                                "motorista_id": motorista_id,
-                                "data": {"$gte": data_inicio_viaverde, "$lte": data_fim_viaverde}
-                            }
-                        },
-                        {
-                            "$group": {
-                                "_id": None,
-                                "total": {"$sum": {"$toDouble": "$valor"}}
-                            }
-                        }
-                    ]
+                    carregamentos_total = 0.0
+                    for d in dados_viaverde:
+                        if d.get('tipo_transacao') == 'carregamento_eletrico':
+                            # Carregamentos elétricos
+                            carregamentos_total += float(d.get('valor_total_com_taxas') or 0)
+                        else:
+                            # Portagens tradicionais
+                            via_verde_total += (
+                                float(d.get('liquid_value') or 0) or
+                                float(d.get('valor_total_com_taxas') or 0) or
+                                float(d.get('valor') or 0)
+                            )
                     
-                    result_viaverde = await db.portagens_viaverde.aggregate(pipeline_viaverde).to_list(None)
-                    if result_viaverde:
-                        via_verde_total = result_viaverde[0].get("total", 0.0)
-                    
-                    logger.info(f"Via Verde para {motorista.get('name')}: Período ajustado {data_inicio_viaverde} a {data_fim_viaverde} (1 semana atrás) = €{via_verde_total:.2f}")
+                    logger.info(f"Via Verde para {motorista.get('name')}: Portagens €{via_verde_total:.2f}, Carregamentos €{carregamentos_total:.2f}")
                 
                 # 4. Agregar Combustível
                 if incluir_combustivel:
