@@ -87,6 +87,7 @@ const MotoristaDadosPessoaisExpanded = ({ motoristaData, onUpdate, userRole }) =
     portagens_bolt_config: motoristaData?.portagens_bolt_config || 'motorista_paga',
     gorjetas_uber_recebe: motoristaData?.gorjetas_uber_recebe ?? true,
     gorjetas_bolt_recebe: motoristaData?.gorjetas_bolt_recebe ?? true,
+    viaverde_config: motoristaData?.viaverde_config || 'motorista_paga',  // 🆕 Configuração Via Verde
     
     // 🆕 Cartões de Frota Atribuídos
     cartao_combustivel_id: motoristaData?.cartao_combustivel_id || '',
