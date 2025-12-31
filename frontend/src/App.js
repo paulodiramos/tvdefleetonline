@@ -674,6 +674,16 @@ function App() {
             }
           />
           <Route
+            path="/ficheiros-importados"
+            element={
+              user ? (
+                <FicheirosImportados user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/gestao-credenciais"
             element={
               user ? (
