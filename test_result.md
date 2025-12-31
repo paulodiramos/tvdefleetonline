@@ -931,7 +931,25 @@ agent_communication:
         
     - agent: "testing"
       message: |
-        🎯 TESTE CRÍTICO COMPLETO: IMPORTAÇÃO CSV DA BOLT - 100% FUNCIONANDO!
+        🚨 BUG P2 CONFIRMADO DEFINITIVAMENTE - FichaVeiculo.js NÃO guarda dados corretamente!
+        
+        TESTE CRÍTICO EXECUTADO conforme review request específico:
+        - CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU ✅
+        - URL: https://fleetmaster-45.preview.emergentagent.com ✅
+        
+        RESULTADOS DO TESTE:
+        1) ✅ Login, navegação, edição funcionando perfeitamente
+        2) ✅ Campos 'Via Verde ID' e 'Cartão Frota Elétrico ID' editados para valores de teste
+        3) ✅ Botão 'Guardar' clicado, dialog de confirmação apareceu e foi aceito
+        4) ❌ CRÍTICO: Função handleSaveAllChanges iniciada mas handleSaveInfo NUNCA executada (logs capturados)
+        5) ❌ CRÍTICO: Nenhuma requisição PUT enviada para backend
+        6) ❌ CRÍTICO: Dados NÃO persistiram após reload
+        
+        CAUSA RAIZ IDENTIFICADA:
+        Função handleSaveInfo está travando/hanging após dialog de confirmação. Console logs mostram início de handleSaveAllChanges mas não os logs subsequentes de handleSaveInfo.
+        
+        AÇÃO NECESSÁRIA:
+        Main agent deve investigar e corrigir o travamento na função handleSaveInfo em FichaVeiculo.js. Backend API está funcional, problema é no frontend.
         
         CONTEXTO DO TESTE:
         Teste específico da importação de CSV da Bolt com formato real de resumo semanal conforme review request detalhado em português:
