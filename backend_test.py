@@ -1729,25 +1729,19 @@ startxref
             print(f"\n❌ ERRO NA EXECUÇÃO: {str(e)}")
             self.log_result("Critical-Bug-Fix", False, f"❌ Erro na execução: {str(e)}")
             return False
-        try:
-            files = {
-                'file': ('Transacoes_Eletrico_20251215.csv', csv_content, 'text/csv')
-            }
-            data = {
-                'periodo_inicio': '2025-12-01',
-                'periodo_fim': '2025-12-31'
-            }
-            
-            print(f"\n🔄 Executando importação...")
-            print(f"   - Ficheiro: Transacoes_Eletrico_20251215.csv ({csv_size} bytes)")
-            print(f"   - Período: 2025-12-01 a 2025-12-31")
-            
-            response = requests.post(
-                f"{BACKEND_URL}/importar/viaverde",
-                files=files,
-                data=data,
-                headers=headers
-            )
+    
+    # ==================== EXCEL IMPORT CARREGAMENTOS ELÉTRICOS ====================
+    
+    def test_excel_import_carregamentos_eletricos(self):
+        """Test Excel import for electric charging - Review Request Specific"""
+        print("\n⚡ TESTE EXCEL CARREGAMENTOS ELÉTRICOS - REVIEW REQUEST")
+        print("-" * 80)
+        
+        # Authenticate as parceiro
+        headers = self.get_headers("parceiro")
+        if not headers:
+            self.log_result("Excel-Import-Auth", False, "❌ No auth token for parceiro")
+            return False
             
             print(f"\n📊 RESULTADO DA IMPORTAÇÃO:")
             print(f"   - Status Code: {response.status_code}")
