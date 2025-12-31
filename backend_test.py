@@ -1825,77 +1825,7 @@ Galp,2025-01-15,14:30:00,{numero_cartao},45.5,65.75,{motorista_name}"""
             self.log_result("BUG-P0-Exception", False, f"❌ Erro durante teste: {str(e)}")
             return False
     
-    def test_bug_p1_relatorios_carregamentos(self):
-        """BUG P1 - Relatórios com Carregamentos: Confirmar relatório com carregamentos_eletricos > €0"""
-        print("\n📋 BUG P1 - Relatórios com Carregamentos")
-        print("-" * 60)
-        print("OBJETIVO: Buscar relatórios e confirmar:")
-        print("- Existe relatório com campo carregamentos_eletricos > €0")
-        
-        # Authenticate as admin
-        headers = self.get_headers("admin")
-        if not headers:
-            self.log_result("BUG-P1-Auth", False, "❌ No auth token for admin")
-            return False
-        
-        try:
-            # Step 1: Get weekly reports for 2025
-            print("\n1. Buscar relatórios via GET /api/relatorios/semanais-todos?ano=2025")
-            
-            response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos?ano=2025", headers=headers)
-            
-            if response.status_code == 200:
-                relatorios = response.json()
-                
-                print(f"   ✅ {len(relatorios)} relatórios encontrados")
-                
-                # Step 2: Check for reports with carregamentos_eletricos > €0
-                relatorios_com_carregamentos = []
-                
-                for relatorio in relatorios:
-                    carregamentos_eletricos = relatorio.get("carregamentos_eletricos", 0)
-                    
-                    # Handle both numeric and string values
-                    if isinstance(carregamentos_eletricos, str):
-                        try:
-                            carregamentos_eletricos = float(carregamentos_eletricos.replace("€", "").replace(",", "."))
-                        except:
-                            carregamentos_eletricos = 0
-                    
-                    if carregamentos_eletricos > 0:
-                        relatorios_com_carregamentos.append({
-                            "numero": relatorio.get("numero_relatorio", "N/A"),
-                            "motorista": relatorio.get("motorista_nome", "N/A"),
-                            "carregamentos": carregamentos_eletricos
-                        })
-                
-                print(f"\n📊 ANÁLISE DOS RELATÓRIOS:")
-                print(f"   - Total de relatórios: {len(relatorios)}")
-                print(f"   - Relatórios com carregamentos > €0: {len(relatorios_com_carregamentos)}")
-                
-                if relatorios_com_carregamentos:
-                    print(f"\n✅ RELATÓRIOS COM CARREGAMENTOS ENCONTRADOS:")
-                    for i, rel in enumerate(relatorios_com_carregamentos[:3]):  # Show first 3
-                        print(f"   {i+1}. Relatório {rel['numero']} - {rel['motorista']} - €{rel['carregamentos']:.2f}")
-                    
-                    self.log_result("BUG-P1-Reports-Found", True, 
-                                  f"✅ {len(relatorios_com_carregamentos)} relatórios com carregamentos_eletricos > €0")
-                    return True
-                else:
-                    self.log_result("BUG-P1-Reports-Found", False, 
-                                  "❌ Nenhum relatório com carregamentos_eletricos > €0 encontrado")
-                    return False
-                
-            else:
-                self.log_result("BUG-P1-Get-Reports", False, 
-                              f"❌ Falha ao buscar relatórios: {response.status_code}", response.text)
-                return False
-                
-        except Exception as e:
-            self.log_result("BUG-P1-Exception", False, f"❌ Erro durante teste: {str(e)}")
-            return False
-    
-    def test_bug_p2_atualizacao_veiculo(self):
+    # ==================== MAIN TEST RUNNER ====================
         """BUG P2 - Atualização de Veículo: Confirmar persistência dos campos via_verde_id e cartao_frota_eletric_id"""
         print("\n📋 BUG P2 - Atualização de Veículo")
         print("-" * 60)
