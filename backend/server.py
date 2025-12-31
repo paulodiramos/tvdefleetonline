@@ -11307,6 +11307,8 @@ async def gerar_relatorios_em_massa(
                     "ganhos_bolt": round(ganhos_bolt, 2),
                     "ganhos_totais": round(ganhos_uber + ganhos_bolt, 2),
                     "via_verde_total": round(via_verde_total, 2),
+                    "portagens_viaverde": round(via_verde_total, 2),  # Alias para consistência
+                    "carregamentos_eletricos": round(carregamentos_total, 2),  # NOVO: Carregamentos elétricos
                     "combustivel_total": round(combustivel_total, 2),
                     "valor_aluguer": round(valor_aluguer, 2),
                     "caucao_semanal": round(caucao_semanal, 2),
