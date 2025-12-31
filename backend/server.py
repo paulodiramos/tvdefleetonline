@@ -11867,14 +11867,14 @@ async def importar_combustivel_excel(
                 # Criar documento de abastecimento
                 documento = {
                     "id": str(uuid.uuid4()),
-                    "vehicle_id": vehicle["id"],
-                    "matricula": desc_cartao if desc_cartao and '-' in desc_cartao else vehicle.get('matricula'),
+                    "vehicle_id": vehicle["id"] if vehicle else None,
+                    "matricula": desc_cartao if desc_cartao and '-' in desc_cartao else (vehicle.get('matricula') if vehicle else None),
                     "cartao_numero": cartao_via_verde,  # Ex: 7824731736480003
                     "cartao_via_verde": cartao_via_verde,
                     "desc_cartao": desc_cartao,
-                    "obu": obu or vehicle.get("obu"),
-                    "via_verde_id": vehicle.get("via_verde_id"),  # Ex: 60...
-                    "cartao_frota_id": vehicle.get("cartao_frota_id"),  # Ex: PTPRIO...
+                    "obu": obu or (vehicle.get("obu") if vehicle else None),
+                    "via_verde_id": vehicle.get("via_verde_id") if vehicle else None,
+                    "cartao_frota_id": vehicle.get("cartao_frota_id") if vehicle else cartao_via_verde,
                     "motorista_id": motorista["id"] if motorista else None,
                     "motorista_email": motorista.get("email") if motorista else None,
                     "parceiro_id": current_user["id"],
