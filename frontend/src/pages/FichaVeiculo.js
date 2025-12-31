@@ -297,6 +297,14 @@ const FichaVeiculo = ({ user, onLogout }) => {
   const handleSaveInfo = async (silent = false) => {
     try {
       console.log('🔍 handleSaveInfo iniciado', { silent, vehicle, infoForm });
+      
+      // Verificar se vehicle existe
+      if (!vehicle) {
+        console.error('❌ Vehicle é null/undefined');
+        if (!silent) toast.error('Erro: dados do veículo não carregados');
+        return;
+      }
+      
       const token = localStorage.getItem('token');
       
       const payload = {
@@ -318,34 +326,34 @@ const FichaVeiculo = ({ user, onLogout }) => {
         cartao_frota_id: vehicle.cartao_frota_id || null,
         cartao_frota_eletric_id: vehicle.cartao_frota_eletric_id || null,
         tipo_contrato: {
-          tipo: infoForm.tipo,
-          periodicidade: infoForm.periodicidade,
-          regime: infoForm.regime,
-          horario_turno_1: infoForm.horario_turno_1,
-          horario_turno_2: infoForm.horario_turno_2,
-          horario_turno_3: infoForm.horario_turno_3,
-          horario_turno_4: infoForm.horario_turno_4,
-          valor_aluguer: parseFloat(infoForm.valor_aluguer) || null,
-          valor_caucao: parseFloat(infoForm.valor_caucao) || null,
-          numero_parcelas_caucao: parseInt(infoForm.numero_parcelas_caucao) || null,
-          valor_epoca_alta: parseFloat(infoForm.valor_epoca_alta) || null,
-          valor_epoca_baixa: parseFloat(infoForm.valor_epoca_baixa) || null,
-          comissao_parceiro: parseFloat(infoForm.comissao_parceiro) || null,
-          comissao_motorista: parseFloat(infoForm.comissao_motorista) || null,
-          inclui_combustivel: infoForm.inclui_combustivel || false,
-          valor_compra_veiculo: parseFloat(infoForm.valor_compra_veiculo) || null,
-          numero_semanas_compra: parseInt(infoForm.numero_semanas_compra) || null,
-          com_slot: infoForm.com_slot || false,
-          extra_seguro: infoForm.extra_seguro || false,
-          valor_extra_seguro: parseFloat(infoForm.valor_extra_seguro) || null,
-          valor_semanal_compra: parseFloat(infoForm.valor_semanal_compra) || null,
-          periodo_compra: parseInt(infoForm.periodo_compra) || null,
-          valor_acumulado: parseFloat(infoForm.valor_acumulado) || null,
-          valor_falta_cobrar: parseFloat(infoForm.valor_falta_cobrar) || null,
-          custo_slot: parseFloat(infoForm.custo_slot) || null
+          tipo: infoForm?.tipo || 'aluguer_sem_caucao',
+          periodicidade: infoForm?.periodicidade || 'semanal',
+          regime: infoForm?.regime || 'full_time',
+          horario_turno_1: infoForm?.horario_turno_1 || '',
+          horario_turno_2: infoForm?.horario_turno_2 || '',
+          horario_turno_3: infoForm?.horario_turno_3 || '',
+          horario_turno_4: infoForm?.horario_turno_4 || '',
+          valor_aluguer: parseFloat(infoForm?.valor_aluguer) || null,
+          valor_caucao: parseFloat(infoForm?.valor_caucao) || null,
+          numero_parcelas_caucao: parseInt(infoForm?.numero_parcelas_caucao) || null,
+          valor_epoca_alta: parseFloat(infoForm?.valor_epoca_alta) || null,
+          valor_epoca_baixa: parseFloat(infoForm?.valor_epoca_baixa) || null,
+          comissao_parceiro: parseFloat(infoForm?.comissao_parceiro) || null,
+          comissao_motorista: parseFloat(infoForm?.comissao_motorista) || null,
+          inclui_combustivel: infoForm?.inclui_combustivel || false,
+          valor_compra_veiculo: parseFloat(infoForm?.valor_compra_veiculo) || null,
+          numero_semanas_compra: parseInt(infoForm?.numero_semanas_compra) || null,
+          com_slot: infoForm?.com_slot || false,
+          extra_seguro: infoForm?.extra_seguro || false,
+          valor_extra_seguro: parseFloat(infoForm?.valor_extra_seguro) || null,
+          valor_semanal_compra: parseFloat(infoForm?.valor_semanal_compra) || null,
+          periodo_compra: parseInt(infoForm?.periodo_compra) || null,
+          valor_acumulado: parseFloat(infoForm?.valor_acumulado) || null,
+          valor_falta_cobrar: parseFloat(infoForm?.valor_falta_cobrar) || null,
+          custo_slot: parseFloat(infoForm?.custo_slot) || null
         },
-        categorias_uber: infoForm.categorias_uber,
-        categorias_bolt: infoForm.categorias_bolt
+        categorias_uber: infoForm?.categorias_uber || {},
+        categorias_bolt: infoForm?.categorias_bolt || {}
       };
       
       console.log('📤 Payload a enviar:', payload);
