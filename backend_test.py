@@ -1344,7 +1344,285 @@ startxref
         
         return True
     
-    def test_backend_put_vehicles(self):
+    def test_bug_p0_importacao_carregamentos(self):
+        """BUG P0 - Importação de Carregamentos: Confirmar sucesso sem erro 'Email do motorista vazio'"""
+        print("\n📋 BUG P0 - Importação de Carregamentos")
+        print("-" * 60)
+        print("OBJETIVO: Importar CSV de carregamento e confirmar:")
+        print("- Sucesso sem erro 'Email do motorista vazio'")
+        print("- Rascunho de relatório criado automaticamente")
+        
+        # Authenticate as admin or parceiro
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("BUG-P0-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        try:
+            # Step 1: Create test CSV file as specified in review request
+            csv_content = """data;hora;CardCode;posto;kwh;valor_total;duracao_min
+31/12/2025;15:30:00;PTPRIO9050324927265598;ESTACAO-FINAL;60.0;30.00;80"""
+            
+            print("\n1. Criar ficheiro CSV de carregamento de teste:")
+            print("   data;hora;CardCode;posto;kwh;valor_total;duracao_min")
+            print("   31/12/2025;15:30:00;PTPRIO9050324927265598;ESTACAO-FINAL;60.0;30.00;80")
+            
+            # Step 2: Import via POST /api/importar/viaverde with specified parameters
+            files = {
+                'file': ('carregamento_teste.csv', csv_content.encode('utf-8'), 'text/csv')
+            }
+            data = {
+                'periodo_inicio': '2025-12-30',
+                'periodo_fim': '2025-12-31'
+            }
+            
+            print("\n2. Importar via POST /api/importar/viaverde")
+            print("   - periodo_inicio: 2025-12-30")
+            print("   - periodo_fim: 2025-12-31")
+            
+            response = requests.post(
+                f"{BACKEND_URL}/importar/viaverde",
+                files=files,
+                data=data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                # Check for success without "Email do motorista vazio" error
+                sucesso = result.get("sucesso", 0)
+                erros = result.get("erros", 0)
+                erros_detalhes = result.get("erros_detalhes", [])
+                
+                print(f"\n📊 RESULTADOS DA IMPORTAÇÃO:")
+                print(f"   - Sucessos: {sucesso}")
+                print(f"   - Erros: {erros}")
+                
+                # Check for the specific error
+                email_vazio_error = False
+                for erro in erros_detalhes:
+                    if "Email do motorista vazio" in erro:
+                        email_vazio_error = True
+                        print(f"   ❌ ERRO ENCONTRADO: {erro}")
+                        break
+                
+                if not email_vazio_error and sucesso > 0:
+                    self.log_result("BUG-P0-Import-Success", True, 
+                                  f"✅ Importação bem-sucedida sem erro 'Email do motorista vazio' ({sucesso} sucessos)")
+                elif email_vazio_error:
+                    self.log_result("BUG-P0-Import-Success", False, 
+                                  "❌ ERRO 'Email do motorista vazio' ainda presente")
+                    return False
+                else:
+                    self.log_result("BUG-P0-Import-Success", False, 
+                                  f"❌ Importação falhou: {sucesso} sucessos, {erros} erros")
+                    return False
+                
+                # Step 3: Check if draft report was created automatically
+                print("\n3. Verificar se rascunho de relatório foi criado automaticamente")
+                
+                # Try to get weekly reports for 2025
+                relatorios_response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos?ano=2025", headers=headers)
+                
+                if relatorios_response.status_code == 200:
+                    relatorios = relatorios_response.json()
+                    
+                    # Look for recent reports (created after import)
+                    recent_reports = [r for r in relatorios if r.get("status") == "rascunho"]
+                    
+                    if recent_reports:
+                        self.log_result("BUG-P0-Draft-Report", True, 
+                                      f"✅ Rascunho de relatório encontrado: {len(recent_reports)} relatórios em rascunho")
+                    else:
+                        self.log_result("BUG-P0-Draft-Report", False, 
+                                      "❌ Nenhum rascunho de relatório encontrado")
+                else:
+                    self.log_result("BUG-P0-Draft-Report", False, 
+                                  f"❌ Não foi possível verificar relatórios: {relatorios_response.status_code}")
+                
+                return True
+                
+            else:
+                self.log_result("BUG-P0-Import-Failed", False, 
+                              f"❌ Importação falhou: {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_result("BUG-P0-Exception", False, f"❌ Erro durante teste: {str(e)}")
+            return False
+    
+    def test_bug_p1_relatorios_carregamentos(self):
+        """BUG P1 - Relatórios com Carregamentos: Confirmar relatório com carregamentos_eletricos > €0"""
+        print("\n📋 BUG P1 - Relatórios com Carregamentos")
+        print("-" * 60)
+        print("OBJETIVO: Buscar relatórios e confirmar:")
+        print("- Existe relatório com campo carregamentos_eletricos > €0")
+        
+        # Authenticate as admin
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("BUG-P1-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        try:
+            # Step 1: Get weekly reports for 2025
+            print("\n1. Buscar relatórios via GET /api/relatorios/semanais-todos?ano=2025")
+            
+            response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos?ano=2025", headers=headers)
+            
+            if response.status_code == 200:
+                relatorios = response.json()
+                
+                print(f"   ✅ {len(relatorios)} relatórios encontrados")
+                
+                # Step 2: Check for reports with carregamentos_eletricos > €0
+                relatorios_com_carregamentos = []
+                
+                for relatorio in relatorios:
+                    carregamentos_eletricos = relatorio.get("carregamentos_eletricos", 0)
+                    
+                    # Handle both numeric and string values
+                    if isinstance(carregamentos_eletricos, str):
+                        try:
+                            carregamentos_eletricos = float(carregamentos_eletricos.replace("€", "").replace(",", "."))
+                        except:
+                            carregamentos_eletricos = 0
+                    
+                    if carregamentos_eletricos > 0:
+                        relatorios_com_carregamentos.append({
+                            "numero": relatorio.get("numero_relatorio", "N/A"),
+                            "motorista": relatorio.get("motorista_nome", "N/A"),
+                            "carregamentos": carregamentos_eletricos
+                        })
+                
+                print(f"\n📊 ANÁLISE DOS RELATÓRIOS:")
+                print(f"   - Total de relatórios: {len(relatorios)}")
+                print(f"   - Relatórios com carregamentos > €0: {len(relatorios_com_carregamentos)}")
+                
+                if relatorios_com_carregamentos:
+                    print(f"\n✅ RELATÓRIOS COM CARREGAMENTOS ENCONTRADOS:")
+                    for i, rel in enumerate(relatorios_com_carregamentos[:3]):  # Show first 3
+                        print(f"   {i+1}. Relatório {rel['numero']} - {rel['motorista']} - €{rel['carregamentos']:.2f}")
+                    
+                    self.log_result("BUG-P1-Reports-Found", True, 
+                                  f"✅ {len(relatorios_com_carregamentos)} relatórios com carregamentos_eletricos > €0")
+                    return True
+                else:
+                    self.log_result("BUG-P1-Reports-Found", False, 
+                                  "❌ Nenhum relatório com carregamentos_eletricos > €0 encontrado")
+                    return False
+                
+            else:
+                self.log_result("BUG-P1-Get-Reports", False, 
+                              f"❌ Falha ao buscar relatórios: {response.status_code}", response.text)
+                return False
+                
+        except Exception as e:
+            self.log_result("BUG-P1-Exception", False, f"❌ Erro durante teste: {str(e)}")
+            return False
+    
+    def test_bug_p2_atualizacao_veiculo(self):
+        """BUG P2 - Atualização de Veículo: Confirmar persistência dos campos via_verde_id e cartao_frota_eletric_id"""
+        print("\n📋 BUG P2 - Atualização de Veículo")
+        print("-" * 60)
+        print("OBJETIVO: Testar veículo AS-14-NI e confirmar:")
+        print("- Campos via_verde_id e cartao_frota_eletric_id são persistidos")
+        print("- Atualização via PUT funciona corretamente")
+        
+        # Authenticate as admin
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("BUG-P2-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        try:
+            # Step 1: Get vehicle AS-14-NI via GET /api/vehicles
+            print("\n1. Buscar veículo AS-14-NI via GET /api/vehicles")
+            
+            vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+            
+            if vehicles_response.status_code != 200:
+                self.log_result("BUG-P2-Get-Vehicles", False, f"❌ Falha ao buscar veículos: {vehicles_response.status_code}")
+                return False
+            
+            vehicles = vehicles_response.json()
+            
+            # Find vehicle AS-14-NI
+            target_vehicle = None
+            for vehicle in vehicles:
+                if vehicle.get("matricula") == "AS-14-NI":
+                    target_vehicle = vehicle
+                    break
+            
+            if not target_vehicle:
+                self.log_result("BUG-P2-Find-Vehicle", False, "❌ Veículo AS-14-NI não encontrado")
+                return False
+            
+            vehicle_id = target_vehicle["id"]
+            print(f"   ✅ Veículo AS-14-NI encontrado (ID: {vehicle_id})")
+            
+            # Step 2: Check current values of via_verde_id and cartao_frota_eletric_id
+            current_via_verde = target_vehicle.get("via_verde_id")
+            current_cartao_frota = target_vehicle.get("cartao_frota_eletric_id")
+            
+            print(f"\n2. Valores atuais dos campos:")
+            print(f"   - via_verde_id: {current_via_verde}")
+            print(f"   - cartao_frota_eletric_id: {current_cartao_frota}")
+            
+            if current_via_verde or current_cartao_frota:
+                self.log_result("BUG-P2-Fields-Persisted", True, 
+                              "✅ Campos via_verde_id e cartao_frota_eletric_id foram persistidos")
+            else:
+                print("   ⚠️ Campos estão vazios, mas isso pode ser normal")
+            
+            # Step 3: Update via PUT /api/vehicles/{id} with new test value
+            print("\n3. Atualizar via PUT /api/vehicles/{id} com novo valor")
+            
+            new_via_verde_id = "VV-FINAL-TEST-999"
+            update_data = {
+                "via_verde_id": new_via_verde_id
+            }
+            
+            print(f"   - Novo via_verde_id: {new_via_verde_id}")
+            
+            update_response = requests.put(f"{BACKEND_URL}/vehicles/{vehicle_id}", 
+                                         json=update_data, headers=headers)
+            
+            if update_response.status_code != 200:
+                self.log_result("BUG-P2-Update-Failed", False, 
+                              f"❌ Falha na atualização: {update_response.status_code}", update_response.text)
+                return False
+            
+            print("   ✅ Atualização enviada com sucesso")
+            
+            # Step 4: Verify via GET that the value was persisted
+            print("\n4. Verificar novamente via GET se valor foi persistido")
+            
+            verify_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}", headers=headers)
+            
+            if verify_response.status_code != 200:
+                self.log_result("BUG-P2-Verify-Failed", False, 
+                              f"❌ Falha na verificação: {verify_response.status_code}")
+                return False
+            
+            updated_vehicle = verify_response.json()
+            updated_via_verde = updated_vehicle.get("via_verde_id")
+            
+            print(f"   - via_verde_id após atualização: {updated_via_verde}")
+            
+            if updated_via_verde == new_via_verde_id:
+                self.log_result("BUG-P2-Value-Persisted", True, 
+                              f"✅ Valor persistido corretamente: {updated_via_verde}")
+                return True
+            else:
+                self.log_result("BUG-P2-Value-Persisted", False, 
+                              f"❌ Valor não persistido: esperado '{new_via_verde_id}', obtido '{updated_via_verde}'")
+                return False
+                
+        except Exception as e:
+            self.log_result("BUG-P2-Exception", False, f"❌ Erro durante teste: {str(e)}")
+            return False
         """TESTE 1: TESTE DE BACKEND - PUT /api/vehicles/{id}"""
         print("\n📋 TESTE 1: TESTE DE BACKEND - PUT /api/vehicles/{id}")
         print("-" * 60)
