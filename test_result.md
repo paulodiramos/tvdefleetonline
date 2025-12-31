@@ -619,6 +619,18 @@ backend:
           comment: "🎯 INVESTIGAÇÃO DE DEBUG COMPLETA - BOTÃO 'EDITAR' FUNCIONANDO PERFEITAMENTE! CONTEXTO: Investigação específica conforme review request detalhado sobre botão 'Editar' não aparecer na página de detalhes do veículo. CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU ✅. FLUXO TESTADO COMPLETAMENTE: 1) ✅ Login como parceiro bem-sucedido 2) ✅ Navegação para menu 'Veículos' → 'Lista de Veículos' funcionando 3) ✅ Abertura de detalhes do primeiro veículo (Peugeot 308 SW - AS-14-NI) funcionando 4) ✅ CRÍTICO - Console logs capturados com sucesso: User: {email: parceiro@tvdefleet.com, name: Maria Santos - Parceira, role: parceiro}, User role: parceiro, canEdit: true, editMode: false inicialmente 5) ✅ CRÍTICO - Botão 'Editar' ENCONTRADO, VISÍVEL e HABILITADO na página 6) ✅ CRÍTICO - Funcionalidade do botão testada: clique funciona, editMode muda para true, botões 'Guardar' e 'Cancelar' aparecem 7) ✅ CRÍTICO - Formulário entra corretamente em modo de edição com campos editáveis 8) ✅ Screenshots confirmam toda a funcionalidade. PONTOS CRÍTICOS INVESTIGADOS: ✅ Objeto user tem role: 'parceiro' ✅ canEdit calculado como true ✅ Botão 'Editar' está no DOM e visível ✅ Nenhum erro JavaScript no console ✅ Página de detalhes carrega corretamente. RESULTADO FINAL: O problema reportado no review request NÃO EXISTE ATUALMENTE - o botão 'Editar' está funcionando perfeitamente para utilizadores parceiros. Sistema operacional conforme especificado."
 
 backend:
+  - task: "VERIFICAÇÃO FINAL - Todos os 3 Bugs Críticos Resolvidos"
+    implemented: true
+    working: true
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: true
+          agent: "testing"
+          comment: "🎯 VERIFICAÇÃO FINAL COMPLETA - TODOS OS 3 BUGS CRÍTICOS RESOLVIDOS! CONTEXTO: Teste final executado conforme review request específico para confirmar que todos os bugs P0, P1 e P2 foram resolvidos. CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU, admin@tvdefleet.com / o72ocUHy ✅. BUG P0 - IMPORTAÇÃO DE CARREGAMENTOS: ✅ CSV criado conforme especificação: data;hora;CardCode;posto;kwh;valor_total;duracao_min / 31/12/2025;15:30:00;PTPRIO9050324927265598;ESTACAO-FINAL;60.0;30.00;80 ✅ Importação via POST /api/importar/viaverde com periodo_inicio=2025-12-30 e periodo_fim=2025-12-31 ✅ SUCESSO sem erro 'Email do motorista vazio' (1 sucesso, 0 erros) ✅ Rascunho de relatório criado automaticamente (23 relatórios em rascunho encontrados). BUG P1 - RELATÓRIOS COM CARREGAMENTOS: ✅ Busca via GET /api/relatorios/semanais-todos?ano=2025 executada com sucesso ✅ 28 relatórios encontrados ✅ 9 relatórios com campo carregamentos_eletricos > €0 confirmados ✅ Exemplos: Relatório com €95.23, €35.94, €18.35 em carregamentos elétricos. BUG P2 - ATUALIZAÇÃO DE VEÍCULO: ✅ Veículo AS-14-NI encontrado via GET /api/vehicles (ID: 36b6fe3c-4db7-4b16-ab9b-b9452fc52379) ✅ Campos via_verde_id (601073899804) e cartao_frota_eletric_id persistidos corretamente ✅ Atualização via PUT /api/vehicles/{id} com via_verde_id='VV-FINAL-TEST-999' bem-sucedida ✅ Verificação via GET confirma valor persistido: 'VV-FINAL-TEST-999'. RESULTADO FINAL: 🎉 TODOS OS 3 BUGS CRÍTICOS (P0, P1, P2) ESTÃO 100% RESOLVIDOS! Taxa de sucesso: 100% (7/7 testes passaram). Sistema pronto para produção!"
+
   - task: "CSV Import Bug Fix - Carregamentos Elétricos (Email do motorista vazio)"
     implemented: true
     working: true
