@@ -15359,14 +15359,21 @@ async def criar_cartao_frota(cartao: CartaoFrotaCreate, current_user: Dict = Dep
     if existe:
         raise HTTPException(status_code=400, detail=f"Cartão {cartao.numero_cartao} já existe")
     
+    # Se motorista foi especificado, buscar nome
+    motorista_nome = None
+    if cartao.motorista_atribuido:
+        motorista = await db.motoristas.find_one({"id": cartao.motorista_atribuido}, {"_id": 0, "name": 1})
+        if motorista:
+            motorista_nome = motorista.get("name")
+    
     cartao_dict = {
         "id": str(uuid.uuid4()),
         "numero_cartao": cartao.numero_cartao,
         "tipo": cartao.tipo,
         "fornecedor": cartao.fornecedor,
         "status": "ativo",
-        "motorista_atribuido": None,
-        "motorista_nome": None,
+        "motorista_atribuido": cartao.motorista_atribuido,
+        "motorista_nome": motorista_nome,
         "observacoes": cartao.observacoes,
         "created_at": datetime.now(timezone.utc).isoformat(),
         "created_by": current_user["id"],
@@ -15374,7 +15381,7 @@ async def criar_cartao_frota(cartao: CartaoFrotaCreate, current_user: Dict = Dep
     }
     
     await db.cartoes_frota.insert_one(cartao_dict)
-    logger.info(f"✅ Cartão de frota criado: {cartao.numero_cartao} ({cartao.tipo})")
+    logger.info(f"✅ Cartão de frota criado: {cartao.numero_cartao} ({cartao.tipo}) -> Motorista: {motorista_nome}")
     return cartao_dict
 
 @api_router.get("/cartoes-frota", response_model=List[CartaoFrota])
