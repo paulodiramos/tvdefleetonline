@@ -1826,12 +1826,6 @@ Galp,2025-01-15,14:30:00,{numero_cartao},45.5,65.75,{motorista_name}"""
             return False
     
     # ==================== MAIN TEST RUNNER ====================
-        """BUG P2 - Atualização de Veículo: Confirmar persistência dos campos via_verde_id e cartao_frota_eletric_id"""
-        print("\n📋 BUG P2 - Atualização de Veículo")
-        print("-" * 60)
-        print("OBJETIVO: Testar veículo AS-14-NI e confirmar:")
-        print("- Campos via_verde_id e cartao_frota_eletric_id são persistidos")
-        print("- Atualização via PUT funciona corretamente")
         
         # Authenticate as admin
         headers = self.get_headers("admin")
