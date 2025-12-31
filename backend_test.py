@@ -1325,19 +1325,22 @@ startxref
     # ==================== REVIEW REQUEST CRITICAL TESTS ====================
     
     def test_review_request_critical_tests(self):
-        """🎯 TESTE CRÍTICO: Verificar se os dados são guardados corretamente nos formulários FichaVeiculo.js"""
-        print("\n🎯 TESTE CRÍTICO: Verificar se os dados são guardados corretamente nos formulários FichaVeiculo.js")
+        """🎯 VERIFICAÇÃO FINAL: Confirmar que todos os bugs críticos foram resolvidos"""
+        print("\n🎯 VERIFICAÇÃO FINAL: Confirmar que todos os bugs críticos foram resolvidos")
         print("=" * 80)
-        print("OBJETIVO: Confirmar que o Bug P2 (falha ao guardar dados) está resolvido")
         print("CREDENCIAIS:")
         print("- Parceiro: parceiro@tvdefleet.com / UQ1B6DXU")
         print("- Admin: admin@tvdefleet.com / o72ocUHy")
+        print("\nTESTES A REALIZAR:")
+        print("1. BUG P0 - Importação de Carregamentos")
+        print("2. BUG P1 - Relatórios com Carregamentos")
+        print("3. BUG P2 - Atualização de Veículo")
         print("=" * 80)
         
         # Execute all critical tests
-        self.test_backend_put_vehicles()
-        self.test_carregamentos_import_complete()
-        self.test_relatorios_carregamentos()
+        self.test_bug_p0_importacao_carregamentos()
+        self.test_bug_p1_relatorios_carregamentos()
+        self.test_bug_p2_atualizacao_veiculo()
         
         return True
     
