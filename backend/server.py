@@ -2269,6 +2269,7 @@ class CartaoFrotaCreate(BaseModel):
     tipo: str  # "combustivel", "eletrico", "viaverde"
     fornecedor: Optional[str] = None
     observacoes: Optional[str] = None
+    motorista_atribuido: Optional[str] = None  # ID do motorista a atribuir
 
 class CartaoFrota(BaseModel):
     model_config = ConfigDict(extra="ignore")
