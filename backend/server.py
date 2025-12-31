@@ -11162,26 +11162,29 @@ async def gerar_relatorios_em_massa(
                 via_verde_total = 0.0
                 combustivel_total = 0.0
                 
-                # 1. Agregar ganhos Uber
+                # 1. Agregar ganhos Uber (CORRIGIDO: usar ganhos_uber em vez de viagens_uber)
                 if incluir_uber:
-                    pipeline_uber = [
-                        {
-                            "$match": {
-                                "motorista_id": motorista_id,
-                                "data_viagem": {"$gte": data_inicio, "$lte": data_fim}
-                            }
-                        },
-                        {
-                            "$group": {
-                                "_id": None,
-                                "total": {"$sum": {"$toDouble": "$valor_pago"}}
-                            }
-                        }
-                    ]
+                    dados_uber = await db.ganhos_uber.find({
+                        "motorista_id": motorista_id,
+                        "periodo_inicio": {"$gte": data_inicio, "$lte": data_fim}
+                    }, {"_id": 0}).to_list(1000)
                     
-                    result_uber = await db.viagens_uber.aggregate(pipeline_uber).to_list(None)
-                    if result_uber:
-                        ganhos_uber = result_uber[0].get("total", 0.0)
+                    for d in dados_uber:
+                        # Usar ganhos_base (sem gorjetas) como ponto de partida
+                        ganho_linha = float(d.get('ganhos_base') or d.get('ganhos_totais') or d.get('rendimentos_total') or 0)
+                        
+                        # Adicionar gorjetas se motorista recebe
+                        if motorista.get('gorjetas_uber_recebe', True):
+                            ganho_linha += float(d.get('gorjetas') or 0)
+                        
+                        # Portagens - conforme configuração
+                        portagens = float(d.get('portagens_total') or 0)
+                        if motorista.get('portagens_uber_config') == 'empresa_paga':
+                            ganho_linha += portagens
+                        elif motorista.get('portagens_uber_config') == 'motorista_paga':
+                            ganho_linha -= portagens
+                        
+                        ganhos_uber += ganho_linha
                 
                 # 2. Agregar ganhos Bolt
                 if incluir_bolt:
