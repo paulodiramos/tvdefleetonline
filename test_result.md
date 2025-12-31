@@ -8230,24 +8230,19 @@ metadata:
 
 test_plan:
   current_focus:
-    - "CSV Import Bug Fix - Carregamentos Elétricos (Email do motorista vazio) - COMPLETED ✅"
-  stuck_tasks: []
+    - "TAREFA 2 - Página Ficheiros Importados"
+    - "TAREFA 3 - Campo Via Verde Config no Backend"
+    - "TAREFA 4 - Importação de Combustível com Cartões de Frota"
+  stuck_tasks: 
+    - "TAREFA 2 - Página Ficheiros Importados"
+    - "TAREFA 3 - Campo Via Verde Config no Backend"
+    - "TAREFA 4 - Importação de Combustível com Cartões de Frota"
   test_all: false
   test_priority: "high_first"
-  review_request_bug_fixes_tested: true
-  bug_1_vehicle_driver_assignment_working: true
-  bug_2_driver_profile_vehicle_field_working: true
-  bug_3_uber_import_uuid_working: true
-  via_verde_excel_import_tested: true
-  via_verde_obu_validation_working: true
-  via_verde_csv_cardid_import_tested: true
-  fuel_import_excel_desc_cartao_tested: true
-  fuel_import_desc_cartao_logic_working: true
-  gps_import_matricula_tested: true
-  gps_import_vehicle_lookup_working: true
-  excel_carregamentos_eletricos_tested: true
-  excel_carregamentos_detection_working: true
-  csv_carregamentos_bug_fix_tested: true
+  review_request_tarefas_2_3_4_tested: true
+  tarefa_2_ficheiros_importados_partial: true
+  tarefa_3_viaverde_config_partial: true
+  tarefa_4_cartoes_frota_partial: true
   csv_carregamentos_email_validation_skipped: true
   excel_carregamentos_cardcode_lookup_working: true
   excel_carregamentos_error_messages_working: true
