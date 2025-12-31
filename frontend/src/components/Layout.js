@@ -105,7 +105,8 @@ const Layout = ({ children, user, onLogout }) => {
           { path: '/criar-relatorio-semanal', label: 'Criar Relatório' },
           { path: '/gestao-pagamentos-recibos', label: 'Pagamentos & Recibos' },
           { path: '/gestao-credenciais', label: 'Sincronização Auto' },
-          { path: '/importar-dados', label: 'Importar Dados CSV' }
+          { path: '/importar-dados', label: 'Importar Dados CSV' },
+          { path: '/ficheiros-importados', label: 'Ficheiros Importados' }
         ]
       },
       { 
