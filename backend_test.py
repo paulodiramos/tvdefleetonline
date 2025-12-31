@@ -2655,6 +2655,11 @@ startxref
         for role in ["admin", "parceiro", "gestor", "operacional", "motorista"]:
             self.authenticate_user(role)
         
+        # PRIORITY: REVIEW REQUEST CRITICAL TESTS
+        print("\n🎯 TESTES CRÍTICOS DO REVIEW REQUEST (PRIORIDADE MÁXIMA)")
+        print("=" * 80)
+        self.test_review_request_critical_tests()
+        
         # CRITICAL TEST: Email Motorista Vazio Bug Fix (Review Request Priority)
         print("\n🚨 TESTE CRÍTICO FINAL: BUG 'EMAIL MOTORISTA VAZIO' (REVIEW REQUEST PRIORITY)")
         print("=" * 80)
@@ -2688,11 +2693,6 @@ startxref
         print("\n💰 FASE 4: SISTEMA DE IMPORTAÇÃO FINANCEIRA")
         print("-" * 40)
         self.test_financial_import_system()
-        
-        # Phase 5: Excel import for electric charging (Review Request)
-        print("\n⚡ FASE 5: IMPORTAÇÃO EXCEL CARREGAMENTOS ELÉTRICOS")
-        print("-" * 40)
-        self.test_excel_import_carregamentos_eletricos()
         
         # Print final summary
         self.print_summary()
