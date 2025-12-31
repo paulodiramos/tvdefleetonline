@@ -11769,7 +11769,37 @@ async def importar_combustivel_excel(
                     if vehicle:
                         logger.info(f"✅ Veículo encontrado por Matrícula: {matricula}")
                 
+                # 🆕 NOVA ARQUITETURA: Se não encontrou veículo, tentar buscar cartão de frota diretamente
+                motorista = None
                 if not vehicle:
+                    # Tentar buscar na coleção cartoes_frota
+                    cartao_frota = None
+                    if cartao_via_verde:
+                        cartao_frota = await db.cartoes_frota.find_one(
+                            {"numero_cartao": cartao_via_verde, "tipo": "combustivel"},
+                            {"_id": 0}
+                        )
+                    if not cartao_frota and desc_cartao:
+                        cartao_frota = await db.cartoes_frota.find_one(
+                            {"numero_cartao": desc_cartao, "tipo": "combustivel"},
+                            {"_id": 0}
+                        )
+                    
+                    if cartao_frota and cartao_frota.get('motorista_atribuido'):
+                        motorista = await db.motoristas.find_one(
+                            {"id": cartao_frota['motorista_atribuido']},
+                            {"_id": 0}
+                        )
+                        if motorista:
+                            logger.info(f"✅ Combustível - Motorista encontrado via cartão de frota: {motorista.get('name')}")
+                            # Buscar veículo do motorista (opcional)
+                            if motorista.get('veiculo_atribuido'):
+                                vehicle = await db.vehicles.find_one(
+                                    {"id": motorista['veiculo_atribuido']},
+                                    {"_id": 0}
+                                )
+                
+                if not vehicle and not motorista:
                     erros += 1
                     identificadores = []
                     if cartao_via_verde:
