@@ -8250,33 +8250,34 @@ test_plan:
 agent_communication:
     - agent: "testing"
       message: |
-        🎯 TESTE CRÍTICO - BUG 'EMAIL DO MOTORISTA VAZIO' RESOLVIDO DEFINITIVAMENTE!
+        🎯 VERIFICAÇÃO FINAL: TAREFAS 2, 3 E 4 IMPLEMENTADAS - RESULTADOS CRÍTICOS
         
-        CONTEXTO DO BUG:
-        - Bug reportado pelo utilizador: "Email do motorista vazio" ao importar CSV de carregamentos
-        - Ficheiro oficial CSV: https://customer-assets.emergentagent.com/job_autofleet-hub-1/artifacts/laxk43nb_Transa%C3%A7%C3%B5es_Eletrico_20251215.csv
-        - Screenshot do erro: 30 erros, 0 registos importados
-        - Credenciais: parceiro@tvdefleet.com / UQ1B6DXU ✅
+        CONTEXTO DO TESTE:
+        - Review Request: Verificação final das Tarefas 2, 3 e 4 implementadas
+        - Credenciais: parceiro@tvdefleet.com / UQ1B6DXU, admin@tvdefleet.com / o72ocUHy ✅
+        - Taxa de sucesso geral: 66.7% (8/12 testes passaram)
         
-        ✅ TODOS OS 5 TESTES CRÍTICOS PASSARAM:
+        📋 TAREFA 2 - PÁGINA FICHEIROS IMPORTADOS:
+        ✅ GET /api/ficheiros-importados funciona
+        ✅ Endpoints de aprovar/rejeitar existem
+        ❌ CRÍTICO: Sistema não cria registos automaticamente durante importação
         
-        **TESTE 1: Download CSV Oficial**
-        - ✅ CSV baixado com sucesso (4524 bytes, 32 linhas)
-        - ✅ CardCodes encontrados: PTPRIO6087131736480005, PTPRIO9050324927265598
-        - ✅ Delimitador ponto-e-vírgula detectado
-        - ✅ Encoding issues detectados (esperado)
+        📋 TAREFA 3 - CAMPO VIA VERDE CONFIG:
+        ✅ PUT /api/motoristas/{id} aceita campo viaverde_config
+        ❌ CRÍTICO: Campo não aparece em GET /api/motoristas
+        ❌ CRÍTICO: Campo não persiste após atualização
         
-        **TESTE 2: Detecção de Formato**
-        - ✅ Sistema detectou como carregamento elétrico (formato CSV oficial)
-        - ✅ Flag is_carregamento_eletrico = True
-        - ✅ Validação de email foi pulada
-        - ✅ ZERO erros de 'Email do motorista vazio'
+        📋 TAREFA 4 - CARTÕES DE FROTA COMBUSTÍVEL:
+        ✅ POST /api/cartoes-frota funciona
+        ✅ Atribuição de cartão ao motorista funciona
+        ❌ CRÍTICO: Importação de combustível ainda procura por email em vez de usar cartão
         
-        **TESTE 3: Extração de Dados**
-        - ✅ CardCode extraído corretamente (mesmo com encoding issues)
-        - ✅ Números com vírgula convertidos (16,45 → 16.45)
-        - ✅ Datas DD/MM/YYYY convertidas para YYYY-MM-DD
-        - ✅ 29 registos extraídos e processados
+        🚨 AÇÕES NECESSÁRIAS PARA MAIN AGENT:
+        1. Implementar criação automática de FicheiroImportado durante importações
+        2. Corrigir serialização/persistência do campo viaverde_config
+        3. Atualizar lógica de importação de combustível para usar cartao_combustivel_id
+        
+        PRIORIDADE: ALTA - Todas as 3 tarefas precisam de correções para funcionamento completo
         
         **TESTE 4: Associação Veículo→Motorista**
         - ✅ Sistema usa CardCode → Veículo → Motorista atribuído
