@@ -1678,6 +1678,59 @@ startxref
         # Step 2: Execute the import with the exact parameters from review request
         try:
             files = {
+                'file': ('carregamentos_eletricos.csv', csv_content, 'text/csv')
+            }
+            
+            response = requests.post(f"{BACKEND_URL}/importar/viaverde", 
+                                   files=files, headers=headers)
+            
+            print(f"\n📊 RESULTADO DA IMPORTAÇÃO:")
+            print(f"   - Status Code: {response.status_code}")
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                sucesso = result.get("sucesso", 0)
+                erros = result.get("erros", 0)
+                erros_detalhes = result.get("erros_detalhes", [])
+                
+                print(f"   - Sucessos: {sucesso}")
+                print(f"   - Erros: {erros}")
+                
+                # Check specifically for "Email do motorista vazio" error
+                email_vazio_errors = [erro for erro in erros_detalhes if "Email do motorista vazio" in erro]
+                
+                if email_vazio_errors:
+                    print(f"\n❌ ERRO CRÍTICO AINDA PRESENTE:")
+                    for erro in email_vazio_errors:
+                        print(f"   - {erro}")
+                    
+                    self.log_result("Critical-Bug-Fix", False, 
+                                  f"❌ BUG NÃO CORRIGIDO: {len(email_vazio_errors)} erros 'Email do motorista vazio'")
+                    return False
+                else:
+                    print(f"\n✅ CORREÇÃO CONFIRMADA:")
+                    print(f"   - Nenhum erro 'Email do motorista vazio' encontrado")
+                    print(f"   - Importação processada com {sucesso} sucessos e {erros} erros")
+                    
+                    self.log_result("Critical-Bug-Fix", True, 
+                                  "✅ BUG CORRIGIDO: Importação de carregamentos funciona sem erro de email")
+                    return True
+            else:
+                print(f"\n❌ FALHA NA IMPORTAÇÃO:")
+                print(f"   - Status: {response.status_code}")
+                print(f"   - Response: {response.text}")
+                
+                self.log_result("Critical-Bug-Fix", False, 
+                              f"❌ Importação falhou: {response.status_code}")
+                return False
+                
+        except Exception as e:
+            print(f"\n❌ ERRO NA EXECUÇÃO: {str(e)}")
+            self.log_result("Critical-Bug-Fix", False, f"❌ Erro na execução: {str(e)}")
+            return Falseameters from review request
+        try:
+            files = {
                 'file': ('Transacoes_Eletrico_20251215.csv', csv_content, 'text/csv')
             }
             data = {
