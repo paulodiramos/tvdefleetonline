@@ -619,6 +619,42 @@ backend:
           comment: "🎯 INVESTIGAÇÃO DE DEBUG COMPLETA - BOTÃO 'EDITAR' FUNCIONANDO PERFEITAMENTE! CONTEXTO: Investigação específica conforme review request detalhado sobre botão 'Editar' não aparecer na página de detalhes do veículo. CREDENCIAIS: parceiro@tvdefleet.com / UQ1B6DXU ✅. FLUXO TESTADO COMPLETAMENTE: 1) ✅ Login como parceiro bem-sucedido 2) ✅ Navegação para menu 'Veículos' → 'Lista de Veículos' funcionando 3) ✅ Abertura de detalhes do primeiro veículo (Peugeot 308 SW - AS-14-NI) funcionando 4) ✅ CRÍTICO - Console logs capturados com sucesso: User: {email: parceiro@tvdefleet.com, name: Maria Santos - Parceira, role: parceiro}, User role: parceiro, canEdit: true, editMode: false inicialmente 5) ✅ CRÍTICO - Botão 'Editar' ENCONTRADO, VISÍVEL e HABILITADO na página 6) ✅ CRÍTICO - Funcionalidade do botão testada: clique funciona, editMode muda para true, botões 'Guardar' e 'Cancelar' aparecem 7) ✅ CRÍTICO - Formulário entra corretamente em modo de edição com campos editáveis 8) ✅ Screenshots confirmam toda a funcionalidade. PONTOS CRÍTICOS INVESTIGADOS: ✅ Objeto user tem role: 'parceiro' ✅ canEdit calculado como true ✅ Botão 'Editar' está no DOM e visível ✅ Nenhum erro JavaScript no console ✅ Página de detalhes carrega corretamente. RESULTADO FINAL: O problema reportado no review request NÃO EXISTE ATUALMENTE - o botão 'Editar' está funcionando perfeitamente para utilizadores parceiros. Sistema operacional conforme especificado."
 
 backend:
+  - task: "TAREFA 2 - Página Ficheiros Importados"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "🎯 TAREFA 2 - PÁGINA FICHEIROS IMPORTADOS - PARCIALMENTE FUNCIONANDO! CONTEXTO: Testados endpoints de ficheiros importados conforme review request específico. CREDENCIAIS: admin@tvdefleet.com / o72ocUHy ✅. RESULTADOS CRÍTICOS: 1) ✅ GET /api/ficheiros-importados funciona: 0 ficheiros encontrados 2) ✅ Ficheiro importado criado via importação de teste 3) ❌ CRÍTICO: Nenhum novo ficheiro criado após importação - sistema não está registando ficheiros importados automaticamente 4) ✅ Endpoints de aprovar/rejeitar existem mas não testados devido ao problema anterior. PROBLEMA IDENTIFICADO: Sistema de importação não está criando registos na tabela ficheiros_importados automaticamente. FUNCIONALIDADES CONFIRMADAS: ✅ Endpoint GET /api/ficheiros-importados funciona ✅ Endpoints PUT /api/ficheiros-importados/{id}/aprovar e /api/ficheiros-importados/{id}/rejeitar existem ❌ Sistema não cria registos automaticamente durante importação. NECESSÁRIA CORREÇÃO: Implementar criação automática de registos FicheiroImportado durante processo de importação."
+
+  - task: "TAREFA 3 - Campo Via Verde Config no Backend"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "🎯 TAREFA 3 - CAMPO VIA VERDE CONFIG - PARCIALMENTE IMPLEMENTADO! CONTEXTO: Testado campo viaverde_config no modelo do motorista conforme review request. CREDENCIAIS: admin@tvdefleet.com / o72ocUHy ✅. RESULTADOS CRÍTICOS: 1) ❌ CRÍTICO: Campo viaverde_config não encontrado no modelo do motorista via GET /api/motoristas 2) ✅ PUT /api/motoristas/{id} com viaverde_config funcionou (status 200) 3) ❌ CRÍTICO: Campo não persistiu corretamente - esperado 'acumula', obtido 'None'. PROBLEMA IDENTIFICADO: Campo viaverde_config existe no modelo Python (linha 1278) mas não está sendo retornado nas respostas da API ou não está sendo persistido no MongoDB. ANÁLISE TÉCNICA: ✅ Campo definido no modelo Motorista (linha 1278): viaverde_config: Optional[str] = 'motorista_paga' ❌ Campo não aparece nas respostas GET /api/motoristas ❌ Campo não persiste após PUT /api/motoristas/{id}. NECESSÁRIA CORREÇÃO: Verificar serialização do modelo e persistência no MongoDB para o campo viaverde_config."
+
+  - task: "TAREFA 4 - Importação de Combustível com Cartões de Frota"
+    implemented: true
+    working: false
+    file: "backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: false
+          agent: "testing"
+          comment: "🎯 TAREFA 4 - CARTÕES DE FROTA COMBUSTÍVEL - PARCIALMENTE FUNCIONANDO! CONTEXTO: Testada nova arquitetura de cartões de frota conforme review request. CREDENCIAIS: admin@tvdefleet.com / o72ocUHy ✅. RESULTADOS CRÍTICOS: 1) ✅ Cartão de frota criado: TEST-COMBUSTIVEL-12345 (ID: f615e1b4-a2b4-438f-a7d5-b10e95ca1577) 2) ✅ Cartão atribuído ao motorista com sucesso 3) ✅ Cartão atualizado com informações do motorista 4) ❌ CRÍTICO: Importação de combustível falhou - 'Email do motorista vazio' (0 sucessos, 1 erro). PROBLEMA IDENTIFICADO: Sistema de importação de combustível ainda procura por email do motorista em vez de usar a nova arquitetura de cartões de frota. FUNCIONALIDADES CONFIRMADAS: ✅ POST /api/cartoes-frota funciona ✅ Atribuição de cartão ao motorista funciona ✅ PUT /api/cartoes-frota/{id} funciona ❌ Importação não consegue encontrar motorista via cartão. NECESSÁRIA CORREÇÃO: Atualizar lógica de importação de combustível para usar cartao_combustivel_id em vez de email do motorista."
+
   - task: "VERIFICAÇÃO FINAL - Todos os 3 Bugs Críticos Resolvidos"
     implemented: true
     working: true
