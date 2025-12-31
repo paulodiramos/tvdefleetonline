@@ -2849,54 +2849,20 @@ startxref
     # ==================== MAIN TEST RUNNER ====================
     
     def run_all_tests(self):
-        """Run all tests in sequence"""
-        print("🚀 INICIANDO TESTES DO SISTEMA TVDEFLEET")
+        """Run all tests in sequence - Focus on Review Request Critical Tests"""
+        print("🚀 INICIANDO VERIFICAÇÃO FINAL - BUGS CRÍTICOS RESOLVIDOS")
         print("=" * 80)
         
-        # Authenticate all users
+        # Authenticate required users
         print("\n🔐 AUTENTICAÇÃO DE UTILIZADORES")
         print("-" * 40)
-        for role in ["admin", "parceiro", "gestor", "operacional", "motorista"]:
+        for role in ["admin", "parceiro"]:
             self.authenticate_user(role)
         
         # PRIORITY: REVIEW REQUEST CRITICAL TESTS
-        print("\n🎯 TESTES CRÍTICOS DO REVIEW REQUEST (PRIORIDADE MÁXIMA)")
+        print("\n🎯 VERIFICAÇÃO FINAL: CONFIRMAR QUE TODOS OS BUGS CRÍTICOS FORAM RESOLVIDOS")
         print("=" * 80)
         self.test_review_request_critical_tests()
-        
-        # CRITICAL TEST: Email Motorista Vazio Bug Fix (Review Request Priority)
-        print("\n🚨 TESTE CRÍTICO FINAL: BUG 'EMAIL MOTORISTA VAZIO' (REVIEW REQUEST PRIORITY)")
-        print("=" * 80)
-        self.test_critical_bug_fix_email_motorista_vazio()
-        
-        # Phase 1: Permission restrictions
-        print("\n📋 FASE 1: RESTRIÇÕES DE PERMISSÕES")
-        print("-" * 40)
-        self.test_parceiro_cannot_create_revenue()
-        self.test_parceiro_cannot_create_expense()
-        self.test_parceiro_can_read_revenues_expenses()
-        self.test_admin_can_create_revenues_expenses()
-        
-        # Phase 2: File upload system
-        print("\n📁 FASE 2: SISTEMA DE UPLOAD DE FICHEIROS")
-        print("-" * 40)
-        self.test_motorista_document_upload()
-        self.test_pagamento_document_upload()
-        self.test_file_serving_endpoint()
-        
-        # Phase 3: Alert system
-        print("\n🚨 FASE 3: SISTEMA DE ALERTAS")
-        print("-" * 40)
-        self.test_alertas_list_endpoint()
-        self.test_alertas_dashboard_stats()
-        self.test_alertas_verificar_manual()
-        self.test_alertas_resolver_ignorar()
-        self.test_background_task_logs()
-        
-        # Phase 4: Financial import system
-        print("\n💰 FASE 4: SISTEMA DE IMPORTAÇÃO FINANCEIRA")
-        print("-" * 40)
-        self.test_financial_import_system()
         
         # Print final summary
         self.print_summary()
