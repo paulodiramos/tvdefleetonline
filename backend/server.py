@@ -11811,13 +11811,13 @@ async def importar_combustivel_excel(
                     if matricula:
                         identificadores.append(f"Matrícula: {matricula}")
                     erros_detalhes.append(
-                        f"Linha {row_num}: Veículo não encontrado ({', '.join(identificadores) if identificadores else 'Sem identificadores'})"
+                        f"Linha {row_num}: Veículo/Cartão não encontrado ({', '.join(identificadores) if identificadores else 'Sem identificadores'}). "
+                        f"Crie o cartão em 'Configurações → Cartões de Frota' e atribua ao motorista."
                     )
                     continue
                 
-                # Buscar motorista atribuído ao veículo
-                motorista = None
-                if vehicle.get('motorista_atribuido'):
+                # Buscar motorista atribuído ao veículo (se ainda não temos motorista)
+                if vehicle and not motorista and vehicle.get('motorista_atribuido'):
                     motorista = await db.motoristas.find_one(
                         {"id": vehicle['motorista_atribuido']},
                         {"_id": 0}
