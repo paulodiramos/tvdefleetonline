@@ -218,7 +218,100 @@ async def inicializar_fornecedores_padrao(current_user: Dict = Depends(get_curre
         if not existing:
             await db.fornecedores.insert_one(fornecedor)
     
-    return {"message": "Fornecedores padrão inicializados", "total": len(default_fornecedores)}
+    # Also create default automations for each fornecedor
+    fornecedores_db = await db.fornecedores.find({}, {"_id": 0}).to_list(10)
+    
+    for fornecedor in fornecedores_db:
+        # Check if automation already exists
+        existing_auto = await db.automacoes.find_one({"fornecedor_id": fornecedor["id"]})
+        if existing_auto:
+            continue
+        
+        automacao_id = str(uuid.uuid4())
+        
+        if fornecedor["tipo"] == "uber":
+            automacao = {
+                "id": automacao_id,
+                "nome": "Download Pagamentos Uber",
+                "descricao": "Automação para download de relatórios de pagamentos da Uber",
+                "fornecedor_id": fornecedor["id"],
+                "tipo_fornecedor": "uber",
+                "versao": "1.0",
+                "passos": [
+                    {"ordem": 1, "tipo": "navegar", "nome": "Ir para login Uber", "valor": "https://auth.uber.com/login/"},
+                    {"ordem": 2, "tipo": "preencher", "nome": "Inserir email", "seletor": "#useridInput", "variavel": "{{email}}"},
+                    {"ordem": 3, "tipo": "clicar", "nome": "Continuar", "seletor": "#forward-button"},
+                    {"ordem": 4, "tipo": "esperar", "nome": "Esperar campo password", "seletor": "#password", "timeout": 10000},
+                    {"ordem": 5, "tipo": "preencher", "nome": "Inserir password", "seletor": "#password", "variavel": "{{password}}"},
+                    {"ordem": 6, "tipo": "clicar", "nome": "Login", "seletor": "#forward-button"},
+                    {"ordem": 7, "tipo": "esperar", "nome": "Esperar dashboard", "timeout": 15000},
+                    {"ordem": 8, "tipo": "screenshot", "nome": "Screenshot após login"}
+                ],
+                "variaveis": ["email", "password", "data_inicio", "data_fim"],
+                "tipo_resultado": "csv",
+                "ativo": True,
+                "testada": False,
+                "created_at": now.isoformat(),
+                "created_by": current_user["id"]
+            }
+        elif fornecedor["tipo"] == "bolt":
+            automacao = {
+                "id": automacao_id,
+                "nome": "Download Ganhos Bolt",
+                "descricao": "Automação para download de relatórios de ganhos da Bolt",
+                "fornecedor_id": fornecedor["id"],
+                "tipo_fornecedor": "bolt",
+                "versao": "1.0",
+                "passos": [
+                    {"ordem": 1, "tipo": "navegar", "nome": "Ir para login Bolt", "valor": "https://fleets.bolt.eu/login"},
+                    {"ordem": 2, "tipo": "preencher", "nome": "Inserir email", "seletor": "input[name='email']", "variavel": "{{email}}"},
+                    {"ordem": 3, "tipo": "preencher", "nome": "Inserir password", "seletor": "input[name='password']", "variavel": "{{password}}"},
+                    {"ordem": 4, "tipo": "clicar", "nome": "Login", "seletor": "button[type='submit']"},
+                    {"ordem": 5, "tipo": "esperar", "nome": "Esperar dashboard", "timeout": 10000},
+                    {"ordem": 6, "tipo": "screenshot", "nome": "Screenshot após login"}
+                ],
+                "variaveis": ["email", "password", "data_inicio", "data_fim"],
+                "tipo_resultado": "csv",
+                "ativo": True,
+                "testada": False,
+                "created_at": now.isoformat(),
+                "created_by": current_user["id"]
+            }
+        elif fornecedor["tipo"] == "via_verde":
+            automacao = {
+                "id": automacao_id,
+                "nome": "Download Portagens Via Verde",
+                "descricao": "Automação para download de extratos Via Verde Empresas",
+                "fornecedor_id": fornecedor["id"],
+                "tipo_fornecedor": "via_verde",
+                "versao": "1.0",
+                "passos": [
+                    {"ordem": 1, "tipo": "navegar", "nome": "Ir para login Via Verde", "valor": "https://www.viaverde.pt/empresas/login"},
+                    {"ordem": 2, "tipo": "preencher", "nome": "Inserir username", "seletor": "#username", "variavel": "{{email}}"},
+                    {"ordem": 3, "tipo": "preencher", "nome": "Inserir password", "seletor": "#password", "variavel": "{{password}}"},
+                    {"ordem": 4, "tipo": "clicar", "nome": "Login", "seletor": "#kc-login"},
+                    {"ordem": 5, "tipo": "esperar", "nome": "Esperar área cliente", "timeout": 10000},
+                    {"ordem": 6, "tipo": "screenshot", "nome": "Screenshot após login"}
+                ],
+                "variaveis": ["email", "password", "data_inicio", "data_fim"],
+                "tipo_resultado": "csv",
+                "ativo": True,
+                "testada": False,
+                "created_at": now.isoformat(),
+                "created_by": current_user["id"]
+            }
+        else:
+            continue
+        
+        await db.automacoes.insert_one(automacao)
+        
+        # Update fornecedor with automation_id
+        await db.fornecedores.update_one(
+            {"id": fornecedor["id"]},
+            {"$set": {"automacao_id": automacao_id}}
+        )
+    
+    return {"message": "Fornecedores e automações padrão inicializados", "total": len(default_fornecedores)}
 
 
 # ==================== AUTOMAÇÕES ====================
