@@ -685,6 +685,16 @@ function App() {
             }
           />
           <Route
+            path="/configuracao-csv"
+            element={
+              user ? (
+                <ConfiguracaoCSV user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/gestao-credenciais"
             element={
               user ? (
