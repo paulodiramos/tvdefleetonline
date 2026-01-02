@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import Dict
 from datetime import datetime, timezone
 import uuid
+import os
 
 from models.user import User, UserCreate, UserLogin, TokenResponse, UserRole
 from utils.auth import (
