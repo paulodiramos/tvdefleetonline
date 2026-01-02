@@ -470,7 +470,7 @@ class TVDEFleetTester:
         # Authenticate required users
         print("\n🔐 AUTENTICAÇÃO DE UTILIZADORES")
         print("-" * 40)
-        for role in ["parceiro"]:
+        for role in ["parceiro", "admin"]:
             self.authenticate_user(role)
         
         # PRIORITY: REVIEW REQUEST CRITICAL TESTS
