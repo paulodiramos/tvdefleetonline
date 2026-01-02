@@ -2967,6 +2967,105 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* 🆕 Atalhos Rápidos para Agendar Vistorias */}
+                {canEdit && (
+                  <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-200">
+                    <h3 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                      <ClipboardCheck className="w-4 h-4" />
+                      Agendar Vistoria Rápida
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-white hover:bg-purple-100 border-purple-300"
+                        onClick={() => {
+                          const proximaData = vehicle?.inspection?.proxima_inspecao 
+                            ? new Date(new Date(vehicle.inspection.proxima_inspecao).getTime() - 7*24*60*60*1000).toISOString().split('T')[0]
+                            : new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+                          setAgendaForm({
+                            tipo: 'inspecao',
+                            titulo: 'Inspeção Periódica',
+                            data: proximaData,
+                            hora: '10:00',
+                            descricao: `Agendar inspeção para ${vehicle?.matricula || 'veículo'}`
+                          });
+                        }}
+                      >
+                        🔍 Inspeção
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-white hover:bg-blue-100 border-blue-300"
+                        onClick={() => {
+                          const proximaData = vehicle?.seguro?.data_validade 
+                            ? new Date(new Date(vehicle.seguro.data_validade).getTime() - 30*24*60*60*1000).toISOString().split('T')[0]
+                            : new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+                          setAgendaForm({
+                            tipo: 'seguro',
+                            titulo: 'Renovação Seguro',
+                            data: proximaData,
+                            hora: '',
+                            descricao: `Renovar seguro do veículo ${vehicle?.matricula || ''}`
+                          });
+                        }}
+                      >
+                        🛡️ Seguro
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-white hover:bg-yellow-100 border-yellow-300"
+                        onClick={() => {
+                          const proximaData = vehicle?.revisao?.proxima_revisao_data 
+                            ? new Date(new Date(vehicle.revisao.proxima_revisao_data).getTime() - 7*24*60*60*1000).toISOString().split('T')[0]
+                            : new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+                          setAgendaForm({
+                            tipo: 'revisao',
+                            titulo: 'Revisão Periódica',
+                            data: proximaData,
+                            hora: '09:00',
+                            descricao: `Revisão programada - KM atual: ${vehicle?.km_atual || 'N/A'}`
+                          });
+                        }}
+                      >
+                        🔧 Revisão
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-white hover:bg-red-100 border-red-300"
+                        onClick={() => {
+                          const proximaData = vehicle?.extintor?.data_validade 
+                            ? new Date(new Date(vehicle.extintor.data_validade).getTime() - 30*24*60*60*1000).toISOString().split('T')[0]
+                            : new Date(Date.now() + 30*24*60*60*1000).toISOString().split('T')[0];
+                          setAgendaForm({
+                            tipo: 'manutencao',
+                            titulo: 'Verificação Extintor',
+                            data: proximaData,
+                            hora: '',
+                            descricao: 'Verificar e renovar extintor se necessário'
+                          });
+                        }}
+                      >
+                        🧯 Extintor
+                      </Button>
+                    </div>
+                    
+                    {/* Alertas de Vistorias Próximas */}
+                    {(
+                      (vehicle?.inspection?.proxima_inspecao && new Date(vehicle.inspection.proxima_inspecao) <= new Date(Date.now() + 30*24*60*60*1000)) ||
+                      (vehicle?.seguro?.data_validade && new Date(vehicle.seguro.data_validade) <= new Date(Date.now() + 30*24*60*60*1000)) ||
+                      (vehicle?.extintor?.data_validade && new Date(vehicle.extintor.data_validade) <= new Date(Date.now() + 30*24*60*60*1000))
+                    ) && (
+                      <div className="mt-3 p-2 bg-orange-100 rounded border border-orange-300">
+                        <p className="text-xs text-orange-800 font-medium">⚠️ Atenção: Existem documentos/vistorias a vencer nos próximos 30 dias!</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {canEdit && (
                   <form onSubmit={editingAgendaId ? handleUpdateAgenda : handleAddAgenda} className="space-y-4 border-b pb-4">
                     <h3 className="font-semibold">{editingAgendaId ? 'Editar Evento' : 'Adicionar Evento'}</h3>
