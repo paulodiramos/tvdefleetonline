@@ -333,8 +333,7 @@ async def forgot_password(email_data: Dict):
             msg['To'] = email
             msg.attach(MIMEText(html_body, 'html', 'utf-8'))
             
-            with smtplib.SMTP(smtp_host, smtp_port) as server:
-                server.starttls()
+            with smtplib.SMTP_SSL(smtp_host, smtp_port) as server:
                 server.login(smtp_user, smtp_password)
                 server.sendmail(from_email, email, msg.as_string())
             
