@@ -66,6 +66,7 @@ from routes.ifthenpay import router as ifthenpay_router
 from routes.vehicles import router as vehicles_router
 from routes.csv_config import router as csv_config_router
 from routes.relatorios import router as relatorios_router
+from routes.automacao import router as automacao_router
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
