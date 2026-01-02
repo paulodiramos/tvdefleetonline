@@ -356,11 +356,16 @@ class TVDEFleetTester:
         print("- GET /api/vehicles - buscar um veículo")
         print("- POST /api/vehicles/{id}/agenda - adicionar evento de vistoria")
         print("- GET /api/vehicles/{id}/agenda - verificar se evento foi adicionado")
+        print("NOTA: Endpoint agenda requer permissões ADMIN/GESTAO, usando admin para teste")
         
-        # Authenticate as parceiro
-        headers = self.get_headers("parceiro")
+        # Authenticate as admin for agenda endpoint (requires ADMIN/GESTAO permissions)
+        if not self.authenticate_user("admin"):
+            self.log_result("Agenda-Veiculos-Auth", False, "❌ Failed to authenticate as admin")
+            return False
+            
+        headers = self.get_headers("admin")
         if not headers:
-            self.log_result("Agenda-Veiculos-Auth", False, "❌ No auth token for parceiro")
+            self.log_result("Agenda-Veiculos-Auth", False, "❌ No auth token for admin")
             return False
         
         try:
@@ -385,7 +390,7 @@ class TVDEFleetTester:
                 
                 print(f"Veículo selecionado: {vehicle_info} (ID: {vehicle_id})")
                 
-                    # Test 2: POST /api/vehicles/{id}/agenda - add inspection event
+                # Test 2: POST /api/vehicles/{id}/agenda - add inspection event
                 print(f"\n2. Testando POST /api/vehicles/{vehicle_id}/agenda")
                 
                 agenda_event = {
