@@ -2297,19 +2297,22 @@ class FicheiroImportado(BaseModel):
     nome_ficheiro: str
     plataforma: str  # "uber", "bolt", "viaverde", "combustivel", "gps", "carregamentos"
     data_importacao: str
-    periodo_inicio: str
-    periodo_fim: str
+    periodo_inicio: Optional[str] = None
+    periodo_fim: Optional[str] = None
     status: str = "pendente"  # "pendente", "aprovado", "rejeitado"
-    registos_importados: int = 0
+    total_registos: int = 0
+    registos_sucesso: int = 0
+    registos_erro: int = 0
+    registos_importados: int = 0  # Alias para compatibilidade
     total_valor: Optional[float] = None  # Total de ganhos ou despesas
     motoristas_afetados: List[str] = []  # IDs dos motoristas
     observacoes: Optional[str] = None
     importado_por: str  # User ID
-    importado_por_nome: str  # User name
+    importado_por_nome: Optional[str] = None  # User name
     aprovado_por: Optional[str] = None
     aprovado_por_nome: Optional[str] = None
     data_aprovacao: Optional[str] = None
-    created_at: str
+    created_at: Optional[str] = None  # Optional - usamos data_importacao
 
 # ==================== AUTH UTILITIES ====================
 
