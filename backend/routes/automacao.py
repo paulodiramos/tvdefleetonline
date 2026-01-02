@@ -555,7 +555,10 @@ async def executar_automacao(
     await db.execucoes_automacao.insert_one(execucao)
     
     # Queue execution in background
-    # background_tasks.add_task(run_automation, execucao_id)
+    async def run_in_background():
+        await run_automation(db, execucao_id)
+    
+    background_tasks.add_task(asyncio.create_task, run_in_background())
     
     logger.info(f"🤖 Execução de automação agendada: {execucao_id}")
     
