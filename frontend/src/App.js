@@ -96,6 +96,7 @@ import Termos from "@/pages/Termos";
 import Privacidade from "@/pages/Privacidade";
 import TermosPrivacidadeAdmin from "@/pages/TermosPrivacidadeAdmin";
 import FicheirosImportados from "@/pages/FicheirosImportados";
+import ConfiguracaoCSV from "@/pages/ConfiguracaoCSV";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
