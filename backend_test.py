@@ -469,7 +469,7 @@ class TVDEFleetTester:
             self.authenticate_user(role)
         
         # PRIORITY: REVIEW REQUEST CRITICAL TESTS
-        print("\n🎯 VERIFICAÇÃO FINAL: TAREFAS 2, 3 E 4 IMPLEMENTADAS")
+        print("\n🎯 VERIFICAÇÃO FINAL: Tarefas P2 implementadas")
         print("=" * 80)
         self.test_review_request_critical_tests()
         
