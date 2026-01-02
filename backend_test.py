@@ -385,7 +385,7 @@ class TVDEFleetTester:
                 
                 print(f"Veículo selecionado: {vehicle_info} (ID: {vehicle_id})")
                 
-                # Test 2: POST /api/vehicles/{id}/agenda - add inspection event
+                    # Test 2: POST /api/vehicles/{id}/agenda - add inspection event
                 print(f"\n2. Testando POST /api/vehicles/{vehicle_id}/agenda")
                 
                 agenda_event = {
