@@ -8242,22 +8242,15 @@ metadata:
 
 test_plan:
   current_focus:
-    - "TAREFA 2 - Página Ficheiros Importados"
-    - "TAREFA 3 - Campo Via Verde Config no Backend"
-    - "TAREFA 4 - Importação de Combustível com Cartões de Frota"
-  stuck_tasks: 
-    - "TAREFA 2 - Página Ficheiros Importados"
-    - "TAREFA 3 - Campo Via Verde Config no Backend"
-    - "TAREFA 4 - Importação de Combustível com Cartões de Frota"
+    - "VERIFICAÇÃO FINAL - Tarefas P2 implementadas"
+  stuck_tasks: []
   test_all: false
   test_priority: "high_first"
-  review_request_tarefas_2_3_4_tested: true
-  tarefa_2_ficheiros_importados_partial: true
-  tarefa_3_viaverde_config_partial: true
-  tarefa_4_cartoes_frota_partial: true
-  csv_carregamentos_email_validation_skipped: true
-  excel_carregamentos_cardcode_lookup_working: true
-  excel_carregamentos_error_messages_working: true
+  review_request_tarefas_p2_tested: true
+  tarefa_p2_sistema_ficheiros_importados: true
+  tarefa_p2_importacao_registo_automatico: true
+  tarefa_p2_aprovacao_criacao_relatorios: true
+  tarefa_p2_agenda_veiculos: true
 
 agent_communication:
     - agent: "testing"
