@@ -15536,7 +15536,7 @@ async def obter_ficheiro_importado(ficheiro_id: str, current_user: Dict = Depend
 
 @api_router.put("/ficheiros-importados/{ficheiro_id}/aprovar")
 async def aprovar_ficheiro_importado(ficheiro_id: str, observacoes: Optional[str] = None, current_user: Dict = Depends(get_current_user)):
-    """Aprovar um ficheiro importado"""
+    """Aprovar um ficheiro importado e criar relatórios de rascunho"""
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
@@ -15559,8 +15559,24 @@ async def aprovar_ficheiro_importado(ficheiro_id: str, observacoes: Optional[str
     
     await db.ficheiros_importados.update_one({"id": ficheiro_id}, {"$set": updates})
     
+    # 🆕 Criar relatórios de rascunho após aprovação (se tiver período definido)
+    info_rascunhos = None
+    if ficheiro.get("periodo_inicio") and ficheiro.get("periodo_fim"):
+        info_rascunhos = await criar_relatorios_rascunho_apos_importacao(
+            plataforma=ficheiro.get("plataforma"),
+            periodo_inicio=ficheiro.get("periodo_inicio"),
+            periodo_fim=ficheiro.get("periodo_fim"),
+            parceiro_id=ficheiro.get("importado_por"),
+            db=db
+        )
+        logger.info(f"📊 Relatórios criados após aprovação: {info_rascunhos}")
+    
     logger.info(f"✅ Ficheiro {ficheiro['nome_ficheiro']} aprovado por {current_user.get('name')}")
-    return {"message": "Ficheiro aprovado com sucesso", "ficheiro": {**ficheiro, **updates}}
+    return {
+        "message": "Ficheiro aprovado com sucesso", 
+        "ficheiro": {**ficheiro, **updates},
+        "rascunhos": info_rascunhos
+    }
 
 @api_router.put("/ficheiros-importados/{ficheiro_id}/rejeitar")
 async def rejeitar_ficheiro_importado(ficheiro_id: str, observacoes: str, current_user: Dict = Depends(get_current_user)):
