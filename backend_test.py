@@ -143,17 +143,23 @@ class TVDEFleetTester:
                 
                 if approved_files:
                     approved_file = approved_files[0]
-                    has_approver = any(key in approved_file for key in ['aprovado_por', 'approved_by', 'approver'])
-                    has_approval_date = any(key in approved_file for key in ['aprovado_em', 'approved_at', 'approval_date'])
+                    has_approver = any(key in approved_file for key in ['aprovado_por', 'approved_by', 'approver', 'aprovado_por_nome'])
+                    has_approval_date = any(key in approved_file for key in ['aprovado_em', 'approved_at', 'approval_date', 'data_aprovacao'])
                     
                     if has_approver and has_approval_date:
-                        approver_info = approved_file.get('aprovado_por') or approved_file.get('approved_by') or approved_file.get('approver')
-                        approval_date = approved_file.get('aprovado_em') or approved_file.get('approved_at') or approved_file.get('approval_date')
+                        approver_info = (approved_file.get('aprovado_por') or 
+                                       approved_file.get('approved_by') or 
+                                       approved_file.get('approver') or 
+                                       approved_file.get('aprovado_por_nome'))
+                        approval_date = (approved_file.get('aprovado_em') or 
+                                       approved_file.get('approved_at') or 
+                                       approved_file.get('approval_date') or 
+                                       approved_file.get('data_aprovacao'))
                         self.log_result("Sistema-Ficheiros-Approval-Info", True, 
-                                      f"✅ Ficheiro aprovado tem informação completa: aprovado_por={approver_info}, aprovado_em={approval_date}")
+                                      f"✅ Ficheiro aprovado tem informação completa: aprovado_por={approver_info}, data_aprovacao={approval_date}")
                     else:
                         self.log_result("Sistema-Ficheiros-Approval-Info", False, 
-                                      f"❌ Ficheiro aprovado sem informação completa: aprovado_por={has_approver}, aprovado_em={has_approval_date}")
+                                      f"❌ Ficheiro aprovado sem informação completa: aprovado_por={has_approver}, data_aprovacao={has_approval_date}")
                         print(f"   Campos disponíveis: {list(approved_file.keys())}")
                 else:
                     self.log_result("Sistema-Ficheiros-No-Approved", True, 
