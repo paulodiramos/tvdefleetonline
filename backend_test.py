@@ -93,22 +93,23 @@ class TVDEFleetTester:
         return {"Authorization": f"Bearer {self.tokens[role]}"}
     
     def test_review_request_critical_tests(self):
-        """🎯 VERIFICAÇÃO FINAL: Tarefas 2, 3 e 4 implementadas"""
-        print("\n🎯 VERIFICAÇÃO FINAL: Tarefas 2, 3 e 4 implementadas")
+        """🎯 VERIFICAÇÃO FINAL: Tarefas P2 implementadas"""
+        print("\n🎯 VERIFICAÇÃO FINAL: Tarefas P2 implementadas")
         print("=" * 80)
         print("CREDENCIAIS:")
         print("- Parceiro: parceiro@tvdefleet.com / UQ1B6DXU")
-        print("- Admin: admin@tvdefleet.com / o72ocUHy")
-        print("\nTAREFAS A TESTAR:")
-        print("TAREFA 2 - Página Ficheiros Importados")
-        print("TAREFA 3 - Campo Via Verde Config no Backend")
-        print("TAREFA 4 - Importação de Combustível com Cartões de Frota")
+        print("\nTESTES A REALIZAR:")
+        print("1. Sistema de Ficheiros Importados")
+        print("2. Importação com Registo Automático")
+        print("3. Aprovação com Criação de Relatórios")
+        print("4. Agenda de Veículos")
         print("=" * 80)
         
         # Execute all critical tests
-        self.test_tarefa_2_ficheiros_importados()
-        self.test_tarefa_3_viaverde_config()
-        self.test_tarefa_4_cartoes_frota_combustivel()
+        self.test_sistema_ficheiros_importados()
+        self.test_importacao_registo_automatico()
+        self.test_aprovacao_criacao_relatorios()
+        self.test_agenda_veiculos()
         
         return True
     
