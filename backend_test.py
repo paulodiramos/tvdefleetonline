@@ -459,13 +459,13 @@ class TVDEFleetTester:
     
     def run_all_tests(self):
         """Run all tests in sequence - Focus on Review Request Critical Tests"""
-        print("🚀 INICIANDO VERIFICAÇÃO FINAL - TAREFAS 2, 3 E 4 IMPLEMENTADAS")
+        print("🚀 INICIANDO VERIFICAÇÃO FINAL - TAREFAS P2 IMPLEMENTADAS")
         print("=" * 80)
         
         # Authenticate required users
         print("\n🔐 AUTENTICAÇÃO DE UTILIZADORES")
         print("-" * 40)
-        for role in ["admin", "parceiro"]:
+        for role in ["parceiro"]:
             self.authenticate_user(role)
         
         # PRIORITY: REVIEW REQUEST CRITICAL TESTS
