@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 import uuid
 import logging
 import base64
+import asyncio
 from cryptography.fernet import Fernet
 import os
 
@@ -25,6 +26,7 @@ from models.automacao import (
     ExecucaoAutomacao,
     DEFAULT_UBER_AUTOMATION, DEFAULT_BOLT_AUTOMATION, DEFAULT_VIAVERDE_AUTOMATION
 )
+from services.automacao_executor import run_automation
 
 logger = logging.getLogger(__name__)
 
