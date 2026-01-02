@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-TVDEFleet Backend Testing Suite - Review Request Specific Tests
-Tests for Tarefas 2, 3 e 4 implementadas
+TVDEFleet Backend Testing Suite - Refactored Backend & CSV Config System Tests
+Tests for Phase 3 (P3) refactoring and CSV configuration system
 """
 
 import requests
@@ -19,8 +19,8 @@ BACKEND_URL = "https://fleetvision-1.preview.emergentagent.com/api"
 
 # Test credentials (from review request)
 TEST_CREDENTIALS = {
-    "admin": {"email": "admin@tvdefleet.com", "password": "o72ocUHy"},
-    "parceiro": {"email": "parceiro@tvdefleet.com", "password": "UQ1B6DXU"}
+    "admin": {"email": "admin@tvdefleet.com", "password": "123456"},
+    "parceiro": {"email": "parceiro@tvdefleet.com", "password": "123456"}
 }
 
 class TVDEFleetTester:
