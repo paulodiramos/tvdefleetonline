@@ -18696,6 +18696,7 @@ app.include_router(motoristas_router, prefix="/api")
 app.include_router(notificacoes_router, prefix="/api")
 app.include_router(mensagens_router, prefix="/api")
 app.include_router(ifthenpay_router)
+app.include_router(vehicles_router, prefix="/api")
 
 # Include main API router (legacy routes - to be migrated)
 # ==================== DOCUMENTO VALIDATION SYSTEM ====================
