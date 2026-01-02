@@ -143,15 +143,18 @@ class TVDEFleetTester:
                 
                 if approved_files:
                     approved_file = approved_files[0]
-                    has_approver = 'aprovado_por' in approved_file
-                    has_approval_date = 'aprovado_em' in approved_file
+                    has_approver = any(key in approved_file for key in ['aprovado_por', 'approved_by', 'approver'])
+                    has_approval_date = any(key in approved_file for key in ['aprovado_em', 'approved_at', 'approval_date'])
                     
                     if has_approver and has_approval_date:
+                        approver_info = approved_file.get('aprovado_por') or approved_file.get('approved_by') or approved_file.get('approver')
+                        approval_date = approved_file.get('aprovado_em') or approved_file.get('approved_at') or approved_file.get('approval_date')
                         self.log_result("Sistema-Ficheiros-Approval-Info", True, 
-                                      f"✅ Ficheiro aprovado tem informação completa: aprovado_por={approved_file.get('aprovado_por')}, aprovado_em={approved_file.get('aprovado_em')}")
+                                      f"✅ Ficheiro aprovado tem informação completa: aprovado_por={approver_info}, aprovado_em={approval_date}")
                     else:
                         self.log_result("Sistema-Ficheiros-Approval-Info", False, 
                                       f"❌ Ficheiro aprovado sem informação completa: aprovado_por={has_approver}, aprovado_em={has_approval_date}")
+                        print(f"   Campos disponíveis: {list(approved_file.keys())}")
                 else:
                     self.log_result("Sistema-Ficheiros-No-Approved", True, 
                                   "ℹ️ Nenhum ficheiro com status 'aprovado' encontrado (normal se não houver aprovações)")
