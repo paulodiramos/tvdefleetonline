@@ -2358,11 +2358,17 @@ def send_email(to_email: str, subject: str, html_body: str, text_body: str = Non
         part2 = MIMEText(html_body, 'html', 'utf-8')
         msg.attach(part2)
         
-        # Enviar email
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_password)
-            server.sendmail(from_email, to_email, msg.as_string())
+        # Enviar email - Usar SSL para porta 465, STARTTLS para 587
+        smtp_port_int = int(smtp_port)
+        if smtp_port_int == 465:
+            with smtplib.SMTP_SSL(smtp_host, smtp_port_int) as server:
+                server.login(smtp_user, smtp_password)
+                server.sendmail(from_email, to_email, msg.as_string())
+        else:
+            with smtplib.SMTP(smtp_host, smtp_port_int) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_password)
+                server.sendmail(from_email, to_email, msg.as_string())
         
         logger.info(f"✅ Email enviado com sucesso para {to_email}")
         return True
