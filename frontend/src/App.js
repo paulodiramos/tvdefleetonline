@@ -696,6 +696,16 @@ function App() {
             }
           />
           <Route
+            path="/automacao"
+            element={
+              user ? (
+                <Automacao user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/gestao-credenciais"
             element={
               user ? (
