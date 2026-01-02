@@ -1330,57 +1330,30 @@ const FichaVeiculo = ({ user, onLogout }) => {
                         <p className="font-medium">{vehicle.km_atual || 0} km</p>
                       )}
                     </div>
-                    <div>
-                      <Label className="text-slate-600">Via Verde ID</Label>
-                      {canEdit && editMode ? (
-                        <Input
-                          value={vehicle.via_verde_id || ''}
-                          onChange={(e) => setVehicle({...vehicle, via_verde_id: e.target.value})}
-                          placeholder="Ex: 1234567890"
-                        />
-                      ) : (
-                        <p className="font-medium">{vehicle.via_verde_id || 'N/A'}</p>
-                      )}
-                    </div>
-                    <div>
-                      <Label className="text-slate-600">Cartão Frota ID (Combustível)</Label>
-                      {canEdit && editMode ? (
-                        <Input
-                          value={vehicle.cartao_frota_id || ''}
-                          onChange={(e) => setVehicle({...vehicle, cartao_frota_id: e.target.value})}
-                          placeholder="7824731736480003"
-                        />
-                      ) : (
-                        <p className="font-medium">{vehicle.cartao_frota_id || 'N/A'}</p>
-                      )}
-                      {vehicle.cartao_frota_id && vehicle.motorista_atribuido_nome && (
-                        <p className="text-xs text-slate-500 mt-1">
-                          Associado a: {vehicle.motorista_atribuido_nome}
-                        </p>
-                      )}
-                    </div>
-                    
-                    <div>
-                      <Label className="text-slate-600">Cartão Frota Elétrico ID (Carregamentos)</Label>
-                      {canEdit && editMode ? (
-                        <Input
-                          value={vehicle.cartao_frota_eletric_id || ''}
-                          onChange={(e) => setVehicle({...vehicle, cartao_frota_eletric_id: e.target.value})}
-                          placeholder="PTPRIO6087131736480003"
-                        />
-                      ) : (
-                        <p className="font-medium">{vehicle.cartao_frota_eletric_id || 'N/A'}</p>
-                      )}
-                    </div>
-                    <div>
-                      <Label className="text-slate-600">Motorista Atribuído</Label>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Card de Atribuição - Motorista, Via Verde e Cartões */}
+              <Card className="mt-4 border-2 border-blue-200">
+                <CardHeader className="pb-2 bg-blue-50">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <User className="h-5 w-5 text-blue-600" />
+                    Atribuição - Motorista & Cartões
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Motorista */}
+                    <div className="md:col-span-2">
+                      <Label className="text-slate-600 font-medium">Motorista Atribuído</Label>
                       {canEdit && editMode ? (
                         <select
                           value={vehicle.motorista_atribuido || ''}
                           onChange={(e) => setVehicle({...vehicle, motorista_atribuido: e.target.value})}
-                          className="w-full p-2 border rounded-md"
+                          className="w-full p-2 border rounded-md mt-1"
                         >
-                          <option value="">Nenhum</option>
+                          <option value="">Nenhum motorista atribuído</option>
                           {motoristasDisponiveis.map((m) => (
                             <option key={m.id} value={m.id}>
                               {m.name}
@@ -1388,16 +1361,143 @@ const FichaVeiculo = ({ user, onLogout }) => {
                           ))}
                         </select>
                       ) : (
-                        <p className="font-medium">
+                        <p className="font-medium text-lg">
                           {vehicle.motorista_atribuido_nome || 'Não atribuído'}
                         </p>
                       )}
                     </div>
+
+                    {/* Via Verde */}
                     <div>
-                      <Label className="text-slate-600">Status</Label>
+                      <Label className="text-slate-600">
+                        🛣️ Via Verde ID
+                        {vehicle.via_verde_id && vehicle.motorista_atribuido_nome && (
+                          <span className="text-xs text-green-600 ml-2">✓ Associado</span>
+                        )}
+                      </Label>
+                      {canEdit && editMode ? (
+                        <Input
+                          value={vehicle.via_verde_id || ''}
+                          onChange={(e) => setVehicle({...vehicle, via_verde_id: e.target.value, via_verde_disponivel: !!e.target.value})}
+                          placeholder="Ex: 1234567890"
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.via_verde_id || 'Não configurado'}</p>
+                      )}
+                      {vehicle.via_verde_id && vehicle.motorista_atribuido_nome && (
+                        <p className="text-xs text-green-600 mt-1">
+                          → Associado a: {vehicle.motorista_atribuido_nome}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Cartão Frota Combustível */}
+                    <div>
+                      <Label className="text-slate-600">
+                        ⛽ Cartão Frota (Combustível)
+                        {vehicle.cartao_frota_id && vehicle.motorista_atribuido_nome && (
+                          <span className="text-xs text-green-600 ml-2">✓ Associado</span>
+                        )}
+                      </Label>
+                      {canEdit && editMode ? (
+                        <Input
+                          value={vehicle.cartao_frota_id || ''}
+                          onChange={(e) => setVehicle({...vehicle, cartao_frota_id: e.target.value, cartao_frota_disponivel: !!e.target.value})}
+                          placeholder="7824731736480003"
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.cartao_frota_id || 'Não configurado'}</p>
+                      )}
+                      {vehicle.cartao_frota_id && vehicle.motorista_atribuido_nome && (
+                        <p className="text-xs text-green-600 mt-1">
+                          → Associado a: {vehicle.motorista_atribuido_nome}
+                        </p>
+                      )}
+                    </div>
+                    
+                    {/* Cartão Frota Elétrico */}
+                    <div>
+                      <Label className="text-slate-600">
+                        🔌 Cartão Frota Elétrico (Carregamentos)
+                        {vehicle.cartao_frota_eletric_id && vehicle.motorista_atribuido_nome && (
+                          <span className="text-xs text-green-600 ml-2">✓ Associado</span>
+                        )}
+                      </Label>
+                      {canEdit && editMode ? (
+                        <Input
+                          value={vehicle.cartao_frota_eletric_id || ''}
+                          onChange={(e) => setVehicle({...vehicle, cartao_frota_eletric_id: e.target.value})}
+                          placeholder="PTPRIO6087131736480003"
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.cartao_frota_eletric_id || 'Não configurado'}</p>
+                      )}
+                      {vehicle.cartao_frota_eletric_id && vehicle.motorista_atribuido_nome && (
+                        <p className="text-xs text-green-600 mt-1">
+                          → Associado a: {vehicle.motorista_atribuido_nome}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Status */}
+                    <div>
+                      <Label className="text-slate-600">Status do Veículo</Label>
                       {canEdit && editMode ? (
                         <select
                           value={vehicle.status || 'disponivel'}
+                          onChange={async (e) => {
+                            try {
+                              const token = localStorage.getItem('token');
+                              await axios.put(`${API}/vehicles/${vehicleId}/status`, 
+                                { status: e.target.value },
+                                { headers: { Authorization: `Bearer ${token}` }}
+                              );
+                              toast.success('Status atualizado!');
+                              fetchVehicleData();
+                            } catch (error) {
+                              toast.error('Erro ao atualizar status');
+                            }
+                          }}
+                          className="w-full p-2 border rounded-md mt-1"
+                        >
+                          <option value="disponivel">Disponível</option>
+                          <option value="atribuido">Atribuído</option>
+                          <option value="manutencao">Manutenção</option>
+                          <option value="venda">Venda</option>
+                          <option value="condicoes">Condições</option>
+                        </select>
+                      ) : (
+                        <p className="font-medium capitalize">
+                          {vehicle.status === 'disponivel' ? '🟢 Disponível' :
+                           vehicle.status === 'atribuido' ? '🔵 Atribuído' :
+                           vehicle.status === 'manutencao' ? '🟡 Manutenção' :
+                           vehicle.status === 'venda' ? '🔴 Venda' :
+                           vehicle.status === 'condicoes' ? '🟠 Condições' :
+                           '🟢 Disponível'}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Informação de associação automática */}
+                  {vehicle.motorista_atribuido && (
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm text-blue-800">
+                      <strong>ℹ️ Nota:</strong> Ao guardar, os cartões Via Verde e Frota serão automaticamente associados ao motorista <strong>{vehicle.motorista_atribuido_nome}</strong> para facilitar o registo de despesas.
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Continuação - Contrato */}
+              <Card className="mt-4">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base">Contrato do Veículo</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           onChange={async (e) => {
                             try {
                               const token = localStorage.getItem('token');
