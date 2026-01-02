@@ -228,17 +228,133 @@ async def get_permissions(current_user: Dict = Depends(get_current_user)):
 
 @router.post("/auth/forgot-password")
 async def forgot_password(email_data: Dict):
-    """Send password reset email"""
+    """Send password reset email with temporary password"""
+    import random
+    import string
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    import bcrypt
+    
     email = email_data.get("email")
     if not email:
-        raise HTTPException(status_code=400, detail="Email is required")
+        raise HTTPException(status_code=400, detail="Email é obrigatório")
     
     user = await db.users.find_one({"email": email}, {"_id": 0})
     if not user:
-        # Don't reveal if email exists
-        return {"message": "If the email exists, a reset link will be sent"}
+        raise HTTPException(status_code=404, detail="Email não encontrado no sistema")
     
-    # TODO: Generate reset token and send email
-    print(f"📧 Password reset requested for: {email}")
+    # Generate temporary password (8 characters: letters + numbers)
+    temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
     
-    return {"message": "If the email exists, a reset link will be sent"}
+    # Hash the temporary password
+    hashed_password = bcrypt.hashpw(temp_password.encode('utf-8'), bcrypt.gensalt())
+    
+    # Update user password
+    await db.users.update_one(
+        {"email": email},
+        {"$set": {
+            "password": hashed_password.decode('utf-8'),
+            "senha_provisoria": True,
+            "senha_provisoria_criada_em": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Also update in motoristas if exists
+    await db.motoristas.update_one(
+        {"email": email},
+        {"$set": {"senha_provisoria": True}}
+    )
+    
+    # Enviar email com senha temporária
+    email_sent = False
+    try:
+        smtp_host = os.environ.get('SMTP_HOST', 'smtp.tvdefleet.com')
+        smtp_port = int(os.environ.get('SMTP_PORT', 587))
+        smtp_user = os.environ.get('SMTP_USER', 'info@tvdefleet.com')
+        smtp_password = os.environ.get('SMTP_PASSWORD', '')
+        from_email = os.environ.get('SMTP_FROM_EMAIL', 'info@tvdefleet.com')
+        from_name = os.environ.get('SMTP_FROM_NAME', 'TVDEFleet')
+        
+        if smtp_password:
+            user_name = user.get("name", "").split()[0] if user.get("name") else None
+            
+            # HTML Email
+            html_body = f"""
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ background: linear-gradient(135deg, #2563eb, #0891b2); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+                    .content {{ background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }}
+                    .password-box {{ background: #1e293b; color: #22c55e; padding: 15px 25px; border-radius: 8px; font-family: monospace; font-size: 24px; text-align: center; margin: 20px 0; letter-spacing: 2px; }}
+                    .warning {{ background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; }}
+                    .footer {{ text-align: center; padding: 20px; color: #64748b; font-size: 12px; }}
+                </style>
+            </head>
+            <body>
+                <div class="container">
+                    <div class="header">
+                        <h1>🚗 TVDEFleet</h1>
+                        <p>Gestão Inteligente de Frotas</p>
+                    </div>
+                    <div class="content">
+                        <h2>Olá{f', {user_name}' if user_name else ''}!</h2>
+                        <p>Recebemos um pedido de recuperação de senha para a sua conta.</p>
+                        <p>A sua <strong>senha temporária</strong> é:</p>
+                        
+                        <div class="password-box">
+                            {temp_password}
+                        </div>
+                        
+                        <div class="warning">
+                            <strong>⚠️ Importante:</strong>
+                            <ul>
+                                <li>Esta senha é temporária e deve ser alterada no primeiro login</li>
+                                <li>Se não solicitou esta recuperação, ignore este email</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="footer">
+                        <p>© {datetime.now().year} TVDEFleet - Todos os direitos reservados</p>
+                    </div>
+                </div>
+            </body>
+            </html>
+            """
+            
+            msg = MIMEMultipart('alternative')
+            msg['Subject'] = "🔐 TVDEFleet - Recuperação de Senha"
+            msg['From'] = f"{from_name} <{from_email}>"
+            msg['To'] = email
+            msg.attach(MIMEText(html_body, 'html', 'utf-8'))
+            
+            with smtplib.SMTP(smtp_host, smtp_port) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_password)
+                server.sendmail(from_email, email, msg.as_string())
+            
+            email_sent = True
+            print(f"✅ Email de recuperação enviado para {email}")
+            
+    except Exception as e:
+        print(f"❌ Erro ao enviar email: {e}")
+    
+    if email_sent:
+        return {
+            "message": "Email de recuperação enviado com sucesso!",
+            "email": email,
+            "email_sent": True,
+            "instructions": "Verifique a sua caixa de entrada (e spam) para obter a senha temporária."
+        }
+    else:
+        return {
+            "message": "Senha temporária gerada (email não enviado - verifique configuração SMTP)",
+            "temp_password": temp_password,
+            "email": email,
+            "email_sent": False,
+            "instructions": "Use esta senha temporária para fazer login."
+        }
