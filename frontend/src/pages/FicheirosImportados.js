@@ -84,7 +84,7 @@ const FicheirosImportados = ({ user, onLogout }) => {
   };
 
   const handleAprovar = async (ficheiro) => {
-    if (!window.confirm(`Tem certeza que deseja aprovar o ficheiro "${ficheiro.nome_ficheiro}"?`)) {
+    if (!window.confirm(`Tem certeza que deseja aprovar o ficheiro "${ficheiro.nome_ficheiro}"?\n\nApós aprovação, os relatórios de rascunho serão criados automaticamente.`)) {
       return;
     }
     
@@ -92,13 +92,20 @@ const FicheirosImportados = ({ user, onLogout }) => {
     
     try {
       const token = localStorage.getItem('token');
-      await axios.put(
+      const response = await axios.put(
         `${API}/ficheiros-importados/${ficheiro.id}/aprovar`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      toast.success('Ficheiro aprovado com sucesso!');
+      // Mostrar informação sobre relatórios criados
+      const rascunhos = response.data?.rascunhos;
+      if (rascunhos && rascunhos.rascunhos_criados > 0) {
+        toast.success(`Ficheiro aprovado! ${rascunhos.rascunhos_criados} relatório(s) de rascunho criado(s).`);
+      } else {
+        toast.success('Ficheiro aprovado com sucesso!');
+      }
+      
       fetchFicheiros();
     } catch (error) {
       console.error('Erro ao aprovar:', error);
