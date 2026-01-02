@@ -2325,6 +2325,148 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
+# ==================== EMAIL UTILITIES ====================
+
+def send_email(to_email: str, subject: str, html_body: str, text_body: str = None) -> bool:
+    """
+    Envia email via SMTP
+    Retorna True se enviado com sucesso, False caso contrário
+    """
+    try:
+        smtp_host = os.environ.get('SMTP_HOST', 'smtp.tvdefleet.com')
+        smtp_port = int(os.environ.get('SMTP_PORT', 587))
+        smtp_user = os.environ.get('SMTP_USER', 'info@tvdefleet.com')
+        smtp_password = os.environ.get('SMTP_PASSWORD', '')
+        from_email = os.environ.get('SMTP_FROM_EMAIL', 'info@tvdefleet.com')
+        from_name = os.environ.get('SMTP_FROM_NAME', 'TVDEFleet')
+        
+        if not smtp_password:
+            logger.error("SMTP_PASSWORD não configurada")
+            return False
+        
+        # Criar mensagem
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = f"{from_name} <{from_email}>"
+        msg['To'] = to_email
+        
+        # Adicionar versões text e HTML
+        if text_body:
+            part1 = MIMEText(text_body, 'plain', 'utf-8')
+            msg.attach(part1)
+        
+        part2 = MIMEText(html_body, 'html', 'utf-8')
+        msg.attach(part2)
+        
+        # Enviar email
+        with smtplib.SMTP(smtp_host, smtp_port) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.sendmail(from_email, to_email, msg.as_string())
+        
+        logger.info(f"✅ Email enviado com sucesso para {to_email}")
+        return True
+        
+    except smtplib.SMTPAuthenticationError as e:
+        logger.error(f"❌ Erro de autenticação SMTP: {e}")
+        return False
+    except smtplib.SMTPException as e:
+        logger.error(f"❌ Erro SMTP ao enviar email: {e}")
+        return False
+    except Exception as e:
+        logger.error(f"❌ Erro ao enviar email: {e}")
+        return False
+
+def send_password_reset_email(to_email: str, temp_password: str, user_name: str = None) -> bool:
+    """
+    Envia email de recuperação de senha com senha temporária
+    """
+    subject = "🔐 TVDEFleet - Recuperação de Senha"
+    
+    html_body = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: linear-gradient(135deg, #2563eb, #0891b2); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+            .content {{ background: #f8fafc; padding: 30px; border: 1px solid #e2e8f0; }}
+            .password-box {{ background: #1e293b; color: #22c55e; padding: 15px 25px; border-radius: 8px; font-family: monospace; font-size: 24px; text-align: center; margin: 20px 0; letter-spacing: 2px; }}
+            .warning {{ background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; }}
+            .footer {{ text-align: center; padding: 20px; color: #64748b; font-size: 12px; }}
+            .btn {{ display: inline-block; background: #2563eb; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin-top: 20px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🚗 TVDEFleet</h1>
+                <p>Gestão Inteligente de Frotas</p>
+            </div>
+            <div class="content">
+                <h2>Olá{f', {user_name}' if user_name else ''}!</h2>
+                <p>Recebemos um pedido de recuperação de senha para a sua conta.</p>
+                <p>A sua <strong>senha temporária</strong> é:</p>
+                
+                <div class="password-box">
+                    {temp_password}
+                </div>
+                
+                <div class="warning">
+                    <strong>⚠️ Importante:</strong>
+                    <ul>
+                        <li>Esta senha é temporária e deve ser alterada no primeiro login</li>
+                        <li>Se não solicitou esta recuperação, ignore este email</li>
+                        <li>Por segurança, a senha expira em 24 horas</li>
+                    </ul>
+                </div>
+                
+                <p>Para aceder à sua conta:</p>
+                <ol>
+                    <li>Vá para a página de login</li>
+                    <li>Introduza o seu email: <strong>{to_email}</strong></li>
+                    <li>Use a senha temporária acima</li>
+                    <li>Será solicitado a criar uma nova senha</li>
+                </ol>
+            </div>
+            <div class="footer">
+                <p>Este email foi enviado automaticamente pelo sistema TVDEFleet.</p>
+                <p>Se não solicitou a recuperação de senha, pode ignorar este email.</p>
+                <p>© {datetime.now().year} TVDEFleet - Todos os direitos reservados</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    text_body = f"""
+    TVDEFleet - Recuperação de Senha
+    
+    Olá{f', {user_name}' if user_name else ''}!
+    
+    Recebemos um pedido de recuperação de senha para a sua conta.
+    
+    A sua senha temporária é: {temp_password}
+    
+    IMPORTANTE:
+    - Esta senha é temporária e deve ser alterada no primeiro login
+    - Se não solicitou esta recuperação, ignore este email
+    - Por segurança, a senha expira em 24 horas
+    
+    Para aceder à sua conta:
+    1. Vá para a página de login
+    2. Introduza o seu email: {to_email}
+    3. Use a senha temporária acima
+    4. Será solicitado a criar uma nova senha
+    
+    ---
+    Este email foi enviado automaticamente pelo sistema TVDEFleet.
+    """
+    
+    return send_email(to_email, subject, html_body, text_body)
+
 def create_access_token(user_id: str, email: str, role: str) -> str:
     expiration = datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS)
     payload = {
