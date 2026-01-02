@@ -92,383 +92,297 @@ class TVDEFleetTester:
             return None
         return {"Authorization": f"Bearer {self.tokens[role]}"}
     
-    def test_review_request_critical_tests(self):
-        """🎯 VERIFICAÇÃO FINAL: Tarefas P2 implementadas"""
-        print("\n🎯 VERIFICAÇÃO FINAL: Tarefas P2 implementadas")
+    def test_refactored_backend_and_csv_config(self):
+        """🎯 MAIN TEST: Refactored Backend & CSV Configuration System"""
+        print("\n🎯 MAIN TEST: Refactored Backend & CSV Configuration System")
         print("=" * 80)
         print("CREDENCIAIS:")
-        print("- Parceiro: parceiro@tvdefleet.com / UQ1B6DXU")
+        print("- Admin: admin@tvdefleet.com / 123456")
         print("\nTESTES A REALIZAR:")
-        print("1. Sistema de Ficheiros Importados")
-        print("2. Importação com Registo Automático")
-        print("3. Aprovação com Criação de Relatórios")
-        print("4. Agenda de Veículos")
+        print("1. Vehicles Router (Refactored)")
+        print("2. CSV Configuration System")
         print("=" * 80)
         
-        # Execute all critical tests
-        self.test_sistema_ficheiros_importados()
-        self.test_importacao_registo_automatico()
-        self.test_aprovacao_criacao_relatorios()
-        self.test_agenda_veiculos()
+        # Execute all tests
+        self.test_vehicles_router_refactored()
+        self.test_csv_configuration_system()
         
         return True
     
-    def test_sistema_ficheiros_importados(self):
-        """1. Sistema de Ficheiros Importados: GET /api/ficheiros-importados"""
-        print("\n📋 1. Sistema de Ficheiros Importados")
+    def test_vehicles_router_refactored(self):
+        """1. Test Vehicles Router (Refactored from server.py)"""
+        print("\n📋 1. Test Vehicles Router (Refactored)")
         print("-" * 60)
         print("TESTES:")
-        print("- GET /api/ficheiros-importados - verificar se lista ficheiros")
-        print("- Verificar se ficheiro tem status 'aprovado'")
-        print("- Verificar se tem informação de quem aprovou e quando")
+        print("- GET /api/vehicles - List vehicles via new modular router")
+        print("- GET /api/vehicles/{vehicle_id} - Get specific vehicle")
+        print("- PUT /api/vehicles/{vehicle_id} - Update vehicle")
         
-        # Authenticate as parceiro
-        headers = self.get_headers("parceiro")
+        # Authenticate as admin
+        headers = self.get_headers("admin")
         if not headers:
-            self.log_result("Sistema-Ficheiros-Auth", False, "❌ No auth token for parceiro")
+            self.log_result("Vehicles-Router-Auth", False, "❌ No auth token for admin")
             return False
         
         try:
-            # Test: GET /api/ficheiros-importados
-            print("\nTestando GET /api/ficheiros-importados")
-            response = requests.get(f"{BACKEND_URL}/ficheiros-importados", headers=headers)
+            # Test 1: GET /api/vehicles
+            print("\nTestando GET /api/vehicles (via new router)")
+            response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
             
             if response.status_code == 200:
-                ficheiros = response.json()
-                self.log_result("Sistema-Ficheiros-GET", True, 
-                              f"✅ GET /api/ficheiros-importados funciona: {len(ficheiros)} ficheiros encontrados")
+                vehicles = response.json()
+                self.log_result("Vehicles-Router-GET-List", True, 
+                              f"✅ GET /api/vehicles funciona via router: {len(vehicles)} veículos encontrados")
                 
-                # Check for approved files with approval info
-                approved_files = [f for f in ficheiros if f.get('status') == 'aprovado']
-                
-                if approved_files:
-                    approved_file = approved_files[0]
-                    has_approver = any(key in approved_file for key in ['aprovado_por', 'approved_by', 'approver', 'aprovado_por_nome'])
-                    has_approval_date = any(key in approved_file for key in ['aprovado_em', 'approved_at', 'approval_date', 'data_aprovacao'])
+                if len(vehicles) > 0:
+                    # Test 2: GET /api/vehicles/{vehicle_id}
+                    test_vehicle = vehicles[0]
+                    vehicle_id = test_vehicle['id']
+                    vehicle_info = f"{test_vehicle.get('marca', 'N/A')} {test_vehicle.get('modelo', 'N/A')} - {test_vehicle.get('matricula', 'N/A')}"
                     
-                    if has_approver and has_approval_date:
-                        approver_info = (approved_file.get('aprovado_por') or 
-                                       approved_file.get('approved_by') or 
-                                       approved_file.get('approver') or 
-                                       approved_file.get('aprovado_por_nome'))
-                        approval_date = (approved_file.get('aprovado_em') or 
-                                       approved_file.get('approved_at') or 
-                                       approved_file.get('approval_date') or 
-                                       approved_file.get('data_aprovacao'))
-                        self.log_result("Sistema-Ficheiros-Approval-Info", True, 
-                                      f"✅ Ficheiro aprovado tem informação completa: aprovado_por={approver_info}, data_aprovacao={approval_date}")
+                    print(f"\nTestando GET /api/vehicles/{vehicle_id}")
+                    single_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}", headers=headers)
+                    
+                    if single_response.status_code == 200:
+                        vehicle_data = single_response.json()
+                        self.log_result("Vehicles-Router-GET-Single", True, 
+                                      f"✅ GET /api/vehicles/{{id}} funciona: {vehicle_info}")
+                        
+                        # Test 3: PUT /api/vehicles/{vehicle_id} - Update vehicle
+                        print(f"\nTestando PUT /api/vehicles/{vehicle_id}")
+                        update_data = {
+                            "km_atual": vehicle_data.get("km_atual", 0) + 100,
+                            "updated_by_test": "backend_test_refactored"
+                        }
+                        
+                        update_response = requests.put(
+                            f"{BACKEND_URL}/vehicles/{vehicle_id}", 
+                            json=update_data,
+                            headers=headers
+                        )
+                        
+                        if update_response.status_code == 200:
+                            self.log_result("Vehicles-Router-PUT", True, 
+                                          "✅ PUT /api/vehicles/{id} funciona via router")
+                        else:
+                            self.log_result("Vehicles-Router-PUT", False, 
+                                          f"❌ PUT /api/vehicles/{{id}} falhou: {update_response.status_code}")
+                            print(f"   Erro: {update_response.text}")
                     else:
-                        self.log_result("Sistema-Ficheiros-Approval-Info", False, 
-                                      f"❌ Ficheiro aprovado sem informação completa: aprovado_por={has_approver}, data_aprovacao={has_approval_date}")
-                        print(f"   Campos disponíveis: {list(approved_file.keys())}")
+                        self.log_result("Vehicles-Router-GET-Single", False, 
+                                      f"❌ GET /api/vehicles/{{id}} falhou: {single_response.status_code}")
+                        print(f"   Erro: {single_response.text}")
                 else:
-                    self.log_result("Sistema-Ficheiros-No-Approved", True, 
-                                  "ℹ️ Nenhum ficheiro com status 'aprovado' encontrado (normal se não houver aprovações)")
-                
-            elif response.status_code == 404:
-                self.log_result("Sistema-Ficheiros-GET", False, 
-                              "❌ Endpoint GET /api/ficheiros-importados não implementado (404)")
+                    self.log_result("Vehicles-Router-No-Vehicles", True, 
+                                  "ℹ️ Nenhum veículo encontrado (normal se base de dados vazia)")
             else:
-                self.log_result("Sistema-Ficheiros-GET", False, 
-                              f"❌ GET /api/ficheiros-importados falhou: {response.status_code}")
+                self.log_result("Vehicles-Router-GET-List", False, 
+                              f"❌ GET /api/vehicles falhou: {response.status_code}")
                 print(f"   Erro: {response.text}")
             
             return True
             
         except Exception as e:
-            self.log_result("Sistema-Ficheiros-Error", False, f"❌ Erro durante teste: {str(e)}")
+            self.log_result("Vehicles-Router-Error", False, f"❌ Erro durante teste: {str(e)}")
             return False
     
-    def test_importacao_registo_automatico(self):
-        """2. Importação com Registo Automático"""
-        print("\n📋 2. Importação com Registo Automático")
+    def test_csv_configuration_system(self):
+        """2. Test CSV Configuration System"""
+        print("\n📋 2. Test CSV Configuration System")
         print("-" * 60)
         print("TESTES:")
-        print("- Criar novo ficheiro CSV de teste")
-        print("- POST /api/importar/viaverde com periodo_inicio=2026-01-01 e periodo_fim=2026-01-07")
-        print("- Verificar se retorna 'ficheiro_importado_id' na resposta")
-        print("- GET /api/ficheiros-importados - verificar se novo ficheiro aparece com status 'pendente'")
+        print("- GET /api/csv-config/plataformas - List available platforms")
+        print("- GET /api/csv-config/campos-sistema/uber - Get system fields for Uber")
+        print("- GET /api/csv-config/mapeamentos-padrao/uber - Get default mappings for Uber")
+        print("- POST /api/csv-config - Create new CSV configuration")
+        print("- GET /api/csv-config - List configurations")
+        print("- POST /api/csv-config/analisar-ficheiro - Analyze CSV file")
         
-        # Authenticate as parceiro
-        headers = self.get_headers("parceiro")
+        # Authenticate as admin
+        headers = self.get_headers("admin")
         if not headers:
-            self.log_result("Importacao-Automatica-Auth", False, "❌ No auth token for parceiro")
+            self.log_result("CSV-Config-Auth", False, "❌ No auth token for admin")
             return False
         
         try:
-            # Create test CSV file as specified in review request
-            csv_content = """data;hora;CardCode;posto;kwh;valor_total;duracao_min
-02/01/2026;16:00:00;PTPRIO9050324927265598;ESTACAO-NOVA;20.0;10.00;30"""
+            # Test 1: GET /api/csv-config/plataformas
+            print("\nTestando GET /api/csv-config/plataformas")
+            platforms_response = requests.get(f"{BACKEND_URL}/csv-config/plataformas", headers=headers)
             
-            print("\nCriando ficheiro CSV de teste conforme especificação:")
-            print(csv_content)
+            if platforms_response.status_code == 200:
+                platforms = platforms_response.json()
+                expected_platforms = ["uber", "bolt", "via_verde", "combustivel", "gps"]
+                platform_ids = [p.get("id") for p in platforms]
+                
+                all_platforms_present = all(platform in platform_ids for platform in expected_platforms)
+                
+                if all_platforms_present:
+                    self.log_result("CSV-Config-Platforms", True, 
+                                  f"✅ GET /api/csv-config/plataformas funciona: {len(platforms)} plataformas ({', '.join(platform_ids)})")
+                else:
+                    self.log_result("CSV-Config-Platforms", False, 
+                                  f"❌ Plataformas em falta. Esperado: {expected_platforms}, Encontrado: {platform_ids}")
+            else:
+                self.log_result("CSV-Config-Platforms", False, 
+                              f"❌ GET /api/csv-config/plataformas falhou: {platforms_response.status_code}")
+                print(f"   Erro: {platforms_response.text}")
+                return False
             
-            # Get initial count of files
-            initial_response = requests.get(f"{BACKEND_URL}/ficheiros-importados", headers=headers)
-            initial_count = 0
-            if initial_response.status_code == 200:
-                initial_count = len(initial_response.json())
+            # Test 2: GET /api/csv-config/campos-sistema/uber
+            print("\nTestando GET /api/csv-config/campos-sistema/uber")
+            fields_response = requests.get(f"{BACKEND_URL}/csv-config/campos-sistema/uber", headers=headers)
             
-            # Test: POST /api/importar/viaverde with specific date range
+            if fields_response.status_code == 200:
+                fields_data = fields_response.json()
+                campos = fields_data.get("campos", [])
+                
+                if len(campos) > 0:
+                    self.log_result("CSV-Config-System-Fields", True, 
+                                  f"✅ GET /api/csv-config/campos-sistema/uber funciona: {len(campos)} campos disponíveis")
+                else:
+                    self.log_result("CSV-Config-System-Fields", False, 
+                                  "❌ Nenhum campo de sistema encontrado para Uber")
+            else:
+                self.log_result("CSV-Config-System-Fields", False, 
+                              f"❌ GET /api/csv-config/campos-sistema/uber falhou: {fields_response.status_code}")
+                print(f"   Erro: {fields_response.text}")
+            
+            # Test 3: GET /api/csv-config/mapeamentos-padrao/uber
+            print("\nTestando GET /api/csv-config/mapeamentos-padrao/uber")
+            mappings_response = requests.get(f"{BACKEND_URL}/csv-config/mapeamentos-padrao/uber", headers=headers)
+            
+            if mappings_response.status_code == 200:
+                mappings_data = mappings_response.json()
+                mapeamentos = mappings_data.get("mapeamentos", [])
+                
+                if len(mapeamentos) > 0:
+                    self.log_result("CSV-Config-Default-Mappings", True, 
+                                  f"✅ GET /api/csv-config/mapeamentos-padrao/uber funciona: {len(mapeamentos)} mapeamentos padrão")
+                else:
+                    self.log_result("CSV-Config-Default-Mappings", False, 
+                                  "❌ Nenhum mapeamento padrão encontrado para Uber")
+            else:
+                self.log_result("CSV-Config-Default-Mappings", False, 
+                              f"❌ GET /api/csv-config/mapeamentos-padrao/uber falhou: {mappings_response.status_code}")
+                print(f"   Erro: {mappings_response.text}")
+            
+            # Get user ID for creating configuration
+            user_response = requests.get(f"{BACKEND_URL}/auth/me", headers=headers)
+            user_id = None
+            if user_response.status_code == 200:
+                user_data = user_response.json()
+                user_id = user_data.get("id")
+            
+            if not user_id:
+                self.log_result("CSV-Config-User-ID", False, "❌ Não foi possível obter user_id")
+                return False
+            
+            # Test 4: POST /api/csv-config - Create new CSV configuration
+            print("\nTestando POST /api/csv-config")
+            config_data = {
+                "parceiro_id": user_id,
+                "plataforma": "uber",
+                "nome_configuracao": "Test Config",
+                "descricao": "Test configuration",
+                "delimitador": ",",
+                "encoding": "utf-8",
+                "skip_linhas": 0,
+                "mapeamentos": [
+                    {
+                        "csv_column": "UUID",
+                        "system_field": "uuid_motorista",
+                        "transform": "text",
+                        "required": True
+                    }
+                ]
+            }
+            
+            create_response = requests.post(
+                f"{BACKEND_URL}/csv-config", 
+                json=config_data,
+                headers=headers
+            )
+            
+            config_id = None
+            if create_response.status_code == 200:
+                create_result = create_response.json()
+                config_id = create_result.get("config_id")
+                
+                if config_id:
+                    self.log_result("CSV-Config-Create", True, 
+                                  f"✅ POST /api/csv-config funciona: configuração criada com ID {config_id}")
+                else:
+                    self.log_result("CSV-Config-Create", False, 
+                                  "❌ Configuração criada mas sem config_id na resposta")
+            else:
+                self.log_result("CSV-Config-Create", False, 
+                              f"❌ POST /api/csv-config falhou: {create_response.status_code}")
+                print(f"   Erro: {create_response.text}")
+            
+            # Test 5: GET /api/csv-config - List configurations
+            print("\nTestando GET /api/csv-config")
+            list_response = requests.get(f"{BACKEND_URL}/csv-config", headers=headers)
+            
+            if list_response.status_code == 200:
+                configs = list_response.json()
+                
+                # Check if our created config is in the list
+                created_config_found = False
+                if config_id:
+                    created_config_found = any(c.get("id") == config_id for c in configs)
+                
+                if created_config_found:
+                    self.log_result("CSV-Config-List", True, 
+                                  f"✅ GET /api/csv-config funciona: {len(configs)} configurações (incluindo a criada)")
+                else:
+                    self.log_result("CSV-Config-List", True, 
+                                  f"✅ GET /api/csv-config funciona: {len(configs)} configurações")
+            else:
+                self.log_result("CSV-Config-List", False, 
+                              f"❌ GET /api/csv-config falhou: {list_response.status_code}")
+                print(f"   Erro: {list_response.text}")
+            
+            # Test 6: POST /api/csv-config/analisar-ficheiro - Analyze CSV file
+            print("\nTestando POST /api/csv-config/analisar-ficheiro")
+            
+            # Create a simple test CSV file
+            csv_content = "UUID,Nome,Valor\ntest-uuid-123,João Silva,25.50\ntest-uuid-456,Maria Santos,30.75"
+            
             files = {
-                'file': ('test_viaverde_2026.csv', csv_content.encode('utf-8'), 'text/csv')
+                'file': ('test.csv', csv_content.encode('utf-8'), 'text/csv')
             }
             
             data = {
-                'periodo_inicio': '2026-01-01',
-                'periodo_fim': '2026-01-07'
+                'delimitador': ',',
+                'encoding': 'utf-8'
             }
             
-            print(f"\nTestando POST /api/importar/viaverde com periodo_inicio=2026-01-01 e periodo_fim=2026-01-07")
-            import_response = requests.post(
-                f"{BACKEND_URL}/importar/viaverde", 
-                files=files, 
+            analyze_response = requests.post(
+                f"{BACKEND_URL}/csv-config/analisar-ficheiro", 
+                files=files,
                 data=data,
                 headers=headers
             )
             
-            if import_response.status_code == 200:
-                import_result = import_response.json()
+            if analyze_response.status_code == 200:
+                analyze_result = analyze_response.json()
+                colunas = analyze_result.get("colunas", [])
                 
-                # Check if response contains ficheiro_importado_id
-                has_ficheiro_id = 'ficheiro_importado_id' in import_result
-                
-                if has_ficheiro_id:
-                    ficheiro_id = import_result['ficheiro_importado_id']
-                    self.log_result("Importacao-Automatica-Response", True, 
-                                  f"✅ Resposta contém 'ficheiro_importado_id': {ficheiro_id}")
-                    
-                    # Verify new file appears in list with 'pendente' status
-                    print(f"\nVerificando se novo ficheiro aparece na lista com status 'pendente'")
-                    updated_response = requests.get(f"{BACKEND_URL}/ficheiros-importados", headers=headers)
-                    
-                    if updated_response.status_code == 200:
-                        updated_files = updated_response.json()
-                        new_count = len(updated_files)
-                        
-                        if new_count > initial_count:
-                            # Find the new file
-                            new_file = None
-                            for file in updated_files:
-                                if file.get('id') == ficheiro_id:
-                                    new_file = file
-                                    break
-                            
-                            if new_file and new_file.get('status') == 'pendente':
-                                self.log_result("Importacao-Automatica-Status", True, 
-                                              f"✅ Novo ficheiro aparece com status 'pendente': {new_file.get('nome_ficheiro', 'N/A')}")
-                            else:
-                                status = new_file.get('status') if new_file else 'file not found'
-                                self.log_result("Importacao-Automatica-Status", False, 
-                                              f"❌ Novo ficheiro não tem status 'pendente': {status}")
-                        else:
-                            self.log_result("Importacao-Automatica-Count", False, 
-                                          f"❌ Número de ficheiros não aumentou: {initial_count} -> {new_count}")
-                    else:
-                        self.log_result("Importacao-Automatica-List", False, 
-                                      f"❌ Não foi possível verificar lista atualizada: {updated_response.status_code}")
+                if len(colunas) == 3:  # UUID, Nome, Valor
+                    self.log_result("CSV-Config-Analyze", True, 
+                                  f"✅ POST /api/csv-config/analisar-ficheiro funciona: {len(colunas)} colunas detectadas")
                 else:
-                    self.log_result("Importacao-Automatica-Response", False, 
-                                  "❌ Resposta não contém 'ficheiro_importado_id'")
-                    print(f"   Resposta: {import_result}")
+                    self.log_result("CSV-Config-Analyze", False, 
+                                  f"❌ Análise incorreta: esperado 3 colunas, encontrado {len(colunas)}")
             else:
-                self.log_result("Importacao-Automatica-Import", False, 
-                              f"❌ POST /api/importar/viaverde falhou: {import_response.status_code}")
-                print(f"   Erro: {import_response.text}")
+                self.log_result("CSV-Config-Analyze", False, 
+                              f"❌ POST /api/csv-config/analisar-ficheiro falhou: {analyze_response.status_code}")
+                print(f"   Erro: {analyze_response.text}")
             
             return True
             
         except Exception as e:
-            self.log_result("Importacao-Automatica-Error", False, f"❌ Erro durante teste: {str(e)}")
-            return False
-    
-    def test_aprovacao_criacao_relatorios(self):
-        """3. Aprovação com Criação de Relatórios"""
-        print("\n📋 3. Aprovação com Criação de Relatórios")
-        print("-" * 60)
-        print("TESTES:")
-        print("- PUT /api/ficheiros-importados/{id}/aprovar no novo ficheiro")
-        print("- Verificar se resposta inclui informação sobre 'rascunhos' criados")
-        
-        # Authenticate as parceiro
-        headers = self.get_headers("parceiro")
-        if not headers:
-            self.log_result("Aprovacao-Relatorios-Auth", False, "❌ No auth token for parceiro")
-            return False
-        
-        try:
-            # Get list of files to find a pendente file to approve
-            response = requests.get(f"{BACKEND_URL}/ficheiros-importados", headers=headers)
-            
-            if response.status_code == 200:
-                ficheiros = response.json()
-                
-                # Find a file with status 'pendente'
-                pendente_file = None
-                for file in ficheiros:
-                    if file.get('status') == 'pendente':
-                        pendente_file = file
-                        break
-                
-                if pendente_file:
-                    file_id = pendente_file['id']
-                    file_name = pendente_file.get('nome_ficheiro', 'N/A')
-                    
-                    print(f"\nTestando PUT /api/ficheiros-importados/{file_id}/aprovar")
-                    print(f"Ficheiro: {file_name}")
-                    
-                    # Test: PUT /api/ficheiros-importados/{id}/aprovar
-                    approve_response = requests.put(
-                        f"{BACKEND_URL}/ficheiros-importados/{file_id}/aprovar", 
-                        headers=headers
-                    )
-                    
-                    if approve_response.status_code == 200:
-                        approve_result = approve_response.json()
-                        
-                        # Check if response includes information about 'rascunhos' created
-                        has_rascunhos_info = any(key in approve_result for key in ['rascunhos', 'rascunhos_criados', 'relatorios_criados', 'relatorios'])
-                        
-                        if has_rascunhos_info:
-                            rascunhos_info = approve_result.get('rascunhos') or approve_result.get('rascunhos_criados') or approve_result.get('relatorios_criados') or approve_result.get('relatorios')
-                            self.log_result("Aprovacao-Relatorios-Rascunhos", True, 
-                                          f"✅ Resposta inclui informação sobre rascunhos: {rascunhos_info}")
-                        else:
-                            self.log_result("Aprovacao-Relatorios-Rascunhos", False, 
-                                          "❌ Resposta não inclui informação sobre 'rascunhos' criados")
-                            print(f"   Resposta: {approve_result}")
-                        
-                        self.log_result("Aprovacao-Relatorios-Success", True, 
-                                      f"✅ PUT /api/ficheiros-importados/{file_id}/aprovar funcionou")
-                    else:
-                        self.log_result("Aprovacao-Relatorios-Failed", False, 
-                                      f"❌ PUT /api/ficheiros-importados/{file_id}/aprovar falhou: {approve_response.status_code}")
-                        print(f"   Erro: {approve_response.text}")
-                else:
-                    self.log_result("Aprovacao-Relatorios-No-Pendente", False, 
-                                  "❌ Nenhum ficheiro com status 'pendente' encontrado para aprovar")
-            else:
-                self.log_result("Aprovacao-Relatorios-List", False, 
-                              f"❌ Não foi possível obter lista de ficheiros: {response.status_code}")
-            
-            return True
-            
-        except Exception as e:
-            self.log_result("Aprovacao-Relatorios-Error", False, f"❌ Erro durante teste: {str(e)}")
-            return False
-    
-    def test_agenda_veiculos(self):
-        """4. Agenda de Veículos"""
-        print("\n📋 4. Agenda de Veículos")
-        print("-" * 60)
-        print("TESTES:")
-        print("- GET /api/vehicles - buscar um veículo")
-        print("- POST /api/vehicles/{id}/agenda - adicionar evento de vistoria")
-        print("- GET /api/vehicles/{id}/agenda - verificar se evento foi adicionado")
-        print("NOTA: Endpoint agenda requer permissões ADMIN/GESTAO, usando admin para teste")
-        
-        # Authenticate as admin for agenda endpoint (requires ADMIN/GESTAO permissions)
-        if not self.authenticate_user("admin"):
-            self.log_result("Agenda-Veiculos-Auth", False, "❌ Failed to authenticate as admin")
-            return False
-            
-        headers = self.get_headers("admin")
-        if not headers:
-            self.log_result("Agenda-Veiculos-Auth", False, "❌ No auth token for admin")
-            return False
-        
-        try:
-            # Test 1: GET /api/vehicles
-            print("\n1. Testando GET /api/vehicles")
-            vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
-            
-            if vehicles_response.status_code == 200:
-                vehicles = vehicles_response.json()
-                
-                if len(vehicles) == 0:
-                    self.log_result("Agenda-Veiculos-No-Vehicles", False, "❌ Nenhum veículo encontrado")
-                    return False
-                
-                self.log_result("Agenda-Veiculos-GET", True, 
-                              f"✅ GET /api/vehicles funcionou: {len(vehicles)} veículos encontrados")
-                
-                # Select first vehicle for testing
-                test_vehicle = vehicles[0]
-                vehicle_id = test_vehicle['id']
-                vehicle_info = f"{test_vehicle.get('marca', 'N/A')} {test_vehicle.get('modelo', 'N/A')} - {test_vehicle.get('matricula', 'N/A')}"
-                
-                print(f"Veículo selecionado: {vehicle_info} (ID: {vehicle_id})")
-                
-                # Test 2: POST /api/vehicles/{id}/agenda - add inspection event
-                print(f"\n2. Testando POST /api/vehicles/{vehicle_id}/agenda")
-                
-                agenda_event = {
-                    "tipo": "inspecao",
-                    "titulo": "Inspeção Periódica Teste",
-                    "data": "2026-02-01",
-                    "hora": "10:00",
-                    "descricao": "Teste de agendamento de vistoria"
-                }
-                
-                print(f"Evento a adicionar: {agenda_event}")
-                
-                add_event_response = requests.post(
-                    f"{BACKEND_URL}/vehicles/{vehicle_id}/agenda", 
-                    json=agenda_event,
-                    headers=headers
-                )
-                
-                if add_event_response.status_code == 200:
-                    self.log_result("Agenda-Veiculos-POST", True, 
-                                  "✅ POST /api/vehicles/{id}/agenda funcionou")
-                    
-                    # Test 3: GET /api/vehicles/{id}/agenda - verify event was added
-                    print(f"\n3. Testando GET /api/vehicles/{vehicle_id}/agenda")
-                    
-                    get_agenda_response = requests.get(
-                        f"{BACKEND_URL}/vehicles/{vehicle_id}/agenda", 
-                        headers=headers
-                    )
-                    
-                    if get_agenda_response.status_code == 200:
-                        agenda = get_agenda_response.json()
-                        
-                        # Check if our test event is in the agenda
-                        test_event_found = False
-                        for event in agenda:
-                            if (event.get('titulo') == 'Inspeção Periódica Teste' and 
-                                event.get('tipo') == 'inspecao' and
-                                event.get('data') == '2026-02-01'):
-                                test_event_found = True
-                                break
-                        
-                        if test_event_found:
-                            self.log_result("Agenda-Veiculos-GET-Verify", True, 
-                                          f"✅ Evento foi adicionado à agenda: {len(agenda)} eventos total")
-                        else:
-                            self.log_result("Agenda-Veiculos-GET-Verify", False, 
-                                          f"❌ Evento não encontrado na agenda: {len(agenda)} eventos total")
-                            print(f"   Eventos na agenda: {[e.get('titulo') for e in agenda]}")
-                        
-                        self.log_result("Agenda-Veiculos-GET-Agenda", True, 
-                                      "✅ GET /api/vehicles/{id}/agenda funcionou")
-                    else:
-                        self.log_result("Agenda-Veiculos-GET-Agenda", False, 
-                                      f"❌ GET /api/vehicles/{id}/agenda falhou: {get_agenda_response.status_code}")
-                        print(f"   Erro: {get_agenda_response.text}")
-                else:
-                    self.log_result("Agenda-Veiculos-POST", False, 
-                                  f"❌ POST /api/vehicles/{id}/agenda falhou: {add_event_response.status_code}")
-                    print(f"   Erro: {add_event_response.text}")
-            else:
-                self.log_result("Agenda-Veiculos-GET", False, 
-                              f"❌ GET /api/vehicles falhou: {vehicles_response.status_code}")
-                print(f"   Erro: {vehicles_response.text}")
-            
-            return True
-            
-        except Exception as e:
-            self.log_result("Agenda-Veiculos-Error", False, f"❌ Erro durante teste: {str(e)}")
+            self.log_result("CSV-Config-Error", False, f"❌ Erro durante teste: {str(e)}")
             return False
     
     def run_all_tests(self):
