@@ -20724,8 +20724,6 @@ async def enviar_relatorio_email(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-app.include_router(api_router)
-
 # Mount static files for uploads (PDFs, documents, etc.)
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
