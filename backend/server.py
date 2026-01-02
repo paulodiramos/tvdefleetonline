@@ -64,6 +64,7 @@ from routes.notificacoes import router as notificacoes_router
 from routes.mensagens import router as mensagens_router
 from routes.ifthenpay import router as ifthenpay_router
 from routes.vehicles import router as vehicles_router
+from routes.csv_config import router as csv_config_router
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
