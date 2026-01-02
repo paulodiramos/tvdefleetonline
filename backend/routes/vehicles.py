@@ -734,42 +734,89 @@ async def get_vehicle_relatorio_ganhos(vehicle_id: str, current_user: Dict = Dep
 @router.post("/{vehicle_id}/atribuir-motorista")
 async def atribuir_motorista_vehicle(
     vehicle_id: str,
-    data: Dict[str, str],
+    data: Dict[str, Any],
     current_user: Dict = Depends(get_current_user)
 ):
-    """Atribuir motorista a um veículo"""
+    """
+    Atribuir motorista a um veículo com Via Verde e Cartão Frota
+    
+    Body:
+    - motorista_id: ID do motorista (ou null para remover)
+    - via_verde_id: ID/número do cartão Via Verde (opcional)
+    - cartao_frota_id: ID/número do cartão frota combustível (opcional)
+    - cartao_frota_eletric_id: ID/número do cartão frota elétrico (opcional)
+    """
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     motorista_id = data.get("motorista_id")
+    via_verde_id = data.get("via_verde_id")
+    cartao_frota_id = data.get("cartao_frota_id")
+    cartao_frota_eletric_id = data.get("cartao_frota_eletric_id")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
     
     if motorista_id:
         motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
         if not motorista:
             raise HTTPException(status_code=404, detail="Motorista not found")
         
-        vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
-        if not vehicle:
-            raise HTTPException(status_code=404, detail="Vehicle not found")
+        # Atualizar veículo
+        vehicle_update = {
+            "motorista_atribuido": motorista_id,
+            "motorista_atribuido_nome": motorista.get("name"),
+            "status": "atribuido",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
         
-        await db.vehicles.update_one(
-            {"id": vehicle_id},
-            {"$set": {
-                "motorista_atribuido": motorista_id,
-                "motorista_atribuido_nome": motorista.get("name"),
-                "status": "atribuido",
-                "updated_at": datetime.now(timezone.utc).isoformat()
-            }}
-        )
+        # Atualizar cartões se fornecidos
+        if via_verde_id is not None:
+            vehicle_update["via_verde_id"] = via_verde_id
+            vehicle_update["via_verde_disponivel"] = bool(via_verde_id)
         
-        if vehicle.get("cartao_frota_id"):
-            await db.motoristas.update_one(
-                {"id": motorista_id},
-                {"$set": {"id_cartao_frota_combustivel": vehicle.get("cartao_frota_id")}}
-            )
+        if cartao_frota_id is not None:
+            vehicle_update["cartao_frota_id"] = cartao_frota_id
+            vehicle_update["cartao_frota_disponivel"] = bool(cartao_frota_id)
         
-        return {"message": "Motorista atribuído com sucesso"}
+        if cartao_frota_eletric_id is not None:
+            vehicle_update["cartao_frota_eletric_id"] = cartao_frota_eletric_id
+        
+        await db.vehicles.update_one({"id": vehicle_id}, {"$set": vehicle_update})
+        
+        # Atualizar motorista com os cartões associados
+        motorista_update = {
+            "veiculo_atribuido": vehicle_id,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        # Associar cartões ao motorista
+        if cartao_frota_id or vehicle.get("cartao_frota_id"):
+            motorista_update["cartao_combustivel_id"] = cartao_frota_id or vehicle.get("cartao_frota_id")
+            motorista_update["id_cartao_frota_combustivel"] = cartao_frota_id or vehicle.get("cartao_frota_id")
+        
+        if cartao_frota_eletric_id or vehicle.get("cartao_frota_eletric_id"):
+            motorista_update["cartao_eletrico_id"] = cartao_frota_eletric_id or vehicle.get("cartao_frota_eletric_id")
+        
+        if via_verde_id or vehicle.get("via_verde_id"):
+            motorista_update["cartao_viaverde_id"] = via_verde_id or vehicle.get("via_verde_id")
+        
+        await db.motoristas.update_one({"id": motorista_id}, {"$set": motorista_update})
+        
+        logger.info(f"✅ Motorista {motorista.get('name')} atribuído ao veículo {vehicle.get('matricula')} com cartões: VV={via_verde_id}, Comb={cartao_frota_id}, Elec={cartao_frota_eletric_id}")
+        
+        return {
+            "message": "Motorista atribuído com sucesso",
+            "motorista": motorista.get("name"),
+            "via_verde_id": via_verde_id or vehicle.get("via_verde_id"),
+            "cartao_frota_id": cartao_frota_id or vehicle.get("cartao_frota_id"),
+            "cartao_frota_eletric_id": cartao_frota_eletric_id or vehicle.get("cartao_frota_eletric_id")
+        }
     else:
+        # Remover motorista - limpar associações
+        old_motorista_id = vehicle.get("motorista_atribuido")
+        
         await db.vehicles.update_one(
             {"id": vehicle_id},
             {"$set": {
@@ -779,6 +826,21 @@ async def atribuir_motorista_vehicle(
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }}
         )
+        
+        # Limpar associações do motorista anterior
+        if old_motorista_id:
+            await db.motoristas.update_one(
+                {"id": old_motorista_id},
+                {"$set": {
+                    "veiculo_atribuido": None,
+                    "cartao_combustivel_id": None,
+                    "cartao_eletrico_id": None,
+                    "cartao_viaverde_id": None,
+                    "id_cartao_frota_combustivel": None,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            logger.info(f"✅ Motorista removido do veículo {vehicle.get('matricula')}")
         
         return {"message": "Motorista removido com sucesso"}
 
