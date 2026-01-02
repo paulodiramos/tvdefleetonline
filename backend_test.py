@@ -386,20 +386,20 @@ class TVDEFleetTester:
             return False
     
     def run_all_tests(self):
-        """Run all tests in sequence - Focus on Review Request Critical Tests"""
-        print("🚀 INICIANDO VERIFICAÇÃO FINAL - TAREFAS P2 IMPLEMENTADAS")
+        """Run all tests in sequence - Focus on Refactored Backend & CSV Config Tests"""
+        print("🚀 INICIANDO TESTES - BACKEND REFATORIZADO & SISTEMA CSV CONFIG")
         print("=" * 80)
         
         # Authenticate required users
         print("\n🔐 AUTENTICAÇÃO DE UTILIZADORES")
         print("-" * 40)
-        for role in ["parceiro", "admin"]:
+        for role in ["admin"]:
             self.authenticate_user(role)
         
-        # PRIORITY: REVIEW REQUEST CRITICAL TESTS
-        print("\n🎯 VERIFICAÇÃO FINAL: Tarefas P2 implementadas")
+        # PRIORITY: REFACTORED BACKEND & CSV CONFIG TESTS
+        print("\n🎯 TESTES PRINCIPAIS: Backend Refatorizado & Sistema CSV Config")
         print("=" * 80)
-        self.test_review_request_critical_tests()
+        self.test_refactored_backend_and_csv_config()
         
         # Print final summary
         self.print_summary()
