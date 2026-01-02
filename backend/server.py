@@ -16077,18 +16077,18 @@ async def admin_reset_password(
 
 @api_router.post("/auth/forgot-password")
 async def forgot_password(email_data: Dict[str, str]):
-    """Generate temporary password for user who forgot password"""
+    """Generate temporary password for user who forgot password and send via email"""
     import random
     import string
     
     email = email_data.get("email")
     if not email:
-        raise HTTPException(status_code=400, detail="Email is required")
+        raise HTTPException(status_code=400, detail="Email é obrigatório")
     
     # Find user by email
     user = await db.users.find_one({"email": email}, {"_id": 0})
     if not user:
-        raise HTTPException(status_code=404, detail="Email not found in system")
+        raise HTTPException(status_code=404, detail="Email não encontrado no sistema")
     
     # Generate temporary password (8 characters: letters + numbers)
     temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=8))
@@ -16101,7 +16101,8 @@ async def forgot_password(email_data: Dict[str, str]):
         {"email": email},
         {"$set": {
             "password": hashed_password.decode('utf-8'),
-            "senha_provisoria": True
+            "senha_provisoria": True,
+            "senha_provisoria_criada_em": datetime.now(timezone.utc).isoformat()
         }}
     )
     
@@ -16111,14 +16112,28 @@ async def forgot_password(email_data: Dict[str, str]):
         {"$set": {"senha_provisoria": True}}
     )
     
-    # In production, this would send an email
-    # For now, we return the temporary password
-    return {
-        "message": "Temporary password generated successfully",
-        "temp_password": temp_password,
-        "email": email,
-        "instructions": "Use this temporary password to login. You will be prompted to change it on first login."
-    }
+    # Enviar email com senha temporária
+    user_name = user.get("name", "").split()[0] if user.get("name") else None
+    email_sent = send_password_reset_email(email, temp_password, user_name)
+    
+    if email_sent:
+        logger.info(f"✅ Email de recuperação enviado para {email}")
+        return {
+            "message": "Email de recuperação enviado com sucesso!",
+            "email": email,
+            "email_sent": True,
+            "instructions": "Verifique a sua caixa de entrada (e spam) para obter a senha temporária."
+        }
+    else:
+        # Se falhar o envio de email, ainda retornamos a senha (fallback)
+        logger.warning(f"⚠️ Falha ao enviar email para {email}, retornando senha no response")
+        return {
+            "message": "Senha temporária gerada (email não enviado - verifique a configuração SMTP)",
+            "temp_password": temp_password,
+            "email": email,
+            "email_sent": False,
+            "instructions": "Use esta senha temporária para fazer login. Será solicitado a alterá-la."
+        }
 
 
 # ==================== PLANOS E SUBSCRIÇÕES ====================
