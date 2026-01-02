@@ -107,7 +107,8 @@ const Layout = ({ children, user, onLogout }) => {
           { path: '/gestao-credenciais', label: 'Sincronização Auto' },
           { path: '/importar-dados', label: 'Importar Dados CSV' },
           { path: '/ficheiros-importados', label: 'Ficheiros Importados' },
-          { path: '/configuracao-csv', label: 'Configurar Extração CSV' }
+          { path: '/configuracao-csv', label: 'Configurar Extração CSV' },
+          { path: '/automacao', label: '🤖 Automação RPA' }
         ]
       },
       { 
