@@ -45,7 +45,7 @@ const Login = ({ onLogin }) => {
     try {
       const response = await axios.post(`${API}/auth/forgot-password`, { email: forgotEmail });
       
-      if (response.data.email_sent) {
+      if (response.data.email_sent === true) {
         // Email enviado com sucesso
         toast.success('📧 Email de recuperação enviado! Verifique a sua caixa de entrada.');
         setTempPassword('EMAIL_SENT'); // Flag especial
@@ -53,9 +53,17 @@ const Login = ({ onLogin }) => {
         // Fallback: mostrar senha se email não foi enviado
         setTempPassword(response.data.temp_password);
         toast.warning('⚠️ Email não enviado. Use a senha temporária abaixo.');
+      } else {
+        // Caso genérico - tentar mostrar mensagem
+        toast.info(response.data.message || 'Pedido processado');
+        if (response.data.temp_password) {
+          setTempPassword(response.data.temp_password);
+        }
       }
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Erro ao recuperar senha');
+      console.error('Erro forgot password:', error);
+      const errorMsg = error.response?.data?.detail || error.message || 'Erro ao recuperar senha';
+      toast.error(errorMsg);
     } finally {
       setLoadingForgot(false);
     }
