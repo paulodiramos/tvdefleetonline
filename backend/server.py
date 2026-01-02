@@ -18686,7 +18686,10 @@ async def download_csv_template(template_name: str, current_user: Dict = Depends
         filename=template_files[template_name]
     )
 
-# Include modular routers (new structure)
+# Include main API router FIRST (has full login functionality with senha_provisoria)
+app.include_router(api_router)
+
+# Include modular routers (these routes will be secondary if there are duplicates)
 app.include_router(auth_router, prefix="/api")
 app.include_router(motoristas_router, prefix="/api")
 app.include_router(notificacoes_router, prefix="/api")
