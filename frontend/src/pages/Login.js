@@ -354,21 +354,45 @@ const Login = ({ onLogin }) => {
               </form>
             ) : (
               <div className="space-y-4">
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-800 font-semibold mb-2">
-                    ✓ Senha temporária gerada com sucesso!
-                  </p>
-                  <p className="text-xs text-green-700 mb-3">
-                    Use esta senha para fazer login:
-                  </p>
-                  <div className="bg-white p-3 rounded border border-green-300">
-                    <code className="text-lg font-mono text-green-900 select-all">
-                      {tempPassword}
-                    </code>
+                {tempPassword === 'EMAIL_SENT' ? (
+                  // Email enviado com sucesso
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800 font-semibold mb-2">
+                      📧 Email enviado com sucesso!
+                    </p>
+                    <p className="text-sm text-blue-700 mb-3">
+                      Enviámos um email para <strong>{forgotEmail}</strong> com a sua senha temporária.
+                    </p>
+                    <div className="bg-white p-3 rounded border border-blue-300 text-sm">
+                      <p className="text-slate-700 mb-2">📥 Verifique:</p>
+                      <ul className="list-disc list-inside text-slate-600 space-y-1">
+                        <li>A sua caixa de entrada</li>
+                        <li>A pasta de spam/lixo</li>
+                        <li>A pasta de promoções</li>
+                      </ul>
+                    </div>
+                    <p className="text-xs text-blue-600 mt-3">
+                      💡 O email foi enviado de <strong>info@tvdefleet.com</strong>
+                    </p>
                   </div>
-                </div>
+                ) : (
+                  // Fallback: mostrar senha temporária
+                  <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800 font-semibold mb-2">
+                      ⚠️ Senha temporária gerada
+                    </p>
+                    <p className="text-xs text-yellow-700 mb-3">
+                      O email não foi enviado. Use esta senha para fazer login:
+                    </p>
+                    <div className="bg-white p-3 rounded border border-yellow-300">
+                      <code className="text-lg font-mono text-yellow-900 select-all">
+                        {tempPassword}
+                      </code>
+                    </div>
+                  </div>
+                )}
                 <p className="text-xs text-slate-600">
-                  💡 Copie esta senha e faça login. Será solicitado que altere a senha no primeiro acesso.
+                  💡 Será solicitado que altere a senha no primeiro acesso.
                 </p>
                 <div className="flex justify-end">
                   <Button
