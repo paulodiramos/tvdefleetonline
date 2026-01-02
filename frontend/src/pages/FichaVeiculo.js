@@ -1498,46 +1498,66 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          onChange={async (e) => {
-                            try {
-                              const token = localStorage.getItem('token');
-                              await axios.put(`${API}/vehicles/${vehicleId}/status`, 
-                                { status: e.target.value },
-                                { headers: { Authorization: `Bearer ${token}` }}
-                              );
-                              toast.success('Status atualizado!');
-                              fetchVehicleData();
-                            } catch (error) {
-                              toast.error('Erro ao atualizar status');
-                            }
-                          }}
-                          className="w-full p-2 border rounded-md"
+                    {/* Tipo de Contrato */}
+                    <div>
+                      <Label htmlFor="tipo_contrato_veiculo">Tipo de Contrato</Label>
+                      {canEdit && editMode ? (
+                        <select
+                          value={vehicle.tipo_contrato_veiculo || ''}
+                          onChange={(e) => setVehicle({...vehicle, tipo_contrato_veiculo: e.target.value})}
+                          className="w-full p-2 border rounded-md mt-1"
                         >
-                          <option value="disponivel">Disponível</option>
-                          <option value="atribuido">Atribuído</option>
-                          <option value="manutencao">Manutenção</option>
-                          <option value="venda">Venda</option>
-                          <option value="condicoes">Condições</option>
+                          <option value="">Sem contrato</option>
+                          <option value="aluguer">Aluguer</option>
+                          <option value="comissao">Comissão</option>
                         </select>
                       ) : (
-                        <p className="font-medium capitalize">
-                          {vehicle.status === 'disponivel' ? 'Disponível' :
-                           vehicle.status === 'atribuido' ? 'Atribuído' :
-                           vehicle.status === 'manutencao' ? 'Manutenção' :
-                           vehicle.status === 'venda' ? 'Venda' :
-                           vehicle.status === 'condicoes' ? 'Condições' :
-                           'Disponível'}
+                        <p className="font-medium">
+                          {vehicle.tipo_contrato_veiculo === 'aluguer' ? 'Aluguer' :
+                           vehicle.tipo_contrato_veiculo === 'comissao' ? 'Comissão' : 'Sem contrato'}
                         </p>
+                      )}
+                    </div>
+                    
+                    {/* Valor Semanal */}
+                    <div>
+                      <Label>Valor Semanal (€)</Label>
+                      {canEdit && editMode ? (
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={vehicle.valor_semanal || ''}
+                          onChange={(e) => setVehicle({...vehicle, valor_semanal: parseFloat(e.target.value) || null})}
+                          placeholder="Ex: 150.00"
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.valor_semanal ? `€${vehicle.valor_semanal.toFixed(2)}` : 'N/A'}</p>
+                      )}
+                    </div>
+                    
+                    {/* Condições */}
+                    <div>
+                      <Label>Condições do Contrato</Label>
+                      {canEdit && editMode ? (
+                        <Input
+                          value={vehicle.condicoes_contrato || ''}
+                          onChange={(e) => setVehicle({...vehicle, condicoes_contrato: e.target.value})}
+                          placeholder="Ex: Inclui manutenção"
+                          className="mt-1"
+                        />
+                      ) : (
+                        <p className="font-medium">{vehicle.condicoes_contrato || 'N/A'}</p>
                       )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Tipo de Contrato */}
+              {/* Tipo de Contrato Detalhado */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Tipo de Contrato</CardTitle>
+                  <CardTitle className="text-lg">Tipo de Contrato Detalhado</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
