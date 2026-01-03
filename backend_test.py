@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
-FleeTrack Backend Testing Suite - Via Verde Excel Import Tests
-Tests for Via Verde Excel import functionality and weekly report integration
+FleeTrack Backend Testing Suite - 3 New Features Testing
+Tests for:
+1. Via Verde Auto-Calculate Button
+2. Reports Showing Ganhos
+3. Comunicações Contact Config
 """
 
 import requests
@@ -20,6 +23,11 @@ TEST_CREDENTIALS = {
     "admin": {"email": "admin@tvdefleet.com", "password": "123456"},
     "parceiro": {"email": "parceiro@tvdefleet.com", "password": "123456"}
 }
+
+# Test data from review request
+TEST_MOTORISTA_ID = "e2355169-10a7-4547-9dd0-479c128d73f9"
+TEST_SEMANA = 53
+TEST_ANO = 2025
 
 class FleeTrackTester:
     def __init__(self):
