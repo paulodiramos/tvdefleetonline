@@ -46,6 +46,16 @@ const ImportarDespesas = ({ user, onLogout }) => {
   const [selectedImportacao, setSelectedImportacao] = useState(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const fileInputRef = useRef(null);
+  
+  // Seletores de semana para importação
+  const [semanaDados, setSemanaDados] = useState(''); // Semana dos dados no ficheiro
+  const [semanaRelatorio, setSemanaRelatorio] = useState(''); // Semana onde associar no relatório
+  const [anoDados, setAnoDados] = useState(new Date().getFullYear());
+  const [anoRelatorio, setAnoRelatorio] = useState(new Date().getFullYear());
+
+  // Gerar lista de semanas (1-53)
+  const semanas = Array.from({ length: 53 }, (_, i) => i + 1);
+  const anos = [new Date().getFullYear() - 1, new Date().getFullYear(), new Date().getFullYear() + 1];
 
   useEffect(() => {
     fetchImportacoes();
