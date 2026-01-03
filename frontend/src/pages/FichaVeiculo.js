@@ -2184,6 +2184,118 @@ const FichaVeiculo = ({ user, onLogout }) => {
             </div>
           </TabsContent>
 
+          {/* Dispositivos */}
+          <TabsContent value="dispositivos">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                  </svg>
+                  <span>Dispositivos Associados</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <p className="text-sm text-gray-500">
+                  Configure os dispositivos associados a este veículo. Quando um motorista é atribuído, 
+                  herda automaticamente estes dispositivos.
+                </p>
+                
+                <div className="grid grid-cols-2 gap-6">
+                  {/* OBU Via Verde */}
+                  <div className="space-y-2">
+                    <Label htmlFor="obu_via_verde" className="flex items-center gap-2">
+                      <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                      OBU Via Verde
+                    </Label>
+                    <Input
+                      id="obu_via_verde"
+                      placeholder="Número do identificador OBU"
+                      value={vehicle?.via_verde_id || ''}
+                      onChange={(e) => setVehicle({...vehicle, via_verde_id: e.target.value})}
+                      disabled={!canEdit || !editMode}
+                    />
+                    <p className="text-xs text-gray-400">Identificador do dispositivo Via Verde</p>
+                  </div>
+
+                  {/* GPS */}
+                  <div className="space-y-2">
+                    <Label htmlFor="gps_matricula" className="flex items-center gap-2">
+                      <span className="w-3 h-3 bg-blue-500 rounded-full"></span>
+                      GPS (Matrícula)
+                    </Label>
+                    <Input
+                      id="gps_matricula"
+                      value={vehicle?.matricula || ''}
+                      disabled={true}
+                      className="bg-gray-50"
+                    />
+                    <p className="text-xs text-gray-400">O GPS é identificado pela matrícula do veículo</p>
+                  </div>
+
+                  {/* Cartão Combustível Fóssil */}
+                  <div className="space-y-2">
+                    <Label htmlFor="cartao_fossil" className="flex items-center gap-2">
+                      <span className="w-3 h-3 bg-orange-500 rounded-full"></span>
+                      Cartão Combustível Fóssil
+                    </Label>
+                    <Input
+                      id="cartao_fossil"
+                      placeholder="Número do cartão de frota"
+                      value={vehicle?.cartao_frota_id || ''}
+                      onChange={(e) => setVehicle({...vehicle, cartao_frota_id: e.target.value})}
+                      disabled={!canEdit || !editMode}
+                    />
+                    <p className="text-xs text-gray-400">Cartão para abastecimentos de combustível</p>
+                  </div>
+
+                  {/* Cartão Combustível Elétrico */}
+                  <div className="space-y-2">
+                    <Label htmlFor="cartao_eletrico" className="flex items-center gap-2">
+                      <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                      Cartão Combustível Elétrico
+                    </Label>
+                    <Input
+                      id="cartao_eletrico"
+                      placeholder="Número do cartão de carregamento"
+                      value={vehicle?.cartao_frota_eletric_id || ''}
+                      onChange={(e) => setVehicle({...vehicle, cartao_frota_eletric_id: e.target.value})}
+                      disabled={!canEdit || !editMode}
+                    />
+                    <p className="text-xs text-gray-400">Cartão para carregamentos elétricos</p>
+                  </div>
+                </div>
+
+                {/* Motorista Atribuído */}
+                {vehicle?.motorista_atribuido && (
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <h4 className="font-medium text-blue-900 mb-2">Motorista Atribuído</h4>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm"><strong>Nome:</strong> {vehicle.motorista_atribuido_nome}</p>
+                        {vehicle.motorista_atribuido_desde && (
+                          <p className="text-xs text-gray-500">
+                            Desde: {new Date(vehicle.motorista_atribuido_desde).toLocaleString('pt-PT')}
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                        Dispositivos sincronizados
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Histórico de Atribuições */}
+          <TabsContent value="historico">
+            <HistoricoAtribuicoesTab vehicleId={vehicleId} canEdit={canEdit} user={user} />
+          </TabsContent>
+
           {/* Seguro */}
           <TabsContent value="seguro">
             <Card>
