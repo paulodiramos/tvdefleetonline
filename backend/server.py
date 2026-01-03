@@ -17099,6 +17099,26 @@ async def save_email_config(
     return {"message": "Configuration saved successfully"}
 
 
+@api_router.get("/public/contacto")
+async def get_public_contacto():
+    """Get public contact information (no auth required)"""
+    config = await db.configuracoes.find_one({"tipo": "email"}, {"_id": 0})
+    if not config:
+        # Return default config
+        return {
+            "email_contacto": "info@tvdefleet.com",
+            "telefone_contacto": "+351 912 345 678",
+            "morada_empresa": "Lisboa, Portugal",
+            "nome_empresa": "TVDEFleet"
+        }
+    return {
+        "email_contacto": config.get("email_contacto", "info@tvdefleet.com"),
+        "telefone_contacto": config.get("telefone_contacto", "+351 912 345 678"),
+        "morada_empresa": config.get("morada_empresa", "Lisboa, Portugal"),
+        "nome_empresa": config.get("nome_empresa", "TVDEFleet")
+    }
+
+
 # ==================== PUBLIC ENDPOINTS (NO AUTH) ====================
 # =============================================================================
 # SINCRONIZAÇÃO AUTOMÁTICA DE PLATAFORMAS
