@@ -341,6 +341,42 @@ agent_communication:
         agent: "testing"
         comment: "✅ VIA VERDE EXCEL IMPORT VALIDATION COMPLETED (21/21 tests passed - 100% success rate)! ALL PRIORITY SCENARIOS FROM REVIEW REQUEST VERIFIED: 1) VIA VERDE IMPORT ENDPOINT WORKING - POST /api/import/viaverde successfully imported 829 records from /app/backend/uploads/via_verde_test.xlsx with total value €0, exceeding expected 750+ records. Only 2 vehicles not found (normal for test data). 2) VEHICLE OBU CONFIGURATION CORRECT - Vehicle AS-83-NX (ID: 4ad331ff-c0f5-43c9-95b8-cc085d32d8a7) has OBU Via Verde correctly configured as 43026607794 (exact match with expected value). 3) WEEKLY REPORT VIA VERDE INTEGRATION WORKING PERFECTLY - Report for semana 53, ano 2025 correctly fetched Via Verde data from semana 51 (2-week delay applied). Nelson Francisco (e2355169-10a7-4547-9dd0-479c128d73f9) report shows total_via_verde = €325.20 (exact match with expected ~€325.20). Report breakdown: Uber €1215.08, Bolt €273.48, Via Verde €325.20, Aluguer €278.57, Líquido €884.79. 4) PORTAGENS COLLECTION VERIFICATION SUCCESSFUL - portagens_viaverde collection accessible and writable. Data structure contains all required fields (motorista_id, semana, ano, total_via_verde). Test import of minimal Excel file successful. Via Verde Excel import functionality fully operational with correct OBU mapping, 2-week delay calculation, and weekly report integration as specified."
 
+  - task: "Via Verde Auto-Calculate Button"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/relatorios.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VIA VERDE AUTO-CALCULATE BUTTON TESTING COMPLETED (5/5 tests passed - 100% success rate)! NEW ENDPOINT WORKING PERFECTLY: 1) ENDPOINT FUNCTIONAL - GET /api/relatorios/motorista/{motorista_id}/via-verde-total working correctly with test motorista e2355169-10a7-4547-9dd0-479c128d73f9, semana=53, ano=2025. 2) CALCULATION WORKING - Returns total_via_verde = €135.5 with correct calculation considering via_verde_atraso_semanas (2 weeks delay). 3) DELAY CALCULATION CORRECT - Report week 53/2025 correctly fetches data from week 51/2025 (2-week delay applied). 4) DATA STRUCTURE COMPLETE - Response includes motorista_id, semana_relatorio, ano_relatorio, semana_dados, ano_dados, total_via_verde, registos_portagens (77), registos_legacy (0), via_verde_atraso_semanas. Via Verde auto-calculate button functionality fully operational as specified in review request."
+
+  - task: "Reports Showing Ganhos"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/relatorios.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ REPORTS SHOWING GANHOS TESTING COMPLETED (6/6 tests passed - 100% success rate)! GANHOS DISPLAY WORKING PERFECTLY: 1) REPORTS ENDPOINT FUNCTIONAL - GET /api/relatorios/semanais-todos returns 26 reports successfully. 2) GANHOS CALCULATION WORKING - 20 reports show total_ganhos > 0 with total sum €10,928.46 across all drivers with earnings. 3) SPECIFIC DRIVERS VERIFIED - Bruno Coelho shows ganhos €559.73 (exact match), Arlei Oliveira shows ganhos €763.23 (exact match) as expected in review request. 4) TOP DRIVERS IDENTIFIED - Jorge Macaia (€932.26), Arlei Oliveira (€763.23), Nelson Francisco (€707.63) among top earners. 5) DATA INTEGRITY CONFIRMED - All reports correctly calculate and display total_ganhos from uber and bolt earnings. Reports showing ganhos functionality fully operational as specified in review request."
+
+  - task: "Comunicações Contact Config"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ COMUNICAÇÕES CONTACT CONFIG TESTING COMPLETED (7/7 tests passed - 100% success rate)! CONTACT CONFIGURATION WORKING PERFECTLY: 1) SAVE ENDPOINT FUNCTIONAL - POST /api/configuracoes/email successfully saves contact configuration with test data (email_contacto: test@test.com, telefone_contacto: +351 999 999 999, morada_empresa: Test Address, nome_empresa: Test Company). 2) GET ENDPOINT FUNCTIONAL - GET /api/configuracoes/email retrieves saved configuration correctly (Admin only access). 3) DATA INTEGRITY VERIFIED - All saved fields retrieved exactly as stored with no data loss. 4) PUBLIC ENDPOINT FUNCTIONAL - GET /api/public/contacto works without authentication and returns same contact data. 5) PUBLIC DATA SYNC CONFIRMED - Public endpoint returns identical data to authenticated endpoint. Contact configuration save/retrieve functionality fully operational as specified in review request."
+
 test_plan:
   current_focus: []
   stuck_tasks: []
