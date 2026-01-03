@@ -1949,6 +1949,103 @@ const RelatoriosHub = ({ user, onLogout }) => {
           </DialogContent>
         </Dialog>
 
+        {/* Modal de Confirmação de Eliminação */}
+        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-red-600">
+                <Trash2 className="w-5 h-5" />
+                Confirmar Eliminação
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-slate-700">
+                Tem certeza que deseja eliminar <strong>{selectedIds.length}</strong> relatório(s)?
+              </p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-700">
+                  <AlertCircle className="w-4 h-4 inline mr-1" />
+                  Esta ação é irreversível. Todos os dados dos relatórios selecionados serão permanentemente eliminados.
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} disabled={processingBulk}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleBulkDelete} 
+                className="bg-red-600 hover:bg-red-700"
+                disabled={processingBulk}
+              >
+                {processingBulk ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    A eliminar...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Eliminar {selectedIds.length} Relatório(s)
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Alteração de Estado em Lote */}
+        <Dialog open={showStatusChangeModal} onOpenChange={setShowStatusChangeModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Alterar Estado dos Relatórios</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-slate-700">
+                Selecione o novo estado para os <strong>{selectedIds.length}</strong> relatório(s) selecionado(s):
+              </p>
+              <div>
+                <Label>Novo Estado</Label>
+                <Select value={newStatus} onValueChange={setNewStatus}>
+                  <SelectTrigger className="mt-2">
+                    <SelectValue placeholder="Selecione o estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="rascunho">Rascunho</SelectItem>
+                    <SelectItem value="pendente_aprovacao">Pendente</SelectItem>
+                    <SelectItem value="aguarda_recibo">Aguarda Recibo</SelectItem>
+                    <SelectItem value="em_analise">Em Análise</SelectItem>
+                    <SelectItem value="verificado">Verificado</SelectItem>
+                    <SelectItem value="pago">Pago</SelectItem>
+                    <SelectItem value="rejeitado">Rejeitado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowStatusChangeModal(false)} disabled={processingBulk}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleBulkStatusChange} 
+                disabled={!newStatus || processingBulk}
+              >
+                {processingBulk ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    A processar...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    Aplicar a {selectedIds.length} Relatório(s)
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
         {/* Modal Importar CSV - Removido */}
       </div>
     </div>
