@@ -472,3 +472,78 @@ async def download_motorista_contrato(
         media_type="application/pdf",
         filename=f"contrato_{motorista['name']}.pdf"
     )
+
+
+@router.get("/motoristas/{motorista_id}/historico-atribuicoes")
+async def get_motorista_historico_atribuicoes(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Obter histórico de atribuições de veículos ao motorista
+    Inclui dados do veículo (marca, modelo, matrícula), tipo de contrato, valor semanal e link para PDF
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista not found")
+    
+    # Se parceiro, só pode ver histórico dos seus motoristas
+    if current_user["role"] == UserRole.PARCEIRO and motorista.get("parceiro_atribuido") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    historico = await db.historico_atribuicoes.find(
+        {"motorista_id": motorista_id},
+        {"_id": 0}
+    ).sort("data_inicio", -1).to_list(100)
+    
+    # Enriquecer cada entrada com dados do veículo e contrato
+    for entry in historico:
+        veiculo_id = entry.get("veiculo_id")
+        
+        if veiculo_id:
+            # Obter dados do veículo
+            veiculo = await db.vehicles.find_one({"id": veiculo_id}, {"_id": 0})
+            if veiculo:
+                entry["veiculo_marca"] = veiculo.get("marca", "")
+                entry["veiculo_modelo"] = veiculo.get("modelo", "")
+                entry["veiculo_matricula"] = veiculo.get("matricula", "")
+                entry["veiculo_ano"] = veiculo.get("ano", "")
+            
+            # Procurar contrato associado (usando motorista_id + veiculo_id ou apenas motorista_id)
+            contrato = await db.contratos.find_one({
+                "$or": [
+                    {"motorista_id": motorista_id, "veiculo_id": veiculo_id, "ativo": True},
+                    {"motorista_id": motorista_id, "ativo": True}
+                ]
+            }, {"_id": 0})
+            
+            if contrato:
+                entry["tipo_contrato"] = contrato.get("tipo_utilizacao", contrato.get("tipo_contrato", "N/A"))
+                entry["valor_semanal"] = contrato.get("valor_semanal", contrato.get("valor_aluguer_semanal", 0))
+                entry["contrato_id"] = contrato.get("id")
+                
+                # Verificar se existe PDF do contrato
+                if contrato.get("pdf_url"):
+                    entry["pdf_url"] = contrato.get("pdf_url")
+                elif contrato.get("pdf_path"):
+                    entry["pdf_url"] = contrato.get("pdf_path")
+        
+        # Calcular duração da atribuição em dias
+        if entry.get("data_inicio"):
+            try:
+                data_inicio = datetime.fromisoformat(entry["data_inicio"].replace("Z", "+00:00"))
+                data_fim = datetime.fromisoformat(entry["data_fim"].replace("Z", "+00:00")) if entry.get("data_fim") else datetime.now(timezone.utc)
+                entry["duracao_dias"] = (data_fim - data_inicio).days
+            except:
+                pass
+    
+    return {
+        "motorista_id": motorista_id,
+        "motorista_nome": motorista.get("name"),
+        "historico": historico,
+        "total_registos": len(historico)
+    }
+
