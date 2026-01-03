@@ -3434,65 +3434,15 @@ const FichaVeiculo = ({ user, onLogout }) => {
             </Card>
           </TabsContent>
 
-          {/* Relatório Ganhos/Perdas */}
+          {/* Relatório Ganhos/Perdas com ROI */}
           <TabsContent value="relatorio">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <TrendingUp className="w-5 h-5" />
-                  <span>Relatório Financeiro</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Cards de Resumo */}
-                <div className="grid grid-cols-3 gap-3">
-                  <Card className="bg-green-50">
-                    <CardContent className="pt-6">
-                      <p className="text-sm text-slate-600">Ganhos Total</p>
-                      <p className="text-2xl font-bold text-green-600">
-                        €{relatorioGanhos.ganhos_total.toFixed(2)}
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-red-50">
-                    <CardContent className="pt-6">
-                      <p className="text-sm text-slate-600">Despesas Total</p>
-                      <p className="text-2xl font-bold text-red-600">
-                        €{relatorioGanhos.despesas_total.toFixed(2)}
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card className="bg-blue-50">
-                    <CardContent className="pt-6">
-                      <p className="text-sm text-slate-600">Lucro</p>
-                      <p className="text-2xl font-bold text-blue-600">
-                        €{relatorioGanhos.lucro.toFixed(2)}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Detalhes */}
-                {relatorioGanhos.detalhes && relatorioGanhos.detalhes.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold mb-3">Detalhes</h3>
-                    <div className="space-y-2">
-                      {relatorioGanhos.detalhes.map((item, index) => (
-                        <div key={index} className="flex justify-between items-center border-b py-2">
-                          <div>
-                            <p className="font-medium">{item.descricao}</p>
-                            <p className="text-xs text-slate-500">{item.data}</p>
-                          </div>
-                          <p className={`font-semibold ${item.tipo === 'ganho' ? 'text-green-600' : 'text-red-600'}`}>
-                            {item.tipo === 'ganho' ? '+' : '-'}€{item.valor.toFixed(2)}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <RelatorioFinanceiroTab 
+              vehicleId={vehicleId} 
+              canEdit={canEdit} 
+              user={user}
+              relatorioGanhos={relatorioGanhos}
+              setRelatorioGanhos={setRelatorioGanhos}
+            />
           </TabsContent>
         </Tabs>
       </div>
