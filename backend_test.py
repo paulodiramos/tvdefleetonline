@@ -437,7 +437,9 @@ class FleeTrackTester:
         except Exception as e:
             self.log_result("Motoristas-List-Error", False, f"❌ Error during motoristas list test: {str(e)}")
             return False
-        """2. Test Via Verde Weekly Reports API - PRIORITY TEST"""
+    
+    def test_via_verde_weekly_reports_api(self):
+        """6. Test Via Verde Weekly Reports API - PRIORITY TEST"""
         print("\n📋 2. Test Via Verde Weekly Reports API - PRIORITY TEST")
         print("-" * 60)
         print("TESTE: POST /api/relatorios/motorista/{motorista_id}/gerar-semanal")
