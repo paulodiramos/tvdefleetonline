@@ -406,24 +406,33 @@ const PublicHome = () => {
             <p className="text-xl text-slate-600">Estamos aqui para ajudar</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            <Card className="text-center hover:shadow-lg transition cursor-pointer" onClick={() => window.open('https://wa.me/351912345678', '_blank')}>
+            <Card 
+              className="text-center hover:shadow-lg transition cursor-pointer" 
+              onClick={() => {
+                const phone = contactInfo.telefone_contacto?.replace(/\s/g, '').replace('+', '');
+                window.open(`https://wa.me/${phone}`, '_blank');
+              }}
+            >
               <CardHeader>
                 <Phone className="w-12 h-12 text-blue-600 mx-auto mb-4" />
                 <CardTitle>Telefone / WhatsApp</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-blue-600 font-semibold hover:underline">+351 912 345 678</p>
+                <p className="text-blue-600 font-semibold hover:underline">{contactInfo.telefone_contacto}</p>
                 <p className="text-xs text-slate-500 mt-2">Clique para abrir WhatsApp</p>
               </CardContent>
             </Card>
 
-            <Card className="text-center hover:shadow-lg transition cursor-pointer" onClick={() => window.location.href = 'mailto:info@tvdefleet.com'}>
+            <Card 
+              className="text-center hover:shadow-lg transition cursor-pointer" 
+              onClick={() => window.location.href = `mailto:${contactInfo.email_contacto}`}
+            >
               <CardHeader>
                 <Mail className="w-12 h-12 text-blue-600 mx-auto mb-4" />
                 <CardTitle>Email</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-blue-600 font-semibold hover:underline">info@tvdefleet.com</p>
+                <p className="text-blue-600 font-semibold hover:underline">{contactInfo.email_contacto}</p>
                 <p className="text-xs text-slate-500 mt-2">Clique para enviar email</p>
               </CardContent>
             </Card>
