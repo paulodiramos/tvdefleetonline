@@ -473,7 +473,7 @@ def main():
     try:
         summary = tester.run_all_tests()
         
-        print(f"\n🎯 RESUMO FINAL - FleeTrack Backend API Tests")
+        print(f"\n🎯 RESUMO FINAL - FleeTrack CSV Import for Despesas Tests")
         print("=" * 50)
         print(f"Total de testes: {summary['total']}")
         print(f"✅ Sucessos: {summary['passed']}")
