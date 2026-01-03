@@ -103,30 +103,6 @@ const RelatoriosHub = ({ user, onLogout }) => {
     fetchViaVerdeAuto();
   }, [novoRelatorio.motorista_id, novoRelatorio.semana, novoRelatorio.ano]);
 
-  // Auto-fetch Via Verde when editing a report
-  useEffect(() => {
-    const fetchViaVerdeEdit = async () => {
-      if (relatorioEditando && relatorioEditando.motorista_id && relatorioEditando.semana && relatorioEditando.ano) {
-        // Only fetch if via_verde_total is 0 or not set
-        if (!relatorioEditando.via_verde_total || relatorioEditando.via_verde_total === 0) {
-          try {
-            const token = localStorage.getItem('token');
-            const response = await axios.get(
-              `${API_URL}/api/relatorios/motorista/${relatorioEditando.motorista_id}/via-verde-total?semana=${relatorioEditando.semana}&ano=${relatorioEditando.ano}`,
-              { headers: { Authorization: `Bearer ${token}` } }
-            );
-            if (response.data.total_via_verde > 0) {
-              setRelatorioEditando(prev => ({ ...prev, via_verde_total: response.data.total_via_verde }));
-            }
-          } catch (error) {
-            console.log('Via Verde edit auto-fetch:', error.message);
-          }
-        }
-      }
-    };
-    fetchViaVerdeEdit();
-  }, [relatorioEditando?.motorista_id, relatorioEditando?.semana, relatorioEditando?.ano]);
-
   const handleDownloadRecibo = async (reciboUrl) => {
     try {
       const token = localStorage.getItem('token');
