@@ -446,8 +446,27 @@ const RelatoriosHub = ({ user, onLogout }) => {
     }
   };
 
-  const handleEditar = (relatorio) => {
-    setRelatorioEditando({ ...relatorio });
+  const handleEditar = async (relatorio) => {
+    // Se via_verde_total é 0, buscar automaticamente
+    let updatedRelatorio = { ...relatorio };
+    
+    if (!relatorio.via_verde_total || relatorio.via_verde_total === 0) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `${API_URL}/api/relatorios/motorista/${relatorio.motorista_id}/via-verde-total?semana=${relatorio.semana}&ano=${relatorio.ano}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (response.data.total_via_verde > 0) {
+          updatedRelatorio.via_verde_total = response.data.total_via_verde;
+          toast.info(`Via Verde calculado automaticamente: €${response.data.total_via_verde}`);
+        }
+      } catch (error) {
+        console.log('Via Verde auto-fetch on edit:', error.message);
+      }
+    }
+    
+    setRelatorioEditando(updatedRelatorio);
     setShowEditModal(true);
   };
 
