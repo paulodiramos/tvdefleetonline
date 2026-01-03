@@ -108,31 +108,39 @@ class FleeTrackTester:
         return temp_file.name
     
     def test_fleetrack_backend_apis(self):
-        """🎯 CRITICAL REFACTORING TESTS: Backend Auth Routes Moved to routes/auth.py"""
-        print("\n🎯 CRITICAL REFACTORING TESTS: Backend Auth Routes Moved to routes/auth.py")
+        """🎯 CRITICAL REFACTORING TESTS: Backend Routes Refactoring (Phase 2)"""
+        print("\n🎯 CRITICAL REFACTORING TESTS: Backend Routes Refactoring (Phase 2)")
         print("=" * 80)
-        print("CONTEXT: Refatoração parcial do server.py:")
-        print("- Removidos endpoints duplicados de auth (register, login, me)")
-        print("- Removidos endpoints duplicados de profile (update, change-password, permissions)")
-        print("- Estes endpoints agora são servidos por routes/auth.py")
+        print("CONTEXT: Refatoração do server.py (segunda fase):")
+        print("- POST /motoristas/register -> routes/motoristas.py")
+        print("- GET /motoristas -> routes/motoristas.py")
+        print("- GET /motoristas/{motorista_id} -> routes/motoristas.py")
+        print("- PUT /motoristas/{motorista_id}/approve -> routes/motoristas.py (melhorado)")
+        print("- PUT /motoristas/{motorista_id} -> routes/motoristas.py (melhorado)")
+        print("- DELETE /motoristas/{motorista_id} -> routes/motoristas.py")
+        print("- DELETE /notificacoes/{notificacao_id} -> routes/notificacoes.py")
+        print("- PATCH /notificacoes/{notificacao_id} -> routes/notificacoes.py")
+        print("Total: 474 linhas removidas")
         print("\nCREDENCIAIS:")
         print("- Admin: admin@tvdefleet.com / 123456")
         print("\nTESTES CRÍTICOS:")
         print("1. Login (POST /api/auth/login)")
-        print("2. Get Current User (GET /api/auth/me)")
-        print("3. Listar Veículos (GET /api/vehicles)")
-        print("4. Listar Motoristas (GET /api/motoristas)")
-        print("5. Gerar Relatório Semanal (POST /api/relatorios/motorista/{id}/gerar-semanal)")
-        print("6. Custos do Veículo (GET /api/vehicles/{id}/custos)")
+        print("2. Listar Motoristas (GET /api/motoristas)")
+        print("3. Obter Motorista por ID (GET /api/motoristas/{motorista_id})")
+        print("4. Atualizar Motorista (PUT /api/motoristas/{motorista_id})")
+        print("5. Aprovar Motorista (PUT /api/motoristas/{motorista_id}/approve)")
+        print("6. Eliminar Notificação (DELETE /api/notificacoes/{notificacao_id})")
+        print("7. Gerar Relatório (POST /api/relatorios/motorista/{motorista_id}/gerar-semanal)")
         print("=" * 80)
         
-        # Execute critical tests only
+        # Execute critical tests for refactoring verification
         self.test_critical_auth_login()
-        self.test_critical_auth_me()
-        self.test_critical_vehicles_list()
         self.test_critical_motoristas_list()
+        self.test_critical_motorista_by_id()
+        self.test_critical_motorista_update()
+        self.test_critical_motorista_approve()
+        self.test_critical_notification_delete()
         self.test_critical_weekly_report()
-        self.test_critical_vehicle_costs()
         
         return True
     
