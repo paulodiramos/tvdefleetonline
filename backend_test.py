@@ -130,6 +130,553 @@ class FleeTrackTester:
         
         return True
     
+    def test_scenario_1_vehicle_roi_custom_dates(self):
+        """SCENARIO 1: Vehicle Report Custom Dates (ROI)"""
+        print("\n📋 SCENARIO 1: Vehicle Report Custom Dates (ROI)")
+        print("-" * 60)
+        print("GOAL: Verify vehicle ROI report works with custom date range (Entre Datas)")
+        print("STEPS:")
+        print("1. Login as admin")
+        print("2. Call GET /api/vehicles/{vehicle_id}/relatorio-ganhos?periodo=custom&data_inicio=2025-01-01&data_fim=2026-01-31")
+        print("3. Verify response contains ROI, receitas, and custos fields")
+        print("EXPECTED: 200 OK with valid ROI calculation")
+        
+        # Step 1: Login as admin
+        if not self.authenticate_user("admin"):
+            self.log_result("Scenario1-Auth", False, "❌ Failed to authenticate as admin")
+            return False
+        
+        headers = self.get_headers("admin")
+        
+        try:
+            # Step 2: Get a vehicle ID first
+            print("\n🔍 Step 2: Getting vehicle for ROI testing...")
+            vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+            
+            if vehicles_response.status_code == 200:
+                vehicles = vehicles_response.json()
+                
+                if vehicles and len(vehicles) > 0:
+                    vehicle = vehicles[0]
+                    vehicle_id = vehicle["id"]
+                    vehicle_info = f"{vehicle.get('matricula', 'N/A')} - {vehicle.get('marca', 'N/A')} {vehicle.get('modelo', 'N/A')}"
+                    
+                    self.log_result("Scenario1-GetVehicle", True, 
+                                  f"✅ Found vehicle for testing: {vehicle_info}")
+                    
+                    # Step 3: Test ROI report with custom dates
+                    print("\n🔍 Step 3: Testing ROI report with custom dates...")
+                    
+                    roi_params = {
+                        "periodo": "custom",
+                        "data_inicio": "2025-01-01",
+                        "data_fim": "2026-01-31"
+                    }
+                    
+                    roi_response = requests.get(
+                        f"{BACKEND_URL}/vehicles/{vehicle_id}/relatorio-ganhos",
+                        params=roi_params,
+                        headers=headers
+                    )
+                    
+                    if roi_response.status_code == 200:
+                        roi_data = roi_response.json()
+                        required_fields = ["veiculo_id", "matricula", "periodo", "receitas", "custos", "roi"]
+                        
+                        if all(field in roi_data for field in required_fields):
+                            receitas_total = roi_data.get("receitas", {}).get("total", 0)
+                            custos_total = roi_data.get("custos", {}).get("total", 0)
+                            roi_value = roi_data.get("roi", 0)
+                            lucro = roi_data.get("lucro", 0)
+                            
+                            self.log_result("Scenario1-ROICustomDates", True, 
+                                          f"✅ VEHICLE ROI CUSTOM DATES WORKING: {vehicle_info}")
+                            self.log_result("Scenario1-ROICalculation", True, 
+                                          f"✅ ROI Calculation: Receitas €{receitas_total}, Custos €{custos_total}, Lucro €{lucro}, ROI {roi_value}%")
+                            
+                            # Verify period is correctly set
+                            periodo = roi_data.get("periodo", {})
+                            if (periodo.get("tipo") == "custom" and 
+                                periodo.get("data_inicio") == "2025-01-01" and 
+                                periodo.get("data_fim") == "2026-01-31"):
+                                self.log_result("Scenario1-CustomPeriod", True, 
+                                              "✅ Custom date period correctly applied")
+                            else:
+                                self.log_result("Scenario1-CustomPeriod", False, 
+                                              f"❌ Custom period incorrect: {periodo}")
+                        else:
+                            self.log_result("Scenario1-ROICustomDates", False, 
+                                          f"❌ ROI response missing required fields: {list(roi_data.keys())}")
+                    else:
+                        self.log_result("Scenario1-ROICustomDates", False, 
+                                      f"❌ ROI custom dates failed: {roi_response.status_code} - {roi_response.text}")
+                else:
+                    self.log_result("Scenario1-GetVehicle", False, 
+                                  "❌ No vehicles found to test ROI")
+            else:
+                self.log_result("Scenario1-GetVehicle", False, 
+                              f"❌ Failed to get vehicles: {vehicles_response.status_code}")
+                
+        except Exception as e:
+            self.log_result("Scenario1-Error", False, f"❌ Error in scenario 1: {str(e)}")
+
+    def test_scenario_2_motorista_combustivel_integration(self):
+        """SCENARIO 2: Motorista Weekly Report - Combustível Integration"""
+        print("\n📋 SCENARIO 2: Motorista Weekly Report - Combustível Integration")
+        print("-" * 60)
+        print("GOAL: Verify that combustível (fossil fuel) data from abastecimentos_combustivel collection is included in motorista weekly report")
+        print("STEPS:")
+        print("1. Login as admin")
+        print("2. Get a motorista with veiculo_atribuido")
+        print("3. Generate a weekly report POST /api/relatorios/motorista/{motorista_id}/gerar-semanal")
+        print("4. Verify response contains total_combustivel field")
+        print("EXPECTED: total_combustivel should be calculated from both abastecimentos and abastecimentos_combustivel collections")
+        
+        # Step 1: Login as admin
+        if not self.authenticate_user("admin"):
+            self.log_result("Scenario2-Auth", False, "❌ Failed to authenticate as admin")
+            return False
+        
+        headers = self.get_headers("admin")
+        
+        try:
+            # Step 2: Get motorista with vehicle
+            print("\n🔍 Step 2: Getting motorista with assigned vehicle...")
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            
+            if motoristas_response.status_code == 200:
+                motoristas = motoristas_response.json()
+                
+                motorista_with_vehicle = None
+                for motorista in motoristas:
+                    if motorista.get("veiculo_atribuido"):
+                        motorista_with_vehicle = motorista
+                        break
+                
+                if motorista_with_vehicle:
+                    motorista_id = motorista_with_vehicle["id"]
+                    motorista_name = motorista_with_vehicle.get("name", "N/A")
+                    veiculo_id = motorista_with_vehicle.get("veiculo_atribuido")
+                    
+                    self.log_result("Scenario2-GetMotorista", True, 
+                                  f"✅ Found motorista with vehicle: {motorista_name} (Vehicle: {veiculo_id})")
+                    
+                    # Step 3: Generate weekly report
+                    print("\n🔍 Step 3: Generating weekly report...")
+                    
+                    report_data = {
+                        "data_inicio": "2025-01-06",
+                        "data_fim": "2025-01-12",
+                        "semana": 2,
+                        "ano": 2025
+                    }
+                    
+                    report_response = requests.post(
+                        f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
+                        json=report_data,
+                        headers=headers
+                    )
+                    
+                    if report_response.status_code == 200:
+                        report_result = report_response.json()
+                        
+                        if "resumo" in report_result:
+                            resumo = report_result.get("resumo", {})
+                            total_combustivel = resumo.get("total_combustivel", 0)
+                            
+                            self.log_result("Scenario2-WeeklyReport", True, 
+                                          f"✅ MOTORISTA WEEKLY REPORT GENERATED: ID {report_result.get('relatorio_id')}")
+                            
+                            # Step 4: Verify combustível field exists
+                            if "total_combustivel" in resumo:
+                                self.log_result("Scenario2-CombustivelField", True, 
+                                              f"✅ COMBUSTÍVEL INTEGRATION WORKING: total_combustivel = €{total_combustivel}")
+                                
+                                # Check if there are combustivel records in the full report
+                                full_report_response = requests.get(
+                                    f"{BACKEND_URL}/relatorios/semanal/{report_result.get('relatorio_id')}",
+                                    headers=headers
+                                )
+                                
+                                if full_report_response.status_code == 200:
+                                    full_report = full_report_response.json()
+                                    combustivel_records = full_report.get("combustivel_records")
+                                    
+                                    if combustivel_records:
+                                        self.log_result("Scenario2-CombustivelRecords", True, 
+                                                      f"✅ Combustível records found: {len(combustivel_records)} entries")
+                                    else:
+                                        self.log_result("Scenario2-CombustivelRecords", True, 
+                                                      "ℹ️ No combustível records for this period (normal if no data)")
+                            else:
+                                self.log_result("Scenario2-CombustivelField", False, 
+                                              "❌ total_combustivel field missing from report")
+                        else:
+                            self.log_result("Scenario2-WeeklyReport", False, 
+                                          f"❌ Weekly report response missing resumo: {report_result}")
+                    else:
+                        self.log_result("Scenario2-WeeklyReport", False, 
+                                      f"❌ Weekly report generation failed: {report_response.status_code} - {report_response.text}")
+                else:
+                    # Try with any motorista
+                    if motoristas:
+                        motorista = motoristas[0]
+                        motorista_id = motorista["id"]
+                        motorista_name = motorista.get("name", "N/A")
+                        
+                        self.log_result("Scenario2-GetMotorista", True, 
+                                      f"✅ Testing with motorista: {motorista_name} (no vehicle assigned)")
+                        
+                        # Generate report anyway to test combustível integration
+                        report_data = {
+                            "data_inicio": "2025-01-06",
+                            "data_fim": "2025-01-12",
+                            "semana": 2,
+                            "ano": 2025
+                        }
+                        
+                        report_response = requests.post(
+                            f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
+                            json=report_data,
+                            headers=headers
+                        )
+                        
+                        if report_response.status_code == 200:
+                            report_result = report_response.json()
+                            resumo = report_result.get("resumo", {})
+                            
+                            if "total_combustivel" in resumo:
+                                self.log_result("Scenario2-CombustivelIntegration", True, 
+                                              f"✅ COMBUSTÍVEL INTEGRATION AVAILABLE: total_combustivel field exists")
+                            else:
+                                self.log_result("Scenario2-CombustivelIntegration", False, 
+                                              "❌ total_combustivel field missing from report")
+                    else:
+                        self.log_result("Scenario2-GetMotorista", False, 
+                                      "❌ No motoristas found to test")
+            else:
+                self.log_result("Scenario2-GetMotorista", False, 
+                              f"❌ Failed to get motoristas: {motoristas_response.status_code}")
+                
+        except Exception as e:
+            self.log_result("Scenario2-Error", False, f"❌ Error in scenario 2: {str(e)}")
+
+    def test_scenario_3_motorista_eletrico_integration(self):
+        """SCENARIO 3: Motorista Weekly Report - Carregamentos Elétricos"""
+        print("\n📋 SCENARIO 3: Motorista Weekly Report - Carregamentos Elétricos")
+        print("-" * 60)
+        print("GOAL: Verify that electric charging data is included in motorista weekly report")
+        print("STEPS:")
+        print("1. Using the same report generation process")
+        print("2. Verify response contains total_eletrico field")
+        print("EXPECTED: total_eletrico field should exist and sum data from abastecimentos_eletrico collection")
+        
+        # Step 1: Login as admin
+        if not self.authenticate_user("admin"):
+            self.log_result("Scenario3-Auth", False, "❌ Failed to authenticate as admin")
+            return False
+        
+        headers = self.get_headers("admin")
+        
+        try:
+            # Get first motorista
+            print("\n🔍 Getting motorista for electric charging test...")
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            
+            if motoristas_response.status_code == 200:
+                motoristas = motoristas_response.json()
+                
+                if motoristas:
+                    motorista = motoristas[0]
+                    motorista_id = motorista["id"]
+                    motorista_name = motorista.get("name", "N/A")
+                    
+                    self.log_result("Scenario3-GetMotorista", True, 
+                                  f"✅ Testing electric charging with motorista: {motorista_name}")
+                    
+                    # Generate weekly report
+                    print("\n🔍 Generating weekly report for electric charging test...")
+                    
+                    report_data = {
+                        "data_inicio": "2025-01-06",
+                        "data_fim": "2025-01-12",
+                        "semana": 2,
+                        "ano": 2025
+                    }
+                    
+                    report_response = requests.post(
+                        f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
+                        json=report_data,
+                        headers=headers
+                    )
+                    
+                    if report_response.status_code == 200:
+                        report_result = report_response.json()
+                        
+                        if "resumo" in report_result:
+                            resumo = report_result.get("resumo", {})
+                            
+                            # Verify total_eletrico field exists
+                            if "total_eletrico" in resumo:
+                                total_eletrico = resumo.get("total_eletrico", 0)
+                                self.log_result("Scenario3-EletricoField", True, 
+                                              f"✅ ELECTRIC CHARGING INTEGRATION WORKING: total_eletrico = €{total_eletrico}")
+                                
+                                # Check for electric records in full report
+                                full_report_response = requests.get(
+                                    f"{BACKEND_URL}/relatorios/semanal/{report_result.get('relatorio_id')}",
+                                    headers=headers
+                                )
+                                
+                                if full_report_response.status_code == 200:
+                                    full_report = full_report_response.json()
+                                    eletrico_records = full_report.get("eletrico_records")
+                                    
+                                    if eletrico_records:
+                                        self.log_result("Scenario3-EletricoRecords", True, 
+                                                      f"✅ Electric charging records found: {len(eletrico_records)} entries")
+                                    else:
+                                        self.log_result("Scenario3-EletricoRecords", True, 
+                                                      "ℹ️ No electric charging records for this period (normal if no data)")
+                            else:
+                                self.log_result("Scenario3-EletricoField", False, 
+                                              "❌ total_eletrico field missing from report")
+                        else:
+                            self.log_result("Scenario3-WeeklyReport", False, 
+                                          f"❌ Weekly report response missing resumo: {report_result}")
+                    else:
+                        self.log_result("Scenario3-WeeklyReport", False, 
+                                      f"❌ Weekly report generation failed: {report_response.status_code} - {report_response.text}")
+                else:
+                    self.log_result("Scenario3-GetMotorista", False, 
+                                  "❌ No motoristas found to test")
+            else:
+                self.log_result("Scenario3-GetMotorista", False, 
+                              f"❌ Failed to get motoristas: {motoristas_response.status_code}")
+                
+        except Exception as e:
+            self.log_result("Scenario3-Error", False, f"❌ Error in scenario 3: {str(e)}")
+
+    def test_scenario_4_motorista_gps_km_data(self):
+        """SCENARIO 4: Motorista Weekly Report - GPS/KM Data"""
+        print("\n📋 SCENARIO 4: Motorista Weekly Report - GPS/KM Data")
+        print("-" * 60)
+        print("GOAL: Verify that GPS/KM data is included in motorista weekly report")
+        print("STEPS:")
+        print("1. Using the same report generation process")
+        print("2. Verify response contains total_km and total_viagens_gps fields")
+        print("EXPECTED: total_km and total_viagens_gps fields should exist")
+        
+        # Step 1: Login as admin
+        if not self.authenticate_user("admin"):
+            self.log_result("Scenario4-Auth", False, "❌ Failed to authenticate as admin")
+            return False
+        
+        headers = self.get_headers("admin")
+        
+        try:
+            # Get first motorista
+            print("\n🔍 Getting motorista for GPS/KM test...")
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            
+            if motoristas_response.status_code == 200:
+                motoristas = motoristas_response.json()
+                
+                if motoristas:
+                    motorista = motoristas[0]
+                    motorista_id = motorista["id"]
+                    motorista_name = motorista.get("name", "N/A")
+                    
+                    self.log_result("Scenario4-GetMotorista", True, 
+                                  f"✅ Testing GPS/KM data with motorista: {motorista_name}")
+                    
+                    # Generate weekly report
+                    print("\n🔍 Generating weekly report for GPS/KM test...")
+                    
+                    report_data = {
+                        "data_inicio": "2025-01-06",
+                        "data_fim": "2025-01-12",
+                        "semana": 2,
+                        "ano": 2025
+                    }
+                    
+                    report_response = requests.post(
+                        f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
+                        json=report_data,
+                        headers=headers
+                    )
+                    
+                    if report_response.status_code == 200:
+                        report_result = report_response.json()
+                        
+                        if "resumo" in report_result:
+                            resumo = report_result.get("resumo", {})
+                            
+                            # Verify GPS/KM fields exist
+                            gps_fields_present = []
+                            if "total_km" in resumo:
+                                total_km = resumo.get("total_km", 0)
+                                gps_fields_present.append(f"total_km = {total_km} km")
+                            
+                            # Check full report for total_viagens_gps
+                            full_report_response = requests.get(
+                                f"{BACKEND_URL}/relatorios/semanal/{report_result.get('relatorio_id')}",
+                                headers=headers
+                            )
+                            
+                            if full_report_response.status_code == 200:
+                                full_report = full_report_response.json()
+                                
+                                if "total_viagens_gps" in full_report:
+                                    total_viagens_gps = full_report.get("total_viagens_gps", 0)
+                                    gps_fields_present.append(f"total_viagens_gps = {total_viagens_gps}")
+                                
+                                gps_records = full_report.get("gps_records")
+                                
+                                if gps_fields_present:
+                                    self.log_result("Scenario4-GPSFields", True, 
+                                                  f"✅ GPS/KM DATA INTEGRATION WORKING: {', '.join(gps_fields_present)}")
+                                    
+                                    if gps_records:
+                                        self.log_result("Scenario4-GPSRecords", True, 
+                                                      f"✅ GPS records found: {len(gps_records)} entries")
+                                    else:
+                                        self.log_result("Scenario4-GPSRecords", True, 
+                                                      "ℹ️ No GPS records for this period (normal if no data)")
+                                else:
+                                    self.log_result("Scenario4-GPSFields", False, 
+                                                  "❌ GPS/KM fields missing from report")
+                        else:
+                            self.log_result("Scenario4-WeeklyReport", False, 
+                                          f"❌ Weekly report response missing resumo: {report_result}")
+                    else:
+                        self.log_result("Scenario4-WeeklyReport", False, 
+                                      f"❌ Weekly report generation failed: {report_response.status_code} - {report_response.text}")
+                else:
+                    self.log_result("Scenario4-GetMotorista", False, 
+                                  "❌ No motoristas found to test")
+            else:
+                self.log_result("Scenario4-GetMotorista", False, 
+                              f"❌ Failed to get motoristas: {motoristas_response.status_code}")
+                
+        except Exception as e:
+            self.log_result("Scenario4-Error", False, f"❌ Error in scenario 4: {str(e)}")
+
+    def test_scenario_5_motorista_uber_bolt_data(self):
+        """SCENARIO 5: Motorista Weekly Report - Uber/Bolt Data"""
+        print("\n📋 SCENARIO 5: Motorista Weekly Report - Uber/Bolt Data")
+        print("-" * 60)
+        print("GOAL: Verify that Uber and Bolt earnings are calculated correctly")
+        print("STEPS:")
+        print("1. Using the same report generation process")
+        print("2. Verify response contains ganhos_uber and ganhos_bolt fields")
+        print("3. Verify total_ganhos = ganhos_uber + ganhos_bolt")
+        print("EXPECTED: All fields should exist with correct values")
+        
+        # Step 1: Login as admin
+        if not self.authenticate_user("admin"):
+            self.log_result("Scenario5-Auth", False, "❌ Failed to authenticate as admin")
+            return False
+        
+        headers = self.get_headers("admin")
+        
+        try:
+            # Get first motorista
+            print("\n🔍 Getting motorista for Uber/Bolt test...")
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            
+            if motoristas_response.status_code == 200:
+                motoristas = motoristas_response.json()
+                
+                if motoristas:
+                    motorista = motoristas[0]
+                    motorista_id = motorista["id"]
+                    motorista_name = motorista.get("name", "N/A")
+                    
+                    self.log_result("Scenario5-GetMotorista", True, 
+                                  f"✅ Testing Uber/Bolt data with motorista: {motorista_name}")
+                    
+                    # Generate weekly report
+                    print("\n🔍 Generating weekly report for Uber/Bolt test...")
+                    
+                    report_data = {
+                        "data_inicio": "2025-01-06",
+                        "data_fim": "2025-01-12",
+                        "semana": 2,
+                        "ano": 2025
+                    }
+                    
+                    report_response = requests.post(
+                        f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
+                        json=report_data,
+                        headers=headers
+                    )
+                    
+                    if report_response.status_code == 200:
+                        report_result = report_response.json()
+                        
+                        if "resumo" in report_result:
+                            resumo = report_result.get("resumo", {})
+                            
+                            # Verify Uber/Bolt fields exist
+                            ganhos_uber = resumo.get("ganhos_uber", 0)
+                            ganhos_bolt = resumo.get("ganhos_bolt", 0)
+                            
+                            # Get full report for more details
+                            full_report_response = requests.get(
+                                f"{BACKEND_URL}/relatorios/semanal/{report_result.get('relatorio_id')}",
+                                headers=headers
+                            )
+                            
+                            if full_report_response.status_code == 200:
+                                full_report = full_report_response.json()
+                                total_ganhos = full_report.get("total_ganhos", 0)
+                                valor_bruto = full_report.get("valor_bruto", 0)
+                                
+                                # Verify fields exist
+                                if "ganhos_uber" in resumo and "ganhos_bolt" in resumo:
+                                    self.log_result("Scenario5-UberBoltFields", True, 
+                                                  f"✅ UBER/BOLT DATA INTEGRATION WORKING: ganhos_uber = €{ganhos_uber}, ganhos_bolt = €{ganhos_bolt}")
+                                    
+                                    # Verify calculation
+                                    expected_total = ganhos_uber + ganhos_bolt
+                                    if abs(total_ganhos - expected_total) < 0.01:  # Allow small floating point differences
+                                        self.log_result("Scenario5-TotalCalculation", True, 
+                                                      f"✅ Total calculation correct: total_ganhos = €{total_ganhos} (€{ganhos_uber} + €{ganhos_bolt})")
+                                    else:
+                                        self.log_result("Scenario5-TotalCalculation", False, 
+                                                      f"❌ Total calculation incorrect: expected €{expected_total}, got €{total_ganhos}")
+                                    
+                                    # Check for trip counts
+                                    viagens_uber = full_report.get("viagens_uber", 0)
+                                    viagens_bolt = full_report.get("viagens_bolt", 0)
+                                    total_viagens = full_report.get("total_viagens", 0)
+                                    
+                                    if viagens_uber is not None and viagens_bolt is not None:
+                                        self.log_result("Scenario5-TripCounts", True, 
+                                                      f"✅ Trip counts available: {viagens_uber} Uber trips, {viagens_bolt} Bolt trips, {total_viagens} total")
+                                    else:
+                                        self.log_result("Scenario5-TripCounts", True, 
+                                                      "ℹ️ Trip count data not available (normal if no trip data)")
+                                else:
+                                    self.log_result("Scenario5-UberBoltFields", False, 
+                                                  "❌ ganhos_uber or ganhos_bolt fields missing from report")
+                        else:
+                            self.log_result("Scenario5-WeeklyReport", False, 
+                                          f"❌ Weekly report response missing resumo: {report_result}")
+                    else:
+                        self.log_result("Scenario5-WeeklyReport", False, 
+                                      f"❌ Weekly report generation failed: {report_response.status_code} - {report_response.text}")
+                else:
+                    self.log_result("Scenario5-GetMotorista", False, 
+                                  "❌ No motoristas found to test")
+            else:
+                self.log_result("Scenario5-GetMotorista", False, 
+                              f"❌ Failed to get motoristas: {motoristas_response.status_code}")
+                
+        except Exception as e:
+            self.log_result("Scenario5-Error", False, f"❌ Error in scenario 5: {str(e)}")
+
     def test_scenario_1_partner_delete_reports(self):
         """SCENARIO 1: Partner Delete Weekly Reports Permission"""
         print("\n📋 SCENARIO 1: Partner Delete Weekly Reports Permission")
