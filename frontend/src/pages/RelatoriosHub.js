@@ -1659,7 +1659,7 @@ const RelatoriosHub = ({ user, onLogout }) => {
                   <ol className="text-sm text-blue-800 list-decimal list-inside mt-2 space-y-1">
                     <li>Importar dados das plataformas (Uber, Bolt, Via Verde, etc.)</li>
                     <li>Gerar relatórios semanais (cria rascunhos automaticamente)</li>
-                    <li>Revisar e ajustar valores na aba "Rascunho"</li>
+                    <li>Revisar e ajustar valores na aba &quot;Rascunho&quot;</li>
                     <li>Aprovar para enviar aos motoristas e parceiros</li>
                   </ol>
                 </div>
