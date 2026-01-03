@@ -1,161 +1,187 @@
 <analysis>**original_problem_statement:**
-O utilizador iniciou a sessão com o objetivo de refatorar o backend, adicionar um sistema de extração de dados CSV, melhorar a atribuição de veículos e implementar automação RPA. Recentemente, os pedidos focaram-se em:
-1.  Criar um sistema de importação de despesas a partir de ficheiros CSV/Excel (ex: Via Verde).
-2.  Associar essas despesas corretamente a motoristas ou veículos, com base no tipo de contrato do veículo.
-3.  Permitir que parceiros e gestores façam a gestão em lote (seleção múltipla, alterar estado, apagar) dos relatórios semanais.
-4.  Garantir que as despesas importadas (como Via Verde) são automaticamente incluídas nos relatórios semanais dos motoristas, respeitando uma configuração de atraso (ex: despesas da semana 49 aparecem no relatório da semana 50).
+O utilizador iniciou a sessão com o objetivo de refatorar o backend, adicionar um sistema de extração de dados CSV, melhorar a atribuição de veículos e implementar automação RPA. Os pedidos mais recentes, adicionados durante a sessão, foram:
+1.  **Histórico de Manutenções:** Adicionar um campo de despesa e descrição no histórico de revisões e intervenções do veículo.
+2.  **Remover Botão Redundante:** Remover o botão Criar Template do submenu Contratos, pois já existe uma página dedicada para isso.
+3.  **Corrigir Permissões:** Permitir que utilizadores com o perfil Parceiro possam excluir os seus próprios relatórios semanais (atualmente recebem Não Autorizado).
+4.  **Seletores de Semana na Importação:** Adicionar seletores de semana (semana de importação e semana de relatório) às páginas de importação de GPS, combustível e carregamentos elétricos, semelhante ao que foi feito para a Via Verde.
+5.  **Melhorar Ficha do Veículo:** Na ficha do veículo, quando um motorista está atribuído, mostrar o seu número de telefone e tornar o nome um link para o perfil do motorista.
+6.  **Melhorar Atribuições do Motorista:** Na página do motorista, na lista de atribuições, mostrar a marca, modelo e matrícula do veículo, o tipo de utilização (ex: aluguer), o valor semanal e um link para descarregar uma cópia do contrato em PDF.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação é um sistema de gestão de frotas (React + FastAPI + MongoDB). O agente anterior implementou com sucesso um sistema completo de importação de despesas, incluindo uma nova página de frontend () e os endpoints de backend necessários. Foi também implementada a funcionalidade de gestão em lote (seleção múltipla, apagar, alterar estado) em duas páginas de relatórios diferentes, conforme solicitado. A lógica de atribuição de despesas (motorista vs. parceiro) com base no tipo de contrato do veículo foi corrigida e está a funcionar. O principal trabalho em andamento é a depuração da integração final entre as despesas importadas e a geração dos relatórios semanais dos motoristas.
+A aplicação é um sistema de gestão de frotas (React + FastAPI + MongoDB). O agente resolveu com sucesso o bug crítico que impedia as despesas de Via Verde de serem incluídas nos relatórios semanais. Subsequentemente, implementou várias funcionalidades novas solicitadas pelo utilizador:
+-   **Cálculo de Aluguer Proporcional:** A geração de relatórios agora calcula o valor do aluguer de forma proporcional se um motorista trocar de veículo a meio da semana.
+-   **Gestão de Dispositivos e Histórico do Veículo:** Foi implementado um sistema para associar dispositivos (OBU Via Verde, cartões de combustível, GPS) a um veículo e para manter um histórico detalhado de atribuições a motoristas, incluindo data/hora e KMs, visível em novos separadores (Dispositivos e Histórico) na página do veículo.
+-   **Análise de Custos e ROI do Veículo:** Foi adicionado um separador Relatório na página do veículo que calcula o ROI com base nas receitas (alugueres) e custos (manutenções, etc.), permitindo adicionar novos custos através de um modal.
+-   **Refatoração Parcial do Backend:** O agente removeu aproximadamente 474 linhas de código duplicado do ficheiro monolítico , migrando endpoints de autenticação, motoristas e notificações para os seus routers modulares.
+-   **Correções e Melhorias de UI:** Foram implementadas várias das solicitações mais recentes do utilizador, incluindo a correção da permissão de exclusão de relatórios para parceiros, a exibição do telefone do motorista na ficha do veículo e a remoção de um botão redundante.
 
 **Last working item**:
-- **Last item agent was working:** O agente estava a depurar o motivo pelo qual as despesas de Via Verde, apesar de serem importadas e atribuídas corretamente, não estão a ser somadas no relatório semanal do motorista (). A lógica para calcular o período de tempo das despesas (considerando o atraso configurado) foi implementada, e a consulta direta à base de dados confirma que os dados existem para o período esperado. No entanto, o endpoint continua a devolver um total de  para Via Verde.
-- **Status:** IN PROGRESS
-- **Agent Testing Done:** N
-- **Which testing method agent to use?** Backend testing. O agente deve primeiro resolver o bloqueio de depuração (prints não aparecem nos logs). Depois, usando  ou um script Python, chamar o endpoint  e verificar se o relatório gravado na coleção  contém o valor correto de .
-- **User Testing Done:** N
+-   **Last item agent was working:** O agente estava a trabalhar numa lista de correções e funcionalidades solicitadas pelo utilizador. A última ação foi a implementação de uma nova funcionalidade no separador Revisão/Intervenções da página do veículo () para registar o histórico de manutenções com descrição e custo, através de um novo botão e modal. O agente também implementou a exibição do telefone do motorista e a remoção de um botão de menu redundante.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N (Apenas um build do frontend e verificação visual com screenshots foram realizados. A funcionalidade do novo formulário não foi testada.)
+-   **Which testing method agent to use?** Frontend testing agent. É necessário testar de forma completa a página  para validar as novas funcionalidades e correções:
+    1.  Testar o fluxo de Registar Manutenção: abrir o modal, preencher e submeter o formulário, e verificar se o registo aparece corretamente no histórico.
+    2.  Confirmar que o telefone do motorista e o link para o seu perfil aparecem corretamente.
+    3.  Verificar no menu de navegação que o botão Criar Template em Contratos foi removido.
+    4.  Como parceiro, tentar apagar um relatório semanal e confirmar que a operação é bem-sucedida.
+-   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-- **Issue 1: Despesas Via Verde não são incluídas nos relatórios semanais (P0)**
-- **Issue 2: Refatoração do Backend Incompleta (P1)**
-- **Issue 3: Lógica de Automação RPA não Implementada (P2)**
+-   **Issue 1: Adicionar Seletores de Semana a Outras Páginas de Importação (P0)**
+-   **Issue 2: Melhorar a Vista de Histórico de Atribuições do Motorista (P1)**
+-   **Issue 3: Refatoração do Backend Incompleta (P2)**
+-   **Issue 4: Lógica de Automação RPA Não Implementada (P3)**
 
 Issues Detail:
-- **Issue 1: Despesas Via Verde não são incluídas nos relatórios semanais (P0)**
-    - **Attempted fixes:** O agente modificou a função  no  (linha ~10263) para consultar a coleção . A consulta foi validada diretamente na base de dados e funciona. O principal problema é um **bloqueio de depuração**: as instruções  e  não produzem saída nos logs do supervisor, tornando impossível seguir o fluxo de execução e inspecionar variáveis dentro do endpoint.
-    - **Next debug checklist:**
-        1.  **Resolver o bloqueio de depuração:** Tente escrever logs para um ficheiro temporário para obter visibilidade. Ex: . Este passo é crítico.
-        2.  Dentro da função  no , verificar o conteúdo das variáveis: , , .
-        3.  Verificar a consulta exata à coleção  que está a ser executada.
-        4.  Confirmar o número de registos () e o total somado () antes de serem inseridos no objeto do relatório. A causa provável é que a consulta dentro do código FastAPI não está a ser executada como esperado, apesar de funcionar isoladamente.
-    - **Why fix this issue and what will be achieved with the fix?** Conclui a funcionalidade de importação de despesas, automatizando a sua integração nos relatórios dos motoristas, que é um requisito principal do utilizador.
-    - **Status:** IN PROGRESS
-    - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** backend
-    - **Blocked on other issue:** None
+-   **Issue 1: Adicionar Seletores de Semana a Outras Páginas de Importação (P0)**
+    -   **Attempted fixes:** Nenhuma. A funcionalidade foi implementada apenas para a importação de despesas gerais (), mas o utilizador pediu o mesmo para GPS, combustível e carregamentos elétricos.
+    -   **Next debug checklist:**
+        1.  Identificar os ficheiros de frontend para as páginas de importação de GPS, combustível fóssil e elétrico.
+        2.  Reutilizar os componentes de seletor de ano/semana já criados para .
+        3.  Atualizar os endpoints de backend correspondentes para aceitar e guardar os novos parâmetros (, , , ).
+    -   **Why fix this issue and what will be achieved with the fix?** Para uniformizar o processo de importação de todas as despesas e completar um requisito explícito do utilizador.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** both
 
-- **Issue 2: Refatoração do Backend Incompleta (P1)**
-    - **Attempted fixes:** O agente anterior inverteu a ordem de inclusão dos routers no , o que serviu como um paliativo para os conflitos de rota. No entanto, o código duplicado (endpoints antigos) ainda existe no .
-    - **Next debug checklist:** Rever sistematicamente  e eliminar os endpoints que já foram migrados para ficheiros em .
-    - **Why fix this issue and what will be achieved with the fix?** Elimina a dívida técnica, previne futuros conflitos, melhora a manutenibilidade e estabiliza a arquitetura do backend.
-    - **Status:** NOT STARTED
-    - **Is recurring issue?** Y
-    - **Should Test frontend/backend/both after fix?** backend
-    - **Blocked on other issue:** None
+-   **Issue 2: Melhorar a Vista de Histórico de Atribuições do Motorista (P1)**
+    -   **Attempted fixes:** Nenhuma.
+    -   **Next debug checklist:**
+        1.  Identificar o componente de frontend que mostra o histórico de atribuições na página de detalhes do motorista.
+        2.  Modificar o endpoint de backend que fornece estes dados para incluir: marca, modelo e matrícula do veículo; tipo de contrato; valor semanal; e uma referência ao PDF do contrato.
+        3.  Atualizar a UI para exibir estas novas informações.
+        4.  Implementar um botão Download PDF que chame o endpoint apropriado para descarregar o contrato.
+    -   **Why fix this issue and what will be achieved with the fix?** Para fornecer uma visão mais completa e útil das atribuições aos motoristas, conforme solicitado.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** both
 
-- **Issue 3: Lógica de Automação RPA não Implementada (P2)**
-    - **Attempted fixes:** N/A. A estrutura foi criada, mas o ficheiro  está vazio.
-    - **Next debug checklist:** Implementar a função  em  usando a biblioteca Playwright para executar os passos de automação definidos (navegar, preencher, clicar, descarregar).
-    - **Why fix this issue and what will be achieved with the fix?** Torna a funcionalidade de Automação RPA, já com UI e base de dados, efetivamente funcional.
-    - **Status:** NOT STARTED
-    - **Is recurring issue?** N
-    - **Should Test frontend/backend/both after fix?** backend
-    - **Blocked on other issue:** None
+-   **Issue 3: Refatoração do Backend Incompleta (P2)**
+    -   **Attempted fixes:** O agente removeu com sucesso ~474 linhas de código e vários endpoints duplicados (, , ) de .
+    -   **Next debug checklist:**
+        1.  Identificar o próximo grupo lógico de endpoints para migrar (ex: , ).
+        2.  Seguir o padrão estabelecido: consolidar a lógica no router modular, remover o código duplicado de  e validar com o testing agent.
+    -   **Why fix this issue and what will be achieved with the fix?** Reduzir a dívida técnica, melhorar a manutenibilidade e prevenir conflitos de rotas.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** backend
+
+-   **Issue 4: Lógica de Automação RPA Não Implementada (P3)**
+    -   **Attempted fixes:** N/A.
+    -   **Next debug checklist:** Implementar a função  em  com Playwright.
+    -   **Why fix this issue and what will be achieved with the fix?** Para tornar a funcionalidade de automação RPA, que já tem UI, efetivamente operacional.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** backend
 
 **In progress Task List**:
-- None
+-   None
 
 **Upcoming and Future Tasks**
-- **Upcoming Tasks:**
-    - (P1) **Concluir Refatoração do Backend:** Migrar todos os endpoints restantes de  para routers modulares e apagar o código legado.
-    - (P2) **Implementar o Motor de Execução RPA:** Codificar a lógica em  para executar as automações com Playwright.
-- **Future Tasks:**
-    - (P3) **Editor Visual de Passos RPA:** Melhorar a página  para permitir a edição visual dos passos de automação.
-    - (P4) **Adicionar Mais Fornecedores de Automação:** Expandir o sistema RPA para novos fornecedores.
-    - (P5) **Usar Configurações CSV na Importação:** Conectar a funcionalidade Configuração de Extração CSV ao processo de importação.
+-   **Upcoming Tasks:**
+    -   (P0) **Concluir a verificação do Last working item**: Testar funcionalmente as várias correções e adições na página .
+    -   (P0) **Issue 1**: Adicionar Seletores de Semana a Outras Páginas de Importação.
+    -   (P1) **Issue 2**: Melhorar a Vista de Histórico de Atribuições do Motorista.
+-   **Future Tasks:**
+    -   (P2) **Issue 3**: Continuar a refatoração do backend.
+    -   (P3) **Issue 4**: Implementar o motor de execução RPA.
+    -   (P4) Criar um editor visual para os passos de automação RPA.
+    -   (P5) Expandir o sistema RPA para suportar novos fornecedores.
 
 **Completed work in this session**
-- **Implementado Sistema de Importação de Despesas:** Criada a página  e os endpoints de backend para fazer upload, pré-visualizar e importar ficheiros CSV/Excel de despesas.
-- **Corrigida Lógica de Atribuição de Despesas:** A importação agora atribui despesas corretamente ao motorista ou ao parceiro com base no tipo de contrato do veículo.
-- **Implementada Gestão em Lote de Relatórios:** As páginas  (parceiro) e  (admin) foram atualizadas para permitir seleção múltipla, alteração de estado em lote e eliminação em lote de relatórios, com modais de confirmação.
-- **Implementada Gestão de Credenciais RPA:** Adicionada uma secção no perfil do parceiro para gerir credenciais de automação.
-- **Corrigidos Conflitos de Rota (Paliativo):** A reordenação dos routers no  desbloqueou várias funcionalidades que estavam quebradas, como a atribuição de veículos.
+-   **Correção da Integração de Despesas**: Resolvido o bug crítico que impedia as despesas de Via Verde de serem somadas nos relatórios semanais.
+-   **Cálculo de Aluguer Proporcional**: Implementado o cálculo de aluguer proporcional para motoristas que trocam de veículo a meio da semana.
+-   **Gestão Avançada de Veículos**: Criado um sistema para associar dispositivos, rastrear histórico de atribuições, monitorizar custos e calcular o ROI por veículo.
+-   **Refatoração Parcial do Backend**: Removidas ~474 linhas de código duplicado de , migrando endpoints de , , e .
+-   **Implementação de Várias Solicitações do Utilizador**:
+    -   Corrigida a permissão para parceiros poderem apagar relatórios.
+    -   Adicionado o telefone do motorista e um link para o seu perfil na ficha do veículo.
+    -   Removido um botão redundante (Criar Template) do menu principal.
+    -   Adicionada a funcionalidade para registar o histórico de manutenções com custos.
 
 **Earlier issues found/mentioned but not fixed**
-- A refatoração do backend () continua incompleta, com muito código legado e duplicado que precisa ser removido.
+-   Todos os problemas mencionados foram registados nas listas de pendências ou resolvidos.
 
 **Known issue recurrence from previous fork**
-- None.
+-   Nenhum.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-- **Refatoração de Monólito:** A luta para decompor  continua. A não remoção de código antigo é a principal fonte de problemas.
-- **Processamento de Ficheiros:** Uso de  e  no backend para ler e processar ficheiros Excel.
-- **Tarefas em Background:** Uso de  para importações.
-- **Gestão de Estado no Frontend:** Uso extensivo de  e  no React para gerir UI complexa com seleções múltiplas, filtros e modais.
+-   **Refatoração Modular**: Continuação da migração de endpoints do  para ficheiros de rota dedicados, com o carregamento destes em primeiro lugar para garantir prioridade sobre o código legado.
+-   **Cálculo Proporcional**: Implementação de lógica baseada em datas para dividir custos (aluguer) de forma proporcional dentro de um período semanal.
+-   **Gestão de Estado Complexa em React**: A página  tornou-se um componente muito complexo, gerindo múltiplos separadores, modais e chamadas a APIs com  e .
+-   **UI Dinâmica**: A interface foi atualizada para apresentar ou ocultar elementos (como modais e formulários) de forma dinâmica com base no estado da aplicação.
 
 **key DB schema**
-- **:** (Nova) Armazena cada linha de despesa importada de um ficheiro (ex: Via Verde).
-- **:** (Nova) Regista o histórico de cada ficheiro de despesa importado.
+-   ****: Adicionados os campos  (array) e  (array) para rastrear atribuições e despesas ao longo do tempo.
+-   ****: Adicionados os campos , , ,  para a nova lógica de importação.
+-   ****: Adicionado o campo  para armazenar o detalhe do cálculo de aluguer proporcional.
 
 **changes in tech stack**
-- **Adicionado:**  e  para processamento de ficheiros no backend.
+-   Nenhuma nova dependência foi adicionada.
 
 **All files of reference**
-- **Criados/Modificados Criticamente nesta sessão:**
-    - : Modificado para adicionar endpoints de gestão de relatórios em lote e para a lógica de integração de despesas na geração de relatórios (atualmente em depuração).
-    - : Criado para gerir toda a lógica de importação de despesas.
-    - : Criado para definir os modelos de dados de despesas.
-    - : Criado para a UI de importação.
-    - : Fortemente modificado para adicionar gestão em lote.
-    - : Fortemente modificado para adicionar gestão em lote.
+-   **/app/backend/server.py**: O ficheiro monolítico, alvo principal da refatoração.
+-   **/app/backend/routes/relatorios.py**: Ficheiro crítico para a geração de relatórios.
+-   **/app/backend/routes/vehicles.py**: Ficheiro crítico para a gestão de veículos.
+-   **/app/frontend/src/pages/FichaVeiculo.js**: A página de detalhes do veículo, que se tornou um hub para muitas funcionalidades.
+-   **/app/frontend/src/pages/ImportarDespesas.js**: Página de importação de despesas.
+-   **/app/frontend/src/components/Layout.js**: Componente principal do layout da aplicação.
 
 **Areas that need refactoring**:
-- **:** A necessidade de remover código duplicado e migrar endpoints é urgente e continua a ser a principal dívida técnica.
+-   ****: Continua a ser a prioridade máxima. Apesar do progresso, ainda é extremamente grande.
+-   ****: Este ficheiro está a tornar-se um monólito de frontend (+4500 linhas). Os novos separadores e modais foram adicionados diretamente, em vez de serem extraídos para componentes reutilizáveis, aumentando a dívida técnica. O próximo agente deve focar-se em extrair a lógica dos separadores para componentes separados.
 
 **key api endpoints**
-- : Inicia a importação de um ficheiro de despesas.
-- : Lista as despesas importadas.
-- : Gera o relatório semanal para um motorista (endpoint em depuração).
-- : Elimina múltiplos relatórios.
-- : Altera o estado de múltiplos relatórios.
+-   : Lógica atualizada para cálculo de aluguer proporcional e integração de despesas.
+-   : Vários endpoints novos e atualizados para gerir dispositivos, histórico, custos e ROI.
+-   : Permissões atualizadas para incluir o perfil .
+-   : Atualizado para receber os parâmetros de semana e ano.
+-   Vários endpoints (, ) foram movidos de  para os seus routers modulares.
 
 **Critical Info for New Agent**
-- **BLOQUEIO DE DEPURAÇÃO:** O agente anterior não conseguiu obter saída de  ou  nos logs do supervisor. Esta é a sua **prioridade #0**. Resolva isso antes de tentar depurar a lógica do código, por exemplo, escrevendo para um ficheiro temporário ().
-- **LÓGICA DO RELATÓRIO:** O problema atual está na função  (linha ~10263) no . A consulta ao MongoDB () parece não estar a devolver resultados quando executada dentro do endpoint, embora funcione isoladamente. Investigue a passagem de parâmetros e o objeto  dentro dessa função.
-- **NÃO APAGUE DADOS DE TESTE:** As despesas são importadas para a coleção . Não apague esta coleção ao testar. Se precisar de re-importar, use a funcionalidade da aplicação que já trata da limpeza de importações anteriores.
-- **NOME DA BASE DE DADOS:** A base de dados correta é .
+-   **Prioridades do Utilizador:** As tarefas pendentes mais importantes são as que restam do último pedido do utilizador (Mensagens #405, #408): adicionar seletores de semana a todas as importações e melhorar a vista de histórico de atribuições do motorista.
+-   **Refatoração do Frontend:** A página  está a tornar-se insustentável. Ao trabalhar nela, planeie extrair a lógica dos separadores (Dispositivos, Histórico, Relatório, Revisão) para os seus próprios ficheiros de componentes em  ou numa nova pasta .
+-   **Estratégia de Refatoração do Backend:** A abordagem de mover a lógica para os routers modulares e depois limpar  está a funcionar. Continue a aplicar este método, focando-se nos endpoints de  e  como próximos alvos.
 
 **documents and test reports created in this job**
--  (atualizado várias vezes com resultados dos testes de backend)
+-   /app/test_result.md (atualizado consistentemente)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  User: (Screenshot) Reporta que a página de relatórios não permite seleção em lote. **Status: IN PROGRESS (Agente corrigiu a página errada inicialmente).**
-2.  User: Clarifica que o estado após importação deve ser pendente e que as despesas Via Verde da semana X devem aparecer no relatório da semana X+1. **Status: IN PROGRESS (É o problema atual).**
-3.  User: Fornece um screenshot da página de relatórios de parceiros e pede para adicionar seleção múltipla para apagar/alterar estado. **Status: COMPLETED (corrigido em /relatorios-semanais-lista e depois em /relatorios).**
-4.  User: Reporta que as despesas importadas não foram atribuídas ao motorista. **Status: COMPLETED (lógica de atribuição foi corrigida).**
-5.  User: Pede para apagar relatórios de parceiros com confirmação. **Status: COMPLETED.**
-6.  User: (Upload ficheiro via_verde.xlsx) Pede para configurar a importação de CSV da Via Verde e associar a despesa ao motorista/veículo. **Status: COMPLETED (sistema de importação criado).**
-7.  User: Clarifica a lógica de associação de despesas com base no tipo de contrato (aluguer vs. comissão). **Status: COMPLETED (lógica implementada).**
-8.  User: Concorda com o plano de implementação da importação de despesas. **Status: COMPLETED.**
-9.  User: Aprova o avanço para a próxima tarefa. **Status: COMPLETED.**
-10. User: Reporta que o screenshot prova que não dá para selecionar motoristas na lista, alterar estado ou apagar relatórios. **Status: COMPLETED (Funcionalidade implementada na página correta).**
+1.  **User ():** Confirma e detalha os requisitos para a lista de tarefas, como usar a matrícula para GPS e IDs de cartão para combustível.
+2.  **Agent:** Inicia a implementação da lista de tarefas, começando pelas mais simples.
+3.  **User ():** Envia uma nova lista de 6 bugs/melhorias a serem implementados.
+4.  **Agent:** Pede esclarecimentos sobre a lista de tarefas.
+5.  **User ():** Pede para continuar a refatoração.
+6.  **Agent:** Continua a refatoração do backend, limpando mais endpoints duplicados de  e validando com testes.
+7.  **User ():** Pede para iniciar a refatoração do backend.
+8.  **Agent:** Inicia a refatoração do backend, removendo com sucesso os endpoints de autenticação duplicados.
+9.  **User ():** Pede para avançar com a Fase 2.
+10. **Agent:** Implementa com sucesso a Fase 2 (cálculo de aluguer proporcional) e valida com testes.
 
 **Project Health Check:**
-*   **Broken:**
-    *   A integração das despesas importadas na geração de relatórios semanais não funciona.
-    *   A arquitetura do backend continua instável devido à refatoração incompleta ().
-*   **Mocked:**
-    *   O serviço de execução RPA () continua a ser um placeholder.
+-   **Broken:** Nenhuma funcionalidade crítica está quebrada.
+-   **Mocked:** O serviço de execução de automação RPA () permanece como um placeholder.
 
 **3rd Party Integrations**
-*   **Playwright:** Para automação RPA (lógica de execução pendente).
-*   **Cryptography:** Para encriptação de credenciais.
-*   **pandas/xlrd:** Para leitura de ficheiros CSV/Excel.
+-   **Playwright:** Instalado para automação RPA (execução pendente).
+-   **Cryptography:** Usado para encriptação de credenciais.
+-   **pandas/xlrd:** Usado para ler ficheiros CSV/Excel durante a importação.
 
 **Testing status**
-- **Testing agent used after significant changes:** YES (o agente usou o testing agent para validar os endpoints de backend após as grandes implementações).
-- **Troubleshoot agent used after agent stuck in loop:** NO
-- **Test files created:** None in this session, but  foi consistentemente atualizado.
-- **Known regressions:** A refatoração contínua do  acarreta um risco elevado de regressões.
+-   **Testing agent used after significant changes:** YES. O agente usou consistentemente o testing agent para validar as alterações, o que é uma excelente prática.
+-   **Troubleshoot agent used after agent stuck in loop:** NO
+-   **Test files created:** Nenhuma.
+-   **Known regressions:** Uma execução de teste mostrou 37/38 passes, mas o agente não investigou a falha. Pode ter sido um problema pontual (flake), mas vale a pena estar atento.
 
 **Credentials to test flow:**
-*   **Admin:**  / 
-*   **Parceiro:**  / 
+-   **Admin:**  / 
+-   **Parceiro:**  / 
 
 **What agent forgot to execute**
-*   O agente não conseguiu resolver o problema fundamental de não ter saída de logs/prints, o que o forçou a usar métodos de depuração indiretos e demorados. A resolução deste problema de ambiente/configuração é crucial.</analysis>
+-   O agente não esqueceu nada; estava no meio da implementação de uma lista de solicitações do utilizador.
+-   **Refatoração do Frontend:** O agente adicionou uma quantidade significativa de código ao ficheiro  sem o dividir em componentes menores, aumentando a dívida técnica do frontend. Esta é uma oportunidade de melhoria para o próximo agente.</analysis>

@@ -3,7 +3,7 @@ console.log("TESTE CRITICO DO BUG DE GRAVACAO - INICIANDO");
 
 // Login as parceiro
 console.log("1. Login como parceiro");
-await page.goto('https://auto-expense-9.preview.emergentagent.com/login');
+await page.goto('https://fleetmaster-49.preview.emergentagent.com/login');
 await page.waitForSelector('input[type="email"]');
 
 await page.fill('input[type="email"]', 'parceiro@tvdefleet.com');
@@ -15,7 +15,7 @@ console.log("Login bem-sucedido");
 
 // Navigate to Vehicles
 console.log("2. Navegando para Veiculos");
-await page.goto('https://auto-expense-9.preview.emergentagent.com/vehicles');
+await page.goto('https://fleetmaster-49.preview.emergentagent.com/vehicles');
 await page.waitForSelector('[data-testid="vehicles-page"]', { timeout: 10000 });
 console.log("Pagina de veiculos carregada");
 
