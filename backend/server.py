@@ -12430,8 +12430,10 @@ async def criar_relatorios_rascunho_apos_importacao(
                 if plataforma == 'uber':
                     dados = await db.ganhos_uber.find({
                         "motorista_id": motorista_id,
-                        "periodo_inicio": periodo_inicio,
-                        "periodo_fim": periodo_fim
+                        "$or": [
+                            {"periodo_inicio": periodo_inicio, "periodo_fim": periodo_fim},
+                            {"semana": semana, "ano": ano}
+                        ]
                     }, {"_id": 0}).to_list(1000)
                     
                     ganhos_uber_novo = 0
