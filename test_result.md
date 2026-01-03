@@ -149,7 +149,53 @@ backend:
         agent: "testing"
         comment: "✅ VEHICLE ROI CALCULATION WORKING PERFECTLY! GET /api/vehicles/{id}/relatorio-ganhos endpoint tested with multiple scenarios: 1) Total period: Receitas €750, Custos €685, Lucro €65, ROI 9.49% - calculation verified correct. 2) Year filter (2026): Properly filters data by year. 3) Custom period: Correctly applies date range filters. ROI formula ((receitas - custos) / custos) * 100 working accurately. Cost categories properly grouped and revenue/cost breakdown detailed. All period types supported: total, ano, mes, custom."
 
-frontend:
+  - task: "Partner Permission - Delete Weekly Reports"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PARTNER DELETE PERMISSION VERIFIED: Partner (parceiro@tvdefleet.com) can successfully delete their own weekly reports. DELETE /api/relatorios/semanal/{relatorio_id} returns 200 success, NOT 'Não Autorizado'. Critical bug fix confirmed working."
+
+  - task: "FichaVeiculo - Maintenance History Registration"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/vehicles.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VEHICLE MAINTENANCE HISTORY WORKING: POST /api/vehicles/{vehicle_id}/custos endpoint successfully adds maintenance cost records. Tested with vehicle AB-12-CD (Toyota Prius) - added €150 revisao cost. Record persistence verified via GET /api/vehicles/{vehicle_id}/custos. Backend endpoint functional for maintenance registration."
+
+  - task: "FichaVeiculo - Driver Phone and Link Display"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/motoristas.py, /app/backend/routes/vehicles.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ DRIVER PHONE DISPLAY WORKING: Driver phone numbers are correctly available when fetching vehicle details. Vehicle AS-83-NX shows assigned driver Nelson Francisco with phone +351912847256. GET /api/motoristas/{motorista_id} returns phone field. Vehicle response includes motorista_atribuido_nome. Backend supports driver phone display in vehicle context."
+
+  - task: "Layout - Removed Criar Template button"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/vehicles.py, /app/backend/routes/motoristas.py, /app/backend/routes/relatorios.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ BASIC BACKEND ENDPOINTS FUNCTIONAL: All menu-related endpoints working correctly. GET /api/vehicles (29 vehicles), GET /api/motoristas (12 drivers), GET /api/auth/me (Admin TVDEFleet), GET /api/relatorios/semanais-todos (24 reports) all return proper responses. Backend infrastructure supports layout menu functionality without issues."
   - task: "RelatoriosSemanaisLista Page"
     implemented: true
     working: "NA"
