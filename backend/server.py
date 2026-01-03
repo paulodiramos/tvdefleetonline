@@ -13083,6 +13083,7 @@ async def importar_plataforma(
                             "ganhos_liquidos": parse_float_bolt(row.get('Ganhos líquidos|€', '0')),
                             "comissoes": parse_float_bolt(row.get('Comissões|€', '0')),
                             "gorjetas": parse_float_bolt(row.get('Gorjetas dos passageiros|€', '0')),
+                            "portagens": parse_float_bolt(row.get('Portagens|€', '0')),
                             "total_taxas": parse_float_bolt(row.get('Total de taxas|€', '0')),
                             "ganhos_liquidos_por_hora": parse_float_bolt(row.get('Ganhos líquidos por hora|€/h', '0')),
                             "tipo_documento": "resumo_semanal",
