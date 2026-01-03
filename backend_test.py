@@ -445,8 +445,8 @@ class FleeTrackTester:
             return False
     
     def run_all_tests(self):
-        """Run all tests in sequence - Focus on FleeTrack Backend APIs"""
-        print("🚀 INICIANDO TESTES - FleeTrack Backend APIs após Refatorização")
+        """Run all tests in sequence - Focus on CSV Import for Despesas"""
+        print("🚀 INICIANDO TESTES - FleeTrack CSV Import for Despesas (Via Verde)")
         print("=" * 80)
         
         # Authenticate required users
@@ -455,8 +455,8 @@ class FleeTrackTester:
         for role in ["admin"]:
             self.authenticate_user(role)
         
-        # PRIORITY: FleeTrack Backend API Tests
-        print("\n🎯 TESTES PRINCIPAIS: FleeTrack Backend APIs")
+        # PRIORITY: CSV Import for Despesas Tests
+        print("\n🎯 TESTES PRINCIPAIS: CSV Import for Despesas (Via Verde)")
         print("=" * 80)
         self.test_fleetrack_backend_apis()
         
