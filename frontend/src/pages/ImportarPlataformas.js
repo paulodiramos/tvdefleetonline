@@ -445,7 +445,7 @@ const ImportarPlataformas = () => {
                 </div>
 
                 {/* Campos de Período (Semana) */}
-                {['uber', 'bolt', 'viaverde'].includes(plataformaSelecionada) && (
+                {['uber', 'bolt', 'viaverde', 'gps', 'combustivel', 'carregamento'].includes(plataformaSelecionada) && (
                   <div className="p-4 bg-blue-50 border border-blue-200 rounded space-y-3">
                     <p className="text-sm font-semibold text-blue-800">📅 Período de Importação</p>
                     
