@@ -71,6 +71,13 @@ const RelatoriosHub = ({ user, onLogout }) => {
   });
   const [resultadoGeracaoMassa, setResultadoGeracaoMassa] = useState(null);
 
+  // Multi-select state
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showStatusChangeModal, setShowStatusChangeModal] = useState(false);
+  const [newStatus, setNewStatus] = useState('');
+  const [processingBulk, setProcessingBulk] = useState(false);
+
   useEffect(() => {
     fetchData();
   }, []);
