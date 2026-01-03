@@ -1,4 +1,16 @@
 backend:
+  - task: "Backend Auth Routes Refactoring"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/auth.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ BACKEND REFACTORING VERIFICATION COMPLETED (22/23 tests passed - 95.7% success)! CRITICAL TESTS ALL PASSED: 1) POST /api/auth/login - Login funcionando: Admin TVDEFleet (admin@tvdefleet.com) with valid JWT token (length: 231), 2) GET /api/auth/me - Get current user funcionando: correct admin user authenticated, 3) GET /api/vehicles - Lista de veículos funcionando: 29 veículos encontrados, 4) GET /api/motoristas - Lista de motoristas funcionando: 12 motoristas encontrados, 5) POST /api/relatorios/motorista/{id}/gerar-semanal - Relatório semanal funcionando with proportional rental (€278.57), 6) GET /api/vehicles/{id}/custos - Custos do veículo funcionando: AS-83-NX with 6 costs (€1370 total). REFACTORING SUCCESS: Auth endpoints moved from server.py to routes/auth.py working perfectly. No breaking changes detected."
+
   - task: "Proportional Rental Calculation"
     implemented: true
     working: true
