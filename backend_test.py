@@ -661,8 +661,8 @@ class FleeTrackTester:
             return False
     
     def test_relatorios_delete_api(self):
-        """3. Test Report Delete API"""
-        print("\n📋 3. Test Report Delete API")
+        """8. Test Report Delete API"""
+        print("\n📋 8. Test Report Delete API")
         print("-" * 60)
         print("TESTE: DELETE /api/relatorios/semanal/{relatorio_id}")
         
