@@ -3844,70 +3844,7 @@ async def atribuir_motorista_a_parceiro(
         "parceiro_id": parceiro_id
     }
 
-@api_router.put("/motoristas/{motorista_id}")
-async def update_motorista(
-    motorista_id: str, 
-    update_data: Dict[str, Any], 
-    current_user: Dict = Depends(get_current_user)
-):
-    """Update motorista data (partial updates allowed)"""
-    # Check if motorista exists
-    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
-    if not motorista:
-        raise HTTPException(status_code=404, detail="Motorista not found")
-    
-    # Check if parceiro/operacional is assigned to this motorista
-    is_assigned = False
-    if current_user["role"] in [UserRole.PARCEIRO]:
-        # Check if current user is the assigned parceiro
-        is_assigned = motorista.get("parceiro_atribuido") == current_user["id"]
-    
-    # Allow admin, gestao, OR parceiro/operacional assigned OR motorista editing their own profile
-    is_authorized = (
-        current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO] or
-        is_assigned or
-        (current_user["role"] == UserRole.MOTORISTA and current_user["email"] == motorista.get("email"))
-    )
-    
-    if not is_authorized:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    
-    # If motorista is editing and documents are approved, only allow specific fields
-    if (current_user["role"] == UserRole.MOTORISTA and 
-        motorista.get("documentos_aprovados", False)):
-        # Only allow editing: registo criminal and iban
-        allowed_fields = [
-            'codigo_registo_criminal', 'validade_registo_criminal',
-            'iban', 'nome_banco'
-        ]
-        
-        # Filter update_data to only allowed fields
-        filtered_update = {k: v for k, v in update_data.items() if k in allowed_fields}
-        
-        if not filtered_update:
-            raise HTTPException(
-                status_code=403, 
-                detail="Documentos aprovados. Apenas Registo Criminal e IBAN podem ser alterados. Contacte o gestor para outras alterações."
-            )
-        
-        update_data = filtered_update
-    
-    # Remove fields that shouldn't be updated directly
-    update_data.pop("id", None)
-    update_data.pop("created_at", None)
-    update_data.pop("_id", None)
-    update_data.pop("documentos_aprovados", None)  # Não permitir mudança direta deste campo
-    
-    if not update_data:
-        raise HTTPException(status_code=400, detail="No data to update")
-    
-    # Update motorista
-    await db.motoristas.update_one(
-        {"id": motorista_id},
-        {"$set": update_data}
-    )
-    
-    return {"message": "Motorista updated successfully"}
+# NOTA: Endpoint PUT /motoristas/{motorista_id} migrado para routes/motoristas.py
 
 @api_router.put("/motoristas/{motorista_id}/desativar")
 async def desativar_motorista(
