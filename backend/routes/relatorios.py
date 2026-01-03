@@ -194,12 +194,66 @@ async def gerar_relatorio_semanal(
         via_verde_importado = sum(desp.get("valor_liquido", 0.0) for desp in despesas_via_verde)
         total_via_verde += via_verde_importado
     
-    # Calculate valor aluguer/comissao
+    # ==================== CÁLCULO DE ALUGUER PROPORCIONAL ====================
+    # Verificar se houve troca de veículo na semana do relatório
     valor_aluguer = 0.0
-    if contrato:
-        valor_aluguer = contrato.get("valor_semanal", 0) or 0
-    elif veiculo:
-        valor_aluguer = veiculo.get("valor_semanal", 0) or 0
+    aluguer_detalhes = []
+    
+    # Buscar histórico de atribuições do motorista nesta semana
+    historico_semana = await db.historico_atribuicoes.find({
+        "motorista_id": motorista_id,
+        "$or": [
+            # Atribuição começou antes ou durante a semana e ainda estava ativa
+            {
+                "data_inicio": {"$lte": data_fim + "T23:59:59"},
+                "$or": [
+                    {"data_fim": None},
+                    {"data_fim": {"$gte": data_inicio + "T00:00:00"}}
+                ]
+            }
+        ]
+    }, {"_id": 0}).to_list(100)
+    
+    if historico_semana:
+        # Calcular aluguer proporcional para cada veículo usado na semana
+        dt_inicio_semana = datetime.fromisoformat(data_inicio)
+        dt_fim_semana = datetime.fromisoformat(data_fim) + timedelta(days=1)  # Incluir último dia
+        total_dias_semana = 7
+        
+        for hist in historico_semana:
+            hist_inicio = datetime.fromisoformat(hist["data_inicio"].replace("Z", "+00:00").split("+")[0])
+            hist_fim = datetime.fromisoformat(hist["data_fim"].replace("Z", "+00:00").split("+")[0]) if hist.get("data_fim") else datetime.now(timezone.utc).replace(tzinfo=None)
+            
+            # Calcular sobreposição com a semana do relatório
+            periodo_inicio = max(hist_inicio, dt_inicio_semana)
+            periodo_fim = min(hist_fim, dt_fim_semana)
+            
+            if periodo_fim > periodo_inicio:
+                dias_com_veiculo = (periodo_fim - periodo_inicio).days
+                if dias_com_veiculo < 1:
+                    dias_com_veiculo = 1  # Mínimo 1 dia
+                
+                valor_semanal = hist.get("valor_aluguer_semanal", 0) or 0
+                valor_diario = valor_semanal / 7
+                valor_proporcional = valor_diario * dias_com_veiculo
+                
+                valor_aluguer += valor_proporcional
+                aluguer_detalhes.append({
+                    "veiculo_id": hist.get("veiculo_id"),
+                    "veiculo_matricula": hist.get("veiculo_matricula"),
+                    "dias": dias_com_veiculo,
+                    "valor_semanal": valor_semanal,
+                    "valor_proporcional": round(valor_proporcional, 2),
+                    "periodo": f"{periodo_inicio.strftime('%d/%m')} - {periodo_fim.strftime('%d/%m')}"
+                })
+        
+        valor_aluguer = round(valor_aluguer, 2)
+    else:
+        # Fallback: usar valor do contrato/veículo atual (sem histórico)
+        if contrato:
+            valor_aluguer = contrato.get("valor_semanal", 0) or 0
+        elif veiculo:
+            valor_aluguer = veiculo.get("valor_semanal", 0) or 0
     
     # Calculate totals
     valor_bruto = total_ganhos_uber + total_ganhos_bolt
