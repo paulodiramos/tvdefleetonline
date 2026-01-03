@@ -11484,12 +11484,13 @@ async def gerar_relatorios_em_massa(
                     
                     data_inicio_vv = (inicio - timedelta(weeks=via_verde_atraso)).strftime("%Y-%m-%d")
                     data_fim_vv = (fim - timedelta(weeks=via_verde_atraso)).strftime("%Y-%m-%d")
+                    data_fim_vv_next = (fim - timedelta(weeks=via_verde_atraso) + timedelta(days=1)).strftime("%Y-%m-%d")
                     
                     despesas_via_verde = await db.despesas_fornecedor.find({
                         "motorista_id": motorista_id,
                         "tipo_fornecedor": "via_verde",
                         "tipo_responsavel": "motorista",
-                        "data_entrada": {"$gte": data_inicio_vv, "$lte": data_fim_vv}
+                        "data_entrada": {"$gte": data_inicio_vv, "$lt": data_fim_vv_next}
                     }, {"_id": 0}).to_list(1000)
                     
                     via_verde_importado = sum(float(d.get("valor_liquido", 0)) for d in despesas_via_verde)
