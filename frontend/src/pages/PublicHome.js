@@ -443,7 +443,7 @@ const PublicHome = () => {
                 <CardTitle>Localização</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-slate-600">Lisboa, Portugal</p>
+                <p className="text-slate-600">{contactInfo.morada_empresa}</p>
               </CardContent>
             </Card>
           </div>
