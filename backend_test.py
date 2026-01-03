@@ -1214,6 +1214,175 @@ class FleeTrackTester:
             self.log_result("Vehicle-ROI-Error", False, f"❌ Error during ROI test: {str(e)}")
             return False
     
+    def test_proportional_rental_calculation(self):
+        """🎯 NEW TEST: Proportional Rental Calculation for Vehicle Switch"""
+        print("\n📋 🎯 NEW TEST: Proportional Rental Calculation for Vehicle Switch")
+        print("-" * 80)
+        print("TESTE: Cálculo de aluguer proporcional quando motorista troca de veículo")
+        print("MOTORISTA: Nelson Francisco (ID: e2355169-10a7-4547-9dd0-479c128d73f9)")
+        print("CENÁRIO: Veículo AB-12-CD (29-31 dez, 3 dias, €250/semana) + EF-34-GH (1-4 jan, 4 dias, €300/semana)")
+        print("CÁLCULO ESPERADO: (€250/7)×3 + (€300/7)×4 = €107.14 + €171.43 = €278.57")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Proportional-Rental-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        motorista_id = "e2355169-10a7-4547-9dd0-479c128d73f9"
+        
+        try:
+            # Test 1: Gerar relatório com troca de veículo
+            print("\n🔍 Test 1: Gerar relatório semanal com troca de veículo")
+            test_data = {
+                "data_inicio": "2025-12-29",
+                "data_fim": "2026-01-04",
+                "semana": 1,
+                "ano": 2026
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
+                json=test_data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                resumo = result.get("resumo", {})
+                
+                # Verificar se aluguer_proporcional = true
+                aluguer_proporcional = resumo.get("aluguer_proporcional", False)
+                valor_aluguer = resumo.get("valor_aluguer", 0)
+                aluguer_detalhes = resumo.get("aluguer_detalhes", [])
+                
+                if aluguer_proporcional:
+                    self.log_result("Proportional-Rental-Flag", True, 
+                                  f"✅ aluguer_proporcional = true (troca de veículo detectada)")
+                    
+                    # Verificar valor total aproximado (€278.57 esperado)
+                    if 270 <= valor_aluguer <= 285:
+                        self.log_result("Proportional-Rental-Value", True, 
+                                      f"✅ Valor aluguer correto: €{valor_aluguer} (esperado ~€278.57)")
+                    else:
+                        self.log_result("Proportional-Rental-Value", False, 
+                                      f"❌ Valor aluguer incorreto: €{valor_aluguer} (esperado ~€278.57)")
+                    
+                    # Verificar detalhes do aluguer
+                    if aluguer_detalhes and len(aluguer_detalhes) == 2:
+                        total_dias = sum(detalhe.get("dias", 0) for detalhe in aluguer_detalhes)
+                        if total_dias == 7:
+                            self.log_result("Proportional-Rental-Days", True, 
+                                          f"✅ Total de dias correto: {total_dias} dias")
+                            
+                            # Verificar cada veículo
+                            for i, detalhe in enumerate(aluguer_detalhes):
+                                matricula = detalhe.get("veiculo_matricula", "N/A")
+                                dias = detalhe.get("dias", 0)
+                                valor_semanal = detalhe.get("valor_semanal", 0)
+                                valor_proporcional = detalhe.get("valor_proporcional", 0)
+                                
+                                self.log_result(f"Proportional-Rental-Vehicle-{i+1}", True, 
+                                              f"✅ Veículo {matricula}: {dias} dias, €{valor_semanal}/semana → €{valor_proporcional}")
+                        else:
+                            self.log_result("Proportional-Rental-Days", False, 
+                                          f"❌ Total de dias incorreto: {total_dias} (esperado 7)")
+                    else:
+                        self.log_result("Proportional-Rental-Details", False, 
+                                      f"❌ Detalhes incorretos: {len(aluguer_detalhes) if aluguer_detalhes else 0} veículos (esperado 2)")
+                else:
+                    self.log_result("Proportional-Rental-Flag", False, 
+                                  f"❌ aluguer_proporcional = false (troca de veículo não detectada)")
+                
+                # Store relatorio_id for Test 2
+                self.relatorio_id = result.get("relatorio_id")
+                
+            else:
+                self.log_result("Proportional-Rental-Generate", False, 
+                              f"❌ Falha ao gerar relatório: {response.status_code}", response.text)
+            
+            # Test 2: Verificar relatório guardado
+            if hasattr(self, 'relatorio_id'):
+                print("\n🔍 Test 2: Verificar relatório guardado")
+                response = requests.get(
+                    f"{BACKEND_URL}/relatorios/semanal/{self.relatorio_id}",
+                    headers=headers
+                )
+                
+                if response.status_code == 200:
+                    relatorio = response.json()
+                    aluguer_detalhes_saved = relatorio.get("aluguer_detalhes", [])
+                    aluguer_proporcional_saved = relatorio.get("aluguer_proporcional", False)
+                    
+                    if aluguer_proporcional_saved and aluguer_detalhes_saved:
+                        self.log_result("Proportional-Rental-Saved", True, 
+                                      f"✅ Relatório guardado com detalhes proporcionais: {len(aluguer_detalhes_saved)} veículos")
+                    else:
+                        self.log_result("Proportional-Rental-Saved", False, 
+                                      f"❌ Relatório não guardou detalhes proporcionais corretamente")
+                else:
+                    self.log_result("Proportional-Rental-Saved", False, 
+                                  f"❌ Falha ao recuperar relatório: {response.status_code}")
+            
+            # Test 3: Gerar relatório sem troca (motorista normal)
+            print("\n🔍 Test 3: Gerar relatório para motorista sem troca de veículo")
+            
+            # First, get list of motoristas to find one without vehicle switch
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            
+            if motoristas_response.status_code == 200:
+                motoristas = motoristas_response.json()
+                
+                # Find a different motorista
+                test_motorista = None
+                for motorista in motoristas:
+                    if motorista.get("id") != motorista_id:
+                        test_motorista = motorista
+                        break
+                
+                if test_motorista:
+                    test_motorista_id = test_motorista.get("id")
+                    test_motorista_nome = test_motorista.get("name")
+                    
+                    test_data_normal = {
+                        "data_inicio": "2025-12-29",
+                        "data_fim": "2026-01-04",
+                        "semana": 1,
+                        "ano": 2026
+                    }
+                    
+                    response = requests.post(
+                        f"{BACKEND_URL}/relatorios/motorista/{test_motorista_id}/gerar-semanal",
+                        json=test_data_normal,
+                        headers=headers
+                    )
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        resumo = result.get("resumo", {})
+                        aluguer_proporcional = resumo.get("aluguer_proporcional", False)
+                        
+                        if not aluguer_proporcional:
+                            self.log_result("Proportional-Rental-Normal", True, 
+                                          f"✅ Motorista normal sem troca: {test_motorista_nome} - aluguer_proporcional = false")
+                        else:
+                            self.log_result("Proportional-Rental-Normal", False, 
+                                          f"⚠️ Motorista {test_motorista_nome} também tem troca de veículo")
+                    else:
+                        self.log_result("Proportional-Rental-Normal", False, 
+                                      f"❌ Falha ao gerar relatório normal: {response.status_code}")
+                else:
+                    self.log_result("Proportional-Rental-Normal", True, 
+                                  "ℹ️ Não há outros motoristas para testar cenário normal")
+            else:
+                self.log_result("Proportional-Rental-Normal", False, 
+                              f"❌ Falha ao obter lista de motoristas: {motoristas_response.status_code}")
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Proportional-Rental-Error", False, f"❌ Erro durante teste de aluguer proporcional: {str(e)}")
+            return False
+
     def run_all_tests(self):
         """Run all tests in sequence - Focus on Updated FleeTrack System"""
         print("🚀 INICIANDO TESTES - FleeTrack Updated System Tests")
@@ -1229,6 +1398,11 @@ class FleeTrackTester:
         print("\n🎯 TESTES PRINCIPAIS: FleeTrack Updated System")
         print("=" * 80)
         self.test_fleetrack_backend_apis()
+        
+        # NEW PRIORITY TEST: Proportional Rental Calculation
+        print("\n🎯 TESTE PRIORITÁRIO: Cálculo de Aluguer Proporcional")
+        print("=" * 80)
+        self.test_proportional_rental_calculation()
         
         # Print final summary
         self.print_summary()
