@@ -227,14 +227,14 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Week Selectors for GPS, Combustível and Carregamentos Import"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
+agent_communication:
   - agent: "testing"
-    message: "🎯 PRIORITY SCENARIOS TESTING COMPLETED (20/20 tests passed - 100% success rate). LAST SESSION IMPLEMENTATION VALIDATION SUCCESSFUL: 1) PARTNER DELETE PERMISSION WORKING - Partner (parceiro@tvdefleet.com) can successfully delete weekly reports, critical bug fix verified. 2) VEHICLE MAINTENANCE HISTORY WORKING - POST /api/vehicles/{vehicle_id}/custos endpoint adds maintenance records correctly, tested with €150 revisao cost on Toyota Prius. 3) DRIVER PHONE DISPLAY WORKING - Driver phone numbers available in vehicle context, Nelson Francisco (+351912847256) displayed correctly. 4) BASIC BACKEND ENDPOINTS FUNCTIONAL - All menu endpoints working (29 vehicles, 12 drivers, 24 reports). All priority scenarios from review request are working correctly."
+    message: "🎯 WEEK SELECTORS TESTING COMPLETED (4/4 tests passed - 100% success rate). PRIORITY FEATURE VERIFIED: Week selectors successfully added to all required import platforms! 1) GPS / Trajetos - 'Período de Importação' section with Ano, Semana (1-53), Data Início, and Data Fim fields all visible and functional. 2) Combustível (Fóssil) - All week selector fields present and working. 3) Carregamentos (Elétrico) - All week selector fields present and working. 4) Via Verde - Confirmed still working with all fields visible. FUNCTIONALITY TEST PASSED: Auto-calculation working correctly (Year 2025, Week 3 → Data Início: 2025-01-20, Data Fim: 2025-01-26). All import tabs now have consistent week selector functionality as requested in the review."
   - agent: "testing"
     message: "🎯 BACKEND REFACTORING PHASE 2 VERIFICATION COMPLETED (18/19 tests passed - 94.7% success rate). CRITICAL REFACTORING TESTS ALL PASSED: Motoristas and notificacoes endpoints successfully moved from server.py to routes/motoristas.py and routes/notificacoes.py with NO BREAKING CHANGES! 1) POST /api/auth/login working perfectly - Admin login returns valid JWT token (231 chars), 2) GET /api/motoristas working - 12 drivers listed, 3) GET /api/motoristas/{id} working - driver data with plano_nome, 4) PUT /api/motoristas/{id} working - update success, 5) PUT /api/motoristas/{id}/approve working - plan assignment (Plano Base Gratuito), 6) DELETE /api/notificacoes/{id} working - proper 404 response, 7) POST /api/relatorios/motorista/{id}/gerar-semanal working - proportional rental calculation (€278.57). REFACTORING SUCCESS: Total 474 lines removed from server.py. All critical functionality preserved."
   - agent: "testing"
