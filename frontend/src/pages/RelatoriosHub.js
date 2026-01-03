@@ -1162,7 +1162,35 @@ const RelatoriosHub = ({ user, onLogout }) => {
                   />
                 </div>
                 <div>
-                  <Label>Via Verde (€)</Label>
+                  <Label className="flex items-center justify-between">
+                    <span>Via Verde (€)</span>
+                    <Button 
+                      type="button"
+                      variant="ghost" 
+                      size="sm"
+                      className="h-6 px-2 text-xs text-blue-600 hover:text-blue-800"
+                      onClick={async () => {
+                        if (!novoRelatorio.motorista_id || !novoRelatorio.semana || !novoRelatorio.ano) {
+                          toast.error('Selecione o motorista, semana e ano primeiro');
+                          return;
+                        }
+                        try {
+                          const token = localStorage.getItem('token');
+                          const response = await axios.get(
+                            `${API_URL}/api/relatorios/motorista/${novoRelatorio.motorista_id}/via-verde-total?semana=${novoRelatorio.semana}&ano=${novoRelatorio.ano}`,
+                            { headers: { Authorization: `Bearer ${token}` } }
+                          );
+                          setNovoRelatorio({ ...novoRelatorio, via_verde_total: response.data.total_via_verde });
+                          toast.success(`Via Verde calculado: €${response.data.total_via_verde} (${response.data.registos_portagens} registos)`);
+                        } catch (error) {
+                          console.error('Erro ao calcular Via Verde:', error);
+                          toast.error('Erro ao calcular Via Verde');
+                        }
+                      }}
+                    >
+                      Calcular
+                    </Button>
+                  </Label>
                   <Input
                     type="number"
                     step="0.01"
