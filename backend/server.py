@@ -10402,11 +10402,14 @@ async def gerar_relatorio_semanal(
         # Also check imported despesas (Via Verde from CSV import)
         # Only count if motorista is responsible (tipo_responsavel = "motorista")
         if motorista_id:
+            # Include full day by using $lt on next day
+            data_fim_vv_next = (datetime.fromisoformat(data_fim_via_verde) + timedelta(days=1)).strftime("%Y-%m-%d")
+            
             despesas_via_verde_query = {
                 "motorista_id": motorista_id,
                 "tipo_fornecedor": "via_verde",
                 "tipo_responsavel": "motorista",
-                "data_entrada": {"$gte": data_inicio_via_verde, "$lte": data_fim_via_verde}
+                "data_entrada": {"$gte": data_inicio_via_verde, "$lt": data_fim_vv_next}
             }
             despesas_via_verde_cursor = db.despesas_fornecedor.find(despesas_via_verde_query, {"_id": 0})
             despesas_via_verde = await despesas_via_verde_cursor.to_list(1000)
