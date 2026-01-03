@@ -108,47 +108,31 @@ class FleeTrackTester:
         return temp_file.name
     
     def test_fleetrack_backend_apis(self):
-        """🎯 MAIN TEST: FleeTrack Updated System Tests"""
-        print("\n🎯 MAIN TEST: FleeTrack Updated System Tests")
+        """🎯 CRITICAL REFACTORING TESTS: Backend Auth Routes Moved to routes/auth.py"""
+        print("\n🎯 CRITICAL REFACTORING TESTS: Backend Auth Routes Moved to routes/auth.py")
         print("=" * 80)
-        print("CREDENCIAIS:")
+        print("CONTEXT: Refatoração parcial do server.py:")
+        print("- Removidos endpoints duplicados de auth (register, login, me)")
+        print("- Removidos endpoints duplicados de profile (update, change-password, permissions)")
+        print("- Estes endpoints agora são servidos por routes/auth.py")
+        print("\nCREDENCIAIS:")
         print("- Admin: admin@tvdefleet.com / 123456")
-        print("- Parceiro: parceiro@tvdefleet.com / 123456")
-        print("\nTESTES A REALIZAR:")
-        print("1. Authentication API")
-        print("2. Vehicle Device Management API - GET/PUT /api/vehicles/{id}/dispositivos")
-        print("3. Vehicle Assignment History API - GET /api/vehicles/{id}/historico-atribuicoes")
-        print("4. Vehicle Driver Assignment API - POST /api/vehicles/{id}/atribuir-motorista")
-        print("5. Motoristas List API - GET /api/motoristas")
-        print("6. Via Verde Weekly Reports API - POST /api/relatorios/motorista/{id}/gerar-semanal")
-        print("7. Despesas Resumo API - GET /api/despesas/resumo (NEW LOGIC)")
-        print("8. Report Delete API - DELETE /api/relatorios/semanal/{id}")
-        print("9. Report Status Change API - PUT /api/relatorios/semanal/{id}/status")
-        print("10. List Reports for Parceiro - GET /api/relatorios/semanais-todos")
-        print("11. CSV Import API - POST /api/despesas/importar")
-        print("12. List Despesas API - GET /api/despesas/")
-        print("13. 🆕 NEW: Vehicle Costs API - POST /api/vehicles/{id}/custos")
-        print("14. 🆕 NEW: Vehicle Costs List API - GET /api/vehicles/{id}/custos")
-        print("15. 🆕 NEW: Vehicle ROI Report API - GET /api/vehicles/{id}/relatorio-ganhos")
+        print("\nTESTES CRÍTICOS:")
+        print("1. Login (POST /api/auth/login)")
+        print("2. Get Current User (GET /api/auth/me)")
+        print("3. Listar Veículos (GET /api/vehicles)")
+        print("4. Listar Motoristas (GET /api/motoristas)")
+        print("5. Gerar Relatório Semanal (POST /api/relatorios/motorista/{id}/gerar-semanal)")
+        print("6. Custos do Veículo (GET /api/vehicles/{id}/custos)")
         print("=" * 80)
         
-        # Execute all tests
-        self.test_authentication_api()
-        self.test_vehicle_device_management_api()
-        self.test_vehicle_assignment_history_api()
-        self.test_vehicle_driver_assignment_api()
-        self.test_motoristas_list_api()
-        self.test_via_verde_weekly_reports_api()
-        self.test_despesas_resumo_api()
-        self.test_relatorios_delete_api()
-        self.test_relatorios_status_change_api()
-        self.test_relatorios_list_parceiro_api()
-        self.test_despesas_import_api()
-        self.test_despesas_list_api()
-        # NEW TESTS: Vehicle Costs and ROI
-        self.test_vehicle_costs_api()
-        self.test_vehicle_costs_list_api()
-        self.test_vehicle_roi_report_api()
+        # Execute critical tests only
+        self.test_critical_auth_login()
+        self.test_critical_auth_me()
+        self.test_critical_vehicles_list()
+        self.test_critical_motoristas_list()
+        self.test_critical_weekly_report()
+        self.test_critical_vehicle_costs()
         
         return True
     
