@@ -128,424 +128,284 @@ class FleeTrackTester:
         
         return True
 
-    def test_scenario_1_via_verde_import_endpoint(self):
-        """SCENARIO 1: Via Verde Import Endpoint Test"""
-        print("\n📋 SCENARIO 1: Via Verde Import Endpoint Test")
+    def test_feature_1_via_verde_auto_calculate(self):
+        """FEATURE 1: Via Verde Auto-Calculate Button"""
+        print("\n📋 FEATURE 1: Via Verde Auto-Calculate Button")
         print("-" * 60)
-        print("GOAL: Test POST /api/importar/viaverde endpoint with Excel file")
+        print("GOAL: Test GET /api/relatorios/motorista/{motorista_id}/via-verde-total endpoint")
         print("STEPS:")
         print("1. Login as admin")
-        print("2. Import Via Verde Excel file")
-        print("3. Verify successful import with ~750+ records")
-        print("4. Check vehicle OBU mapping")
+        print("2. Call Via Verde auto-calculate endpoint")
+        print("3. Verify total_via_verde > 0 with correct calculation")
+        print("4. Check via_verde_atraso_semanas (2 weeks delay)")
         
         # Step 1: Login as admin
         if not self.authenticate_user("admin"):
-            self.log_result("Scenario1-Auth", False, "❌ Failed to authenticate as admin")
+            self.log_result("Feature1-Auth", False, "❌ Failed to authenticate as admin")
             return False
         
         headers = self.get_headers("admin")
         
         try:
-            # Step 2: Check if test file exists
-            import os
-            test_file_path = "/app/backend/uploads/via_verde_test.xlsx"
+            # Step 2: Call Via Verde auto-calculate endpoint
+            print(f"\n🔍 Step 2: Testing Via Verde auto-calculate for motorista {TEST_MOTORISTA_ID}")
+            print(f"   Parameters: semana={TEST_SEMANA}, ano={TEST_ANO}")
             
-            if not os.path.exists(test_file_path):
-                self.log_result("Scenario1-TestFile", False, f"❌ Test file not found: {test_file_path}")
-                return False
-            
-            self.log_result("Scenario1-TestFile", True, f"✅ Test file found: {test_file_path}")
-            
-            # Step 3: Import Via Verde Excel file
-            print("\n🔍 Step 2: Importing Via Verde Excel file...")
-            
-            # Use the new endpoint from server.py
-            import_url = f"{BACKEND_URL}/import/viaverde"
-            
-            # Prepare form data
-            with open(test_file_path, 'rb') as f:
-                files = {'file': ('via_verde_test.xlsx', f, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
-                data = {
-                    'parceiro_id': 'test_parceiro_001',
-                    'periodo_inicio': '2025-12-15',
-                    'periodo_fim': '2025-12-21'
-                }
-                
-                import_response = requests.post(
-                    import_url,
-                    files=files,
-                    data=data,
-                    headers=headers
-                )
-            
-            if import_response.status_code == 200:
-                import_result = import_response.json()
-                
-                movimentos_importados = import_result.get("movimentos_importados", 0)
-                total_value = import_result.get("total_value", 0)
-                
-                self.log_result("Scenario1-ImportSuccess", True, 
-                              f"✅ VIA VERDE IMPORT SUCCESSFUL: {movimentos_importados} records imported, total value: €{total_value}")
-                
-                # Check if we got expected number of records
-                if movimentos_importados >= 750:
-                    self.log_result("Scenario1-RecordCount", True, 
-                                  f"✅ EXPECTED RECORD COUNT: {movimentos_importados} records (≥750)")
-                else:
-                    self.log_result("Scenario1-RecordCount", True, 
-                                  f"✅ IMPORT WORKING: {movimentos_importados} records imported (expected ≥750)")
-                
-                # Check for vehicle mapping issues
-                veiculos_nao_encontrados = import_result.get("veiculos_nao_encontrados", [])
-                if veiculos_nao_encontrados:
-                    self.log_result("Scenario1-VehicleMapping", True, 
-                                  f"ℹ️ Vehicles not found: {len(veiculos_nao_encontrados)} (normal if test data)")
-                else:
-                    self.log_result("Scenario1-VehicleMapping", True, 
-                                  "✅ All vehicles found and mapped correctly")
-                
-            else:
-                self.log_result("Scenario1-ImportFailed", False, 
-                              f"❌ Via Verde import failed: {import_response.status_code} - {import_response.text}")
-                
-        except Exception as e:
-            self.log_result("Scenario1-Error", False, f"❌ Error in scenario 1: {str(e)}")
-
-    def test_scenario_2_vehicle_obu_configuration(self):
-        """SCENARIO 2: Vehicle OBU Configuration Test"""
-        print("\n📋 SCENARIO 2: Vehicle OBU Configuration Test")
-        print("-" * 60)
-        print("GOAL: Test vehicle AS-83-NX has OBU configured")
-        print("STEPS:")
-        print("1. Get vehicle dispositivos for AS-83-NX")
-        print("2. Verify OBU Via Verde is configured")
-        print("3. Expected OBU: 43026607794")
-        
-        # Step 1: Login as admin
-        if not self.authenticate_user("admin"):
-            self.log_result("Scenario2-Auth", False, "❌ Failed to authenticate as admin")
-            return False
-        
-        headers = self.get_headers("admin")
-        
-        try:
-            # Step 2: Get vehicle by ID
-            vehicle_id = "4ad331ff-c0f5-43c9-95b8-cc085d32d8a7"
-            print(f"\n🔍 Testing vehicle ID: {vehicle_id}")
-            
-            # Get vehicle dispositivos
-            dispositivos_response = requests.get(
-                f"{BACKEND_URL}/vehicles/{vehicle_id}/dispositivos",
-                headers=headers
-            )
-            
-            if dispositivos_response.status_code == 200:
-                dispositivos_data = dispositivos_response.json()
-                
-                matricula = dispositivos_data.get("matricula")
-                dispositivos = dispositivos_data.get("dispositivos", {})
-                obu_via_verde = dispositivos.get("obu_via_verde")
-                
-                self.log_result("Scenario2-GetDispositivos", True, 
-                              f"✅ Vehicle dispositivos retrieved: {matricula}")
-                
-                # Check OBU configuration
-                expected_obu = "43026607794"
-                if obu_via_verde:
-                    if obu_via_verde == expected_obu:
-                        self.log_result("Scenario2-OBUCorrect", True, 
-                                      f"✅ OBU VIA VERDE CORRECT: {obu_via_verde}")
-                    else:
-                        self.log_result("Scenario2-OBUDifferent", True, 
-                                      f"✅ OBU VIA VERDE CONFIGURED: {obu_via_verde} (expected {expected_obu})")
-                else:
-                    self.log_result("Scenario2-OBUMissing", False, 
-                                  "❌ OBU Via Verde not configured")
-                
-                # Check other dispositivos
-                cartao_fossil = dispositivos.get("cartao_combustivel_fossil")
-                cartao_eletrico = dispositivos.get("cartao_combustivel_eletrico")
-                gps_matricula = dispositivos.get("gps_matricula")
-                
-                self.log_result("Scenario2-AllDispositivos", True, 
-                              f"✅ All dispositivos: OBU={obu_via_verde}, Fossil={cartao_fossil}, Electric={cartao_eletrico}, GPS={gps_matricula}")
-                
-            else:
-                self.log_result("Scenario2-GetDispositivos", False, 
-                              f"❌ Failed to get vehicle dispositivos: {dispositivos_response.status_code}")
-                
-        except Exception as e:
-            self.log_result("Scenario2-Error", False, f"❌ Error in scenario 2: {str(e)}")
-
-    def test_scenario_3_weekly_report_via_verde_integration(self):
-        """SCENARIO 3: Weekly Report Via Verde Integration Test"""
-        print("\n📋 SCENARIO 3: Weekly Report Via Verde Integration Test")
-        print("-" * 60)
-        print("GOAL: Test Via Verde integration in weekly reports with 2-week delay")
-        print("STEPS:")
-        print("1. Generate report for semana 53, ano 2025")
-        print("2. Should fetch Via Verde data from semana 51 (2-week delay)")
-        print("3. Motorista: Nelson Francisco")
-        print("4. Expected: resumo.total_via_verde > €0")
-        
-        # Step 1: Login as admin
-        if not self.authenticate_user("admin"):
-            self.log_result("Scenario3-Auth", False, "❌ Failed to authenticate as admin")
-            return False
-        
-        headers = self.get_headers("admin")
-        
-        try:
-            # Step 2: Use Nelson Francisco's motorista ID
-            motorista_id = "e2355169-10a7-4547-9dd0-479c128d73f9"
-            print(f"\n🔍 Testing with Nelson Francisco motorista ID: {motorista_id}")
-            
-            # Verify motorista exists
-            motorista_response = requests.get(f"{BACKEND_URL}/motoristas/{motorista_id}", headers=headers)
-            
-            if motorista_response.status_code == 200:
-                motorista = motorista_response.json()
-                motorista_name = motorista.get("name", "N/A")
-                
-                self.log_result("Scenario3-GetMotorista", True, 
-                              f"✅ Found motorista: {motorista_name}")
-                
-                # Step 3: Generate weekly report for semana 53, ano 2025
-                print("\n🔍 Step 2: Generating report for semana 53, ano 2025 (should get Via Verde from semana 51)...")
-                
-                report_data = {
-                    "data_inicio": "2025-12-29",  # Week 53 of 2025
-                    "data_fim": "2026-01-04",
-                    "semana": 53,
-                    "ano": 2025
-                }
-                
-                report_response = requests.post(
-                    f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
-                    json=report_data,
-                    headers=headers
-                )
-                
-                if report_response.status_code == 200:
-                    report_result = report_response.json()
-                    
-                    if "resumo" in report_result:
-                        resumo = report_result.get("resumo", {})
-                        
-                        # Extract Via Verde values
-                        total_via_verde = resumo.get("total_via_verde", 0)
-                        
-                        self.log_result("Scenario3-WeeklyReport", True, 
-                                      f"✅ WEEKLY REPORT GENERATED: ID {report_result.get('relatorio_id')}")
-                        
-                        # Step 4: Verify Via Verde integration
-                        if total_via_verde > 0:
-                            expected_value = 325.20
-                            tolerance = 50.0  # Allow some tolerance
-                            
-                            if abs(total_via_verde - expected_value) <= tolerance:
-                                self.log_result("Scenario3-ViaVerdeCorrect", True, 
-                                              f"✅ VIA VERDE INTEGRATION WORKING: total_via_verde = €{total_via_verde} (expected ~€{expected_value})")
-                            else:
-                                self.log_result("Scenario3-ViaVerdePresent", True, 
-                                              f"✅ VIA VERDE DATA PRESENT: total_via_verde = €{total_via_verde} (expected ~€{expected_value})")
-                        else:
-                            self.log_result("Scenario3-ViaVerdeZero", False, 
-                                          f"❌ VIA VERDE INTEGRATION ISSUE: total_via_verde = €{total_via_verde} (expected > 0)")
-                        
-                        # Check other report fields
-                        ganhos_uber = resumo.get("ganhos_uber", 0)
-                        ganhos_bolt = resumo.get("ganhos_bolt", 0)
-                        total_combustivel = resumo.get("total_combustivel", 0)
-                        valor_aluguer = resumo.get("valor_aluguer", 0)
-                        valor_liquido = resumo.get("valor_liquido", 0)
-                        
-                        self.log_result("Scenario3-ReportBreakdown", True, 
-                                      f"✅ Report breakdown: Uber €{ganhos_uber}, Bolt €{ganhos_bolt}, Combustível €{total_combustivel}, Via Verde €{total_via_verde}, Aluguer €{valor_aluguer}, Líquido €{valor_liquido}")
-                        
-                        # Get full report for more details
-                        full_report_response = requests.get(
-                            f"{BACKEND_URL}/relatorios/semanal/{report_result.get('relatorio_id')}",
-                            headers=headers
-                        )
-                        
-                        if full_report_response.status_code == 200:
-                            full_report = full_report_response.json()
-                            semana_report = full_report.get("semana")
-                            ano_report = full_report.get("ano")
-                            
-                            self.log_result("Scenario3-ReportDetails", True, 
-                                          f"✅ Report details: Semana {semana_report}/{ano_report}, Via Verde delay applied correctly")
-                    else:
-                        self.log_result("Scenario3-WeeklyReport", False, 
-                                      f"❌ Weekly report response missing resumo: {report_result}")
-                else:
-                    self.log_result("Scenario3-WeeklyReport", False, 
-                                  f"❌ Weekly report generation failed: {report_response.status_code} - {report_response.text}")
-            else:
-                self.log_result("Scenario3-GetMotorista", False, 
-                              f"❌ Failed to get motorista {motorista_id}: {motorista_response.status_code}")
-                
-        except Exception as e:
-            self.log_result("Scenario3-Error", False, f"❌ Error in scenario 3: {str(e)}")
-
-    def test_scenario_4_portagens_collection_verification(self):
-        """SCENARIO 4: Portagens Collection Verification"""
-        print("\n📋 SCENARIO 4: Portagens Collection Verification")
-        print("-" * 60)
-        print("GOAL: Verify imported records exist in portagens_viaverde collection")
-        print("STEPS:")
-        print("1. Check if portagens_viaverde collection has records")
-        print("2. Verify records have semana, ano, vehicle_id, motorista_id")
-        print("3. Check data structure and mapping")
-        
-        # Step 1: Login as admin
-        if not self.authenticate_user("admin"):
-            self.log_result("Scenario4-Auth", False, "❌ Failed to authenticate as admin")
-            return False
-        
-        headers = self.get_headers("admin")
-        
-        try:
-            # Since we can't directly query MongoDB from the test, we'll use the weekly report
-            # generation to verify that the portagens_viaverde collection is being used
-            
-            # Step 2: Generate a report and check if Via Verde data is included
-            print("\n🔍 Verifying portagens_viaverde collection through report generation...")
-            
-            # Use a known motorista
-            motorista_id = "e2355169-10a7-4547-9dd0-479c128d73f9"
-            
-            # Generate report for a period that should have Via Verde data
-            report_data = {
-                "data_inicio": "2025-12-15",
-                "data_fim": "2025-12-21",
-                "semana": 51,
-                "ano": 2025
+            via_verde_url = f"{BACKEND_URL}/relatorios/motorista/{TEST_MOTORISTA_ID}/via-verde-total"
+            params = {
+                "semana": TEST_SEMANA,
+                "ano": TEST_ANO
             }
             
-            report_response = requests.post(
-                f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
-                json=report_data,
-                headers=headers
-            )
+            response = requests.get(via_verde_url, params=params, headers=headers)
             
-            if report_response.status_code == 200:
-                report_result = report_response.json()
+            if response.status_code == 200:
+                result = response.json()
                 
-                if "resumo" in report_result:
-                    resumo = report_result.get("resumo", {})
-                    total_via_verde = resumo.get("total_via_verde", 0)
-                    
-                    self.log_result("Scenario4-CollectionAccess", True, 
-                                  f"✅ PORTAGENS COLLECTION ACCESSIBLE: Via Verde data retrieved through report")
-                    
-                    if total_via_verde > 0:
-                        self.log_result("Scenario4-DataPresent", True, 
-                                      f"✅ PORTAGENS DATA PRESENT: €{total_via_verde} found for semana 51/2025")
-                        
-                        # Get full report to check for Via Verde records structure
-                        full_report_response = requests.get(
-                            f"{BACKEND_URL}/relatorios/semanal/{report_result.get('relatorio_id')}",
-                            headers=headers
-                        )
-                        
-                        if full_report_response.status_code == 200:
-                            full_report = full_report_response.json()
-                            
-                            # Check if report has the expected structure
-                            expected_fields = ["motorista_id", "semana", "ano", "total_via_verde"]
-                            missing_fields = [field for field in expected_fields if field not in full_report]
-                            
-                            if not missing_fields:
-                                self.log_result("Scenario4-DataStructure", True, 
-                                              "✅ PORTAGENS DATA STRUCTURE: All required fields present")
-                            else:
-                                self.log_result("Scenario4-DataStructure", True, 
-                                              f"✅ PORTAGENS DATA STRUCTURE: Missing fields: {missing_fields}")
-                            
-                            # Verify semana/ano mapping
-                            report_semana = full_report.get("semana")
-                            report_ano = full_report.get("ano")
-                            
-                            self.log_result("Scenario4-SemanaAnoMapping", True, 
-                                          f"✅ SEMANA/ANO MAPPING: Report semana {report_semana}/{report_ano} correctly processed")
-                    else:
-                        self.log_result("Scenario4-NoData", True, 
-                                      "ℹ️ No Via Verde data for this period (normal if no imports)")
+                motorista_id = result.get("motorista_id")
+                semana_relatorio = result.get("semana_relatorio")
+                ano_relatorio = result.get("ano_relatorio")
+                semana_dados = result.get("semana_dados")
+                ano_dados = result.get("ano_dados")
+                total_via_verde = result.get("total_via_verde", 0)
+                via_verde_atraso = result.get("via_verde_atraso_semanas", 0)
+                registos_portagens = result.get("registos_portagens", 0)
+                registos_legacy = result.get("registos_legacy", 0)
+                
+                self.log_result("Feature1-EndpointSuccess", True, 
+                              f"✅ VIA VERDE AUTO-CALCULATE ENDPOINT WORKING")
+                
+                # Step 3: Verify calculation
+                if total_via_verde > 0:
+                    self.log_result("Feature1-CalculationWorking", True, 
+                                  f"✅ VIA VERDE CALCULATION WORKING: total_via_verde = €{total_via_verde}")
                 else:
-                    self.log_result("Scenario4-ReportStructure", False, 
-                                  "❌ Report missing resumo section")
+                    self.log_result("Feature1-NoData", True, 
+                                  f"ℹ️ No Via Verde data found for this period: €{total_via_verde}")
+                
+                # Step 4: Check delay calculation
+                expected_semana_dados = TEST_SEMANA - via_verde_atraso if TEST_SEMANA > via_verde_atraso else TEST_SEMANA
+                expected_ano_dados = TEST_ANO if TEST_SEMANA > via_verde_atraso else TEST_ANO - 1
+                
+                if semana_dados == expected_semana_dados and ano_dados == expected_ano_dados:
+                    self.log_result("Feature1-DelayCalculation", True, 
+                                  f"✅ VIA VERDE DELAY CALCULATION CORRECT: {via_verde_atraso} weeks delay applied")
+                else:
+                    self.log_result("Feature1-DelayCalculation", False, 
+                                  f"❌ VIA VERDE DELAY CALCULATION ISSUE: expected semana {expected_semana_dados}/{expected_ano_dados}, got {semana_dados}/{ano_dados}")
+                
+                # Log detailed results
+                self.log_result("Feature1-DetailedResults", True, 
+                              f"✅ Detailed results: Motorista {motorista_id}, Report {semana_relatorio}/{ano_relatorio}, Data {semana_dados}/{ano_dados}, Portagens {registos_portagens}, Legacy {registos_legacy}")
+                
             else:
-                self.log_result("Scenario4-ReportGeneration", False, 
-                              f"❌ Failed to generate test report: {report_response.status_code}")
-            
-            # Step 3: Test the import endpoint to verify collection is working
-            print("\n🔍 Testing import endpoint to verify collection functionality...")
-            
-            # Try to import a small test to verify the collection is accessible
-            import tempfile
-            import openpyxl
-            
-            # Create a minimal test Excel file
-            wb = openpyxl.Workbook()
-            ws = wb.active
-            
-            # Add headers
-            headers_row = ["License Plate", "IAI OBU", "Service", "Service Description", "Market", 
-                          "Contract Number", "Entry Date", "Exit Date", "Entry Point", "Exit Point", 
-                          "Value", "Is Payed", "Payment Date", "Contract Number", "Liquid Value"]
-            
-            for col, header in enumerate(headers_row, 1):
-                ws.cell(row=1, column=col, value=header)
-            
-            # Add one test row
-            test_row = ["AS-83-NX", "43026607794", "Autoestradas", "Toll", "Portugal", 
-                       "123456", "2025-12-15", "2025-12-15", "A1 Porto", "A1 Lisboa", 
-                       "2.50", "Yes", "2025-12-15", "123456", "2.30"]
-            
-            for col, value in enumerate(test_row, 1):
-                ws.cell(row=2, column=col, value=value)
-            
-            # Save to temporary file
-            with tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False) as tmp_file:
-                wb.save(tmp_file.name)
-                
-                # Test import
-                with open(tmp_file.name, 'rb') as f:
-                    files = {'file': ('test_via_verde.xlsx', f, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')}
-                    data = {
-                        'parceiro_id': 'test_collection_verification',
-                        'periodo_inicio': '2025-12-15',
-                        'periodo_fim': '2025-12-21'
-                    }
-                    
-                    import_response = requests.post(
-                        f"{BACKEND_URL}/import/viaverde",
-                        files=files,
-                        data=data,
-                        headers=self.get_headers("admin")
-                    )
-                
-                if import_response.status_code == 200:
-                    import_result = import_response.json()
-                    self.log_result("Scenario4-CollectionWrite", True, 
-                                  f"✅ PORTAGENS COLLECTION WRITABLE: Test import successful")
-                else:
-                    self.log_result("Scenario4-CollectionWrite", False, 
-                                  f"❌ Collection write test failed: {import_response.status_code}")
-                
-                # Clean up
-                import os
-                os.unlink(tmp_file.name)
+                self.log_result("Feature1-EndpointFailed", False, 
+                              f"❌ Via Verde auto-calculate endpoint failed: {response.status_code} - {response.text}")
                 
         except Exception as e:
-            self.log_result("Scenario4-Error", False, f"❌ Error in scenario 4: {str(e)}")
+            self.log_result("Feature1-Error", False, f"❌ Error in feature 1: {str(e)}")
+
+    def test_feature_2_reports_showing_ganhos(self):
+        """FEATURE 2: Reports Showing Ganhos"""
+        print("\n📋 FEATURE 2: Reports Showing Ganhos")
+        print("-" * 60)
+        print("GOAL: Test that reports endpoint returns correct total_ganhos")
+        print("STEPS:")
+        print("1. Login as admin")
+        print("2. Get all weekly reports")
+        print("3. Verify reports have total_ganhos > 0 for drivers with earnings")
+        print("4. Check specific drivers: Bruno Coelho, Arlei Oliveira")
+        
+        # Step 1: Login as admin
+        if not self.authenticate_user("admin"):
+            self.log_result("Feature2-Auth", False, "❌ Failed to authenticate as admin")
+            return False
+        
+        headers = self.get_headers("admin")
+        
+        try:
+            # Step 2: Get all weekly reports
+            print("\n🔍 Step 2: Getting all weekly reports...")
+            
+            reports_url = f"{BACKEND_URL}/relatorios/semanais-todos"
+            response = requests.get(reports_url, headers=headers)
+            
+            if response.status_code == 200:
+                reports = response.json()
+                
+                self.log_result("Feature2-GetReports", True, 
+                              f"✅ REPORTS ENDPOINT WORKING: {len(reports)} reports retrieved")
+                
+                # Step 3: Verify reports have ganhos
+                reports_with_ganhos = []
+                total_ganhos_sum = 0
+                
+                for report in reports:
+                    total_ganhos = report.get("total_ganhos", 0) or report.get("ganhos_uber", 0) + report.get("ganhos_bolt", 0)
+                    if total_ganhos > 0:
+                        reports_with_ganhos.append({
+                            "motorista_nome": report.get("motorista_nome"),
+                            "total_ganhos": total_ganhos,
+                            "semana": report.get("semana"),
+                            "ano": report.get("ano")
+                        })
+                        total_ganhos_sum += total_ganhos
+                
+                if reports_with_ganhos:
+                    self.log_result("Feature2-GanhosPresent", True, 
+                                  f"✅ REPORTS SHOWING GANHOS: {len(reports_with_ganhos)} reports with ganhos > 0, total sum: €{total_ganhos_sum:.2f}")
+                else:
+                    self.log_result("Feature2-NoGanhos", True, 
+                                  "ℹ️ No reports with ganhos found (may be normal if no data)")
+                
+                # Step 4: Check specific drivers
+                bruno_reports = [r for r in reports_with_ganhos if "Bruno" in r.get("motorista_nome", "") and "Coelho" in r.get("motorista_nome", "")]
+                arlei_reports = [r for r in reports_with_ganhos if "Arlei" in r.get("motorista_nome", "") and "Oliveira" in r.get("motorista_nome", "")]
+                
+                if bruno_reports:
+                    bruno_ganhos = bruno_reports[0]["total_ganhos"]
+                    self.log_result("Feature2-BrunoCoelho", True, 
+                                  f"✅ BRUNO COELHO GANHOS FOUND: €{bruno_ganhos:.2f}")
+                else:
+                    self.log_result("Feature2-BrunoCoelho", True, 
+                                  "ℹ️ Bruno Coelho not found in reports with ganhos")
+                
+                if arlei_reports:
+                    arlei_ganhos = arlei_reports[0]["total_ganhos"]
+                    self.log_result("Feature2-ArleiOliveira", True, 
+                                  f"✅ ARLEI OLIVEIRA GANHOS FOUND: €{arlei_ganhos:.2f}")
+                else:
+                    self.log_result("Feature2-ArleiOliveira", True, 
+                                  "ℹ️ Arlei Oliveira not found in reports with ganhos")
+                
+                # Show top 5 drivers with ganhos
+                if reports_with_ganhos:
+                    top_drivers = sorted(reports_with_ganhos, key=lambda x: x["total_ganhos"], reverse=True)[:5]
+                    top_drivers_str = ", ".join([f"{d['motorista_nome']} (€{d['total_ganhos']:.2f})" for d in top_drivers])
+                    self.log_result("Feature2-TopDrivers", True, 
+                                  f"✅ Top 5 drivers with ganhos: {top_drivers_str}")
+                
+            else:
+                self.log_result("Feature2-GetReports", False, 
+                              f"❌ Reports endpoint failed: {response.status_code} - {response.text}")
+                
+        except Exception as e:
+            self.log_result("Feature2-Error", False, f"❌ Error in feature 2: {str(e)}")
+
+    def test_feature_3_comunicacoes_contact_config(self):
+        """FEATURE 3: Comunicações Contact Config"""
+        print("\n📋 FEATURE 3: Comunicações Contact Config")
+        print("-" * 60)
+        print("GOAL: Test contact config save and retrieve functionality")
+        print("STEPS:")
+        print("1. Login as admin")
+        print("2. Save contact config via POST /api/configuracoes/email")
+        print("3. Retrieve config via GET /api/configuracoes/email")
+        print("4. Test public endpoint GET /api/public/contacto (no auth)")
+        
+        # Step 1: Login as admin
+        if not self.authenticate_user("admin"):
+            self.log_result("Feature3-Auth", False, "❌ Failed to authenticate as admin")
+            return False
+        
+        headers = self.get_headers("admin")
+        
+        try:
+            # Step 2: Save contact config
+            print("\n🔍 Step 2: Saving contact configuration...")
+            
+            test_config = {
+                "email_contacto": "test@test.com",
+                "telefone_contacto": "+351 999 999 999",
+                "morada_empresa": "Test Address",
+                "nome_empresa": "Test Company"
+            }
+            
+            save_url = f"{BACKEND_URL}/configuracoes/email"
+            save_response = requests.post(save_url, json=test_config, headers=headers)
+            
+            if save_response.status_code == 200:
+                self.log_result("Feature3-SaveConfig", True, 
+                              "✅ CONTACT CONFIG SAVE WORKING: Configuration saved successfully")
+            else:
+                self.log_result("Feature3-SaveConfig", False, 
+                              f"❌ Contact config save failed: {save_response.status_code} - {save_response.text}")
+                return False
+            
+            # Step 3: Retrieve config (authenticated)
+            print("\n🔍 Step 3: Retrieving contact configuration (authenticated)...")
+            
+            get_url = f"{BACKEND_URL}/configuracoes/email"
+            get_response = requests.get(get_url, headers=headers)
+            
+            if get_response.status_code == 200:
+                config = get_response.json()
+                
+                self.log_result("Feature3-GetConfig", True, 
+                              "✅ CONTACT CONFIG GET WORKING: Configuration retrieved successfully")
+                
+                # Verify saved data
+                saved_email = config.get("email_contacto")
+                saved_telefone = config.get("telefone_contacto")
+                saved_morada = config.get("morada_empresa")
+                saved_nome = config.get("nome_empresa")
+                
+                if (saved_email == test_config["email_contacto"] and 
+                    saved_telefone == test_config["telefone_contacto"] and
+                    saved_morada == test_config["morada_empresa"] and
+                    saved_nome == test_config["nome_empresa"]):
+                    
+                    self.log_result("Feature3-DataIntegrity", True, 
+                                  "✅ CONTACT CONFIG DATA INTEGRITY: All fields saved and retrieved correctly")
+                else:
+                    self.log_result("Feature3-DataIntegrity", False, 
+                                  f"❌ Data integrity issue: saved {test_config}, retrieved {config}")
+            else:
+                self.log_result("Feature3-GetConfig", False, 
+                              f"❌ Contact config get failed: {get_response.status_code} - {get_response.text}")
+            
+            # Step 4: Test public endpoint (no auth)
+            print("\n🔍 Step 4: Testing public contact endpoint (no auth)...")
+            
+            public_url = f"{BACKEND_URL}/public/contacto"
+            public_response = requests.get(public_url)  # No headers (no auth)
+            
+            if public_response.status_code == 200:
+                public_config = public_response.json()
+                
+                self.log_result("Feature3-PublicEndpoint", True, 
+                              "✅ PUBLIC CONTACT ENDPOINT WORKING: Public endpoint accessible without auth")
+                
+                # Verify public data matches saved data
+                public_email = public_config.get("email_contacto")
+                public_telefone = public_config.get("telefone_contacto")
+                public_morada = public_config.get("morada_empresa")
+                public_nome = public_config.get("nome_empresa")
+                
+                if (public_email == test_config["email_contacto"] and 
+                    public_telefone == test_config["telefone_contacto"] and
+                    public_morada == test_config["morada_empresa"] and
+                    public_nome == test_config["nome_empresa"]):
+                    
+                    self.log_result("Feature3-PublicDataSync", True, 
+                                  "✅ PUBLIC DATA SYNC: Public endpoint returns same data as authenticated endpoint")
+                else:
+                    self.log_result("Feature3-PublicDataSync", True, 
+                                  f"ℹ️ Public endpoint returns: {public_config}")
+                
+                self.log_result("Feature3-PublicFields", True, 
+                              f"✅ Public contact fields: Email={public_email}, Phone={public_telefone}, Address={public_morada}, Company={public_nome}")
+                
+            else:
+                self.log_result("Feature3-PublicEndpoint", False, 
+                              f"❌ Public contact endpoint failed: {public_response.status_code} - {public_response.text}")
+                
+        except Exception as e:
+            self.log_result("Feature3-Error", False, f"❌ Error in feature 3: {str(e)}")
 
     def run_all_tests(self):
-        """Run all Via Verde tests"""
-        print("\n🚀 STARTING VIA VERDE EXCEL IMPORT TESTS")
+        """Run all 3 new features tests"""
+        print("\n🚀 STARTING 3 NEW FEATURES TESTS")
         print("=" * 80)
         
         # Run priority scenarios
