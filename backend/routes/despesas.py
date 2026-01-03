@@ -487,8 +487,9 @@ async def resumo_despesas(
     """Get expense summary"""
     query = {}
     
-    if current_user["role"] == UserRole.PARCEIRO:
-        query["parceiro_id"] = current_user["id"]
+    # Handle None user gracefully
+    if current_user and current_user.get("role") == UserRole.PARCEIRO:
+        query["parceiro_id"] = current_user.get("id")
     
     # Filter by month/year if provided
     if mes and ano:
