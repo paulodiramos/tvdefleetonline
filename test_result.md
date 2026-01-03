@@ -115,3 +115,5 @@ test_plan:
 agent_communication:
   - agent: "testing"
     message: "✅ ALL BACKEND TESTS PASSED (10/10 - 100% success rate). Key findings: 1) NEW EXPENSE LOGIC WORKING - €505.79 assigned to motoristas vs €2178.59 to parceiro, 2) Report delete API working for parceiro users, 3) Report status change API working with all valid statuses, 4) List reports API properly filtering by parceiro, 5) CSV import and despesas list APIs functioning correctly. All high-priority backend features are working as expected."
+  - agent: "testing"
+    message: "🎯 VIA VERDE WEEKLY REPORTS TESTING COMPLETED (14/14 tests passed - 100% success). PRIORITY TASK VERIFIED: Via Verde expenses from despesas_fornecedor collection are correctly included in weekly reports with proper via_verde_atraso_semanas=2 delay calculation. Test 1: Semana 1/2026 returned exact expected €81.30. Test 2: Semana 52/2025 correctly returned €0.00 for empty period. Test 3: Delay logic verified working. All backend APIs functioning perfectly. Updated expense totals: €1517.37 motoristas, €3851.39 parceiro from 3325 total records."
