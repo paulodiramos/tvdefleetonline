@@ -12690,7 +12690,8 @@ async def criar_relatorios_rascunho_apos_importacao(
         return {
             "rascunhos_criados": rascunhos_criados,
             "rascunhos_existentes": rascunhos_existentes,
-            "message": f"{rascunhos_criados} relatório(s) de rascunho criado(s)"
+            "rascunhos_atualizados": rascunhos_existentes,  # Agora indica quantos foram atualizados
+            "message": f"{rascunhos_criados} relatório(s) criado(s), {rascunhos_existentes} atualizado(s)"
         }
         
     except Exception as e:
