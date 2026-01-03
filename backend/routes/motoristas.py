@@ -270,28 +270,63 @@ async def update_motorista(
     update_data: Dict,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Update motorista information"""
-    motorista = await db.motoristas.find_one({"id": motorista_id})
+    """Update motorista data (partial updates allowed)"""
+    # Check if motorista exists
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista not found")
     
-    # Check permissions
-    if current_user["role"] == UserRole.MOTORISTA:
-        if motorista["id"] != current_user["id"]:
-            raise HTTPException(status_code=403, detail="Not authorized")
-        # Motorista can only update certain fields
-        allowed_fields = ["phone", "morada", "documents", "dados_bancarios"]
-        update_data = {k: v for k, v in update_data.items() if k in allowed_fields}
-    elif current_user["role"] == UserRole.PARCEIRO:
-        if motorista.get("parceiro_atribuido") != current_user["id"]:
-            raise HTTPException(status_code=403, detail="Not authorized")
+    # Check if parceiro is assigned to this motorista
+    is_assigned = False
+    if current_user["role"] == UserRole.PARCEIRO:
+        is_assigned = motorista.get("parceiro_atribuido") == current_user["id"]
+    
+    # Allow admin, gestao, OR parceiro assigned OR motorista editing their own profile
+    is_authorized = (
+        current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO] or
+        is_assigned or
+        (current_user["role"] == UserRole.MOTORISTA and current_user["email"] == motorista.get("email"))
+    )
+    
+    if not is_authorized:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # If motorista is editing and documents are approved, only allow specific fields
+    if (current_user["role"] == UserRole.MOTORISTA and 
+        motorista.get("documentos_aprovados", False)):
+        # Only allow editing: registo criminal and iban
+        allowed_fields = [
+            'codigo_registo_criminal', 'validade_registo_criminal',
+            'iban', 'nome_banco'
+        ]
+        
+        # Filter update_data to only allowed fields
+        filtered_update = {k: v for k, v in update_data.items() if k in allowed_fields}
+        
+        if not filtered_update:
+            raise HTTPException(
+                status_code=403, 
+                detail="Documentos aprovados. Apenas Registo Criminal e IBAN podem ser alterados. Contacte o gestor para outras alterações."
+            )
+        
+        update_data = filtered_update
+    
+    # Remove fields that shouldn't be updated directly
+    update_data.pop("id", None)
+    update_data.pop("created_at", None)
+    update_data.pop("_id", None)
+    update_data.pop("documentos_aprovados", None)
     
     if not update_data:
-        raise HTTPException(status_code=400, detail="No valid fields to update")
+        raise HTTPException(status_code=400, detail="No data to update")
     
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
-    await db.motoristas.update_one({"id": motorista_id}, {"$set": update_data})
+    # Update motorista
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        {"$set": update_data}
+    )
     
     # Update user table if name or email changed
     user_update = {}
