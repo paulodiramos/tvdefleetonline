@@ -23,7 +23,7 @@ TEST_CREDENTIALS = {
     "parceiro": {"email": "parceiro@tvdefleet.com", "password": "123456"}
 }
 
-class TVDEFleetTester:
+class FleeTrackTester:
     def __init__(self):
         self.tokens = {}
         self.test_results = []
@@ -45,7 +45,7 @@ class TVDEFleetTester:
     def print_summary(self):
         """Print test results summary"""
         print("\n" + "="*80)
-        print("📋 RESUMO DOS TESTES")
+        print("📋 RESUMO DOS TESTES - FleeTrack Backend API")
         print("="*80)
         
         for result in self.test_results:
