@@ -11474,7 +11474,28 @@ async def gerar_relatorios_em_massa(
                                 float(d.get('valor') or 0)
                             )
                     
-                    logger.info(f"Via Verde para {motorista.get('name')}: Portagens €{via_verde_total:.2f}, Carregamentos €{carregamentos_total:.2f}")
+                    # NOVO: Buscar despesas Via Verde importadas via CSV
+                    # Aplicar atraso de 1 semana (Via Verde semana X aparece no relatório semana X+1)
+                    config = await db.relatorio_config.find_one({"parceiro_id": motorista.get("parceiro_atribuido")}, {"_id": 0})
+                    via_verde_atraso = config.get("via_verde_atraso_semanas", 1) if config else 1
+                    
+                    data_inicio_vv = (inicio - timedelta(weeks=via_verde_atraso)).strftime("%Y-%m-%d")
+                    data_fim_vv = (fim - timedelta(weeks=via_verde_atraso)).strftime("%Y-%m-%d")
+                    
+                    despesas_via_verde = await db.despesas_fornecedor.find({
+                        "motorista_id": motorista_id,
+                        "tipo_fornecedor": "via_verde",
+                        "tipo_responsavel": "motorista",
+                        "data_entrada": {"$gte": data_inicio_vv, "$lte": data_fim_vv}
+                    }, {"_id": 0}).to_list(1000)
+                    
+                    via_verde_importado = sum(float(d.get("valor_liquido", 0)) for d in despesas_via_verde)
+                    via_verde_total += via_verde_importado
+                    
+                    if via_verde_importado > 0:
+                        logger.info(f"Via Verde importado (CSV) para {motorista.get('name')}: €{via_verde_importado:.2f}")
+                    
+                    logger.info(f"Via Verde total para {motorista.get('name')}: Portagens €{via_verde_total:.2f}, Carregamentos €{carregamentos_total:.2f}")
                 
                 # 4. Agregar Combustível
                 if incluir_combustivel:
