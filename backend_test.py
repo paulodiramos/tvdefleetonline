@@ -94,23 +94,29 @@ class FleeTrackTester:
         return {"Authorization": f"Bearer {self.tokens[role]}"}
     
     def test_fleetrack_backend_apis(self):
-        """🎯 MAIN TEST: FleeTrack Backend APIs after Route Refactoring"""
-        print("\n🎯 MAIN TEST: FleeTrack Backend APIs after Route Refactoring")
+        """🎯 MAIN TEST: FleeTrack CSV Import for Despesas (Via Verde)"""
+        print("\n🎯 MAIN TEST: FleeTrack CSV Import for Despesas (Via Verde)")
         print("=" * 80)
         print("CREDENCIAIS:")
         print("- Admin: admin@tvdefleet.com / 123456")
         print("\nTESTES A REALIZAR:")
         print("1. Authentication API")
-        print("2. Vehicles API (Refactored)")
-        print("3. Automação RPA API (New Module)")
-        print("4. CSV Config API (New Module)")
+        print("2. CSV Preview API - POST /api/despesas/preview")
+        print("3. CSV Import API - POST /api/despesas/importar")
+        print("4. List Despesas API - GET /api/despesas/")
+        print("5. Resumo API - GET /api/despesas/resumo")
+        print("6. Import History API - GET /api/despesas/importacoes")
+        print("7. By Vehicle API - GET /api/despesas/por-veiculo/{id}")
         print("=" * 80)
         
         # Execute all tests
         self.test_authentication_api()
-        self.test_vehicles_api_refactored()
-        self.test_automacao_rpa_api()
-        self.test_csv_config_api()
+        self.test_despesas_preview_api()
+        self.test_despesas_import_api()
+        self.test_despesas_list_api()
+        self.test_despesas_resumo_api()
+        self.test_despesas_importacoes_api()
+        self.test_despesas_por_veiculo_api()
         
         return True
     
