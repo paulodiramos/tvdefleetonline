@@ -252,33 +252,33 @@ class FleeTrackTester:
                         self.log_result("Scenario2-AddMaintenance", True, 
                                       f"✅ MAINTENANCE HISTORY WORKING: Added maintenance record to {vehicle_info}")
                         
-                        # Step 4: Verify maintenance was saved
-                        print("\n🔍 Step 4: Verifying maintenance record was saved...")
-                        verify_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}", headers=headers)
+                        # Step 4: Verify maintenance cost was saved
+                        print("\n🔍 Step 4: Verifying maintenance cost was saved...")
+                        verify_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}/custos", headers=headers)
                         
                         if verify_response.status_code == 200:
-                            updated_vehicle = verify_response.json()
-                            manutencoes = updated_vehicle.get("manutencoes", [])
+                            custos_data = verify_response.json()
+                            custos = custos_data.get("custos", [])
                             
-                            # Check if our maintenance record exists
+                            # Check if our maintenance cost exists
                             found_maintenance = False
-                            for manutencao in manutencoes:
-                                if (manutencao.get("descricao") == "Teste de manutenção via API" and 
-                                    manutencao.get("tipo_manutencao") == "Revisão Geral"):
+                            for custo in custos:
+                                if (custo.get("descricao") == "Teste de manutenção via API" and 
+                                    custo.get("categoria") == "revisao"):
                                     found_maintenance = True
                                     break
                             
                             if found_maintenance:
                                 self.log_result("Scenario2-VerifyMaintenance", True, 
-                                              f"✅ MAINTENANCE PERSISTENCE WORKING: Record saved correctly ({len(manutencoes)} total records)")
+                                              f"✅ MAINTENANCE PERSISTENCE WORKING: Cost record saved correctly ({len(custos)} total records)")
                                 self.log_result("Scenario2-Success", True, 
                                               "✅ VEHICLE MAINTENANCE HISTORY REGISTRATION WORKING")
                             else:
                                 self.log_result("Scenario2-VerifyMaintenance", False, 
-                                              f"❌ Maintenance record not found after save. Found {len(manutencoes)} records")
+                                              f"❌ Maintenance cost record not found after save. Found {len(custos)} records")
                         else:
                             self.log_result("Scenario2-VerifyMaintenance", False, 
-                                          f"❌ Failed to verify maintenance: {verify_response.status_code}")
+                                          f"❌ Failed to verify maintenance costs: {verify_response.status_code}")
                     else:
                         self.log_result("Scenario2-AddMaintenance", False, 
                                       f"❌ Failed to add maintenance: {maintenance_response.status_code} - {maintenance_response.text}")
