@@ -13539,7 +13539,7 @@ async def importar_plataforma(
         # Retornar resumo
         mensagem_info = ""
         if info_rascunhos and info_rascunhos.get("rascunhos_criados", 0) > 0:
-            mensagem_info = f"✅ {info_rascunhos['rascunhos_criados']} relatório(s) de rascunho criado(s) automaticamente!"
+            mensagem_info = f"✅ {info_rascunhos['rascunhos_criados']} relatório(s) criado(s), {info_rascunhos.get('rascunhos_atualizados', 0)} atualizado(s)!"
         
         # 🆕 Criar registo de ficheiro importado para sistema de aprovação
         ficheiro_importado = {
