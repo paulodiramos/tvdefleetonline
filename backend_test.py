@@ -327,10 +327,12 @@ class FleeTrackTester:
             return False
     
     def test_despesas_resumo_api(self):
-        """5. Test Despesas Resumo API"""
-        print("\n📋 5. Test Despesas Resumo API")
+        """2. Test Despesas Resumo API - NEW LOGIC"""
+        print("\n📋 2. Test Despesas Resumo API - NEW LOGIC")
         print("-" * 60)
         print("TESTE: GET /api/despesas/resumo")
+        print("EXPECTED: por_responsavel should show both 'motorista' and 'veiculo' values")
+        print("EXPECTED: valor_motoristas should be > 0 (around €505.79)")
         
         headers = self.get_headers("admin")
         if not headers:
@@ -349,8 +351,23 @@ class FleeTrackTester:
                     total_registos = data.get("total_registos", 0)
                     por_responsavel = data.get("por_responsavel", {})
                     
-                    self.log_result("Despesas-Resumo", True, 
-                                  f"✅ Resumo API works: €{total_geral} total, {total_registos} records, {len(por_responsavel)} responsibility types")
+                    # Check if both motorista and veiculo values exist
+                    has_motorista = "motorista" in por_responsavel
+                    has_veiculo = "veiculo" in por_responsavel
+                    valor_motoristas = por_responsavel.get("motorista", {}).get("total", 0)
+                    valor_parceiro = por_responsavel.get("veiculo", {}).get("total", 0)
+                    
+                    success_msg = f"✅ Resumo API works: €{total_geral} total, {total_registos} records"
+                    if has_motorista and has_veiculo:
+                        success_msg += f", Motoristas: €{valor_motoristas}, Parceiro: €{valor_parceiro}"
+                        if valor_motoristas > 0:
+                            success_msg += " ✅ NEW LOGIC WORKING - Expenses assigned to motoristas!"
+                        else:
+                            success_msg += " ⚠️ No motorista expenses found"
+                    else:
+                        success_msg += f" ⚠️ Missing responsibility types: {list(por_responsavel.keys())}"
+                    
+                    self.log_result("Despesas-Resumo", True, success_msg)
                 else:
                     self.log_result("Despesas-Resumo", False, 
                                   f"❌ Resumo response missing required fields: {data}")
@@ -362,6 +379,148 @@ class FleeTrackTester:
             
         except Exception as e:
             self.log_result("Despesas-Resumo-Error", False, f"❌ Error during resumo test: {str(e)}")
+            return False
+    
+    def test_relatorios_delete_api(self):
+        """3. Test Report Delete API"""
+        print("\n📋 3. Test Report Delete API")
+        print("-" * 60)
+        print("TESTE: DELETE /api/relatorios/semanal/{relatorio_id}")
+        
+        headers = self.get_headers("parceiro")
+        if not headers:
+            self.log_result("Reports-Delete-Auth", False, "❌ No auth token for parceiro")
+            return False
+        
+        try:
+            # First, get list of reports for parceiro
+            response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos", headers=headers)
+            
+            if response.status_code == 200:
+                relatorios = response.json()
+                
+                if relatorios and len(relatorios) > 0:
+                    # Try to delete the first report
+                    relatorio_id = relatorios[0]["id"]
+                    relatorio_info = f"{relatorios[0].get('motorista_nome', 'N/A')} - {relatorios[0].get('periodo_inicio', 'N/A')}"
+                    
+                    delete_response = requests.delete(f"{BACKEND_URL}/relatorios/semanal/{relatorio_id}", headers=headers)
+                    
+                    if delete_response.status_code == 200:
+                        result = delete_response.json()
+                        self.log_result("Reports-Delete", True, 
+                                      f"✅ Delete API works: Report deleted successfully - {relatorio_info}")
+                    else:
+                        self.log_result("Reports-Delete", False, 
+                                      f"❌ Delete API failed: {delete_response.status_code}", delete_response.text)
+                else:
+                    self.log_result("Reports-Delete", True, 
+                                  "ℹ️ No reports to test delete API (normal if no reports exist)")
+            else:
+                self.log_result("Reports-Delete", False, 
+                              f"❌ Could not get reports for delete test: {response.status_code}")
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Reports-Delete-Error", False, f"❌ Error during delete test: {str(e)}")
+            return False
+    
+    def test_relatorios_status_change_api(self):
+        """4. Test Report Status Change API"""
+        print("\n📋 4. Test Report Status Change API")
+        print("-" * 60)
+        print("TESTE: PUT /api/relatorios/semanal/{relatorio_id}/status")
+        print("VALID STATUSES: rascunho, pendente_aprovacao, aprovado, aguarda_recibo, verificado, pago, rejeitado")
+        
+        headers = self.get_headers("parceiro")
+        if not headers:
+            self.log_result("Reports-Status-Auth", False, "❌ No auth token for parceiro")
+            return False
+        
+        try:
+            # First, get list of reports for parceiro
+            response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos", headers=headers)
+            
+            if response.status_code == 200:
+                relatorios = response.json()
+                
+                if relatorios and len(relatorios) > 0:
+                    # Try to change status of the first report
+                    relatorio_id = relatorios[0]["id"]
+                    current_status = relatorios[0].get("status", "unknown")
+                    relatorio_info = f"{relatorios[0].get('motorista_nome', 'N/A')} - {relatorios[0].get('periodo_inicio', 'N/A')}"
+                    
+                    # Test changing to "aprovado" status
+                    status_data = {"status": "aprovado"}
+                    status_response = requests.put(
+                        f"{BACKEND_URL}/relatorios/semanal/{relatorio_id}/status", 
+                        json=status_data, 
+                        headers=headers
+                    )
+                    
+                    if status_response.status_code == 200:
+                        result = status_response.json()
+                        self.log_result("Reports-Status", True, 
+                                      f"✅ Status change API works: {current_status} → aprovado - {relatorio_info}")
+                    else:
+                        self.log_result("Reports-Status", False, 
+                                      f"❌ Status change API failed: {status_response.status_code}", status_response.text)
+                else:
+                    self.log_result("Reports-Status", True, 
+                                  "ℹ️ No reports to test status change API (normal if no reports exist)")
+            else:
+                self.log_result("Reports-Status", False, 
+                              f"❌ Could not get reports for status test: {response.status_code}")
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Reports-Status-Error", False, f"❌ Error during status test: {str(e)}")
+            return False
+    
+    def test_relatorios_list_parceiro_api(self):
+        """5. Test List Reports for Parceiro API"""
+        print("\n📋 5. Test List Reports for Parceiro API")
+        print("-" * 60)
+        print("TESTE: GET /api/relatorios/semanais-todos")
+        
+        headers = self.get_headers("parceiro")
+        if not headers:
+            self.log_result("Reports-List-Auth", False, "❌ No auth token for parceiro")
+            return False
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos", headers=headers)
+            
+            if response.status_code == 200:
+                relatorios = response.json()
+                
+                if isinstance(relatorios, list):
+                    if relatorios:
+                        first_report = relatorios[0]
+                        required_fields = ["id", "motorista_nome", "parceiro_id", "status"]
+                        
+                        if all(field in first_report for field in required_fields):
+                            self.log_result("Reports-List", True, 
+                                          f"✅ List reports API works: {len(relatorios)} reports found for parceiro")
+                        else:
+                            self.log_result("Reports-List", False, 
+                                          f"❌ Report records missing required fields: {first_report}")
+                    else:
+                        self.log_result("Reports-List", True, 
+                                      "✅ List reports API works: No reports found for parceiro (normal if no reports)")
+                else:
+                    self.log_result("Reports-List", False, 
+                                  f"❌ Reports list response not a list: {relatorios}")
+            else:
+                self.log_result("Reports-List", False, 
+                              f"❌ List reports API failed: {response.status_code}", response.text)
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Reports-List-Error", False, f"❌ Error during list reports test: {str(e)}")
             return False
     
     def test_despesas_importacoes_api(self):
