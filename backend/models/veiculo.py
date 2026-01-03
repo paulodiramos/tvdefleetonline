@@ -186,8 +186,8 @@ class Vehicle(BaseModel):
     versao: Optional[str] = None
     ano: Optional[int] = None
     matricula: str
-    data_matricula: str
-    validade_matricula: str
+    data_matricula: Optional[str] = ""
+    validade_matricula: Optional[str] = ""
     alerta_validade: bool = False
     cor: str
     combustivel: str
