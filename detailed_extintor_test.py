@@ -9,7 +9,7 @@ import json
 import io
 from PIL import Image
 
-BACKEND_URL = "https://fleetmaster-49.preview.emergentagent.com/api"
+BACKEND_URL = "https://expense-sync-7.preview.emergentagent.com/api"
 ADMIN_CREDS = {"email": "admin@tvdefleet.com", "password": "admin123"}
 
 def authenticate():

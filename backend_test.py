@@ -13,7 +13,7 @@ from pathlib import Path
 import csv
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://fleetmaster-49.preview.emergentagent.com/api"
+BACKEND_URL = "https://expense-sync-7.preview.emergentagent.com/api"
 
 # Test credentials (from review request)
 TEST_CREDENTIALS = {
