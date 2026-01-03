@@ -170,14 +170,14 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Backend Auth Routes Refactoring"
+    - "Backend Routes Refactoring Phase 2"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
   - agent: "testing"
-    message: "🎯 BACKEND REFACTORING VERIFICATION COMPLETED (22/23 tests passed - 95.7% success rate). CRITICAL REFACTORING TESTS ALL PASSED: Auth endpoints successfully moved from server.py to routes/auth.py with NO BREAKING CHANGES! 1) POST /api/auth/login working perfectly - Admin login returns valid JWT token (231 chars), 2) GET /api/auth/me working - correct user authentication, 3) GET /api/vehicles working - 29 vehicles listed, 4) GET /api/motoristas working - 12 drivers listed, 5) POST /api/relatorios/motorista/{id}/gerar-semanal working - proportional rental calculation (€278.57), 6) GET /api/vehicles/{id}/custos working - vehicle costs (€1370 total). REFACTORING SUCCESS: Duplicate auth endpoints (register, login, me) and profile endpoints (update, change-password, permissions) successfully removed from server.py and moved to routes/auth.py. All critical functionality preserved."
+    message: "🎯 BACKEND REFACTORING PHASE 2 VERIFICATION COMPLETED (18/19 tests passed - 94.7% success rate). CRITICAL REFACTORING TESTS ALL PASSED: Motoristas and notificacoes endpoints successfully moved from server.py to routes/motoristas.py and routes/notificacoes.py with NO BREAKING CHANGES! 1) POST /api/auth/login working perfectly - Admin login returns valid JWT token (231 chars), 2) GET /api/motoristas working - 12 drivers listed, 3) GET /api/motoristas/{id} working - driver data with plano_nome, 4) PUT /api/motoristas/{id} working - update success, 5) PUT /api/motoristas/{id}/approve working - plan assignment (Plano Base Gratuito), 6) DELETE /api/notificacoes/{id} working - proper 404 response, 7) POST /api/relatorios/motorista/{id}/gerar-semanal working - proportional rental calculation (€278.57). REFACTORING SUCCESS: Total 474 lines removed from server.py. All critical functionality preserved."
   - agent: "testing"
     message: "🎯 PROPORTIONAL RENTAL CALCULATION TESTING COMPLETED (37/38 tests passed - 97.4% success rate). PRIORITY FEATURE VERIFIED: Proportional rental calculation when driver switches vehicles during the week is working perfectly! Test scenario: Driver Nelson Francisco with vehicle switch AB-12-CD (3 days, €250/week) + EF-34-GH (4 days, €300/week). Expected: €278.57. RESULTS: 1) aluguer_proporcional = true (correctly detected vehicle switch), 2) valor_aluguer = €278.57 (exact calculation match), 3) aluguer_detalhes shows 2 vehicles with correct proportional breakdown, 4) Report saved with all proportional details. Algorithm correctly handles overlapping periods and calculates daily rates (€250/7 × 3 days + €300/7 × 4 days). Only 1 minor test failed (normal motorista also had vehicle switch in test data)."
   - agent: "testing"
