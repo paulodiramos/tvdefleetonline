@@ -496,6 +496,88 @@ async def gerar_relatorio_semanal(
     }
 
 
+
+@router.get("/resumos-motoristas")
+async def get_resumos_motoristas(
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Get summary of latest weekly reports for all drivers.
+    Returns ganhos, despesas, and total for each driver's most recent report.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Build query based on user role
+    query = {}
+    if current_user["role"] == UserRole.PARCEIRO:
+        query["parceiro_id"] = current_user["id"]
+    
+    # Get all reports, grouped by motorista, taking the most recent one
+    pipeline = [
+        {"$match": query},
+        {"$sort": {"ano": -1, "semana": -1}},
+        {"$group": {
+            "_id": "$motorista_id",
+            "motorista_id": {"$first": "$motorista_id"},
+            "motorista_nome": {"$first": "$motorista_nome"},
+            "semana": {"$first": "$semana"},
+            "ano": {"$first": "$ano"},
+            "ganhos_uber": {"$first": "$ganhos_uber"},
+            "ganhos_bolt": {"$first": "$ganhos_bolt"},
+            "gorjetas_uber": {"$first": "$gorjetas_uber"},
+            "gorjetas_bolt": {"$first": "$gorjetas_bolt"},
+            "portagens_uber": {"$first": "$portagens_uber"},
+            "portagens_bolt": {"$first": "$portagens_bolt"},
+            "total_ganhos": {"$first": "$total_ganhos"},
+            "total_combustivel": {"$first": {"$ifNull": ["$combustivel_total", 0]}},
+            "total_via_verde": {"$first": {"$ifNull": ["$portagens_viaverde", 0]}},
+            "total_eletrico": {"$first": {"$ifNull": ["$carregamentos_eletricos", 0]}},
+            "valor_aluguer": {"$first": {"$ifNull": ["$valor_aluguer", 0]}},
+            "status": {"$first": "$status"}
+        }},
+        {"$project": {
+            "_id": 0,
+            "motorista_id": 1,
+            "motorista_nome": 1,
+            "semana": 1,
+            "ano": 1,
+            "ganhos_uber": 1,
+            "ganhos_bolt": 1,
+            "gorjetas_uber": 1,
+            "gorjetas_bolt": 1,
+            "portagens_uber": 1,
+            "portagens_bolt": 1,
+            "total_ganhos": 1,
+            "total_despesas": {
+                "$add": [
+                    {"$ifNull": ["$total_combustivel", 0]},
+                    {"$ifNull": ["$total_via_verde", 0]},
+                    {"$ifNull": ["$total_eletrico", 0]},
+                    {"$ifNull": ["$valor_aluguer", 0]}
+                ]
+            },
+            "valor_liquido": {
+                "$subtract": [
+                    {"$ifNull": ["$total_ganhos", 0]},
+                    {"$add": [
+                        {"$ifNull": ["$total_combustivel", 0]},
+                        {"$ifNull": ["$total_via_verde", 0]},
+                        {"$ifNull": ["$total_eletrico", 0]},
+                        {"$ifNull": ["$valor_aluguer", 0]}
+                    ]}
+                ]
+            },
+            "status": 1
+        }}
+    ]
+    
+    resumos = await db.relatorios_semanais.aggregate(pipeline).to_list(1000)
+    
+    return resumos
+
+
+
 @router.get("/motorista/{motorista_id}/semanais")
 async def get_relatorios_motorista(
     motorista_id: str,
