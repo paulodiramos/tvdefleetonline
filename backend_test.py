@@ -354,8 +354,8 @@ class FleeTrackTester:
             return False
     
     def run_all_tests(self):
-        """Run all tests in sequence - Focus on Refactored Backend & CSV Config Tests"""
-        print("🚀 INICIANDO TESTES - BACKEND REFATORIZADO & SISTEMA CSV CONFIG")
+        """Run all tests in sequence - Focus on FleeTrack Backend APIs"""
+        print("🚀 INICIANDO TESTES - FleeTrack Backend APIs após Refatorização")
         print("=" * 80)
         
         # Authenticate required users
@@ -364,10 +364,10 @@ class FleeTrackTester:
         for role in ["admin"]:
             self.authenticate_user(role)
         
-        # PRIORITY: REFACTORED BACKEND & CSV CONFIG TESTS
-        print("\n🎯 TESTES PRINCIPAIS: Backend Refatorizado & Sistema CSV Config")
+        # PRIORITY: FleeTrack Backend API Tests
+        print("\n🎯 TESTES PRINCIPAIS: FleeTrack Backend APIs")
         print("=" * 80)
-        self.test_refactored_backend_and_csv_config()
+        self.test_fleetrack_backend_apis()
         
         # Print final summary
         self.print_summary()
@@ -377,12 +377,12 @@ class FleeTrackTester:
 
 def main():
     """Main function to run tests"""
-    tester = TVDEFleetTester()
+    tester = FleeTrackTester()
     
     try:
         summary = tester.run_all_tests()
         
-        print(f"\n🎯 RESUMO FINAL")
+        print(f"\n🎯 RESUMO FINAL - FleeTrack Backend API Tests")
         print("=" * 50)
         print(f"Total de testes: {summary['total']}")
         print(f"✅ Sucessos: {summary['passed']}")
