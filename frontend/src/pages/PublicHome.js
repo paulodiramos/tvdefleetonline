@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,10 +7,34 @@ import {
   ArrowRight, CheckCircle, Clock, Award, Wrench, FileText,
   Scale, Calculator, MessageCircle, Building
 } from 'lucide-react';
+import axios from 'axios';
+
+const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 const PublicHome = () => {
   const navigate = useNavigate();
   const [showRegistroModal, setShowRegistroModal] = useState(false);
+  const [contactInfo, setContactInfo] = useState({
+    email_contacto: 'info@tvdefleet.com',
+    telefone_contacto: '+351 912 345 678',
+    morada_empresa: 'Lisboa, Portugal',
+    nome_empresa: 'TVDEFleet'
+  });
+
+  // Carregar informações de contacto do backend
+  useEffect(() => {
+    const fetchContactInfo = async () => {
+      try {
+        const response = await axios.get(`${API_URL}/api/public/contacto`);
+        if (response.data) {
+          setContactInfo(response.data);
+        }
+      } catch (error) {
+        console.log('Usando configurações de contacto padrão');
+      }
+    };
+    fetchContactInfo();
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">
