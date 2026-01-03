@@ -10434,7 +10434,7 @@ async def gerar_relatorio_semanal(
             via_verde_importado = sum(desp.get("valor_liquido", 0.0) for desp in despesas_via_verde)
             total_via_verde += via_verde_importado
             
-            logger.info(f"Via Verde importado total: €{via_verde_importado:.2f}, Via Verde total final: €{total_via_verde:.2f}")
+            print(f"DEBUG: Via Verde importado total: €{via_verde_importado:.2f}, Via Verde total final: €{total_via_verde:.2f}")
     
     # Calculate valor aluguer/comissao
     valor_aluguer = 0.0
