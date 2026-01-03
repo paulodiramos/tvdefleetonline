@@ -679,55 +679,246 @@ async def delete_historico_entry(
 # ==================== VEHICLE FINANCIAL ====================
 
 @router.get("/{vehicle_id}/relatorio-ganhos")
-async def get_vehicle_relatorio_ganhos(vehicle_id: str, current_user: Dict = Depends(get_current_user)):
-    """Get vehicle financial report (earnings vs expenses)"""
+async def get_vehicle_relatorio_ganhos(
+    vehicle_id: str, 
+    periodo: str = "total",  # total, ano, mes, custom
+    ano: int = None,
+    mes: int = None,
+    data_inicio: str = None,
+    data_fim: str = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Get vehicle financial report with ROI calculation
+    
+    Periods:
+    - total: desde aquisição
+    - ano: ano específico
+    - mes: mês específico
+    - custom: datas personalizadas
+    """
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
     
-    ganhos_total = 0.0
-    despesas_total = 0.0
-    detalhes = []
+    now = datetime.now(timezone.utc)
     
+    # Definir período de análise
+    if periodo == "ano" and ano:
+        filtro_data_inicio = f"{ano}-01-01"
+        filtro_data_fim = f"{ano}-12-31"
+    elif periodo == "mes" and ano and mes:
+        from calendar import monthrange
+        ultimo_dia = monthrange(ano, mes)[1]
+        filtro_data_inicio = f"{ano}-{mes:02d}-01"
+        filtro_data_fim = f"{ano}-{mes:02d}-{ultimo_dia}"
+    elif periodo == "custom" and data_inicio and data_fim:
+        filtro_data_inicio = data_inicio
+        filtro_data_fim = data_fim
+    else:
+        # Total - desde sempre
+        filtro_data_inicio = "2000-01-01"
+        filtro_data_fim = now.strftime("%Y-%m-%d")
+    
+    # ==================== RECEITAS ====================
+    receitas_total = 0.0
+    receitas_detalhes = []
+    
+    # 1. Alugueres cobrados (do histórico de atribuições)
+    historico = await db.historico_atribuicoes.find(
+        {"veiculo_id": vehicle_id},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    for entry in historico:
+        valor_semanal = entry.get("valor_aluguer_semanal", 0) or 0
+        data_inicio_attr = entry.get("data_inicio", "")[:10]
+        data_fim_attr = (entry.get("data_fim") or now.isoformat())[:10]
+        
+        # Verificar se está no período
+        if data_inicio_attr >= filtro_data_inicio and data_inicio_attr <= filtro_data_fim:
+            # Calcular semanas
+            try:
+                dt_inicio = datetime.fromisoformat(data_inicio_attr)
+                dt_fim = datetime.fromisoformat(data_fim_attr)
+                semanas = max(1, (dt_fim - dt_inicio).days // 7)
+                valor_total = valor_semanal * semanas
+                
+                if valor_total > 0:
+                    receitas_total += valor_total
+                    receitas_detalhes.append({
+                        "tipo": "ganho",
+                        "categoria": "aluguer",
+                        "descricao": f"Aluguer - {entry.get('motorista_nome', 'N/A')} ({semanas} semanas)",
+                        "data": data_inicio_attr,
+                        "valor": valor_total
+                    })
+            except:
+                pass
+    
+    # 2. Relatórios semanais pagos (se houver)
+    relatorios = await db.relatorios_semanais.find(
+        {
+            "veiculo_id": vehicle_id,
+            "estado": "pago",
+            "data_emissao": {"$gte": filtro_data_inicio, "$lte": filtro_data_fim}
+        },
+        {"_id": 0}
+    ).to_list(1000)
+    
+    for rel in relatorios:
+        valor = rel.get("valor_aluguer", 0) or 0
+        if valor > 0:
+            receitas_total += valor
+            receitas_detalhes.append({
+                "tipo": "ganho",
+                "categoria": "relatorio",
+                "descricao": f"Relatório Semana {rel.get('semana', '')}/{rel.get('ano', '')}",
+                "data": rel.get("data_emissao", "")[:10],
+                "valor": valor
+            })
+    
+    # ==================== CUSTOS ====================
+    custos_total = 0.0
+    custos_por_categoria = {}
+    custos_detalhes = []
+    
+    # 1. Manutenções/Revisões
     if vehicle.get("manutencoes"):
         for man in vehicle["manutencoes"]:
-            valor = man.get("valor", 0)
-            despesas_total += valor
-            detalhes.append({
+            data_man = man.get("data", "")[:10] if man.get("data") else ""
+            if data_man >= filtro_data_inicio and data_man <= filtro_data_fim:
+                valor = float(man.get("valor", 0) or 0)
+                custos_total += valor
+                categoria = "revisao" if "revisão" in man.get("tipo_manutencao", "").lower() else "manutencao"
+                custos_por_categoria[categoria] = custos_por_categoria.get(categoria, 0) + valor
+                custos_detalhes.append({
+                    "tipo": "despesa",
+                    "categoria": categoria,
+                    "descricao": f"Manutenção: {man.get('tipo_manutencao', 'N/A')}",
+                    "data": data_man,
+                    "valor": valor
+                })
+    
+    # 2. Seguro
+    if vehicle.get("insurance") or vehicle.get("seguro"):
+        seguro = vehicle.get("insurance") or vehicle.get("seguro") or {}
+        valor = float(seguro.get("valor", 0) or 0)
+        data_seguro = (seguro.get("data_inicio") or "")[:10]
+        if valor > 0 and data_seguro >= filtro_data_inicio and data_seguro <= filtro_data_fim:
+            custos_total += valor
+            custos_por_categoria["seguro"] = custos_por_categoria.get("seguro", 0) + valor
+            custos_detalhes.append({
                 "tipo": "despesa",
-                "descricao": f"Manutenção: {man.get('tipo_manutencao')}",
-                "data": man.get("data"),
+                "categoria": "seguro",
+                "descricao": f"Seguro - {seguro.get('seguradora', 'N/A')}",
+                "data": data_seguro,
                 "valor": valor
             })
     
-    if vehicle.get("insurance"):
-        valor = vehicle["insurance"].get("valor", 0)
-        despesas_total += valor
-        detalhes.append({
+    # 3. Inspeções/Vistorias
+    if vehicle.get("inspection") or vehicle.get("inspecoes"):
+        inspecao = vehicle.get("inspection") or {}
+        valor = float(inspecao.get("valor", 0) or inspecao.get("custo", 0) or 0)
+        data_insp = (inspecao.get("ultima_inspecao") or inspecao.get("data_inspecao") or "")[:10]
+        if valor > 0 and data_insp >= filtro_data_inicio and data_insp <= filtro_data_fim:
+            custos_total += valor
+            custos_por_categoria["vistoria"] = custos_por_categoria.get("vistoria", 0) + valor
+            custos_detalhes.append({
+                "tipo": "despesa",
+                "categoria": "vistoria",
+                "descricao": "Inspeção/Vistoria",
+                "data": data_insp,
+                "valor": valor
+            })
+        
+        # Também verificar lista de inspeções
+        if vehicle.get("inspecoes"):
+            for insp in vehicle["inspecoes"]:
+                valor = float(insp.get("custo", 0) or 0)
+                data_insp = (insp.get("data_inspecao") or "")[:10]
+                if valor > 0 and data_insp >= filtro_data_inicio and data_insp <= filtro_data_fim:
+                    custos_total += valor
+                    custos_por_categoria["vistoria"] = custos_por_categoria.get("vistoria", 0) + valor
+                    custos_detalhes.append({
+                        "tipo": "despesa",
+                        "categoria": "vistoria",
+                        "descricao": f"Inspeção - {insp.get('centro_inspecao', 'N/A')}",
+                        "data": data_insp,
+                        "valor": valor
+                    })
+    
+    # 4. Extintor
+    if vehicle.get("extintor"):
+        extintor = vehicle["extintor"]
+        valor = float(extintor.get("preco", 0) or 0)
+        data_ext = (extintor.get("data_instalacao") or "")[:10]
+        if valor > 0 and data_ext >= filtro_data_inicio and data_ext <= filtro_data_fim:
+            custos_total += valor
+            custos_por_categoria["outros"] = custos_por_categoria.get("outros", 0) + valor
+            custos_detalhes.append({
+                "tipo": "despesa",
+                "categoria": "outros",
+                "descricao": "Extintor",
+                "data": data_ext,
+                "valor": valor
+            })
+    
+    # 5. Custos do histórico de custos (nova coleção)
+    custos_historico = await db.historico_custos_veiculo.find(
+        {
+            "veiculo_id": vehicle_id,
+            "data": {"$gte": filtro_data_inicio, "$lte": filtro_data_fim}
+        },
+        {"_id": 0}
+    ).to_list(1000)
+    
+    for custo in custos_historico:
+        valor = float(custo.get("valor", 0) or 0)
+        categoria = custo.get("categoria", "outros")
+        custos_total += valor
+        custos_por_categoria[categoria] = custos_por_categoria.get(categoria, 0) + valor
+        custos_detalhes.append({
             "tipo": "despesa",
-            "descricao": "Seguro",
-            "data": vehicle["insurance"].get("data_inicio"),
-            "valor": valor
+            "categoria": categoria,
+            "descricao": custo.get("descricao", "Custo"),
+            "data": custo.get("data", "")[:10],
+            "valor": valor,
+            "fornecedor": custo.get("fornecedor")
         })
     
-    if vehicle.get("inspection"):
-        valor = vehicle["inspection"].get("valor", 0)
-        if valor:
-            despesas_total += valor
-            detalhes.append({
-                "tipo": "despesa",
-                "descricao": "Inspeção",
-                "data": vehicle["inspection"].get("ultima_inspecao"),
-                "valor": valor
-            })
+    # ==================== CÁLCULO ROI ====================
+    lucro = receitas_total - custos_total
+    roi = 0.0
+    if custos_total > 0:
+        roi = ((receitas_total - custos_total) / custos_total) * 100
     
-    lucro = ganhos_total - despesas_total
+    # Combinar detalhes
+    detalhes = receitas_detalhes + custos_detalhes
+    detalhes_sorted = sorted(detalhes, key=lambda x: x.get("data", ""), reverse=True)
     
     return {
-        "ganhos_total": ganhos_total,
-        "despesas_total": despesas_total,
-        "lucro": lucro,
-        "detalhes": sorted(detalhes, key=lambda x: x.get("data", ""), reverse=True)
+        "veiculo_id": vehicle_id,
+        "matricula": vehicle.get("matricula"),
+        "periodo": {
+            "tipo": periodo,
+            "data_inicio": filtro_data_inicio,
+            "data_fim": filtro_data_fim
+        },
+        "receitas": {
+            "total": round(receitas_total, 2),
+            "detalhes": receitas_detalhes
+        },
+        "custos": {
+            "total": round(custos_total, 2),
+            "por_categoria": {k: round(v, 2) for k, v in custos_por_categoria.items()},
+            "detalhes": custos_detalhes
+        },
+        "ganhos_total": round(receitas_total, 2),
+        "despesas_total": round(custos_total, 2),
+        "lucro": round(lucro, 2),
+        "roi": round(roi, 2),
+        "detalhes": detalhes_sorted
     }
 
 
