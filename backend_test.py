@@ -65,7 +65,7 @@ VIA_VERDE_TEST_SCENARIOS = [
     }
 ]
 
-class FleeTrackTester:
+class ViaVerdeTester:
     def __init__(self):
         self.tokens = {}
         self.test_results = []
@@ -87,7 +87,7 @@ class FleeTrackTester:
     def print_summary(self):
         """Print test results summary"""
         print("\n" + "="*80)
-        print("📋 RESUMO DOS TESTES - 3 New Features Testing")
+        print("📋 RESUMO DOS TESTES - Via Verde Calculation Fix Validation")
         print("="*80)
         
         for result in self.test_results:
