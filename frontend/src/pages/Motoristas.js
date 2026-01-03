@@ -109,10 +109,31 @@ const Motoristas = ({ user, onLogout }) => {
     try {
       const response = await axios.get(`${API}/motoristas`);
       setMotoristas(response.data);
+      // Também carregar os resumos dos motoristas
+      fetchResumosMotoristas(response.data);
     } catch (error) {
       toast.error('Erro ao carregar motoristas');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchResumosMotoristas = async (motoristasList) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/relatorios/resumos-motoristas`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Converter array para objeto com motorista_id como chave
+      const resumos = {};
+      if (response.data && Array.isArray(response.data)) {
+        response.data.forEach(r => {
+          resumos[r.motorista_id] = r;
+        });
+      }
+      setResumosMotoristas(resumos);
+    } catch (error) {
+      console.error('Error fetching resumos motoristas:', error);
     }
   };
 
