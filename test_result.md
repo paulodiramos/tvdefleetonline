@@ -238,6 +238,31 @@ metadata:
   test_sequence: 7
   run_ui: false
 
+frontend:
+  - task: "Driver Assignment History Improvements"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/Motoristas.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ DRIVER ASSIGNMENT HISTORY TESTING COMPLETED (3/3 scenarios passed - 100% success)! ALL REQUIREMENTS VERIFIED: 1) Frontend Display Working - 'Histórico de Atribuições' section visible in Motoristas page → Ver Detalhes → Atribuições tab with badge showing '4 registos'. 2) All Required Fields Present - Vehicle brand/model (Peugeot 308 SW), vehicle plate (AS-83-NX), date ranges (De: 03/01/2026 → Até: Presente), contract type (aluguer_sem_caucao), weekly value (€250.00/semana) all displayed correctly. 3) Backend Endpoint Working - GET /api/motoristas/{id}/historico-atribuicoes returns status 200 with all required fields: veiculo_marca, veiculo_modelo, veiculo_matricula, tipo_contrato, valor_aluguer_semanal, data_inicio. 4) Multiple Entries Display - 4 history entries displayed correctly with proper scrolling and all data visible. Driver assignment history improvements fully functional as requested."
+
+  - task: "RelatoriosSemanaisLista Page"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/RelatoriosSemanaisLista.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Frontend testing not performed as per system limitations. Backend APIs are working correctly to support frontend functionality."
+
 test_plan:
   current_focus:
     - "Bug Fixes - ROI custom dates, motorista report data"
