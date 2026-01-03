@@ -991,6 +991,7 @@ const Motoristas = ({ user, onLogout }) => {
                       onClick={() => {
                         setSelectedMotorista(motorista);
                         setShowDetailDialog(true);
+                        fetchHistoricoAtribuicoes(motorista.id);
                       }}
                     >
                       Ver Detalhes
