@@ -142,6 +142,7 @@ const RelatoriosHub = ({ user, onLogout }) => {
       ]);
       setRelatorios(relRes.data || []);
       setMotoristas(motRes.data || []);
+      setSelectedIds([]); // Clear selection on refresh
       console.log('Motoristas carregados:', motRes.data?.length || 0);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -150,6 +151,98 @@ const RelatoriosHub = ({ user, onLogout }) => {
       setMotoristas([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Selection handlers
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(i => i !== id)
+        : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    const filteredIds = relatoriosFiltrados.map(r => r.id);
+    if (selectedIds.length === filteredIds.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredIds);
+    }
+  };
+
+  const isSelected = (id) => selectedIds.includes(id);
+
+  // Bulk delete handler
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    
+    setProcessingBulk(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Delete each selected report
+      const deletePromises = selectedIds.map(id => 
+        axios.delete(
+          `${API_URL}/api/relatorios/semanal/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      );
+      
+      await Promise.all(deletePromises);
+      
+      toast.success(`${selectedIds.length} relatório(s) eliminado(s) com sucesso!`);
+      setShowDeleteConfirm(false);
+      setSelectedIds([]);
+      fetchData();
+    } catch (error) {
+      console.error('Erro ao eliminar relatórios:', error);
+      toast.error('Erro ao eliminar alguns relatórios');
+    } finally {
+      setProcessingBulk(false);
+    }
+  };
+
+  // Bulk status change handler
+  const handleBulkStatusChange = async () => {
+    if (selectedIds.length === 0 || !newStatus) return;
+    
+    setProcessingBulk(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Update status for each selected report
+      const updatePromises = selectedIds.map(id => 
+        axios.put(
+          `${API_URL}/api/relatorios/semanal/${id}/status`,
+          { status: newStatus },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      );
+      
+      await Promise.all(updatePromises);
+      
+      const statusLabels = {
+        'rascunho': 'Rascunho',
+        'pendente_aprovacao': 'Pendente',
+        'aguarda_recibo': 'Aguarda Recibo',
+        'em_analise': 'Em Análise',
+        'verificado': 'Verificado',
+        'pago': 'Pago',
+        'rejeitado': 'Rejeitado'
+      };
+      
+      toast.success(`Estado de ${selectedIds.length} relatório(s) atualizado para "${statusLabels[newStatus] || newStatus}"!`);
+      setShowStatusChangeModal(false);
+      setSelectedIds([]);
+      setNewStatus('');
+      fetchData();
+    } catch (error) {
+      console.error('Erro ao alterar estado:', error);
+      toast.error('Erro ao alterar estado de alguns relatórios');
+    } finally {
+      setProcessingBulk(false);
     }
   };
 
