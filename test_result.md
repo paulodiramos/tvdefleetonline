@@ -379,6 +379,18 @@ agent_communication:
         agent: "testing"
         comment: "✅ COMUNICAÇÕES CONTACT CONFIG TESTING COMPLETED (7/7 tests passed - 100% success rate)! CONTACT CONFIGURATION WORKING PERFECTLY: 1) SAVE ENDPOINT FUNCTIONAL - POST /api/configuracoes/email successfully saves contact configuration with test data (email_contacto: test@test.com, telefone_contacto: +351 999 999 999, morada_empresa: Test Address, nome_empresa: Test Company). 2) GET ENDPOINT FUNCTIONAL - GET /api/configuracoes/email retrieves saved configuration correctly (Admin only access). 3) DATA INTEGRITY VERIFIED - All saved fields retrieved exactly as stored with no data loss. 4) PUBLIC ENDPOINT FUNCTIONAL - GET /api/public/contacto works without authentication and returns same contact data. 5) PUBLIC DATA SYNC CONFIRMED - Public endpoint returns identical data to authenticated endpoint. Contact configuration save/retrieve functionality fully operational as specified in review request."
 
+  - task: "Via Verde Calculation Fix Validation"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/relatorios.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VIA VERDE CALCULATION FIX VALIDATION COMPLETED (20/20 tests passed - 100% success rate)! ALL PRIORITY SCENARIOS FROM REVIEW REQUEST VERIFIED PERFECTLY: 1) MARCO COELHO VIA VERDE (OBU 601104486167) WORKING - GET /api/relatorios/motorista/36b1d8b4-dbf4-4857-acea-9580aeaaf98c/via-verde-total?semana=52&ano=2025 returns exact expected total_via_verde = €53.00 with 30 registos. Data correctly fetched from week 50/2025 (2-week delay applied). 2) LUIZ CRUZ VIA VERDE WORKING - Same endpoint with motorista 086afba0-2007-43c7-a60b-c6d60ad9f3dd returns exact expected total_via_verde = €14.50 with 30 registos. 3) MÁRIO DOMINGUES VIA VERDE WORKING - Same endpoint with motorista 0f0c1c6a-49f6-48d4-98ba-46bf8e3617ed returns exact expected total_via_verde = €323.00 with 284 registos. 4) MULTIPLE WEEK TEST WORKING - Marco Coelho with semana=51 returns different value (€18.75 from week 49/2025) confirming correct week-based data retrieval. All Via Verde calculation scenarios working perfectly with exact expected values and correct 2-week delay calculation as specified in review request."
+
 test_plan:
   current_focus: []
   stuck_tasks: []
