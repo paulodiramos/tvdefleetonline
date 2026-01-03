@@ -116,10 +116,10 @@ class VehicleCreate(BaseModel):
     matricula: str
     data_matricula: Optional[str] = ""
     validade_matricula: Optional[str] = ""
-    cor: str
-    combustivel: str
-    caixa: str
-    lugares: int
+    cor: Optional[str] = ""
+    combustivel: Optional[str] = ""
+    caixa: Optional[str] = ""
+    lugares: Optional[int] = 5
     parceiro_id: str
 
 
