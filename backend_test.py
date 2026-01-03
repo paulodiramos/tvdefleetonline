@@ -917,6 +917,303 @@ class FleeTrackTester:
             self.log_result("Despesas-List-Error", False, f"❌ Error during list test: {str(e)}")
             return False
     
+    def test_vehicle_costs_api(self):
+        """13. Test Vehicle Costs API - NEW ENDPOINT"""
+        print("\n📋 13. Test Vehicle Costs API - NEW ENDPOINT")
+        print("-" * 60)
+        print("TESTE: POST /api/vehicles/{vehicle_id}/custos")
+        print("VEHICLE ID: 4ad331ff-c0f5-43c9-95b8-cc085d32d8a7")
+        print("EXPECTED: Add cost to vehicle history and return custo_id")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Vehicle-Costs-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        vehicle_id = "4ad331ff-c0f5-43c9-95b8-cc085d32d8a7"
+        
+        try:
+            # Test 1: Add maintenance cost
+            print("\n🔍 Test 1: POST Add Maintenance Cost")
+            cost_data = {
+                "categoria": "revisao",
+                "descricao": "Troca de óleo e filtros",
+                "valor": 150.00,
+                "data": "2026-01-03",
+                "fornecedor": "Oficina Central"
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/vehicles/{vehicle_id}/custos",
+                json=cost_data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                required_fields = ["message", "custo_id", "custo"]
+                
+                if all(field in result for field in required_fields):
+                    custo_id = result.get("custo_id")
+                    custo = result.get("custo", {})
+                    
+                    if custo.get("categoria") == "revisao" and custo.get("valor") == 150.00:
+                        self.log_result("Vehicle-Costs-Add", True, 
+                                      f"✅ Add cost works: {custo.get('descricao')} - €{custo.get('valor')} (ID: {custo_id})")
+                        
+                        # Store for later tests
+                        self.test_custo_id = custo_id
+                    else:
+                        self.log_result("Vehicle-Costs-Add", False, 
+                                      f"❌ Cost data incorrect: {custo}")
+                else:
+                    self.log_result("Vehicle-Costs-Add", False, 
+                                  f"❌ Add cost response missing required fields: {result}")
+            else:
+                self.log_result("Vehicle-Costs-Add", False, 
+                              f"❌ Add cost failed: {response.status_code}", response.text)
+            
+            # Test 2: Add insurance cost
+            print("\n🔍 Test 2: POST Add Insurance Cost")
+            insurance_data = {
+                "categoria": "seguro",
+                "descricao": "Seguro anual do veículo",
+                "valor": 500.00,
+                "data": "2026-01-01",
+                "fornecedor": "Seguradora XYZ"
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/vehicles/{vehicle_id}/custos",
+                json=insurance_data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if "custo_id" in result:
+                    self.log_result("Vehicle-Costs-Insurance", True, 
+                                  f"✅ Insurance cost added: €{insurance_data['valor']}")
+                else:
+                    self.log_result("Vehicle-Costs-Insurance", False, 
+                                  f"❌ Insurance cost response invalid: {result}")
+            else:
+                self.log_result("Vehicle-Costs-Insurance", False, 
+                              f"❌ Insurance cost failed: {response.status_code}")
+            
+            # Test 3: Add inspection cost
+            print("\n🔍 Test 3: POST Add Inspection Cost")
+            inspection_data = {
+                "categoria": "vistoria",
+                "descricao": "Inspeção periódica obrigatória",
+                "valor": 35.00,
+                "data": "2026-01-02",
+                "fornecedor": "Centro de Inspeções"
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/vehicles/{vehicle_id}/custos",
+                json=inspection_data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if "custo_id" in result:
+                    self.log_result("Vehicle-Costs-Inspection", True, 
+                                  f"✅ Inspection cost added: €{inspection_data['valor']}")
+                else:
+                    self.log_result("Vehicle-Costs-Inspection", False, 
+                                  f"❌ Inspection cost response invalid: {result}")
+            else:
+                self.log_result("Vehicle-Costs-Inspection", False, 
+                              f"❌ Inspection cost failed: {response.status_code}")
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Vehicle-Costs-Error", False, f"❌ Error during vehicle costs test: {str(e)}")
+            return False
+    
+    def test_vehicle_costs_list_api(self):
+        """14. Test Vehicle Costs List API - NEW ENDPOINT"""
+        print("\n📋 14. Test Vehicle Costs List API - NEW ENDPOINT")
+        print("-" * 60)
+        print("TESTE: GET /api/vehicles/{vehicle_id}/custos")
+        print("EXPECTED: List of costs with totals by category")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Vehicle-Costs-List-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        vehicle_id = "4ad331ff-c0f5-43c9-95b8-cc085d32d8a7"
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}/custos", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["veiculo_id", "matricula", "custos", "totais_por_categoria", "total_geral", "total_registos"]
+                
+                if all(field in data for field in required_fields):
+                    custos = data.get("custos", [])
+                    totais = data.get("totais_por_categoria", {})
+                    total_geral = data.get("total_geral", 0)
+                    total_registos = data.get("total_registos", 0)
+                    matricula = data.get("matricula")
+                    
+                    if custos:
+                        # Check first cost structure
+                        first_cost = custos[0]
+                        required_cost_fields = ["id", "categoria", "descricao", "valor", "data"]
+                        
+                        if all(field in first_cost for field in required_cost_fields):
+                            categoria = first_cost.get("categoria")
+                            valor = first_cost.get("valor")
+                            descricao = first_cost.get("descricao")
+                            
+                            self.log_result("Vehicle-Costs-List", True, 
+                                          f"✅ Costs list works: {matricula} - {total_registos} costs, €{total_geral} total")
+                            
+                            # Check if categories are properly grouped
+                            if totais:
+                                categories_msg = ", ".join([f"{k}: €{v}" for k, v in totais.items()])
+                                self.log_result("Vehicle-Costs-Categories", True, 
+                                              f"✅ Categories grouped: {categories_msg}")
+                            else:
+                                self.log_result("Vehicle-Costs-Categories", False, 
+                                              "❌ No category totals found")
+                        else:
+                            self.log_result("Vehicle-Costs-List", False, 
+                                          f"❌ Cost records missing required fields: {first_cost}")
+                    else:
+                        self.log_result("Vehicle-Costs-List", True, 
+                                      f"✅ Costs list works: {matricula} - No costs found (normal for new vehicle)")
+                else:
+                    self.log_result("Vehicle-Costs-List", False, 
+                                  f"❌ Costs list response missing required fields: {data}")
+            else:
+                self.log_result("Vehicle-Costs-List", False, 
+                              f"❌ Costs list failed: {response.status_code}", response.text)
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Vehicle-Costs-List-Error", False, f"❌ Error during costs list test: {str(e)}")
+            return False
+    
+    def test_vehicle_roi_report_api(self):
+        """15. Test Vehicle ROI Report API - NEW ENDPOINT"""
+        print("\n📋 15. Test Vehicle ROI Report API - NEW ENDPOINT")
+        print("-" * 60)
+        print("TESTE: GET /api/vehicles/{vehicle_id}/relatorio-ganhos")
+        print("EXPECTED: ROI calculation with revenues, costs, profit and ROI percentage")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Vehicle-ROI-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        vehicle_id = "4ad331ff-c0f5-43c9-95b8-cc085d32d8a7"
+        
+        try:
+            # Test 1: Total period ROI
+            print("\n🔍 Test 1: GET Total Period ROI")
+            response = requests.get(
+                f"{BACKEND_URL}/vehicles/{vehicle_id}/relatorio-ganhos?periodo=total",
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["veiculo_id", "matricula", "periodo", "receitas", "custos", "lucro", "roi"]
+                
+                if all(field in data for field in required_fields):
+                    receitas = data.get("receitas", {})
+                    custos = data.get("custos", {})
+                    lucro = data.get("lucro", 0)
+                    roi = data.get("roi", 0)
+                    matricula = data.get("matricula")
+                    
+                    receitas_total = receitas.get("total", 0)
+                    custos_total = custos.get("total", 0)
+                    custos_por_categoria = custos.get("por_categoria", {})
+                    
+                    self.log_result("Vehicle-ROI-Total", True, 
+                                  f"✅ ROI report works: {matricula} - Receitas: €{receitas_total}, Custos: €{custos_total}, Lucro: €{lucro}, ROI: {roi}%")
+                    
+                    # Verify ROI calculation
+                    if custos_total > 0:
+                        expected_roi = ((receitas_total - custos_total) / custos_total) * 100
+                        if abs(roi - expected_roi) < 0.01:  # Allow small rounding differences
+                            self.log_result("Vehicle-ROI-Calculation", True, 
+                                          f"✅ ROI calculation correct: {roi}%")
+                        else:
+                            self.log_result("Vehicle-ROI-Calculation", False, 
+                                          f"❌ ROI calculation incorrect: got {roi}%, expected {expected_roi:.2f}%")
+                    else:
+                        self.log_result("Vehicle-ROI-Calculation", True, 
+                                      f"✅ ROI calculation handled zero costs correctly: {roi}%")
+                    
+                    # Check cost categories
+                    if custos_por_categoria:
+                        categories_msg = ", ".join([f"{k}: €{v}" for k, v in custos_por_categoria.items()])
+                        self.log_result("Vehicle-ROI-Categories", True, 
+                                      f"✅ Cost categories: {categories_msg}")
+                else:
+                    self.log_result("Vehicle-ROI-Total", False, 
+                                  f"❌ ROI report missing required fields: {data}")
+            else:
+                self.log_result("Vehicle-ROI-Total", False, 
+                              f"❌ ROI report failed: {response.status_code}", response.text)
+            
+            # Test 2: Year-specific ROI
+            print("\n🔍 Test 2: GET Year 2026 ROI")
+            response = requests.get(
+                f"{BACKEND_URL}/vehicles/{vehicle_id}/relatorio-ganhos?periodo=ano&ano=2026",
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                periodo = data.get("periodo", {})
+                if periodo.get("tipo") == "ano" and "2026" in periodo.get("data_inicio", ""):
+                    self.log_result("Vehicle-ROI-Year", True, 
+                                  f"✅ Year filter works: {periodo.get('data_inicio')} to {periodo.get('data_fim')}")
+                else:
+                    self.log_result("Vehicle-ROI-Year", False, 
+                                  f"❌ Year filter incorrect: {periodo}")
+            else:
+                self.log_result("Vehicle-ROI-Year", False, 
+                              f"❌ Year ROI failed: {response.status_code}")
+            
+            # Test 3: Custom period ROI
+            print("\n🔍 Test 3: GET Custom Period ROI")
+            response = requests.get(
+                f"{BACKEND_URL}/vehicles/{vehicle_id}/relatorio-ganhos?periodo=custom&data_inicio=2026-01-01&data_fim=2026-01-31",
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                periodo = data.get("periodo", {})
+                if periodo.get("data_inicio") == "2026-01-01" and periodo.get("data_fim") == "2026-01-31":
+                    self.log_result("Vehicle-ROI-Custom", True, 
+                                  f"✅ Custom period works: {periodo.get('data_inicio')} to {periodo.get('data_fim')}")
+                else:
+                    self.log_result("Vehicle-ROI-Custom", False, 
+                                  f"❌ Custom period incorrect: {periodo}")
+            else:
+                self.log_result("Vehicle-ROI-Custom", False, 
+                              f"❌ Custom ROI failed: {response.status_code}")
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Vehicle-ROI-Error", False, f"❌ Error during ROI test: {str(e)}")
+            return False
+    
     def run_all_tests(self):
         """Run all tests in sequence - Focus on Updated FleeTrack System"""
         print("🚀 INICIANDO TESTES - FleeTrack Updated System Tests")
