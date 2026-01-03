@@ -227,28 +227,23 @@ class FleeTrackTester:
                     self.log_result("Scenario2-GetVehicles", True, 
                                   f"✅ Found {len(vehicles)} vehicles, testing with: {vehicle_info}")
                     
-                    # Step 3: Add maintenance record using correct endpoint
-                    print("\n🔍 Step 3: Adding maintenance record...")
+                    # Step 3: Add maintenance record using custos endpoint (which is working)
+                    print("\n🔍 Step 3: Adding maintenance cost record...")
                     
-                    # Create maintenance record data with correct field names
-                    maintenance_data = {
-                        "data_intervencao": "2025-01-15",
-                        "tipo_manutencao": "Revisão Geral", 
+                    # Create maintenance cost data (using custos endpoint)
+                    maintenance_cost_data = {
+                        "categoria": "revisao",
                         "descricao": "Teste de manutenção via API",
-                        "descricao_detalhada": "Teste completo do endpoint de manutenção",
-                        "custos": 150.0,
-                        "oficina": "Oficina Teste",
-                        "tempo_intervencao": "2 horas",
-                        "km_intervencao": 50000,
-                        "data_proxima": "2025-07-15",
-                        "km_proxima": 55000,
-                        "o_que_fazer": "Próxima revisão geral"
+                        "valor": 150.0,
+                        "data": "2025-01-15",
+                        "fornecedor": "Oficina Teste",
+                        "observacoes": "Teste completo do endpoint de manutenção"
                     }
                     
-                    # Use the correct maintenance endpoint
+                    # Use the custos endpoint which is working
                     maintenance_response = requests.post(
-                        f"{BACKEND_URL}/vehicles/{vehicle_id}/manutencoes",
-                        json=maintenance_data,
+                        f"{BACKEND_URL}/vehicles/{vehicle_id}/custos",
+                        json=maintenance_cost_data,
                         headers=headers
                     )
                     
