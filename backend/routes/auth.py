@@ -110,11 +110,21 @@ async def login(credentials: UserLogin):
     if user["role"] == UserRole.MOTORISTA and not user.get("approved", False):
         raise HTTPException(status_code=403, detail="Account pending approval")
     
+    # Verificar se tem senha provisória
+    senha_provisoria = False
+    if user["role"] == UserRole.MOTORISTA:
+        motorista = await db.motoristas.find_one({"id": user["id"]}, {"_id": 0, "senha_provisoria": 1})
+        if motorista and motorista.get("senha_provisoria", False):
+            senha_provisoria = True
+    
     token = create_access_token(user["id"], user["email"], user["role"])
     
     user.pop("password")
     if isinstance(user["created_at"], str):
         user["created_at"] = datetime.fromisoformat(user["created_at"])
+    
+    # Adicionar flag senha_provisoria na resposta
+    user["senha_provisoria"] = senha_provisoria
     
     return TokenResponse(access_token=token, user=User(**user))
 
