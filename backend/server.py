@@ -10411,8 +10411,13 @@ async def gerar_relatorio_semanal(
                 "tipo_responsavel": "motorista",
                 "data_entrada": {"$gte": data_inicio_via_verde, "$lt": data_fim_vv_next}
             }
+            
+            logger.info(f"Via Verde CSV Query: {despesas_via_verde_query}")
+            
             despesas_via_verde_cursor = db.despesas_fornecedor.find(despesas_via_verde_query, {"_id": 0})
             despesas_via_verde = await despesas_via_verde_cursor.to_list(1000)
+            
+            logger.info(f"Via Verde CSV: encontrados {len(despesas_via_verde)} registos")
             
             # Add to via verde records for display
             for desp in despesas_via_verde:
@@ -10423,7 +10428,10 @@ async def gerar_relatorio_semanal(
                     "tipo": "importado_csv"
                 })
             
-            total_via_verde += sum(desp.get("valor_liquido", 0.0) for desp in despesas_via_verde)
+            via_verde_importado = sum(desp.get("valor_liquido", 0.0) for desp in despesas_via_verde)
+            total_via_verde += via_verde_importado
+            
+            logger.info(f"Via Verde importado total: €{via_verde_importado:.2f}, Via Verde total final: €{total_via_verde:.2f}")
     
     # Calculate valor aluguer/comissao
     valor_aluguer = 0.0
