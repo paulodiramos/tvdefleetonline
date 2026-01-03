@@ -1784,7 +1784,7 @@ const RelatoriosHub = ({ user, onLogout }) => {
                   <li>Sistema busca todos os motoristas ativos</li>
                   <li>Agrega ganhos e despesas do período selecionado</li>
                   <li>Calcula aluguer e caução automaticamente</li>
-                  <li>Cria relatórios em status "Rascunho"</li>
+                  <li>Cria relatórios em status &quot;Rascunho&quot;</li>
                   <li>Você pode revisar e ajustar antes de enviar ao motorista</li>
                 </ul>
               </div>
