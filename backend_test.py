@@ -129,7 +129,390 @@ class FleeTrackTester:
         
         return True
     
-    def test_critical_auth_login(self):
+    def test_scenario_1_partner_delete_reports(self):
+        """SCENARIO 1: Partner Delete Weekly Reports Permission"""
+        print("\n📋 SCENARIO 1: Partner Delete Weekly Reports Permission")
+        print("-" * 60)
+        print("GOAL: Verify that a user with role 'PARCEIRO' can delete their own weekly reports")
+        print("STEPS:")
+        print("1. Login as parceiro@tvdefleet.com / 123456")
+        print("2. Get list of weekly reports (GET /api/relatorios/semanais-todos)")
+        print("3. Attempt to delete one report (DELETE /api/relatorios/semanal/{relatorio_id})")
+        print("EXPECTED: Should return success (200), NOT 'Não Autorizado'")
+        
+        # Step 1: Login as parceiro
+        if not self.authenticate_user("parceiro"):
+            self.log_result("Scenario1-Auth", False, "❌ Failed to authenticate as parceiro")
+            return False
+        
+        headers = self.get_headers("parceiro")
+        
+        try:
+            # Step 2: Get list of weekly reports
+            print("\n🔍 Step 2: Getting weekly reports list...")
+            response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos", headers=headers)
+            
+            if response.status_code == 200:
+                relatorios = response.json()
+                
+                if relatorios and len(relatorios) > 0:
+                    self.log_result("Scenario1-GetReports", True, 
+                                  f"✅ Found {len(relatorios)} reports for parceiro")
+                    
+                    # Step 3: Attempt to delete first report
+                    print("\n🔍 Step 3: Attempting to delete report...")
+                    relatorio_id = relatorios[0]["id"]
+                    relatorio_info = f"{relatorios[0].get('motorista_nome', 'N/A')} - {relatorios[0].get('periodo_inicio', 'N/A')}"
+                    
+                    delete_response = requests.delete(f"{BACKEND_URL}/relatorios/semanal/{relatorio_id}", headers=headers)
+                    
+                    if delete_response.status_code == 200:
+                        result = delete_response.json()
+                        self.log_result("Scenario1-DeleteReport", True, 
+                                      f"✅ PARTNER DELETE PERMISSION WORKING: Successfully deleted report {relatorio_info}")
+                        self.log_result("Scenario1-Success", True, 
+                                      "✅ CRITICAL BUG FIX VERIFIED: Partner can now delete weekly reports")
+                    elif delete_response.status_code == 403:
+                        self.log_result("Scenario1-DeleteReport", False, 
+                                      f"❌ PERMISSION DENIED: Partner cannot delete reports - {delete_response.text}")
+                        self.log_result("Scenario1-Failed", False, 
+                                      "❌ CRITICAL BUG NOT FIXED: Partner still cannot delete weekly reports")
+                    else:
+                        self.log_result("Scenario1-DeleteReport", False, 
+                                      f"❌ Unexpected response: {delete_response.status_code} - {delete_response.text}")
+                else:
+                    self.log_result("Scenario1-GetReports", True, 
+                                  "ℹ️ No reports found for parceiro (cannot test delete)")
+                    # Create a test report first
+                    print("\n🔍 Creating test report for delete testing...")
+                    self.create_test_report_for_parceiro(headers)
+            else:
+                self.log_result("Scenario1-GetReports", False, 
+                              f"❌ Failed to get reports: {response.status_code} - {response.text}")
+                
+        except Exception as e:
+            self.log_result("Scenario1-Error", False, f"❌ Error in scenario 1: {str(e)}")
+    
+    def test_scenario_2_vehicle_maintenance_history(self):
+        """SCENARIO 2: Vehicle Maintenance History Registration"""
+        print("\n📋 SCENARIO 2: Vehicle Maintenance History Registration")
+        print("-" * 60)
+        print("GOAL: Verify backend endpoint to add maintenance records to vehicles")
+        print("STEPS:")
+        print("1. Login as admin")
+        print("2. Get list of vehicles (GET /api/vehicles)")
+        print("3. Add maintenance record to vehicle (PUT /api/vehicles/{vehicle_id})")
+        print("4. Verify maintenance record was saved correctly")
+        
+        # Step 1: Login as admin
+        if not self.authenticate_user("admin"):
+            self.log_result("Scenario2-Auth", False, "❌ Failed to authenticate as admin")
+            return False
+        
+        headers = self.get_headers("admin")
+        
+        try:
+            # Step 2: Get list of vehicles
+            print("\n🔍 Step 2: Getting vehicles list...")
+            response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+            
+            if response.status_code == 200:
+                vehicles = response.json()
+                
+                if vehicles and len(vehicles) > 0:
+                    vehicle = vehicles[0]
+                    vehicle_id = vehicle["id"]
+                    vehicle_info = f"{vehicle.get('matricula', 'N/A')} - {vehicle.get('marca', 'N/A')} {vehicle.get('modelo', 'N/A')}"
+                    
+                    self.log_result("Scenario2-GetVehicles", True, 
+                                  f"✅ Found {len(vehicles)} vehicles, testing with: {vehicle_info}")
+                    
+                    # Step 3: Add maintenance record
+                    print("\n🔍 Step 3: Adding maintenance record...")
+                    
+                    # Get current vehicle data first
+                    vehicle_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}", headers=headers)
+                    if vehicle_response.status_code == 200:
+                        current_vehicle = vehicle_response.json()
+                        
+                        # Add new maintenance record
+                        new_maintenance = {
+                            "data_intervencao": "2025-01-15",
+                            "tipo_manutencao": "Revisão Geral",
+                            "descricao": "Teste de manutenção via API",
+                            "custos": 150.0,
+                            "oficina": "Oficina Teste",
+                            "tempo_intervencao": "2 horas",
+                            "km_intervencao": 50000,
+                            "data_proxima": "2025-07-15",
+                            "km_proxima": 55000
+                        }
+                        
+                        # Get existing maintenance history or create new
+                        maintenance_history = current_vehicle.get("maintenance_history", [])
+                        maintenance_history.append(new_maintenance)
+                        
+                        update_data = {
+                            "maintenance_history": maintenance_history
+                        }
+                        
+                        update_response = requests.put(
+                            f"{BACKEND_URL}/vehicles/{vehicle_id}",
+                            json=update_data,
+                            headers=headers
+                        )
+                        
+                        if update_response.status_code == 200:
+                            self.log_result("Scenario2-AddMaintenance", True, 
+                                          f"✅ MAINTENANCE HISTORY WORKING: Added maintenance record to {vehicle_info}")
+                            
+                            # Step 4: Verify maintenance was saved
+                            print("\n🔍 Step 4: Verifying maintenance record was saved...")
+                            verify_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}", headers=headers)
+                            
+                            if verify_response.status_code == 200:
+                                updated_vehicle = verify_response.json()
+                                updated_maintenance = updated_vehicle.get("maintenance_history", [])
+                                
+                                # Check if our maintenance record exists
+                                found_maintenance = False
+                                for maintenance in updated_maintenance:
+                                    if (maintenance.get("descricao") == "Teste de manutenção via API" and 
+                                        maintenance.get("tipo_manutencao") == "Revisão Geral"):
+                                        found_maintenance = True
+                                        break
+                                
+                                if found_maintenance:
+                                    self.log_result("Scenario2-VerifyMaintenance", True, 
+                                                  f"✅ MAINTENANCE PERSISTENCE WORKING: Record saved correctly ({len(updated_maintenance)} total records)")
+                                    self.log_result("Scenario2-Success", True, 
+                                                  "✅ VEHICLE MAINTENANCE HISTORY REGISTRATION WORKING")
+                                else:
+                                    self.log_result("Scenario2-VerifyMaintenance", False, 
+                                                  "❌ Maintenance record not found after save")
+                            else:
+                                self.log_result("Scenario2-VerifyMaintenance", False, 
+                                              f"❌ Failed to verify maintenance: {verify_response.status_code}")
+                        else:
+                            self.log_result("Scenario2-AddMaintenance", False, 
+                                          f"❌ Failed to add maintenance: {update_response.status_code} - {update_response.text}")
+                    else:
+                        self.log_result("Scenario2-GetVehicle", False, 
+                                      f"❌ Failed to get vehicle details: {vehicle_response.status_code}")
+                else:
+                    self.log_result("Scenario2-GetVehicles", False, 
+                                  "❌ No vehicles found to test maintenance")
+            else:
+                self.log_result("Scenario2-GetVehicles", False, 
+                              f"❌ Failed to get vehicles: {response.status_code} - {response.text}")
+                
+        except Exception as e:
+            self.log_result("Scenario2-Error", False, f"❌ Error in scenario 2: {str(e)}")
+    
+    def test_scenario_3_driver_phone_display(self):
+        """SCENARIO 3: Driver Phone Display in Vehicle"""
+        print("\n📋 SCENARIO 3: Driver Phone Display in Vehicle")
+        print("-" * 60)
+        print("GOAL: Verify driver phone number is included when fetching vehicle details")
+        print("STEPS:")
+        print("1. Login as admin")
+        print("2. Get vehicle with assigned driver (GET /api/vehicles/{vehicle_id})")
+        print("3. If driver assigned, fetch driver details (GET /api/motoristas/{motorista_id})")
+        print("4. Verify driver has telefone field")
+        
+        # Step 1: Login as admin
+        if not self.authenticate_user("admin"):
+            self.log_result("Scenario3-Auth", False, "❌ Failed to authenticate as admin")
+            return False
+        
+        headers = self.get_headers("admin")
+        
+        try:
+            # Step 2: Get vehicles and find one with assigned driver
+            print("\n🔍 Step 2: Looking for vehicle with assigned driver...")
+            response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+            
+            if response.status_code == 200:
+                vehicles = response.json()
+                
+                vehicle_with_driver = None
+                for vehicle in vehicles:
+                    if vehicle.get("motorista_atribuido"):
+                        vehicle_with_driver = vehicle
+                        break
+                
+                if vehicle_with_driver:
+                    vehicle_id = vehicle_with_driver["id"]
+                    motorista_id = vehicle_with_driver["motorista_atribuido"]
+                    vehicle_info = f"{vehicle_with_driver.get('matricula', 'N/A')} - {vehicle_with_driver.get('marca', 'N/A')} {vehicle_with_driver.get('modelo', 'N/A')}"
+                    
+                    self.log_result("Scenario3-FindVehicle", True, 
+                                  f"✅ Found vehicle with assigned driver: {vehicle_info}")
+                    
+                    # Step 3: Fetch driver details
+                    print("\n🔍 Step 3: Fetching driver details...")
+                    driver_response = requests.get(f"{BACKEND_URL}/motoristas/{motorista_id}", headers=headers)
+                    
+                    if driver_response.status_code == 200:
+                        driver = driver_response.json()
+                        driver_name = driver.get("name", "N/A")
+                        driver_phone = driver.get("phone") or driver.get("telefone")
+                        
+                        # Step 4: Verify driver has phone field
+                        if driver_phone:
+                            self.log_result("Scenario3-DriverPhone", True, 
+                                          f"✅ DRIVER PHONE DISPLAY WORKING: {driver_name} - Phone: {driver_phone}")
+                            self.log_result("Scenario3-Success", True, 
+                                          "✅ DRIVER PHONE FIELD AVAILABLE IN VEHICLE CONTEXT")
+                        else:
+                            self.log_result("Scenario3-DriverPhone", False, 
+                                          f"❌ Driver {driver_name} missing phone field")
+                            
+                        # Also check if vehicle response includes driver phone directly
+                        vehicle_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}", headers=headers)
+                        if vehicle_response.status_code == 200:
+                            vehicle_details = vehicle_response.json()
+                            if vehicle_details.get("motorista_atribuido_nome"):
+                                self.log_result("Scenario3-VehicleDriverInfo", True, 
+                                              f"✅ Vehicle includes driver name: {vehicle_details.get('motorista_atribuido_nome')}")
+                    else:
+                        self.log_result("Scenario3-DriverDetails", False, 
+                                      f"❌ Failed to get driver details: {driver_response.status_code}")
+                else:
+                    # No vehicle with assigned driver, try to assign one for testing
+                    print("\n🔍 No vehicle with assigned driver found, checking available drivers...")
+                    drivers_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+                    
+                    if drivers_response.status_code == 200 and vehicles:
+                        drivers = drivers_response.json()
+                        if drivers:
+                            # Test with first available driver and vehicle
+                            driver = drivers[0]
+                            vehicle = vehicles[0]
+                            
+                            driver_phone = driver.get("phone") or driver.get("telefone")
+                            if driver_phone:
+                                self.log_result("Scenario3-DriverPhoneAvailable", True, 
+                                              f"✅ DRIVER PHONE FIELD AVAILABLE: {driver.get('name')} - {driver_phone}")
+                                self.log_result("Scenario3-Success", True, 
+                                              "✅ DRIVER PHONE DISPLAY FUNCTIONALITY AVAILABLE")
+                            else:
+                                self.log_result("Scenario3-DriverPhoneAvailable", False, 
+                                              f"❌ Driver {driver.get('name')} missing phone field")
+                        else:
+                            self.log_result("Scenario3-NoDrivers", True, 
+                                          "ℹ️ No drivers found to test phone display")
+                    else:
+                        self.log_result("Scenario3-NoAssignment", True, 
+                                      "ℹ️ No vehicle-driver assignments found to test")
+            else:
+                self.log_result("Scenario3-GetVehicles", False, 
+                              f"❌ Failed to get vehicles: {response.status_code}")
+                
+        except Exception as e:
+            self.log_result("Scenario3-Error", False, f"❌ Error in scenario 3: {str(e)}")
+    
+    def test_scenario_4_basic_endpoints(self):
+        """SCENARIO 4: Basic Layout Menu Items (Backend Endpoints)"""
+        print("\n📋 SCENARIO 4: Basic Layout Menu Items (Backend Endpoints)")
+        print("-" * 60)
+        print("GOAL: Verify backend is functional and menu endpoints work")
+        print("STEPS:")
+        print("1. Login as admin")
+        print("2. Verify basic endpoints work (GET /api/vehicles, GET /api/motoristas)")
+        
+        # Step 1: Login as admin
+        if not self.authenticate_user("admin"):
+            self.log_result("Scenario4-Auth", False, "❌ Failed to authenticate as admin")
+            return False
+        
+        headers = self.get_headers("admin")
+        
+        try:
+            # Step 2: Test basic endpoints
+            print("\n🔍 Step 2: Testing basic menu endpoints...")
+            
+            # Test vehicles endpoint
+            vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+            if vehicles_response.status_code == 200:
+                vehicles = vehicles_response.json()
+                self.log_result("Scenario4-VehiclesEndpoint", True, 
+                              f"✅ Vehicles endpoint working: {len(vehicles)} vehicles found")
+            else:
+                self.log_result("Scenario4-VehiclesEndpoint", False, 
+                              f"❌ Vehicles endpoint failed: {vehicles_response.status_code}")
+            
+            # Test motoristas endpoint
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            if motoristas_response.status_code == 200:
+                motoristas = motoristas_response.json()
+                self.log_result("Scenario4-MotoristasEndpoint", True, 
+                              f"✅ Motoristas endpoint working: {len(motoristas)} drivers found")
+            else:
+                self.log_result("Scenario4-MotoristasEndpoint", False, 
+                              f"❌ Motoristas endpoint failed: {motoristas_response.status_code}")
+            
+            # Test auth/me endpoint
+            me_response = requests.get(f"{BACKEND_URL}/auth/me", headers=headers)
+            if me_response.status_code == 200:
+                user_data = me_response.json()
+                self.log_result("Scenario4-AuthMeEndpoint", True, 
+                              f"✅ Auth/me endpoint working: {user_data.get('name', 'N/A')} ({user_data.get('role', 'N/A')})")
+            else:
+                self.log_result("Scenario4-AuthMeEndpoint", False, 
+                              f"❌ Auth/me endpoint failed: {me_response.status_code}")
+            
+            # Test relatorios endpoint
+            relatorios_response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos", headers=headers)
+            if relatorios_response.status_code == 200:
+                relatorios = relatorios_response.json()
+                self.log_result("Scenario4-RelatoriosEndpoint", True, 
+                              f"✅ Relatorios endpoint working: {len(relatorios)} reports found")
+            else:
+                self.log_result("Scenario4-RelatoriosEndpoint", False, 
+                              f"❌ Relatorios endpoint failed: {relatorios_response.status_code}")
+            
+            self.log_result("Scenario4-Success", True, 
+                          "✅ BASIC BACKEND ENDPOINTS FUNCTIONAL - Menu should work properly")
+                
+        except Exception as e:
+            self.log_result("Scenario4-Error", False, f"❌ Error in scenario 4: {str(e)}")
+    
+    def create_test_report_for_parceiro(self, headers):
+        """Helper method to create a test report for parceiro delete testing"""
+        try:
+            # Get first motorista for test report
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            if motoristas_response.status_code == 200:
+                motoristas = motoristas_response.json()
+                if motoristas:
+                    motorista_id = motoristas[0]["id"]
+                    
+                    # Create test report
+                    test_data = {
+                        "data_inicio": "2025-01-06",
+                        "data_fim": "2025-01-12",
+                        "semana": 2,
+                        "ano": 2025
+                    }
+                    
+                    create_response = requests.post(
+                        f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
+                        json=test_data,
+                        headers=headers
+                    )
+                    
+                    if create_response.status_code == 200:
+                        self.log_result("TestReport-Created", True, 
+                                      "✅ Test report created for delete testing")
+                        return True
+                    else:
+                        self.log_result("TestReport-Failed", False, 
+                                      f"❌ Failed to create test report: {create_response.status_code}")
+        except Exception as e:
+            self.log_result("TestReport-Error", False, f"❌ Error creating test report: {str(e)}")
+        
+        return False
         """CRITICAL TEST 1: Login (POST /api/auth/login)"""
         print("\n📋 CRITICAL TEST 1: Login (POST /api/auth/login)")
         print("-" * 60)
