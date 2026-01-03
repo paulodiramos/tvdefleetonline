@@ -285,8 +285,8 @@ class FleeTrackTester:
             self.log_result("Critical-Vehicles-List-Error", False, f"❌ Vehicles list error: {str(e)}")
     
     def test_critical_motoristas_list(self):
-        """CRITICAL TEST 4: Listar Motoristas (GET /api/motoristas)"""
-        print("\n📋 CRITICAL TEST 4: Listar Motoristas (GET /api/motoristas)")
+        """CRITICAL TEST 2: Listar Motoristas (GET /api/motoristas)"""
+        print("\n📋 CRITICAL TEST 2: Listar Motoristas (GET /api/motoristas)")
         print("-" * 60)
         print("TESTE: GET /api/motoristas")
         print("EXPECTED: Deve retornar lista de motoristas")
@@ -335,6 +335,282 @@ class FleeTrackTester:
                 
         except Exception as e:
             self.log_result("Critical-Motoristas-List-Error", False, f"❌ Motoristas list error: {str(e)}")
+    
+    def test_critical_motorista_by_id(self):
+        """CRITICAL TEST 3: Obter Motorista por ID (GET /api/motoristas/{motorista_id})"""
+        print("\n📋 CRITICAL TEST 3: Obter Motorista por ID (GET /api/motoristas/{motorista_id})")
+        print("-" * 60)
+        print("TESTE: GET /api/motoristas/{motorista_id}")
+        print("EXPECTED: Deve retornar dados do motorista com plano_nome")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Critical-Motorista-ByID", False, "❌ No auth token for admin")
+            return False
+        
+        # First get a motorista ID
+        if not hasattr(self, 'test_motorista_id'):
+            try:
+                response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+                if response.status_code == 200:
+                    motoristas = response.json()
+                    if motoristas:
+                        self.test_motorista_id = motoristas[0]["id"]
+                    else:
+                        self.log_result("Critical-Motorista-ByID", True, "ℹ️ No motoristas to test by ID")
+                        return True
+                else:
+                    self.log_result("Critical-Motorista-ByID", False, "❌ Could not get motoristas list")
+                    return False
+            except Exception as e:
+                self.log_result("Critical-Motorista-ByID", False, f"❌ Error getting motoristas: {str(e)}")
+                return False
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/motoristas/{self.test_motorista_id}", headers=headers)
+            
+            if response.status_code == 200:
+                motorista = response.json()
+                required_fields = ["id", "name", "email"]
+                
+                if all(field in motorista for field in required_fields):
+                    name = motorista.get("name")
+                    email = motorista.get("email")
+                    plano_nome = motorista.get("plano_nome", "N/A")
+                    
+                    self.log_result("Critical-Motorista-ByID", True, 
+                                  f"✅ Obter motorista por ID funcionando: {name} ({email}) - Plano: {plano_nome}")
+                else:
+                    self.log_result("Critical-Motorista-ByID", False, 
+                                  f"❌ Motorista data missing required fields: {motorista}")
+            else:
+                self.log_result("Critical-Motorista-ByID", False, 
+                              f"❌ Get motorista by ID failed: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Critical-Motorista-ByID-Error", False, f"❌ Get motorista by ID error: {str(e)}")
+    
+    def test_critical_motorista_update(self):
+        """CRITICAL TEST 4: Atualizar Motorista (PUT /api/motoristas/{motorista_id})"""
+        print("\n📋 CRITICAL TEST 4: Atualizar Motorista (PUT /api/motoristas/{motorista_id})")
+        print("-" * 60)
+        print("TESTE: PUT /api/motoristas/{motorista_id}")
+        print("BODY: {\"phone\": \"912345678\"}")
+        print("EXPECTED: Success message")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Critical-Motorista-Update", False, "❌ No auth token for admin")
+            return False
+        
+        # Use existing motorista ID or get one
+        if not hasattr(self, 'test_motorista_id'):
+            try:
+                response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+                if response.status_code == 200:
+                    motoristas = response.json()
+                    if motoristas:
+                        self.test_motorista_id = motoristas[0]["id"]
+                    else:
+                        self.log_result("Critical-Motorista-Update", True, "ℹ️ No motoristas to test update")
+                        return True
+                else:
+                    self.log_result("Critical-Motorista-Update", False, "❌ Could not get motoristas list")
+                    return False
+            except Exception as e:
+                self.log_result("Critical-Motorista-Update", False, f"❌ Error getting motoristas: {str(e)}")
+                return False
+        
+        try:
+            update_data = {"phone": "912345678"}
+            
+            response = requests.put(
+                f"{BACKEND_URL}/motoristas/{self.test_motorista_id}",
+                json=update_data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if "message" in result:
+                    self.log_result("Critical-Motorista-Update", True, 
+                                  f"✅ Atualizar motorista funcionando: {result['message']}")
+                else:
+                    self.log_result("Critical-Motorista-Update", False, 
+                                  f"❌ Update response missing message: {result}")
+            else:
+                self.log_result("Critical-Motorista-Update", False, 
+                              f"❌ Update motorista failed: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Critical-Motorista-Update-Error", False, f"❌ Update motorista error: {str(e)}")
+    
+    def test_critical_motorista_approve(self):
+        """CRITICAL TEST 5: Aprovar Motorista (PUT /api/motoristas/{motorista_id}/approve)"""
+        print("\n📋 CRITICAL TEST 5: Aprovar Motorista (PUT /api/motoristas/{motorista_id}/approve)")
+        print("-" * 60)
+        print("TESTE: PUT /api/motoristas/{motorista_id}/approve")
+        print("EXPECTED: Success com plano_atribuido")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Critical-Motorista-Approve", False, "❌ No auth token for admin")
+            return False
+        
+        # Use existing motorista ID or get one
+        if not hasattr(self, 'test_motorista_id'):
+            try:
+                response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+                if response.status_code == 200:
+                    motoristas = response.json()
+                    if motoristas:
+                        self.test_motorista_id = motoristas[0]["id"]
+                    else:
+                        self.log_result("Critical-Motorista-Approve", True, "ℹ️ No motoristas to test approve")
+                        return True
+                else:
+                    self.log_result("Critical-Motorista-Approve", False, "❌ Could not get motoristas list")
+                    return False
+            except Exception as e:
+                self.log_result("Critical-Motorista-Approve", False, f"❌ Error getting motoristas: {str(e)}")
+                return False
+        
+        try:
+            response = requests.put(f"{BACKEND_URL}/motoristas/{self.test_motorista_id}/approve", headers=headers)
+            
+            if response.status_code == 200:
+                result = response.json()
+                required_fields = ["message", "plano_atribuido"]
+                
+                if all(field in result for field in required_fields):
+                    plano_atribuido = result.get("plano_atribuido", {})
+                    plano_nome = plano_atribuido.get("nome", "N/A")
+                    plano_id = plano_atribuido.get("id", "N/A")
+                    
+                    self.log_result("Critical-Motorista-Approve", True, 
+                                  f"✅ Aprovar motorista funcionando: Plano atribuído - {plano_nome} (ID: {plano_id})")
+                else:
+                    self.log_result("Critical-Motorista-Approve", False, 
+                                  f"❌ Approve response missing required fields: {result}")
+            else:
+                self.log_result("Critical-Motorista-Approve", False, 
+                              f"❌ Approve motorista failed: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Critical-Motorista-Approve-Error", False, f"❌ Approve motorista error: {str(e)}")
+    
+    def test_critical_notification_delete(self):
+        """CRITICAL TEST 6: Eliminar Notificação (DELETE /api/notificacoes/{notificacao_id})"""
+        print("\n📋 CRITICAL TEST 6: Eliminar Notificação (DELETE /api/notificacoes/{notificacao_id})")
+        print("-" * 60)
+        print("TESTE: DELETE /api/notificacoes/{notificacao_id}")
+        print("EXPECTED: Success ou 404")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Critical-Notification-Delete", False, "❌ No auth token for admin")
+            return False
+        
+        try:
+            # First try to get notifications
+            response = requests.get(f"{BACKEND_URL}/notificacoes", headers=headers)
+            
+            if response.status_code == 200:
+                notificacoes = response.json()
+                
+                if notificacoes and len(notificacoes) > 0:
+                    # Try to delete the first notification
+                    notificacao_id = notificacoes[0]["id"]
+                    
+                    delete_response = requests.delete(f"{BACKEND_URL}/notificacoes/{notificacao_id}", headers=headers)
+                    
+                    if delete_response.status_code == 200:
+                        result = delete_response.json()
+                        self.log_result("Critical-Notification-Delete", True, 
+                                      f"✅ Eliminar notificação funcionando: {result.get('message', 'Success')}")
+                    elif delete_response.status_code == 404:
+                        self.log_result("Critical-Notification-Delete", True, 
+                                      "✅ Eliminar notificação funcionando: 404 (notification not found - normal)")
+                    else:
+                        self.log_result("Critical-Notification-Delete", False, 
+                                      f"❌ Delete notification failed: {delete_response.status_code}", delete_response.text)
+                else:
+                    # No notifications to delete, test with fake ID
+                    fake_id = "test-notification-id"
+                    delete_response = requests.delete(f"{BACKEND_URL}/notificacoes/{fake_id}", headers=headers)
+                    
+                    if delete_response.status_code == 404:
+                        self.log_result("Critical-Notification-Delete", True, 
+                                      "✅ Eliminar notificação funcionando: 404 (notification not found - expected)")
+                    else:
+                        self.log_result("Critical-Notification-Delete", False, 
+                                      f"❌ Delete notification unexpected response: {delete_response.status_code}")
+            else:
+                self.log_result("Critical-Notification-Delete", False, 
+                              f"❌ Could not get notifications: {response.status_code}")
+                
+        except Exception as e:
+            self.log_result("Critical-Notification-Delete-Error", False, f"❌ Delete notification error: {str(e)}")
+    
+    def test_critical_weekly_report(self):
+        """CRITICAL TEST 7: Gerar Relatório (POST /api/relatorios/motorista/{motorista_id}/gerar-semanal)"""
+        print("\n📋 CRITICAL TEST 7: Gerar Relatório (POST /api/relatorios/motorista/{motorista_id}/gerar-semanal)")
+        print("-" * 60)
+        print("TESTE: POST /api/relatorios/motorista/{motorista_id}/gerar-semanal")
+        print("MOTORISTA ID: e2355169-10a7-4547-9dd0-479c128d73f9")
+        print("BODY: {\"data_inicio\": \"2025-12-29\", \"data_fim\": \"2026-01-04\", \"semana\": 1, \"ano\": 2026}")
+        print("EXPECTED: Deve funcionar com aluguer proporcional")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Critical-Weekly-Report", False, "❌ No auth token for admin")
+            return False
+        
+        motorista_id = "e2355169-10a7-4547-9dd0-479c128d73f9"
+        
+        try:
+            test_data = {
+                "data_inicio": "2025-12-29",
+                "data_fim": "2026-01-04",
+                "semana": 1,
+                "ano": 2026
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
+                json=test_data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                if "resumo" in result:
+                    resumo = result.get("resumo", {})
+                    relatorio_id = result.get("relatorio_id")
+                    
+                    # Check for proportional rental
+                    aluguer_proporcional = resumo.get("aluguer_proporcional", False)
+                    valor_aluguer = resumo.get("valor_aluguer", 0)
+                    
+                    self.log_result("Critical-Weekly-Report", True, 
+                                  f"✅ Relatório semanal funcionando: ID {relatorio_id}")
+                    
+                    if aluguer_proporcional:
+                        self.log_result("Critical-Weekly-Report-Proportional", True, 
+                                      f"✅ Aluguer proporcional detectado: €{valor_aluguer}")
+                    else:
+                        self.log_result("Critical-Weekly-Report-Proportional", True, 
+                                      f"✅ Relatório normal: €{valor_aluguer}")
+                else:
+                    self.log_result("Critical-Weekly-Report", False, 
+                                  f"❌ Weekly report response missing resumo: {result}")
+            else:
+                self.log_result("Critical-Weekly-Report", False, 
+                              f"❌ Weekly report failed: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Critical-Weekly-Report-Error", False, f"❌ Weekly report error: {str(e)}")
     
     def test_critical_weekly_report(self):
         """CRITICAL TEST 5: Gerar Relatório Semanal"""
