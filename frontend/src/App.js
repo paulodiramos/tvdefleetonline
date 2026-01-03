@@ -697,6 +697,16 @@ function App() {
             }
           />
           <Route
+            path="/importar-despesas"
+            element={
+              user ? (
+                <ImportarDespesas user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/automacao"
             element={
               user ? (
