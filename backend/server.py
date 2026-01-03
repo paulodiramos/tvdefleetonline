@@ -11519,7 +11519,9 @@ async def importar_combustivel_excel(
     file_content: bytes, 
     current_user: Dict,
     periodo_inicio: Optional[str] = None,
-    periodo_fim: Optional[str] = None
+    periodo_fim: Optional[str] = None,
+    semana: Optional[int] = None,
+    ano: Optional[int] = None
 ) -> Dict[str, Any]:
     """
     Importar ficheiro Excel de combustível fóssil
