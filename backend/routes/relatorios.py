@@ -221,15 +221,25 @@ async def gerar_relatorio_semanal(
         total_dias_semana = 7
         
         for hist in historico_semana:
-            hist_inicio = datetime.fromisoformat(hist["data_inicio"].replace("Z", "+00:00").split("+")[0])
-            hist_fim = datetime.fromisoformat(hist["data_fim"].replace("Z", "+00:00").split("+")[0]) if hist.get("data_fim") else datetime.now(timezone.utc).replace(tzinfo=None)
+            hist_inicio_str = hist["data_inicio"].replace("Z", "").split("+")[0]
+            hist_inicio = datetime.fromisoformat(hist_inicio_str[:19])  # Remove microseconds
+            
+            if hist.get("data_fim"):
+                hist_fim_str = hist["data_fim"].replace("Z", "").split("+")[0]
+                hist_fim = datetime.fromisoformat(hist_fim_str[:19])
+                # Se termina às 23:59, considerar como fim do dia seguinte para contagem
+                if hist_fim.hour >= 23:
+                    hist_fim = hist_fim.replace(hour=0, minute=0, second=0) + timedelta(days=1)
+            else:
+                hist_fim = dt_fim_semana  # Ainda ativo
             
             # Calcular sobreposição com a semana do relatório
             periodo_inicio = max(hist_inicio, dt_inicio_semana)
             periodo_fim = min(hist_fim, dt_fim_semana)
             
             if periodo_fim > periodo_inicio:
-                dias_com_veiculo = (periodo_fim - periodo_inicio).days
+                # Calcular dias completos
+                dias_com_veiculo = (periodo_fim.date() - periodo_inicio.date()).days
                 if dias_com_veiculo < 1:
                     dias_com_veiculo = 1  # Mínimo 1 dia
                 
@@ -244,7 +254,7 @@ async def gerar_relatorio_semanal(
                     "dias": dias_com_veiculo,
                     "valor_semanal": valor_semanal,
                     "valor_proporcional": round(valor_proporcional, 2),
-                    "periodo": f"{periodo_inicio.strftime('%d/%m')} - {periodo_fim.strftime('%d/%m')}"
+                    "periodo": f"{periodo_inicio.strftime('%d/%m')} - {(periodo_fim - timedelta(days=1)).strftime('%d/%m') if periodo_fim > periodo_inicio else periodo_inicio.strftime('%d/%m')}"
                 })
         
         valor_aluguer = round(valor_aluguer, 2)
