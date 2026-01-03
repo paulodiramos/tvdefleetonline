@@ -320,8 +320,8 @@ const PublicSite = () => {
             <div>
               <h5 className="font-semibold mb-4">Contacto</h5>
               <ul className="space-y-2 text-sm text-slate-400">
-                <li>Email: info@tvdefleet.com</li>
-                <li>Telefone: +351 XXX XXX XXX</li>
+                <li>Email: {contactInfo.email_contacto}</li>
+                <li>Telefone: {contactInfo.telefone_contacto}</li>
               </ul>
             </div>
           </div>
