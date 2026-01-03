@@ -229,8 +229,8 @@ class FleeTrackTester:
             return False
     
     def test_despesas_import_api(self):
-        """3. Test Despesas Import API"""
-        print("\n📋 3. Test Despesas Import API")
+        """6. Test Despesas Import API"""
+        print("\n📋 6. Test Despesas Import API")
         print("-" * 60)
         print("TESTE: POST /api/despesas/importar")
         
@@ -259,8 +259,14 @@ class FleeTrackTester:
                     imported = result.get("registos_importados", 0)
                     total = result.get("total_registos", 0)
                     vehicles_found = result.get("veiculos_encontrados", 0)
-                    self.log_result("Despesas-Import", True, 
-                                  f"✅ Import API works: {imported}/{total} records imported, {vehicles_found} vehicles found")
+                    valor_motoristas = result.get("valor_motoristas", 0)
+                    valor_parceiro = result.get("valor_parceiro", 0)
+                    
+                    success_msg = f"✅ Import API works: {imported}/{total} records imported, {vehicles_found} vehicles found"
+                    if valor_motoristas > 0:
+                        success_msg += f", Motoristas: €{valor_motoristas}, Parceiro: €{valor_parceiro}"
+                    
+                    self.log_result("Despesas-Import", True, success_msg)
                     
                     # Store import ID for later tests
                     self.import_id = result.get("importacao_id")
@@ -278,8 +284,8 @@ class FleeTrackTester:
             return False
     
     def test_despesas_list_api(self):
-        """4. Test Despesas List API"""
-        print("\n📋 4. Test Despesas List API")
+        """7. Test Despesas List API"""
+        print("\n📋 7. Test Despesas List API")
         print("-" * 60)
         print("TESTE: GET /api/despesas/")
         
@@ -305,8 +311,12 @@ class FleeTrackTester:
                         required_despesa_fields = ["id", "matricula", "tipo_responsavel", "valor_liquido"]
                         
                         if all(field in first_despesa for field in required_despesa_fields):
+                            tipo_responsavel = first_despesa.get("tipo_responsavel")
+                            matricula = first_despesa.get("matricula")
+                            valor = first_despesa.get("valor_liquido", 0)
+                            
                             self.log_result("Despesas-List", True, 
-                                          f"✅ List API works: {len(despesas)} despesas returned, {total} total")
+                                          f"✅ List API works: {len(despesas)} despesas returned, {total} total. Sample: {matricula} → {tipo_responsavel} (€{valor})")
                         else:
                             self.log_result("Despesas-List", False, 
                                           f"❌ Despesa records missing required fields: {first_despesa}")
