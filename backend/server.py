@@ -13530,11 +13530,35 @@ async def importar_plataforma(
                         "km_atual": to_int(row.get('km_atual', '0'))
                     })
                 
-                # Inserir na coleção apropriada
-                logger.info(f"📥 Inserindo na coleção '{colecao}': motorista={motorista.get('name') if motorista else 'N/A'}")
-                result = await db[colecao].insert_one(documento)
-                logger.info(f"✅ Inserido com ID: {result.inserted_id}")
-                sucesso += 1
+                # Inserir na coleção apropriada (com verificação de duplicados)
+                # Verificar se já existe um registo idêntico para este motorista/semana/ano
+                existing_query = {
+                    "motorista_id": documento.get("motorista_id"),
+                    "semana": documento.get("semana"),
+                    "ano": documento.get("ano")
+                }
+                
+                # Para Bolt e Uber, verificar duplicados e atualizar em vez de criar novo
+                if colecao in ['viagens_bolt', 'ganhos_uber'] and documento.get("motorista_id") and documento.get("semana"):
+                    existing = await db[colecao].find_one(existing_query)
+                    if existing:
+                        # Atualizar registo existente
+                        await db[colecao].update_one(
+                            {"_id": existing["_id"]},
+                            {"$set": documento}
+                        )
+                        logger.info(f"🔄 Atualizado na coleção '{colecao}': motorista={motorista.get('name') if motorista else 'N/A'}, semana={documento.get('semana')}")
+                        sucesso += 1
+                    else:
+                        # Criar novo registo
+                        result = await db[colecao].insert_one(documento)
+                        logger.info(f"📥 Inserido na coleção '{colecao}': motorista={motorista.get('name') if motorista else 'N/A'}")
+                        sucesso += 1
+                else:
+                    # Para outras coleções, inserir normalmente
+                    result = await db[colecao].insert_one(documento)
+                    logger.info(f"📥 Inserido na coleção '{colecao}': motorista={motorista.get('name') if motorista else 'N/A'}")
+                    sucesso += 1
                 
             except Exception as e:
                 erros += 1
