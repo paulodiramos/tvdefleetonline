@@ -158,15 +158,22 @@ async def importar_despesas(
             tipo_responsavel = TipoResponsavel.VEICULO
             motivo_responsabilidade = "Despesa do veículo (parceiro)"
             
-            # Determine responsibility
+            # Determine responsibility based on contract type
+            # aluguer, compra, slot → motorista
+            # comissao → veiculo (parceiro)
             if veiculo:
-                # Check if vehicle is rental type
+                # Check contract type
                 tipo_contrato = veiculo.get("tipo_contrato", {})
-                is_aluguer = False
+                contrato_tipo = None
+                
                 if isinstance(tipo_contrato, dict):
-                    is_aluguer = tipo_contrato.get("tipo") == "aluguer" or tipo_contrato.get("aluguer", False)
+                    contrato_tipo = tipo_contrato.get("tipo", "").lower()
                 elif isinstance(tipo_contrato, str):
-                    is_aluguer = "aluguer" in tipo_contrato.lower()
+                    contrato_tipo = tipo_contrato.lower()
+                
+                # Contracts that assign expense to motorista: aluguer, compra, slot
+                motorista_contracts = ["aluguer", "compra", "slot"]
+                is_motorista_contract = any(ct in (contrato_tipo or "") for ct in motorista_contracts)
                 
                 # Get assigned driver
                 motorista_atribuido = veiculo.get("motorista_atribuido") or veiculo.get("motorista_id")
