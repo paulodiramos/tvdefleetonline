@@ -108,25 +108,24 @@ class FleeTrackTester:
         return temp_file.name
     
     def test_priority_scenarios(self):
-        """🎯 PRIORITY TEST SCENARIOS: Bug Fixes Validation - Motorista Report Data Integration"""
-        print("\n🎯 PRIORITY TEST SCENARIOS: Bug Fixes Validation - Motorista Report Data Integration")
+        """🎯 PRIORITY TEST SCENARIOS: Bug Fixes Validation - Bolt/Uber Earnings in Motorista Reports"""
+        print("\n🎯 PRIORITY TEST SCENARIOS: Bug Fixes Validation - Bolt/Uber Earnings in Motorista Reports")
         print("=" * 80)
         print("CONTEXT: Testing specific scenarios from review request:")
-        print("1. Vehicle Report Custom Dates (ROI)")
-        print("2. Motorista Weekly Report - Combustível Integration")
-        print("3. Motorista Weekly Report - Carregamentos Elétricos")
-        print("4. Motorista Weekly Report - GPS/KM Data")
-        print("5. Motorista Weekly Report - Uber/Bolt Data")
+        print("1. Bolt Earnings in Motorista Report (from viagens_bolt collection)")
+        print("2. Uber Earnings in Motorista Report")
+        print("3. Total Calculation Verification")
+        print("4. Vehicle ROI Report with Custom Dates")
         print("\nCREDENCIAIS:")
         print("- Admin: admin@tvdefleet.com / 123456")
+        print("- Motorista ID: 57d6a119-e5af-4c7f-b357-49dc4f618763 (Arlei Oliveira)")
         print("=" * 80)
         
         # Execute priority tests
-        self.test_scenario_1_vehicle_roi_custom_dates()
-        self.test_scenario_2_motorista_combustivel_integration()
-        self.test_scenario_3_motorista_eletrico_integration()
-        self.test_scenario_4_motorista_gps_km_data()
-        self.test_scenario_5_motorista_uber_bolt_data()
+        self.test_scenario_1_bolt_earnings_motorista_report()
+        self.test_scenario_2_uber_earnings_motorista_report()
+        self.test_scenario_3_total_calculation_verification()
+        self.test_scenario_4_vehicle_roi_custom_dates()
         
         return True
     
