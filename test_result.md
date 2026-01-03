@@ -10,6 +10,9 @@ backend:
       - working: true
         agent: "main"
         comment: "✅ Implemented - New endpoints for vehicle device management and assignment history. POST /api/vehicles/{id}/atribuir-motorista now creates history records with date/time, km, and devices."
+      - working: true
+        agent: "testing"
+        comment: "✅ PHASE 1 VEHICLE MANAGEMENT ENDPOINTS FULLY TESTED (21/21 tests passed - 100% success). NEW ENDPOINTS WORKING: 1) GET/PUT /api/vehicles/{id}/dispositivos - Device management (OBU Via Verde, Cartões combustível) working perfectly. Vehicle AS-83-NX devices retrieved and updated successfully. 2) GET /api/vehicles/{id}/historico-atribuicoes - Assignment history with ganhos calculation working. 3) POST /api/vehicles/{id}/atribuir-motorista - Driver assignment with history creation working. Creates historico_id and data_atribuicao as expected. 4) All endpoints return proper data structures and handle authentication correctly. Vehicle ID 4ad331ff-c0f5-43c9-95b8-cc085d32d8a7 tested successfully."
 
   - task: "Despesas Via Verde in Weekly Reports"
     implemented: true
