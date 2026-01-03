@@ -170,7 +170,10 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Backend Routes Refactoring Phase 2"
+    - "FichaVeiculo - Maintenance History Registration"
+    - "FichaVeiculo - Driver Phone and Link Display"
+    - "Layout - Removed Criar Template button"
+    - "Partner Permission - Delete Weekly Reports"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
