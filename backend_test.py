@@ -108,24 +108,27 @@ class FleeTrackTester:
         return temp_file.name
     
     def test_priority_scenarios(self):
-        """🎯 PRIORITY TEST SCENARIOS: Bug Fixes Validation - Bolt/Uber Earnings in Motorista Reports"""
-        print("\n🎯 PRIORITY TEST SCENARIOS: Bug Fixes Validation - Bolt/Uber Earnings in Motorista Reports")
+        """🎯 PRIORITY TEST SCENARIOS: Validate Bolt CSV Import with Portagens, Gorjetas and Ganhos Liquidos"""
+        print("\n🎯 PRIORITY TEST SCENARIOS: Validate Bolt CSV Import with Portagens, Gorjetas and Ganhos Liquidos")
         print("=" * 80)
         print("CONTEXT: Testing specific scenarios from review request:")
-        print("1. Bolt Earnings in Motorista Report (from viagens_bolt collection)")
-        print("2. Uber Earnings in Motorista Report")
-        print("3. Total Calculation Verification")
-        print("4. Vehicle ROI Report with Custom Dates")
+        print("1. Bolt Ganhos Liquidos (expected: 236.08 from Ganhos líquidos|€ column)")
+        print("2. Bolt Gorjetas/Tips (expected: 1.0 from Gorjetas dos passageiros|€ column)")
+        print("3. Bolt Portagens/Tolls (expected: 25.57 from Portagens|€ column)")
+        print("4. Motorista Association via Identificador")
+        print("5. Report Total Calculation")
         print("\nCREDENCIAIS:")
         print("- Admin: admin@tvdefleet.com / 123456")
         print("- Motorista ID: 57d6a119-e5af-4c7f-b357-49dc4f618763 (Arlei Oliveira)")
+        print("- Test Period: semana 2, ano 2026 (2026-01-06 to 2026-01-12)")
         print("=" * 80)
         
         # Execute priority tests
-        self.test_scenario_1_bolt_earnings_motorista_report()
-        self.test_scenario_2_uber_earnings_motorista_report()
-        self.test_scenario_3_total_calculation_verification()
-        self.test_scenario_4_vehicle_roi_custom_dates()
+        self.test_scenario_1_bolt_ganhos_liquidos()
+        self.test_scenario_2_bolt_gorjetas()
+        self.test_scenario_3_bolt_portagens()
+        self.test_scenario_4_motorista_association()
+        self.test_scenario_5_report_total_calculation()
         
         return True
     
