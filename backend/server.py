@@ -10354,6 +10354,10 @@ async def gerar_relatorio_semanal(
     data_inicio_via_verde = (datetime.fromisoformat(data_inicio) - timedelta(weeks=via_verde_atraso)).strftime("%Y-%m-%d")
     data_fim_via_verde = (datetime.fromisoformat(data_fim) - timedelta(weeks=via_verde_atraso)).strftime("%Y-%m-%d")
     
+    debug_log(f"Via Verde atraso: {via_verde_atraso} semanas")
+    debug_log(f"Período relatório: {data_inicio} a {data_fim}")
+    debug_log(f"Período Via Verde: {data_inicio_via_verde} a {data_fim_via_verde}")
+    
     # Get ganhos data (from relatorios_ganhos collection)
     ganhos_query = {
         "motorista_id": motorista_id,
