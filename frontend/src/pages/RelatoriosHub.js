@@ -785,6 +785,59 @@ const RelatoriosHub = ({ user, onLogout }) => {
           </CardContent>
         </Card>
 
+        {/* Bulk Actions Bar */}
+        {selectedIds.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CheckSquare className="w-5 h-5 text-blue-600" />
+              <span className="font-medium text-blue-800">
+                {selectedIds.length} relatório(s) selecionado(s)
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowStatusChangeModal(true)}
+              >
+                <Edit className="w-4 h-4 mr-1" />
+                Alterar Estado
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Eliminar Selecionados
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedIds([])}
+              >
+                <X className="w-4 h-4 mr-1" />
+                Limpar Seleção
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Select All Checkbox */}
+        <div className="flex items-center gap-4 mb-4">
+          <div 
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={toggleSelectAll}
+          >
+            <Checkbox 
+              checked={relatoriosFiltrados.length > 0 && selectedIds.length === relatoriosFiltrados.length} 
+              onCheckedChange={toggleSelectAll}
+            />
+            <span className="text-sm text-slate-600">Selecionar Todos ({relatoriosFiltrados.length})</span>
+          </div>
+        </div>
+
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-6 gap-1">
