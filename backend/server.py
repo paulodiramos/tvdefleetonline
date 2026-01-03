@@ -12572,7 +12572,7 @@ async def importar_plataforma(
         # Para combustível em Excel (.xlsx), processar diferente
         if plataforma == 'combustivel' and (file.filename.endswith('.xlsx') or file.filename.endswith('.xls')):
             # Processar Excel de combustível
-            return await importar_combustivel_excel(content, current_user, periodo_inicio, periodo_fim)
+            return await importar_combustivel_excel(content, current_user, periodo_inicio, periodo_fim, semana, ano)
         
         # Para Via Verde em Excel (.xlsx), processar diferente
         if plataforma == 'viaverde' and (file.filename.endswith('.xlsx') or file.filename.endswith('.xls')):
@@ -12606,10 +12606,10 @@ async def importar_plataforma(
             # Se tem "Nº. CARTÃO" ou "POSTO ENERGIA" ou "ENERGIA" é carregamentos elétricos
             if 'Nº. CARTÃO' in header or 'POSTO ENERGIA' in header or 'Nº. Cartão' in header or ('POSTO' in header and 'ENERGIA' in header):
                 logger.info("📄 Detectado: Excel de Carregamentos Elétricos")
-                return await importar_carregamentos_excel(content, current_user, periodo_inicio, periodo_fim)
+                return await importar_carregamentos_excel(content, current_user, periodo_inicio, periodo_fim, semana, ano)
             else:
                 logger.info("📄 Detectado: Excel de Portagens Via Verde")
-                return await importar_viaverde_excel(content, current_user, periodo_inicio, periodo_fim)
+                return await importar_viaverde_excel(content, current_user, periodo_inicio, periodo_fim, semana, ano)
         
         # Para CSV: tentar múltiplas codificações
         decoded = None
