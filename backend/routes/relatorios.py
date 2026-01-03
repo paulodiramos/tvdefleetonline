@@ -754,16 +754,18 @@ async def get_motorista_via_verde_total(
         "$or": [
             {"semana": semana_via_verde, "ano": ano_via_verde},
             {
-                "entry_date": {"$gte": data_inicio_str, "$lte": data_fim_str},
-                "$or": [{"semana": None}, {"semana": {"$exists": False}}]
+                "entry_date": {"$gte": data_inicio_str, "$lte": data_fim_str}
             }
         ]
     }
     
-    # Final query
+    # Final query - must match (one of the identifiers) AND (date filter)
+    # Use explicit $and to combine identifier match with date filter
     query = {
-        "$or": query_conditions,
-        "$and": [date_filter]
+        "$and": [
+            {"$or": query_conditions},
+            date_filter
+        ]
     }
     
     logger.info(f"📍 Query OBU: {obu}, vehicle_id: {veiculo_id}")
