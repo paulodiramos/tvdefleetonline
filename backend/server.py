@@ -1540,6 +1540,7 @@ class Vehicle(BaseModel):
     categorias_bolt: Optional[CategoriasBolt] = None
     via_verde_disponivel: bool = False
     via_verde_id: Optional[str] = None  # ID do Via Verde
+    obu: Optional[str] = None  # Identificador OBU (On-Board Unit) do Via Verde
     cartao_frota_disponivel: bool = False
     cartao_frota_id: Optional[str] = None  # ID do Cartão Frota COMBUSTÍVEL (associado ao motorista quando veículo é atribuído)
     cartao_frota_eletric_id: Optional[str] = None  # ID do Cartão Frota ELÉTRICO (para carregamentos Via Verde)
@@ -12163,9 +12164,14 @@ async def importar_viaverde_excel(
                 # Criar dicionário da linha
                 row = dict(zip(header, row_values))
                 
-                # Extrair License Plate e OBU
+                # Extrair License Plate e OBU (suporta diferentes nomes de coluna)
                 license_plate = str(row.get('License Plate', '')).strip() if row.get('License Plate') else None
-                obu = str(row.get('OBU', '')).strip() if row.get('OBU') else None
+                # Suportar "IAI OBU", "OBU", "IAI_OBU" como nome da coluna
+                obu = None
+                for obu_key in ['IAI OBU', 'IAI_OBU', 'OBU', 'obu']:
+                    if row.get(obu_key):
+                        obu = str(row.get(obu_key)).strip()
+                        break
                 
                 if not obu:
                     erros += 1
