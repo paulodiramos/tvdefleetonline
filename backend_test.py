@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-FleeTrack Backend Testing Suite - CSV Import for Despesas (Via Verde)
-Tests for new CSV Import feature for Via Verde expenses with automatic association
+FleeTrack Backend Testing Suite - Updated System Tests
+Tests for updated expense assignment logic and report management features
 """
 
 import requests
@@ -9,9 +9,6 @@ import json
 import os
 import tempfile
 import time
-from PIL import Image
-import io
-import base64
 from pathlib import Path
 import csv
 
@@ -93,6 +90,23 @@ class FleeTrackTester:
             return None
         return {"Authorization": f"Bearer {self.tokens[role]}"}
     
+    def create_test_csv_file(self):
+        """Create a test CSV file with Via Verde data"""
+        csv_data = [
+            ["License Plate", "Entry Date", "Exit Date", "Entry Point", "Exit Point", "Value", "Liquid Value", "Service Description"],
+            ["AB-12-CD", "2024-01-15", "2024-01-15", "A1 Porto", "A1 Lisboa", "2.50", "2.30", "Autoestradas"],
+            ["EF-34-GH", "2024-01-16", "2024-01-16", "A2 Lisboa", "A2 Faro", "5.80", "5.50", "Autoestradas"],
+            ["IJ-56-KL", "2024-01-17", "2024-01-17", "Parque Centro", "Parque Centro", "1.20", "1.00", "Parques"]
+        ]
+        
+        # Create temporary CSV file
+        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False, encoding='utf-8')
+        writer = csv.writer(temp_file)
+        writer.writerows(csv_data)
+        temp_file.close()
+        
+        return temp_file.name
+    
     def test_fleetrack_backend_apis(self):
         """🎯 MAIN TEST: FleeTrack Updated System Tests"""
         print("\n🎯 MAIN TEST: FleeTrack Updated System Tests")
@@ -166,175 +180,6 @@ class FleeTrackTester:
                 
         except Exception as e:
             self.log_result("Auth-Error", False, f"❌ Authentication error: {str(e)}")
-    
-    def create_test_csv_file(self):
-        """Create a test CSV file with Via Verde data"""
-        csv_data = [
-            ["License Plate", "Entry Date", "Exit Date", "Entry Point", "Exit Point", "Value", "Liquid Value", "Service Description"],
-            ["AB-12-CD", "2024-01-15", "2024-01-15", "A1 Porto", "A1 Lisboa", "2.50", "2.30", "Autoestradas"],
-            ["EF-34-GH", "2024-01-16", "2024-01-16", "A2 Lisboa", "A2 Faro", "5.80", "5.50", "Autoestradas"],
-            ["IJ-56-KL", "2024-01-17", "2024-01-17", "Parque Centro", "Parque Centro", "1.20", "1.00", "Parques"]
-        ]
-        
-        # Create temporary CSV file
-        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False, encoding='utf-8')
-        writer = csv.writer(temp_file)
-        writer.writerows(csv_data)
-        temp_file.close()
-        
-        return temp_file.name
-    
-    def test_despesas_preview_api(self):
-        """2. Test Despesas Preview API"""
-        print("\n📋 2. Test Despesas Preview API")
-        print("-" * 60)
-        print("TESTE: POST /api/despesas/preview")
-        
-        headers = self.get_headers("admin")
-        if not headers:
-            self.log_result("Despesas-Preview-Auth", False, "❌ No auth token for admin")
-            return False
-        
-        try:
-            # Create test CSV file
-            csv_file_path = self.create_test_csv_file()
-            
-            with open(csv_file_path, 'rb') as f:
-                files = {'file': ('test_via_verde.csv', f, 'text/csv')}
-                response = requests.post(f"{BACKEND_URL}/despesas/preview", files=files, headers=headers)
-            
-            # Clean up
-            os.unlink(csv_file_path)
-            
-            if response.status_code == 200:
-                data = response.json()
-                required_fields = ["nome_ficheiro", "total_registos", "colunas", "colunas_identificadas", "matriculas_unicas"]
-                
-                if all(field in data for field in required_fields):
-                    matriculas_count = len(data.get("matriculas_unicas", []))
-                    total_registos = data.get("total_registos", 0)
-                    self.log_result("Despesas-Preview", True, 
-                                  f"✅ Preview API works: {total_registos} records, {matriculas_count} unique matriculas")
-                else:
-                    self.log_result("Despesas-Preview", False, 
-                                  f"❌ Preview response missing required fields: {data}")
-            else:
-                self.log_result("Despesas-Preview", False, 
-                              f"❌ Preview API failed: {response.status_code}", response.text)
-            
-            return True
-            
-        except Exception as e:
-            self.log_result("Despesas-Preview-Error", False, f"❌ Error during preview test: {str(e)}")
-            return False
-    
-    def test_despesas_import_api(self):
-        """6. Test Despesas Import API"""
-        print("\n📋 6. Test Despesas Import API")
-        print("-" * 60)
-        print("TESTE: POST /api/despesas/importar")
-        
-        headers = self.get_headers("admin")
-        if not headers:
-            self.log_result("Despesas-Import-Auth", False, "❌ No auth token for admin")
-            return False
-        
-        try:
-            # Create test CSV file
-            csv_file_path = self.create_test_csv_file()
-            
-            with open(csv_file_path, 'rb') as f:
-                files = {'file': ('test_via_verde.csv', f, 'text/csv')}
-                data = {'tipo_fornecedor': 'via_verde'}
-                response = requests.post(f"{BACKEND_URL}/despesas/importar", files=files, data=data, headers=headers)
-            
-            # Clean up
-            os.unlink(csv_file_path)
-            
-            if response.status_code == 200:
-                result = response.json()
-                required_fields = ["message", "importacao_id", "total_registos", "registos_importados"]
-                
-                if all(field in result for field in required_fields):
-                    imported = result.get("registos_importados", 0)
-                    total = result.get("total_registos", 0)
-                    vehicles_found = result.get("veiculos_encontrados", 0)
-                    valor_motoristas = result.get("valor_motoristas", 0)
-                    valor_parceiro = result.get("valor_parceiro", 0)
-                    
-                    success_msg = f"✅ Import API works: {imported}/{total} records imported, {vehicles_found} vehicles found"
-                    if valor_motoristas > 0:
-                        success_msg += f", Motoristas: €{valor_motoristas}, Parceiro: €{valor_parceiro}"
-                    
-                    self.log_result("Despesas-Import", True, success_msg)
-                    
-                    # Store import ID for later tests
-                    self.import_id = result.get("importacao_id")
-                else:
-                    self.log_result("Despesas-Import", False, 
-                                  f"❌ Import response missing required fields: {result}")
-            else:
-                self.log_result("Despesas-Import", False, 
-                              f"❌ Import API failed: {response.status_code}", response.text)
-            
-            return True
-            
-        except Exception as e:
-            self.log_result("Despesas-Import-Error", False, f"❌ Error during import test: {str(e)}")
-            return False
-    
-    def test_despesas_list_api(self):
-        """7. Test Despesas List API"""
-        print("\n📋 7. Test Despesas List API")
-        print("-" * 60)
-        print("TESTE: GET /api/despesas/")
-        
-        headers = self.get_headers("admin")
-        if not headers:
-            self.log_result("Despesas-List-Auth", False, "❌ No auth token for admin")
-            return False
-        
-        try:
-            response = requests.get(f"{BACKEND_URL}/despesas/?limit=10", headers=headers)
-            
-            if response.status_code == 200:
-                data = response.json()
-                required_fields = ["despesas", "total", "limit", "skip"]
-                
-                if all(field in data for field in required_fields):
-                    despesas = data.get("despesas", [])
-                    total = data.get("total", 0)
-                    
-                    # Check if despesas have required fields
-                    if despesas:
-                        first_despesa = despesas[0]
-                        required_despesa_fields = ["id", "matricula", "tipo_responsavel", "valor_liquido"]
-                        
-                        if all(field in first_despesa for field in required_despesa_fields):
-                            tipo_responsavel = first_despesa.get("tipo_responsavel")
-                            matricula = first_despesa.get("matricula")
-                            valor = first_despesa.get("valor_liquido", 0)
-                            
-                            self.log_result("Despesas-List", True, 
-                                          f"✅ List API works: {len(despesas)} despesas returned, {total} total. Sample: {matricula} → {tipo_responsavel} (€{valor})")
-                        else:
-                            self.log_result("Despesas-List", False, 
-                                          f"❌ Despesa records missing required fields: {first_despesa}")
-                    else:
-                        self.log_result("Despesas-List", True, 
-                                      f"✅ List API works: No despesas found (normal if database empty)")
-                else:
-                    self.log_result("Despesas-List", False, 
-                                  f"❌ List response missing required fields: {data}")
-            else:
-                self.log_result("Despesas-List", False, 
-                              f"❌ List API failed: {response.status_code}", response.text)
-            
-            return True
-            
-        except Exception as e:
-            self.log_result("Despesas-List-Error", False, f"❌ Error during list test: {str(e)}")
-            return False
     
     def test_despesas_resumo_api(self):
         """2. Test Despesas Resumo API - NEW LOGIC"""
@@ -533,103 +378,112 @@ class FleeTrackTester:
             self.log_result("Reports-List-Error", False, f"❌ Error during list reports test: {str(e)}")
             return False
     
-    def test_despesas_importacoes_api(self):
-        """6. Test Despesas Import History API"""
-        print("\n📋 6. Test Despesas Import History API")
+    def test_despesas_import_api(self):
+        """6. Test Despesas Import API"""
+        print("\n📋 6. Test Despesas Import API")
         print("-" * 60)
-        print("TESTE: GET /api/despesas/importacoes")
+        print("TESTE: POST /api/despesas/importar")
         
         headers = self.get_headers("admin")
         if not headers:
-            self.log_result("Despesas-Importacoes-Auth", False, "❌ No auth token for admin")
+            self.log_result("Despesas-Import-Auth", False, "❌ No auth token for admin")
             return False
         
         try:
-            response = requests.get(f"{BACKEND_URL}/despesas/importacoes", headers=headers)
+            # Create test CSV file
+            csv_file_path = self.create_test_csv_file()
+            
+            with open(csv_file_path, 'rb') as f:
+                files = {'file': ('test_via_verde.csv', f, 'text/csv')}
+                data = {'tipo_fornecedor': 'via_verde'}
+                response = requests.post(f"{BACKEND_URL}/despesas/importar", files=files, data=data, headers=headers)
+            
+            # Clean up
+            os.unlink(csv_file_path)
             
             if response.status_code == 200:
-                importacoes = response.json()
+                result = response.json()
+                required_fields = ["message", "importacao_id", "total_registos", "registos_importados"]
                 
-                if isinstance(importacoes, list):
-                    if importacoes:
-                        first_import = importacoes[0]
-                        required_fields = ["id", "nome_ficheiro", "tipo_fornecedor", "status", "total_registos"]
-                        
-                        if all(field in first_import for field in required_fields):
-                            self.log_result("Despesas-Importacoes", True, 
-                                          f"✅ Import history API works: {len(importacoes)} imports found")
-                        else:
-                            self.log_result("Despesas-Importacoes", False, 
-                                          f"❌ Import records missing required fields: {first_import}")
-                    else:
-                        self.log_result("Despesas-Importacoes", True, 
-                                      f"✅ Import history API works: No imports found (normal if no imports)")
+                if all(field in result for field in required_fields):
+                    imported = result.get("registos_importados", 0)
+                    total = result.get("total_registos", 0)
+                    vehicles_found = result.get("veiculos_encontrados", 0)
+                    valor_motoristas = result.get("valor_motoristas", 0)
+                    valor_parceiro = result.get("valor_parceiro", 0)
+                    
+                    success_msg = f"✅ Import API works: {imported}/{total} records imported, {vehicles_found} vehicles found"
+                    if valor_motoristas > 0:
+                        success_msg += f", Motoristas: €{valor_motoristas}, Parceiro: €{valor_parceiro}"
+                    
+                    self.log_result("Despesas-Import", True, success_msg)
+                    
+                    # Store import ID for later tests
+                    self.import_id = result.get("importacao_id")
                 else:
-                    self.log_result("Despesas-Importacoes", False, 
-                                  f"❌ Import history response not a list: {importacoes}")
+                    self.log_result("Despesas-Import", False, 
+                                  f"❌ Import response missing required fields: {result}")
             else:
-                self.log_result("Despesas-Importacoes", False, 
-                              f"❌ Import history API failed: {response.status_code}", response.text)
+                self.log_result("Despesas-Import", False, 
+                              f"❌ Import API failed: {response.status_code}", response.text)
             
             return True
             
         except Exception as e:
-            self.log_result("Despesas-Importacoes-Error", False, f"❌ Error during import history test: {str(e)}")
+            self.log_result("Despesas-Import-Error", False, f"❌ Error during import test: {str(e)}")
             return False
     
-    def test_despesas_por_veiculo_api(self):
-        """7. Test Despesas By Vehicle API"""
-        print("\n📋 7. Test Despesas By Vehicle API")
+    def test_despesas_list_api(self):
+        """7. Test Despesas List API"""
+        print("\n📋 7. Test Despesas List API")
         print("-" * 60)
-        print("TESTE: GET /api/despesas/por-veiculo/{id}")
+        print("TESTE: GET /api/despesas/")
         
         headers = self.get_headers("admin")
         if not headers:
-            self.log_result("Despesas-ByVehicle-Auth", False, "❌ No auth token for admin")
+            self.log_result("Despesas-List-Auth", False, "❌ No auth token for admin")
             return False
         
         try:
-            # First get a vehicle ID
-            vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+            response = requests.get(f"{BACKEND_URL}/despesas/?limit=10", headers=headers)
             
-            if vehicles_response.status_code == 200:
-                vehicles = vehicles_response.json()
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["despesas", "total", "limit", "skip"]
                 
-                if vehicles:
-                    test_vehicle = vehicles[0]
-                    vehicle_id = test_vehicle['id']
-                    vehicle_info = f"{test_vehicle.get('marca', 'N/A')} {test_vehicle.get('modelo', 'N/A')} - {test_vehicle.get('matricula', 'N/A')}"
+                if all(field in data for field in required_fields):
+                    despesas = data.get("despesas", [])
+                    total = data.get("total", 0)
                     
-                    # Test expenses for this vehicle
-                    response = requests.get(f"{BACKEND_URL}/despesas/por-veiculo/{vehicle_id}", headers=headers)
-                    
-                    if response.status_code == 200:
-                        data = response.json()
-                        required_fields = ["despesas", "resumo"]
+                    # Check if despesas have required fields
+                    if despesas:
+                        first_despesa = despesas[0]
+                        required_despesa_fields = ["id", "matricula", "tipo_responsavel", "valor_liquido"]
                         
-                        if all(field in data for field in required_fields):
-                            despesas = data.get("despesas", [])
-                            resumo = data.get("resumo", {})
+                        if all(field in first_despesa for field in required_despesa_fields):
+                            tipo_responsavel = first_despesa.get("tipo_responsavel")
+                            matricula = first_despesa.get("matricula")
+                            valor = first_despesa.get("valor_liquido", 0)
                             
-                            self.log_result("Despesas-ByVehicle", True, 
-                                          f"✅ By vehicle API works: {len(despesas)} expenses for {vehicle_info}")
+                            self.log_result("Despesas-List", True, 
+                                          f"✅ List API works: {len(despesas)} despesas returned, {total} total. Sample: {matricula} → {tipo_responsavel} (€{valor})")
                         else:
-                            self.log_result("Despesas-ByVehicle", False, 
-                                          f"❌ By vehicle response missing required fields: {data}")
+                            self.log_result("Despesas-List", False, 
+                                          f"❌ Despesa records missing required fields: {first_despesa}")
                     else:
-                        self.log_result("Despesas-ByVehicle", False, 
-                                      f"❌ By vehicle API failed: {response.status_code}", response.text)
+                        self.log_result("Despesas-List", True, 
+                                      f"✅ List API works: No despesas found (normal if database empty)")
                 else:
-                    self.log_result("Despesas-ByVehicle", True, 
-                                  "ℹ️ No vehicles to test by vehicle API (normal if database empty)")
+                    self.log_result("Despesas-List", False, 
+                                  f"❌ List response missing required fields: {data}")
             else:
-                self.log_result("Despesas-ByVehicle", False, 
-                              f"❌ Could not get vehicles for by vehicle test: {vehicles_response.status_code}")
+                self.log_result("Despesas-List", False, 
+                              f"❌ List API failed: {response.status_code}", response.text)
             
             return True
             
         except Exception as e:
-            self.log_result("Despesas-ByVehicle-Error", False, f"❌ Error during by vehicle test: {str(e)}")
+            self.log_result("Despesas-List-Error", False, f"❌ Error during list test: {str(e)}")
             return False
     
     def run_all_tests(self):
