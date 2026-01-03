@@ -4202,6 +4202,101 @@ const RelatorioFinanceiroTab = ({ vehicleId, canEdit, user, relatorioGanhos, set
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Modal Adicionar Manutenção */}
+      <Dialog open={showAddManutencao} onOpenChange={setShowAddManutencao}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Registar Manutenção</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAddManutencao} className="space-y-4">
+            <div>
+              <Label>Tipo de Manutenção *</Label>
+              <select
+                value={novaManutencao.tipo_manutencao}
+                onChange={(e) => setNovaManutencao({...novaManutencao, tipo_manutencao: e.target.value})}
+                className="w-full p-2 border rounded-md"
+                required
+              >
+                <option value="">Selecione o tipo</option>
+                <option value="Revisão">Revisão</option>
+                <option value="Troca de Óleo">Troca de Óleo</option>
+                <option value="Troca de Filtros">Troca de Filtros</option>
+                <option value="Troca de Pneus">Troca de Pneus</option>
+                <option value="Travões">Travões</option>
+                <option value="Suspensão">Suspensão</option>
+                <option value="Embraiagem">Embraiagem</option>
+                <option value="Correia de Distribuição">Correia de Distribuição</option>
+                <option value="Bateria">Bateria</option>
+                <option value="Ar Condicionado">Ar Condicionado</option>
+                <option value="Reparação Mecânica">Reparação Mecânica</option>
+                <option value="Reparação Elétrica">Reparação Elétrica</option>
+                <option value="Chapa e Pintura">Chapa e Pintura</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </div>
+            <div>
+              <Label>Descrição (o que foi feito)</Label>
+              <textarea
+                value={novaManutencao.descricao}
+                onChange={(e) => setNovaManutencao({...novaManutencao, descricao: e.target.value})}
+                className="w-full p-2 border rounded-md min-h-[80px]"
+                placeholder="Descreva os trabalhos realizados..."
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Data *</Label>
+                <Input
+                  type="date"
+                  value={novaManutencao.data}
+                  onChange={(e) => setNovaManutencao({...novaManutencao, data: e.target.value})}
+                  required
+                />
+              </div>
+              <div>
+                <Label>KM na Manutenção</Label>
+                <Input
+                  type="number"
+                  value={novaManutencao.km_realizada}
+                  onChange={(e) => setNovaManutencao({...novaManutencao, km_realizada: e.target.value})}
+                  placeholder="Ex: 85000"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Valor/Despesa (€) *</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  value={novaManutencao.valor}
+                  onChange={(e) => setNovaManutencao({...novaManutencao, valor: e.target.value})}
+                  placeholder="0.00"
+                  required
+                />
+              </div>
+              <div>
+                <Label>Fornecedor/Oficina</Label>
+                <Input
+                  value={novaManutencao.fornecedor}
+                  onChange={(e) => setNovaManutencao({...novaManutencao, fornecedor: e.target.value})}
+                  placeholder="Nome da oficina"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setShowAddManutencao(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit">
+                <Save className="w-4 h-4 mr-2" />
+                Registar
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
