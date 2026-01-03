@@ -13397,13 +13397,15 @@ async def importar_plataforma(
                     })
                 
                 # Inserir na coleção apropriada
-                await db[colecao].insert_one(documento)
+                logger.info(f"📥 Inserindo na coleção '{colecao}': motorista={motorista.get('name') if motorista else 'N/A'}")
+                result = await db[colecao].insert_one(documento)
+                logger.info(f"✅ Inserido com ID: {result.inserted_id}")
                 sucesso += 1
                 
             except Exception as e:
                 erros += 1
                 erros_detalhes.append(f"Linha {row_num}: {str(e)}")
-                print(f"Erro ao processar linha {row_num}: {str(e)}")
+                logger.error(f"❌ Erro ao processar linha {row_num}: {str(e)}")
         
         # Criar relatórios de rascunho automaticamente se houver sucesso
         info_rascunhos = None
