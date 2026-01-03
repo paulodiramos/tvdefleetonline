@@ -868,19 +868,38 @@ async def atribuir_motorista_vehicle(
             "motorista": motorista.get("name"),
             "via_verde_id": via_verde_id or vehicle.get("via_verde_id"),
             "cartao_frota_id": cartao_frota_id or vehicle.get("cartao_frota_id"),
-            "cartao_frota_eletric_id": cartao_frota_eletric_id or vehicle.get("cartao_frota_eletric_id")
+            "cartao_frota_eletric_id": cartao_frota_eletric_id or vehicle.get("cartao_frota_eletric_id"),
+            "data_atribuicao": now_iso,
+            "historico_id": historico_entry["id"]
         }
     else:
-        # Remover motorista - limpar associações
-        old_motorista_id = vehicle.get("motorista_atribuido")
+        # Remover motorista - fechar histórico e limpar associações
+        km_remocao = data.get("km_atual")
+        
+        # Fechar histórico de atribuição atual
+        if old_motorista_id:
+            await db.historico_atribuicoes.update_one(
+                {
+                    "veiculo_id": vehicle_id,
+                    "motorista_id": old_motorista_id,
+                    "data_fim": None
+                },
+                {
+                    "$set": {
+                        "data_fim": now_iso,
+                        "km_final": km_remocao or vehicle.get("km_atual", 0)
+                    }
+                }
+            )
         
         await db.vehicles.update_one(
             {"id": vehicle_id},
             {"$set": {
                 "motorista_atribuido": None,
                 "motorista_atribuido_nome": None,
+                "motorista_atribuido_desde": None,
                 "status": "disponivel",
-                "updated_at": datetime.now(timezone.utc).isoformat()
+                "updated_at": now_iso
             }}
         )
         
@@ -894,12 +913,12 @@ async def atribuir_motorista_vehicle(
                     "cartao_eletrico_id": None,
                     "cartao_viaverde_id": None,
                     "id_cartao_frota_combustivel": None,
-                    "updated_at": datetime.now(timezone.utc).isoformat()
+                    "updated_at": now_iso
                 }}
             )
             logger.info(f"✅ Motorista removido do veículo {vehicle.get('matricula')}")
         
-        return {"message": "Motorista removido com sucesso"}
+        return {"message": "Motorista removido com sucesso", "data_remocao": now_iso}
 
 
 # ==================== VEHICLE DOCUMENT UPLOADS ====================
