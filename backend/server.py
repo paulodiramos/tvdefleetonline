@@ -12547,7 +12547,11 @@ async def criar_relatorios_rascunho_apos_importacao(
             
             # Agregar dados por plataforma
             ganhos_uber = 0
+            gorjetas_uber_total = 0
+            portagens_uber_total = 0
             ganhos_bolt = 0
+            gorjetas_bolt_total = 0
+            portagens_bolt_total = 0
             portagens_viaverde = 0
             carregamentos_total = 0  # Carregamentos elétricos separados
             combustivel_total = 0
@@ -12556,14 +12560,18 @@ async def criar_relatorios_rascunho_apos_importacao(
             if plataforma == 'uber':
                 dados = await db.ganhos_uber.find({
                     "motorista_id": motorista_id,
-                    "periodo_inicio": periodo_inicio,
-                    "periodo_fim": periodo_fim
+                    "$or": [
+                        {"periodo_inicio": periodo_inicio, "periodo_fim": periodo_fim},
+                        {"semana": semana, "ano": ano}
+                    ]
                 }, {"_id": 0}).to_list(1000)
                 
                 # Calcular ganhos conforme configuração do motorista
                 for d in dados:
                     # Usar ganhos_base (sem gorjetas) como ponto de partida
                     ganho_linha = float(d.get('ganhos_base') or d.get('ganhos_totais') or d.get('rendimentos_total') or 0)
+                    gorjetas_uber_total += float(d.get('gorjetas') or 0)
+                    portagens_uber_total += float(d.get('portagens_total') or 0)
                     
                     # Adicionar gorjetas se motorista recebe
                     if motorista.get('gorjetas_uber_recebe', True):
