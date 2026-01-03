@@ -10426,7 +10426,7 @@ async def gerar_relatorio_semanal(
                 "data_entrada": {"$gte": data_inicio_via_verde, "$lt": data_fim_vv_next}
             }
             
-            print(f"DEBUG: Via Verde CSV Query: motorista_id={motorista_id}, data: {data_inicio_via_verde} to {data_fim_vv_next}")
+            debug_log(f"Via Verde Query: {despesas_via_verde_query}")
             
             despesas_via_verde_cursor = db.despesas_fornecedor.find(despesas_via_verde_query, {"_id": 0})
             despesas_via_verde = await despesas_via_verde_cursor.to_list(1000)
