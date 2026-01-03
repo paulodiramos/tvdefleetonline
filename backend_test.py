@@ -2349,28 +2349,34 @@ class FleeTrackTester:
 
 
 def main():
-    """Main function to run tests"""
+    """Main function to run priority scenario tests"""
+    print("🚀 FleeTrack Backend Testing Suite - Priority Scenarios")
+    print("=" * 80)
+    print("Testing specific scenarios from last session implementation")
+    print("=" * 80)
+    
     tester = FleeTrackTester()
     
     try:
-        summary = tester.run_all_tests()
+        # Run priority scenarios
+        tester.test_priority_scenarios()
         
-        print(f"\n🎯 RESUMO FINAL - FleeTrack Updated System Tests")
-        print("=" * 50)
-        print(f"Total de testes: {summary['total']}")
-        print(f"✅ Sucessos: {summary['passed']}")
-        print(f"❌ Falhas: {summary['failed']}")
-        print(f"Taxa de sucesso: {summary['passed']/summary['total']*100:.1f}%")
+        # Print summary
+        tester.print_summary()
         
-        if summary['failed'] == 0:
-            print("\n🎉 TODOS OS TESTES PASSARAM!")
-            return 0
-        else:
-            print(f"\n⚠️ {summary['failed']} TESTES FALHARAM")
+        # Get summary stats
+        summary = tester.get_test_summary()
+        print(f"\n📊 SUMMARY: {summary['passed']}/{summary['total']} tests passed ({summary['failed']} failed)")
+        
+        if summary['failed'] > 0:
+            print("⚠️  Some tests failed - check details above")
             return 1
+        else:
+            print("✅ All priority scenarios passed!")
+            return 0
             
     except Exception as e:
-        print(f"\n💥 ERRO CRÍTICO: {str(e)}")
+        print(f"\n💥 CRITICAL ERROR: {str(e)}")
         return 1
 
 
