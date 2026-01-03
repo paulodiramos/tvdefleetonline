@@ -1833,7 +1833,7 @@ const RelatoriosHub = ({ user, onLogout }) => {
                   ✅ Relatórios Gerados com Sucesso!
                 </h3>
                 <p className="text-green-800">
-                  {resultadoGeracaoMassa.sucesso} relatório(s) criado(s) em status "Rascunho"
+                  {resultadoGeracaoMassa.sucesso} relatório(s) criado(s) em status &quot;Rascunho&quot;
                 </p>
                 {resultadoGeracaoMassa.erros > 0 && (
                   <p className="text-amber-700 mt-2">
