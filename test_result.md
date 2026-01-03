@@ -1,4 +1,16 @@
 backend:
+  - task: "Despesas Via Verde in Weekly Reports"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/relatorios.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ Fixed - Updated gerar_relatorio_semanal in routes/relatorios.py to include imported despesas from despesas_fornecedor collection. Test with semana 1/2026 returned €81.30 Via Verde."
+
   - task: "Despesas Import Logic Update"
     implemented: true
     working: true
