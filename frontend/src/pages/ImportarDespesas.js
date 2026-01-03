@@ -432,10 +432,89 @@ const ImportarDespesas = ({ user, onLogout }) => {
                 </div>
 
                 {/* Import Button */}
+                <div className="border-t pt-4 mt-4">
+                  <h4 className="font-medium mb-4">Configuração de Semanas</h4>
+                  <div className="grid grid-cols-2 gap-6 mb-4">
+                    {/* Semana dos Dados */}
+                    <div className="space-y-2 p-4 bg-blue-50 rounded-lg">
+                      <label className="text-sm font-medium text-blue-900">
+                        Semana dos Dados (no ficheiro)
+                      </label>
+                      <p className="text-xs text-blue-600 mb-2">
+                        Em que semana ocorreram estas despesas?
+                      </p>
+                      <div className="flex gap-2">
+                        <Select value={semanaDados} onValueChange={setSemanaDados}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue placeholder="Semana" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {semanas.map((s) => (
+                              <SelectItem key={s} value={String(s)}>Semana {s}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={String(anoDados)} onValueChange={(v) => setAnoDados(Number(v))}>
+                          <SelectTrigger className="w-24">
+                            <SelectValue placeholder="Ano" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {anos.map((a) => (
+                              <SelectItem key={a} value={String(a)}>{a}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Semana do Relatório */}
+                    <div className="space-y-2 p-4 bg-green-50 rounded-lg">
+                      <label className="text-sm font-medium text-green-900">
+                        Associar ao Relatório da Semana
+                      </label>
+                      <p className="text-xs text-green-600 mb-2">
+                        Em que semana devem aparecer no relatório?
+                      </p>
+                      <div className="flex gap-2">
+                        <Select value={semanaRelatorio} onValueChange={setSemanaRelatorio}>
+                          <SelectTrigger className="w-32">
+                            <SelectValue placeholder="Semana" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {semanas.map((s) => (
+                              <SelectItem key={s} value={String(s)}>Semana {s}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={String(anoRelatorio)} onValueChange={(v) => setAnoRelatorio(Number(v))}>
+                          <SelectTrigger className="w-24">
+                            <SelectValue placeholder="Ano" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {anos.map((a) => (
+                              <SelectItem key={a} value={String(a)}>{a}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Exemplo explicativo */}
+                  {semanaDados && semanaRelatorio && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                      <p className="text-sm text-amber-800">
+                        <strong>Resumo:</strong> As despesas da <span className="font-semibold">Semana {semanaDados}/{anoDados}</span> serão 
+                        associadas ao relatório da <span className="font-semibold">Semana {semanaRelatorio}/{anoRelatorio}</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex justify-end">
                   <Button 
                     onClick={handleImport} 
-                    disabled={importing}
+                    disabled={importing || !semanaDados || !semanaRelatorio}
                     className="bg-green-600 hover:bg-green-700"
                   >
                     {importing ? (
