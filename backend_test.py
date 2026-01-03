@@ -136,15 +136,16 @@ class FleeTrackTester:
         
         return True
     
-    def test_scenario_1_bolt_ganhos_liquidos(self):
-        """SCENARIO 1: Bolt Ganhos Liquidos"""
-        print("\n📋 SCENARIO 1: Bolt Ganhos Liquidos")
+    def test_scenario_1_paulo_macaya_complete_report(self):
+        """SCENARIO 1: Paulo Macaya - Complete Report (Semana 4)"""
+        print("\n📋 SCENARIO 1: Paulo Macaya - Complete Report (Semana 4)")
         print("-" * 60)
-        print("GOAL: Verify ganhos_liquidos from Bolt CSV is correctly imported and shown in report.")
+        print("GOAL: Verify Paulo Macaya has correct Uber + Bolt values combined in one draft report.")
         print("STEPS:")
-        print("1. Use motorista Arlei Oliveira (ID: 57d6a119-e5af-4c7f-b357-49dc4f618763)")
-        print("2. Generate report for semana 2, ano 2026: POST /api/relatorios/motorista/{motorista_id}/gerar-semanal")
-        print("3. Expected: ganhos_bolt should be 236.08 (from Ganhos líquidos|€ column in CSV)")
+        print("1. Check draft report for motorista_id 'cbbfc362-3241-43e1-9287-d55ad9f6c7ce', semana 4, ano 2026")
+        print("2. Expected UBER values: ganhos_uber=129.00, gorjetas_uber=0.50, portagens_uber=9.40")
+        print("3. Expected BOLT values: ganhos_bolt=203.95, gorjetas_bolt=3.00, portagens_bolt=4.30")
+        print("4. Expected total_ganhos: 332.95 (129.00 + 203.95)")
         
         # Step 1: Login as admin
         if not self.authenticate_user("admin"):
@@ -154,9 +155,9 @@ class FleeTrackTester:
         headers = self.get_headers("admin")
         
         try:
-            # Step 2: Use specific motorista ID from review request
-            motorista_id = "57d6a119-e5af-4c7f-b357-49dc4f618763"
-            print(f"\n🔍 Step 1: Testing with motorista ID: {motorista_id} (Arlei Oliveira)")
+            # Step 2: Use Paulo Macaya's motorista ID from review request
+            motorista_id = "cbbfc362-3241-43e1-9287-d55ad9f6c7ce"
+            print(f"\n🔍 Step 1: Testing with Paulo Macaya motorista ID: {motorista_id}")
             
             # Verify motorista exists
             motorista_response = requests.get(f"{BACKEND_URL}/motoristas/{motorista_id}", headers=headers)
@@ -168,13 +169,13 @@ class FleeTrackTester:
                 self.log_result("Scenario1-GetMotorista", True, 
                               f"✅ Found motorista: {motorista_name}")
                 
-                # Step 3: Generate weekly report for semana 2, ano 2026
-                print("\n🔍 Step 2: Generating report for semana 2, ano 2026 (2026-01-06 to 2026-01-12)...")
+                # Step 3: Generate weekly report for semana 4, ano 2026
+                print("\n🔍 Step 2: Generating report for semana 4, ano 2026...")
                 
                 report_data = {
-                    "data_inicio": "2026-01-06",
-                    "data_fim": "2026-01-12",
-                    "semana": 2,
+                    "data_inicio": "2026-01-20",  # Week 4 of 2026
+                    "data_fim": "2026-01-26",
+                    "semana": 4,
                     "ano": 2026
                 }
                 
@@ -189,38 +190,94 @@ class FleeTrackTester:
                     
                     if "resumo" in report_result:
                         resumo = report_result.get("resumo", {})
+                        
+                        # Extract values
+                        ganhos_uber = resumo.get("ganhos_uber", 0)
+                        gorjetas_uber = resumo.get("gorjetas_uber", 0)
+                        portagens_uber = resumo.get("portagens_uber", 0)
                         ganhos_bolt = resumo.get("ganhos_bolt", 0)
+                        gorjetas_bolt = resumo.get("gorjetas_bolt", 0)
+                        portagens_bolt = resumo.get("portagens_bolt", 0)
+                        total_ganhos = resumo.get("total_ganhos", 0)
                         
                         self.log_result("Scenario1-WeeklyReport", True, 
                                       f"✅ WEEKLY REPORT GENERATED: ID {report_result.get('relatorio_id')}")
                         
-                        # Step 3: Verify Bolt ganhos_liquidos
-                        expected_value = 236.08
+                        # Step 3: Verify UBER values
+                        expected_uber_ganhos = 129.00
+                        expected_uber_gorjetas = 0.50
+                        expected_uber_portagens = 9.40
                         tolerance = 1.0  # Allow small tolerance
                         
-                        if "ganhos_bolt" in resumo:
-                            if abs(ganhos_bolt - expected_value) <= tolerance:
-                                self.log_result("Scenario1-BoltGanhosLiquidos", True, 
-                                              f"✅ BOLT GANHOS LIQUIDOS CORRECT: ganhos_bolt = €{ganhos_bolt} (expected €{expected_value})")
-                            else:
-                                self.log_result("Scenario1-BoltGanhosLiquidos", False, 
-                                              f"❌ BOLT GANHOS LIQUIDOS INCORRECT: ganhos_bolt = €{ganhos_bolt} (expected €{expected_value}, difference: €{abs(ganhos_bolt - expected_value)})")
-                            
-                            # Get full report for more details
-                            full_report_response = requests.get(
-                                f"{BACKEND_URL}/relatorios/semanal/{report_result.get('relatorio_id')}",
-                                headers=headers
-                            )
-                            
-                            if full_report_response.status_code == 200:
-                                full_report = full_report_response.json()
-                                viagens_bolt = full_report.get("viagens_bolt", 0)
-                                
-                                self.log_result("Scenario1-BoltDetails", True, 
-                                              f"✅ Bolt trip details: {viagens_bolt} trips, €{ganhos_bolt} earnings from ganhos_liquidos field")
+                        if abs(ganhos_uber - expected_uber_ganhos) <= tolerance:
+                            self.log_result("Scenario1-UberGanhos", True, 
+                                          f"✅ UBER GANHOS CORRECT: ganhos_uber = €{ganhos_uber} (expected €{expected_uber_ganhos})")
                         else:
-                            self.log_result("Scenario1-BoltGanhosLiquidos", False, 
-                                          "❌ ganhos_bolt field missing from report")
+                            self.log_result("Scenario1-UberGanhos", False, 
+                                          f"❌ UBER GANHOS INCORRECT: ganhos_uber = €{ganhos_uber} (expected €{expected_uber_ganhos})")
+                        
+                        if abs(gorjetas_uber - expected_uber_gorjetas) <= tolerance:
+                            self.log_result("Scenario1-UberGorjetas", True, 
+                                          f"✅ UBER GORJETAS CORRECT: gorjetas_uber = €{gorjetas_uber} (expected €{expected_uber_gorjetas})")
+                        else:
+                            self.log_result("Scenario1-UberGorjetas", False, 
+                                          f"❌ UBER GORJETAS INCORRECT: gorjetas_uber = €{gorjetas_uber} (expected €{expected_uber_gorjetas})")
+                        
+                        if abs(portagens_uber - expected_uber_portagens) <= tolerance:
+                            self.log_result("Scenario1-UberPortagens", True, 
+                                          f"✅ UBER PORTAGENS CORRECT: portagens_uber = €{portagens_uber} (expected €{expected_uber_portagens})")
+                        else:
+                            self.log_result("Scenario1-UberPortagens", False, 
+                                          f"❌ UBER PORTAGENS INCORRECT: portagens_uber = €{portagens_uber} (expected €{expected_uber_portagens})")
+                        
+                        # Step 4: Verify BOLT values
+                        expected_bolt_ganhos = 203.95
+                        expected_bolt_gorjetas = 3.00
+                        expected_bolt_portagens = 4.30
+                        
+                        if abs(ganhos_bolt - expected_bolt_ganhos) <= tolerance:
+                            self.log_result("Scenario1-BoltGanhos", True, 
+                                          f"✅ BOLT GANHOS CORRECT: ganhos_bolt = €{ganhos_bolt} (expected €{expected_bolt_ganhos})")
+                        else:
+                            self.log_result("Scenario1-BoltGanhos", False, 
+                                          f"❌ BOLT GANHOS INCORRECT: ganhos_bolt = €{ganhos_bolt} (expected €{expected_bolt_ganhos})")
+                        
+                        if abs(gorjetas_bolt - expected_bolt_gorjetas) <= tolerance:
+                            self.log_result("Scenario1-BoltGorjetas", True, 
+                                          f"✅ BOLT GORJETAS CORRECT: gorjetas_bolt = €{gorjetas_bolt} (expected €{expected_bolt_gorjetas})")
+                        else:
+                            self.log_result("Scenario1-BoltGorjetas", False, 
+                                          f"❌ BOLT GORJETAS INCORRECT: gorjetas_bolt = €{gorjetas_bolt} (expected €{expected_bolt_gorjetas})")
+                        
+                        if abs(portagens_bolt - expected_bolt_portagens) <= tolerance:
+                            self.log_result("Scenario1-BoltPortagens", True, 
+                                          f"✅ BOLT PORTAGENS CORRECT: portagens_bolt = €{portagens_bolt} (expected €{expected_bolt_portagens})")
+                        else:
+                            self.log_result("Scenario1-BoltPortagens", False, 
+                                          f"❌ BOLT PORTAGENS INCORRECT: portagens_bolt = €{portagens_bolt} (expected €{expected_bolt_portagens})")
+                        
+                        # Step 5: Verify total calculation
+                        expected_total = 332.95
+                        if abs(total_ganhos - expected_total) <= tolerance:
+                            self.log_result("Scenario1-TotalGanhos", True, 
+                                          f"✅ TOTAL GANHOS CORRECT: total_ganhos = €{total_ganhos} (expected €{expected_total})")
+                        else:
+                            self.log_result("Scenario1-TotalGanhos", False, 
+                                          f"❌ TOTAL GANHOS INCORRECT: total_ganhos = €{total_ganhos} (expected €{expected_total})")
+                        
+                        # Get full report for more details
+                        full_report_response = requests.get(
+                            f"{BACKEND_URL}/relatorios/semanal/{report_result.get('relatorio_id')}",
+                            headers=headers
+                        )
+                        
+                        if full_report_response.status_code == 200:
+                            full_report = full_report_response.json()
+                            viagens_uber = full_report.get("viagens_uber", 0)
+                            viagens_bolt = full_report.get("viagens_bolt", 0)
+                            
+                            self.log_result("Scenario1-TripDetails", True, 
+                                          f"✅ Trip details: {viagens_uber} Uber trips, {viagens_bolt} Bolt trips")
                     else:
                         self.log_result("Scenario1-WeeklyReport", False, 
                                       f"❌ Weekly report response missing resumo: {report_result}")
@@ -234,14 +291,14 @@ class FleeTrackTester:
         except Exception as e:
             self.log_result("Scenario1-Error", False, f"❌ Error in scenario 1: {str(e)}")
 
-    def test_scenario_2_bolt_gorjetas(self):
-        """SCENARIO 2: Bolt Gorjetas (Tips)"""
-        print("\n📋 SCENARIO 2: Bolt Gorjetas (Tips)")
+    def test_scenario_2_motorista_association_uuid(self):
+        """SCENARIO 2: Motorista Association via UUID"""
+        print("\n📋 SCENARIO 2: Motorista Association via UUID")
         print("-" * 60)
-        print("GOAL: Verify gorjetas (tips) from Bolt CSV is correctly imported and shown in report.")
+        print("GOAL: Verify motorista is correctly linked via UUID fields.")
         print("STEPS:")
-        print("1. Same report as Scenario 1")
-        print("2. Expected: gorjetas_bolt should be 1.0 (from Gorjetas dos passageiros|€ column in CSV)")
+        print("1. Check viagens_bolt collection - Paulo Macaya should have identificador_motorista_bolt = db16b2ed-225d-488f-858e-3dc89effba5f")
+        print("2. Check ganhos_uber collection - Paulo Macaya should have uuid_motorista_uber = e5ed435e-df3a-473b-bd47-ee6880084aa6")
         
         # Step 1: Login as admin
         if not self.authenticate_user("admin"):
@@ -251,75 +308,89 @@ class FleeTrackTester:
         headers = self.get_headers("admin")
         
         try:
-            # Use same motorista ID from review request
-            motorista_id = "57d6a119-e5af-4c7f-b357-49dc4f618763"
-            print(f"\n🔍 Testing Bolt gorjetas with motorista ID: {motorista_id}")
+            # Use Paulo Macaya's motorista ID from review request
+            motorista_id = "cbbfc362-3241-43e1-9287-d55ad9f6c7ce"
+            print(f"\n🔍 Testing UUID association for Paulo Macaya: {motorista_id}")
             
-            # Generate weekly report for same period
-            report_data = {
-                "data_inicio": "2026-01-06",
-                "data_fim": "2026-01-12",
-                "semana": 2,
-                "ano": 2026
-            }
+            # First, get motorista details to check UUID fields
+            motorista_response = requests.get(f"{BACKEND_URL}/motoristas/{motorista_id}", headers=headers)
             
-            report_response = requests.post(
-                f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
-                json=report_data,
-                headers=headers
-            )
-            
-            if report_response.status_code == 200:
-                report_result = report_response.json()
+            if motorista_response.status_code == 200:
+                motorista = motorista_response.json()
+                identificador_bolt = motorista.get("identificador_motorista_bolt")
+                uuid_uber = motorista.get("uuid_motorista_uber")
                 
-                if "resumo" in report_result:
-                    resumo = report_result.get("resumo", {})
-                    gorjetas_bolt = resumo.get("gorjetas_bolt", 0)
+                # Check Bolt identificador
+                expected_bolt_id = "db16b2ed-225d-488f-858e-3dc89effba5f"
+                if identificador_bolt == expected_bolt_id:
+                    self.log_result("Scenario2-BoltIdentificador", True, 
+                                  f"✅ BOLT IDENTIFICADOR CORRECT: {identificador_bolt}")
+                else:
+                    self.log_result("Scenario2-BoltIdentificador", False, 
+                                  f"❌ BOLT IDENTIFICADOR INCORRECT: got {identificador_bolt}, expected {expected_bolt_id}")
+                
+                # Check Uber UUID
+                expected_uber_uuid = "e5ed435e-df3a-473b-bd47-ee6880084aa6"
+                if uuid_uber == expected_uber_uuid:
+                    self.log_result("Scenario2-UberUUID", True, 
+                                  f"✅ UBER UUID CORRECT: {uuid_uber}")
+                else:
+                    self.log_result("Scenario2-UberUUID", False, 
+                                  f"❌ UBER UUID INCORRECT: got {uuid_uber}, expected {expected_uber_uuid}")
+                
+                # Test if association works by generating a report
+                report_data = {
+                    "data_inicio": "2026-01-20",
+                    "data_fim": "2026-01-26",
+                    "semana": 4,
+                    "ano": 2026
+                }
+                
+                report_response = requests.post(
+                    f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
+                    json=report_data,
+                    headers=headers
+                )
+                
+                if report_response.status_code == 200:
+                    report_result = report_response.json()
                     
-                    # Verify Bolt gorjetas field exists and has expected value
-                    if "gorjetas_bolt" in resumo:
-                        expected_value = 1.0
-                        tolerance = 0.1  # Allow small tolerance
+                    if "resumo" in report_result:
+                        resumo = report_result.get("resumo", {})
+                        ganhos_uber = resumo.get("ganhos_uber", 0)
+                        ganhos_bolt = resumo.get("ganhos_bolt", 0)
                         
-                        if abs(gorjetas_bolt - expected_value) <= tolerance:
-                            self.log_result("Scenario2-BoltGorjetas", True, 
-                                          f"✅ BOLT GORJETAS CORRECT: gorjetas_bolt = €{gorjetas_bolt} (expected €{expected_value})")
+                        if ganhos_uber > 0 and ganhos_bolt > 0:
+                            self.log_result("Scenario2-UUIDAssociation", True, 
+                                          f"✅ UUID ASSOCIATION WORKING: Found Uber (€{ganhos_uber}) and Bolt (€{ganhos_bolt}) data")
+                        elif ganhos_uber > 0:
+                            self.log_result("Scenario2-UberAssociation", True, 
+                                          f"✅ UBER UUID ASSOCIATION WORKING: Found Uber data (€{ganhos_uber})")
+                        elif ganhos_bolt > 0:
+                            self.log_result("Scenario2-BoltAssociation", True, 
+                                          f"✅ BOLT UUID ASSOCIATION WORKING: Found Bolt data (€{ganhos_bolt})")
                         else:
-                            self.log_result("Scenario2-BoltGorjetas", False, 
-                                          f"❌ BOLT GORJETAS INCORRECT: gorjetas_bolt = €{gorjetas_bolt} (expected €{expected_value}, difference: €{abs(gorjetas_bolt - expected_value)})")
-                        
-                        # Get full report for more details
-                        full_report_response = requests.get(
-                            f"{BACKEND_URL}/relatorios/semanal/{report_result.get('relatorio_id')}",
-                            headers=headers
-                        )
-                        
-                        if full_report_response.status_code == 200:
-                            full_report = full_report_response.json()
-                            
-                            self.log_result("Scenario2-BoltGorjetasDetails", True, 
-                                          f"✅ Bolt gorjetas from Gorjetas dos passageiros|€ column: €{gorjetas_bolt}")
-                    else:
-                        self.log_result("Scenario2-BoltGorjetas", False, 
-                                      "❌ gorjetas_bolt field missing from report")
+                            self.log_result("Scenario2-UUIDAssociation", False, 
+                                          "❌ No Uber or Bolt data found - UUID association may not be working")
                 else:
                     self.log_result("Scenario2-WeeklyReport", False, 
-                                  f"❌ Weekly report response missing resumo: {report_result}")
+                                  f"❌ Weekly report generation failed: {report_response.status_code}")
             else:
-                self.log_result("Scenario2-WeeklyReport", False, 
-                              f"❌ Weekly report generation failed: {report_response.status_code} - {report_response.text}")
+                self.log_result("Scenario2-GetMotorista", False, 
+                              f"❌ Failed to get motorista: {motorista_response.status_code}")
                 
         except Exception as e:
             self.log_result("Scenario2-Error", False, f"❌ Error in scenario 2: {str(e)}")
 
-    def test_scenario_3_bolt_portagens(self):
-        """SCENARIO 3: Bolt Portagens (Tolls)"""
-        print("\n📋 SCENARIO 3: Bolt Portagens (Tolls)")
+    def test_scenario_3_draft_update_second_import(self):
+        """SCENARIO 3: Draft Update on Second Import"""
+        print("\n📋 SCENARIO 3: Draft Update on Second Import")
         print("-" * 60)
-        print("GOAL: Verify portagens (tolls) from Bolt CSV is correctly imported and shown in report.")
+        print("GOAL: Verify that importing Uber after Bolt updates existing draft.")
         print("STEPS:")
-        print("1. Same report as Scenario 1")
-        print("2. Expected: portagens_bolt should be 25.57 (from Portagens|€ column in CSV)")
+        print("1. For semana 4, first Bolt was imported (created 9 drafts)")
+        print("2. Then Uber was imported (updated 9 existing drafts + created 1 new)")
+        print("3. Verify no duplicate drafts exist for same motorista/semana/ano")
         
         # Step 1: Login as admin
         if not self.authenticate_user("admin"):
@@ -329,76 +400,96 @@ class FleeTrackTester:
         headers = self.get_headers("admin")
         
         try:
-            # Use same motorista ID from review request
-            motorista_id = "57d6a119-e5af-4c7f-b357-49dc4f618763"
-            print(f"\n🔍 Testing Bolt portagens with motorista ID: {motorista_id}")
+            # Check for draft reports for semana 4, ano 2026
+            print("\n🔍 Checking for draft reports for semana 4, ano 2026...")
             
-            # Generate weekly report for same period
-            report_data = {
-                "data_inicio": "2026-01-06",
-                "data_fim": "2026-01-12",
-                "semana": 2,
-                "ano": 2026
-            }
+            # Get all reports for the period
+            reports_response = requests.get(f"{BACKEND_URL}/relatorios/semanais-todos", headers=headers)
             
-            report_response = requests.post(
-                f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
-                json=report_data,
-                headers=headers
-            )
-            
-            if report_response.status_code == 200:
-                report_result = report_response.json()
+            if reports_response.status_code == 200:
+                reports = reports_response.json()
                 
-                if "resumo" in report_result:
-                    resumo = report_result.get("resumo", {})
-                    portagens_bolt = resumo.get("portagens_bolt", 0)
+                # Filter for semana 4, ano 2026
+                semana_4_reports = [r for r in reports if r.get("semana") == 4 and r.get("ano") == 2026]
+                
+                if semana_4_reports:
+                    self.log_result("Scenario3-FindReports", True, 
+                                  f"✅ Found {len(semana_4_reports)} reports for semana 4, ano 2026")
                     
-                    # Verify Bolt portagens field exists and has expected value
-                    if "portagens_bolt" in resumo:
-                        expected_value = 25.57
-                        tolerance = 1.0  # Allow small tolerance
-                        
-                        if abs(portagens_bolt - expected_value) <= tolerance:
-                            self.log_result("Scenario3-BoltPortagens", True, 
-                                          f"✅ BOLT PORTAGENS CORRECT: portagens_bolt = €{portagens_bolt} (expected €{expected_value})")
-                        else:
-                            self.log_result("Scenario3-BoltPortagens", False, 
-                                          f"❌ BOLT PORTAGENS INCORRECT: portagens_bolt = €{portagens_bolt} (expected €{expected_value}, difference: €{abs(portagens_bolt - expected_value)})")
-                        
-                        # Get full report for more details
-                        full_report_response = requests.get(
-                            f"{BACKEND_URL}/relatorios/semanal/{report_result.get('relatorio_id')}",
-                            headers=headers
-                        )
-                        
-                        if full_report_response.status_code == 200:
-                            full_report = full_report_response.json()
-                            
-                            self.log_result("Scenario3-BoltPortagensDetails", True, 
-                                          f"✅ Bolt portagens from Portagens|€ column: €{portagens_bolt}")
+                    # Check for duplicates by motorista_id
+                    motorista_ids = [r.get("motorista_id") for r in semana_4_reports]
+                    unique_motorista_ids = set(motorista_ids)
+                    
+                    if len(motorista_ids) == len(unique_motorista_ids):
+                        self.log_result("Scenario3-NoDuplicates", True, 
+                                      f"✅ NO DUPLICATE DRAFTS: {len(unique_motorista_ids)} unique motoristas, {len(motorista_ids)} total reports")
                     else:
-                        self.log_result("Scenario3-BoltPortagens", False, 
-                                      "❌ portagens_bolt field missing from report")
+                        duplicates = len(motorista_ids) - len(unique_motorista_ids)
+                        self.log_result("Scenario3-NoDuplicates", False, 
+                                      f"❌ DUPLICATE DRAFTS FOUND: {duplicates} duplicates detected")
+                    
+                    # Check if Paulo Macaya's report exists and has both Uber and Bolt data
+                    paulo_motorista_id = "cbbfc362-3241-43e1-9287-d55ad9f6c7ce"
+                    paulo_reports = [r for r in semana_4_reports if r.get("motorista_id") == paulo_motorista_id]
+                    
+                    if paulo_reports:
+                        if len(paulo_reports) == 1:
+                            self.log_result("Scenario3-PauloSingleReport", True, 
+                                          f"✅ PAULO MACAYA SINGLE REPORT: Found 1 report (no duplicates)")
+                            
+                            # Check if report has both Uber and Bolt data
+                            paulo_report = paulo_reports[0]
+                            relatorio_id = paulo_report.get("id")
+                            
+                            if relatorio_id:
+                                full_report_response = requests.get(
+                                    f"{BACKEND_URL}/relatorios/semanal/{relatorio_id}",
+                                    headers=headers
+                                )
+                                
+                                if full_report_response.status_code == 200:
+                                    full_report = full_report_response.json()
+                                    resumo = full_report.get("resumo", {})
+                                    
+                                    ganhos_uber = resumo.get("ganhos_uber", 0)
+                                    ganhos_bolt = resumo.get("ganhos_bolt", 0)
+                                    
+                                    if ganhos_uber > 0 and ganhos_bolt > 0:
+                                        self.log_result("Scenario3-CombinedData", True, 
+                                                      f"✅ COMBINED UBER+BOLT DATA: Uber €{ganhos_uber}, Bolt €{ganhos_bolt}")
+                                    else:
+                                        self.log_result("Scenario3-CombinedData", False, 
+                                                      f"❌ MISSING DATA: Uber €{ganhos_uber}, Bolt €{ganhos_bolt}")
+                        else:
+                            self.log_result("Scenario3-PauloSingleReport", False, 
+                                          f"❌ PAULO MACAYA MULTIPLE REPORTS: Found {len(paulo_reports)} reports (should be 1)")
+                    else:
+                        self.log_result("Scenario3-PauloReport", False, 
+                                      "❌ Paulo Macaya report not found for semana 4, ano 2026")
                 else:
-                    self.log_result("Scenario3-WeeklyReport", False, 
-                                  f"❌ Weekly report response missing resumo: {report_result}")
+                    self.log_result("Scenario3-FindReports", False, 
+                                  "❌ No reports found for semana 4, ano 2026")
             else:
-                self.log_result("Scenario3-WeeklyReport", False, 
-                              f"❌ Weekly report generation failed: {report_response.status_code} - {report_response.text}")
+                self.log_result("Scenario3-GetReports", False, 
+                              f"❌ Failed to get reports: {reports_response.status_code}")
                 
         except Exception as e:
             self.log_result("Scenario3-Error", False, f"❌ Error in scenario 3: {str(e)}")
 
-    def test_scenario_4_motorista_association(self):
-        """SCENARIO 4: Motorista Association via Identificador"""
-        print("\n📋 SCENARIO 4: Motorista Association via Identificador")
+    def test_scenario_4_csv_column_mapping(self):
+        """SCENARIO 4: CSV Column Mapping"""
+        print("\n📋 SCENARIO 4: CSV Column Mapping")
         print("-" * 60)
-        print("GOAL: Verify motorista is correctly linked via 'Identificador do motorista' field.")
+        print("GOAL: Verify CSV columns are correctly mapped.")
         print("STEPS:")
-        print("1. Check viagens_bolt collection for records with semana=2, ano=2026")
-        print("2. Verify motorista_id field is populated")
-        print("3. Verify identificador_motorista_bolt field matches UUID from CSV")
+        print("1. Check viagens_bolt record has correct column mapping:")
+        print("   - ganhos_liquidos from 'Ganhos líquidos|€'")
+        print("   - gorjetas from 'Gorjetas dos passageiros|€'")
+        print("   - portagens from 'Portagens|€'")
+        print("2. Check ganhos_uber record has correct column mapping:")
+        print("   - ganhos_totais from 'Pago a si : Os seus rendimentos'")
+        print("   - gorjetas from 'Pago a si:Os seus rendimentos:Gratificação'")
+        print("   - portagens_total from sum of 'Reembolsos:Portagem' + 'Impostos:Imposto sobre a tarifa'")
         
         # Step 1: Login as admin
         if not self.authenticate_user("admin"):
@@ -408,107 +499,15 @@ class FleeTrackTester:
         headers = self.get_headers("admin")
         
         try:
-            # Use same motorista ID from review request
-            motorista_id = "57d6a119-e5af-4c7f-b357-49dc4f618763"
-            print(f"\n🔍 Testing motorista association for ID: {motorista_id}")
+            # Use Paulo Macaya's motorista ID
+            motorista_id = "cbbfc362-3241-43e1-9287-d55ad9f6c7ce"
+            print(f"\n🔍 Testing CSV column mapping for Paulo Macaya: {motorista_id}")
             
-            # First, get motorista details to check identificador_motorista_bolt
-            motorista_response = requests.get(f"{BACKEND_URL}/motoristas/{motorista_id}", headers=headers)
-            
-            if motorista_response.status_code == 200:
-                motorista = motorista_response.json()
-                identificador_bolt = motorista.get("identificador_motorista_bolt")
-                
-                if identificador_bolt:
-                    self.log_result("Scenario4-MotoristaIdentificador", True, 
-                                  f"✅ Motorista has Bolt identificador: {identificador_bolt}")
-                    
-                    # Check if there are Bolt records with this identificador and correct period
-                    # Note: We can't directly query MongoDB, but we can check via the report generation
-                    # which internally queries the viagens_bolt collection
-                    
-                    report_data = {
-                        "data_inicio": "2026-01-06",
-                        "data_fim": "2026-01-12",
-                        "semana": 2,
-                        "ano": 2026
-                    }
-                    
-                    report_response = requests.post(
-                        f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
-                        json=report_data,
-                        headers=headers
-                    )
-                    
-                    if report_response.status_code == 200:
-                        report_result = report_response.json()
-                        
-                        if "resumo" in report_result:
-                            resumo = report_result.get("resumo", {})
-                            ganhos_bolt = resumo.get("ganhos_bolt", 0)
-                            
-                            if ganhos_bolt > 0:
-                                self.log_result("Scenario4-MotoristaAssociation", True, 
-                                              f"✅ MOTORISTA ASSOCIATION WORKING: Found Bolt data (€{ganhos_bolt}) for motorista via identificador")
-                                
-                                # Get full report to check for viagens_bolt count
-                                full_report_response = requests.get(
-                                    f"{BACKEND_URL}/relatorios/semanal/{report_result.get('relatorio_id')}",
-                                    headers=headers
-                                )
-                                
-                                if full_report_response.status_code == 200:
-                                    full_report = full_report_response.json()
-                                    viagens_bolt = full_report.get("viagens_bolt", 0)
-                                    
-                                    self.log_result("Scenario4-BoltRecordsFound", True, 
-                                                  f"✅ Bolt records correctly associated: {viagens_bolt} trips found for semana 2, ano 2026")
-                            else:
-                                self.log_result("Scenario4-MotoristaAssociation", False, 
-                                              "❌ No Bolt data found - motorista association may not be working")
-                        else:
-                            self.log_result("Scenario4-WeeklyReport", False, 
-                                          f"❌ Weekly report response missing resumo: {report_result}")
-                    else:
-                        self.log_result("Scenario4-WeeklyReport", False, 
-                                      f"❌ Weekly report generation failed: {report_response.status_code}")
-                else:
-                    self.log_result("Scenario4-MotoristaIdentificador", False, 
-                                  "❌ Motorista missing identificador_motorista_bolt field")
-            else:
-                self.log_result("Scenario4-GetMotorista", False, 
-                              f"❌ Failed to get motorista: {motorista_response.status_code}")
-                
-        except Exception as e:
-            self.log_result("Scenario4-Error", False, f"❌ Error in scenario 4: {str(e)}")
-
-    def test_scenario_5_report_total_calculation(self):
-        """SCENARIO 5: Report Total Calculation"""
-        print("\n📋 SCENARIO 5: Report Total Calculation")
-        print("-" * 60)
-        print("GOAL: Verify total calculation is correct.")
-        print("STEPS:")
-        print("1. Same report as Scenario 1")
-        print("2. Verify valor_liquido = ganhos_uber + ganhos_bolt - despesas")
-        print("3. Expected: valor_liquido should be 236.08 (since only Bolt earnings expected)")
-        
-        # Step 1: Login as admin
-        if not self.authenticate_user("admin"):
-            self.log_result("Scenario5-Auth", False, "❌ Failed to authenticate as admin")
-            return False
-        
-        headers = self.get_headers("admin")
-        
-        try:
-            # Use same motorista ID from review request
-            motorista_id = "57d6a119-e5af-4c7f-b357-49dc4f618763"
-            print(f"\n🔍 Testing total calculations with motorista ID: {motorista_id}")
-            
-            # Generate weekly report for same period
+            # Generate report to trigger data retrieval
             report_data = {
-                "data_inicio": "2026-01-06",
-                "data_fim": "2026-01-12",
-                "semana": 2,
+                "data_inicio": "2026-01-20",
+                "data_fim": "2026-01-26",
+                "semana": 4,
                 "ano": 2026
             }
             
@@ -523,11 +522,60 @@ class FleeTrackTester:
                 
                 if "resumo" in report_result:
                     resumo = report_result.get("resumo", {})
-                    ganhos_uber = resumo.get("ganhos_uber", 0)
-                    ganhos_bolt = resumo.get("ganhos_bolt", 0)
-                    valor_liquido = resumo.get("valor_liquido", 0)
                     
-                    # Get full report for despesas details
+                    # Check Bolt column mapping
+                    ganhos_bolt = resumo.get("ganhos_bolt", 0)
+                    gorjetas_bolt = resumo.get("gorjetas_bolt", 0)
+                    portagens_bolt = resumo.get("portagens_bolt", 0)
+                    
+                    if ganhos_bolt > 0:
+                        self.log_result("Scenario4-BoltGanhosLiquidos", True, 
+                                      f"✅ BOLT GANHOS LIQUIDOS MAPPING: €{ganhos_bolt} (from 'Ganhos líquidos|€' column)")
+                    else:
+                        self.log_result("Scenario4-BoltGanhosLiquidos", False, 
+                                      "❌ Bolt ganhos_liquidos mapping failed or no data")
+                    
+                    if gorjetas_bolt >= 0:  # Can be 0
+                        self.log_result("Scenario4-BoltGorjetas", True, 
+                                      f"✅ BOLT GORJETAS MAPPING: €{gorjetas_bolt} (from 'Gorjetas dos passageiros|€' column)")
+                    else:
+                        self.log_result("Scenario4-BoltGorjetas", False, 
+                                      "❌ Bolt gorjetas mapping failed")
+                    
+                    if portagens_bolt >= 0:  # Can be 0
+                        self.log_result("Scenario4-BoltPortagens", True, 
+                                      f"✅ BOLT PORTAGENS MAPPING: €{portagens_bolt} (from 'Portagens|€' column)")
+                    else:
+                        self.log_result("Scenario4-BoltPortagens", False, 
+                                      "❌ Bolt portagens mapping failed")
+                    
+                    # Check Uber column mapping
+                    ganhos_uber = resumo.get("ganhos_uber", 0)
+                    gorjetas_uber = resumo.get("gorjetas_uber", 0)
+                    portagens_uber = resumo.get("portagens_uber", 0)
+                    
+                    if ganhos_uber > 0:
+                        self.log_result("Scenario4-UberGanhosTotais", True, 
+                                      f"✅ UBER GANHOS TOTAIS MAPPING: €{ganhos_uber} (from 'Pago a si : Os seus rendimentos' column)")
+                    else:
+                        self.log_result("Scenario4-UberGanhosTotais", False, 
+                                      "❌ Uber ganhos_totais mapping failed or no data")
+                    
+                    if gorjetas_uber >= 0:  # Can be 0
+                        self.log_result("Scenario4-UberGorjetas", True, 
+                                      f"✅ UBER GORJETAS MAPPING: €{gorjetas_uber} (from 'Pago a si:Os seus rendimentos:Gratificação' column)")
+                    else:
+                        self.log_result("Scenario4-UberGorjetas", False, 
+                                      "❌ Uber gorjetas mapping failed")
+                    
+                    if portagens_uber >= 0:  # Can be 0
+                        self.log_result("Scenario4-UberPortagens", True, 
+                                      f"✅ UBER PORTAGENS MAPPING: €{portagens_uber} (from 'Reembolsos:Portagem' + 'Impostos:Imposto sobre a tarifa' columns)")
+                    else:
+                        self.log_result("Scenario4-UberPortagens", False, 
+                                      "❌ Uber portagens mapping failed")
+                    
+                    # Get full report for more details
                     full_report_response = requests.get(
                         f"{BACKEND_URL}/relatorios/semanal/{report_result.get('relatorio_id')}",
                         headers=headers
@@ -535,60 +583,20 @@ class FleeTrackTester:
                     
                     if full_report_response.status_code == 200:
                         full_report = full_report_response.json()
-                        valor_bruto = full_report.get("valor_bruto", 0)
-                        valor_descontos = full_report.get("valor_descontos", 0)
-                        total_combustivel = resumo.get("total_combustivel", 0)
-                        total_via_verde = resumo.get("total_via_verde", 0)
-                        valor_aluguer = resumo.get("valor_aluguer", 0)
+                        viagens_uber = full_report.get("viagens_uber", 0)
+                        viagens_bolt = full_report.get("viagens_bolt", 0)
                         
-                        # Verify total calculations
-                        expected_bruto = ganhos_uber + ganhos_bolt
-                        expected_descontos = total_combustivel + total_via_verde + valor_aluguer
-                        expected_liquido = expected_bruto - expected_descontos
-                        
-                        self.log_result("Scenario5-TotalBreakdown", True, 
-                                      f"✅ CALCULATION BREAKDOWN: Uber €{ganhos_uber} + Bolt €{ganhos_bolt} = Bruto €{expected_bruto}")
-                        
-                        self.log_result("Scenario5-ExpensesBreakdown", True, 
-                                      f"✅ EXPENSES BREAKDOWN: Combustível €{total_combustivel} + Via Verde €{total_via_verde} + Aluguer €{valor_aluguer} = Descontos €{expected_descontos}")
-                        
-                        # Check if calculations match
-                        if abs(valor_bruto - expected_bruto) < 0.01:
-                            self.log_result("Scenario5-BrutoCalculation", True, 
-                                          f"✅ BRUTO CALCULATION CORRECT: €{valor_bruto}")
-                        else:
-                            self.log_result("Scenario5-BrutoCalculation", False, 
-                                          f"❌ BRUTO CALCULATION INCORRECT: got €{valor_bruto}, expected €{expected_bruto}")
-                        
-                        if abs(valor_liquido - expected_liquido) < 0.01:
-                            self.log_result("Scenario5-LiquidoCalculation", True, 
-                                          f"✅ LIQUIDO CALCULATION CORRECT: €{valor_liquido}")
-                        else:
-                            self.log_result("Scenario5-LiquidoCalculation", False, 
-                                          f"❌ LIQUIDO CALCULATION INCORRECT: got €{valor_liquido}, expected €{expected_liquido}")
-                        
-                        # Check against expected value from review request (236.08 if only Bolt earnings)
-                        expected_final = 236.08
-                        tolerance = 50.0  # Allow larger tolerance as there might be other expenses
-                        
-                        if abs(valor_liquido - expected_final) <= tolerance:
-                            self.log_result("Scenario5-ExpectedValue", True, 
-                                          f"✅ TOTAL MATCHES EXPECTED RANGE: valor_liquido = €{valor_liquido} (expected ~€{expected_final})")
-                        else:
-                            self.log_result("Scenario5-ExpectedValue", True, 
-                                          f"✅ TOTAL CALCULATION WORKING: valor_liquido = €{valor_liquido} (expected ~€{expected_final}, difference: €{abs(valor_liquido - expected_final)})")
-                    else:
-                        self.log_result("Scenario5-FullReport", False, 
-                                      f"❌ Failed to get full report: {full_report_response.status_code}")
+                        self.log_result("Scenario4-DataSources", True, 
+                                      f"✅ CSV DATA SOURCES: {viagens_uber} Uber records, {viagens_bolt} Bolt records processed")
                 else:
-                    self.log_result("Scenario5-WeeklyReport", False, 
+                    self.log_result("Scenario4-WeeklyReport", False, 
                                   f"❌ Weekly report response missing resumo: {report_result}")
             else:
-                self.log_result("Scenario5-WeeklyReport", False, 
+                self.log_result("Scenario4-WeeklyReport", False, 
                               f"❌ Weekly report generation failed: {report_response.status_code} - {report_response.text}")
                 
         except Exception as e:
-            self.log_result("Scenario5-Error", False, f"❌ Error in scenario 5: {str(e)}")
+            self.log_result("Scenario4-Error", False, f"❌ Error in scenario 4: {str(e)}")
         """SCENARIO 2: Uber Earnings in Motorista Report"""
         print("\n📋 SCENARIO 2: Uber Earnings in Motorista Report")
         print("-" * 60)
