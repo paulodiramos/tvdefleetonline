@@ -7,9 +7,12 @@ import { Badge } from '../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { Checkbox } from '../components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { 
   FileText, Edit, Check, X, Eye, Download, Send, 
-  ArrowLeft, Calendar, User, Car, DollarSign, AlertCircle 
+  ArrowLeft, Calendar, User, Car, DollarSign, AlertCircle,
+  Trash2, CheckSquare, Square, RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -24,6 +27,13 @@ const RelatoriosSemanaisLista = ({ user, onLogout }) => {
   const [relatorioEditando, setRelatorioEditando] = useState(null);
   const [showAprovarModal, setShowAprovarModal] = useState(false);
   const [relatorioAprovando, setRelatorioAprovando] = useState(null);
+  
+  // Multi-select state
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showStatusChangeModal, setShowStatusChangeModal] = useState(false);
+  const [newStatus, setNewStatus] = useState('');
+  const [processingBulk, setProcessingBulk] = useState(false);
 
   useEffect(() => {
     fetchRelatorios();
@@ -38,11 +48,95 @@ const RelatoriosSemanaisLista = ({ user, onLogout }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setRelatorios(response.data);
+      setSelectedIds([]); // Clear selection on refresh
     } catch (error) {
       console.error('Erro ao carregar relatórios:', error);
       toast.error('Erro ao carregar relatórios');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Selection handlers
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(i => i !== id)
+        : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    const filteredIds = relatoriosFiltrados.map(r => r.id);
+    if (selectedIds.length === filteredIds.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredIds);
+    }
+  };
+
+  const isSelected = (id) => selectedIds.includes(id);
+  const allSelected = relatoriosFiltrados.length > 0 && selectedIds.length === relatoriosFiltrados.length;
+
+  // Bulk delete handler
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    
+    setProcessingBulk(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Delete each selected report
+      const deletePromises = selectedIds.map(id => 
+        axios.delete(
+          `${API_URL}/api/relatorios/semanal/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      );
+      
+      await Promise.all(deletePromises);
+      
+      toast.success(`${selectedIds.length} relatório(s) eliminado(s) com sucesso!`);
+      setShowDeleteConfirm(false);
+      setSelectedIds([]);
+      fetchRelatorios();
+    } catch (error) {
+      console.error('Erro ao eliminar relatórios:', error);
+      toast.error('Erro ao eliminar alguns relatórios');
+    } finally {
+      setProcessingBulk(false);
+    }
+  };
+
+  // Bulk status change handler
+  const handleBulkStatusChange = async () => {
+    if (selectedIds.length === 0 || !newStatus) return;
+    
+    setProcessingBulk(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Update status for each selected report
+      const updatePromises = selectedIds.map(id => 
+        axios.put(
+          `${API_URL}/api/relatorios/semanal/${id}/status`,
+          { status: newStatus },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      );
+      
+      await Promise.all(updatePromises);
+      
+      toast.success(`Estado de ${selectedIds.length} relatório(s) atualizado para "${getStatusLabel(newStatus)}"!`);
+      setShowStatusChangeModal(false);
+      setSelectedIds([]);
+      setNewStatus('');
+      fetchRelatorios();
+    } catch (error) {
+      console.error('Erro ao alterar estado:', error);
+      toast.error('Erro ao alterar estado de alguns relatórios');
+    } finally {
+      setProcessingBulk(false);
     }
   };
 
@@ -108,6 +202,19 @@ const RelatoriosSemanaisLista = ({ user, onLogout }) => {
     }
   };
 
+  const getStatusLabel = (status) => {
+    const labels = {
+      'rascunho': 'Rascunho',
+      'pendente_aprovacao': 'Pendente Aprovação',
+      'aprovado': 'Aprovado',
+      'aguarda_recibo': 'Aguarda Recibo',
+      'verificado': 'Verificado',
+      'pago': 'Pago',
+      'rejeitado': 'Rejeitado',
+    };
+    return labels[status] || status;
+  };
+
   const getStatusBadge = (status) => {
     const config = {
       'rascunho': { label: 'Rascunho', color: 'bg-gray-100 text-gray-700' },
@@ -137,8 +244,9 @@ const RelatoriosSemanaisLista = ({ user, onLogout }) => {
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 p-6">
-        <div className="max-w-7xl mx-auto">
-          <p>A carregar...</p>
+        <div className="max-w-7xl mx-auto flex items-center justify-center">
+          <RefreshCw className="w-8 h-8 animate-spin text-blue-600" />
+          <span className="ml-2">A carregar...</span>
         </div>
       </div>
     );
@@ -209,8 +317,62 @@ const RelatoriosSemanaisLista = ({ user, onLogout }) => {
           </Card>
         </div>
 
+        {/* Bulk Actions Bar */}
+        {selectedIds.length > 0 && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CheckSquare className="w-5 h-5 text-blue-600" />
+              <span className="font-medium text-blue-800">
+                {selectedIds.length} relatório(s) selecionado(s)
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowStatusChangeModal(true)}
+              >
+                <Edit className="w-4 h-4 mr-1" />
+                Alterar Estado
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Eliminar Selecionados
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSelectedIds([])}
+              >
+                <X className="w-4 h-4 mr-1" />
+                Limpar Seleção
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Filtros */}
-        <div className="flex gap-2 mb-4">
+        <div className="flex items-center gap-4 mb-4">
+          {/* Select All Checkbox */}
+          <div 
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={toggleSelectAll}
+          >
+            <Checkbox 
+              checked={allSelected} 
+              onCheckedChange={toggleSelectAll}
+            />
+            <span className="text-sm text-slate-600">Selecionar Todos</span>
+          </div>
+          
+          <div className="border-l h-6 mx-2"></div>
+          
+          {/* Status Filters */}
           <Button
             variant={filtroStatus === 'todos' ? 'default' : 'outline'}
             size="sm"
@@ -258,9 +420,21 @@ const RelatoriosSemanaisLista = ({ user, onLogout }) => {
         ) : (
           <div className="space-y-4">
             {relatoriosFiltrados.map((relatorio) => (
-              <Card key={relatorio.id} className="hover:shadow-lg transition-shadow">
+              <Card 
+                key={relatorio.id} 
+                className={`hover:shadow-lg transition-shadow ${isSelected(relatorio.id) ? 'ring-2 ring-blue-500 bg-blue-50/30' : ''}`}
+              >
                 <CardContent className="p-6">
-                  <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-6 gap-6">
+                    {/* Checkbox */}
+                    <div className="lg:col-span-1 flex items-center">
+                      <Checkbox
+                        checked={isSelected(relatorio.id)}
+                        onCheckedChange={() => toggleSelect(relatorio.id)}
+                        className="mr-4"
+                      />
+                    </div>
+
                     {/* Info */}
                     <div className="lg:col-span-2">
                       <div className="flex items-start justify-between mb-3">
@@ -508,6 +682,103 @@ const RelatoriosSemanaisLista = ({ user, onLogout }) => {
               </Button>
               <Button onClick={confirmarAprovacao} className="bg-green-600 hover:bg-green-700">
                 Confirmar Aprovação
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Confirmação de Eliminação */}
+        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-red-600">
+                <Trash2 className="w-5 h-5" />
+                Confirmar Eliminação
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-slate-700">
+                Tem certeza que deseja eliminar <strong>{selectedIds.length}</strong> relatório(s)?
+              </p>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <p className="text-sm text-red-700">
+                  <AlertCircle className="w-4 h-4 inline mr-1" />
+                  Esta ação é irreversível. Todos os dados dos relatórios selecionados serão permanentemente eliminados.
+                </p>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowDeleteConfirm(false)} disabled={processingBulk}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleBulkDelete} 
+                className="bg-red-600 hover:bg-red-700"
+                disabled={processingBulk}
+              >
+                {processingBulk ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    A eliminar...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Eliminar {selectedIds.length} Relatório(s)
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Modal de Alteração de Estado em Lote */}
+        <Dialog open={showStatusChangeModal} onOpenChange={setShowStatusChangeModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Alterar Estado dos Relatórios</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-slate-700">
+                Selecione o novo estado para os <strong>{selectedIds.length}</strong> relatório(s) selecionado(s):
+              </p>
+              <div>
+                <Label>Novo Estado</Label>
+                <Select value={newStatus} onValueChange={setNewStatus}>
+                  <SelectTrigger className="mt-2">
+                    <SelectValue placeholder="Selecione o estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="rascunho">Rascunho</SelectItem>
+                    <SelectItem value="pendente_aprovacao">Pendente Aprovação</SelectItem>
+                    <SelectItem value="aprovado">Aprovado</SelectItem>
+                    <SelectItem value="aguarda_recibo">Aguarda Recibo</SelectItem>
+                    <SelectItem value="verificado">Verificado</SelectItem>
+                    <SelectItem value="pago">Pago</SelectItem>
+                    <SelectItem value="rejeitado">Rejeitado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowStatusChangeModal(false)} disabled={processingBulk}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleBulkStatusChange} 
+                disabled={!newStatus || processingBulk}
+              >
+                {processingBulk ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    A processar...
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4 mr-2" />
+                    Aplicar a {selectedIds.length} Relatório(s)
+                  </>
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
