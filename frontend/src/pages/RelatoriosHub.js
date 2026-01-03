@@ -894,19 +894,27 @@ const RelatoriosHub = ({ user, onLogout }) => {
                             <div>
                               <p className="text-slate-600">Ganhos</p>
                               <p className="font-semibold text-green-600">
-                                €{(rel.ganhos_totais || 0).toFixed(2)}
+                                €{(rel.total_ganhos || rel.ganhos_totais || 0).toFixed(2)}
                               </p>
                             </div>
                             <div>
                               <p className="text-slate-600">Despesas</p>
                               <p className="font-semibold text-red-600">
-                                €{(rel.total_despesas || 0).toFixed(2)}
+                                €{(rel.total_despesas || (
+                                  (rel.total_combustivel || 0) + 
+                                  (rel.total_via_verde || 0) + 
+                                  (rel.total_eletrico || 0) + 
+                                  (rel.valor_aluguer || 0)
+                                )).toFixed(2)}
                               </p>
                             </div>
                             <div>
                               <p className="text-slate-600">Total</p>
                               <p className="text-lg font-bold text-blue-600">
-                                €{(rel.total_recibo || 0).toFixed(2)}
+                                €{(rel.valor_liquido || rel.total_recibo || (
+                                  (rel.total_ganhos || rel.ganhos_totais || 0) - 
+                                  ((rel.total_combustivel || 0) + (rel.total_via_verde || 0) + (rel.total_eletrico || 0) + (rel.valor_aluguer || 0))
+                                )).toFixed(2)}
                               </p>
                             </div>
                           </div>
