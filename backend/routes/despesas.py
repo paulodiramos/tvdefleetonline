@@ -192,18 +192,15 @@ async def importar_despesas(
                     if motorista:
                         motorista_id = motorista["id"]
                         
-                        # Check if driver has Via Verde card associated
-                        via_verde_motorista = motorista.get("via_verde_id") or motorista.get("cartao_via_verde")
-                        
-                        if is_aluguer:
+                        # Determine responsibility based on contract type
+                        # aluguer, compra, slot → despesa do motorista
+                        # comissao → despesa do veículo (parceiro)
+                        if is_motorista_contract:
                             tipo_responsavel = TipoResponsavel.MOTORISTA
-                            motivo_responsabilidade = "Veículo em regime de aluguer"
-                        elif via_verde_motorista:
-                            tipo_responsavel = TipoResponsavel.MOTORISTA
-                            motivo_responsabilidade = "Via Verde associada ao motorista"
+                            motivo_responsabilidade = f"Veículo com contrato {contrato_tipo} - despesa do motorista"
                         else:
                             tipo_responsavel = TipoResponsavel.VEICULO
-                            motivo_responsabilidade = "Despesa do veículo (parceiro)"
+                            motivo_responsabilidade = "Veículo em comissão - despesa do parceiro"
             
             # Parse values
             valor_bruto = 0.0
