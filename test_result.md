@@ -152,19 +152,20 @@ frontend:
 
 metadata:
   created_by: "testing_agent"
-  version: "1.4"
-  test_sequence: 4
+  version: "1.5"
+  test_sequence: 5
   run_ui: false
 
 test_plan:
   current_focus:
-    - "Vehicle Costs Management API"
-    - "Vehicle ROI Report API"
+    - "Proportional Rental Calculation"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
 agent_communication:
+  - agent: "testing"
+    message: "🎯 PROPORTIONAL RENTAL CALCULATION TESTING COMPLETED (37/38 tests passed - 97.4% success rate). PRIORITY FEATURE VERIFIED: Proportional rental calculation when driver switches vehicles during the week is working perfectly! Test scenario: Driver Nelson Francisco with vehicle switch AB-12-CD (3 days, €250/week) + EF-34-GH (4 days, €300/week). Expected: €278.57. RESULTS: 1) aluguer_proporcional = true (correctly detected vehicle switch), 2) valor_aluguer = €278.57 (exact calculation match), 3) aluguer_detalhes shows 2 vehicles with correct proportional breakdown, 4) Report saved with all proportional details. Algorithm correctly handles overlapping periods and calculates daily rates (€250/7 × 3 days + €300/7 × 4 days). Only 1 minor test failed (normal motorista also had vehicle switch in test data)."
   - agent: "testing"
     message: "✅ ALL BACKEND TESTS PASSED (10/10 - 100% success rate). Key findings: 1) NEW EXPENSE LOGIC WORKING - €505.79 assigned to motoristas vs €2178.59 to parceiro, 2) Report delete API working for parceiro users, 3) Report status change API working with all valid statuses, 4) List reports API properly filtering by parceiro, 5) CSV import and despesas list APIs functioning correctly. All high-priority backend features are working as expected."
   - agent: "testing"
