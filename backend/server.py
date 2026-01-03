@@ -12590,8 +12590,10 @@ async def criar_relatorios_rascunho_apos_importacao(
             elif plataforma == 'bolt':
                 dados = await db.viagens_bolt.find({
                     "motorista_id": motorista_id,
-                    "periodo_inicio": periodo_inicio,
-                    "periodo_fim": periodo_fim
+                    "$or": [
+                        {"periodo_inicio": periodo_inicio, "periodo_fim": periodo_fim},
+                        {"semana": semana, "ano": ano}
+                    ]
                 }, {"_id": 0}).to_list(1000)
                 # Bolt pode ter: valor_liquido, ganhos_liquidos, ganhos_semanais
                 for d in dados:
@@ -12600,6 +12602,8 @@ async def criar_relatorios_rascunho_apos_importacao(
                         float(d.get('ganhos_liquidos') or 0) or
                         float(d.get('ganhos_semanais') or 0)
                     )
+                    gorjetas_bolt_total += float(d.get('gorjetas') or 0)
+                    portagens_bolt_total += float(d.get('portagens') or 0)
             
             elif plataforma == 'viaverde':
                 dados = await db.portagens_viaverde.find({
