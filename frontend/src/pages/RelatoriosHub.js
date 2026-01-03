@@ -8,10 +8,12 @@ import { Label } from '../components/ui/label';
 import { Badge } from '../components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../components/ui/dialog';
+import { Checkbox } from '../components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
 import { 
   FileText, Plus, Edit, Check, X, Download, ArrowLeft,
   Calendar, User, DollarSign, TrendingUp, Eye, CheckCircle, Upload,
-  FileSpreadsheet, Loader2, Trash2
+  FileSpreadsheet, Loader2, Trash2, CheckSquare, RefreshCw, AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 
