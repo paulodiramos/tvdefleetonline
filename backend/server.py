@@ -12414,7 +12414,7 @@ async def criar_relatorios_rascunho_apos_importacao(
                 "ano": ano,
                 "semana": semana,
                 "parceiro_id": parceiro_id
-            }, {"_id": 0})
+            })
             
             if relatorio_existente:
                 # ATUALIZAR relatório existente com os novos dados da plataforma
