@@ -425,9 +425,9 @@ async def listar_despesas(
     """List expenses with filters"""
     query = {}
     
-    # Parceiro filter
-    if current_user["role"] == UserRole.PARCEIRO:
-        query["parceiro_id"] = current_user["id"]
+    # Parceiro filter - handle None user gracefully
+    if current_user and current_user.get("role") == UserRole.PARCEIRO:
+        query["parceiro_id"] = current_user.get("id")
     
     if veiculo_id:
         query["veiculo_id"] = veiculo_id
