@@ -3702,27 +3702,7 @@ async def get_meu_plano_motorista_v2(current_user: Dict = Depends(get_current_us
         "preco_mensal": preco_mensal
     }
 
-@api_router.get("/motoristas/{motorista_id}")
-async def get_motorista_by_id(motorista_id: str, current_user: Dict = Depends(get_current_user)):
-    """Get a specific motorista by ID"""
-    try:
-        motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
-        if not motorista:
-            raise HTTPException(status_code=404, detail="Motorista not found")
-        
-        # Add plano_nome lookup
-        if motorista.get("plano_id"):
-            plano = await db.planos_sistema.find_one({"id": motorista["plano_id"]}, {"_id": 0, "nome": 1})
-            if plano:
-                motorista["plano_nome"] = plano.get("nome")
-        
-        # Return raw data without strict model validation
-        return motorista
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error fetching motorista {motorista_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# NOTA: Endpoint GET /motoristas/{motorista_id} migrado para routes/motoristas.py
 
 @api_router.post("/parceiros/{parceiro_id}/motoristas")
 async def parceiro_criar_motorista(
