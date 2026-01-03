@@ -189,10 +189,10 @@ class Vehicle(BaseModel):
     data_matricula: Optional[str] = ""
     validade_matricula: Optional[str] = ""
     alerta_validade: bool = False
-    cor: str
-    combustivel: str
-    caixa: str
-    lugares: int
+    cor: Optional[str] = ""
+    combustivel: Optional[str] = ""
+    caixa: Optional[str] = ""
+    lugares: Optional[int] = 5
     tipo_contrato: Optional[TipoContrato] = None
     categorias_uber: Optional[CategoriasUber] = None
     categorias_bolt: Optional[CategoriasBolt] = None
