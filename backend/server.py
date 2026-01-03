@@ -10968,6 +10968,76 @@ async def rejeitar_relatorio_semanal(
     
     return {"message": "Relatório rejeitado"}
 
+
+@api_router.delete("/relatorios/semanal/{relatorio_id}")
+async def eliminar_relatorio_semanal(
+    relatorio_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Eliminar um relatório semanal"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verificar se o relatório existe
+    relatorio = await db.relatorios_semanais.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    
+    # Verificar permissões
+    if current_user["role"] == UserRole.PARCEIRO and relatorio.get("parceiro_id") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Não autorizado a eliminar este relatório")
+    
+    # Eliminar relatório
+    await db.relatorios_semanais.delete_one({"id": relatorio_id})
+    
+    return {"message": "Relatório eliminado com sucesso"}
+
+
+@api_router.put("/relatorios/semanal/{relatorio_id}/status")
+async def alterar_status_relatorio_semanal(
+    relatorio_id: str,
+    status_data: dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Alterar o estado de um relatório semanal"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    novo_status = status_data.get("status")
+    if not novo_status:
+        raise HTTPException(status_code=400, detail="Status não fornecido")
+    
+    # Validar status permitidos
+    status_validos = ["rascunho", "pendente_aprovacao", "aprovado", "aguarda_recibo", "verificado", "pago", "rejeitado"]
+    if novo_status not in status_validos:
+        raise HTTPException(status_code=400, detail=f"Status inválido. Use: {', '.join(status_validos)}")
+    
+    # Verificar se o relatório existe
+    relatorio = await db.relatorios_semanais.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    
+    # Verificar permissões
+    if current_user["role"] == UserRole.PARCEIRO and relatorio.get("parceiro_id") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Não autorizado a alterar este relatório")
+    
+    # Atualizar status
+    await db.relatorios_semanais.update_one(
+        {"id": relatorio_id},
+        {
+            "$set": {
+                "estado": novo_status,
+                "status": novo_status,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "status_alterado_por": current_user["id"],
+                "status_alterado_em": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {"message": f"Estado alterado para '{novo_status}'"}
+
+
 @app.get("/uploads/recibos/{filename}")
 async def serve_recibo(filename: str):
     """Servir ficheiros de recibo"""
