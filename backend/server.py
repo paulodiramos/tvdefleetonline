@@ -12295,6 +12295,8 @@ async def importar_viaverde_excel(
                     "payment_method": str(get_value('Payment Method')),
                     "periodo_inicio": periodo_inicio,
                     "periodo_fim": periodo_fim,
+                    "ano": ano if ano else (int(entry_date_formatted.split('-')[0]) if entry_date_formatted else datetime.now(timezone.utc).year),
+                    "semana": semana if semana else (datetime.strptime(entry_date_formatted, '%Y-%m-%d').isocalendar()[1] if entry_date_formatted else datetime.now(timezone.utc).isocalendar()[1]),
                     "tipo_transacao": "portagem",
                     "plataforma": "viaverde",
                     "created_at": datetime.now(timezone.utc).isoformat(),
