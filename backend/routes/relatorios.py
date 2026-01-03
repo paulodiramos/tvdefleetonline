@@ -121,16 +121,104 @@ async def gerar_relatorio_semanal(
         total_ganhos_bolt += record.get("ganhos", 0) or record.get("earnings", 0) or 0
         total_viagens_bolt += record.get("viagens", 1)
     
-    # Get combustivel data
+    # Get combustivel data (fossil)
     total_combustivel = 0.0
     combustivel_records = []
-    if veiculo_id and config.get("incluir_combustivel", True):
-        comb_query = {
-            "veiculo_id": veiculo_id,
+    if config.get("incluir_combustivel", True):
+        # Try to get from multiple sources
+        # 1. Legacy abastecimentos collection (by vehicle)
+        if veiculo_id:
+            comb_query = {
+                "veiculo_id": veiculo_id,
+                "data": {"$gte": data_inicio, "$lte": data_fim}
+            }
+            legacy_records = await db.abastecimentos.find(comb_query, {"_id": 0}).to_list(1000)
+            combustivel_records.extend(legacy_records)
+            total_combustivel += sum(r.get("valor_com_iva", 0) or r.get("valor", 0) or 0 for r in legacy_records)
+        
+        # 2. New imported combustivel collection (by vehicle or motorista)
+        comb_query_new = {
+            "$or": [
+                {"vehicle_id": veiculo_id} if veiculo_id else {"vehicle_id": None},
+                {"motorista_id": motorista_id}
+            ],
             "data": {"$gte": data_inicio, "$lte": data_fim}
         }
-        combustivel_records = await db.abastecimentos.find(comb_query, {"_id": 0}).to_list(1000)
-        total_combustivel = sum(r.get("valor_com_iva", 0) or r.get("valor", 0) or 0 for r in combustivel_records)
+        if not veiculo_id:
+            comb_query_new = {
+                "motorista_id": motorista_id,
+                "data": {"$gte": data_inicio, "$lte": data_fim}
+            }
+        new_records = await db.abastecimentos_combustivel.find(comb_query_new, {"_id": 0}).to_list(1000)
+        for r in new_records:
+            valor = r.get("valor_liquido", 0) or r.get("valor", 0) or 0
+            total_combustivel += valor
+            combustivel_records.append({
+                "data": r.get("data"),
+                "valor": valor,
+                "posto": r.get("posto", ""),
+                "combustivel": r.get("combustivel", ""),
+                "litros": r.get("litros", 0),
+                "tipo": "importado"
+            })
+    
+    # Get carregamentos elétricos data
+    total_eletrico = 0.0
+    eletrico_records = []
+    if config.get("incluir_eletrico", True):
+        elet_query = {
+            "$or": [
+                {"vehicle_id": veiculo_id} if veiculo_id else {"vehicle_id": None},
+                {"motorista_id": motorista_id}
+            ],
+            "data": {"$gte": data_inicio, "$lte": data_fim}
+        }
+        if not veiculo_id:
+            elet_query = {
+                "motorista_id": motorista_id,
+                "data": {"$gte": data_inicio, "$lte": data_fim}
+            }
+        elet_records = await db.abastecimentos_eletrico.find(elet_query, {"_id": 0}).to_list(1000)
+        for r in elet_records:
+            valor = r.get("valor_total_com_taxas", 0) or r.get("custo_base", 0) or 0
+            total_eletrico += valor
+            eletrico_records.append({
+                "data": r.get("data"),
+                "valor": valor,
+                "estacao": r.get("estacao_id", ""),
+                "energia_kwh": r.get("energia_kwh", 0),
+                "duracao": r.get("duracao_minutos", 0),
+                "tipo": "carregamento_eletrico"
+            })
+    
+    # Get GPS/KM data
+    total_km = 0.0
+    gps_records = []
+    if config.get("incluir_gps", True):
+        gps_query = {
+            "$or": [
+                {"vehicle_id": veiculo_id} if veiculo_id else {"vehicle_id": None},
+                {"motorista_id": motorista_id},
+                {"matricula": veiculo.get("matricula")} if veiculo else {"matricula": None}
+            ],
+            "data": {"$gte": data_inicio, "$lte": data_fim}
+        }
+        if not veiculo_id and not veiculo:
+            gps_query = {
+                "motorista_id": motorista_id,
+                "data": {"$gte": data_inicio, "$lte": data_fim}
+            }
+        gps_data = await db.viagens_gps.find(gps_query, {"_id": 0}).to_list(1000)
+        for r in gps_data:
+            km = r.get("km", 0) or r.get("distancia", 0) or 0
+            total_km += km
+            gps_records.append({
+                "data": r.get("data"),
+                "km": km,
+                "origem": r.get("origem", ""),
+                "destino": r.get("destino", ""),
+                "tipo": "gps"
+            })
     
     # Get via verde data
     total_via_verde = 0.0
