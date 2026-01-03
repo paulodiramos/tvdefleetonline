@@ -170,7 +170,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Proportional Rental Calculation"
+    - "Backend Auth Routes Refactoring"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
