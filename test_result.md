@@ -215,7 +215,8 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Week Selectors for GPS, Combustível and Carregamentos Import"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
