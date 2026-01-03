@@ -140,13 +140,14 @@ frontend:
 
 metadata:
   created_by: "testing_agent"
-  version: "1.3"
-  test_sequence: 3
+  version: "1.4"
+  test_sequence: 4
   run_ui: false
 
 test_plan:
   current_focus:
-    - "Despesas Via Verde in Weekly Reports"
+    - "Vehicle Costs Management API"
+    - "Vehicle ROI Report API"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -158,3 +159,5 @@ agent_communication:
     message: "🎯 VIA VERDE WEEKLY REPORTS TESTING COMPLETED (14/14 tests passed - 100% success). PRIORITY TASK VERIFIED: Via Verde expenses from despesas_fornecedor collection are correctly included in weekly reports with proper via_verde_atraso_semanas=2 delay calculation. Test 1: Semana 1/2026 returned exact expected €81.30. Test 2: Semana 52/2025 correctly returned €0.00 for empty period. Test 3: Delay logic verified working. All backend APIs functioning perfectly. Updated expense totals: €1517.37 motoristas, €3851.39 parceiro from 3325 total records."
   - agent: "testing"
     message: "🚀 PHASE 1 VEHICLE MANAGEMENT ENDPOINTS COMPREHENSIVE TESTING COMPLETED (21/21 tests passed - 100% success rate). ALL NEW ENDPOINTS WORKING PERFECTLY: 1) GET /api/vehicles/{id}/dispositivos - Successfully retrieves vehicle devices (OBU Via Verde: 601073900511, Cartão Fossil: 7824731736480003). 2) PUT /api/vehicles/{id}/dispositivos - Successfully updates devices (tested with TEST-OBU-123, TEST-CARD-456). 3) GET /api/vehicles/{id}/historico-atribuicoes - Returns assignment history with motorista, dates, km, and ganhos_periodo calculation. 4) POST /api/vehicles/{id}/atribuir-motorista - Creates history records with historico_id and data_atribuicao as expected. Vehicle AS-83-NX (ID: 4ad331ff-c0f5-43c9-95b8-cc085d32d8a7) tested successfully. All endpoints handle authentication, return proper data structures, and integrate with historico_atribuicoes collection correctly."
+  - agent: "testing"
+    message: "🎯 NEW VEHICLE COSTS & ROI ENDPOINTS TESTING COMPLETED (31/31 tests passed - 100% success rate). COMPREHENSIVE TESTING OF NEW FEATURES: 1) POST /api/vehicles/{id}/custos - Successfully adds costs with all categories (revisao, vistoria, seguro, pneus, reparacao, combustivel, lavagem, multa, outros). Tested with €150 revisao, €500 seguro, €35 vistoria. Returns proper custo_id and response structure. 2) GET /api/vehicles/{id}/custos - Returns costs list with category totals. Vehicle AS-83-NX shows €685 total across 3 costs with proper grouping. 3) GET /api/vehicles/{id}/relatorio-ganhos - ROI calculation working perfectly! Receitas €750, Custos €685, Lucro €65, ROI 9.49%. Formula ((receitas-custos)/custos)*100 verified correct. Supports all period filters: total, ano, mes, custom. All new endpoints handle authentication, data validation, and return proper JSON structures. Vehicle financial management system fully operational!"
