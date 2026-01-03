@@ -706,8 +706,8 @@ class FleeTrackTester:
             return False
     
     def test_relatorios_status_change_api(self):
-        """4. Test Report Status Change API"""
-        print("\n📋 4. Test Report Status Change API")
+        """9. Test Report Status Change API"""
+        print("\n📋 9. Test Report Status Change API")
         print("-" * 60)
         print("TESTE: PUT /api/relatorios/semanal/{relatorio_id}/status")
         print("VALID STATUSES: rascunho, pendente_aprovacao, aprovado, aguarda_recibo, verificado, pago, rejeitado")
