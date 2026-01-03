@@ -120,6 +120,18 @@ const Layout = ({ children, user, onLogout }) => {
       { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' }
     ];
 
+    // Add Configurações (Automação RPA, CSV Config) for admin
+    if (user.role === 'admin') {
+      items.push({ 
+        label: 'Configurações', 
+        icon: Settings,
+        submenu: [
+          { path: '/automacao', label: '🤖 Automação RPA' },
+          { path: '/configuracao-csv', label: '📊 Configuração CSV' }
+        ]
+      });
+    }
+
     // Add Parceiros for admin and gestao
     if (user.role === 'admin' || user.role === 'gestao') {
       items.splice(2, 0, { path: '/parceiros', icon: Building, label: 'Parceiros' });
