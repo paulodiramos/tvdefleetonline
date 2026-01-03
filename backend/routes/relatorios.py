@@ -319,6 +319,8 @@ async def gerar_relatorio_semanal(
             "total_combustivel": total_combustivel,
             "total_via_verde": total_via_verde,
             "valor_aluguer": valor_aluguer,
+            "aluguer_proporcional": len(aluguer_detalhes) > 1,
+            "aluguer_detalhes": aluguer_detalhes if aluguer_detalhes else None,
             "valor_liquido": valor_liquido
         }
     }
