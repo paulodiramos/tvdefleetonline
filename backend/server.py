@@ -11731,6 +11731,20 @@ async def importar_combustivel_excel(
                     hora = '00:00:00'
                 
                 # Criar documento de abastecimento
+                # Usar semana/ano passados ou calcular a partir da data
+                semana_doc = semana
+                ano_doc = ano
+                if not semana_doc or not ano_doc:
+                    if data_transacao:
+                        try:
+                            dt = datetime.strptime(data_transacao, '%Y-%m-%d')
+                            if not ano_doc:
+                                ano_doc = dt.year
+                            if not semana_doc:
+                                semana_doc = dt.isocalendar()[1]
+                        except:
+                            pass
+                
                 documento = {
                     "id": str(uuid.uuid4()),
                     "vehicle_id": vehicle["id"] if vehicle else None,
@@ -11763,6 +11777,8 @@ async def importar_combustivel_excel(
                     "tipo_pagamento": str(get_value(['TIPO DE PAGAMENTO', 'Tipo Pagamento', 'tipo_pagamento', 'Payment Type'])),
                     "periodo_inicio": periodo_inicio,
                     "periodo_fim": periodo_fim,
+                    "semana": semana_doc,
+                    "ano": ano_doc,
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "created_by": current_user["id"]
                 }
