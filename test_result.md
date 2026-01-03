@@ -84,7 +84,7 @@ backend:
     status_history:
       - working: true
         agent: "testing"
-        comment: "✅ GET /api/despesas/ working correctly. Returns 10 despesas from total of 1664 records. Sample shows proper assignment: AS-83-NX → veiculo (€2.15)."
+        comment: "✅ GET /api/despesas/ working correctly. Returns 10 despesas from total of 3325 records (updated count). Sample shows proper assignment: AS-83-NX → veiculo (€2.15)."
 
 frontend:
   - task: "RelatoriosSemanaisLista Page"
