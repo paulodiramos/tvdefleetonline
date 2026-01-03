@@ -12674,12 +12674,12 @@ async def criar_relatorios_rascunho_apos_importacao(
                 
                 # Ganhos por plataforma
                 "ganhos_uber": ganhos_uber,
-                "gorjetas_uber": 0,  # Será calculado na geração final
-                "portagens_uber": 0,  # Será calculado na geração final
+                "gorjetas_uber": gorjetas_uber_total,
+                "portagens_uber": portagens_uber_total,
                 
                 "ganhos_bolt": ganhos_bolt,
-                "gorjetas_bolt": 0,  # Será calculado na geração final
-                "portagens_bolt": 0,  # Será calculado na geração final
+                "gorjetas_bolt": gorjetas_bolt_total,
+                "portagens_bolt": portagens_bolt_total,
                 
                 # Custos gerais
                 "portagens_viaverde": portagens_viaverde,
