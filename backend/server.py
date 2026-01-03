@@ -3541,43 +3541,7 @@ async def delete_documento(
     }
 
 
-@api_router.get("/motoristas", response_model=List[Motorista])
-async def get_motoristas(current_user: Dict = Depends(get_current_user)):
-    try:
-        # Filter motoristas by role
-        query = {}
-        if current_user["role"] == "parceiro":
-            query["parceiro_atribuido"] = current_user["id"]
-        
-        motoristas = await db.motoristas.find(query, {"_id": 0}).to_list(1000)
-        for m in motoristas:
-            # Handle created_at
-            if m.get("created_at"):
-                if isinstance(m["created_at"], str):
-                    try:
-                        m["created_at"] = datetime.fromisoformat(m["created_at"])
-                    except ValueError:
-                        m["created_at"] = datetime.now(timezone.utc)
-            else:
-                m["created_at"] = datetime.now(timezone.utc)
-            
-            # Handle approved_at
-            if m.get("approved_at") and isinstance(m["approved_at"], str):
-                try:
-                    m["approved_at"] = datetime.fromisoformat(m["approved_at"])
-                except ValueError:
-                    m["approved_at"] = None
-            
-            # Add plano_nome lookup
-            if m.get("plano_id"):
-                plano = await db.planos_sistema.find_one({"id": m["plano_id"]}, {"_id": 0, "nome": 1})
-                if plano:
-                    m["plano_nome"] = plano.get("nome")
-        
-        return motoristas
-    except Exception as e:
-        logger.error(f"Error fetching motoristas: {e}")
-        raise HTTPException(status_code=500, detail=f"Error fetching motoristas: {str(e)}")
+# NOTA: Endpoint GET /motoristas migrado para routes/motoristas.py
 
 # ==================== MOLONI AUTO-FATURAÇÃO (MOTORISTA) ====================
 
