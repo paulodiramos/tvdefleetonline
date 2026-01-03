@@ -3912,25 +3912,7 @@ async def ativar_motorista(
     
     return {"message": "Motorista ativado com sucesso"}
 
-@api_router.delete("/motoristas/{motorista_id}")
-async def delete_motorista(
-    motorista_id: str,
-    current_user: Dict = Depends(get_current_user)
-):
-    """Delete a motorista (Admin only)"""
-    if current_user["role"] != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Admin only")
-    
-    # Delete from motoristas collection
-    result = await db.motoristas.delete_one({"id": motorista_id})
-    
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Motorista not found")
-    
-    # Also delete from users collection if exists
-    await db.users.delete_one({"id": motorista_id})
-    
-    return {"message": "Motorista deleted successfully"}
+# NOTA: Endpoint DELETE /motoristas/{motorista_id} migrado para routes/motoristas.py
 
 @api_router.put("/motoristas/{motorista_id}/aprovar-todos-documentos")
 async def aprovar_todos_documentos(
