@@ -3278,32 +3278,16 @@ async def generate_contrato_pdf(parceiro: Dict, motorista: Dict, veiculo: Dict) 
     return f"uploads/contratos/{pdf_filename}"
 
 # ==================== AUTH ENDPOINTS ====================
+# NOTA: Endpoints de auth migrados para routes/auth.py
+# Os seguintes endpoints foram removidos pois já existem em routes/auth.py:
+# - POST /auth/register
+# - POST /auth/login  
+# - GET /auth/me
+# - PUT /profile/update
+# - POST /profile/change-password
+# - GET /profile/permissions
 
-@api_router.post("/auth/register", response_model=User)
-async def register(user_data: UserCreate):
-    existing = await db.users.find_one({"email": user_data.email})
-    if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    user_dict = user_data.model_dump()
-    user_dict["password"] = hash_password(user_data.password)
-    user_dict["id"] = str(uuid.uuid4())
-    user_dict["created_at"] = datetime.now(timezone.utc).isoformat()
-    user_dict["approved"] = user_data.role == UserRole.ADMIN
-    
-    # Gestores não têm planos - apenas acesso a parceiros atribuídos
-    
-    await db.users.insert_one(user_dict)
-    
-    # Send welcome email
-    await enviar_email_boas_vindas(user_dict)
-    
-    user_dict.pop("password")
-    if isinstance(user_dict["created_at"], str):
-        user_dict["created_at"] = datetime.fromisoformat(user_dict["created_at"])
-    
-    return User(**user_dict)
-
+# Função de email mantida aqui para compatibilidade com outros módulos
 async def enviar_email_boas_vindas(user: Dict[str, Any]):
     """Send welcome email to new user"""
     role_labels = {
