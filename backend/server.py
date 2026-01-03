@@ -12178,9 +12178,9 @@ async def importar_viaverde_excel(
                     erros_detalhes.append(f"Linha {row_num}: OBU não encontrado")
                     continue
                 
-                # 1. BUSCAR VEÍCULO POR OBU (principal)
+                # 1. BUSCAR VEÍCULO POR OBU (procurar em ambos os campos: obu e via_verde_id)
                 vehicle = await db.vehicles.find_one(
-                    {"obu": obu},
+                    {"$or": [{"obu": obu}, {"via_verde_id": obu}]},
                     {"_id": 0}
                 )
                 
@@ -12208,7 +12208,7 @@ async def importar_viaverde_excel(
                     )
                     
                     if vehicle:
-                        obu_bd = vehicle.get('obu', '')
+                        obu_bd = vehicle.get('obu') or vehicle.get('via_verde_id', '')
                         if obu_bd and obu_bd != obu:
                             # AVISO: OBU diferente!
                             avisos.append({
