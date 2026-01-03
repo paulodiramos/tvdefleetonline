@@ -132,17 +132,15 @@ class FleeTrackTester:
         
         return True
     
-    def test_scenario_1_bolt_earnings_motorista_report(self):
-        """SCENARIO 1: Bolt Earnings in Motorista Report"""
-        print("\n📋 SCENARIO 1: Bolt Earnings in Motorista Report")
+    def test_scenario_1_bolt_ganhos_liquidos(self):
+        """SCENARIO 1: Bolt Ganhos Liquidos"""
+        print("\n📋 SCENARIO 1: Bolt Ganhos Liquidos")
         print("-" * 60)
-        print("GOAL: Verify that Bolt earnings from viagens_bolt collection are included in motorista weekly reports")
+        print("GOAL: Verify ganhos_liquidos from Bolt CSV is correctly imported and shown in report.")
         print("STEPS:")
-        print("1. Login as admin")
-        print("2. Use motorista ID: 57d6a119-e5af-4c7f-b357-49dc4f618763 (Arlei Oliveira)")
-        print("3. Generate weekly report: POST /api/relatorios/motorista/{motorista_id}/gerar-semanal")
-        print("4. Verify response contains ganhos_bolt > 0")
-        print("EXPECTED: ganhos_bolt should be approximately 1416.48 (from viagens_bolt collection with ganhos_liquidos field)")
+        print("1. Use motorista Arlei Oliveira (ID: 57d6a119-e5af-4c7f-b357-49dc4f618763)")
+        print("2. Generate report for semana 2, ano 2026: POST /api/relatorios/motorista/{motorista_id}/gerar-semanal")
+        print("3. Expected: ganhos_bolt should be 236.08 (from Ganhos líquidos|€ column in CSV)")
         
         # Step 1: Login as admin
         if not self.authenticate_user("admin"):
@@ -154,7 +152,7 @@ class FleeTrackTester:
         try:
             # Step 2: Use specific motorista ID from review request
             motorista_id = "57d6a119-e5af-4c7f-b357-49dc4f618763"
-            print(f"\n🔍 Step 2: Testing with motorista ID: {motorista_id} (Arlei Oliveira)")
+            print(f"\n🔍 Step 1: Testing with motorista ID: {motorista_id} (Arlei Oliveira)")
             
             # Verify motorista exists
             motorista_response = requests.get(f"{BACKEND_URL}/motoristas/{motorista_id}", headers=headers)
@@ -166,13 +164,13 @@ class FleeTrackTester:
                 self.log_result("Scenario1-GetMotorista", True, 
                               f"✅ Found motorista: {motorista_name}")
                 
-                # Step 3: Generate weekly report for specific period
-                print("\n🔍 Step 3: Generating weekly report for 2026-01-01 to 2026-01-07...")
+                # Step 3: Generate weekly report for semana 2, ano 2026
+                print("\n🔍 Step 2: Generating report for semana 2, ano 2026 (2026-01-06 to 2026-01-12)...")
                 
                 report_data = {
-                    "data_inicio": "2026-01-01",
-                    "data_fim": "2026-01-07",
-                    "semana": 1,
+                    "data_inicio": "2026-01-06",
+                    "data_fim": "2026-01-12",
+                    "semana": 2,
                     "ano": 2026
                 }
                 
@@ -192,41 +190,32 @@ class FleeTrackTester:
                         self.log_result("Scenario1-WeeklyReport", True, 
                                       f"✅ WEEKLY REPORT GENERATED: ID {report_result.get('relatorio_id')}")
                         
-                        # Step 4: Verify Bolt earnings field exists and has value
+                        # Step 3: Verify Bolt ganhos_liquidos
+                        expected_value = 236.08
+                        tolerance = 1.0  # Allow small tolerance
+                        
                         if "ganhos_bolt" in resumo:
-                            if ganhos_bolt > 0:
-                                expected_value = 1416.48
-                                tolerance = 50.0  # Allow some tolerance
-                                
-                                if abs(ganhos_bolt - expected_value) <= tolerance:
-                                    self.log_result("Scenario1-BoltEarnings", True, 
-                                                  f"✅ BOLT EARNINGS WORKING CORRECTLY: ganhos_bolt = €{ganhos_bolt} (expected ~€{expected_value})")
-                                else:
-                                    self.log_result("Scenario1-BoltEarnings", True, 
-                                                  f"✅ BOLT EARNINGS PRESENT: ganhos_bolt = €{ganhos_bolt} (expected ~€{expected_value}, difference: €{abs(ganhos_bolt - expected_value)})")
-                                
-                                # Get full report for more details
-                                full_report_response = requests.get(
-                                    f"{BACKEND_URL}/relatorios/semanal/{report_result.get('relatorio_id')}",
-                                    headers=headers
-                                )
-                                
-                                if full_report_response.status_code == 200:
-                                    full_report = full_report_response.json()
-                                    viagens_bolt = full_report.get("viagens_bolt", 0)
-                                    
-                                    self.log_result("Scenario1-BoltDetails", True, 
-                                                  f"✅ Bolt trip details: {viagens_bolt} trips, €{ganhos_bolt} earnings")
-                                    
-                                    # Check if data comes from viagens_bolt collection
-                                    if ganhos_bolt > 0:
-                                        self.log_result("Scenario1-BoltCollection", True, 
-                                                      "✅ BOLT DATA FROM VIAGENS_BOLT COLLECTION: ganhos_liquidos field correctly used")
+                            if abs(ganhos_bolt - expected_value) <= tolerance:
+                                self.log_result("Scenario1-BoltGanhosLiquidos", True, 
+                                              f"✅ BOLT GANHOS LIQUIDOS CORRECT: ganhos_bolt = €{ganhos_bolt} (expected €{expected_value})")
                             else:
-                                self.log_result("Scenario1-BoltEarnings", False, 
-                                              f"❌ BOLT EARNINGS ZERO: ganhos_bolt = €{ganhos_bolt} (expected > 0)")
+                                self.log_result("Scenario1-BoltGanhosLiquidos", False, 
+                                              f"❌ BOLT GANHOS LIQUIDOS INCORRECT: ganhos_bolt = €{ganhos_bolt} (expected €{expected_value}, difference: €{abs(ganhos_bolt - expected_value)})")
+                            
+                            # Get full report for more details
+                            full_report_response = requests.get(
+                                f"{BACKEND_URL}/relatorios/semanal/{report_result.get('relatorio_id')}",
+                                headers=headers
+                            )
+                            
+                            if full_report_response.status_code == 200:
+                                full_report = full_report_response.json()
+                                viagens_bolt = full_report.get("viagens_bolt", 0)
+                                
+                                self.log_result("Scenario1-BoltDetails", True, 
+                                              f"✅ Bolt trip details: {viagens_bolt} trips, €{ganhos_bolt} earnings from ganhos_liquidos field")
                         else:
-                            self.log_result("Scenario1-BoltEarnings", False, 
+                            self.log_result("Scenario1-BoltGanhosLiquidos", False, 
                                           "❌ ganhos_bolt field missing from report")
                     else:
                         self.log_result("Scenario1-WeeklyReport", False, 
