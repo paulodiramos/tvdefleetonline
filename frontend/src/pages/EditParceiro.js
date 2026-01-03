@@ -459,6 +459,22 @@ const EditParceiro = ({ user, onLogout }) => {
               </CardContent>
             </Card>
 
+            {/* Credenciais de Automação RPA */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Key className="w-5 h-5 text-blue-600" />
+                  <span>Credenciais de Automação</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CredenciaisAutomacaoTab 
+                  parceiroId={selectedParceiro}
+                  parceiroNome={parceiroData?.nome_empresa || parceiroData?.name}
+                />
+              </CardContent>
+            </Card>
+
             {/* Veículos Associados */}
             <Card>
               <CardHeader>
