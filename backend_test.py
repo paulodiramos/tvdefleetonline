@@ -107,40 +107,25 @@ class FleeTrackTester:
         
         return temp_file.name
     
-    def test_fleetrack_backend_apis(self):
-        """🎯 CRITICAL REFACTORING TESTS: Backend Routes Refactoring (Phase 2)"""
-        print("\n🎯 CRITICAL REFACTORING TESTS: Backend Routes Refactoring (Phase 2)")
+    def test_priority_scenarios(self):
+        """🎯 PRIORITY TEST SCENARIOS: Last Session Implementation Validation"""
+        print("\n🎯 PRIORITY TEST SCENARIOS: Last Session Implementation Validation")
         print("=" * 80)
-        print("CONTEXT: Refatoração do server.py (segunda fase):")
-        print("- POST /motoristas/register -> routes/motoristas.py")
-        print("- GET /motoristas -> routes/motoristas.py")
-        print("- GET /motoristas/{motorista_id} -> routes/motoristas.py")
-        print("- PUT /motoristas/{motorista_id}/approve -> routes/motoristas.py (melhorado)")
-        print("- PUT /motoristas/{motorista_id} -> routes/motoristas.py (melhorado)")
-        print("- DELETE /motoristas/{motorista_id} -> routes/motoristas.py")
-        print("- DELETE /notificacoes/{notificacao_id} -> routes/notificacoes.py")
-        print("- PATCH /notificacoes/{notificacao_id} -> routes/notificacoes.py")
-        print("Total: 474 linhas removidas")
+        print("CONTEXT: Testing specific scenarios from review request:")
+        print("1. Partner Delete Weekly Reports Permission")
+        print("2. Vehicle Maintenance History Registration")
+        print("3. Driver Phone Display in Vehicle")
+        print("4. Basic Layout Menu Items (Backend Endpoints)")
         print("\nCREDENCIAIS:")
         print("- Admin: admin@tvdefleet.com / 123456")
-        print("\nTESTES CRÍTICOS:")
-        print("1. Login (POST /api/auth/login)")
-        print("2. Listar Motoristas (GET /api/motoristas)")
-        print("3. Obter Motorista por ID (GET /api/motoristas/{motorista_id})")
-        print("4. Atualizar Motorista (PUT /api/motoristas/{motorista_id})")
-        print("5. Aprovar Motorista (PUT /api/motoristas/{motorista_id}/approve)")
-        print("6. Eliminar Notificação (DELETE /api/notificacoes/{notificacao_id})")
-        print("7. Gerar Relatório (POST /api/relatorios/motorista/{motorista_id}/gerar-semanal)")
+        print("- Parceiro: parceiro@tvdefleet.com / 123456")
         print("=" * 80)
         
-        # Execute critical tests for refactoring verification
-        self.test_critical_auth_login()
-        self.test_critical_motoristas_list()
-        self.test_critical_motorista_by_id()
-        self.test_critical_motorista_update()
-        self.test_critical_motorista_approve()
-        self.test_critical_notification_delete()
-        self.test_critical_weekly_report()
+        # Execute priority tests
+        self.test_scenario_1_partner_delete_reports()
+        self.test_scenario_2_vehicle_maintenance_history()
+        self.test_scenario_3_driver_phone_display()
+        self.test_scenario_4_basic_endpoints()
         
         return True
     
