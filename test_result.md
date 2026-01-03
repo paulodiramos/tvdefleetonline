@@ -1,4 +1,16 @@
 backend:
+  - task: "Proportional Rental Calculation"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/relatorios.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PROPORTIONAL RENTAL CALCULATION WORKING PERFECTLY! Tested scenario: Driver Nelson Francisco (e2355169-10a7-4547-9dd0-479c128d73f9) with vehicle switch during week. Vehicle AB-12-CD (3 days, €250/week) + EF-34-GH (4 days, €300/week). Expected calculation: (€250/7)×3 + (€300/7)×4 = €107.14 + €171.43 = €278.57. RESULTS: 1) aluguer_proporcional = true (vehicle switch detected), 2) valor_aluguer = €278.57 (exact match), 3) aluguer_detalhes shows 2 vehicles with correct days (7 total), 4) Report saved with proportional details correctly. Algorithm correctly calculates overlapping periods and proportional rental values."
+
   - task: "Vehicle Assignment History"
     implemented: true
     working: true
