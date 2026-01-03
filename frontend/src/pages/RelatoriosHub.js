@@ -867,9 +867,20 @@ const RelatoriosHub = ({ user, onLogout }) => {
             ) : (
               <div className="space-y-4">
                 {relatoriosFiltrados.map((rel) => (
-                  <Card key={rel.id} className="hover:shadow-md transition-shadow">
+                  <Card 
+                    key={rel.id} 
+                    className={`hover:shadow-md transition-shadow ${isSelected(rel.id) ? 'ring-2 ring-blue-500 bg-blue-50/30' : ''}`}
+                  >
                     <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-4">
+                        {/* Checkbox */}
+                        <div className="pt-1">
+                          <Checkbox
+                            checked={isSelected(rel.id)}
+                            onCheckedChange={() => toggleSelect(rel.id)}
+                          />
+                        </div>
+                        
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <h3 className="text-lg font-bold">{rel.motorista_nome}</h3>
