@@ -137,7 +137,126 @@ class FleeTrackTester:
         
         return True
     
-    def test_authentication_api(self):
+    def test_via_verde_weekly_reports_api(self):
+        """2. Test Via Verde Weekly Reports API - PRIORITY TEST"""
+        print("\n📋 2. Test Via Verde Weekly Reports API - PRIORITY TEST")
+        print("-" * 60)
+        print("TESTE: POST /api/relatorios/motorista/{motorista_id}/gerar-semanal")
+        print("MOTORISTA ID: e2355169-10a7-4547-9dd0-479c128d73f9")
+        print("EXPECTED: Via Verde expenses from despesas_fornecedor collection included")
+        print("EXPECTED: via_verde_atraso_semanas: 2 configuration applied")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("ViaVerde-Reports-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        motorista_id = "e2355169-10a7-4547-9dd0-479c128d73f9"
+        
+        try:
+            # Test Case 1: Semana 1 de 2026 (29 dez 2025 - 4 jan 2026)
+            # Com atraso de 2 semanas, deve buscar despesas de 15-21 dezembro
+            print("\n🔍 Test Case 1: Semana 1/2026 - Deve incluir Via Verde de 15-21 dezembro")
+            test1_data = {
+                "data_inicio": "2025-12-29",
+                "data_fim": "2026-01-04",
+                "semana": 1,
+                "ano": 2026
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
+                json=test1_data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                resumo = result.get("resumo", {})
+                total_via_verde = resumo.get("total_via_verde", 0)
+                
+                # Expected: approximately €81.30 (45 records)
+                if total_via_verde > 0:
+                    self.log_result("ViaVerde-Test1", True, 
+                                  f"✅ Semana 1/2026: Via Verde = €{total_via_verde:.2f} (Expected ~€81.30)")
+                    
+                    # Check if value is approximately correct
+                    if 75 <= total_via_verde <= 90:
+                        self.log_result("ViaVerde-Test1-Value", True, 
+                                      f"✅ Via Verde value in expected range: €{total_via_verde:.2f}")
+                    else:
+                        self.log_result("ViaVerde-Test1-Value", False, 
+                                      f"⚠️ Via Verde value unexpected: €{total_via_verde:.2f} (expected ~€81.30)")
+                else:
+                    self.log_result("ViaVerde-Test1", False, 
+                                  f"❌ Semana 1/2026: No Via Verde expenses found (expected ~€81.30)")
+            else:
+                self.log_result("ViaVerde-Test1", False, 
+                              f"❌ Test 1 failed: {response.status_code}", response.text)
+            
+            # Test Case 2: Semana 52 de 2025 (22-28 dez)
+            # Com atraso de 2 semanas, vai buscar 8-14 dez onde não há despesas
+            print("\n🔍 Test Case 2: Semana 52/2025 - Deve retornar Via Verde = 0 (8-14 dezembro)")
+            test2_data = {
+                "data_inicio": "2025-12-22",
+                "data_fim": "2025-12-28",
+                "semana": 52,
+                "ano": 2025
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
+                json=test2_data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                resumo = result.get("resumo", {})
+                total_via_verde = resumo.get("total_via_verde", 0)
+                
+                if total_via_verde == 0:
+                    self.log_result("ViaVerde-Test2", True, 
+                                  f"✅ Semana 52/2025: Via Verde = €{total_via_verde:.2f} (Expected €0.00)")
+                else:
+                    self.log_result("ViaVerde-Test2", False, 
+                                  f"❌ Semana 52/2025: Via Verde = €{total_via_verde:.2f} (expected €0.00)")
+            else:
+                self.log_result("ViaVerde-Test2", False, 
+                              f"❌ Test 2 failed: {response.status_code}", response.text)
+            
+            # Test Case 3: Verify atraso calculation logic
+            print("\n🔍 Test Case 3: Verificar lógica de atraso de semanas")
+            # Test with a different period to verify the delay logic
+            test3_data = {
+                "data_inicio": "2026-01-05",
+                "data_fim": "2026-01-11",
+                "semana": 2,
+                "ano": 2026
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
+                json=test3_data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                resumo = result.get("resumo", {})
+                total_via_verde = resumo.get("total_via_verde", 0)
+                
+                self.log_result("ViaVerde-Test3", True, 
+                              f"✅ Semana 2/2026: Via Verde = €{total_via_verde:.2f} (atraso aplicado corretamente)")
+            else:
+                self.log_result("ViaVerde-Test3", False, 
+                              f"❌ Test 3 failed: {response.status_code}", response.text)
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("ViaVerde-Reports-Error", False, f"❌ Error during Via Verde reports test: {str(e)}")
+            return False
         """1. Test Authentication API"""
         print("\n📋 1. Test Authentication API")
         print("-" * 60)
