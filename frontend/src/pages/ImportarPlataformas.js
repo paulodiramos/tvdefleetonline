@@ -233,6 +233,10 @@ const ImportarPlataformas = () => {
       // Adicionar período se preenchido
       if (periodoInicio) formData.append('periodo_inicio', periodoInicio);
       if (periodoFim) formData.append('periodo_fim', periodoFim);
+      
+      // Adicionar semana e ano para associação ao relatório
+      if (semana) formData.append('semana', semana);
+      if (ano) formData.append('ano', ano);
 
       const token = localStorage.getItem('token');
       const response = await axios.post(
