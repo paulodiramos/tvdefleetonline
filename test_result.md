@@ -10,6 +10,9 @@ backend:
       - working: true
         agent: "main"
         comment: "✅ Fixed - Updated gerar_relatorio_semanal in routes/relatorios.py to include imported despesas from despesas_fornecedor collection. Test with semana 1/2026 returned €81.30 Via Verde."
+      - working: true
+        agent: "testing"
+        comment: "✅ COMPREHENSIVE TESTING COMPLETED - Via Verde weekly reports working perfectly! Test 1: Semana 1/2026 (29 dez-4 jan) correctly returned €81.30 Via Verde from 15-21 dezembro period (2-week delay applied). Test 2: Semana 52/2025 correctly returned €0.00 for period without expenses. Test 3: Delay calculation logic verified working. All 3 test cases passed with exact expected values."
 
   - task: "Despesas Import Logic Update"
     implemented: true
