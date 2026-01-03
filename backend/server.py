@@ -12000,6 +12000,23 @@ async def importar_carregamentos_excel(
                 matricula_ficheiro = str(row.get(col_map.get('matricula', 'MATRÍCULA'), '') or '').strip()
                 
                 # Criar documento detalhado
+                # Usar semana/ano passados ou calcular a partir da data
+                semana_doc = semana
+                ano_doc = ano
+                if not semana_doc or not ano_doc:
+                    if data:
+                        try:
+                            dt = datetime.strptime(data, '%Y-%m-%d')
+                            if not ano_doc:
+                                ano_doc = dt.year
+                            if not semana_doc:
+                                semana_doc = dt.isocalendar()[1]
+                        except:
+                            if not ano_doc:
+                                ano_doc = datetime.now(timezone.utc).year
+                            if not semana_doc:
+                                semana_doc = datetime.now(timezone.utc).isocalendar()[1]
+                
                 documento = {
                     "id": str(uuid.uuid4()),
                     "vehicle_id": vehicle["id"],
@@ -12023,8 +12040,8 @@ async def importar_carregamentos_excel(
                     "plataforma": "carregamentos",
                     "periodo_inicio": periodo_inicio,
                     "periodo_fim": periodo_fim,
-                    "ano": int(data.split('-')[0]) if data else datetime.now(timezone.utc).year,
-                    "semana": datetime.strptime(data, '%Y-%m-%d').isocalendar()[1] if data else datetime.now(timezone.utc).isocalendar()[1],
+                    "ano": ano_doc,
+                    "semana": semana_doc,
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "created_by": current_user["id"]
                 }
