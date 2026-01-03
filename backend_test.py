@@ -201,7 +201,7 @@ class FleeTrackTester:
         print("STEPS:")
         print("1. Login as admin")
         print("2. Get list of vehicles (GET /api/vehicles)")
-        print("3. Add maintenance record to vehicle (POST /api/vehicles/{vehicle_id}/manutencoes)")
+        print("3. Add maintenance cost record to vehicle (POST /api/vehicles/{vehicle_id}/custos)")
         print("4. Verify maintenance record was saved correctly")
         
         # Step 1: Login as admin
