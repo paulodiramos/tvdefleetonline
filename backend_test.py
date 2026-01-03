@@ -145,7 +145,298 @@ class FleeTrackTester:
         
         return True
     
-    def test_via_verde_weekly_reports_api(self):
+    def test_vehicle_device_management_api(self):
+        """2. Test Vehicle Device Management API - NEW ENDPOINTS"""
+        print("\n📋 2. Test Vehicle Device Management API - NEW ENDPOINTS")
+        print("-" * 60)
+        print("TESTE: GET/PUT /api/vehicles/{vehicle_id}/dispositivos")
+        print("VEHICLE ID: 4ad331ff-c0f5-43c9-95b8-cc085d32d8a7")
+        print("EXPECTED: Get and update vehicle devices (OBU Via Verde, Cartões combustível)")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Vehicle-Devices-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        vehicle_id = "4ad331ff-c0f5-43c9-95b8-cc085d32d8a7"
+        
+        try:
+            # Test 1: GET Vehicle Devices
+            print("\n🔍 Test 1: GET /api/vehicles/{vehicle_id}/dispositivos")
+            response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}/dispositivos", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["veiculo_id", "matricula", "dispositivos"]
+                
+                if all(field in data for field in required_fields):
+                    dispositivos = data.get("dispositivos", {})
+                    expected_device_fields = ["obu_via_verde", "cartao_combustivel_fossil", "cartao_combustivel_eletrico", "gps_matricula"]
+                    
+                    if all(field in dispositivos for field in expected_device_fields):
+                        self.log_result("Vehicle-Devices-GET", True, 
+                                      f"✅ GET dispositivos works: {data.get('matricula')} - OBU: {dispositivos.get('obu_via_verde')}, Fossil: {dispositivos.get('cartao_combustivel_fossil')}")
+                    else:
+                        self.log_result("Vehicle-Devices-GET", False, 
+                                      f"❌ Missing device fields: {dispositivos}")
+                else:
+                    self.log_result("Vehicle-Devices-GET", False, 
+                                  f"❌ Missing required fields: {data}")
+            else:
+                self.log_result("Vehicle-Devices-GET", False, 
+                              f"❌ GET dispositivos failed: {response.status_code}", response.text)
+            
+            # Test 2: PUT Update Vehicle Devices
+            print("\n🔍 Test 2: PUT /api/vehicles/{vehicle_id}/dispositivos")
+            update_data = {
+                "obu_via_verde": "TEST-OBU-123",
+                "cartao_combustivel_fossil": "TEST-CARD-456"
+            }
+            
+            response = requests.put(
+                f"{BACKEND_URL}/vehicles/{vehicle_id}/dispositivos",
+                json=update_data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if "message" in result and "dispositivos" in result:
+                    dispositivos = result.get("dispositivos", {})
+                    if dispositivos.get("obu_via_verde") == "TEST-OBU-123" and dispositivos.get("cartao_combustivel_fossil") == "TEST-CARD-456":
+                        self.log_result("Vehicle-Devices-PUT", True, 
+                                      f"✅ PUT dispositivos works: Updated OBU to {dispositivos.get('obu_via_verde')}, Card to {dispositivos.get('cartao_combustivel_fossil')}")
+                    else:
+                        self.log_result("Vehicle-Devices-PUT", False, 
+                                      f"❌ Device update values incorrect: {dispositivos}")
+                else:
+                    self.log_result("Vehicle-Devices-PUT", False, 
+                                  f"❌ PUT response missing required fields: {result}")
+            else:
+                self.log_result("Vehicle-Devices-PUT", False, 
+                              f"❌ PUT dispositivos failed: {response.status_code}", response.text)
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Vehicle-Devices-Error", False, f"❌ Error during vehicle devices test: {str(e)}")
+            return False
+    
+    def test_vehicle_assignment_history_api(self):
+        """3. Test Vehicle Assignment History API - NEW ENDPOINT"""
+        print("\n📋 3. Test Vehicle Assignment History API - NEW ENDPOINT")
+        print("-" * 60)
+        print("TESTE: GET /api/vehicles/{vehicle_id}/historico-atribuicoes")
+        print("VEHICLE ID: 4ad331ff-c0f5-43c9-95b8-cc085d32d8a7")
+        print("EXPECTED: List of assignments with motorista, datas, km, ganhos_periodo")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Vehicle-History-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        vehicle_id = "4ad331ff-c0f5-43c9-95b8-cc085d32d8a7"
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}/historico-atribuicoes", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["veiculo_id", "matricula", "historico", "total_registos"]
+                
+                if all(field in data for field in required_fields):
+                    historico = data.get("historico", [])
+                    total_registos = data.get("total_registos", 0)
+                    matricula = data.get("matricula")
+                    
+                    if historico:
+                        # Check first history entry structure
+                        first_entry = historico[0]
+                        expected_history_fields = ["id", "veiculo_id", "motorista_id", "motorista_nome", "data_inicio"]
+                        
+                        if all(field in first_entry for field in expected_history_fields):
+                            motorista_nome = first_entry.get("motorista_nome")
+                            data_inicio = first_entry.get("data_inicio")
+                            ganhos_periodo = first_entry.get("ganhos_periodo", {})
+                            
+                            self.log_result("Vehicle-History", True, 
+                                          f"✅ Assignment history works: {matricula} - {total_registos} records, Latest: {motorista_nome} desde {data_inicio[:10]}")
+                            
+                            if ganhos_periodo:
+                                total_ganhos = ganhos_periodo.get("total", 0)
+                                self.log_result("Vehicle-History-Ganhos", True, 
+                                              f"✅ Ganhos calculation works: €{total_ganhos} total period earnings")
+                        else:
+                            self.log_result("Vehicle-History", False, 
+                                          f"❌ History entry missing required fields: {first_entry}")
+                    else:
+                        self.log_result("Vehicle-History", True, 
+                                      f"✅ Assignment history works: {matricula} - No assignments yet (normal for new vehicle)")
+                else:
+                    self.log_result("Vehicle-History", False, 
+                                  f"❌ History response missing required fields: {data}")
+            else:
+                self.log_result("Vehicle-History", False, 
+                              f"❌ Assignment history failed: {response.status_code}", response.text)
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Vehicle-History-Error", False, f"❌ Error during assignment history test: {str(e)}")
+            return False
+    
+    def test_vehicle_driver_assignment_api(self):
+        """4. Test Vehicle Driver Assignment API - UPDATED ENDPOINT"""
+        print("\n📋 4. Test Vehicle Driver Assignment API - UPDATED ENDPOINT")
+        print("-" * 60)
+        print("TESTE: POST /api/vehicles/{vehicle_id}/atribuir-motorista")
+        print("VEHICLE ID: 4ad331ff-c0f5-43c9-95b8-cc085d32d8a7")
+        print("EXPECTED: Create history record and return historico_id and data_atribuicao")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Vehicle-Assignment-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        vehicle_id = "4ad331ff-c0f5-43c9-95b8-cc085d32d8a7"
+        
+        try:
+            # First, get list of motoristas to find one to assign
+            motoristas_response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            
+            if motoristas_response.status_code == 200:
+                motoristas = motoristas_response.json()
+                
+                if motoristas and len(motoristas) > 0:
+                    # Use first available motorista
+                    motorista = motoristas[0]
+                    motorista_id = motorista.get("id")
+                    motorista_nome = motorista.get("name")
+                    
+                    print(f"\n🔍 Using motorista: {motorista_nome} (ID: {motorista_id})")
+                    
+                    # Test assignment
+                    assignment_data = {
+                        "motorista_id": motorista_id,
+                        "km_atual": 55000
+                    }
+                    
+                    response = requests.post(
+                        f"{BACKEND_URL}/vehicles/{vehicle_id}/atribuir-motorista",
+                        json=assignment_data,
+                        headers=headers
+                    )
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        required_fields = ["message", "motorista", "data_atribuicao", "historico_id"]
+                        
+                        if all(field in result for field in required_fields):
+                            historico_id = result.get("historico_id")
+                            data_atribuicao = result.get("data_atribuicao")
+                            motorista_assigned = result.get("motorista")
+                            
+                            self.log_result("Vehicle-Assignment", True, 
+                                          f"✅ Driver assignment works: {motorista_assigned} assigned at {data_atribuicao[:19]}, History ID: {historico_id}")
+                            
+                            # Store for later verification
+                            self.assignment_historico_id = historico_id
+                            
+                            # Verify history was created by checking history endpoint
+                            print("\n🔍 Verifying history was created...")
+                            history_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}/historico-atribuicoes", headers=headers)
+                            
+                            if history_response.status_code == 200:
+                                history_data = history_response.json()
+                                historico = history_data.get("historico", [])
+                                
+                                # Find the entry we just created
+                                found_entry = None
+                                for entry in historico:
+                                    if entry.get("id") == historico_id:
+                                        found_entry = entry
+                                        break
+                                
+                                if found_entry:
+                                    self.log_result("Vehicle-Assignment-History", True, 
+                                                  f"✅ History entry created: {found_entry.get('motorista_nome')} from {found_entry.get('data_inicio')[:19]}")
+                                else:
+                                    self.log_result("Vehicle-Assignment-History", False, 
+                                                  f"❌ History entry not found with ID: {historico_id}")
+                            else:
+                                self.log_result("Vehicle-Assignment-History", False, 
+                                              f"❌ Could not verify history: {history_response.status_code}")
+                        else:
+                            self.log_result("Vehicle-Assignment", False, 
+                                          f"❌ Assignment response missing required fields: {result}")
+                    else:
+                        self.log_result("Vehicle-Assignment", False, 
+                                      f"❌ Driver assignment failed: {response.status_code}", response.text)
+                else:
+                    self.log_result("Vehicle-Assignment", False, 
+                                  "❌ No motoristas found to test assignment")
+            else:
+                self.log_result("Vehicle-Assignment", False, 
+                              f"❌ Could not get motoristas list: {motoristas_response.status_code}")
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Vehicle-Assignment-Error", False, f"❌ Error during driver assignment test: {str(e)}")
+            return False
+    
+    def test_motoristas_list_api(self):
+        """5. Test Motoristas List API"""
+        print("\n📋 5. Test Motoristas List API")
+        print("-" * 60)
+        print("TESTE: GET /api/motoristas")
+        print("EXPECTED: List of motoristas for assignment testing")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Motoristas-List-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            
+            if response.status_code == 200:
+                motoristas = response.json()
+                
+                if isinstance(motoristas, list):
+                    if motoristas:
+                        first_motorista = motoristas[0]
+                        required_fields = ["id", "name", "email"]
+                        
+                        if all(field in first_motorista for field in required_fields):
+                            self.log_result("Motoristas-List", True, 
+                                          f"✅ Motoristas list works: {len(motoristas)} motoristas found")
+                            
+                            # Log some motorista details for reference
+                            for i, motorista in enumerate(motoristas[:3]):  # Show first 3
+                                nome = motorista.get("name")
+                                email = motorista.get("email")
+                                veiculo = motorista.get("veiculo_atribuido")
+                                status = "Assigned" if veiculo else "Available"
+                                print(f"   {i+1}. {nome} ({email}) - {status}")
+                        else:
+                            self.log_result("Motoristas-List", False, 
+                                          f"❌ Motorista records missing required fields: {first_motorista}")
+                    else:
+                        self.log_result("Motoristas-List", True, 
+                                      "ℹ️ No motoristas found (normal if database empty)")
+                else:
+                    self.log_result("Motoristas-List", False, 
+                                  f"❌ Motoristas response not a list: {type(motoristas)}")
+            else:
+                self.log_result("Motoristas-List", False, 
+                              f"❌ Motoristas list failed: {response.status_code}", response.text)
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Motoristas-List-Error", False, f"❌ Error during motoristas list test: {str(e)}")
+            return False
         """2. Test Via Verde Weekly Reports API - PRIORITY TEST"""
         print("\n📋 2. Test Via Verde Weekly Reports API - PRIORITY TEST")
         print("-" * 60)
