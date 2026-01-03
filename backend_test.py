@@ -134,33 +134,151 @@ class ViaVerdeTester:
             return None
         return {"Authorization": f"Bearer {self.tokens[role]}"}
     
-    def test_priority_scenarios(self):
-        """🎯 PRIORITY TEST SCENARIOS: 3 New Features Testing"""
-        print("\n🎯 PRIORITY TEST SCENARIOS: 3 New Features Testing")
+    def test_via_verde_calculation_scenarios(self):
+        """🎯 PRIORITY TEST SCENARIOS: Via Verde Calculation Fix Validation"""
+        print("\n🎯 PRIORITY TEST SCENARIOS: Via Verde Calculation Fix Validation")
         print("=" * 80)
-        print("CONTEXT: Testing 3 new features implementation:")
-        print("1. Via Verde Auto-Calculate Button")
-        print("   - Endpoint: GET /api/relatorios/motorista/{motorista_id}/via-verde-total")
-        print("   - Test motorista: e2355169-10a7-4547-9dd0-479c128d73f9")
-        print("   - Test with: semana=53, ano=2025")
-        print("   - Expected: Should return total_via_verde value > 0 with correct calculation")
-        print("2. Reports Showing Ganhos")
-        print("   - Endpoint: GET /api/relatorios/semanais-todos")
-        print("   - Expected: Reports should have total_ganhos > 0 for drivers with earnings")
-        print("   - Example drivers: Bruno Coelho (€559.73), Arlei Oliveira (€763.23)")
-        print("3. Comunicações Contact Config")
-        print("   - Save Endpoint: POST /api/configuracoes/email")
-        print("   - Get Endpoint: GET /api/configuracoes/email")
-        print("   - Public Endpoint: GET /api/public/contacto (no auth)")
-        print("   - Test data: email_contacto, telefone_contacto, morada_empresa, nome_empresa")
+        print("CONTEXT: Testing Via Verde calculation endpoint fix with specific scenarios:")
+        print("1. Marco Coelho Via Verde (OBU 601104486167)")
+        print("   - Endpoint: GET /api/relatorios/motorista/36b1d8b4-dbf4-4857-acea-9580aeaaf98c/via-verde-total?semana=52&ano=2025")
+        print("   - Expected: total_via_verde = €53.00 (30 registos)")
+        print("2. Luiz Cruz Via Verde")
+        print("   - Endpoint: GET /api/relatorios/motorista/086afba0-2007-43c7-a60b-c6d60ad9f3dd/via-verde-total?semana=52&ano=2025")
+        print("   - Expected: total_via_verde = €14.50 (30 registos)")
+        print("3. Mário Domingues Via Verde")
+        print("   - Endpoint: GET /api/relatorios/motorista/0f0c1c6a-49f6-48d4-98ba-46bf8e3617ed/via-verde-total?semana=52&ano=2025")
+        print("   - Expected: total_via_verde = €323.00 (284 registos)")
+        print("4. Multiple week test (different data week)")
+        print("   - Test same endpoint with semana=51 (should get data from week 49)")
         print("\nCREDENCIAIS:")
         print("- Admin: admin@tvdefleet.com / 123456")
         print("=" * 80)
         
-        # Execute priority tests
-        self.test_feature_1_via_verde_auto_calculate()
-        self.test_feature_2_reports_showing_ganhos()
-        self.test_feature_3_comunicacoes_contact_config()
+        # Execute Via Verde calculation tests
+        self.test_via_verde_scenarios()
+        
+        return True
+
+    def test_via_verde_scenarios(self):
+        """Test all Via Verde calculation scenarios"""
+        print("\n📋 VIA VERDE CALCULATION SCENARIOS")
+        print("-" * 60)
+        print("GOAL: Test Via Verde calculation endpoint with specific test cases")
+        print("STEPS:")
+        print("1. Login as admin")
+        print("2. Test each Via Verde scenario")
+        print("3. Verify expected totals and registos")
+        print("4. Check 2-week delay calculation")
+        
+        # Step 1: Login as admin
+        if not self.authenticate_user("admin"):
+            self.log_result("ViaVerde-Auth", False, "❌ Failed to authenticate as admin")
+            return False
+        
+        headers = self.get_headers("admin")
+        
+        # Store results for comparison
+        scenario_results = {}
+        
+        # Step 2: Test each scenario
+        for i, scenario in enumerate(VIA_VERDE_TEST_SCENARIOS, 1):
+            try:
+                print(f"\n🔍 Test {i}: {scenario['name']}")
+                print(f"   Motorista ID: {scenario['motorista_id']}")
+                print(f"   Parameters: semana={scenario['semana']}, ano={scenario['ano']}")
+                if 'expected_total' in scenario:
+                    print(f"   Expected: €{scenario['expected_total']} ({scenario['expected_registos']} registos)")
+                print(f"   Description: {scenario['description']}")
+                
+                via_verde_url = f"{BACKEND_URL}/relatorios/motorista/{scenario['motorista_id']}/via-verde-total"
+                params = {
+                    "semana": scenario['semana'],
+                    "ano": scenario['ano']
+                }
+                
+                response = requests.get(via_verde_url, params=params, headers=headers)
+                
+                if response.status_code == 200:
+                    result = response.json()
+                    
+                    motorista_id = result.get("motorista_id")
+                    semana_relatorio = result.get("semana_relatorio")
+                    ano_relatorio = result.get("ano_relatorio")
+                    semana_dados = result.get("semana_dados")
+                    ano_dados = result.get("ano_dados")
+                    total_via_verde = result.get("total_via_verde", 0)
+                    via_verde_atraso = result.get("via_verde_atraso_semanas", 0)
+                    registos_portagens = result.get("registos_portagens", 0)
+                    registos_legacy = result.get("registos_legacy", 0)
+                    
+                    # Store result for comparison
+                    scenario_results[scenario['name']] = {
+                        'total_via_verde': total_via_verde,
+                        'registos_portagens': registos_portagens,
+                        'semana_dados': semana_dados,
+                        'ano_dados': ano_dados
+                    }
+                    
+                    self.log_result(f"Test{i}-EndpointSuccess", True, 
+                                  f"✅ {scenario['name']} endpoint working")
+                    
+                    # Check expected values if provided
+                    if 'expected_total' in scenario:
+                        if abs(total_via_verde - scenario['expected_total']) < 0.01:  # Allow small floating point differences
+                            self.log_result(f"Test{i}-TotalMatch", True, 
+                                          f"✅ Total Via Verde matches: €{total_via_verde} (expected €{scenario['expected_total']})")
+                        else:
+                            self.log_result(f"Test{i}-TotalMismatch", False, 
+                                          f"❌ Total Via Verde mismatch: €{total_via_verde} (expected €{scenario['expected_total']})")
+                        
+                        # Check registos count (allow some tolerance)
+                        registos_total = registos_portagens + registos_legacy
+                        if abs(registos_total - scenario['expected_registos']) <= 5:  # Allow 5 record tolerance
+                            self.log_result(f"Test{i}-RegistosMatch", True, 
+                                          f"✅ Registos count acceptable: {registos_total} (expected ~{scenario['expected_registos']})")
+                        else:
+                            self.log_result(f"Test{i}-RegistosMismatch", False, 
+                                          f"❌ Registos count mismatch: {registos_total} (expected ~{scenario['expected_registos']})")
+                    
+                    # Check 2-week delay calculation
+                    expected_semana_dados = scenario['semana'] - via_verde_atraso
+                    if expected_semana_dados <= 0:
+                        expected_semana_dados += 52
+                        expected_ano_dados = scenario['ano'] - 1
+                    else:
+                        expected_ano_dados = scenario['ano']
+                    
+                    if semana_dados == expected_semana_dados and ano_dados == expected_ano_dados:
+                        self.log_result(f"Test{i}-DelayCalculation", True, 
+                                      f"✅ 2-week delay calculation correct: data from week {semana_dados}/{ano_dados}")
+                    else:
+                        self.log_result(f"Test{i}-DelayCalculation", False, 
+                                      f"❌ Delay calculation issue: got week {semana_dados}/{ano_dados}, expected {expected_semana_dados}/{expected_ano_dados}")
+                    
+                    # Log detailed results
+                    self.log_result(f"Test{i}-Details", True, 
+                                  f"✅ Details: Total=€{total_via_verde}, Portagens={registos_portagens}, Legacy={registos_legacy}, Data={semana_dados}/{ano_dados}")
+                    
+                else:
+                    self.log_result(f"Test{i}-EndpointFailed", False, 
+                                  f"❌ {scenario['name']} endpoint failed: {response.status_code} - {response.text}")
+                    
+            except Exception as e:
+                self.log_result(f"Test{i}-Error", False, f"❌ Error in {scenario['name']}: {str(e)}")
+        
+        # Step 4: Compare results for multiple week test
+        if len(scenario_results) >= 2:
+            marco_week52 = scenario_results.get("Marco Coelho Via Verde")
+            marco_week51 = scenario_results.get("Marco Coelho Via Verde (Week 51)")
+            
+            if marco_week52 and marco_week51:
+                if (marco_week52['total_via_verde'] != marco_week51['total_via_verde'] or
+                    marco_week52['semana_dados'] != marco_week51['semana_dados']):
+                    self.log_result("MultiWeek-Comparison", True, 
+                                  f"✅ Multiple week test passed: Week 52 (€{marco_week52['total_via_verde']}, data week {marco_week52['semana_dados']}) vs Week 51 (€{marco_week51['total_via_verde']}, data week {marco_week51['semana_dados']})")
+                else:
+                    self.log_result("MultiWeek-Comparison", False, 
+                                  f"❌ Multiple week test failed: Same values for different weeks")
         
         return True
 
