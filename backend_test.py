@@ -108,24 +108,25 @@ class FleeTrackTester:
         return temp_file.name
     
     def test_priority_scenarios(self):
-        """🎯 PRIORITY TEST SCENARIOS: Last Session Implementation Validation"""
-        print("\n🎯 PRIORITY TEST SCENARIOS: Last Session Implementation Validation")
+        """🎯 PRIORITY TEST SCENARIOS: Bug Fixes Validation - Motorista Report Data Integration"""
+        print("\n🎯 PRIORITY TEST SCENARIOS: Bug Fixes Validation - Motorista Report Data Integration")
         print("=" * 80)
         print("CONTEXT: Testing specific scenarios from review request:")
-        print("1. Partner Delete Weekly Reports Permission")
-        print("2. Vehicle Maintenance History Registration")
-        print("3. Driver Phone Display in Vehicle")
-        print("4. Basic Layout Menu Items (Backend Endpoints)")
+        print("1. Vehicle Report Custom Dates (ROI)")
+        print("2. Motorista Weekly Report - Combustível Integration")
+        print("3. Motorista Weekly Report - Carregamentos Elétricos")
+        print("4. Motorista Weekly Report - GPS/KM Data")
+        print("5. Motorista Weekly Report - Uber/Bolt Data")
         print("\nCREDENCIAIS:")
         print("- Admin: admin@tvdefleet.com / 123456")
-        print("- Parceiro: parceiro@tvdefleet.com / 123456")
         print("=" * 80)
         
         # Execute priority tests
-        self.test_scenario_1_partner_delete_reports()
-        self.test_scenario_2_vehicle_maintenance_history()
-        self.test_scenario_3_driver_phone_display()
-        self.test_scenario_4_basic_endpoints()
+        self.test_scenario_1_vehicle_roi_custom_dates()
+        self.test_scenario_2_motorista_combustivel_integration()
+        self.test_scenario_3_motorista_eletrico_integration()
+        self.test_scenario_4_motorista_gps_km_data()
+        self.test_scenario_5_motorista_uber_bolt_data()
         
         return True
     
