@@ -230,10 +230,10 @@ class FleeTrackTester:
                     # Step 3: Add maintenance record using correct endpoint
                     print("\n🔍 Step 3: Adding maintenance record...")
                     
-                    # Create maintenance record data
+                    # Create maintenance record data with correct field names
                     maintenance_data = {
                         "data_intervencao": "2025-01-15",
-                        "tipo_manutencao": "Revisão Geral",
+                        "tipo_manutencao": "Revisão Geral", 
                         "descricao": "Teste de manutenção via API",
                         "descricao_detalhada": "Teste completo do endpoint de manutenção",
                         "custos": 150.0,
