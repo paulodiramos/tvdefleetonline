@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-FleeTrack Backend Testing Suite - 3 New Features Testing
-Tests for:
-1. Via Verde Auto-Calculate Button
-2. Reports Showing Ganhos
-3. Comunicações Contact Config
+FleeTrack Backend Testing Suite - Via Verde Calculation Fix Validation
+Tests for Via Verde calculation endpoint with specific test scenarios:
+1. Marco Coelho Via Verde (OBU 601104486167) - Expected €53.00 (30 registos)
+2. Luiz Cruz Via Verde - Expected €14.50 (30 registos) 
+3. Mário Domingues Via Verde - Expected €323.00 (284 registos)
+4. Multiple week test (different data week)
 """
 
 import requests
@@ -24,10 +25,45 @@ TEST_CREDENTIALS = {
     "parceiro": {"email": "parceiro@tvdefleet.com", "password": "123456"}
 }
 
-# Test data from review request
-TEST_MOTORISTA_ID = "e2355169-10a7-4547-9dd0-479c128d73f9"
-TEST_SEMANA = 53
-TEST_ANO = 2025
+# Via Verde test scenarios from review request
+VIA_VERDE_TEST_SCENARIOS = [
+    {
+        "name": "Marco Coelho Via Verde",
+        "motorista_id": "36b1d8b4-dbf4-4857-acea-9580aeaaf98c",
+        "obu": "601104486167",
+        "semana": 52,
+        "ano": 2025,
+        "expected_total": 53.00,
+        "expected_registos": 30,
+        "description": "Tests data week 50/2025 (due to 2-week delay)"
+    },
+    {
+        "name": "Luiz Cruz Via Verde",
+        "motorista_id": "086afba0-2007-43c7-a60b-c6d60ad9f3dd",
+        "semana": 52,
+        "ano": 2025,
+        "expected_total": 14.50,
+        "expected_registos": 30,
+        "description": "Tests data week 50/2025 (due to 2-week delay)"
+    },
+    {
+        "name": "Mário Domingues Via Verde",
+        "motorista_id": "0f0c1c6a-49f6-48d4-98ba-46bf8e3617ed",
+        "semana": 52,
+        "ano": 2025,
+        "expected_total": 323.00,
+        "expected_registos": 284,
+        "description": "Tests data week 50/2025 (due to 2-week delay)"
+    },
+    {
+        "name": "Marco Coelho Via Verde (Week 51)",
+        "motorista_id": "36b1d8b4-dbf4-4857-acea-9580aeaaf98c",
+        "semana": 51,
+        "ano": 2025,
+        "expected_different": True,
+        "description": "Should get data from week 49 (different from test 1)"
+    }
+]
 
 class FleeTrackTester:
     def __init__(self):
