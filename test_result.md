@@ -220,7 +220,17 @@ backend:
         agent: "testing"
         comment: "Frontend testing not performed as per system limitations. Backend APIs are working correctly to support frontend functionality."
 
-  - task: "Bug Fixes - ROI custom dates, motorista report data"
+  - task: "Bolt CSV Import Validation - Portagens, Gorjetas and Ganhos Liquidos"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/relatorios.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ BOLT CSV IMPORT VALIDATION COMPLETED (24/24 tests passed - 100% success rate)! ALL PRIORITY SCENARIOS FROM REVIEW REQUEST VERIFIED: 1) BOLT GANHOS LIQUIDOS WORKING CORRECTLY - Motorista Arlei Oliveira (57d6a119-e5af-4c7f-b357-49dc4f618763) weekly report shows ganhos_bolt = €236.08 (exact expected value) from Ganhos líquidos|€ column in CSV. 2) BOLT GORJETAS WORKING CORRECTLY - gorjetas_bolt = €1.0 (exact expected value) from Gorjetas dos passageiros|€ column in CSV. 3) BOLT PORTAGENS WORKING CORRECTLY - portagens_bolt = €25.57 (exact expected value) from Portagens|€ column in CSV. 4) MOTORISTA ASSOCIATION VIA IDENTIFICADOR WORKING - Motorista correctly linked via identificador_motorista_bolt field (114d928f-0d85-438f-a248-6c6a29e0f526), 1 Bolt trip found for semana 2, ano 2026. 5) REPORT TOTAL CALCULATION VERIFIED - valor_liquido = €236.08 matches expected value exactly. All Bolt CSV import fields (ganhos_liquidos, gorjetas, portagens) are correctly imported and displayed in motorista weekly reports as specified in the review request."
     implemented: true
     working: true
     file: "/app/backend/routes/vehicles.py, /app/backend/routes/relatorios.py"
