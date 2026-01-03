@@ -3343,61 +3343,10 @@ async def enviar_email_boas_vindas(user: Dict[str, Any]):
         "user_id": user.get("id")
     })
 
-@api_router.post("/auth/login", response_model=TokenResponse)
-async def login(credentials: UserLogin):
-    user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
-    if not user or not verify_password(credentials.password, user["password"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    if user["role"] == UserRole.MOTORISTA and not user.get("approved", False):
-        raise HTTPException(status_code=403, detail="Account pending approval")
-    
-    # Verificar se tem senha provisória
-    senha_provisoria = False
-    if user["role"] == UserRole.MOTORISTA:
-        motorista = await db.motoristas.find_one({"id": user["id"]}, {"_id": 0, "senha_provisoria": 1})
-        if motorista and motorista.get("senha_provisoria", False):
-            senha_provisoria = True
-    
-    token = create_access_token(user["id"], user["email"], user["role"])
-    
-    user.pop("password")
-    if isinstance(user["created_at"], str):
-        user["created_at"] = datetime.fromisoformat(user["created_at"])
-    
-    # Adicionar flag senha_provisoria na resposta
-    user["senha_provisoria"] = senha_provisoria
-    
-    return TokenResponse(access_token=token, user=User(**user))
+# Endpoints de auth/login, auth/me, profile/update, profile/change-password
+# foram migrados para routes/auth.py
 
-@api_router.get("/auth/me", response_model=User)
-async def get_me(current_user: Dict = Depends(get_current_user)):
-    if isinstance(current_user["created_at"], str):
-        current_user["created_at"] = datetime.fromisoformat(current_user["created_at"])
-    return User(**current_user)
-
-# ==================== USER PROFILE ENDPOINTS ====================
-
-@api_router.put("/profile/update")
-async def update_profile(profile_data: UserProfileUpdate, current_user: Dict = Depends(get_current_user)):
-    update_dict = {k: v for k, v in profile_data.model_dump().items() if v is not None}
-    
-    if not update_dict:
-        raise HTTPException(status_code=400, detail="No data to update")
-    
-    await db.users.update_one(
-        {"id": current_user["id"]},
-        {"$set": update_dict}
-    )
-    
-    return {"message": "Profile updated successfully"}
-
-@api_router.post("/profile/change-password")
-async def change_password(password_data: ChangePasswordRequest, current_user: Dict = Depends(get_current_user)):
-    user = await db.users.find_one({"id": current_user["id"]})
-    
-    if not verify_password(password_data.old_password, user["password"]):
-        raise HTTPException(status_code=400, detail="Senha antiga incorreta")
+# ==================== GESTORES ENDPOINTS ====================
     
     new_hashed = hash_password(password_data.new_password)
     
