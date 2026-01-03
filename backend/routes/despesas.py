@@ -41,11 +41,21 @@ class UserRole:
 async def importar_despesas(
     file: UploadFile = File(...),
     tipo_fornecedor: str = Form("via_verde"),
+    semana_dados: Optional[int] = Form(None),
+    ano_dados: Optional[int] = Form(None),
+    semana_relatorio: Optional[int] = Form(None),
+    ano_relatorio: Optional[int] = Form(None),
     current_user: Dict = Depends(get_current_user)
 ):
     """
     Import expenses from CSV/XLSX file
     Automatically associates with vehicles and drivers
+    
+    Parameters:
+    - semana_dados: Week when the expenses occurred
+    - ano_dados: Year of the expenses
+    - semana_relatorio: Week where expenses should appear in report
+    - ano_relatorio: Year of the report
     """
     # Determine parceiro_id
     if current_user["role"] == UserRole.PARCEIRO:
@@ -94,6 +104,10 @@ async def importar_despesas(
         "valor_parceiro": 0.0,
         "erros": [],
         "status": "processando",
+        "semana_dados": semana_dados,
+        "ano_dados": ano_dados,
+        "semana_relatorio": semana_relatorio,
+        "ano_relatorio": ano_relatorio,
         "created_at": now.isoformat(),
         "created_by": current_user["id"]
     }
