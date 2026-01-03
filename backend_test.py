@@ -148,216 +148,300 @@ class FleeTrackTester:
         except Exception as e:
             self.log_result("Auth-Login", False, f"❌ Authentication error: {str(e)}")
     
-    def test_vehicles_api_refactored(self):
-        """2. Test Vehicles API (Refactored to routes/vehicles.py)"""
-        print("\n📋 2. Test Vehicles API (Refactored)")
-        print("-" * 60)
-        print("TESTES:")
-        print("- GET /api/vehicles - List vehicles")
-        print("- POST /api/vehicles/{vehicle_id}/atribuir-motorista - Vehicle assignment")
+    def create_test_csv_file(self):
+        """Create a test CSV file with Via Verde data"""
+        csv_data = [
+            ["License Plate", "Entry Date", "Exit Date", "Entry Point", "Exit Point", "Value", "Liquid Value", "Service Description"],
+            ["AB-12-CD", "2024-01-15", "2024-01-15", "A1 Porto", "A1 Lisboa", "2.50", "2.30", "Autoestradas"],
+            ["EF-34-GH", "2024-01-16", "2024-01-16", "A2 Lisboa", "A2 Faro", "5.80", "5.50", "Autoestradas"],
+            ["IJ-56-KL", "2024-01-17", "2024-01-17", "Parque Centro", "Parque Centro", "1.20", "1.00", "Parques"]
+        ]
         
-        # Get auth headers
+        # Create temporary CSV file
+        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False, encoding='utf-8')
+        writer = csv.writer(temp_file)
+        writer.writerows(csv_data)
+        temp_file.close()
+        
+        return temp_file.name
+    
+    def test_despesas_preview_api(self):
+        """2. Test Despesas Preview API"""
+        print("\n📋 2. Test Despesas Preview API")
+        print("-" * 60)
+        print("TESTE: POST /api/despesas/preview")
+        
         headers = self.get_headers("admin")
         if not headers:
-            self.log_result("Vehicles-API-Auth", False, "❌ No auth token for admin")
+            self.log_result("Despesas-Preview-Auth", False, "❌ No auth token for admin")
             return False
         
         try:
-            # Test 1: GET /api/vehicles
-            print("\nTestando GET /api/vehicles")
-            response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+            # Create test CSV file
+            csv_file_path = self.create_test_csv_file()
+            
+            with open(csv_file_path, 'rb') as f:
+                files = {'file': ('test_via_verde.csv', f, 'text/csv')}
+                response = requests.post(f"{BACKEND_URL}/despesas/preview", files=files, headers=headers)
+            
+            # Clean up
+            os.unlink(csv_file_path)
             
             if response.status_code == 200:
-                vehicles = response.json()
-                vehicle_count = len(vehicles)
-                self.log_result("Vehicles-API-GET", True, 
-                              f"✅ GET /api/vehicles works: {vehicle_count} vehicles found")
+                data = response.json()
+                required_fields = ["nome_ficheiro", "total_registos", "colunas", "colunas_identificadas", "matriculas_unicas"]
                 
-                # Test 2: Vehicle assignment if vehicles exist
-                if vehicle_count > 0:
+                if all(field in data for field in required_fields):
+                    matriculas_count = len(data.get("matriculas_unicas", []))
+                    total_registos = data.get("total_registos", 0)
+                    self.log_result("Despesas-Preview", True, 
+                                  f"✅ Preview API works: {total_registos} records, {matriculas_count} unique matriculas")
+                else:
+                    self.log_result("Despesas-Preview", False, 
+                                  f"❌ Preview response missing required fields: {data}")
+            else:
+                self.log_result("Despesas-Preview", False, 
+                              f"❌ Preview API failed: {response.status_code}", response.text)
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Despesas-Preview-Error", False, f"❌ Error during preview test: {str(e)}")
+            return False
+    
+    def test_despesas_import_api(self):
+        """3. Test Despesas Import API"""
+        print("\n📋 3. Test Despesas Import API")
+        print("-" * 60)
+        print("TESTE: POST /api/despesas/importar")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Despesas-Import-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        try:
+            # Create test CSV file
+            csv_file_path = self.create_test_csv_file()
+            
+            with open(csv_file_path, 'rb') as f:
+                files = {'file': ('test_via_verde.csv', f, 'text/csv')}
+                data = {'tipo_fornecedor': 'via_verde'}
+                response = requests.post(f"{BACKEND_URL}/despesas/importar", files=files, data=data, headers=headers)
+            
+            # Clean up
+            os.unlink(csv_file_path)
+            
+            if response.status_code == 200:
+                result = response.json()
+                required_fields = ["message", "importacao_id", "total_registos", "registos_importados"]
+                
+                if all(field in result for field in required_fields):
+                    imported = result.get("registos_importados", 0)
+                    total = result.get("total_registos", 0)
+                    vehicles_found = result.get("veiculos_encontrados", 0)
+                    self.log_result("Despesas-Import", True, 
+                                  f"✅ Import API works: {imported}/{total} records imported, {vehicles_found} vehicles found")
+                    
+                    # Store import ID for later tests
+                    self.import_id = result.get("importacao_id")
+                else:
+                    self.log_result("Despesas-Import", False, 
+                                  f"❌ Import response missing required fields: {result}")
+            else:
+                self.log_result("Despesas-Import", False, 
+                              f"❌ Import API failed: {response.status_code}", response.text)
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Despesas-Import-Error", False, f"❌ Error during import test: {str(e)}")
+            return False
+    
+    def test_despesas_list_api(self):
+        """4. Test Despesas List API"""
+        print("\n📋 4. Test Despesas List API")
+        print("-" * 60)
+        print("TESTE: GET /api/despesas/")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Despesas-List-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/despesas/?limit=10", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["despesas", "total", "limit", "skip"]
+                
+                if all(field in data for field in required_fields):
+                    despesas = data.get("despesas", [])
+                    total = data.get("total", 0)
+                    
+                    # Check if despesas have required fields
+                    if despesas:
+                        first_despesa = despesas[0]
+                        required_despesa_fields = ["id", "matricula", "tipo_responsavel", "valor_liquido"]
+                        
+                        if all(field in first_despesa for field in required_despesa_fields):
+                            self.log_result("Despesas-List", True, 
+                                          f"✅ List API works: {len(despesas)} despesas returned, {total} total")
+                        else:
+                            self.log_result("Despesas-List", False, 
+                                          f"❌ Despesa records missing required fields: {first_despesa}")
+                    else:
+                        self.log_result("Despesas-List", True, 
+                                      f"✅ List API works: No despesas found (normal if database empty)")
+                else:
+                    self.log_result("Despesas-List", False, 
+                                  f"❌ List response missing required fields: {data}")
+            else:
+                self.log_result("Despesas-List", False, 
+                              f"❌ List API failed: {response.status_code}", response.text)
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Despesas-List-Error", False, f"❌ Error during list test: {str(e)}")
+            return False
+    
+    def test_despesas_resumo_api(self):
+        """5. Test Despesas Resumo API"""
+        print("\n📋 5. Test Despesas Resumo API")
+        print("-" * 60)
+        print("TESTE: GET /api/despesas/resumo")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Despesas-Resumo-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/despesas/resumo", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["por_responsavel", "por_fornecedor", "total_geral", "total_registos"]
+                
+                if all(field in data for field in required_fields):
+                    total_geral = data.get("total_geral", 0)
+                    total_registos = data.get("total_registos", 0)
+                    por_responsavel = data.get("por_responsavel", {})
+                    
+                    self.log_result("Despesas-Resumo", True, 
+                                  f"✅ Resumo API works: €{total_geral} total, {total_registos} records, {len(por_responsavel)} responsibility types")
+                else:
+                    self.log_result("Despesas-Resumo", False, 
+                                  f"❌ Resumo response missing required fields: {data}")
+            else:
+                self.log_result("Despesas-Resumo", False, 
+                              f"❌ Resumo API failed: {response.status_code}", response.text)
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Despesas-Resumo-Error", False, f"❌ Error during resumo test: {str(e)}")
+            return False
+    
+    def test_despesas_importacoes_api(self):
+        """6. Test Despesas Import History API"""
+        print("\n📋 6. Test Despesas Import History API")
+        print("-" * 60)
+        print("TESTE: GET /api/despesas/importacoes")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Despesas-Importacoes-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/despesas/importacoes", headers=headers)
+            
+            if response.status_code == 200:
+                importacoes = response.json()
+                
+                if isinstance(importacoes, list):
+                    if importacoes:
+                        first_import = importacoes[0]
+                        required_fields = ["id", "nome_ficheiro", "tipo_fornecedor", "status", "total_registos"]
+                        
+                        if all(field in first_import for field in required_fields):
+                            self.log_result("Despesas-Importacoes", True, 
+                                          f"✅ Import history API works: {len(importacoes)} imports found")
+                        else:
+                            self.log_result("Despesas-Importacoes", False, 
+                                          f"❌ Import records missing required fields: {first_import}")
+                    else:
+                        self.log_result("Despesas-Importacoes", True, 
+                                      f"✅ Import history API works: No imports found (normal if no imports)")
+                else:
+                    self.log_result("Despesas-Importacoes", False, 
+                                  f"❌ Import history response not a list: {importacoes}")
+            else:
+                self.log_result("Despesas-Importacoes", False, 
+                              f"❌ Import history API failed: {response.status_code}", response.text)
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Despesas-Importacoes-Error", False, f"❌ Error during import history test: {str(e)}")
+            return False
+    
+    def test_despesas_por_veiculo_api(self):
+        """7. Test Despesas By Vehicle API"""
+        print("\n📋 7. Test Despesas By Vehicle API")
+        print("-" * 60)
+        print("TESTE: GET /api/despesas/por-veiculo/{id}")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Despesas-ByVehicle-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        try:
+            # First get a vehicle ID
+            vehicles_response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+            
+            if vehicles_response.status_code == 200:
+                vehicles = vehicles_response.json()
+                
+                if vehicles:
                     test_vehicle = vehicles[0]
                     vehicle_id = test_vehicle['id']
                     vehicle_info = f"{test_vehicle.get('marca', 'N/A')} {test_vehicle.get('modelo', 'N/A')} - {test_vehicle.get('matricula', 'N/A')}"
                     
-                    print(f"\nTestando POST /api/vehicles/{vehicle_id}/atribuir-motorista")
+                    # Test expenses for this vehicle
+                    response = requests.get(f"{BACKEND_URL}/despesas/por-veiculo/{vehicle_id}", headers=headers)
                     
-                    # Test assignment data
-                    assignment_data = {
-                        "motorista_id": None,  # Remove assignment
-                        "via_verde_id": "VV123456",
-                        "cartao_frota_id": "CF789012"
-                    }
-                    
-                    assignment_response = requests.post(
-                        f"{BACKEND_URL}/vehicles/{vehicle_id}/atribuir-motorista",
-                        json=assignment_data,
-                        headers=headers
-                    )
-                    
-                    if assignment_response.status_code == 200:
-                        self.log_result("Vehicles-API-Assignment", True, 
-                                      f"✅ Vehicle assignment API works for {vehicle_info}")
+                    if response.status_code == 200:
+                        data = response.json()
+                        required_fields = ["despesas", "resumo"]
+                        
+                        if all(field in data for field in required_fields):
+                            despesas = data.get("despesas", [])
+                            resumo = data.get("resumo", {})
+                            
+                            self.log_result("Despesas-ByVehicle", True, 
+                                          f"✅ By vehicle API works: {len(despesas)} expenses for {vehicle_info}")
+                        else:
+                            self.log_result("Despesas-ByVehicle", False, 
+                                          f"❌ By vehicle response missing required fields: {data}")
                     else:
-                        self.log_result("Vehicles-API-Assignment", False, 
-                                      f"❌ Vehicle assignment failed: {assignment_response.status_code}")
-                        print(f"   Error: {assignment_response.text}")
+                        self.log_result("Despesas-ByVehicle", False, 
+                                      f"❌ By vehicle API failed: {response.status_code}", response.text)
                 else:
-                    self.log_result("Vehicles-API-Assignment", True, 
-                                  "ℹ️ No vehicles to test assignment (normal if database empty)")
+                    self.log_result("Despesas-ByVehicle", True, 
+                                  "ℹ️ No vehicles to test by vehicle API (normal if database empty)")
             else:
-                self.log_result("Vehicles-API-GET", False, 
-                              f"❌ GET /api/vehicles failed: {response.status_code}")
-                print(f"   Error: {response.text}")
+                self.log_result("Despesas-ByVehicle", False, 
+                              f"❌ Could not get vehicles for by vehicle test: {vehicles_response.status_code}")
             
             return True
             
         except Exception as e:
-            self.log_result("Vehicles-API-Error", False, f"❌ Error during vehicles test: {str(e)}")
-            return False
-    
-    def test_automacao_rpa_api(self):
-        """3. Test Automação RPA API (New Module routes/automacao.py)"""
-        print("\n📋 3. Test Automação RPA API (New Module)")
-        print("-" * 60)
-        print("TESTES:")
-        print("- GET /api/automacao/dashboard - Dashboard stats")
-        print("- GET /api/automacao/fornecedores - List providers")
-        print("- GET /api/automacao/fornecedores/tipos - Provider types")
-        
-        # Get auth headers
-        headers = self.get_headers("admin")
-        if not headers:
-            self.log_result("Automacao-API-Auth", False, "❌ No auth token for admin")
-            return False
-        
-        try:
-            # Test 1: GET /api/automacao/dashboard
-            print("\nTestando GET /api/automacao/dashboard")
-            dashboard_response = requests.get(f"{BACKEND_URL}/automacao/dashboard", headers=headers)
-            
-            if dashboard_response.status_code == 200:
-                dashboard_data = dashboard_response.json()
-                fornecedores_count = dashboard_data.get("total_fornecedores", 0)
-                automacoes_count = dashboard_data.get("total_automacoes", 0)
-                
-                self.log_result("Automacao-Dashboard", True, 
-                              f"✅ Dashboard API works: {fornecedores_count} fornecedores, {automacoes_count} automações")
-            else:
-                self.log_result("Automacao-Dashboard", False, 
-                              f"❌ Dashboard API failed: {dashboard_response.status_code}")
-                print(f"   Error: {dashboard_response.text}")
-            
-            # Test 2: GET /api/automacao/fornecedores
-            print("\nTestando GET /api/automacao/fornecedores")
-            fornecedores_response = requests.get(f"{BACKEND_URL}/automacao/fornecedores", headers=headers)
-            
-            if fornecedores_response.status_code == 200:
-                fornecedores = fornecedores_response.json()
-                expected_providers = ["Uber", "Bolt", "Via Verde"]
-                provider_names = [f.get("nome") for f in fornecedores]
-                
-                found_providers = [p for p in expected_providers if p in provider_names]
-                
-                if len(found_providers) >= 2:  # At least 2 of the expected providers
-                    self.log_result("Automacao-Fornecedores", True, 
-                                  f"✅ Fornecedores API works: {len(fornecedores)} providers ({', '.join(provider_names)})")
-                else:
-                    self.log_result("Automacao-Fornecedores", False, 
-                                  f"❌ Expected providers missing. Found: {provider_names}")
-            else:
-                self.log_result("Automacao-Fornecedores", False, 
-                              f"❌ Fornecedores API failed: {fornecedores_response.status_code}")
-                print(f"   Error: {fornecedores_response.text}")
-            
-            # Test 3: GET /api/automacao/fornecedores/tipos
-            print("\nTestando GET /api/automacao/fornecedores/tipos")
-            tipos_response = requests.get(f"{BACKEND_URL}/automacao/fornecedores/tipos", headers=headers)
-            
-            if tipos_response.status_code == 200:
-                tipos = tipos_response.json()
-                expected_types = ["uber", "bolt", "via_verde", "gps", "combustivel"]
-                type_ids = [t.get("id") for t in tipos]
-                
-                found_types = [t for t in expected_types if t in type_ids]
-                
-                if len(found_types) >= 3:  # At least 3 expected types
-                    self.log_result("Automacao-Tipos", True, 
-                                  f"✅ Provider types API works: {len(tipos)} types ({', '.join(type_ids)})")
-                else:
-                    self.log_result("Automacao-Tipos", False, 
-                                  f"❌ Expected types missing. Found: {type_ids}")
-            else:
-                self.log_result("Automacao-Tipos", False, 
-                              f"❌ Provider types API failed: {tipos_response.status_code}")
-                print(f"   Error: {tipos_response.text}")
-            
-            return True
-            
-        except Exception as e:
-            self.log_result("Automacao-API-Error", False, f"❌ Error during automação test: {str(e)}")
-            return False
-    
-    def test_csv_config_api(self):
-        """4. Test CSV Config API (New Module routes/csv_config.py)"""
-        print("\n📋 4. Test CSV Config API (New Module)")
-        print("-" * 60)
-        print("TESTES:")
-        print("- GET /api/csv-config/plataformas - Available platforms")
-        print("- GET /api/csv-config/campos-sistema - System fields")
-        
-        # Get auth headers
-        headers = self.get_headers("admin")
-        if not headers:
-            self.log_result("CSV-Config-Auth", False, "❌ No auth token for admin")
-            return False
-        
-        try:
-            # Test 1: GET /api/csv-config/plataformas
-            print("\nTestando GET /api/csv-config/plataformas")
-            platforms_response = requests.get(f"{BACKEND_URL}/csv-config/plataformas", headers=headers)
-            
-            if platforms_response.status_code == 200:
-                platforms = platforms_response.json()
-                expected_platforms = ["uber", "bolt", "via_verde", "combustivel", "gps"]
-                platform_ids = [p.get("id") for p in platforms]
-                
-                found_platforms = [p for p in expected_platforms if p in platform_ids]
-                
-                if len(found_platforms) >= 3:  # At least 3 expected platforms
-                    self.log_result("CSV-Config-Platforms", True, 
-                                  f"✅ Platforms API works: {len(platforms)} platforms ({', '.join(platform_ids)})")
-                else:
-                    self.log_result("CSV-Config-Platforms", False, 
-                                  f"❌ Expected platforms missing. Found: {platform_ids}")
-            else:
-                self.log_result("CSV-Config-Platforms", False, 
-                              f"❌ Platforms API failed: {platforms_response.status_code}")
-                print(f"   Error: {platforms_response.text}")
-            
-            # Test 2: GET /api/csv-config/campos-sistema (test with uber)
-            print("\nTestando GET /api/csv-config/campos-sistema")
-            # Test with uber platform
-            campos_response = requests.get(f"{BACKEND_URL}/csv-config/campos-sistema/uber", headers=headers)
-            
-            if campos_response.status_code == 200:
-                campos_data = campos_response.json()
-                campos = campos_data.get("campos", [])
-                
-                if len(campos) > 0:
-                    self.log_result("CSV-Config-System-Fields", True, 
-                                  f"✅ System fields API works: {len(campos)} fields for uber")
-                else:
-                    self.log_result("CSV-Config-System-Fields", False, 
-                                  "❌ No system fields found for uber")
-            else:
-                self.log_result("CSV-Config-System-Fields", False, 
-                              f"❌ System fields API failed: {campos_response.status_code}")
-                print(f"   Error: {campos_response.text}")
-            
-            return True
-            
-        except Exception as e:
-            self.log_result("CSV-Config-Error", False, f"❌ Error during CSV config test: {str(e)}")
+            self.log_result("Despesas-ByVehicle-Error", False, f"❌ Error during by vehicle test: {str(e)}")
             return False
     
     def run_all_tests(self):
