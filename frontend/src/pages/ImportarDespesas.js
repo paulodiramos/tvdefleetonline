@@ -146,12 +146,21 @@ const ImportarDespesas = ({ user, onLogout }) => {
       return;
     }
 
+    if (!semanaDados || !semanaRelatorio) {
+      toast.error('Selecione a semana dos dados e a semana do relatório');
+      return;
+    }
+
     setImporting(true);
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('file', file);
       formData.append('tipo_fornecedor', 'via_verde');
+      formData.append('semana_dados', semanaDados);
+      formData.append('ano_dados', anoDados);
+      formData.append('semana_relatorio', semanaRelatorio);
+      formData.append('ano_relatorio', anoRelatorio);
 
       const response = await axios.post(`${API}/despesas/importar`, formData, {
         headers: {
