@@ -220,17 +220,20 @@ backend:
         agent: "testing"
         comment: "Frontend testing not performed as per system limitations. Backend APIs are working correctly to support frontend functionality."
 
-  - task: "Bolt CSV Import Validation - Portagens, Gorjetas and Ganhos Liquidos"
+  - task: "Complete Uber + Bolt Import with All Fields - Paulo Macaya"
     implemented: true
-    working: true
+    working: false
     file: "/app/backend/routes/relatorios.py"
-    stuck_count: 0
+    stuck_count: 1
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "testing"
         comment: "✅ BOLT CSV IMPORT VALIDATION COMPLETED (24/24 tests passed - 100% success rate)! ALL PRIORITY SCENARIOS FROM REVIEW REQUEST VERIFIED: 1) BOLT GANHOS LIQUIDOS WORKING CORRECTLY - Motorista Arlei Oliveira (57d6a119-e5af-4c7f-b357-49dc4f618763) weekly report shows ganhos_bolt = €236.08 (exact expected value) from Ganhos líquidos|€ column in CSV. 2) BOLT GORJETAS WORKING CORRECTLY - gorjetas_bolt = €1.0 (exact expected value) from Gorjetas dos passageiros|€ column in CSV. 3) BOLT PORTAGENS WORKING CORRECTLY - portagens_bolt = €25.57 (exact expected value) from Portagens|€ column in CSV. 4) MOTORISTA ASSOCIATION VIA IDENTIFICADOR WORKING - Motorista correctly linked via identificador_motorista_bolt field (114d928f-0d85-438f-a248-6c6a29e0f526), 1 Bolt trip found for semana 2, ano 2026. 5) REPORT TOTAL CALCULATION VERIFIED - valor_liquido = €236.08 matches expected value exactly. All Bolt CSV import fields (ganhos_liquidos, gorjetas, portagens) are correctly imported and displayed in motorista weekly reports as specified in the review request."
+      - working: false
+        agent: "testing"
+        comment: "❌ CRITICAL ISSUES FOUND IN PAULO MACAYA COMPLETE UBER+BOLT IMPORT (24/30 tests passed - 80% success rate): 1) ✅ BOLT DATA WORKING PERFECTLY - Paulo Macaya (cbbfc362-3241-43e1-9287-d55ad9f6c7ce) shows correct Bolt values: ganhos_bolt=€203.95, gorjetas_bolt=€3.0, portagens_bolt=€4.3 (all exact matches). 2) ❌ UBER DATA MISSING - ganhos_uber=€0.0 (expected €129.0), gorjetas_uber=€0 (expected €0.5), portagens_uber=€0 (expected €9.4). No Uber trips found for semana 4, ano 2026. 3) ✅ UUID ASSOCIATION CORRECT - identificador_motorista_bolt=db16b2ed-225d-488f-858e-3dc89effba5f, uuid_motorista_uber=e5ed435e-df3a-473b-bd47-ee6880084aa6 (exact matches). 4) ❌ DUPLICATE DRAFTS ISSUE - Found 12 reports for semana 4 with 2 duplicates detected. Paulo Macaya has 3 reports instead of 1. 5) ❌ TOTAL CALCULATION BROKEN - total_ganhos=€0 (expected €332.95). CRITICAL: Uber data import or association not working for Paulo Macaya in semana 4, ano 2026."
     implemented: true
     working: true
     file: "/app/backend/routes/vehicles.py, /app/backend/routes/relatorios.py"
