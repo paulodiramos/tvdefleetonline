@@ -708,32 +708,89 @@ async def get_motorista_via_verde_total(
     
     logger.info(f"📍 Calculating Via Verde total for motorista {motorista_id}, report week {semana}/{ano}, data week {semana_via_verde}/{ano_via_verde}")
     
-    # Get motorist's vehicles (current and historical)
+    # Get motorist data
     motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
     veiculo_id = motorista.get("veiculo_id") if motorista else None
     
-    # Query portagens_viaverde collection
-    query = {
+    # Get vehicle assigned to this driver (from vehicles collection)
+    vehicle = await db.vehicles.find_one({"motorista_atribuido": motorista_id}, {"_id": 0})
+    if vehicle:
+        veiculo_id = vehicle.get("id")
+        obu = vehicle.get("obu") or vehicle.get("via_verde_id")
+        logger.info(f"📍 Found vehicle for motorista: {vehicle.get('matricula')}, OBU: {obu}")
+    else:
+        obu = None
+    
+    # Calculate date range for the data week
+    # ISO week: Monday to Sunday
+    from datetime import datetime
+    jan4 = datetime(ano_via_verde, 1, 4)
+    start_of_week1 = jan4 - timedelta(days=jan4.weekday())
+    data_inicio = start_of_week1 + timedelta(weeks=semana_via_verde - 1)
+    data_fim = data_inicio + timedelta(days=6)
+    
+    data_inicio_str = data_inicio.strftime("%Y-%m-%d")
+    data_fim_str = data_fim.strftime("%Y-%m-%d")
+    
+    logger.info(f"📍 Date range for week {semana_via_verde}/{ano_via_verde}: {data_inicio_str} to {data_fim_str}")
+    
+    # Build query - search by multiple criteria
+    query_conditions = []
+    
+    # 1. By motorista_id
+    query_conditions.append({"motorista_id": motorista_id})
+    
+    # 2. By vehicle_id
+    if veiculo_id:
+        query_conditions.append({"vehicle_id": veiculo_id})
+    
+    # 3. By OBU (obu or via_verde_id fields)
+    if obu:
+        query_conditions.append({"obu": obu})
+        query_conditions.append({"via_verde_id": obu})
+    
+    # Date filter - either by semana/ano or by entry_date
+    date_filter = {
         "$or": [
-            {"motorista_id": motorista_id},
-            {"vehicle_id": veiculo_id} if veiculo_id else {"vehicle_id": None}
-        ],
-        "$and": [
+            {"semana": semana_via_verde, "ano": ano_via_verde},
             {
-                "$or": [
-                    {"semana": semana_via_verde, "ano": ano_via_verde},
-                    {"semana": {"$exists": False}},
-                    {"semana": None}
-                ]
+                "entry_date": {"$gte": data_inicio_str, "$lte": data_fim_str},
+                "$or": [{"semana": None}, {"semana": {"$exists": False}}]
             }
         ]
     }
     
-    # If no semana, try by date
+    # Final query
+    query = {
+        "$or": query_conditions,
+        "$and": [date_filter]
+    }
+    
+    logger.info(f"📍 Query OBU: {obu}, vehicle_id: {veiculo_id}")
+    
     portagens = await db.portagens_viaverde.find(query, {"_id": 0}).to_list(5000)
     
+    # Filter by date if semana is None (manual check)
+    filtered_portagens = []
+    for p in portagens:
+        entry_date = p.get("entry_date", "")
+        if entry_date:
+            try:
+                if isinstance(entry_date, str):
+                    entry_dt = datetime.strptime(entry_date[:10], "%Y-%m-%d")
+                else:
+                    entry_dt = entry_date
+                    
+                # Check if within date range
+                if data_inicio <= entry_dt <= data_fim:
+                    filtered_portagens.append(p)
+            except:
+                pass
+        elif p.get("semana") == semana_via_verde and p.get("ano") == ano_via_verde:
+            filtered_portagens.append(p)
+    
     # Calculate total
-    total = sum(float(p.get("liquid_value") or p.get("value") or 0) for p in portagens)
+    total = sum(float(p.get("liquid_value") or p.get("value") or 0) for p in filtered_portagens)
     
     # Also check despesas_fornecedor for legacy imports
     despesas_vv = await db.despesas_fornecedor.find({
@@ -749,7 +806,7 @@ async def get_motorista_via_verde_total(
     
     total_via_verde = total + total_legacy
     
-    logger.info(f"📍 Via Verde total: €{total_via_verde:.2f} (portagens: €{total:.2f}, legacy: €{total_legacy:.2f})")
+    logger.info(f"📍 Via Verde total: €{total_via_verde:.2f} (portagens: {len(filtered_portagens)} = €{total:.2f}, legacy: €{total_legacy:.2f})")
     
     return {
         "motorista_id": motorista_id,
