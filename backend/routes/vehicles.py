@@ -1472,6 +1472,7 @@ async def update_dispositivos_veiculo(
     # Atualizar OBU Via Verde
     if "obu_via_verde" in data:
         update_data["via_verde_id"] = data["obu_via_verde"]
+        update_data["obu"] = data["obu_via_verde"]  # Guardar também no campo obu para importação
         update_data["via_verde_disponivel"] = bool(data["obu_via_verde"])
     
     # Atualizar cartão combustível fóssil
