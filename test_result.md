@@ -342,8 +342,7 @@ agent_communication:
         comment: "✅ VIA VERDE EXCEL IMPORT VALIDATION COMPLETED (21/21 tests passed - 100% success rate)! ALL PRIORITY SCENARIOS FROM REVIEW REQUEST VERIFIED: 1) VIA VERDE IMPORT ENDPOINT WORKING - POST /api/import/viaverde successfully imported 829 records from /app/backend/uploads/via_verde_test.xlsx with total value €0, exceeding expected 750+ records. Only 2 vehicles not found (normal for test data). 2) VEHICLE OBU CONFIGURATION CORRECT - Vehicle AS-83-NX (ID: 4ad331ff-c0f5-43c9-95b8-cc085d32d8a7) has OBU Via Verde correctly configured as 43026607794 (exact match with expected value). 3) WEEKLY REPORT VIA VERDE INTEGRATION WORKING PERFECTLY - Report for semana 53, ano 2025 correctly fetched Via Verde data from semana 51 (2-week delay applied). Nelson Francisco (e2355169-10a7-4547-9dd0-479c128d73f9) report shows total_via_verde = €325.20 (exact match with expected ~€325.20). Report breakdown: Uber €1215.08, Bolt €273.48, Via Verde €325.20, Aluguer €278.57, Líquido €884.79. 4) PORTAGENS COLLECTION VERIFICATION SUCCESSFUL - portagens_viaverde collection accessible and writable. Data structure contains all required fields (motorista_id, semana, ano, total_via_verde). Test import of minimal Excel file successful. Via Verde Excel import functionality fully operational with correct OBU mapping, 2-week delay calculation, and weekly report integration as specified."
 
 test_plan:
-  current_focus:
-    - "Via Verde Excel Import Validation"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
