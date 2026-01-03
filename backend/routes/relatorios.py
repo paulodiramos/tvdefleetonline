@@ -355,7 +355,7 @@ async def gerar_relatorio_semanal(
     
     # Calculate totals
     valor_bruto = total_ganhos_uber + total_ganhos_bolt
-    valor_descontos = total_combustivel + total_via_verde + valor_aluguer
+    valor_descontos = total_combustivel + total_eletrico + total_via_verde + valor_aluguer
     valor_liquido = valor_bruto - valor_descontos
     
     # Generate relatorio ID
@@ -387,10 +387,20 @@ async def gerar_relatorio_semanal(
         
         # Despesas
         "total_combustivel": total_combustivel,
+        "total_eletrico": total_eletrico,
         "total_via_verde": total_via_verde,
         "valor_aluguer": valor_aluguer,
         "aluguer_proporcional": len(aluguer_detalhes) > 1,  # True se houve troca de veículo
         "aluguer_detalhes": aluguer_detalhes if aluguer_detalhes else None,
+        
+        # GPS/KM
+        "total_km": total_km,
+        "total_viagens_gps": len(gps_records),
+        
+        # Records detail (optional)
+        "combustivel_records": combustivel_records if combustivel_records else None,
+        "eletrico_records": eletrico_records if eletrico_records else None,
+        "gps_records": gps_records if gps_records else None,
         
         # Totais
         "valor_bruto": valor_bruto,
