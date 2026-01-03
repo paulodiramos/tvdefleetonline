@@ -220,24 +220,23 @@ backend:
         agent: "testing"
         comment: "Frontend testing not performed as per system limitations. Backend APIs are working correctly to support frontend functionality."
 
-metadata:
-  created_by: "testing_agent"
-  version: "1.6"
-  test_sequence: 6
-  run_ui: false
-
-frontend:
-  - task: "Driver Assignment History Improvements"
+  - task: "Bug Fixes - ROI custom dates, motorista report data"
     implemented: true
     working: true
-    file: "/app/frontend/src/pages/Motoristas.js"
+    file: "/app/backend/routes/vehicles.py, /app/backend/routes/relatorios.py"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: true
         agent: "testing"
-        comment: "✅ DRIVER ASSIGNMENT HISTORY TESTING COMPLETED (3/3 scenarios passed - 100% success)! ALL REQUIREMENTS VERIFIED: 1) Frontend Display Working - 'Histórico de Atribuições' section visible in Motoristas page → Ver Detalhes → Atribuições tab with badge showing '4 registos'. 2) All Required Fields Present - Vehicle brand/model (Peugeot 308 SW), vehicle plate (AS-83-NX), date ranges (De: 03/01/2026 → Até: Presente), contract type (aluguer_sem_caucao), weekly value (€250.00/semana) all displayed correctly. 3) Backend Endpoint Working - GET /api/motoristas/{id}/historico-atribuicoes returns status 200 with all required fields: veiculo_marca, veiculo_modelo, veiculo_matricula, tipo_contrato, valor_aluguer_semanal, data_inicio. 4) Multiple Entries Display - 4 history entries displayed correctly with proper scrolling and all data visible. Driver assignment history improvements fully functional as requested."
+        comment: "✅ BUG FIXES VALIDATION COMPLETED (23/23 tests passed - 100% success rate)! ALL PRIORITY SCENARIOS VERIFIED: 1) VEHICLE ROI CUSTOM DATES WORKING - GET /api/vehicles/{vehicle_id}/relatorio-ganhos?periodo=custom&data_inicio=2025-01-01&data_fim=2026-01-31 returns proper ROI calculation (Receitas €250.0, Custos €150.0, Lucro €100.0, ROI 66.67%) with custom period correctly applied. 2) MOTORISTA COMBUSTÍVEL INTEGRATION WORKING - Weekly reports include total_combustivel field from both abastecimentos and abastecimentos_combustivel collections. 3) MOTORISTA ELECTRIC CHARGING INTEGRATION WORKING - Weekly reports include total_eletrico field from abastecimentos_eletrico collection. 4) MOTORISTA GPS/KM DATA INTEGRATION WORKING - Weekly reports include total_km and total_viagens_gps fields from viagens_gps collection. 5) MOTORISTA UBER/BOLT DATA INTEGRATION WORKING - Weekly reports include ganhos_uber, ganhos_bolt fields with correct total calculation (total_ganhos = ganhos_uber + ganhos_bolt) and trip counts. All data integration endpoints functioning correctly for motorista weekly report generation."
+
+metadata:
+  created_by: "testing_agent"
+  version: "1.7"
+  test_sequence: 7
+  run_ui: false
 
 test_plan:
   current_focus:
@@ -247,6 +246,8 @@ test_plan:
   test_priority: "high_first"
 
 agent_communication:
+  - agent: "testing"
+    message: "🎯 BUG FIXES VALIDATION COMPLETED (23/23 tests passed - 100% success rate). MOTORISTA REPORT DATA INTEGRATION FULLY VERIFIED: All priority scenarios from review request working perfectly! 1) VEHICLE ROI CUSTOM DATES WORKING - Custom date range (Entre Datas) functionality verified with GET /api/vehicles/{vehicle_id}/relatorio-ganhos?periodo=custom&data_inicio=2025-01-01&data_fim=2026-01-31 returning proper ROI calculation (Receitas €250.0, Custos €150.0, Lucro €100.0, ROI 66.67%). 2) MOTORISTA WEEKLY REPORT DATA INTEGRATION WORKING - All required fields present: total_combustivel (from abastecimentos_combustivel collection), total_eletrico (from abastecimentos_eletrico collection), total_km and total_viagens_gps (from viagens_gps collection), ganhos_uber and ganhos_bolt (with correct total calculation). 3) REPORT GENERATION WORKING - POST /api/relatorios/motorista/{motorista_id}/gerar-semanal successfully generates reports with all integrated data sources. All backend endpoints for motorista report data integration are functioning correctly as requested in the review."
   - agent: "testing"
     message: "🎯 DRIVER ASSIGNMENT HISTORY TESTING COMPLETED (3/3 scenarios passed - 100% success rate). PRIORITY FEATURE FULLY VERIFIED: Driver assignment history improvements working perfectly! 1) FRONTEND DISPLAY WORKING - 'Histórico de Atribuições' section visible in Motoristas page → Ver Detalhes → Atribuições tab with badge showing '4 registos'. All required fields present: Vehicle brand/model (Peugeot 308 SW), vehicle plate (AS-83-NX), date ranges (De: 03/01/2026 → Até: Presente), contract type (aluguer_sem_caucao), weekly value (€250.00/semana). 2) BACKEND ENDPOINT WORKING - GET /api/motoristas/{id}/historico-atribuicoes returns status 200 with all required fields: veiculo_marca, veiculo_modelo, veiculo_matricula, tipo_contrato, valor_aluguer_semanal, data_inicio. 3) MULTIPLE ENTRIES DISPLAY - 4 history entries displayed correctly with proper scrolling and all data visible. Driver assignment history improvements fully functional as requested in review."
   - agent: "testing"
