@@ -196,6 +196,18 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ BASIC BACKEND ENDPOINTS FUNCTIONAL: All menu-related endpoints working correctly. GET /api/vehicles (29 vehicles), GET /api/motoristas (12 drivers), GET /api/auth/me (Admin TVDEFleet), GET /api/relatorios/semanais-todos (24 reports) all return proper responses. Backend infrastructure supports layout menu functionality without issues."
+  - task: "Week Selectors for GPS, Combustível and Carregamentos Import"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/ImportarPlataformas.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ WEEK SELECTORS TESTING COMPLETED (4/4 tests passed - 100% success)! ALL IMPORT TABS VERIFIED: 1) GPS / Trajetos - 'Período de Importação' section visible with Ano field, Semana field (1-53), Data Início and Data Fim fields all working correctly. 2) Combustível (Fóssil) - All week selector fields present and functional. 3) Carregamentos (Elétrico) - All week selector fields present and functional. 4) Via Verde - Confirmed still working with all fields visible. FUNCTIONALITY TEST PASSED: Year 2025, Week 3 auto-calculated dates correctly (Data Início: 2025-01-20, Data Fim: 2025-01-26). Week selectors successfully added to all required import platforms as requested."
+
   - task: "RelatoriosSemanaisLista Page"
     implemented: true
     working: "NA"
