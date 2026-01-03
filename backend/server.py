@@ -11809,7 +11809,9 @@ async def importar_carregamentos_excel(
     file_content: bytes,
     current_user: dict,
     periodo_inicio: str,
-    periodo_fim: str
+    periodo_fim: str,
+    semana: Optional[int] = None,
+    ano: Optional[int] = None
 ):
     """
     Importar carregamentos elétricos de Excel (.xlsx) - FORMATO OFICIAL
