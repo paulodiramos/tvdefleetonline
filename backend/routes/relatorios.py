@@ -88,23 +88,32 @@ async def gerar_relatorio_semanal(
     data_inicio_via_verde = (datetime.fromisoformat(data_inicio) - timedelta(weeks=via_verde_atraso)).strftime("%Y-%m-%d")
     data_fim_via_verde = (datetime.fromisoformat(data_fim) - timedelta(weeks=via_verde_atraso)).strftime("%Y-%m-%d")
     
-    # Calculate totals from dados_uber and dados_bolt
+    # Calculate totals from uber and bolt collections
     total_ganhos_uber = 0.0
     total_ganhos_bolt = 0.0
     total_viagens_uber = 0
     total_viagens_bolt = 0
     
-    # Query dados_uber
+    # Query Uber from multiple collections
     uber_query = {
         "$or": [
             {"motorista_id": motorista_id},
             {"email_motorista": motorista.get("email")},
+            {"email": motorista.get("email")},
             {"uuid_motorista": motorista.get("uuid_motorista_uber")}
         ],
         "data": {"$gte": data_inicio, "$lte": data_fim}
     }
-    uber_records = await db.dados_uber.find(uber_query, {"_id": 0}).to_list(1000)
-    for record in uber_records:
+    
+    # 1. Check ganhos_uber collection (main import collection)
+    ganhos_uber_records = await db.ganhos_uber.find(uber_query, {"_id": 0}).to_list(1000)
+    for record in ganhos_uber_records:
+        total_ganhos_uber += record.get("pago_total", 0) or record.get("rendimentos_total", 0) or record.get("ganhos", 0) or 0
+        total_viagens_uber += record.get("viagens", 1)
+    
+    # 2. Check dados_uber collection (fallback/legacy)
+    dados_uber_records = await db.dados_uber.find(uber_query, {"_id": 0}).to_list(1000)
+    for record in dados_uber_records:
         total_ganhos_uber += record.get("pago_total", 0) or record.get("rendimentos_total", 0) or 0
         total_viagens_uber += record.get("viagens", 1)
     
