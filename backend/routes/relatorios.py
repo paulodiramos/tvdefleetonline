@@ -93,6 +93,8 @@ async def gerar_relatorio_semanal(
     total_ganhos_bolt = 0.0
     total_viagens_uber = 0
     total_viagens_bolt = 0
+    total_gorjetas_bolt = 0.0
+    total_portagens_bolt = 0.0
     
     # Query Uber from multiple collections
     uber_query = {
