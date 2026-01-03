@@ -299,6 +299,10 @@ async def importar_despesas(
                 "valor_liquido": valor_liquido,
                 "tipo_servico": tipo_servico,
                 "descricao_servico": descricao_servico,
+                "semana_dados": semana_dados,
+                "ano_dados": ano_dados,
+                "semana_relatorio": semana_relatorio,
+                "ano_relatorio": ano_relatorio,
                 "dados_originais": {k: str(v) if pd.notna(v) else None for k, v in row.to_dict().items()},
                 "created_at": now.isoformat(),
                 "updated_at": now.isoformat()
