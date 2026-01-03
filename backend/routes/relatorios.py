@@ -455,6 +455,8 @@ async def gerar_relatorio_semanal(
         "resumo": {
             "ganhos_uber": total_ganhos_uber,
             "ganhos_bolt": total_ganhos_bolt,
+            "gorjetas_bolt": total_gorjetas_bolt,
+            "portagens_bolt": total_portagens_bolt,
             "total_combustivel": total_combustivel,
             "total_eletrico": total_eletrico,
             "total_via_verde": total_via_verde,
