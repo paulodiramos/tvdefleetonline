@@ -275,6 +275,16 @@ const Layout = ({ children, user, onLogout }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link to="/automacao" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>🤖 Automação RPA</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/configuracao-csv" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>📊 Extração CSV</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to="/termos-privacidade" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>Termos & Privacidade</span>
                         </Link>
