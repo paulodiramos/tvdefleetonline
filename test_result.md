@@ -101,6 +101,30 @@ backend:
         agent: "testing"
         comment: "✅ GET /api/despesas/ working correctly. Returns 10 despesas from total of 3325 records (updated count). Sample shows proper assignment: AS-83-NX → veiculo (€2.15)."
 
+  - task: "Vehicle Costs Management API"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/vehicles.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ NEW VEHICLE COSTS ENDPOINTS WORKING PERFECTLY! 1) POST /api/vehicles/{id}/custos - Successfully adds costs to vehicle history. Tested with revisao (€150), seguro (€500), vistoria (€35). Returns custo_id and proper response structure. 2) GET /api/vehicles/{id}/custos - Returns costs list with totals by category. Vehicle AS-83-NX shows 3 costs totaling €685 with proper category grouping: revisao €150, seguro €500, vistoria €35. All valid categories supported: revisao, vistoria, seguro, pneus, reparacao, combustivel, lavagem, multa, outros."
+
+  - task: "Vehicle ROI Report API"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/vehicles.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ VEHICLE ROI CALCULATION WORKING PERFECTLY! GET /api/vehicles/{id}/relatorio-ganhos endpoint tested with multiple scenarios: 1) Total period: Receitas €750, Custos €685, Lucro €65, ROI 9.49% - calculation verified correct. 2) Year filter (2026): Properly filters data by year. 3) Custom period: Correctly applies date range filters. ROI formula ((receitas - custos) / custos) * 100 working accurately. Cost categories properly grouped and revenue/cost breakdown detailed. All period types supported: total, ano, mes, custom."
+
 frontend:
   - task: "RelatoriosSemanaisLista Page"
     implemented: true
