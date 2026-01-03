@@ -136,7 +136,309 @@ class FleeTrackTester:
         
         return True
     
-    def test_vehicle_device_management_api(self):
+    def test_critical_auth_login(self):
+        """CRITICAL TEST 1: Login (POST /api/auth/login)"""
+        print("\n📋 CRITICAL TEST 1: Login (POST /api/auth/login)")
+        print("-" * 60)
+        print("TESTE: POST /api/auth/login")
+        print("BODY: {\"email\": \"admin@tvdefleet.com\", \"password\": \"123456\"}")
+        print("EXPECTED: Deve retornar access_token e dados do user")
+        
+        try:
+            response = requests.post(f"{BACKEND_URL}/auth/login", json=TEST_CREDENTIALS["admin"])
+            
+            if response.status_code == 200:
+                data = response.json()
+                access_token = data.get("access_token")
+                user_data = data.get("user")
+                
+                if access_token and user_data:
+                    self.tokens["admin"] = access_token
+                    user_email = user_data.get("email")
+                    user_name = user_data.get("name", "N/A")
+                    user_role = user_data.get("role", "N/A")
+                    
+                    self.log_result("Critical-Auth-Login", True, 
+                                  f"✅ Login funcionando: {user_name} ({user_email}) - Role: {user_role}")
+                    
+                    # Verify token format
+                    if len(access_token) > 50:  # JWT tokens are typically long
+                        self.log_result("Critical-Auth-Token", True, 
+                                      f"✅ Access token válido (length: {len(access_token)})")
+                    else:
+                        self.log_result("Critical-Auth-Token", False, 
+                                      f"❌ Access token suspeito (length: {len(access_token)})")
+                else:
+                    self.log_result("Critical-Auth-Login", False, 
+                                  "❌ Login response missing access_token or user data")
+            else:
+                self.log_result("Critical-Auth-Login", False, 
+                              f"❌ Login failed: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Critical-Auth-Login-Error", False, f"❌ Login error: {str(e)}")
+    
+    def test_critical_auth_me(self):
+        """CRITICAL TEST 2: Get Current User (GET /api/auth/me)"""
+        print("\n📋 CRITICAL TEST 2: Get Current User (GET /api/auth/me)")
+        print("-" * 60)
+        print("TESTE: GET /api/auth/me")
+        print("EXPECTED: Deve retornar dados do user autenticado")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Critical-Auth-Me", False, "❌ No auth token for admin")
+            return False
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/auth/me", headers=headers)
+            
+            if response.status_code == 200:
+                user_data = response.json()
+                required_fields = ["id", "email", "name", "role"]
+                
+                if all(field in user_data for field in required_fields):
+                    user_email = user_data.get("email")
+                    user_name = user_data.get("name")
+                    user_role = user_data.get("role")
+                    user_id = user_data.get("id")
+                    
+                    self.log_result("Critical-Auth-Me", True, 
+                                  f"✅ Get current user funcionando: {user_name} ({user_email}) - Role: {user_role}")
+                    
+                    # Verify it's the admin user
+                    if user_email == "admin@tvdefleet.com":
+                        self.log_result("Critical-Auth-Me-Admin", True, 
+                                      "✅ Authenticated as correct admin user")
+                    else:
+                        self.log_result("Critical-Auth-Me-Admin", False, 
+                                      f"❌ Wrong user authenticated: {user_email}")
+                else:
+                    self.log_result("Critical-Auth-Me", False, 
+                                  f"❌ User data missing required fields: {user_data}")
+            else:
+                self.log_result("Critical-Auth-Me", False, 
+                              f"❌ Get current user failed: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Critical-Auth-Me-Error", False, f"❌ Get current user error: {str(e)}")
+    
+    def test_critical_vehicles_list(self):
+        """CRITICAL TEST 3: Listar Veículos (GET /api/vehicles)"""
+        print("\n📋 CRITICAL TEST 3: Listar Veículos (GET /api/vehicles)")
+        print("-" * 60)
+        print("TESTE: GET /api/vehicles")
+        print("EXPECTED: Deve retornar lista de veículos")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Critical-Vehicles-List", False, "❌ No auth token for admin")
+            return False
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
+            
+            if response.status_code == 200:
+                vehicles = response.json()
+                
+                if isinstance(vehicles, list):
+                    if vehicles:
+                        first_vehicle = vehicles[0]
+                        required_fields = ["id", "matricula", "marca", "modelo"]
+                        
+                        if all(field in first_vehicle for field in required_fields):
+                            vehicle_count = len(vehicles)
+                            sample_matricula = first_vehicle.get("matricula")
+                            sample_marca = first_vehicle.get("marca")
+                            sample_modelo = first_vehicle.get("modelo")
+                            
+                            self.log_result("Critical-Vehicles-List", True, 
+                                          f"✅ Lista de veículos funcionando: {vehicle_count} veículos encontrados")
+                            
+                            self.log_result("Critical-Vehicles-Sample", True, 
+                                          f"✅ Sample: {sample_matricula} - {sample_marca} {sample_modelo}")
+                            
+                            # Store vehicle ID for later tests
+                            self.test_vehicle_id = first_vehicle.get("id")
+                        else:
+                            self.log_result("Critical-Vehicles-List", False, 
+                                          f"❌ Vehicle records missing required fields: {first_vehicle}")
+                    else:
+                        self.log_result("Critical-Vehicles-List", True, 
+                                      "ℹ️ No vehicles found (normal if database empty)")
+                else:
+                    self.log_result("Critical-Vehicles-List", False, 
+                                  f"❌ Vehicles response not a list: {type(vehicles)}")
+            else:
+                self.log_result("Critical-Vehicles-List", False, 
+                              f"❌ Vehicles list failed: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Critical-Vehicles-List-Error", False, f"❌ Vehicles list error: {str(e)}")
+    
+    def test_critical_motoristas_list(self):
+        """CRITICAL TEST 4: Listar Motoristas (GET /api/motoristas)"""
+        print("\n📋 CRITICAL TEST 4: Listar Motoristas (GET /api/motoristas)")
+        print("-" * 60)
+        print("TESTE: GET /api/motoristas")
+        print("EXPECTED: Deve retornar lista de motoristas")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Critical-Motoristas-List", False, "❌ No auth token for admin")
+            return False
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/motoristas", headers=headers)
+            
+            if response.status_code == 200:
+                motoristas = response.json()
+                
+                if isinstance(motoristas, list):
+                    if motoristas:
+                        first_motorista = motoristas[0]
+                        required_fields = ["id", "name", "email"]
+                        
+                        if all(field in first_motorista for field in required_fields):
+                            motorista_count = len(motoristas)
+                            sample_name = first_motorista.get("name")
+                            sample_email = first_motorista.get("email")
+                            
+                            self.log_result("Critical-Motoristas-List", True, 
+                                          f"✅ Lista de motoristas funcionando: {motorista_count} motoristas encontrados")
+                            
+                            self.log_result("Critical-Motoristas-Sample", True, 
+                                          f"✅ Sample: {sample_name} ({sample_email})")
+                            
+                            # Store motorista ID for later tests
+                            self.test_motorista_id = first_motorista.get("id")
+                        else:
+                            self.log_result("Critical-Motoristas-List", False, 
+                                          f"❌ Motorista records missing required fields: {first_motorista}")
+                    else:
+                        self.log_result("Critical-Motoristas-List", True, 
+                                      "ℹ️ No motoristas found (normal if database empty)")
+                else:
+                    self.log_result("Critical-Motoristas-List", False, 
+                                  f"❌ Motoristas response not a list: {type(motoristas)}")
+            else:
+                self.log_result("Critical-Motoristas-List", False, 
+                              f"❌ Motoristas list failed: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Critical-Motoristas-List-Error", False, f"❌ Motoristas list error: {str(e)}")
+    
+    def test_critical_weekly_report(self):
+        """CRITICAL TEST 5: Gerar Relatório Semanal"""
+        print("\n📋 CRITICAL TEST 5: Gerar Relatório Semanal")
+        print("-" * 60)
+        print("TESTE: POST /api/relatorios/motorista/{motorista_id}/gerar-semanal")
+        print("MOTORISTA ID: e2355169-10a7-4547-9dd0-479c128d73f9")
+        print("BODY: {\"data_inicio\": \"2025-12-29\", \"data_fim\": \"2026-01-04\", \"semana\": 1, \"ano\": 2026}")
+        print("EXPECTED: Deve funcionar com aluguer proporcional")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Critical-Weekly-Report", False, "❌ No auth token for admin")
+            return False
+        
+        motorista_id = "e2355169-10a7-4547-9dd0-479c128d73f9"
+        
+        try:
+            test_data = {
+                "data_inicio": "2025-12-29",
+                "data_fim": "2026-01-04",
+                "semana": 1,
+                "ano": 2026
+            }
+            
+            response = requests.post(
+                f"{BACKEND_URL}/relatorios/motorista/{motorista_id}/gerar-semanal",
+                json=test_data,
+                headers=headers
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                
+                if "resumo" in result:
+                    resumo = result.get("resumo", {})
+                    relatorio_id = result.get("relatorio_id")
+                    
+                    # Check for proportional rental
+                    aluguer_proporcional = resumo.get("aluguer_proporcional", False)
+                    valor_aluguer = resumo.get("valor_aluguer", 0)
+                    
+                    self.log_result("Critical-Weekly-Report", True, 
+                                  f"✅ Relatório semanal funcionando: ID {relatorio_id}")
+                    
+                    if aluguer_proporcional:
+                        self.log_result("Critical-Weekly-Report-Proportional", True, 
+                                      f"✅ Aluguer proporcional detectado: €{valor_aluguer}")
+                    else:
+                        self.log_result("Critical-Weekly-Report-Proportional", True, 
+                                      f"✅ Relatório normal: €{valor_aluguer}")
+                else:
+                    self.log_result("Critical-Weekly-Report", False, 
+                                  f"❌ Weekly report response missing resumo: {result}")
+            else:
+                self.log_result("Critical-Weekly-Report", False, 
+                              f"❌ Weekly report failed: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Critical-Weekly-Report-Error", False, f"❌ Weekly report error: {str(e)}")
+    
+    def test_critical_vehicle_costs(self):
+        """CRITICAL TEST 6: Custos do Veículo"""
+        print("\n📋 CRITICAL TEST 6: Custos do Veículo")
+        print("-" * 60)
+        print("TESTE: GET /api/vehicles/{vehicle_id}/custos")
+        print("VEHICLE ID: 4ad331ff-c0f5-43c9-95b8-cc085d32d8a7")
+        print("EXPECTED: Deve retornar lista de custos")
+        
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Critical-Vehicle-Costs", False, "❌ No auth token for admin")
+            return False
+        
+        vehicle_id = "4ad331ff-c0f5-43c9-95b8-cc085d32d8a7"
+        
+        try:
+            response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}/custos", headers=headers)
+            
+            if response.status_code == 200:
+                data = response.json()
+                required_fields = ["veiculo_id", "matricula", "custos", "total_geral"]
+                
+                if all(field in data for field in required_fields):
+                    custos = data.get("custos", [])
+                    total_geral = data.get("total_geral", 0)
+                    matricula = data.get("matricula")
+                    total_registos = data.get("total_registos", 0)
+                    
+                    self.log_result("Critical-Vehicle-Costs", True, 
+                                  f"✅ Custos do veículo funcionando: {matricula} - {total_registos} custos, €{total_geral} total")
+                    
+                    if custos:
+                        first_cost = custos[0]
+                        categoria = first_cost.get("categoria", "N/A")
+                        valor = first_cost.get("valor", 0)
+                        descricao = first_cost.get("descricao", "N/A")
+                        
+                        self.log_result("Critical-Vehicle-Costs-Sample", True, 
+                                      f"✅ Sample cost: {categoria} - €{valor} ({descricao})")
+                    else:
+                        self.log_result("Critical-Vehicle-Costs-Empty", True, 
+                                      "ℹ️ No costs found (normal for new vehicle)")
+                else:
+                    self.log_result("Critical-Vehicle-Costs", False, 
+                                  f"❌ Vehicle costs response missing required fields: {data}")
+            else:
+                self.log_result("Critical-Vehicle-Costs", False, 
+                              f"❌ Vehicle costs failed: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Critical-Vehicle-Costs-Error", False, f"❌ Vehicle costs error: {str(e)}")
         """2. Test Vehicle Device Management API - NEW ENDPOINTS"""
         print("\n📋 2. Test Vehicle Device Management API - NEW ENDPOINTS")
         print("-" * 60)
