@@ -127,7 +127,8 @@ const Layout = ({ children, user, onLogout }) => {
         icon: Settings,
         submenu: [
           { path: '/automacao', label: '🤖 Automação RPA' },
-          { path: '/configuracao-csv', label: '📊 Configuração CSV' }
+          { path: '/configuracao-csv', label: '📊 Configuração CSV' },
+          { path: '/importar-despesas', label: '📥 Importar Despesas' }
         ]
       });
     }
