@@ -265,7 +265,7 @@ frontend:
 
 test_plan:
   current_focus:
-    - "Bug Fixes - ROI custom dates, motorista report data"
+    - "Bug Fixes Complete - Bolt/Uber earnings in motorista report"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
