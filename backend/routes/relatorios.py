@@ -425,7 +425,19 @@ async def delete_relatorio(
     current_user: Dict = Depends(get_current_user)
 ):
     """Delete a report"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+    # Obter o relatório primeiro para verificar permissões
+    relatorio = await db.relatorios_semanais.find_one({"id": relatorio_id}, {"_id": 0})
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Relatório não encontrado")
+    
+    # Admin e Gestao podem eliminar qualquer relatório
+    if current_user["role"] in [UserRole.ADMIN, UserRole.GESTAO]:
+        pass
+    # Parceiro só pode eliminar relatórios dos seus motoristas
+    elif current_user["role"] == UserRole.PARCEIRO:
+        if relatorio.get("parceiro_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Não autorizado - este relatório não pertence ao seu parceiro")
+    else:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     result = await db.relatorios_semanais.delete_one({"id": relatorio_id})
