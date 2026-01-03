@@ -1,4 +1,16 @@
 backend:
+  - task: "Vehicle Assignment History"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/vehicles.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ Implemented - New endpoints for vehicle device management and assignment history. POST /api/vehicles/{id}/atribuir-motorista now creates history records with date/time, km, and devices."
+
   - task: "Despesas Via Verde in Weekly Reports"
     implemented: true
     working: true
