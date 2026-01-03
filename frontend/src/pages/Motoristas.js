@@ -47,6 +47,8 @@ const Motoristas = ({ user, onLogout }) => {
   });
   const [showImportDialog, setShowImportDialog] = useState(false);
   const [importLoading, setImportLoading] = useState(false);
+  const [historicoAtribuicoes, setHistoricoAtribuicoes] = useState([]);
+  const [loadingHistorico, setLoadingHistorico] = useState(false);
   const [newMotorista, setNewMotorista] = useState({
     email: '',
     name: '',
