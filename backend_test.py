@@ -2881,9 +2881,9 @@ class FleeTrackTester:
 
 def main():
     """Main function to run priority scenario tests"""
-    print("🚀 FleeTrack Backend Testing Suite - Priority Scenarios")
+    print("🚀 FleeTrack Backend Testing Suite - Bug Fixes Validation")
     print("=" * 80)
-    print("Testing specific scenarios from last session implementation")
+    print("Testing Motorista Report Data Integration scenarios")
     print("=" * 80)
     
     tester = FleeTrackTester()
