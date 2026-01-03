@@ -12910,17 +12910,22 @@ async def importar_plataforma(
                     except:
                         return default
                 
-                # Calcular ano e semana a partir do periodo_inicio
-                ano = None
-                semana = None
-                if periodo_inicio:
-                    try:
-                        dt = datetime.strptime(periodo_inicio, '%Y-%m-%d')
-                        ano = dt.year
-                        # Calcular semana ISO
-                        semana = dt.isocalendar()[1]
-                    except:
-                        pass
+                # Calcular ano e semana a partir do periodo_inicio ou usar valores passados
+                ano_doc = ano  # Usar valor passado pelo frontend se disponível
+                semana_doc = semana  # Usar valor passado pelo frontend se disponível
+                
+                # Se não foram passados, calcular a partir do periodo_inicio
+                if not ano_doc or not semana_doc:
+                    if periodo_inicio:
+                        try:
+                            dt = datetime.strptime(periodo_inicio, '%Y-%m-%d')
+                            if not ano_doc:
+                                ano_doc = dt.year
+                            if not semana_doc:
+                                # Calcular semana ISO
+                                semana_doc = dt.isocalendar()[1]
+                        except:
+                            pass
                 
                 # Criar documento baseado na plataforma
                 # NOTA: Para Via Verde carregamentos, motorista_id será atribuído na secção específica
@@ -12932,8 +12937,8 @@ async def importar_plataforma(
                     "data": data,
                     "periodo_inicio": periodo_inicio,
                     "periodo_fim": periodo_fim,
-                    "ano": ano,
-                    "semana": semana,
+                    "ano": ano_doc,
+                    "semana": semana_doc,
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "created_by": current_user["id"]
                 }
