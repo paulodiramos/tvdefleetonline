@@ -213,7 +213,7 @@ const ImportarPlataformas = () => {
     }
 
     // Validar período para plataformas que requerem
-    if (['uber', 'bolt', 'viaverde'].includes(plataformaSelecionada)) {
+    if (['uber', 'bolt', 'viaverde', 'gps', 'combustivel', 'carregamento'].includes(plataformaSelecionada)) {
       if (!ano || !semana || !periodoInicio || !periodoFim) {
         toast.error('Selecione o ano e semana (ex: 2024, semana 49)');
         return;
