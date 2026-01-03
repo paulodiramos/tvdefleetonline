@@ -10431,7 +10431,7 @@ async def gerar_relatorio_semanal(
             despesas_via_verde_cursor = db.despesas_fornecedor.find(despesas_via_verde_query, {"_id": 0})
             despesas_via_verde = await despesas_via_verde_cursor.to_list(1000)
             
-            print(f"DEBUG: Via Verde CSV: encontrados {len(despesas_via_verde)} registos")
+            debug_log(f"Via Verde registos encontrados: {len(despesas_via_verde)}")
             
             # Add to via verde records for display
             for desp in despesas_via_verde:
