@@ -4230,34 +4230,14 @@ const RelatorioFinanceiroTab = ({ vehicleId, canEdit, user, relatorioGanhos, set
           </form>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+};
 
-      {/* Modal Adicionar Manutenção */}
-      <Dialog open={showAddManutencao} onOpenChange={setShowAddManutencao}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Registar Manutenção</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleAddManutencao} className="space-y-4">
-            <div>
-              <Label>Tipo de Manutenção *</Label>
-              <select
-                value={novaManutencao.tipo_manutencao}
-                onChange={(e) => setNovaManutencao({...novaManutencao, tipo_manutencao: e.target.value})}
-                className="w-full p-2 border rounded-md"
-                required
-              >
-                <option value="">Selecione o tipo</option>
-                <option value="Revisão">Revisão</option>
-                <option value="Troca de Óleo">Troca de Óleo</option>
-                <option value="Troca de Filtros">Troca de Filtros</option>
-                <option value="Troca de Pneus">Troca de Pneus</option>
-                <option value="Travões">Travões</option>
-                <option value="Suspensão">Suspensão</option>
-                <option value="Embraiagem">Embraiagem</option>
-                <option value="Correia de Distribuição">Correia de Distribuição</option>
-                <option value="Bateria">Bateria</option>
-                <option value="Ar Condicionado">Ar Condicionado</option>
-                <option value="Reparação Mecânica">Reparação Mecânica</option>
+// Modal Adicionar Manutenção (movido de volta para o componente pai)
+// Este modal é usado no separador Revisão/Intervenções do FichaVeiculo
+
+export default FichaVeiculo;
                 <option value="Reparação Elétrica">Reparação Elétrica</option>
                 <option value="Chapa e Pintura">Chapa e Pintura</option>
                 <option value="Outro">Outro</option>
