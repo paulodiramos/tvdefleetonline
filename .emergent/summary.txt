@@ -1,133 +1,198 @@
 <analysis>**original_problem_statement:**
-O utilizador pretende desenvolver um sistema de gestão de frotas. Os requisitos evoluíram para incluir um fluxo de trabalho de relatórios semanais, um sistema de importação de dados de múltiplas plataformas (Uber, Bolt, etc.), gestão de contratos de veículos, um fluxo de aprovação de ficheiros e uma infraestrutura para automação de integrações de API. Ao longo do projeto, o utilizador enfrentou bugs recorrentes e críticos, como erros de email do motorista vazio durante as importações e relatórios com valores zerados.
+O utilizador iniciou a sessão com o objetivo de refatorar o backend monolítico () para melhorar a manutenibilidade (Tarefa P3). Durante a sessão, o utilizador expandiu o âmbito para incluir:
+1.  Um novo sistema para configurar a extração de dados de ficheiros CSV, em vez de integrações de API diretas.
+2.  Melhorias na atribuição de veículos, associando cartões de Via Verde e de frota a um motorista no momento da atribuição.
+3.  Uma nova e complexa funcionalidade de Automação de Processos Robóticos (RPA) para automatizar o login em plataformas de terceiros (Uber, Bolt), navegar e descarregar ficheiros CSV.
+4.  Ajustes na interface do utilizador, como a reorganização do menu de navegação e a adição da gestão de credenciais nos perfis dos parceiros.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação é uma full-stack (React + FastAPI + MongoDB) com um Hub de Relatórios, gestão de motoristas, veículos e cartões de frota. O backend é um grande monolítico  com mais de 21.500 linhas, e uma pasta  que contém lógica de autenticação adicional, o que causava conflitos.
+A aplicação é um sistema de gestão de frotas full-stack (React + FastAPI + MongoDB). Nesta sessão, o agente iniciou a refatoração do backend criando routers modulares para veículos, configurações de CSV e relatórios. Foi também implementada a estrutura completa (backend e frontend) para duas novas funcionalidades principais:
+1.  **Configuração de Extração CSV:** Uma página que permite ao administrador definir mapeamentos de colunas para diferentes tipos de ficheiros CSV.
+2.  **Automação RPA:** Um sistema robusto para criar, gerir e executar automações de browser (usando Playwright) para descarregar ficheiros de fornecedores como Uber e Bolt. As credenciais são encriptadas na base de dados.
 
-Nesta sessão, todos os bugs críticos (P0 - erro de email, P1 - relatórios a zero, P2 - falha ao guardar formulários) foram resolvidos. Além disso, foram implementadas várias funcionalidades:
-1.  **Sistema de Aprovação de Ficheiros:** Uma página de frontend () foi criada para gerir ficheiros importados. O backend foi ajustado para criar relatórios apenas após a aprovação de um ficheiro.
-2.  **Agenda de Vistorias:** Foi implementado um sistema completo para agendar e visualizar eventos (inspeções, seguros, etc.) na página de detalhes do veículo ().
-3.  **Recuperação de Senha por Email:** Foi configurada uma integração SMTP para enviar emails de recuperação de senha.
-4.  **Pequenas Melhorias:** O campo  foi adicionado ao perfil do motorista e a lógica de importação de combustível foi atualizada para a nova arquitetura de cartões.
+O agente também implementou uma melhoria na atribuição de motoristas a veículos para incluir cartões de frota e Via Verde. A interface do utilizador foi atualizada para adicionar as novas páginas aos menus de navegação.
 
 **Last working item**:
-*   **Last item agent was working:** Resolver um Network Error que ocorria no login na aplicação em produção (após deploy). O agente identificou que o erro era causado por rotas de autenticação duplicadas em  e . A correção envolveu reorganizar a ordem de inclusão dos routers no  principal para garantir que a rota mais completa tivesse prioridade.
-*   **Status:** USER VERIFICATION PENDING
-*   **Agent Testing Done:** Y
-*   **Which testing method agent to use?** Manual testing by the user after re-deploying the application. O agente confirmou que o login e a recuperação de senha funcionam corretamente no ambiente de preview, mas o erro original foi reportado no ambiente de produção, que só o utilizador pode verificar após o deploy.
+*   **Last item agent was working:** O agente estava a começar a implementação do pedido do utilizador para adicionar uma secção de gestão de Credenciais de Automação dentro da página de perfil de cada parceiro. O objetivo é permitir que um gestor de frotas configure as credenciais de login (para a automação RPA) diretamente no perfil do parceiro. O agente estava a explorar os ficheiros do frontend () para identificar qual componente editar.
+*   **Status:** IN PROGRESS
+*   **Agent Testing Done:** N
+*   **Which testing method agent to use?** Frontend testing agent (para verificar a nova secção na UI do perfil do parceiro) e Backend testing agent (para garantir que as credenciais são guardadas e recuperadas corretamente para o parceiro certo).
 *   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-Não existem issues pendentes. Todos os bugs críticos reportados no início da sessão foram resolvidos.
+*   **Issue 1: Backend Route Conflicts due to Incomplete Refactoring (P0, Blocker)**
+*   **Issue 2: Vehicle Assignment Endpoint is Broken (P1)**
+*   **Issue 3: RPA Automation Logic is not Implemented (P2)**
+
+Issues Detail:
+*   **Issue 1: Backend Route Conflicts due to Incomplete Refactoring (P0, Blocker)**
+    *   **Attempted fixes:** O agente moveu a lógica de endpoints para ficheiros de rotas separados (, , etc.), mas não removeu o código original do . Além disso, o router principal ( de ) é incluído antes dos routers modulares, fazendo com que as rotas antigas tenham prioridade e causem conflitos (ex: ) ou impeçam as novas rotas de serem ativadas.
+    *   **Next debug checklist:**
+        1.  Editar .
+        2.  Identificar e **eliminar** todos os blocos de código de endpoints que já foram movidos para ,  e .
+        3.  Garantir que os  para os routers modulares são os únicos a definir essas rotas.
+        4.  Reiniciar o backend e testar endpoints de cada router para confirmar que funcionam e que os conflitos foram resolvidos.
+    *   **Why fix this issue and what will be achieved with the fix?** Isto é um blocker crítico. Resolvê-lo irá concluir a refatoração corretamente, eliminar comportamentos inesperados, desbloquear o teste de outras funcionalidades (como a Atribuição de Veículos) e estabilizar a arquitetura do backend.
+    *   **Status:** NOT STARTED
+    *   **Is recurring issue?** Y
+    *   **Should Test frontend/backend/both after fix?** backend
+    *   **Blocked on other issue:** None
+
+*   **Issue 2: Vehicle Assignment Endpoint is Broken (P1)**
+    *   **Attempted fixes:** O agente criou um endpoint melhorado  em  e atualizou o frontend em . No entanto, os testes falharam consistentemente (Motorista not found, Vehicle not found), mesmo após a criação manual de dados na base de dados. A causa provável é o **Issue 1**.
+    *   **Next debug checklist:**
+        1.  Resolver o **Issue 1** primeiro.
+        2.  Re-executar o script de teste para atribuir um motorista, Via Verde e cartão de frota a um veículo.
+        3.  Verificar os logs do backend em caso de erro e depurar a lógica de pesquisa de motorista e veículo no endpoint, garantindo que o  está a ser tratado corretamente no contexto do utilizador autenticado.
+    *   **Why fix this issue and what will be achieved with the fix?** Esta é uma funcionalidade pedida pelo utilizador que está incompleta e não funcional. A sua correção permitirá a gestão correta de atribuições.
+    *   **Status:** BLOCKED
+    *   **Is recurring issue?** N
+    *   **Should Test frontend/backend/both after fix?** both
+    *   **Blocked on other issue:** Issue 1: Backend Route Conflicts
+
+*   **Issue 3: RPA Automation Logic is not Implemented (P2)**
+    *   **Attempted fixes:** N/A. O agente criou a estrutura, incluindo o ficheiro  e a instalação do Playwright, mas o motor de execução está vazio.
+    *   **Next debug checklist:**
+        1.  Editar .
+        2.  Implementar a função  que recebe uma lista de passos (ex: navigate, fill, click, download).
+        3.  Usar a biblioteca Playwright para traduzir esses passos em ações reais de browser (ex: , , ).
+        4.  Implementar a lógica para tratar downloads de ficheiros e guardá-los no diretório .
+        5.  Atualizar o estado da execução na base de dados (sucesso, falha, ficheiro descarregado).
+    *   **Why fix this issue and what will be achieved with the fix?** Esta é a etapa final para tornar a funcionalidade de automação RPA funcional e útil, permitindo que as automações desenhadas sejam de facto executadas.
+    *   **Status:** NOT STARTED
+    *   **Is recurring issue?** N
+    *   **Should Test frontend/backend/both after fix?** backend
+    *   **Blocked on other issue:** None
 
 **In progress Task List**:
-Não existem tarefas em progresso.
+*   **Task 1: Add RPA Credential Management to Partner Profile (P0)**
+    *   **Where to resume:** O agente precisa de editar a página de frontend que permite a um administrador editar o perfil de um parceiro (provavelmente  ou similar).
+    *   **What will be achieved with this?** O utilizador (gestor de frotas) poderá guardar e gerir as credenciais de automação (login/password para Uber, Bolt, etc.) de forma segura e centralizada no perfil de cada parceiro.
+    *   **Status:** IN PROGRESS
+    *   **Should Test frontend/backend/both after fix?** both
+    *   **Blocked on something:** None
 
 **Upcoming and Future Tasks**
 *   **Upcoming Tasks:**
-    *   (P3) **Refatoração do Backend:** Conforme solicitado pelo utilizador (avancar com p2 p3), a próxima tarefa de alta prioridade é refatorar o monolítico . O objetivo é dividir o ficheiro em módulos menores e mais organizados (rotas, modelos, serviços) para melhorar a manutenibilidade e reduzir a probabilidade de bugs como os conflitos de rotas resolvidos nesta sessão.
-    *   (P1) **Sistema de Gestão de Integrações de API:** Implementar a infraestrutura de backend e frontend para que os parceiros possam guardar as suas credenciais de API (Uber, Bolt, etc.). Esta tarefa foi colocada em espera pelo utilizador, mas é o próximo grande passo funcional.
+    *   **(P1) Finish Backend Refactoring:** Concluir a migração de todos os endpoints relevantes de  para routers modulares (ex: , ), garantindo a eliminação do código antigo para resolver o **Issue 1**.
+    *   **(P2) Implementar o Editor Visual de Passos RPA:** Melhorar a página  no frontend para permitir que o admin adicione, edite e reordene visualmente os passos de uma automação (ex: arrastar e largar blocos de Click, Fill, Navigate).
 *   **Future Tasks:**
-    *   (P4) **Sincronização Automática:** Utilizar as credenciais de API guardadas para importar dados automaticamente, eliminando a necessidade de importações manuais.
+    *   **(P3) Adicionar Mais Fornecedores de Automação:** Expandir o sistema RPA para suportar novos fornecedores, como empresas de GPS e de combustível, conforme solicitado pelo utilizador.
+    *   **(P4) Usar Configurações CSV na Importação:** Conectar a funcionalidade de Configuração de Extração CSV ao processo de importação de ficheiros, para que os mapeamentos definidos sejam usados para processar os ficheiros CSV carregados.
 
 **Completed work in this session**
-*   **Resolução de Bugs Críticos:**
-    *   **Bug P0 - Email do motorista vazio:** Corrigido na importação de carregamentos elétricos.
-    *   **Bug P1 - Relatórios a €0,00:** Corrigido o pipeline de agregação de dados.
-    *   **Bug P2 - Falha ao guardar formulários:** Corrigido em .
-*   **Implementação de Funcionalidades:**
-    *   **Sistema de Aprovação de Ficheiros:** Frontend () e lógica de backend para aprovar/rejeitar e gerar relatórios após aprovação.
-    *   **Agenda de Vistorias:** Sistema completo de agendamento na página do veículo.
-    *   **Recuperação de Senha por Email:** Integração SMTP configurada e funcional.
-*   **Correções de Arquitetura e Pedidos do Utilizador:**
-    *   **Conflito de Rotas de Login:** Resolvido ao reordenar a inclusão dos routers em .
-    *   **Refatoração de Importação:** Lógica de importação de combustível alinhada com a nova arquitetura de cartões.
-    *   **Reset de Senhas:** Todas as senhas de utilizadores foram alteradas para  a pedido.
+*   **Backend Refactoring (Started):**
+    - Criado  e movidos endpoints de veículos.
+    - Criado  e movidos endpoints de relatórios.
+*   **CSV Configuration Feature (Full-stack):**
+    - Backend: Criado modelo  e router  para gerir configurações.
+    - Frontend: Criada página  para a UI.
+*   **RPA Automation Feature (Full-stack Scaffolding):**
+    - Backend: Criado modelo , router  e serviço . Instalado  e . Criado endpoint para executar automações em background.
+    - Frontend: Criada página  com dashboard, lista de automações e fornecedores.
+*   **UI/UX Improvements:**
+    - Reorganizado o menu principal, movendo Automação RPA e Extração CSV para o dropdown de Configurações.
+*   **Vehicle Assignment Enhancement:**
+    - Backend: Endpoint em  foi modificado para aceitar  e  na atribuição (atualmente quebrado).
+    - Frontend:  atualizado com novos campos para a atribuição.
 
 **Earlier issues found/mentioned but not fixed**
-*   Nenhum. Todos os problemas mencionados no handoff anterior foram abordados e resolvidos.
+*   None.
 
 **Known issue recurrence from previous fork**
-*   **Bugs de gravação em formulários ()**:
-    *   Recurrence count: 3+
-    *   Status: **RESOLVED**. O agente identificou a causa raiz (uma verificação de nulidade em falta no objeto  antes de aceder às suas propriedades) e corrigiu-a. A funcionalidade foi testada com sucesso.
+*   None.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
-*   **Monolith Refactoring (Pending):** A necessidade de dividir  é crítica, como demonstrado pelo conflito de rotas resolvido nesta sessão.
-*   **Route Conflict Resolution:** O agente diagnosticou e corrigiu um problema onde rotas duplicadas () em  e  causavam um Network Error em produção. A solução foi garantir que o router principal do  fosse carregado antes do .
-*   **SMTP Integration:** Implementação de envio de email usando a biblioteca  do Python, com configuração para SSL (porta 465) e credenciais armazenadas no ficheiro .
+*   **Monolith Refactoring:** O processo de decomposição do  está em andamento, mas incompleto. A principal falha é a não remoção do código antigo, causando conflitos de rota.
+*   **Robotic Process Automation (RPA):** Implementação de um sistema para automatizar interações de browser usando **Playwright**.
+*   **Background Tasks:** O endpoint de execução de RPA utiliza  do FastAPI para não bloquear a resposta da API.
+*   **Credential Encryption:** Uso da biblioteca **cryptography** para encriptar e desencriptar credenciais de automação antes de as guardar/utilizar.
 
 **key DB schema**
-*   **:** Coleção agora ativamente utilizada para registar cada importação de ficheiro. O seu schema foi corrigido para corresponder aos dados guardados pela aplicação.
-*   ** / :** A estrutura não foi alterada, mas o campo de senha () foi atualizado para todos os registos.
+*   **:** (Nova) Armazena configurações de mapeamento de CSV para cada plataforma e parceiro.
+*   **:** (Nova) Armazena a lista de fornecedores de automação (Uber, Bolt, etc.).
+*   **:** (Nova) Armazena as definições de cada automação, incluindo o nome, fornecedor e a lista de passos.
+*   **:** (Nova) Armazena as credenciais encriptadas de cada parceiro para cada fornecedor.
+*   **:** (Nova) Regista o histórico de cada execução de automação.
 
 **changes in tech stack**
-*   Nenhuma.
+*   **Adicionado:**  (para automação de browser).
+*   **Adicionado:**  (para encriptação de credenciais).
 
 **All files of reference**
-*    (principal ficheiro modificado para bugs, funcionalidades e resolução de conflitos)
-*    (modificado para a funcionalidade de recuperação de senha)
-*    (corrigido bug de gravação e adicionada agenda de vistorias)
-*    (ficheiro novo para a funcionalidade de aprovação)
-*    (atualizado o fluxo de recuperação de senha)
-*    e  (adicionada rota e link para a nova página)
-*    (adicionadas credenciais SMTP)
+*   **Criados nesta sessão:**
+    -   
+    -   
+    -   
+    -   
+    -   
+    -   
+    -   
+    -   
+    -   
+*   **Modificados significativamente:**
+    -    (para incluir os novos routers)
+    -    (para adicionar as novas rotas)
+    -    (para reorganizar os menus)
+    -    (para a nova funcionalidade de atribuição)
 
 **Areas that need refactoring**:
-*   **:** A refatoração deste ficheiro é a tarefa pendente mais crítica (P3). O conflito de rotas resolvido nesta sessão é um sintoma claro de que a separação da lógica em ficheiros dedicados (rotas, serviços, modelos) é urgente para a estabilidade do projeto.
+*   **:** Urgente. O código dos endpoints movidos para  **deve ser eliminado** de  para resolver conflitos de rota e concluir a refatoração. Esta é a principal dívida técnica da sessão.
 
 **key api endpoints**
-*   : Endpoint crítico cujo conflito de duplicação foi resolvido.
-*   : Endpoint implementado para o envio de email de recuperação de senha.
-*   : Endpoint que suporta a nova página de aprovação de ficheiros.
-*   : Endpoint atualizado para despoletar a criação de relatórios de rascunho.
-*   : Endpoint para adicionar eventos à nova agenda de vistorias.
+*   : Executa uma automação RPA em background.
+*   , : Endpoints para popular a UI da página de Automação.
+*   : Endpoint melhorado para atribuição de veículos (atualmente quebrado).
+*   , : Endpoints para a UI de configuração de CSV.
 
 **Critical Info for New Agent**
-*   **Todos os bugs críticos do handoff anterior foram resolvidos.** O utilizador já não deve enfrentar os problemas de email vazio ou relatórios a zero.
-*   **A prioridade agora é a Tarefa P3: Refatorar o .** O utilizador pediu especificamente para avançar com esta tarefa. Comece por mover gradualmente os endpoints de  para ficheiros separados dentro da pasta .
-*   **Todas as senhas dos utilizadores foram alteradas para .** Isto é importante para fins de teste.
-*   A aplicação está pronta para ser re-deployada. O último problema de Network Error foi resolvido no ambiente de preview. O utilizador precisa de fazer o re-deploy para que as correções tenham efeito em produção.
+*   **Prioridade Zero é Resolver o Conflito de Rotas:** Antes de continuar qualquer nova funcionalidade ou correção de bug, você deve editar  e remover os endpoints que já foram migrados para a pasta . Esta é a causa raiz de vários problemas de teste e instabilidade.
+*   **Funcionalidade de Atribuição Quebrada:** A atribuição de motorista com Via Verde/Cartão de Frota foi implementada mas não funciona. Após resolver o conflito de rotas, esta funcionalidade precisa ser depurada e testada.
+*   **Motor RPA Precisa de Lógica:** A infraestrutura para automação RPA está pronta, mas o executor () está vazio. A próxima etapa lógica após as correções é implementar a lógica de execução com Playwright.
+*   **Credenciais de Teste:** Todos os utilizadores, incluindo , têm a senha .
 
 **documents and test reports created in this job**
-*   Nenhum documento persistente foi criado. Testes foram realizados com ficheiros temporários.
+*    (criado pelo testing agent para validar os endpoints)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  ****: Utilizador reporta Network Error no login após o deploy. **Status: RESOLVED** (agente encontrou e corrigiu conflito de rotas).
-2.  ****: Utilizador pergunta como fazer um deploy fresco. **Status: ADDRESSED** (agente explicou como substituir o deployment).
-3.  ****: Pedido para alterar todas as senhas para . **Status: COMPLETED**.
-4.  ****: Utilizador nota que o botão é Re-deploy. **Status: ADDRESSED** (agente explicou que é a ação correta para atualizar).
-5.  ****: Utilizador reporta que a recuperação de senha falha após o deploy. **Status: ADDRESSED** (este foi o gatilho para a investigação do Network Error).
-6.  ****: Pergunta sobre como fazer deploy mantendo os dados. **Status: ADDRESSED**.
-7.  ****: Pergunta sobre as tarefas pendentes. **Status: ADDRESSED**.
-8.  ****: Pergunta como parar um deployment. **Status: ADDRESSED**.
-9.  ****: Pergunta pelas credenciais de login. **Status: ADDRESSED**.
-10. ****: Utilizador define as prioridades: avançar com as tarefas P2 (Aprovação/Agenda) e P3 (Refatoração), deixando P1 e P4 para depois. **Status: PARTIALLY COMPLETED** (P2 está concluída, P3 é a próxima).
+10.  - **Status: IN PROGRESS**. User wants RPA credentials inside the partner's profile page.
+9.   - **Status: ADDRESSED**. User asked for the location of the new automation page.
+8.   - **Status: COMPLETED**. User approved implementing the Playwright engine.
+7.   - **Status: PARTIALLY COMPLETED**. User defined the architecture for the RPA feature. The scaffolding is done, but the execution logic is pending.
+6.   - **Status: ADDRESSED**. User requested the RPA feature.
+5.   - **Status: COMPLETED**. User approved continuing with backend refactoring.
+4.   - **Status: IN PROGRESS (BLOCKED)**. User requested the vehicle assignment enhancement. Implemented but not working.
+3.   - **Status: ADDRESSED**.
+2.   - **Status: PARTIALLY COMPLETED**. User approved the 3-phase refactoring plan. Phase 1 and 2 were started but are incomplete due to the route conflict issue.
+1.   - **Status: PARTIALLY COMPLETED**. User set priorities: refactor () and build a CSV config system instead of an API system. Both were started.
 
 **Project Health Check:**
-*   **Broken:** Nenhum. Os componentes que estavam quebrados foram todos corrigidos.
-*   **Mocked:** Nenhum.
+*   **Broken:**
+    *   A funcionalidade de atribuição de motoristas a veículos está quebrada.
+    *   A arquitetura do backend está instável devido a conflitos de rota por refatoração incompleta.
+*   **Mocked:**
+    *   O serviço de execução RPA () é um placeholder sem lógica funcional.
 
 **3rd Party Integrations**
-*   **SMTP para Email:** A aplicação está integrada com um servidor SMTP para o envio de emails de recuperação de senha.
-    *   **Serviço:** SMTP genérico.
-    *   **Credenciais:** Armazenadas em  (, , , ).
-    *   **Host:** 
-    *   **Porta:**  (SSL).
+*   **SMTP para Email:** Configurado para recuperação de senha.
+*   **Playwright (Novo):** Instalado para a funcionalidade de automação RPA.
+*   **Cryptography (Novo):** Instalado para encriptar credenciais RPA.
 
 **Testing status**
-*   Testing agent used after significant changes: YES
-*   Troubleshoot agent used after agent stuck in loop: YES
-*   Test files created: Apenas ficheiros temporários para testes de importação.
-*   Known regressions: Nenhuma. Os bugs recorrentes foram resolvidos.
+*   **Testing agent used after significant changes:** YES (para os routers iniciais)
+*   **Troubleshoot agent used after agent stuck in loop:** NO
+*   **Test files created:**
+    - 
+*   **Known regressions:** A refatoração introduziu conflitos de rota que podem ter quebrado endpoints que antes funcionavam.
 
 **Credentials to test flow:**
-*   Todos os 15 utilizadores no sistema (incluindo , , etc.) têm a senha: .
+*   **Email:** 
+*   **Password:** 
 
 **What agent forgot to execute**
-*   Nenhum item esquecido. O agente seguiu as prioridades do utilizador, resolveu todos os bugs críticos, implementou as novas funcionalidades pedidas e abordou os problemas de deployment no final da sessão.</analysis>
+*   O agente esqueceu-se de **remover o código original do ** após migrá-lo para novos ficheiros de router. Esta é a omissão mais crítica da sessão e a causa de múltiplos problemas subsequentes.</analysis>
