@@ -1,42 +1,105 @@
-# Test Results - TVDEFleet FleetManager
+backend:
+  - task: "Despesas Import Logic Update"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/despesas.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ NEW LOGIC WORKING - Expenses assigned to motoristas! Resumo API shows €505.79 for motoristas and €2178.59 for parceiro. Contract types 'aluguer', 'compra', 'slot' correctly assign expenses to motorista, while 'comissao' assigns to veiculo (parceiro)."
 
-## Last Updated: 2026-01-03
+  - task: "Report Delete Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ DELETE /api/relatorios/semanal/{relatorio_id} working correctly. Successfully deleted report for parceiro user. API returns proper success message."
 
-## Testing Context
-- Testing updated expense assignment logic
-- Testing multi-select and bulk delete for reports
+  - task: "Report Status Change Endpoint"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ PUT /api/relatorios/semanal/{relatorio_id}/status working correctly. Successfully changed status from 'unknown' to 'aprovado'. Valid statuses: rascunho, pendente_aprovacao, aprovado, aguarda_recibo, verificado, pago, rejeitado."
 
-## Test Scenarios to Verify
+  - task: "List Reports for Parceiro"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/relatorios.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ GET /api/relatorios/semanais-todos working correctly. Returns 9 reports for parceiro user with proper filtering by parceiro_id."
 
-### Backend Tests
-1. **Despesas Logic Update:**
-   - Contract type "aluguer", "compra", "slot" → expense goes to motorista
-   - Contract type "comissao" → expense goes to veiculo (parceiro)
+  - task: "CSV Import API"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/despesas.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ POST /api/despesas/importar working correctly. Successfully imported 3/3 test records with 3 vehicles found. Returns proper import statistics."
 
-2. **Report Bulk Actions:**
-   - DELETE /api/relatorios/semanal/{id} - Delete single report
-   - PUT /api/relatorios/semanal/{id}/status - Change status
+  - task: "Despesas List API"
+    implemented: true
+    working: true
+    file: "/app/backend/routes/despesas.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ GET /api/despesas/ working correctly. Returns 10 despesas from total of 1664 records. Sample shows proper assignment: AS-83-NX → veiculo (€2.15)."
 
-### Frontend Tests - RelatoriosSemanaisLista
-1. Page loads at /relatorios-semanais-lista (parceiro login)
-2. Shows statistics (Total, Pendentes, Aprovados, Rejeitados)
-3. "Selecionar Todos" checkbox works
-4. Individual checkboxes select reports
-5. Bulk actions bar appears when items selected:
-   - "X relatório(s) selecionado(s)" text
-   - "Alterar Estado" button
-   - "Eliminar Selecionados" button
-   - "Limpar Seleção" button
-6. Delete confirmation dialog with warning
-7. Status change modal with dropdown
+frontend:
+  - task: "RelatoriosSemanaisLista Page"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/RelatoriosSemanaisLista.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: "Frontend testing not performed as per system limitations. Backend APIs are working correctly to support frontend functionality."
 
-### Import Stats (Via Verde with new logic)
-- Total records: 829
-- Vehicles found: 752
-- Drivers associated: 348
-- Valor Motoristas: €505.79 (was €0.00)
-- Valor Parceiro: €832.00 (was €1337.79)
+metadata:
+  created_by: "testing_agent"
+  version: "1.1"
+  test_sequence: 1
+  run_ui: false
 
-## Incorporate User Feedback
-- Expense logic updated for contract types
-- Reports multi-select and bulk delete implemented
+test_plan:
+  current_focus:
+    - "Despesas Import Logic Update"
+    - "Report Delete Endpoint"
+    - "Report Status Change Endpoint"
+    - "List Reports for Parceiro"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "testing"
+    message: "✅ ALL BACKEND TESTS PASSED (10/10 - 100% success rate). Key findings: 1) NEW EXPENSE LOGIC WORKING - €505.79 assigned to motoristas vs €2178.59 to parceiro, 2) Report delete API working for parceiro users, 3) Report status change API working with all valid statuses, 4) List reports API properly filtering by parceiro, 5) CSV import and despesas list APIs functioning correctly. All high-priority backend features are working as expected."
