@@ -295,6 +295,64 @@ async def gerar_relatorio_semanal(
             via_verde_records = await db.via_verde.find(vv_query, {"_id": 0}).to_list(1000)
             total_via_verde = sum(r.get("valor", 0) or 0 for r in via_verde_records)
         
+        # ======= NOVA LÓGICA: Buscar da coleção portagens_viaverde =======
+        # Esta coleção é preenchida pelo import de Excel Via Verde
+        portagens_vv_query = {
+            "motorista_id": motorista_id,
+            "$or": [
+                # Buscar por semana/ano se disponível
+                {"semana": semana_relatorio, "ano": ano_relatorio},
+                # Fallback: buscar por data de entrada
+                {
+                    "entry_date": {"$gte": data_inicio_via_verde, "$lte": data_fim_via_verde},
+                    "semana": None
+                },
+                {
+                    "data": {"$gte": data_inicio_via_verde, "$lte": data_fim_via_verde},
+                    "semana": None
+                }
+            ]
+        }
+        
+        # Também buscar por veículo se o motorista estiver atribuído
+        if veiculo_id:
+            portagens_vv_query = {
+                "$or": [
+                    {"motorista_id": motorista_id},
+                    {"vehicle_id": veiculo_id}
+                ],
+                "$and": [
+                    {
+                        "$or": [
+                            {"semana": semana_relatorio, "ano": ano_relatorio},
+                            {
+                                "entry_date": {"$gte": data_inicio_via_verde, "$lte": data_fim_via_verde}
+                            },
+                            {
+                                "data": {"$gte": data_inicio_via_verde, "$lte": data_fim_via_verde}
+                            }
+                        ]
+                    }
+                ]
+            }
+        
+        portagens_viaverde = await db.portagens_viaverde.find(portagens_vv_query, {"_id": 0}).to_list(1000)
+        
+        # Adicionar aos registos e somar valores
+        for pv in portagens_viaverde:
+            valor = float(pv.get("liquid_value") or pv.get("value") or 0)
+            via_verde_records.append({
+                "data": pv.get("entry_date") or pv.get("data"),
+                "valor": valor,
+                "local": f"{pv.get('entry_point', '')} → {pv.get('exit_point', '')}",
+                "tipo": "importado_excel",
+                "service": pv.get("service"),
+                "matricula": pv.get("matricula")
+            })
+            total_via_verde += valor
+        
+        logger.info(f"📍 Via Verde portagens: {len(portagens_viaverde)} registos, total: €{total_via_verde:.2f}")
+        
         # Check imported despesas from CSV (Via Verde)
         # Priority 1: Use semana_relatorio field if available (new import system)
         despesas_vv_query_semana = {
