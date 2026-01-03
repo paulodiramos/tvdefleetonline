@@ -235,11 +235,6 @@ const RelatoriosSemanaisLista = ({ user, onLogout }) => {
     return <Badge className={c.color}>{c.label}</Badge>;
   };
 
-  const relatoriosFiltrados = relatorios.filter(rel => {
-    if (filtroStatus === 'todos') return true;
-    return rel.status === filtroStatus;
-  });
-
   const estatisticas = {
     total: relatorios.length,
     pendentes: relatorios.filter(r => r.status === 'pendente_aprovacao').length,
