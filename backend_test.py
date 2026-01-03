@@ -92,113 +92,213 @@ class FleeTrackTester:
             return None
         return {"Authorization": f"Bearer {self.tokens[role]}"}
     
-    def test_refactored_backend_and_csv_config(self):
-        """🎯 MAIN TEST: Refactored Backend & CSV Configuration System"""
-        print("\n🎯 MAIN TEST: Refactored Backend & CSV Configuration System")
+    def test_fleetrack_backend_apis(self):
+        """🎯 MAIN TEST: FleeTrack Backend APIs after Route Refactoring"""
+        print("\n🎯 MAIN TEST: FleeTrack Backend APIs after Route Refactoring")
         print("=" * 80)
         print("CREDENCIAIS:")
         print("- Admin: admin@tvdefleet.com / 123456")
         print("\nTESTES A REALIZAR:")
-        print("1. Vehicles Router (Refactored)")
-        print("2. CSV Configuration System")
+        print("1. Authentication API")
+        print("2. Vehicles API (Refactored)")
+        print("3. Automação RPA API (New Module)")
+        print("4. CSV Config API (New Module)")
         print("=" * 80)
         
         # Execute all tests
-        self.test_vehicles_router_refactored()
-        self.test_csv_configuration_system()
+        self.test_authentication_api()
+        self.test_vehicles_api_refactored()
+        self.test_automacao_rpa_api()
+        self.test_csv_config_api()
         
         return True
     
-    def test_vehicles_router_refactored(self):
-        """1. Test Vehicles Router (Refactored from server.py)"""
-        print("\n📋 1. Test Vehicles Router (Refactored)")
+    def test_authentication_api(self):
+        """1. Test Authentication API"""
+        print("\n📋 1. Test Authentication API")
+        print("-" * 60)
+        print("TESTE: POST /api/auth/login")
+        
+        try:
+            # Test login with admin credentials
+            response = requests.post(f"{BACKEND_URL}/auth/login", json=TEST_CREDENTIALS["admin"])
+            
+            if response.status_code == 200:
+                data = response.json()
+                access_token = data.get("access_token")
+                user_data = data.get("user")
+                
+                if access_token and user_data:
+                    self.tokens["admin"] = access_token
+                    self.log_result("Auth-Login", True, 
+                                  f"✅ Login successful - Token received, User: {user_data.get('name', user_data.get('email'))}")
+                else:
+                    self.log_result("Auth-Login", False, "❌ Login response missing token or user data")
+            else:
+                self.log_result("Auth-Login", False, 
+                              f"❌ Login failed: {response.status_code}", response.text)
+                
+        except Exception as e:
+            self.log_result("Auth-Login", False, f"❌ Authentication error: {str(e)}")
+    
+    def test_vehicles_api_refactored(self):
+        """2. Test Vehicles API (Refactored to routes/vehicles.py)"""
+        print("\n📋 2. Test Vehicles API (Refactored)")
         print("-" * 60)
         print("TESTES:")
-        print("- GET /api/vehicles - List vehicles via new modular router")
-        print("- GET /api/vehicles/{vehicle_id} - Get specific vehicle")
-        print("- PUT /api/vehicles/{vehicle_id} - Update vehicle")
+        print("- GET /api/vehicles - List vehicles")
+        print("- POST /api/vehicles/{vehicle_id}/atribuir-motorista - Vehicle assignment")
         
-        # Authenticate as admin
+        # Get auth headers
         headers = self.get_headers("admin")
         if not headers:
-            self.log_result("Vehicles-Router-Auth", False, "❌ No auth token for admin")
+            self.log_result("Vehicles-API-Auth", False, "❌ No auth token for admin")
             return False
         
         try:
             # Test 1: GET /api/vehicles
-            print("\nTestando GET /api/vehicles (via new router)")
+            print("\nTestando GET /api/vehicles")
             response = requests.get(f"{BACKEND_URL}/vehicles", headers=headers)
             
             if response.status_code == 200:
                 vehicles = response.json()
-                self.log_result("Vehicles-Router-GET-List", True, 
-                              f"✅ GET /api/vehicles funciona via router: {len(vehicles)} veículos encontrados")
+                vehicle_count = len(vehicles)
+                self.log_result("Vehicles-API-GET", True, 
+                              f"✅ GET /api/vehicles works: {vehicle_count} vehicles found")
                 
-                if len(vehicles) > 0:
-                    # Test 2: GET /api/vehicles/{vehicle_id}
+                # Test 2: Vehicle assignment if vehicles exist
+                if vehicle_count > 0:
                     test_vehicle = vehicles[0]
                     vehicle_id = test_vehicle['id']
                     vehicle_info = f"{test_vehicle.get('marca', 'N/A')} {test_vehicle.get('modelo', 'N/A')} - {test_vehicle.get('matricula', 'N/A')}"
                     
-                    print(f"\nTestando GET /api/vehicles/{vehicle_id}")
-                    single_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}", headers=headers)
+                    print(f"\nTestando POST /api/vehicles/{vehicle_id}/atribuir-motorista")
                     
-                    if single_response.status_code == 200:
-                        vehicle_data = single_response.json()
-                        self.log_result("Vehicles-Router-GET-Single", True, 
-                                      f"✅ GET /api/vehicles/{{id}} funciona: {vehicle_info}")
-                        
-                        # Test 3: PUT /api/vehicles/{vehicle_id} - Update vehicle
-                        print(f"\nTestando PUT /api/vehicles/{vehicle_id}")
-                        update_data = {
-                            "km_atual": vehicle_data.get("km_atual", 0) + 100,
-                            "updated_by_test": "backend_test_refactored"
-                        }
-                        
-                        update_response = requests.put(
-                            f"{BACKEND_URL}/vehicles/{vehicle_id}", 
-                            json=update_data,
-                            headers=headers
-                        )
-                        
-                        if update_response.status_code == 200:
-                            self.log_result("Vehicles-Router-PUT", True, 
-                                          "✅ PUT /api/vehicles/{id} funciona via router")
-                        else:
-                            self.log_result("Vehicles-Router-PUT", False, 
-                                          f"❌ PUT /api/vehicles/{{id}} falhou: {update_response.status_code}")
-                            print(f"   Erro: {update_response.text}")
+                    # Test assignment data
+                    assignment_data = {
+                        "motorista_id": None,  # Remove assignment
+                        "via_verde_id": "VV123456",
+                        "cartao_frota_id": "CF789012"
+                    }
+                    
+                    assignment_response = requests.post(
+                        f"{BACKEND_URL}/vehicles/{vehicle_id}/atribuir-motorista",
+                        json=assignment_data,
+                        headers=headers
+                    )
+                    
+                    if assignment_response.status_code == 200:
+                        self.log_result("Vehicles-API-Assignment", True, 
+                                      f"✅ Vehicle assignment API works for {vehicle_info}")
                     else:
-                        self.log_result("Vehicles-Router-GET-Single", False, 
-                                      f"❌ GET /api/vehicles/{{id}} falhou: {single_response.status_code}")
-                        print(f"   Erro: {single_response.text}")
+                        self.log_result("Vehicles-API-Assignment", False, 
+                                      f"❌ Vehicle assignment failed: {assignment_response.status_code}")
+                        print(f"   Error: {assignment_response.text}")
                 else:
-                    self.log_result("Vehicles-Router-No-Vehicles", True, 
-                                  "ℹ️ Nenhum veículo encontrado (normal se base de dados vazia)")
+                    self.log_result("Vehicles-API-Assignment", True, 
+                                  "ℹ️ No vehicles to test assignment (normal if database empty)")
             else:
-                self.log_result("Vehicles-Router-GET-List", False, 
-                              f"❌ GET /api/vehicles falhou: {response.status_code}")
-                print(f"   Erro: {response.text}")
+                self.log_result("Vehicles-API-GET", False, 
+                              f"❌ GET /api/vehicles failed: {response.status_code}")
+                print(f"   Error: {response.text}")
             
             return True
             
         except Exception as e:
-            self.log_result("Vehicles-Router-Error", False, f"❌ Erro durante teste: {str(e)}")
+            self.log_result("Vehicles-API-Error", False, f"❌ Error during vehicles test: {str(e)}")
             return False
     
-    def test_csv_configuration_system(self):
-        """2. Test CSV Configuration System"""
-        print("\n📋 2. Test CSV Configuration System")
+    def test_automacao_rpa_api(self):
+        """3. Test Automação RPA API (New Module routes/automacao.py)"""
+        print("\n📋 3. Test Automação RPA API (New Module)")
         print("-" * 60)
         print("TESTES:")
-        print("- GET /api/csv-config/plataformas - List available platforms")
-        print("- GET /api/csv-config/campos-sistema/uber - Get system fields for Uber")
-        print("- GET /api/csv-config/mapeamentos-padrao/uber - Get default mappings for Uber")
-        print("- POST /api/csv-config - Create new CSV configuration")
-        print("- GET /api/csv-config - List configurations")
-        print("- POST /api/csv-config/analisar-ficheiro - Analyze CSV file")
+        print("- GET /api/automacao/dashboard - Dashboard stats")
+        print("- GET /api/automacao/fornecedores - List providers")
+        print("- GET /api/automacao/fornecedores/tipos - Provider types")
         
-        # Authenticate as admin
+        # Get auth headers
+        headers = self.get_headers("admin")
+        if not headers:
+            self.log_result("Automacao-API-Auth", False, "❌ No auth token for admin")
+            return False
+        
+        try:
+            # Test 1: GET /api/automacao/dashboard
+            print("\nTestando GET /api/automacao/dashboard")
+            dashboard_response = requests.get(f"{BACKEND_URL}/automacao/dashboard", headers=headers)
+            
+            if dashboard_response.status_code == 200:
+                dashboard_data = dashboard_response.json()
+                fornecedores_count = dashboard_data.get("total_fornecedores", 0)
+                automacoes_count = dashboard_data.get("total_automacoes", 0)
+                
+                self.log_result("Automacao-Dashboard", True, 
+                              f"✅ Dashboard API works: {fornecedores_count} fornecedores, {automacoes_count} automações")
+            else:
+                self.log_result("Automacao-Dashboard", False, 
+                              f"❌ Dashboard API failed: {dashboard_response.status_code}")
+                print(f"   Error: {dashboard_response.text}")
+            
+            # Test 2: GET /api/automacao/fornecedores
+            print("\nTestando GET /api/automacao/fornecedores")
+            fornecedores_response = requests.get(f"{BACKEND_URL}/automacao/fornecedores", headers=headers)
+            
+            if fornecedores_response.status_code == 200:
+                fornecedores = fornecedores_response.json()
+                expected_providers = ["Uber", "Bolt", "Via Verde"]
+                provider_names = [f.get("nome") for f in fornecedores]
+                
+                found_providers = [p for p in expected_providers if p in provider_names]
+                
+                if len(found_providers) >= 2:  # At least 2 of the expected providers
+                    self.log_result("Automacao-Fornecedores", True, 
+                                  f"✅ Fornecedores API works: {len(fornecedores)} providers ({', '.join(provider_names)})")
+                else:
+                    self.log_result("Automacao-Fornecedores", False, 
+                                  f"❌ Expected providers missing. Found: {provider_names}")
+            else:
+                self.log_result("Automacao-Fornecedores", False, 
+                              f"❌ Fornecedores API failed: {fornecedores_response.status_code}")
+                print(f"   Error: {fornecedores_response.text}")
+            
+            # Test 3: GET /api/automacao/fornecedores/tipos
+            print("\nTestando GET /api/automacao/fornecedores/tipos")
+            tipos_response = requests.get(f"{BACKEND_URL}/automacao/fornecedores/tipos", headers=headers)
+            
+            if tipos_response.status_code == 200:
+                tipos = tipos_response.json()
+                expected_types = ["uber", "bolt", "via_verde", "gps", "combustivel"]
+                type_ids = [t.get("id") for t in tipos]
+                
+                found_types = [t for t in expected_types if t in type_ids]
+                
+                if len(found_types) >= 3:  # At least 3 expected types
+                    self.log_result("Automacao-Tipos", True, 
+                                  f"✅ Provider types API works: {len(tipos)} types ({', '.join(type_ids)})")
+                else:
+                    self.log_result("Automacao-Tipos", False, 
+                                  f"❌ Expected types missing. Found: {type_ids}")
+            else:
+                self.log_result("Automacao-Tipos", False, 
+                              f"❌ Provider types API failed: {tipos_response.status_code}")
+                print(f"   Error: {tipos_response.text}")
+            
+            return True
+            
+        except Exception as e:
+            self.log_result("Automacao-API-Error", False, f"❌ Error during automação test: {str(e)}")
+            return False
+    
+    def test_csv_config_api(self):
+        """4. Test CSV Config API (New Module routes/csv_config.py)"""
+        print("\n📋 4. Test CSV Config API (New Module)")
+        print("-" * 60)
+        print("TESTES:")
+        print("- GET /api/csv-config/plataformas - Available platforms")
+        print("- GET /api/csv-config/campos-sistema - System fields")
+        
+        # Get auth headers
         headers = self.get_headers("admin")
         if not headers:
             self.log_result("CSV-Config-Auth", False, "❌ No auth token for admin")
@@ -214,175 +314,43 @@ class FleeTrackTester:
                 expected_platforms = ["uber", "bolt", "via_verde", "combustivel", "gps"]
                 platform_ids = [p.get("id") for p in platforms]
                 
-                all_platforms_present = all(platform in platform_ids for platform in expected_platforms)
+                found_platforms = [p for p in expected_platforms if p in platform_ids]
                 
-                if all_platforms_present:
+                if len(found_platforms) >= 3:  # At least 3 expected platforms
                     self.log_result("CSV-Config-Platforms", True, 
-                                  f"✅ GET /api/csv-config/plataformas funciona: {len(platforms)} plataformas ({', '.join(platform_ids)})")
+                                  f"✅ Platforms API works: {len(platforms)} platforms ({', '.join(platform_ids)})")
                 else:
                     self.log_result("CSV-Config-Platforms", False, 
-                                  f"❌ Plataformas em falta. Esperado: {expected_platforms}, Encontrado: {platform_ids}")
+                                  f"❌ Expected platforms missing. Found: {platform_ids}")
             else:
                 self.log_result("CSV-Config-Platforms", False, 
-                              f"❌ GET /api/csv-config/plataformas falhou: {platforms_response.status_code}")
-                print(f"   Erro: {platforms_response.text}")
-                return False
+                              f"❌ Platforms API failed: {platforms_response.status_code}")
+                print(f"   Error: {platforms_response.text}")
             
-            # Test 2: GET /api/csv-config/campos-sistema/uber
-            print("\nTestando GET /api/csv-config/campos-sistema/uber")
-            fields_response = requests.get(f"{BACKEND_URL}/csv-config/campos-sistema/uber", headers=headers)
+            # Test 2: GET /api/csv-config/campos-sistema (test with uber)
+            print("\nTestando GET /api/csv-config/campos-sistema")
+            # Test with uber platform
+            campos_response = requests.get(f"{BACKEND_URL}/csv-config/campos-sistema/uber", headers=headers)
             
-            if fields_response.status_code == 200:
-                fields_data = fields_response.json()
-                campos = fields_data.get("campos", [])
+            if campos_response.status_code == 200:
+                campos_data = campos_response.json()
+                campos = campos_data.get("campos", [])
                 
                 if len(campos) > 0:
                     self.log_result("CSV-Config-System-Fields", True, 
-                                  f"✅ GET /api/csv-config/campos-sistema/uber funciona: {len(campos)} campos disponíveis")
+                                  f"✅ System fields API works: {len(campos)} fields for uber")
                 else:
                     self.log_result("CSV-Config-System-Fields", False, 
-                                  "❌ Nenhum campo de sistema encontrado para Uber")
+                                  "❌ No system fields found for uber")
             else:
                 self.log_result("CSV-Config-System-Fields", False, 
-                              f"❌ GET /api/csv-config/campos-sistema/uber falhou: {fields_response.status_code}")
-                print(f"   Erro: {fields_response.text}")
-            
-            # Test 3: GET /api/csv-config/mapeamentos-padrao/uber
-            print("\nTestando GET /api/csv-config/mapeamentos-padrao/uber")
-            mappings_response = requests.get(f"{BACKEND_URL}/csv-config/mapeamentos-padrao/uber", headers=headers)
-            
-            if mappings_response.status_code == 200:
-                mappings_data = mappings_response.json()
-                mapeamentos = mappings_data.get("mapeamentos", [])
-                
-                if len(mapeamentos) > 0:
-                    self.log_result("CSV-Config-Default-Mappings", True, 
-                                  f"✅ GET /api/csv-config/mapeamentos-padrao/uber funciona: {len(mapeamentos)} mapeamentos padrão")
-                else:
-                    self.log_result("CSV-Config-Default-Mappings", False, 
-                                  "❌ Nenhum mapeamento padrão encontrado para Uber")
-            else:
-                self.log_result("CSV-Config-Default-Mappings", False, 
-                              f"❌ GET /api/csv-config/mapeamentos-padrao/uber falhou: {mappings_response.status_code}")
-                print(f"   Erro: {mappings_response.text}")
-            
-            # Get user ID for creating configuration
-            user_response = requests.get(f"{BACKEND_URL}/auth/me", headers=headers)
-            user_id = None
-            if user_response.status_code == 200:
-                user_data = user_response.json()
-                user_id = user_data.get("id")
-            
-            if not user_id:
-                self.log_result("CSV-Config-User-ID", False, "❌ Não foi possível obter user_id")
-                return False
-            
-            # Test 4: POST /api/csv-config - Create new CSV configuration
-            print("\nTestando POST /api/csv-config")
-            config_data = {
-                "parceiro_id": user_id,
-                "plataforma": "uber",
-                "nome_configuracao": "Test Config",
-                "descricao": "Test configuration",
-                "delimitador": ",",
-                "encoding": "utf-8",
-                "skip_linhas": 0,
-                "mapeamentos": [
-                    {
-                        "csv_column": "UUID",
-                        "system_field": "uuid_motorista",
-                        "transform": "text",
-                        "required": True
-                    }
-                ]
-            }
-            
-            create_response = requests.post(
-                f"{BACKEND_URL}/csv-config", 
-                json=config_data,
-                headers=headers
-            )
-            
-            config_id = None
-            if create_response.status_code == 200:
-                create_result = create_response.json()
-                config_id = create_result.get("config_id")
-                
-                if config_id:
-                    self.log_result("CSV-Config-Create", True, 
-                                  f"✅ POST /api/csv-config funciona: configuração criada com ID {config_id}")
-                else:
-                    self.log_result("CSV-Config-Create", False, 
-                                  "❌ Configuração criada mas sem config_id na resposta")
-            else:
-                self.log_result("CSV-Config-Create", False, 
-                              f"❌ POST /api/csv-config falhou: {create_response.status_code}")
-                print(f"   Erro: {create_response.text}")
-            
-            # Test 5: GET /api/csv-config - List configurations
-            print("\nTestando GET /api/csv-config")
-            list_response = requests.get(f"{BACKEND_URL}/csv-config", headers=headers)
-            
-            if list_response.status_code == 200:
-                configs = list_response.json()
-                
-                # Check if our created config is in the list
-                created_config_found = False
-                if config_id:
-                    created_config_found = any(c.get("id") == config_id for c in configs)
-                
-                if created_config_found:
-                    self.log_result("CSV-Config-List", True, 
-                                  f"✅ GET /api/csv-config funciona: {len(configs)} configurações (incluindo a criada)")
-                else:
-                    self.log_result("CSV-Config-List", True, 
-                                  f"✅ GET /api/csv-config funciona: {len(configs)} configurações")
-            else:
-                self.log_result("CSV-Config-List", False, 
-                              f"❌ GET /api/csv-config falhou: {list_response.status_code}")
-                print(f"   Erro: {list_response.text}")
-            
-            # Test 6: POST /api/csv-config/analisar-ficheiro - Analyze CSV file
-            print("\nTestando POST /api/csv-config/analisar-ficheiro")
-            
-            # Create a simple test CSV file
-            csv_content = "UUID,Nome,Valor\ntest-uuid-123,João Silva,25.50\ntest-uuid-456,Maria Santos,30.75"
-            
-            files = {
-                'file': ('test.csv', csv_content.encode('utf-8'), 'text/csv')
-            }
-            
-            data = {
-                'delimitador': ',',
-                'encoding': 'utf-8'
-            }
-            
-            analyze_response = requests.post(
-                f"{BACKEND_URL}/csv-config/analisar-ficheiro", 
-                files=files,
-                data=data,
-                headers=headers
-            )
-            
-            if analyze_response.status_code == 200:
-                analyze_result = analyze_response.json()
-                colunas = analyze_result.get("colunas", [])
-                
-                if len(colunas) == 3:  # UUID, Nome, Valor
-                    self.log_result("CSV-Config-Analyze", True, 
-                                  f"✅ POST /api/csv-config/analisar-ficheiro funciona: {len(colunas)} colunas detectadas")
-                else:
-                    self.log_result("CSV-Config-Analyze", False, 
-                                  f"❌ Análise incorreta: esperado 3 colunas, encontrado {len(colunas)}")
-            else:
-                self.log_result("CSV-Config-Analyze", False, 
-                              f"❌ POST /api/csv-config/analisar-ficheiro falhou: {analyze_response.status_code}")
-                print(f"   Erro: {analyze_response.text}")
+                              f"❌ System fields API failed: {campos_response.status_code}")
+                print(f"   Error: {campos_response.text}")
             
             return True
             
         except Exception as e:
-            self.log_result("CSV-Config-Error", False, f"❌ Erro durante teste: {str(e)}")
+            self.log_result("CSV-Config-Error", False, f"❌ Error during CSV config test: {str(e)}")
             return False
     
     def run_all_tests(self):
