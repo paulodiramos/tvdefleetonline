@@ -99,34 +99,32 @@ class FleeTrackTester:
         return {"Authorization": f"Bearer {self.tokens[role]}"}
     
     def test_priority_scenarios(self):
-        """🎯 PRIORITY TEST SCENARIOS: Via Verde Excel Import Validation"""
-        print("\n🎯 PRIORITY TEST SCENARIOS: Via Verde Excel Import Validation")
+        """🎯 PRIORITY TEST SCENARIOS: 3 New Features Testing"""
+        print("\n🎯 PRIORITY TEST SCENARIOS: 3 New Features Testing")
         print("=" * 80)
-        print("CONTEXT: Testing Via Verde Excel import functionality:")
-        print("1. Via Verde Import Endpoint Test")
-        print("   - Endpoint: POST /api/importar/viaverde")
-        print("   - Test file: /app/backend/uploads/via_verde_test.xlsx")
-        print("   - Parameters: periodo_inicio=2025-12-15, periodo_fim=2025-12-21, semana=51, ano=2025")
-        print("   - Expected: Successful import with ~750+ records")
-        print("2. Vehicle OBU Configuration Test")
-        print("   - Vehicle AS-83-NX (id: 4ad331ff-c0f5-43c9-95b8-cc085d32d8a7)")
-        print("   - Expected OBU: 43026607794")
-        print("3. Weekly Report Via Verde Integration Test")
-        print("   - Generate report for semana 53, ano 2025 (2-week delay)")
-        print("   - Should get data from semana 51")
-        print("   - Motorista: Nelson Francisco (id: e2355169-10a7-4547-9dd0-479c128d73f9)")
-        print("   - Expected: resumo.total_via_verde > €0 (~€325.20)")
-        print("4. Portagens Collection Verification")
+        print("CONTEXT: Testing 3 new features implementation:")
+        print("1. Via Verde Auto-Calculate Button")
+        print("   - Endpoint: GET /api/relatorios/motorista/{motorista_id}/via-verde-total")
+        print("   - Test motorista: e2355169-10a7-4547-9dd0-479c128d73f9")
+        print("   - Test with: semana=53, ano=2025")
+        print("   - Expected: Should return total_via_verde value > 0 with correct calculation")
+        print("2. Reports Showing Ganhos")
+        print("   - Endpoint: GET /api/relatorios/semanais-todos")
+        print("   - Expected: Reports should have total_ganhos > 0 for drivers with earnings")
+        print("   - Example drivers: Bruno Coelho (€559.73), Arlei Oliveira (€763.23)")
+        print("3. Comunicações Contact Config")
+        print("   - Save Endpoint: POST /api/configuracoes/email")
+        print("   - Get Endpoint: GET /api/configuracoes/email")
+        print("   - Public Endpoint: GET /api/public/contacto (no auth)")
+        print("   - Test data: email_contacto, telefone_contacto, morada_empresa, nome_empresa")
         print("\nCREDENCIAIS:")
         print("- Admin: admin@tvdefleet.com / 123456")
-        print("- Via Verde delay: 2 weeks (via_verde_atraso_semanas: 2)")
         print("=" * 80)
         
         # Execute priority tests
-        self.test_scenario_1_via_verde_import_endpoint()
-        self.test_scenario_2_vehicle_obu_configuration()
-        self.test_scenario_3_weekly_report_via_verde_integration()
-        self.test_scenario_4_portagens_collection_verification()
+        self.test_feature_1_via_verde_auto_calculate()
+        self.test_feature_2_reports_showing_ganhos()
+        self.test_feature_3_comunicacoes_contact_config()
         
         return True
 
