@@ -12532,11 +12532,11 @@ async def criar_relatorios_rascunho_apos_importacao(
                     update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
                     
                     await db.relatorios_semanais.update_one(
-                        {"id": relatorio_existente["id"]},
+                        {"_id": relatorio_existente["_id"]},
                         {"$set": update_fields}
                     )
                     rascunhos_existentes += 1
-                    logger.info(f"✅ Rascunho ATUALIZADO: {motorista.get('name')} - Semana {semana}/{ano} - {plataforma.upper()}: +€{update_fields.get('ganhos_bolt', update_fields.get('ganhos_uber', 0))}")
+                    logger.info(f"✅ Rascunho ATUALIZADO: {motorista.get('name')} - Semana {semana}/{ano} - {plataforma.upper()}")
                 
                 continue
             
