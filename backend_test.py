@@ -94,29 +94,30 @@ class FleeTrackTester:
         return {"Authorization": f"Bearer {self.tokens[role]}"}
     
     def test_fleetrack_backend_apis(self):
-        """🎯 MAIN TEST: FleeTrack CSV Import for Despesas (Via Verde)"""
-        print("\n🎯 MAIN TEST: FleeTrack CSV Import for Despesas (Via Verde)")
+        """🎯 MAIN TEST: FleeTrack Updated System Tests"""
+        print("\n🎯 MAIN TEST: FleeTrack Updated System Tests")
         print("=" * 80)
         print("CREDENCIAIS:")
         print("- Admin: admin@tvdefleet.com / 123456")
+        print("- Parceiro: parceiro@tvdefleet.com / 123456")
         print("\nTESTES A REALIZAR:")
         print("1. Authentication API")
-        print("2. CSV Preview API - POST /api/despesas/preview")
-        print("3. CSV Import API - POST /api/despesas/importar")
-        print("4. List Despesas API - GET /api/despesas/")
-        print("5. Resumo API - GET /api/despesas/resumo")
-        print("6. Import History API - GET /api/despesas/importacoes")
-        print("7. By Vehicle API - GET /api/despesas/por-veiculo/{id}")
+        print("2. Despesas Resumo API - GET /api/despesas/resumo (NEW LOGIC)")
+        print("3. Report Delete API - DELETE /api/relatorios/semanal/{id}")
+        print("4. Report Status Change API - PUT /api/relatorios/semanal/{id}/status")
+        print("5. List Reports for Parceiro - GET /api/relatorios/semanais-todos")
+        print("6. CSV Import API - POST /api/despesas/importar")
+        print("7. List Despesas API - GET /api/despesas/")
         print("=" * 80)
         
         # Execute all tests
         self.test_authentication_api()
-        self.test_despesas_preview_api()
+        self.test_despesas_resumo_api()
+        self.test_relatorios_delete_api()
+        self.test_relatorios_status_change_api()
+        self.test_relatorios_list_parceiro_api()
         self.test_despesas_import_api()
         self.test_despesas_list_api()
-        self.test_despesas_resumo_api()
-        self.test_despesas_importacoes_api()
-        self.test_despesas_por_veiculo_api()
         
         return True
     
