@@ -490,20 +490,27 @@ async def guardar_credenciais(
     credenciais_id = existing["id"] if existing else str(uuid.uuid4())
     now = datetime.now(timezone.utc)
     
-    # Encrypt password
-    password_encrypted = encrypt_password(credenciais_data.password)
-    
+    # Build credentials dict
     credenciais = {
         "id": credenciais_id,
         "parceiro_id": credenciais_data.parceiro_id,
         "fornecedor_id": credenciais_data.fornecedor_id,
         "email": credenciais_data.email,
-        "password_encrypted": password_encrypted,
         "codigo_2fa_secret": credenciais_data.codigo_2fa_secret,
-        "dados_extra": credenciais_data.dados_extra,
+        "dados_extra": credenciais_data.dados_extra or {},
         "ativo": True,
         "updated_at": now.isoformat()
     }
+    
+    # Only update password if provided (for updates, keep existing)
+    if credenciais_data.password:
+        credenciais["password_encrypted"] = encrypt_password(credenciais_data.password)
+    elif existing:
+        # Keep existing password on update
+        credenciais["password_encrypted"] = existing.get("password_encrypted", "")
+    else:
+        # New credential must have password
+        raise HTTPException(status_code=400, detail="Password é obrigatório para nova credencial")
     
     if existing:
         await db.credenciais_parceiro.update_one(
