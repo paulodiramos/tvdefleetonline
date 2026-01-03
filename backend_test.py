@@ -201,7 +201,7 @@ class FleeTrackTester:
         print("STEPS:")
         print("1. Login as admin")
         print("2. Get list of vehicles (GET /api/vehicles)")
-        print("3. Add maintenance record to vehicle (PUT /api/vehicles/{vehicle_id})")
+        print("3. Add maintenance record to vehicle (POST /api/vehicles/{vehicle_id}/manutencoes)")
         print("4. Verify maintenance record was saved correctly")
         
         # Step 1: Login as admin
@@ -227,78 +227,66 @@ class FleeTrackTester:
                     self.log_result("Scenario2-GetVehicles", True, 
                                   f"✅ Found {len(vehicles)} vehicles, testing with: {vehicle_info}")
                     
-                    # Step 3: Add maintenance record
+                    # Step 3: Add maintenance record using correct endpoint
                     print("\n🔍 Step 3: Adding maintenance record...")
                     
-                    # Get current vehicle data first
-                    vehicle_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}", headers=headers)
-                    if vehicle_response.status_code == 200:
-                        current_vehicle = vehicle_response.json()
+                    # Create maintenance record data
+                    maintenance_data = {
+                        "data_intervencao": "2025-01-15",
+                        "tipo_manutencao": "Revisão Geral",
+                        "descricao": "Teste de manutenção via API",
+                        "descricao_detalhada": "Teste completo do endpoint de manutenção",
+                        "custos": 150.0,
+                        "oficina": "Oficina Teste",
+                        "tempo_intervencao": "2 horas",
+                        "km_intervencao": 50000,
+                        "data_proxima": "2025-07-15",
+                        "km_proxima": 55000,
+                        "o_que_fazer": "Próxima revisão geral"
+                    }
+                    
+                    # Use the correct maintenance endpoint
+                    maintenance_response = requests.post(
+                        f"{BACKEND_URL}/vehicles/{vehicle_id}/manutencoes",
+                        json=maintenance_data,
+                        headers=headers
+                    )
+                    
+                    if maintenance_response.status_code == 200:
+                        result = maintenance_response.json()
+                        self.log_result("Scenario2-AddMaintenance", True, 
+                                      f"✅ MAINTENANCE HISTORY WORKING: Added maintenance record to {vehicle_info}")
                         
-                        # Add new maintenance record
-                        new_maintenance = {
-                            "data_intervencao": "2025-01-15",
-                            "tipo_manutencao": "Revisão Geral",
-                            "descricao": "Teste de manutenção via API",
-                            "custos": 150.0,
-                            "oficina": "Oficina Teste",
-                            "tempo_intervencao": "2 horas",
-                            "km_intervencao": 50000,
-                            "data_proxima": "2025-07-15",
-                            "km_proxima": 55000
-                        }
+                        # Step 4: Verify maintenance was saved
+                        print("\n🔍 Step 4: Verifying maintenance record was saved...")
+                        verify_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}", headers=headers)
                         
-                        # Get existing maintenance history or create new
-                        maintenance_history = current_vehicle.get("maintenance_history", [])
-                        maintenance_history.append(new_maintenance)
-                        
-                        update_data = {
-                            "maintenance_history": maintenance_history
-                        }
-                        
-                        update_response = requests.put(
-                            f"{BACKEND_URL}/vehicles/{vehicle_id}",
-                            json=update_data,
-                            headers=headers
-                        )
-                        
-                        if update_response.status_code == 200:
-                            self.log_result("Scenario2-AddMaintenance", True, 
-                                          f"✅ MAINTENANCE HISTORY WORKING: Added maintenance record to {vehicle_info}")
+                        if verify_response.status_code == 200:
+                            updated_vehicle = verify_response.json()
+                            manutencoes = updated_vehicle.get("manutencoes", [])
                             
-                            # Step 4: Verify maintenance was saved
-                            print("\n🔍 Step 4: Verifying maintenance record was saved...")
-                            verify_response = requests.get(f"{BACKEND_URL}/vehicles/{vehicle_id}", headers=headers)
+                            # Check if our maintenance record exists
+                            found_maintenance = False
+                            for manutencao in manutencoes:
+                                if (manutencao.get("descricao") == "Teste de manutenção via API" and 
+                                    manutencao.get("tipo_manutencao") == "Revisão Geral"):
+                                    found_maintenance = True
+                                    break
                             
-                            if verify_response.status_code == 200:
-                                updated_vehicle = verify_response.json()
-                                updated_maintenance = updated_vehicle.get("maintenance_history", [])
-                                
-                                # Check if our maintenance record exists
-                                found_maintenance = False
-                                for maintenance in updated_maintenance:
-                                    if (maintenance.get("descricao") == "Teste de manutenção via API" and 
-                                        maintenance.get("tipo_manutencao") == "Revisão Geral"):
-                                        found_maintenance = True
-                                        break
-                                
-                                if found_maintenance:
-                                    self.log_result("Scenario2-VerifyMaintenance", True, 
-                                                  f"✅ MAINTENANCE PERSISTENCE WORKING: Record saved correctly ({len(updated_maintenance)} total records)")
-                                    self.log_result("Scenario2-Success", True, 
-                                                  "✅ VEHICLE MAINTENANCE HISTORY REGISTRATION WORKING")
-                                else:
-                                    self.log_result("Scenario2-VerifyMaintenance", False, 
-                                                  "❌ Maintenance record not found after save")
+                            if found_maintenance:
+                                self.log_result("Scenario2-VerifyMaintenance", True, 
+                                              f"✅ MAINTENANCE PERSISTENCE WORKING: Record saved correctly ({len(manutencoes)} total records)")
+                                self.log_result("Scenario2-Success", True, 
+                                              "✅ VEHICLE MAINTENANCE HISTORY REGISTRATION WORKING")
                             else:
                                 self.log_result("Scenario2-VerifyMaintenance", False, 
-                                              f"❌ Failed to verify maintenance: {verify_response.status_code}")
+                                              f"❌ Maintenance record not found after save. Found {len(manutencoes)} records")
                         else:
-                            self.log_result("Scenario2-AddMaintenance", False, 
-                                          f"❌ Failed to add maintenance: {update_response.status_code} - {update_response.text}")
+                            self.log_result("Scenario2-VerifyMaintenance", False, 
+                                          f"❌ Failed to verify maintenance: {verify_response.status_code}")
                     else:
-                        self.log_result("Scenario2-GetVehicle", False, 
-                                      f"❌ Failed to get vehicle details: {vehicle_response.status_code}")
+                        self.log_result("Scenario2-AddMaintenance", False, 
+                                      f"❌ Failed to add maintenance: {maintenance_response.status_code} - {maintenance_response.text}")
                 else:
                     self.log_result("Scenario2-GetVehicles", False, 
                                   "❌ No vehicles found to test maintenance")
