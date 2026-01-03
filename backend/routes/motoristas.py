@@ -512,24 +512,28 @@ async def get_motorista_historico_atribuicoes(
                 entry["veiculo_matricula"] = veiculo.get("matricula", "")
                 entry["veiculo_ano"] = veiculo.get("ano", "")
             
-            # Procurar contrato associado (usando motorista_id + veiculo_id ou apenas motorista_id)
-            contrato = await db.contratos.find_one({
-                "$or": [
-                    {"motorista_id": motorista_id, "veiculo_id": veiculo_id, "ativo": True},
-                    {"motorista_id": motorista_id, "ativo": True}
-                ]
-            }, {"_id": 0})
-            
-            if contrato:
-                entry["tipo_contrato"] = contrato.get("tipo_utilizacao", contrato.get("tipo_contrato", "N/A"))
-                entry["valor_semanal"] = contrato.get("valor_semanal", contrato.get("valor_aluguer_semanal", 0))
-                entry["contrato_id"] = contrato.get("id")
+            # Usar tipo_contrato e valor_aluguer_semanal do próprio histórico se disponíveis
+            # Caso contrário, procurar contrato associado
+            if not entry.get("tipo_contrato") or not entry.get("valor_aluguer_semanal"):
+                contrato = await db.contratos.find_one({
+                    "$or": [
+                        {"motorista_id": motorista_id, "veiculo_id": veiculo_id, "ativo": True},
+                        {"motorista_id": motorista_id, "ativo": True}
+                    ]
+                }, {"_id": 0})
                 
-                # Verificar se existe PDF do contrato
-                if contrato.get("pdf_url"):
-                    entry["pdf_url"] = contrato.get("pdf_url")
-                elif contrato.get("pdf_path"):
-                    entry["pdf_url"] = contrato.get("pdf_path")
+                if contrato:
+                    if not entry.get("tipo_contrato"):
+                        entry["tipo_contrato"] = contrato.get("tipo_utilizacao", contrato.get("tipo_contrato", "N/A"))
+                    if not entry.get("valor_aluguer_semanal"):
+                        entry["valor_aluguer_semanal"] = contrato.get("valor_semanal", contrato.get("valor_aluguer_semanal", 0))
+                    entry["contrato_id"] = contrato.get("id")
+                    
+                    # Verificar se existe PDF do contrato
+                    if contrato.get("pdf_url"):
+                        entry["pdf_url"] = contrato.get("pdf_url")
+                    elif contrato.get("pdf_path"):
+                        entry["pdf_url"] = contrato.get("pdf_path")
         
         # Calcular duração da atribuição em dias
         if entry.get("data_inicio"):
