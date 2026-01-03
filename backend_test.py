@@ -759,8 +759,8 @@ class FleeTrackTester:
             return False
     
     def test_relatorios_list_parceiro_api(self):
-        """5. Test List Reports for Parceiro API"""
-        print("\n📋 5. Test List Reports for Parceiro API")
+        """10. Test List Reports for Parceiro API"""
+        print("\n📋 10. Test List Reports for Parceiro API")
         print("-" * 60)
         print("TESTE: GET /api/relatorios/semanais-todos")
         
