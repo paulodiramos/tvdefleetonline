@@ -19776,45 +19776,7 @@ async def get_recibo_pdf(recibo_id: str):
     from fastapi.responses import HTMLResponse
     return HTMLResponse(content=html_content)
 
-@api_router.delete("/notificacoes/{notificacao_id}")
-async def delete_notificacao(notificacao_id: str, current_user: Dict = Depends(get_current_user)):
-    """Delete a notification"""
-    # Verify ownership or admin
-    notif = await db.notificacoes.find_one({"id": notificacao_id}, {"_id": 0})
-    if not notif:
-        raise HTTPException(status_code=404, detail="Notification not found")
-    
-    if current_user["role"] != UserRole.ADMIN and notif.get("destinatario_id") != current_user["id"]:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    
-    result = await db.notificacoes.delete_one({"id": notificacao_id})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Notification not found")
-    
-    return {"message": "Notification deleted successfully"}
-
-@api_router.patch("/notificacoes/{notificacao_id}")
-async def update_notificacao(
-    notificacao_id: str, 
-    updates: Dict[str, Any], 
-    current_user: Dict = Depends(get_current_user)
-):
-    """Update a notification (e.g., edit message)"""
-    # Verify ownership or admin
-    notif = await db.notificacoes.find_one({"id": notificacao_id}, {"_id": 0})
-    if not notif:
-        raise HTTPException(status_code=404, detail="Notification not found")
-    
-    if current_user["role"] != UserRole.ADMIN and notif.get("destinatario_id") != current_user["id"]:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    
-    updates["updated_at"] = datetime.now(timezone.utc)
-    result = await db.notificacoes.update_one({"id": notificacao_id}, {"$set": updates})
-    
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Notification not found")
-    
-    return {"message": "Notification updated successfully"}
+# NOTA: Endpoints DELETE e PATCH /notificacoes/{notificacao_id} migrados para routes/notificacoes.py
 
 
 # ============================================================================
