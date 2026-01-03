@@ -171,6 +171,18 @@ const FichaVeiculo = ({ user, onLogout }) => {
   const [historico, setHistorico] = useState([]);
   const [historicoEditavel, setHistoricoEditavel] = useState([]);
   const [agenda, setAgenda] = useState([]);
+  
+  // Estado para adicionar manutenção
+  const [showAddManutencao, setShowAddManutencao] = useState(false);
+  const [novaManutencao, setNovaManutencao] = useState({
+    tipo_manutencao: '',
+    descricao: '',
+    data: new Date().toISOString().split('T')[0],
+    km_realizada: '',
+    valor: '',
+    fornecedor: ''
+  });
+
   const [relatorioGanhos, setRelatorioGanhos] = useState({
     ganhos_total: 0,
     despesas_total: 0,
