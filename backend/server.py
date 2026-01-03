@@ -11588,7 +11588,7 @@ async def gerar_relatorios_em_massa(
                     "caucao_semanal": round(caucao_semanal, 2),
                     "outros": 0.0,
                     "divida_anterior": 0.0,
-                    "status": "rascunho",
+                    "status": "pendente_aprovacao",  # Importação fica como pendente
                     "criado_em": datetime.now(timezone.utc).isoformat(),
                     "criado_por": current_user["id"],
                     "gerado_automaticamente": True
