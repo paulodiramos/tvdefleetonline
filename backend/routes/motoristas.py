@@ -152,10 +152,6 @@ async def approve_motorista(
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    motorista = await db.motoristas.find_one({"id": motorista_id})
-    if not motorista:
-        raise HTTPException(status_code=404, detail="Motorista not found")
-    
     # Find or create default free plan in the new unified system
     plano_base = await db.planos_sistema.find_one({
         "preco_mensal": 0, 
@@ -188,21 +184,70 @@ async def approve_motorista(
     from datetime import timedelta
     plano_valida_ate = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
     
-    # Update motorista with approval and base plan
-    logger.info(f"Updating motorista {motorista_id} with plan {plano_base['id']}")
-    result = await db.motoristas.update_one(
-        {"id": motorista_id}, 
-        {"$set": {
+    # Check if motorista profile exists
+    motorista_exists = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    
+    if motorista_exists:
+        # Update existing motorista with approval and base plan
+        logger.info(f"Updating motorista {motorista_id} with plan {plano_base['id']}")
+        result = await db.motoristas.update_one(
+            {"id": motorista_id},
+            {"$set": {
+                "approved": True, 
+                "approved_by": current_user["id"], 
+                "approved_at": datetime.now(timezone.utc).isoformat(),
+                "plano_id": plano_base["id"],
+                "plano_nome": plano_base["nome"],
+                "plano_valida_ate": plano_valida_ate,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        logger.info(f"Motorista update result: matched={result.matched_count}, modified={result.modified_count}")
+    else:
+        # Create motorista profile if it doesn't exist
+        user = await db.users.find_one({"id": motorista_id}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        if user.get("role") != "motorista":
+            raise HTTPException(status_code=400, detail="User is not a motorista")
+        
+        # Create motorista profile from user data with base plan
+        motorista_profile = {
+            "id": motorista_id,
+            "name": user.get("name"),
+            "email": user.get("email"),
+            "phone": user.get("phone", ""),
+            "whatsapp": user.get("whatsapp", ""),
+            "data_nascimento": user.get("data_nascimento", ""),
+            "nif": user.get("nif", ""),
+            "nacionalidade": user.get("nacionalidade", "Portuguesa"),
+            "morada_completa": user.get("morada_completa", ""),
+            "codigo_postal": user.get("codigo_postal", ""),
+            "id_cartao_frota_combustivel": f"FROTA-{str(uuid.uuid4())[:8].upper()}",
+            "documents": {},
             "approved": True,
+            "approved_by": current_user["id"],
+            "approved_at": datetime.now(timezone.utc).isoformat(),
+            "vehicle_assigned": None,
+            "parceiro_atribuido": None,
+            "contrato_id": None,
+            "contacto_emergencia": {},
+            "dados_bancarios": {},
             "plano_id": plano_base["id"],
             "plano_nome": plano_base["nome"],
             "plano_valida_ate": plano_valida_ate,
+            "created_at": user.get("created_at", datetime.now(timezone.utc).isoformat()),
             "updated_at": datetime.now(timezone.utc).isoformat()
-        }}
-    )
-    logger.info(f"Motorista update result: matched={result.matched_count}, modified={result.modified_count}")
+        }
+        await db.motoristas.insert_one(motorista_profile)
+        logger.info(f"Created motorista profile for {motorista_id} with plan {plano_base['id']}")
     
-    await db.users.update_one({"id": motorista_id}, {"$set": {"approved": True}})
+    # Always update user approval status
+    await db.users.update_one(
+        {"id": motorista_id},
+        {"$set": {"approved": True}}
+    )
     
     # Verify the update
     updated_motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
