@@ -3,70 +3,44 @@
 ## Last Updated: 2026-01-03
 
 ## Testing Context
-- Testing new RPA Credentials management in Partner Profile page
+- Testing new CSV Import feature for Via Verde expenses
+- Automatic association with vehicles and drivers
 
 ## Test Scenarios to Verify
 
-### Backend API Tests (Already Passed)
-1. ✅ Authentication - Login working
-2. ✅ Vehicles Endpoint - GET /api/vehicles returns 29 vehicles  
-3. ✅ Vehicle Assignment - POST /api/vehicles/{id}/atribuir-motorista working
-4. ✅ Automação RPA Dashboard - GET /api/automacao/dashboard working
-5. ✅ CSV Config - GET /api/csv-config/plataformas working
+### Backend API Tests
+1. POST /api/despesas/preview - Preview CSV/XLSX file before import
+2. POST /api/despesas/importar - Import expenses with automatic association
+3. GET /api/despesas/ - List all imported expenses
+4. GET /api/despesas/resumo - Get expense summary
+5. GET /api/despesas/importacoes - List import history
+6. GET /api/despesas/por-veiculo/{id} - Get expenses for specific vehicle
+7. GET /api/despesas/por-motorista/{id} - Get expenses for specific driver
 
-### New Credentials API Tests
-6. POST /api/automacao/credenciais - Create new credentials
-7. GET /api/automacao/credenciais?parceiro_id={id} - List credentials for partner
-8. DELETE /api/automacao/credenciais/{id} - Delete credentials
+### Import Logic to Verify
+- Matricula (license plate) is correctly identified
+- Vehicle is found by matricula
+- Motorista is associated via vehicle assignment
+- Tipo responsavel is determined:
+  - If vehicle is "aluguer" type → motorista
+  - If Via Verde associated with motorista → motorista  
+  - Otherwise → veiculo (parceiro)
 
 ### Frontend Tests
-1. ✅ Login page working
-2. ✅ Dashboard loads with vehicle counts
-3. ✅ /automacao page shows RPA dashboard
-4. ✅ /configuracao-csv page shows CSV config UI
-5. ✅ /edit-parceiro page loads and shows credentials section
-6. ✅ Test adding new credential via dialog - PASSED
-7. ✅ Test editing credential - PASSED
-8. ⚠️ Test deleting credential - NOT TESTED (session expired)
+1. /importar-despesas page loads with summary cards
+2. File upload dropzone works
+3. Preview shows column mapping and sample data
+4. Import creates records and updates statistics
+5. Import history table shows completed imports
+6. Recent expenses table shows imported data
 
-## RPA Credentials Management Test Results (2026-01-03)
-
-### ✅ PASSED TESTS:
-1. **Login as Admin**: Successfully logged in with admin@tvdefleet.com
-2. **Navigate to Edit Parceiro**: Page loads correctly with proper title
-3. **Select Parceiro**: Dropdown works, found 6 parceiros, selected "Santos & Filhos Lda"
-4. **Credentials Section Display**: 
-   - "Credenciais de Automação RPA" section visible and properly positioned
-   - Existing Uber credential displayed correctly
-   - Email: test@uber.com ✅
-   - Password properly masked with dots ✅
-   - "Ativa" badge displayed ✅
-   - Edit and Delete buttons present ✅
-5. **Add Credential Dialog**:
-   - "Adicionar Credencial" button works ✅
-   - Dialog opens with correct title "Nova Credencial" ✅
-   - Platform/Fornecedor dropdown present ✅
-   - Email/Username field present ✅
-   - Password field present ✅
-   - 2FA Secret field present (optional) ✅
-   - Form validation working ✅
-6. **Edit Credential Dialog**:
-   - Edit button opens dialog correctly ✅
-   - Dialog title "Editar Credencial" ✅
-   - Email field pre-filled with existing data ✅
-   - Password field empty for security ✅
-   - Platform dropdown disabled (correct behavior) ✅
-
-### ⚠️ PARTIALLY TESTED:
-1. **Configurações Menu**: Found in user dropdown with Automação RPA and CSV links
-2. **Delete Credential**: Button present but not tested due to session expiration
-
-### 🔧 TECHNICAL NOTES:
-- Session management: Sessions expire during long tests, requiring re-authentication
-- UI Components: All using shadcn/ui components correctly
-- Security: Passwords properly encrypted and masked
-- Form Validation: Working correctly for required fields
-- API Integration: Credentials are properly saved and retrieved
+## Current Import Stats (Via Verde Test)
+- Total records: 829
+- Vehicles found: 752
+- Drivers associated: 348
+- Total value: €1,337.79
+- Motoristas: €0.00
+- Parceiro: €1,337.79
 
 ## Incorporate User Feedback
-- User requested credential management in partner profiles (COMPLETED ✅)
+- CSV import for Via Verde (COMPLETED)
