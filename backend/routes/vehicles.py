@@ -922,6 +922,186 @@ async def get_vehicle_relatorio_ganhos(
     }
 
 
+# ==================== HISTÓRICO DE CUSTOS ====================
+
+@router.post("/{vehicle_id}/custos")
+async def add_custo_veiculo(
+    vehicle_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Adicionar custo ao histórico do veículo
+    
+    Body:
+    - categoria: revisao, vistoria, seguro, pneus, reparacao, combustivel, lavagem, multa, outros
+    - descricao: Descrição do custo
+    - valor: Valor em euros
+    - data: Data do custo (YYYY-MM-DD)
+    - fornecedor: Nome do fornecedor/oficina (opcional)
+    - documento_url: URL do documento/fatura (opcional)
+    - observacoes: Notas adicionais (opcional)
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Validar campos obrigatórios
+    categoria = data.get("categoria")
+    descricao = data.get("descricao")
+    valor = data.get("valor")
+    data_custo = data.get("data")
+    
+    if not all([categoria, descricao, valor, data_custo]):
+        raise HTTPException(status_code=400, detail="categoria, descricao, valor e data são obrigatórios")
+    
+    categorias_validas = ["revisao", "vistoria", "seguro", "pneus", "reparacao", 
+                         "combustivel", "lavagem", "multa", "outros"]
+    if categoria not in categorias_validas:
+        raise HTTPException(status_code=400, detail=f"Categoria inválida. Use: {', '.join(categorias_validas)}")
+    
+    custo_id = str(uuid.uuid4())
+    now = datetime.now(timezone.utc)
+    
+    custo = {
+        "id": custo_id,
+        "veiculo_id": vehicle_id,
+        "veiculo_matricula": vehicle.get("matricula"),
+        "parceiro_id": vehicle.get("parceiro_id"),
+        "categoria": categoria,
+        "descricao": descricao,
+        "valor": float(valor),
+        "data": data_custo,
+        "fornecedor": data.get("fornecedor"),
+        "documento_url": data.get("documento_url"),
+        "observacoes": data.get("observacoes"),
+        "created_at": now.isoformat(),
+        "created_by": current_user["id"]
+    }
+    
+    await db.historico_custos_veiculo.insert_one(custo)
+    
+    logger.info(f"✅ Custo adicionado ao veículo {vehicle.get('matricula')}: {categoria} - €{valor}")
+    
+    return {
+        "message": "Custo adicionado com sucesso",
+        "custo_id": custo_id,
+        "custo": {
+            "id": custo_id,
+            "categoria": categoria,
+            "descricao": descricao,
+            "valor": float(valor),
+            "data": data_custo
+        }
+    }
+
+
+@router.get("/{vehicle_id}/custos")
+async def get_custos_veiculo(
+    vehicle_id: str,
+    categoria: str = None,
+    ano: int = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Obter histórico de custos do veículo
+    Filtros opcionais: categoria, ano
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    query = {"veiculo_id": vehicle_id}
+    
+    if categoria:
+        query["categoria"] = categoria
+    
+    if ano:
+        query["data"] = {"$gte": f"{ano}-01-01", "$lte": f"{ano}-12-31"}
+    
+    custos = await db.historico_custos_veiculo.find(
+        query, {"_id": 0}
+    ).sort("data", -1).to_list(1000)
+    
+    # Calcular totais por categoria
+    totais = {}
+    total_geral = 0.0
+    for custo in custos:
+        cat = custo.get("categoria", "outros")
+        valor = custo.get("valor", 0)
+        totais[cat] = totais.get(cat, 0) + valor
+        total_geral += valor
+    
+    return {
+        "veiculo_id": vehicle_id,
+        "matricula": vehicle.get("matricula"),
+        "custos": custos,
+        "totais_por_categoria": {k: round(v, 2) for k, v in totais.items()},
+        "total_geral": round(total_geral, 2),
+        "total_registos": len(custos)
+    }
+
+
+@router.put("/{vehicle_id}/custos/{custo_id}")
+async def update_custo_veiculo(
+    vehicle_id: str,
+    custo_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar custo do veículo"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    custo = await db.historico_custos_veiculo.find_one(
+        {"id": custo_id, "veiculo_id": vehicle_id},
+        {"_id": 0}
+    )
+    if not custo:
+        raise HTTPException(status_code=404, detail="Custo não encontrado")
+    
+    allowed_fields = ["categoria", "descricao", "valor", "data", "fornecedor", 
+                      "documento_url", "observacoes"]
+    
+    update_data = {k: v for k, v in data.items() if k in allowed_fields}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_data["updated_by"] = current_user["id"]
+    
+    await db.historico_custos_veiculo.update_one(
+        {"id": custo_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Custo atualizado com sucesso"}
+
+
+@router.delete("/{vehicle_id}/custos/{custo_id}")
+async def delete_custo_veiculo(
+    vehicle_id: str,
+    custo_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Eliminar custo do veículo"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    result = await db.historico_custos_veiculo.delete_one(
+        {"id": custo_id, "veiculo_id": vehicle_id}
+    )
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Custo não encontrado")
+    
+    return {"message": "Custo eliminado com sucesso"}
+
+
+
 @router.post("/{vehicle_id}/atribuir-motorista")
 async def atribuir_motorista_vehicle(
     vehicle_id: str,
