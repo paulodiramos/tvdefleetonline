@@ -684,6 +684,86 @@ async def get_relatorio_semanal(
     return relatorio
 
 
+@router.get("/motorista/{motorista_id}/via-verde-total")
+async def get_motorista_via_verde_total(
+    motorista_id: str,
+    semana: int,
+    ano: int,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Calculate total Via Verde expenses for a driver for a specific week.
+    Uses portagens_viaverde collection and considers via_verde_atraso_semanas from config.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Get Via Verde delay from config
+    config = await db.relatorio_config.find_one({}, {"_id": 0})
+    via_verde_atraso = config.get("via_verde_atraso_semanas", 1) if config else 1
+    
+    # Calculate the data week (semana - atraso)
+    semana_via_verde = semana - via_verde_atraso if semana > via_verde_atraso else semana
+    ano_via_verde = ano if semana > via_verde_atraso else ano - 1
+    
+    logger.info(f"📍 Calculating Via Verde total for motorista {motorista_id}, report week {semana}/{ano}, data week {semana_via_verde}/{ano_via_verde}")
+    
+    # Get motorist's vehicles (current and historical)
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    veiculo_id = motorista.get("veiculo_id") if motorista else None
+    
+    # Query portagens_viaverde collection
+    query = {
+        "$or": [
+            {"motorista_id": motorista_id},
+            {"vehicle_id": veiculo_id} if veiculo_id else {"vehicle_id": None}
+        ],
+        "$and": [
+            {
+                "$or": [
+                    {"semana": semana_via_verde, "ano": ano_via_verde},
+                    {"semana": {"$exists": False}},
+                    {"semana": None}
+                ]
+            }
+        ]
+    }
+    
+    # If no semana, try by date
+    portagens = await db.portagens_viaverde.find(query, {"_id": 0}).to_list(5000)
+    
+    # Calculate total
+    total = sum(float(p.get("liquid_value") or p.get("value") or 0) for p in portagens)
+    
+    # Also check despesas_fornecedor for legacy imports
+    despesas_vv = await db.despesas_fornecedor.find({
+        "motorista_id": motorista_id,
+        "tipo_fornecedor": "via_verde",
+        "$or": [
+            {"semana_relatorio": semana_via_verde, "ano_relatorio": ano_via_verde},
+            {"semana_dados": semana_via_verde, "ano": ano_via_verde}
+        ]
+    }, {"_id": 0}).to_list(1000)
+    
+    total_legacy = sum(float(d.get("valor_liquido") or d.get("valor") or 0) for d in despesas_vv)
+    
+    total_via_verde = total + total_legacy
+    
+    logger.info(f"📍 Via Verde total: €{total_via_verde:.2f} (portagens: €{total:.2f}, legacy: €{total_legacy:.2f})")
+    
+    return {
+        "motorista_id": motorista_id,
+        "semana_relatorio": semana,
+        "ano_relatorio": ano,
+        "semana_dados": semana_via_verde,
+        "ano_dados": ano_via_verde,
+        "total_via_verde": round(total_via_verde, 2),
+        "registos_portagens": len(portagens),
+        "registos_legacy": len(despesas_vv),
+        "via_verde_atraso_semanas": via_verde_atraso
+    }
+
+
 @router.put("/semanal/{relatorio_id}")
 async def update_relatorio_semanal(
     relatorio_id: str,
