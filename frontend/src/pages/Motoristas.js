@@ -49,6 +49,7 @@ const Motoristas = ({ user, onLogout }) => {
   const [importLoading, setImportLoading] = useState(false);
   const [historicoAtribuicoes, setHistoricoAtribuicoes] = useState([]);
   const [loadingHistorico, setLoadingHistorico] = useState(false);
+  const [resumosMotoristas, setResumosMotoristas] = useState({});
   const [newMotorista, setNewMotorista] = useState({
     email: '',
     name: '',
