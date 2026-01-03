@@ -1818,9 +1818,9 @@ const Motoristas = ({ user, onLogout }) => {
                                           <strong>Tipo:</strong> {item.tipo_contrato}
                                         </span>
                                       )}
-                                      {item.valor_semanal > 0 && (
+                                      {item.valor_aluguer_semanal > 0 && (
                                         <span className="text-green-600 font-medium">
-                                          €{item.valor_semanal.toFixed(2)}/semana
+                                          €{item.valor_aluguer_semanal.toFixed(2)}/semana
                                         </span>
                                       )}
                                     </div>
