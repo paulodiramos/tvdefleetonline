@@ -208,7 +208,7 @@ class Vehicle(BaseModel):
     inspecoes: List[VehicleInspection] = []
     inspection: Optional[VehicleInspection] = None
     proxima_vistoria: Optional[datetime] = None
-    disponibilidade: VehicleAvailability
+    disponibilidade: Optional[VehicleAvailability] = None
     km_atual: Optional[int] = None
     km_aviso_manutencao: int = 5000
     alertas_manutencao: List[str] = []
