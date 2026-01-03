@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-FleeTrack Backend Testing Suite - Route Refactoring & Automação RPA Tests
-Tests for refactored routes and new Automação RPA and CSV Config modules
+FleeTrack Backend Testing Suite - CSV Import for Despesas (Via Verde)
+Tests for new CSV Import feature for Via Verde expenses with automatic association
 """
 
 import requests
@@ -13,6 +13,7 @@ from PIL import Image
 import io
 import base64
 from pathlib import Path
+import csv
 
 # Get backend URL from frontend .env
 BACKEND_URL = "https://fleetmanager-24.preview.emergentagent.com/api"
