@@ -137,6 +137,10 @@ async def gerar_relatorio_semanal(
     via_verde_records = []
     incluir_via_verde = config.get("incluir_via_verde", True)
     
+    # Get semana/ano from request data
+    semana_relatorio = data.get("semana", 1)
+    ano_relatorio = data.get("ano", datetime.now().year)
+    
     if incluir_via_verde:
         # Legacy via_verde collection (by vehicle)
         if veiculo_id:
@@ -147,18 +151,33 @@ async def gerar_relatorio_semanal(
             via_verde_records = await db.via_verde.find(vv_query, {"_id": 0}).to_list(1000)
             total_via_verde = sum(r.get("valor", 0) or 0 for r in via_verde_records)
         
-        # Also check imported despesas from CSV (Via Verde)
-        # Only count despesas where motorista is responsible (tipo_responsavel = "motorista")
-        data_fim_vv_next = (datetime.fromisoformat(data_fim_via_verde) + timedelta(days=1)).strftime("%Y-%m-%d")
-        
-        despesas_vv_query = {
+        # Check imported despesas from CSV (Via Verde)
+        # Priority 1: Use semana_relatorio field if available (new import system)
+        despesas_vv_query_semana = {
             "motorista_id": motorista_id,
             "tipo_fornecedor": "via_verde",
             "tipo_responsavel": "motorista",
+            "semana_relatorio": semana_relatorio,
+            "ano_relatorio": ano_relatorio
+        }
+        
+        despesas_via_verde_semana = await db.despesas_fornecedor.find(despesas_vv_query_semana, {"_id": 0}).to_list(1000)
+        
+        # Priority 2: Fallback to date-based query (legacy imports without semana_relatorio)
+        data_fim_vv_next = (datetime.fromisoformat(data_fim_via_verde) + timedelta(days=1)).strftime("%Y-%m-%d")
+        
+        despesas_vv_query_data = {
+            "motorista_id": motorista_id,
+            "tipo_fornecedor": "via_verde",
+            "tipo_responsavel": "motorista",
+            "semana_relatorio": None,  # Only get legacy records
             "data_entrada": {"$gte": data_inicio_via_verde, "$lt": data_fim_vv_next}
         }
         
-        despesas_via_verde = await db.despesas_fornecedor.find(despesas_vv_query, {"_id": 0}).to_list(1000)
+        despesas_via_verde_data = await db.despesas_fornecedor.find(despesas_vv_query_data, {"_id": 0}).to_list(1000)
+        
+        # Combine both results
+        despesas_via_verde = despesas_via_verde_semana + despesas_via_verde_data
         
         # Add imported despesas to records for display
         for desp in despesas_via_verde:
@@ -166,7 +185,9 @@ async def gerar_relatorio_semanal(
                 "data": desp.get("data_entrada"),
                 "valor": desp.get("valor_liquido", 0.0),
                 "local": f"{desp.get('ponto_entrada', '')} → {desp.get('ponto_saida', '')}",
-                "tipo": "importado_csv"
+                "tipo": "importado_csv",
+                "semana_dados": desp.get("semana_dados"),
+                "semana_relatorio": desp.get("semana_relatorio")
             })
         
         # Sum imported despesas
