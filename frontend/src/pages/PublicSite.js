@@ -12,10 +12,28 @@ const PublicSite = () => {
   const navigate = useNavigate();
   const [availableVehicles, setAvailableVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [contactInfo, setContactInfo] = useState({
+    email_contacto: 'info@tvdefleet.com',
+    telefone_contacto: '+351 912 345 678',
+    morada_empresa: 'Lisboa, Portugal',
+    nome_empresa: 'TVDEFleet'
+  });
 
   useEffect(() => {
     fetchAvailableVehicles();
+    fetchContactInfo();
   }, []);
+
+  const fetchContactInfo = async () => {
+    try {
+      const response = await axios.get(`${API}/public/contacto`);
+      if (response.data) {
+        setContactInfo(response.data);
+      }
+    } catch (error) {
+      console.log('Usando configurações de contacto padrão');
+    }
+  };
 
   const fetchAvailableVehicles = async () => {
     try {
