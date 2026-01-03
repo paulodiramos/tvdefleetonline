@@ -858,8 +858,8 @@ class FleeTrackTester:
             return False
     
     def test_despesas_list_api(self):
-        """7. Test Despesas List API"""
-        print("\n📋 7. Test Despesas List API")
+        """12. Test Despesas List API"""
+        print("\n📋 12. Test Despesas List API")
         print("-" * 60)
         print("TESTE: GET /api/despesas/")
         
