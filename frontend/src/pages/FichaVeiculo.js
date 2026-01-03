@@ -855,6 +855,66 @@ const FichaVeiculo = ({ user, onLogout }) => {
     }
   };
 
+  // Handler para adicionar manutenção ao histórico
+  const handleAddManutencao = async (e) => {
+    e.preventDefault();
+    if (!novaManutencao.tipo_manutencao || !novaManutencao.data) {
+      toast.error('Preencha pelo menos o tipo e a data');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const manutencaoData = {
+        tipo_manutencao: novaManutencao.tipo_manutencao,
+        descricao: novaManutencao.descricao,
+        data: novaManutencao.data,
+        km_realizada: parseInt(novaManutencao.km_realizada) || 0,
+        valor: parseFloat(novaManutencao.valor) || 0,
+        fornecedor: novaManutencao.fornecedor,
+        created_at: new Date().toISOString()
+      };
+
+      // Adicionar ao array de manutenções existente
+      const manutencoes = vehicle.manutencoes || [];
+      manutencoes.unshift(manutencaoData); // Adicionar no início
+
+      await axios.put(`${API}/vehicles/${vehicleId}`, {
+        manutencoes: manutencoes
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      // Também adicionar aos custos do veículo para o ROI
+      if (manutencaoData.valor > 0) {
+        await axios.post(`${API}/vehicles/${vehicleId}/custos`, {
+          categoria: 'revisao',
+          descricao: `${manutencaoData.tipo_manutencao}: ${manutencaoData.descricao || 'Sem descrição'}`,
+          valor: manutencaoData.valor,
+          data: manutencaoData.data,
+          fornecedor: manutencaoData.fornecedor
+        }, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+
+      toast.success('Manutenção registada com sucesso!');
+      setShowAddManutencao(false);
+      setNovaManutencao({
+        tipo_manutencao: '',
+        descricao: '',
+        data: new Date().toISOString().split('T')[0],
+        km_realizada: '',
+        valor: '',
+        fornecedor: ''
+      });
+      fetchVehicleData();
+    } catch (error) {
+      console.error('Error adding manutencao:', error);
+      toast.error('Erro ao registar manutenção');
+    }
+  };
+
   const handleAddHistorico = async (e) => {
     e.preventDefault();
     try {
