@@ -179,7 +179,7 @@ class CredenciaisParceiroCreate(BaseModel):
     parceiro_id: str
     fornecedor_id: str
     email: str
-    password: str  # Será encriptado
+    password: Optional[str] = None  # Optional for updates - will be encrypted
     codigo_2fa_secret: Optional[str] = None
     dados_extra: Dict[str, str] = {}
 
