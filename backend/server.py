@@ -12548,6 +12548,8 @@ async def importar_plataforma(
     file: UploadFile = File(...),
     periodo_inicio: Optional[str] = Form(None),
     periodo_fim: Optional[str] = Form(None),
+    semana: Optional[int] = Form(None),
+    ano: Optional[int] = Form(None),
     current_user: Dict = Depends(get_current_user)
 ):
     """Importar dados de plataformas (Uber, Bolt, Via Verde, GPS, Abastecimentos)"""
