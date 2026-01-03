@@ -127,6 +127,9 @@ class FleeTrackTester:
         print("10. List Reports for Parceiro - GET /api/relatorios/semanais-todos")
         print("11. CSV Import API - POST /api/despesas/importar")
         print("12. List Despesas API - GET /api/despesas/")
+        print("13. 🆕 NEW: Vehicle Costs API - POST /api/vehicles/{id}/custos")
+        print("14. 🆕 NEW: Vehicle Costs List API - GET /api/vehicles/{id}/custos")
+        print("15. 🆕 NEW: Vehicle ROI Report API - GET /api/vehicles/{id}/relatorio-ganhos")
         print("=" * 80)
         
         # Execute all tests
@@ -142,6 +145,10 @@ class FleeTrackTester:
         self.test_relatorios_list_parceiro_api()
         self.test_despesas_import_api()
         self.test_despesas_list_api()
+        # NEW TESTS: Vehicle Costs and ROI
+        self.test_vehicle_costs_api()
+        self.test_vehicle_costs_list_api()
+        self.test_vehicle_roi_report_api()
         
         return True
     
