@@ -51,7 +51,7 @@ class FleeTrackTester:
     def print_summary(self):
         """Print test results summary"""
         print("\n" + "="*80)
-        print("📋 RESUMO DOS TESTES - Via Verde Excel Import")
+        print("📋 RESUMO DOS TESTES - 3 New Features Testing")
         print("="*80)
         
         for result in self.test_results:
