@@ -193,9 +193,9 @@ class Vehicle(BaseModel):
     combustivel: str
     caixa: str
     lugares: int
-    tipo_contrato: TipoContrato
-    categorias_uber: CategoriasUber
-    categorias_bolt: CategoriasBolt
+    tipo_contrato: Optional[TipoContrato] = None
+    categorias_uber: Optional[CategoriasUber] = None
+    categorias_bolt: Optional[CategoriasBolt] = None
     via_verde_disponivel: bool = False
     via_verde_id: Optional[str] = None
     cartao_frota_disponivel: bool = False
