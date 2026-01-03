@@ -1778,6 +1778,71 @@ const Motoristas = ({ user, onLogout }) => {
                           )}
                         </div>
                       )}
+
+                      {/* Histórico de Atribuições */}
+                      <div className="border rounded-lg p-4 mt-4">
+                        <div className="flex justify-between items-center mb-4">
+                          <h4 className="font-semibold text-slate-900">Histórico de Atribuições</h4>
+                          <Badge variant="secondary">{historicoAtribuicoes.length} registos</Badge>
+                        </div>
+                        
+                        {loadingHistorico ? (
+                          <div className="text-center py-4">
+                            <p className="text-slate-500">A carregar histórico...</p>
+                          </div>
+                        ) : historicoAtribuicoes.length === 0 ? (
+                          <div className="text-center py-4 bg-slate-50 rounded-lg">
+                            <p className="text-slate-500">Nenhum histórico de atribuições encontrado.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {historicoAtribuicoes.map((item, index) => (
+                              <div key={item.historico_id || index} className="border rounded-lg p-3 bg-slate-50 hover:bg-slate-100 transition-colors">
+                                <div className="flex justify-between items-start">
+                                  <div className="space-y-1">
+                                    <div className="flex items-center gap-2">
+                                      <span className="font-medium text-slate-900">
+                                        {item.veiculo_marca} {item.veiculo_modelo}
+                                      </span>
+                                      <Badge variant="outline">{item.veiculo_matricula || 'N/A'}</Badge>
+                                    </div>
+                                    <div className="text-sm text-slate-600">
+                                      <span>De: {item.data_inicio ? new Date(item.data_inicio).toLocaleDateString('pt-PT') : 'N/A'}</span>
+                                      <span className="mx-2">→</span>
+                                      <span>Até: {item.data_fim ? new Date(item.data_fim).toLocaleDateString('pt-PT') : 'Presente'}</span>
+                                      {item.duracao_dias && <span className="ml-2 text-xs">({item.duracao_dias} dias)</span>}
+                                    </div>
+                                    <div className="flex items-center gap-3 text-sm">
+                                      {item.tipo_contrato && (
+                                        <span className="text-slate-600">
+                                          <strong>Tipo:</strong> {item.tipo_contrato}
+                                        </span>
+                                      )}
+                                      {item.valor_semanal > 0 && (
+                                        <span className="text-green-600 font-medium">
+                                          €{item.valor_semanal.toFixed(2)}/semana
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col gap-2">
+                                    {item.contrato_id && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleDownloadContrato(item.contrato_id, selectedMotorista.name)}
+                                      >
+                                        <Download className="w-4 h-4 mr-1" />
+                                        PDF
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </TabsContent>
 
