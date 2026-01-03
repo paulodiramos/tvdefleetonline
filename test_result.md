@@ -24,7 +24,7 @@ backend:
     status_history:
       - working: true
         agent: "testing"
-        comment: "✅ NEW LOGIC WORKING - Expenses assigned to motoristas! Resumo API shows €505.79 for motoristas and €2178.59 for parceiro. Contract types 'aluguer', 'compra', 'slot' correctly assign expenses to motorista, while 'comissao' assigns to veiculo (parceiro)."
+        comment: "✅ NEW LOGIC WORKING - Expenses assigned to motoristas! Resumo API shows €1517.37 for motoristas and €3851.39 for parceiro (updated values from latest test). Contract types 'aluguer', 'compra', 'slot' correctly assign expenses to motorista, while 'comissao' assigns to veiculo (parceiro). Total: €5368.76 across 3322 records."
 
   - task: "Report Delete Endpoint"
     implemented: true
