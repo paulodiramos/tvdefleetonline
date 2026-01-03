@@ -115,6 +115,45 @@ const Motoristas = ({ user, onLogout }) => {
     }
   };
 
+  const fetchHistoricoAtribuicoes = async (motoristaId) => {
+    try {
+      setLoadingHistorico(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/motoristas/${motoristaId}/historico-atribuicoes`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setHistoricoAtribuicoes(response.data.historico || []);
+    } catch (error) {
+      console.error('Error fetching historico atribuicoes:', error);
+      setHistoricoAtribuicoes([]);
+    } finally {
+      setLoadingHistorico(false);
+    }
+  };
+
+  const handleDownloadContrato = async (contratoId, motoristaName) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/contratos/${contratoId}/download`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: 'blob'
+      });
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `contrato_${motoristaName}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      toast.success('Contrato descarregado com sucesso!');
+    } catch (error) {
+      console.error('Error downloading contract:', error);
+      toast.error('Erro ao descarregar contrato');
+    }
+  };
+
   const handleApprove = async (motoristaId) => {
     try {
       await axios.put(`${API}/motoristas/${motoristaId}/approve`);
