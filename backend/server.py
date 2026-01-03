@@ -12417,7 +12417,123 @@ async def criar_relatorios_rascunho_apos_importacao(
             }, {"_id": 0})
             
             if relatorio_existente:
-                rascunhos_existentes += 1
+                # ATUALIZAR relatório existente com os novos dados da plataforma
+                # Buscar motorista para recálculo
+                motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+                if not motorista:
+                    rascunhos_existentes += 1
+                    continue
+                
+                # Recalcular valores da plataforma atual
+                update_fields = {}
+                
+                if plataforma == 'uber':
+                    dados = await db.ganhos_uber.find({
+                        "motorista_id": motorista_id,
+                        "periodo_inicio": periodo_inicio,
+                        "periodo_fim": periodo_fim
+                    }, {"_id": 0}).to_list(1000)
+                    
+                    ganhos_uber_novo = 0
+                    gorjetas_uber_novo = 0
+                    portagens_uber_novo = 0
+                    for d in dados:
+                        ganho_linha = float(d.get('ganhos_base') or d.get('ganhos_totais') or d.get('rendimentos_total') or 0)
+                        gorjetas_uber_novo += float(d.get('gorjetas') or 0)
+                        portagens_uber_novo += float(d.get('portagens_total') or 0)
+                        
+                        if motorista.get('gorjetas_uber_recebe', True):
+                            ganho_linha += float(d.get('gorjetas') or 0)
+                        
+                        portagens = float(d.get('portagens_total') or 0)
+                        if motorista.get('portagens_uber_config') == 'empresa_paga':
+                            ganho_linha += portagens
+                        elif motorista.get('portagens_uber_config') == 'motorista_paga':
+                            ganho_linha -= portagens
+                        
+                        ganhos_uber_novo += ganho_linha
+                    
+                    update_fields = {
+                        "ganhos_uber": ganhos_uber_novo,
+                        "gorjetas_uber": gorjetas_uber_novo,
+                        "portagens_uber": portagens_uber_novo
+                    }
+                
+                elif plataforma == 'bolt':
+                    dados = await db.viagens_bolt.find({
+                        "motorista_id": motorista_id,
+                        "periodo_inicio": periodo_inicio,
+                        "periodo_fim": periodo_fim
+                    }, {"_id": 0}).to_list(1000)
+                    
+                    ganhos_bolt_novo = 0
+                    gorjetas_bolt_novo = 0
+                    portagens_bolt_novo = 0
+                    for d in dados:
+                        ganhos_bolt_novo += float(d.get('ganhos_liquidos') or d.get('valor_liquido') or d.get('ganhos_semanais') or 0)
+                        gorjetas_bolt_novo += float(d.get('gorjetas') or 0)
+                        portagens_bolt_novo += float(d.get('portagens') or 0)
+                    
+                    update_fields = {
+                        "ganhos_bolt": ganhos_bolt_novo,
+                        "gorjetas_bolt": gorjetas_bolt_novo,
+                        "portagens_bolt": portagens_bolt_novo
+                    }
+                
+                elif plataforma == 'viaverde':
+                    dados = await db.portagens_viaverde.find({
+                        "motorista_id": motorista_id,
+                        "periodo_inicio": periodo_inicio,
+                        "periodo_fim": periodo_fim
+                    }, {"_id": 0}).to_list(1000)
+                    
+                    portagens_viaverde_novo = 0
+                    carregamentos_total_novo = 0
+                    for d in dados:
+                        if d.get('tipo_transacao') == 'carregamento_eletrico':
+                            carregamentos_total_novo += float(d.get('valor_total_com_taxas') or 0)
+                        else:
+                            portagens_viaverde_novo += float(d.get('liquid_value') or d.get('valor_total_com_taxas') or d.get('valor') or 0)
+                    
+                    update_fields = {
+                        "portagens_viaverde": portagens_viaverde_novo,
+                        "carregamentos_eletricos": carregamentos_total_novo
+                    }
+                
+                elif plataforma == 'combustivel':
+                    dados = await db.abastecimentos_combustivel.find({
+                        "motorista_id": motorista_id,
+                        "periodo_inicio": periodo_inicio,
+                        "periodo_fim": periodo_fim
+                    }, {"_id": 0}).to_list(1000)
+                    
+                    combustivel_total_novo = sum(float(d.get('valor_liquido') or d.get('valor_total') or 0) for d in dados)
+                    update_fields = {"combustivel_total": combustivel_total_novo}
+                
+                elif plataforma == 'gps':
+                    dados = await db.viagens_gps.find({
+                        "motorista_id": motorista_id,
+                        "periodo_inicio": periodo_inicio,
+                        "periodo_fim": periodo_fim
+                    }, {"_id": 0}).to_list(1000)
+                    
+                    km_percorridos_novo = sum(d.get('distancia_percorrida_km', 0) for d in dados)
+                    update_fields = {"km_percorridos": km_percorridos_novo}
+                
+                if update_fields:
+                    # Recalcular total_ganhos
+                    ganhos_uber_final = update_fields.get("ganhos_uber", relatorio_existente.get("ganhos_uber", 0))
+                    ganhos_bolt_final = update_fields.get("ganhos_bolt", relatorio_existente.get("ganhos_bolt", 0))
+                    update_fields["total_ganhos"] = ganhos_uber_final + ganhos_bolt_final
+                    update_fields["updated_at"] = datetime.now(timezone.utc).isoformat()
+                    
+                    await db.relatorios_semanais.update_one(
+                        {"id": relatorio_existente["id"]},
+                        {"$set": update_fields}
+                    )
+                    rascunhos_existentes += 1
+                    logger.info(f"✅ Rascunho ATUALIZADO: {motorista.get('name')} - Semana {semana}/{ano} - {plataforma.upper()}: +€{update_fields.get('ganhos_bolt', update_fields.get('ganhos_uber', 0))}")
+                
                 continue
             
             # Buscar motorista completo
