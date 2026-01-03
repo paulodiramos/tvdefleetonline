@@ -3925,6 +3925,9 @@ const RelatorioFinanceiroTab = ({ vehicleId, canEdit, user, relatorioGanhos, set
       let url = `${API}/vehicles/${vehicleId}/relatorio-ganhos?periodo=${periodo}`;
       if (periodo === 'ano') url += `&ano=${ano}`;
       if (periodo === 'mes') url += `&ano=${ano}&mes=${mes}`;
+      if (periodo === 'custom' && dataInicio && dataFim) {
+        url += `&data_inicio=${dataInicio}&data_fim=${dataFim}`;
+      }
       
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
@@ -3940,9 +3943,13 @@ const RelatorioFinanceiroTab = ({ vehicleId, canEdit, user, relatorioGanhos, set
 
   useEffect(() => {
     if (vehicleId) {
+      // Para custom, só buscar se tiver ambas as datas
+      if (periodo === 'custom' && (!dataInicio || !dataFim)) {
+        return;
+      }
       fetchRelatorio();
     }
-  }, [vehicleId, periodo, ano, mes]);
+  }, [vehicleId, periodo, ano, mes, dataInicio, dataFim]);
 
   const handleAddCusto = async (e) => {
     e.preventDefault();
