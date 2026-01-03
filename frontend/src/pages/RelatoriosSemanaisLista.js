@@ -57,6 +57,12 @@ const RelatoriosSemanaisLista = ({ user, onLogout }) => {
     }
   };
 
+  // Filter reports based on status
+  const relatoriosFiltrados = relatorios.filter(rel => {
+    if (filtroStatus === 'todos') return true;
+    return rel.status === filtroStatus;
+  });
+
   // Selection handlers
   const toggleSelect = (id) => {
     setSelectedIds(prev => 
