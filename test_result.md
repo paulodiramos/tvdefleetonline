@@ -268,7 +268,7 @@ frontend:
 
 test_plan:
   current_focus:
-    - "Bug Fixes Complete - Bolt/Uber earnings in motorista report"
+    - "Bolt CSV Import Validation Complete - Portagens, Gorjetas and Ganhos Liquidos"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
