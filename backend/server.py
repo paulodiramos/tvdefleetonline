@@ -10384,10 +10384,11 @@ async def gerar_relatorio_semanal(
         combustivel_records = await combustivel_cursor.to_list(1000)
         total_combustivel = sum(record.get("valor_com_iva", 0.0) for record in combustivel_records)
     
-    # Get via verde data (with delay)
+    # Get via verde data (with delay) - from both legacy collection and imported despesas
     via_verde_records = []
     total_via_verde = 0.0
     if config.get("incluir_via_verde", True):
+        # Legacy via_verde collection
         via_verde_query = {
             "veiculo_id": veiculo_id,
             "data": {"$gte": data_inicio_via_verde, "$lte": data_fim_via_verde}
@@ -10397,6 +10398,29 @@ async def gerar_relatorio_semanal(
             via_verde_cursor = db.via_verde.find(via_verde_query, {"_id": 0})
             via_verde_records = await via_verde_cursor.to_list(1000)
             total_via_verde = sum(record.get("valor", 0.0) for record in via_verde_records)
+        
+        # Also check imported despesas (Via Verde from CSV import)
+        # Only count if motorista is responsible (tipo_responsavel = "motorista")
+        if motorista_id:
+            despesas_via_verde_query = {
+                "motorista_id": motorista_id,
+                "tipo_fornecedor": "via_verde",
+                "tipo_responsavel": "motorista",
+                "data_entrada": {"$gte": data_inicio_via_verde, "$lte": data_fim_via_verde}
+            }
+            despesas_via_verde_cursor = db.despesas_fornecedor.find(despesas_via_verde_query, {"_id": 0})
+            despesas_via_verde = await despesas_via_verde_cursor.to_list(1000)
+            
+            # Add to via verde records for display
+            for desp in despesas_via_verde:
+                via_verde_records.append({
+                    "data": desp.get("data_entrada"),
+                    "valor": desp.get("valor_liquido", 0.0),
+                    "local": f"{desp.get('ponto_entrada', '')} → {desp.get('ponto_saida', '')}",
+                    "tipo": "importado_csv"
+                })
+            
+            total_via_verde += sum(desp.get("valor_liquido", 0.0) for desp in despesas_via_verde)
     
     # Calculate valor aluguer/comissao
     valor_aluguer = 0.0
