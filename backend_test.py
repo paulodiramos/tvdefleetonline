@@ -108,31 +108,34 @@ class FleeTrackTester:
         return temp_file.name
     
     def test_priority_scenarios(self):
-        """🎯 PRIORITY TEST SCENARIOS: Complete Uber + Bolt Import with All Fields - Paulo Macaya"""
-        print("\n🎯 PRIORITY TEST SCENARIOS: Complete Uber + Bolt Import with All Fields - Paulo Macaya")
+        """🎯 PRIORITY TEST SCENARIOS: Via Verde Excel Import Validation"""
+        print("\n🎯 PRIORITY TEST SCENARIOS: Via Verde Excel Import Validation")
         print("=" * 80)
-        print("CONTEXT: Testing specific scenarios from review request:")
-        print("1. Paulo Macaya - Complete Report (Semana 4)")
-        print("   - motorista_id: cbbfc362-3241-43e1-9287-d55ad9f6c7ce")
-        print("   - Expected UBER: ganhos_uber=129.00, gorjetas_uber=0.50, portagens_uber=9.40")
-        print("   - Expected BOLT: ganhos_bolt=203.95, gorjetas_bolt=3.00, portagens_bolt=4.30")
-        print("   - Expected total_ganhos: 332.95 (129.00 + 203.95)")
-        print("2. Motorista Association via UUID")
-        print("   - viagens_bolt: identificador_motorista_bolt = db16b2ed-225d-488f-858e-3dc89effba5f")
-        print("   - ganhos_uber: uuid_motorista_uber = e5ed435e-df3a-473b-bd47-ee6880084aa6")
-        print("3. Draft Update on Second Import")
-        print("4. CSV Column Mapping")
+        print("CONTEXT: Testing Via Verde Excel import functionality:")
+        print("1. Via Verde Import Endpoint Test")
+        print("   - Endpoint: POST /api/importar/viaverde")
+        print("   - Test file: /app/backend/uploads/via_verde_test.xlsx")
+        print("   - Parameters: periodo_inicio=2025-12-15, periodo_fim=2025-12-21, semana=51, ano=2025")
+        print("   - Expected: Successful import with ~750+ records")
+        print("2. Vehicle OBU Configuration Test")
+        print("   - Vehicle AS-83-NX (id: 4ad331ff-c0f5-43c9-95b8-cc085d32d8a7)")
+        print("   - Expected OBU: 43026607794")
+        print("3. Weekly Report Via Verde Integration Test")
+        print("   - Generate report for semana 53, ano 2025 (2-week delay)")
+        print("   - Should get data from semana 51")
+        print("   - Motorista: Nelson Francisco (id: e2355169-10a7-4547-9dd0-479c128d73f9)")
+        print("   - Expected: resumo.total_via_verde > €0 (~€325.20)")
+        print("4. Portagens Collection Verification")
         print("\nCREDENCIAIS:")
         print("- Admin: admin@tvdefleet.com / 123456")
-        print("- Paulo Macaya ID: cbbfc362-3241-43e1-9287-d55ad9f6c7ce")
-        print("- Test Period: semana 4, ano 2026")
+        print("- Via Verde delay: 2 weeks (via_verde_atraso_semanas: 2)")
         print("=" * 80)
         
         # Execute priority tests
-        self.test_scenario_1_paulo_macaya_complete_report()
-        self.test_scenario_2_motorista_association_uuid()
-        self.test_scenario_3_draft_update_second_import()
-        self.test_scenario_4_csv_column_mapping()
+        self.test_scenario_1_via_verde_import_endpoint()
+        self.test_scenario_2_vehicle_obu_configuration()
+        self.test_scenario_3_weekly_report_via_verde_integration()
+        self.test_scenario_4_portagens_collection_verification()
         
         return True
     
