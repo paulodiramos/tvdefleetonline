@@ -18700,6 +18700,8 @@ app.include_router(csv_config_router, prefix="/api")
 app.include_router(relatorios_router, prefix="/api")
 # Automation/RPA routes - new module
 app.include_router(automacao_router, prefix="/api")
+# Despesas/Expenses routes - new module
+app.include_router(despesas_router, prefix="/api")
 # Auth, Motoristas, Notifications, Messages routes (still in process of migration)
 app.include_router(auth_router, prefix="/api")
 app.include_router(motoristas_router, prefix="/api")
