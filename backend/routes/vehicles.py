@@ -921,6 +921,273 @@ async def atribuir_motorista_vehicle(
         return {"message": "Motorista removido com sucesso", "data_remocao": now_iso}
 
 
+# ==================== HISTÓRICO DE ATRIBUIÇÕES ====================
+
+@router.get("/{vehicle_id}/historico-atribuicoes")
+async def get_historico_atribuicoes(
+    vehicle_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Obter histórico de atribuições de motoristas ao veículo
+    Inclui dados de KM, datas e ganhos por período
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Se parceiro, só pode ver histórico dos seus veículos
+    if current_user["role"] == UserRole.PARCEIRO and vehicle.get("parceiro_id") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    historico = await db.historico_atribuicoes.find(
+        {"veiculo_id": vehicle_id},
+        {"_id": 0}
+    ).sort("data_inicio", -1).to_list(100)
+    
+    # Enriquecer com dados adicionais (ganhos por período)
+    for entry in historico:
+        motorista_id = entry.get("motorista_id")
+        data_inicio = entry.get("data_inicio")
+        data_fim = entry.get("data_fim")
+        
+        if motorista_id and data_inicio:
+            # Calcular ganhos do motorista neste período
+            ganhos_query = {
+                "motorista_id": motorista_id,
+                "data": {"$gte": data_inicio[:10]}  # Usar apenas a data (YYYY-MM-DD)
+            }
+            if data_fim:
+                ganhos_query["data"]["$lte"] = data_fim[:10]
+            
+            # Somar ganhos de Uber e Bolt
+            ganhos_uber = await db.dados_uber.find(ganhos_query, {"_id": 0}).to_list(1000)
+            ganhos_bolt = await db.dados_bolt.find(ganhos_query, {"_id": 0}).to_list(1000)
+            
+            total_uber = sum(r.get("pago_total", 0) or r.get("rendimentos_total", 0) or 0 for r in ganhos_uber)
+            total_bolt = sum(r.get("ganhos", 0) or r.get("earnings", 0) or 0 for r in ganhos_bolt)
+            
+            entry["ganhos_periodo"] = {
+                "uber": round(total_uber, 2),
+                "bolt": round(total_bolt, 2),
+                "total": round(total_uber + total_bolt, 2)
+            }
+            
+            # Calcular KM percorridos
+            if entry.get("km_inicial") and entry.get("km_final"):
+                entry["km_percorridos"] = entry["km_final"] - entry["km_inicial"]
+    
+    return {
+        "veiculo_id": vehicle_id,
+        "matricula": vehicle.get("matricula"),
+        "historico": historico,
+        "total_registos": len(historico)
+    }
+
+
+@router.put("/{vehicle_id}/historico-atribuicoes/{historico_id}")
+async def update_historico_atribuicao(
+    vehicle_id: str,
+    historico_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Atualizar entrada do histórico de atribuições
+    Permite corrigir KM, datas, ou adicionar ganhos semanais
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    entry = await db.historico_atribuicoes.find_one(
+        {"id": historico_id, "veiculo_id": vehicle_id},
+        {"_id": 0}
+    )
+    if not entry:
+        raise HTTPException(status_code=404, detail="Histórico não encontrado")
+    
+    # Campos permitidos para atualização
+    allowed_fields = [
+        "km_inicial", "km_final", "data_inicio", "data_fim",
+        "ganhos_semanais", "observacoes"
+    ]
+    
+    update_data = {
+        k: v for k, v in data.items() if k in allowed_fields
+    }
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_data["updated_by"] = current_user["id"]
+    
+    await db.historico_atribuicoes.update_one(
+        {"id": historico_id},
+        {"$set": update_data}
+    )
+    
+    return {"message": "Histórico atualizado com sucesso"}
+
+
+@router.post("/{vehicle_id}/historico-atribuicoes/{historico_id}/ganhos-semanais")
+async def add_ganhos_semanais(
+    vehicle_id: str,
+    historico_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Adicionar registo de ganhos semanais ao histórico
+    Usado para tracking de performance do motorista com este veículo
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    entry = await db.historico_atribuicoes.find_one(
+        {"id": historico_id, "veiculo_id": vehicle_id},
+        {"_id": 0}
+    )
+    if not entry:
+        raise HTTPException(status_code=404, detail="Histórico não encontrado")
+    
+    semana = data.get("semana")
+    ano = data.get("ano")
+    if not semana or not ano:
+        raise HTTPException(status_code=400, detail="Semana e ano são obrigatórios")
+    
+    ganho_semanal = {
+        "id": str(uuid.uuid4()),
+        "semana": semana,
+        "ano": ano,
+        "km_semana": data.get("km_semana", 0),
+        "ganhos_uber": data.get("ganhos_uber", 0),
+        "ganhos_bolt": data.get("ganhos_bolt", 0),
+        "total_ganhos": data.get("ganhos_uber", 0) + data.get("ganhos_bolt", 0),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.historico_atribuicoes.update_one(
+        {"id": historico_id},
+        {"$push": {"ganhos_semanais": ganho_semanal}}
+    )
+    
+    return {"message": "Ganhos semanais adicionados", "ganho": ganho_semanal}
+
+
+@router.put("/{vehicle_id}/dispositivos")
+async def update_dispositivos_veiculo(
+    vehicle_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Atualizar dispositivos associados ao veículo
+    - OBU Via Verde
+    - Cartão combustível fóssil
+    - Cartão combustível elétrico
+    - GPS (matrícula - apenas leitura)
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    update_data = {
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Atualizar OBU Via Verde
+    if "obu_via_verde" in data:
+        update_data["via_verde_id"] = data["obu_via_verde"]
+        update_data["via_verde_disponivel"] = bool(data["obu_via_verde"])
+    
+    # Atualizar cartão combustível fóssil
+    if "cartao_combustivel_fossil" in data:
+        update_data["cartao_frota_id"] = data["cartao_combustivel_fossil"]
+        update_data["cartao_frota_disponivel"] = bool(data["cartao_combustivel_fossil"])
+    
+    # Atualizar cartão combustível elétrico
+    if "cartao_combustivel_eletrico" in data:
+        update_data["cartao_frota_eletric_id"] = data["cartao_combustivel_eletrico"]
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": update_data}
+    )
+    
+    # Se veículo tem motorista atribuído, atualizar também os cartões do motorista
+    motorista_id = vehicle.get("motorista_atribuido")
+    if motorista_id:
+        motorista_update = {
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        if "obu_via_verde" in data:
+            motorista_update["cartao_viaverde_id"] = data["obu_via_verde"]
+        
+        if "cartao_combustivel_fossil" in data:
+            motorista_update["cartao_combustivel_id"] = data["cartao_combustivel_fossil"]
+            motorista_update["id_cartao_frota_combustivel"] = data["cartao_combustivel_fossil"]
+        
+        if "cartao_combustivel_eletrico" in data:
+            motorista_update["cartao_eletrico_id"] = data["cartao_combustivel_eletrico"]
+        
+        await db.motoristas.update_one(
+            {"id": motorista_id},
+            {"$set": motorista_update}
+        )
+        logger.info(f"✅ Dispositivos do motorista {motorista_id} atualizados automaticamente")
+    
+    return {
+        "message": "Dispositivos atualizados com sucesso",
+        "dispositivos": {
+            "obu_via_verde": data.get("obu_via_verde") or vehicle.get("via_verde_id"),
+            "cartao_combustivel_fossil": data.get("cartao_combustivel_fossil") or vehicle.get("cartao_frota_id"),
+            "cartao_combustivel_eletrico": data.get("cartao_combustivel_eletrico") or vehicle.get("cartao_frota_eletric_id"),
+            "gps_matricula": vehicle.get("matricula")
+        }
+    }
+
+
+@router.get("/{vehicle_id}/dispositivos")
+async def get_dispositivos_veiculo(
+    vehicle_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Obter dispositivos associados ao veículo
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Se parceiro, só pode ver dispositivos dos seus veículos
+    if current_user["role"] == UserRole.PARCEIRO and vehicle.get("parceiro_id") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    return {
+        "veiculo_id": vehicle_id,
+        "matricula": vehicle.get("matricula"),
+        "dispositivos": {
+            "obu_via_verde": vehicle.get("via_verde_id"),
+            "cartao_combustivel_fossil": vehicle.get("cartao_frota_id"),
+            "cartao_combustivel_eletrico": vehicle.get("cartao_frota_eletric_id"),
+            "gps_matricula": vehicle.get("matricula")
+        },
+        "motorista_atribuido": {
+            "id": vehicle.get("motorista_atribuido"),
+            "nome": vehicle.get("motorista_atribuido_nome"),
+            "desde": vehicle.get("motorista_atribuido_desde")
+        }
+    }
+
+
+
 # ==================== VEHICLE DOCUMENT UPLOADS ====================
 
 @router.post("/{vehicle_id}/upload-seguro-doc")
