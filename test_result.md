@@ -107,10 +107,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Despesas Import Logic Update"
-    - "Report Delete Endpoint"
-    - "Report Status Change Endpoint"
-    - "List Reports for Parceiro"
+    - "Despesas Via Verde in Weekly Reports"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
