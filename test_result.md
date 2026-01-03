@@ -215,11 +215,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "FichaVeiculo - Maintenance History Registration"
-    - "FichaVeiculo - Driver Phone and Link Display"
-    - "Layout - Removed Criar Template button"
-    - "Partner Permission - Delete Weekly Reports"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
