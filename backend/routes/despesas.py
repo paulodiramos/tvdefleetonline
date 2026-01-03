@@ -604,8 +604,9 @@ async def listar_importacoes(
     """List import history"""
     query = {}
     
-    if current_user["role"] == UserRole.PARCEIRO:
-        query["parceiro_id"] = current_user["id"]
+    # Handle None user gracefully
+    if current_user and current_user.get("role") == UserRole.PARCEIRO:
+        query["parceiro_id"] = current_user.get("id")
     
     importacoes = await db.importacoes_despesas.find(
         query,
