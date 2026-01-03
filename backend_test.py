@@ -606,8 +606,8 @@ class FleeTrackTester:
             self.log_result("Auth-Error", False, f"❌ Authentication error: {str(e)}")
     
     def test_despesas_resumo_api(self):
-        """2. Test Despesas Resumo API - NEW LOGIC"""
-        print("\n📋 2. Test Despesas Resumo API - NEW LOGIC")
+        """7. Test Despesas Resumo API - NEW LOGIC"""
+        print("\n📋 7. Test Despesas Resumo API - NEW LOGIC")
         print("-" * 60)
         print("TESTE: GET /api/despesas/resumo")
         print("EXPECTED: por_responsavel should show both 'motorista' and 'veiculo' values")
