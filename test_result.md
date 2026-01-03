@@ -60,7 +60,7 @@ backend:
     status_history:
       - working: true
         agent: "testing"
-        comment: "✅ GET /api/relatorios/semanais-todos working correctly. Returns 9 reports for parceiro user with proper filtering by parceiro_id."
+        comment: "✅ GET /api/relatorios/semanais-todos working correctly. Returns 8 reports for parceiro user with proper filtering by parceiro_id (updated count from latest test)."
 
   - task: "CSV Import API"
     implemented: true
