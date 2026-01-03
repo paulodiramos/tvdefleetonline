@@ -138,16 +138,34 @@ class FleeTrackTester:
                 
                 if access_token and user_data:
                     self.tokens["admin"] = access_token
-                    self.log_result("Auth-Login", True, 
-                                  f"✅ Login successful - Token received, User: {user_data.get('name', user_data.get('email'))}")
+                    self.log_result("Auth-Admin", True, 
+                                  f"✅ Admin login successful - User: {user_data.get('name', user_data.get('email'))}")
                 else:
-                    self.log_result("Auth-Login", False, "❌ Login response missing token or user data")
+                    self.log_result("Auth-Admin", False, "❌ Admin login response missing token or user data")
             else:
-                self.log_result("Auth-Login", False, 
-                              f"❌ Login failed: {response.status_code}", response.text)
+                self.log_result("Auth-Admin", False, 
+                              f"❌ Admin login failed: {response.status_code}", response.text)
+            
+            # Test login with parceiro credentials
+            response = requests.post(f"{BACKEND_URL}/auth/login", json=TEST_CREDENTIALS["parceiro"])
+            
+            if response.status_code == 200:
+                data = response.json()
+                access_token = data.get("access_token")
+                user_data = data.get("user")
+                
+                if access_token and user_data:
+                    self.tokens["parceiro"] = access_token
+                    self.log_result("Auth-Parceiro", True, 
+                                  f"✅ Parceiro login successful - User: {user_data.get('name', user_data.get('email'))}")
+                else:
+                    self.log_result("Auth-Parceiro", False, "❌ Parceiro login response missing token or user data")
+            else:
+                self.log_result("Auth-Parceiro", False, 
+                              f"❌ Parceiro login failed: {response.status_code}", response.text)
                 
         except Exception as e:
-            self.log_result("Auth-Login", False, f"❌ Authentication error: {str(e)}")
+            self.log_result("Auth-Error", False, f"❌ Authentication error: {str(e)}")
     
     def create_test_csv_file(self):
         """Create a test CSV file with Via Verde data"""
