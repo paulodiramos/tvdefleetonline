@@ -140,6 +140,8 @@ async def gerar_relatorio_semanal(
     viagens_bolt_records = await db.viagens_bolt.find(bolt_query, {"_id": 0}).to_list(1000)
     for record in viagens_bolt_records:
         total_ganhos_bolt += record.get("ganhos_liquidos", 0) or record.get("ganhos", 0) or record.get("valor_liquido", 0) or 0
+        total_gorjetas_bolt += record.get("gorjetas", 0) or 0
+        total_portagens_bolt += record.get("portagens", 0) or 0
         total_viagens_bolt += 1
     
     # 3. Check dados_bolt collection (fallback)
