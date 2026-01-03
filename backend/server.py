@@ -10387,7 +10387,10 @@ async def gerar_relatorio_semanal(
     # Get via verde data (with delay) - from both legacy collection and imported despesas
     via_verde_records = []
     total_via_verde = 0.0
-    if config.get("incluir_via_verde", True):
+    incluir_via_verde = config.get("incluir_via_verde", True) if config else True
+    logger.info(f"Incluir Via Verde: {incluir_via_verde}, Config: {config is not None}")
+    
+    if incluir_via_verde:
         # Legacy via_verde collection
         via_verde_query = {
             "veiculo_id": veiculo_id,
