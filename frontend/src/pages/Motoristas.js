@@ -1005,6 +1005,39 @@ const Motoristas = ({ user, onLogout }) => {
                     )}
                   </div>
                   
+                  {/* Resumo Financeiro da Última Semana */}
+                  {resumosMotoristas[motorista.id] && (
+                    <div className="bg-slate-50 rounded-lg p-3 space-y-2">
+                      <p className="text-xs font-medium text-slate-500 uppercase">
+                        Semana {resumosMotoristas[motorista.id].semana}/{resumosMotoristas[motorista.id].ano}
+                      </p>
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div>
+                          <p className="text-xs text-slate-500">Ganhos</p>
+                          <p className="text-sm font-semibold text-green-600">
+                            €{(resumosMotoristas[motorista.id].total_ganhos || 0).toFixed(2)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500">Despesas</p>
+                          <p className="text-sm font-semibold text-red-600">
+                            €{(resumosMotoristas[motorista.id].total_despesas || 0).toFixed(2)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-slate-500">Líquido</p>
+                          <p className={`text-sm font-semibold ${(resumosMotoristas[motorista.id].valor_liquido || 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                            €{(resumosMotoristas[motorista.id].valor_liquido || 0).toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex justify-between text-xs text-slate-500 pt-1 border-t border-slate-200">
+                        <span>Uber: €{(resumosMotoristas[motorista.id].ganhos_uber || 0).toFixed(2)}</span>
+                        <span>Bolt: €{(resumosMotoristas[motorista.id].ganhos_bolt || 0).toFixed(2)}</span>
+                      </div>
+                    </div>
+                  )}
+                  
                   <div className="flex space-x-2 pt-3 border-t border-slate-200">
                     <Button 
                       variant="outline" 
