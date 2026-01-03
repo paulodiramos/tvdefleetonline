@@ -326,3 +326,21 @@ agent_communication:
     message: "🚀 PHASE 1 VEHICLE MANAGEMENT ENDPOINTS COMPREHENSIVE TESTING COMPLETED (21/21 tests passed - 100% success rate). ALL NEW ENDPOINTS WORKING PERFECTLY: 1) GET /api/vehicles/{id}/dispositivos - Successfully retrieves vehicle devices (OBU Via Verde: 601073900511, Cartão Fossil: 7824731736480003). 2) PUT /api/vehicles/{id}/dispositivos - Successfully updates devices (tested with TEST-OBU-123, TEST-CARD-456). 3) GET /api/vehicles/{id}/historico-atribuicoes - Returns assignment history with motorista, dates, km, and ganhos_periodo calculation. 4) POST /api/vehicles/{id}/atribuir-motorista - Creates history records with historico_id and data_atribuicao as expected. Vehicle AS-83-NX (ID: 4ad331ff-c0f5-43c9-95b8-cc085d32d8a7) tested successfully. All endpoints handle authentication, return proper data structures, and integrate with historico_atribuicoes collection correctly."
   - agent: "testing"
     message: "🎯 NEW VEHICLE COSTS & ROI ENDPOINTS TESTING COMPLETED (31/31 tests passed - 100% success rate). COMPREHENSIVE TESTING OF NEW FEATURES: 1) POST /api/vehicles/{id}/custos - Successfully adds costs with all categories (revisao, vistoria, seguro, pneus, reparacao, combustivel, lavagem, multa, outros). Tested with €150 revisao, €500 seguro, €35 vistoria. Returns proper custo_id and response structure. 2) GET /api/vehicles/{id}/custos - Returns costs list with category totals. Vehicle AS-83-NX shows €685 total across 3 costs with proper grouping. 3) GET /api/vehicles/{id}/relatorio-ganhos - ROI calculation working perfectly! Receitas €750, Custos €685, Lucro €65, ROI 9.49%. Formula ((receitas-custos)/custos)*100 verified correct. Supports all period filters: total, ano, mes, custom. All new endpoints handle authentication, data validation, and return proper JSON structures. Vehicle financial management system fully operational!"
+  - task: "Via Verde Excel Import"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py, /app/backend/routes/relatorios.py, /app/backend/routes/vehicles.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "✅ Implemented Via Verde Excel import with: 1) Support for 'IAI OBU' column mapping from Excel files, 2) Association to vehicles by OBU (new obu field) or via_verde_id, 3) Driver association based on vehicle assignment, 4) Integration with weekly reports using via_verde_atraso_semanas delay, 5) Correct calculation of total_via_verde in reports. Test result: 752 records imported successfully, €325.20 total Via Verde in report for semana 53/2025."
+
+test_plan:
+  current_focus:
+    - "Via Verde Excel Import Validation"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
