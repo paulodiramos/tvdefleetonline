@@ -10267,6 +10267,8 @@ async def gerar_relatorio_semanal(
     current_user: Dict = Depends(get_current_user)
 ):
     """Gerar relatório semanal para motorista baseado na configuração do parceiro"""
+    print(f"DEBUG INICIO: Gerando relatório para motorista {motorista_id}", flush=True)
+    
     if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
