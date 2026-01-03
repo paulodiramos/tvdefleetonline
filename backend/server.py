@@ -10388,7 +10388,7 @@ async def gerar_relatorio_semanal(
     via_verde_records = []
     total_via_verde = 0.0
     incluir_via_verde = config.get("incluir_via_verde", True) if config else True
-    logger.info(f"Incluir Via Verde: {incluir_via_verde}, Config: {config is not None}")
+    print(f"DEBUG: Incluir Via Verde: {incluir_via_verde}, Config: {config is not None}, motorista_id: {motorista_id}")
     
     if incluir_via_verde:
         # Legacy via_verde collection
