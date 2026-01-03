@@ -739,12 +739,14 @@ async def atribuir_motorista_vehicle(
 ):
     """
     Atribuir motorista a um veículo com Via Verde e Cartão Frota
+    Regista histórico de atribuição com data/hora para cálculo de aluguer proporcional
     
     Body:
     - motorista_id: ID do motorista (ou null para remover)
-    - via_verde_id: ID/número do cartão Via Verde (opcional)
-    - cartao_frota_id: ID/número do cartão frota combustível (opcional)
+    - via_verde_id: ID/número do OBU Via Verde (opcional)
+    - cartao_frota_id: ID/número do cartão frota combustível fóssil (opcional)
     - cartao_frota_eletric_id: ID/número do cartão frota elétrico (opcional)
+    - km_atual: KM atual do veículo no momento da atribuição (opcional)
     """
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
         raise HTTPException(status_code=403, detail="Not authorized")
@@ -753,23 +755,78 @@ async def atribuir_motorista_vehicle(
     via_verde_id = data.get("via_verde_id")
     cartao_frota_id = data.get("cartao_frota_id")
     cartao_frota_eletric_id = data.get("cartao_frota_eletric_id")
+    km_atribuicao = data.get("km_atual")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    now = datetime.now(timezone.utc)
+    now_iso = now.isoformat()
+    
+    # Fechar atribuição anterior no histórico (se existir)
+    old_motorista_id = vehicle.get("motorista_atribuido")
+    if old_motorista_id:
+        # Atualizar a última entrada do histórico com data_fim
+        await db.historico_atribuicoes.update_one(
+            {
+                "veiculo_id": vehicle_id,
+                "motorista_id": old_motorista_id,
+                "data_fim": None
+            },
+            {
+                "$set": {
+                    "data_fim": now_iso,
+                    "km_final": km_atribuicao or vehicle.get("km_atual", 0)
+                }
+            }
+        )
+        logger.info(f"📋 Fechado histórico de atribuição anterior: motorista {old_motorista_id}")
     
     if motorista_id:
         motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
         if not motorista:
             raise HTTPException(status_code=404, detail="Motorista not found")
         
+        # Criar nova entrada no histórico de atribuições
+        historico_entry = {
+            "id": str(uuid.uuid4()),
+            "veiculo_id": vehicle_id,
+            "veiculo_matricula": vehicle.get("matricula"),
+            "motorista_id": motorista_id,
+            "motorista_nome": motorista.get("name"),
+            "parceiro_id": vehicle.get("parceiro_id"),
+            "data_inicio": now_iso,
+            "data_fim": None,  # Será preenchido quando trocar de motorista
+            "km_inicial": km_atribuicao or vehicle.get("km_atual", 0),
+            "km_final": None,
+            "valor_aluguer_semanal": vehicle.get("tipo_contrato", {}).get("valor_aluguer", 0),
+            "tipo_contrato": vehicle.get("tipo_contrato", {}).get("tipo"),
+            "dispositivos": {
+                "obu_via_verde": via_verde_id or vehicle.get("via_verde_id"),
+                "cartao_combustivel_fossil": cartao_frota_id or vehicle.get("cartao_frota_id"),
+                "cartao_combustivel_eletrico": cartao_frota_eletric_id or vehicle.get("cartao_frota_eletric_id"),
+                "gps_matricula": vehicle.get("matricula")
+            },
+            "created_at": now_iso,
+            "created_by": current_user["id"]
+        }
+        
+        await db.historico_atribuicoes.insert_one(historico_entry)
+        logger.info(f"📋 Criado histórico de atribuição: {motorista.get('name')} -> {vehicle.get('matricula')}")
+        
         # Atualizar veículo
         vehicle_update = {
             "motorista_atribuido": motorista_id,
             "motorista_atribuido_nome": motorista.get("name"),
+            "motorista_atribuido_desde": now_iso,  # Nova data/hora de atribuição
             "status": "atribuido",
-            "updated_at": datetime.now(timezone.utc).isoformat()
+            "updated_at": now_iso
         }
+        
+        # Atualizar KM se fornecido
+        if km_atribuicao:
+            vehicle_update["km_atual"] = km_atribuicao
         
         # Atualizar cartões se fornecidos
         if via_verde_id is not None:
