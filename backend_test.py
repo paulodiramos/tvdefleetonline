@@ -257,6 +257,8 @@ class FleeTrackTester:
         except Exception as e:
             self.log_result("ViaVerde-Reports-Error", False, f"❌ Error during Via Verde reports test: {str(e)}")
             return False
+    
+    def test_authentication_api(self):
         """1. Test Authentication API"""
         print("\n📋 1. Test Authentication API")
         print("-" * 60)
