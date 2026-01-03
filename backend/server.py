@@ -18690,19 +18690,24 @@ async def download_csv_template(template_name: str, current_user: Dict = Depends
         filename=template_files[template_name]
     )
 
-# Include main API router FIRST (has full login functionality with senha_provisoria)
-app.include_router(api_router)
-
-# Include modular routers (these routes will be secondary if there are duplicates)
+# Include modular routers FIRST (these have priority over legacy api_router)
+# Vehicle routes - refactored module
+app.include_router(vehicles_router, prefix="/api")
+# CSV Config routes - new module  
+app.include_router(csv_config_router, prefix="/api")
+# Reports routes - refactored module
+app.include_router(relatorios_router, prefix="/api")
+# Automation/RPA routes - new module
+app.include_router(automacao_router, prefix="/api")
+# Auth, Motoristas, Notifications, Messages routes (still in process of migration)
 app.include_router(auth_router, prefix="/api")
 app.include_router(motoristas_router, prefix="/api")
 app.include_router(notificacoes_router, prefix="/api")
 app.include_router(mensagens_router, prefix="/api")
 app.include_router(ifthenpay_router)
-app.include_router(vehicles_router, prefix="/api")
-app.include_router(csv_config_router, prefix="/api")
-app.include_router(relatorios_router, prefix="/api")
-app.include_router(automacao_router, prefix="/api")
+
+# Include main API router LAST (legacy routes - endpoints here are overridden by modular routers above)
+app.include_router(api_router)
 
 # Include main API router (legacy routes - to be migrated)
 # ==================== DOCUMENTO VALIDATION SYSTEM ====================
