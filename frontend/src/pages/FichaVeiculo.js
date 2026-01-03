@@ -4005,6 +4005,7 @@ const RelatorioFinanceiroTab = ({ vehicleId, canEdit, user, relatorioGanhos, set
                 <option value="total">Total (desde aquisição)</option>
                 <option value="ano">Por Ano</option>
                 <option value="mes">Por Mês</option>
+                <option value="custom">Entre Datas</option>
               </select>
             </div>
             
