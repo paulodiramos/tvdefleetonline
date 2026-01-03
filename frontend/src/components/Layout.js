@@ -53,7 +53,6 @@ const Layout = ({ children, user, onLogout }) => {
           icon: FileText,
           submenu: [
             { path: '/contratos', label: 'Gestão de Contratos' },
-            { action: () => setCriarTemplateOpen(true), label: 'Criar Template' },
             { path: '/criar-contrato', label: 'Criar Contrato' }
           ]
         },
@@ -94,7 +93,6 @@ const Layout = ({ children, user, onLogout }) => {
         icon: FileText,
         submenu: [
           { path: '/contratos', label: 'Gestão de Contratos' },
-          { action: () => setCriarTemplateOpen(true), label: 'Criar Template' },
           { path: '/criar-contrato', label: 'Criar Contrato' }
         ]
       },
