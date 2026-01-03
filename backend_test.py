@@ -108,27 +108,31 @@ class FleeTrackTester:
         return temp_file.name
     
     def test_priority_scenarios(self):
-        """🎯 PRIORITY TEST SCENARIOS: Validate Bolt CSV Import with Portagens, Gorjetas and Ganhos Liquidos"""
-        print("\n🎯 PRIORITY TEST SCENARIOS: Validate Bolt CSV Import with Portagens, Gorjetas and Ganhos Liquidos")
+        """🎯 PRIORITY TEST SCENARIOS: Complete Uber + Bolt Import with All Fields - Paulo Macaya"""
+        print("\n🎯 PRIORITY TEST SCENARIOS: Complete Uber + Bolt Import with All Fields - Paulo Macaya")
         print("=" * 80)
         print("CONTEXT: Testing specific scenarios from review request:")
-        print("1. Bolt Ganhos Liquidos (expected: 236.08 from Ganhos líquidos|€ column)")
-        print("2. Bolt Gorjetas/Tips (expected: 1.0 from Gorjetas dos passageiros|€ column)")
-        print("3. Bolt Portagens/Tolls (expected: 25.57 from Portagens|€ column)")
-        print("4. Motorista Association via Identificador")
-        print("5. Report Total Calculation")
+        print("1. Paulo Macaya - Complete Report (Semana 4)")
+        print("   - motorista_id: cbbfc362-3241-43e1-9287-d55ad9f6c7ce")
+        print("   - Expected UBER: ganhos_uber=129.00, gorjetas_uber=0.50, portagens_uber=9.40")
+        print("   - Expected BOLT: ganhos_bolt=203.95, gorjetas_bolt=3.00, portagens_bolt=4.30")
+        print("   - Expected total_ganhos: 332.95 (129.00 + 203.95)")
+        print("2. Motorista Association via UUID")
+        print("   - viagens_bolt: identificador_motorista_bolt = db16b2ed-225d-488f-858e-3dc89effba5f")
+        print("   - ganhos_uber: uuid_motorista_uber = e5ed435e-df3a-473b-bd47-ee6880084aa6")
+        print("3. Draft Update on Second Import")
+        print("4. CSV Column Mapping")
         print("\nCREDENCIAIS:")
         print("- Admin: admin@tvdefleet.com / 123456")
-        print("- Motorista ID: 57d6a119-e5af-4c7f-b357-49dc4f618763 (Arlei Oliveira)")
-        print("- Test Period: semana 2, ano 2026 (2026-01-06 to 2026-01-12)")
+        print("- Paulo Macaya ID: cbbfc362-3241-43e1-9287-d55ad9f6c7ce")
+        print("- Test Period: semana 4, ano 2026")
         print("=" * 80)
         
         # Execute priority tests
-        self.test_scenario_1_bolt_ganhos_liquidos()
-        self.test_scenario_2_bolt_gorjetas()
-        self.test_scenario_3_bolt_portagens()
-        self.test_scenario_4_motorista_association()
-        self.test_scenario_5_report_total_calculation()
+        self.test_scenario_1_paulo_macaya_complete_report()
+        self.test_scenario_2_motorista_association_uuid()
+        self.test_scenario_3_draft_update_second_import()
+        self.test_scenario_4_csv_column_mapping()
         
         return True
     
