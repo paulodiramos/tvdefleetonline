@@ -297,11 +297,15 @@ async def gerar_relatorio_semanal(
         
         # ======= NOVA LÓGICA: Buscar da coleção portagens_viaverde =======
         # Esta coleção é preenchida pelo import de Excel Via Verde
+        # IMPORTANTE: Considerar o atraso da Via Verde (semana dos dados = semana_relatorio - via_verde_atraso)
+        semana_via_verde = semana_relatorio - via_verde_atraso if semana_relatorio > via_verde_atraso else semana_relatorio
+        ano_via_verde = ano_relatorio if semana_relatorio > via_verde_atraso else ano_relatorio - 1
+        
         portagens_vv_query = {
             "motorista_id": motorista_id,
             "$or": [
-                # Buscar por semana/ano se disponível
-                {"semana": semana_relatorio, "ano": ano_relatorio},
+                # Buscar por semana/ano ajustado para o atraso
+                {"semana": semana_via_verde, "ano": ano_via_verde},
                 # Fallback: buscar por data de entrada
                 {
                     "entry_date": {"$gte": data_inicio_via_verde, "$lte": data_fim_via_verde},
@@ -324,7 +328,7 @@ async def gerar_relatorio_semanal(
                 "$and": [
                     {
                         "$or": [
-                            {"semana": semana_relatorio, "ano": ano_relatorio},
+                            {"semana": semana_via_verde, "ano": ano_via_verde},
                             {
                                 "entry_date": {"$gte": data_inicio_via_verde, "$lte": data_fim_via_verde}
                             },
@@ -335,6 +339,8 @@ async def gerar_relatorio_semanal(
                     }
                 ]
             }
+        
+        logger.info(f"📍 Via Verde query: motorista={motorista_id}, semana={semana_via_verde}, ano={ano_via_verde}, veiculo={veiculo_id}")
         
         portagens_viaverde = await db.portagens_viaverde.find(portagens_vv_query, {"_id": 0}).to_list(1000)
         
