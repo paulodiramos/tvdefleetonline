@@ -4029,6 +4029,24 @@ const RelatorioFinanceiroTab = ({ vehicleId, canEdit, user, relatorioGanhos, set
               </select>
             )}
 
+            {periodo === 'custom' && (
+              <div className="flex items-center gap-2">
+                <input
+                  type="date"
+                  value={dataInicio}
+                  onChange={(e) => setDataInicio(e.target.value)}
+                  className="border rounded-md px-3 py-1.5 text-sm"
+                />
+                <span className="text-sm text-slate-500">até</span>
+                <input
+                  type="date"
+                  value={dataFim}
+                  onChange={(e) => setDataFim(e.target.value)}
+                  className="border rounded-md px-3 py-1.5 text-sm"
+                />
+              </div>
+            )}
+
             {canEdit && (
               <Button 
                 size="sm" 
