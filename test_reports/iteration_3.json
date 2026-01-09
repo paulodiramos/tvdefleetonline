@@ -1,0 +1,109 @@
+{
+  "summary": "Backend and Frontend testing completed for Resumo Semanal Parceiro endpoint (Week 51/2025). All expected values for Nelson Francisco and Jorge Macaia are correctly displayed. The endpoint calculates data in real-time from import collections.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "/api/relatorios/parceiro/resumo-semanal",
+        "issue": "One motorista (ID: 7660d473-cd0d-4e6d-8ba0-950ef9c9a6d4) has motorista_nome=null but has vehicle AS-83-NX assigned - appears to be a duplicate/orphan record",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_resumo_semanal_parceiro.py",
+    "/app/test_reports/pytest/pytest_resumo_semanal.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "The endpoint correctly calculates data in real-time from ganhos_uber, ganhos_bolt, portagens_viaverde, abastecimentos_combustivel, and despesas_combustivel collections",
+    "Vehicle valor_semanal is correctly used for aluguer calculation when motorista doesn't have valor_aluguer_semanal set"
+  ],
+  "updated_files": [
+    "/app/tests/test_resumo_semanal_parceiro.py"
+  ],
+  "success_rate": {
+    "backend": "100%",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "admin_email": "admin@tvdefleet.com",
+    "admin_password": "123456",
+    "parceiro_email": "geral@zmbusines.com",
+    "parceiro_password": "123456"
+  },
+  "seed_data_creation": "None - verified existing imported data for Week 51/2025",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Resumo Semanal Parceiro endpoint tested for Week 51/2025. Nelson Francisco (ID: e2355169-10a7-4547-9dd0-479c128d73f9) and Jorge Macaia (ID: 485c1438-b8f7-481d-a880-a2269d543c50) data verified. All values match expected: Nelson (Uber €607.54, Bolt €136.74, Aluguer €249.99, Vehicle AS-83-NX), Jorge (Uber €677.00, Bolt €299.61, Aluguer €249.99, Vehicle BQ-32-RS).",
+  "verified_data": {
+    "week_51_2025": {
+      "nelson_francisco": {
+        "id": "e2355169-10a7-4547-9dd0-479c128d73f9",
+        "uber": {"expected": 607.54, "actual": 607.54, "status": "PASS"},
+        "bolt": {"expected": 136.74, "actual": 136.74, "status": "PASS"},
+        "aluguer": {"expected": 249.99, "actual": 249.99, "status": "PASS"},
+        "vehicle": {"expected": "AS-83-NX", "actual": "AS-83-NX", "status": "PASS"},
+        "via_verde_id": "601073900511",
+        "cartao_combustivel": "7824731736480002"
+      },
+      "jorge_macaia": {
+        "id": "485c1438-b8f7-481d-a880-a2269d543c50",
+        "uber": {"expected": 677.00, "actual": 677.00, "status": "PASS"},
+        "bolt": {"expected": 299.61, "actual": 299.61, "status": "PASS"},
+        "aluguer": {"expected": 249.99, "actual": 249.99, "status": "PASS"},
+        "vehicle": {"expected": "BQ-32-RS", "actual": "BQ-32-RS", "status": "PASS"},
+        "cartao_eletrico": "PTPRIO6087131736480002"
+      }
+    },
+    "totais_week_51_2025": {
+      "total_ganhos_uber": 3542.14,
+      "total_ganhos_bolt": 2104.19,
+      "total_ganhos": 5646.33,
+      "total_combustivel": 3193.58,
+      "total_eletrico": 938.31,
+      "total_via_verde": 4389.89,
+      "total_aluguer": 1149.97,
+      "total_despesas": 9671.75,
+      "total_liquido": -4025.42,
+      "total_motoristas": 12,
+      "motoristas_com_relatorio": 10
+    }
+  },
+  "frontend_tests": {
+    "login": "PASS - Parceiro login works correctly",
+    "resumo_semanal_page": "PASS - Page loads correctly with title 'Resumo Semanal do Parceiro'",
+    "week_selection": "PASS - Week/Year inputs work correctly",
+    "data_table": "PASS - All motoristas displayed with correct values",
+    "summary_cards": "PASS - Total Ganhos, Total Despesas, Valor Líquido, Motoristas cards displayed",
+    "navigation_buttons": "PASS - Previous/Next week buttons work"
+  },
+  "backend_tests": {
+    "total_tests": 16,
+    "passed": 16,
+    "failed": 0,
+    "test_cases": [
+      {"name": "test_endpoint_returns_200", "status": "PASSED"},
+      {"name": "test_response_structure", "status": "PASSED"},
+      {"name": "test_totais_structure", "status": "PASSED"},
+      {"name": "test_nelson_uber_value", "status": "PASSED", "expected": "€607.54", "actual": "€607.54"},
+      {"name": "test_nelson_bolt_value", "status": "PASSED", "expected": "€136.74", "actual": "€136.74"},
+      {"name": "test_nelson_aluguer_value", "status": "PASSED", "expected": "€249.99", "actual": "€249.99"},
+      {"name": "test_nelson_vehicle_matricula", "status": "PASSED", "expected": "AS-83-NX", "actual": "AS-83-NX"},
+      {"name": "test_jorge_uber_value", "status": "PASSED", "expected": "€677.00", "actual": "€677.00"},
+      {"name": "test_jorge_bolt_value", "status": "PASSED", "expected": "€299.61", "actual": "€299.61"},
+      {"name": "test_jorge_aluguer_value", "status": "PASSED", "expected": "€249.99", "actual": "€249.99"},
+      {"name": "test_jorge_vehicle_matricula", "status": "PASSED", "expected": "BQ-32-RS", "actual": "BQ-32-RS"},
+      {"name": "test_totais_ganhos_sum", "status": "PASSED"},
+      {"name": "test_totais_despesas_sum", "status": "PASSED"},
+      {"name": "test_parceiro_can_access_endpoint", "status": "PASSED"},
+      {"name": "test_different_week_returns_different_data", "status": "PASSED"},
+      {"name": "test_default_week_when_not_specified", "status": "PASSED"}
+    ]
+  }
+}
