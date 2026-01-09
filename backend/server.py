@@ -17814,7 +17814,14 @@ async def importar_ganhos_bolt(
         
         # Ler conteúdo do ficheiro
         contents = await file.read()
-        decoded = contents.decode('utf-8')
+        
+        # Handle BOM (Byte Order Mark) - try utf-8-sig first
+        for encoding in ['utf-8-sig', 'utf-8', 'latin-1', 'cp1252']:
+            try:
+                decoded = contents.decode(encoding)
+                break
+            except UnicodeDecodeError:
+                continue
         
         # Detect delimiter (Portuguese Excel often uses semicolon)
         sample = decoded[:1000]
