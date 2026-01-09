@@ -150,7 +150,8 @@ class TestNelsonFranciscoData:
         # Find Nelson in motoristas list
         nelson = None
         for m in data.get("motoristas", []):
-            if "Nelson" in m.get("motorista_nome", ""):
+            nome = m.get("motorista_nome") or ""
+            if "Nelson" in nome:
                 nelson = m
                 break
         
@@ -171,7 +172,8 @@ class TestNelsonFranciscoData:
         
         nelson = None
         for m in data.get("motoristas", []):
-            if "Nelson" in m.get("motorista_nome", ""):
+            nome = m.get("motorista_nome") or ""
+            if "Nelson" in nome:
                 nelson = m
                 break
         
@@ -191,7 +193,8 @@ class TestNelsonFranciscoData:
         
         nelson = None
         for m in data.get("motoristas", []):
-            if "Nelson" in m.get("motorista_nome", ""):
+            nome = m.get("motorista_nome") or ""
+            if "Nelson" in nome:
                 nelson = m
                 break
         
@@ -211,7 +214,8 @@ class TestNelsonFranciscoData:
         
         nelson = None
         for m in data.get("motoristas", []):
-            if "Nelson" in m.get("motorista_nome", ""):
+            nome = m.get("motorista_nome") or ""
+            if "Nelson" in nome:
                 nelson = m
                 break
         
