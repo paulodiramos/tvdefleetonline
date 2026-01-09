@@ -94,7 +94,11 @@ const RelatoriosHub = ({ user, onLogout }) => {
             { headers: { Authorization: `Bearer ${token}` } }
           );
           if (response.data.total_via_verde > 0) {
-            setNovoRelatorio(prev => ({ ...prev, via_verde_total: response.data.total_via_verde }));
+            setNovoRelatorio(prev => ({ 
+              ...prev, 
+              via_verde_total: response.data.total_via_verde,
+              via_verde_semana_ref: response.data.semana_referencia || `Semana ${response.data.semana_dados}/${response.data.ano_dados}`
+            }));
           }
         } catch (error) {
           console.log('Via Verde auto-fetch:', error.message);
