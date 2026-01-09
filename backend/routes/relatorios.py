@@ -860,6 +860,7 @@ async def get_motorista_via_verde_total(
         "ano_relatorio": ano,
         "semana_dados": semana_via_verde,
         "ano_dados": ano_via_verde,
+        "semana_referencia": f"Semana {semana_via_verde}/{ano_via_verde}",
         "total_via_verde": round(total_via_verde, 2),
         "registos_portagens": len(portagens),
         "registos_legacy": len(despesas_vv),
