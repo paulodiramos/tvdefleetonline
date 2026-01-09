@@ -61,6 +61,7 @@ const Layout = ({ children, user, onLogout }) => {
           icon: TrendingUp,
           submenu: [
             { path: '/relatorios', label: '📊 Gerir Relatórios' },
+            { path: '/resumo-semanal', label: '📈 Resumo Semanal' },
             { path: '/historico-relatorios', label: '📜 Histórico' },
             { path: '/configuracao-relatorios', label: '⚙️ Configurações' }
           ]
