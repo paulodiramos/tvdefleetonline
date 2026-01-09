@@ -344,15 +344,21 @@ async def gerar_relatorio_semanal(
         
         portagens_viaverde = await db.portagens_viaverde.find(portagens_vv_query, {"_id": 0}).to_list(1000)
         
-        # REGRA DE NEGÓCIO: INCLUIR APENAS transações onde market_description = "portagens" ou "parques"
+        # REGRA DE NEGÓCIO: 
+        # 1. APENAS documentos que têm market_description preenchido (importação nova)
+        # 2. INCLUIR APENAS transações onde market_description = "portagens" ou "parques"
         included_market_descriptions = {"portagens", "parques"}
         
-        # Adicionar aos registos e somar valores (apenas se market_description for válido)
+        # Adicionar aos registos e somar valores (apenas documentos válidos)
         for pv in portagens_viaverde:
             market_desc = str(pv.get("market_description", "")).strip().lower()
             
-            # Se houver market_description e NÃO for portagens/parques, pular
-            if market_desc and market_desc not in included_market_descriptions:
+            # Se não houver market_description, ignorar (dados antigos)
+            if not market_desc:
+                continue
+            
+            # Se houver, só incluir se for "portagens" ou "parques"
+            if market_desc not in included_market_descriptions:
                 logger.debug(f"📍 Excluído Via Verde: {pv.get('entry_point')} → {pv.get('exit_point')} (market_description={market_desc})")
                 continue
             
