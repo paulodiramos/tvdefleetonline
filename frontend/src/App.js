@@ -85,6 +85,7 @@ import RelatoriosSemanaisLista from "@/pages/RelatoriosSemanaisLista";
 import HistoricoRelatorios from "@/pages/HistoricoRelatorios";
 import CriarRelatorioManual from "@/pages/CriarRelatorioManual";
 import RelatoriosHub from "@/pages/RelatoriosHub";
+import ResumoSemanalParceiro from "@/pages/ResumoSemanalParceiro";
 import MeusPlanos from "@/pages/MeusPlanos";
 import MeusRecibosGanhos from "@/pages/MeusRecibosGanhos";
 import ValidacaoDocumentosMotorista from "@/pages/ValidacaoDocumentosMotorista";
