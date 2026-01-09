@@ -672,7 +672,7 @@ async def get_resumo_semanal_parceiro(
 ):
     """
     Vista consolidada do resumo semanal para parceiros.
-    Mostra todos os motoristas do parceiro com os seus ganhos, despesas e balanço.
+    Calcula dados em tempo real a partir das coleções de importação.
     """
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
@@ -684,23 +684,38 @@ async def get_resumo_semanal_parceiro(
     if not ano:
         ano = now.year
     
-    # Build query based on user role
-    query = {"semana": semana, "ano": ano}
-    if current_user["role"] == UserRole.PARCEIRO:
-        query["parceiro_id"] = current_user["id"]
+    # Calculate date range for the week
+    # Week starts on Monday (ISO week)
+    first_day_of_year = datetime(ano, 1, 1)
+    if first_day_of_year.weekday() <= 3:  # Mon-Thu
+        first_monday = first_day_of_year - timedelta(days=first_day_of_year.weekday())
+    else:
+        first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()))
     
-    # Get all reports for the specified week
-    relatorios = await db.relatorios_semanais.find(query, {"_id": 0}).to_list(1000)
+    week_start = first_monday + timedelta(weeks=semana - 1)
+    week_end = week_start + timedelta(days=6)
     
-    # Get all motoristas for the parceiro (to include even those without reports)
+    data_inicio = week_start.strftime("%Y-%m-%d")
+    data_fim = week_end.strftime("%Y-%m-%d")
+    
+    logger.info(f"📊 Resumo Semanal: Semana {semana}/{ano} ({data_inicio} a {data_fim})")
+    
+    # Get all motoristas for the parceiro
     motoristas_query = {}
     if current_user["role"] == UserRole.PARCEIRO:
-        motoristas_query["parceiro_id"] = current_user["id"]
+        motoristas_query["$or"] = [
+            {"parceiro_id": current_user["id"]},
+            {"parceiro_atribuido": current_user["id"]}
+        ]
     
-    motoristas = await db.motoristas.find(motoristas_query, {"_id": 0, "id": 1, "name": 1, "email": 1, "veiculo_id": 1}).to_list(1000)
+    motoristas = await db.motoristas.find(
+        motoristas_query, 
+        {"_id": 0, "id": 1, "name": 1, "email": 1, "veiculo_atribuido": 1, 
+         "uuid_motorista_uber": 1, "identificador_motorista_bolt": 1,
+         "valor_aluguer_semanal": 1}
+    ).to_list(1000)
     
-    # Create a map of motorista_id to report
-    relatorios_map = {r["motorista_id"]: r for r in relatorios}
+    logger.info(f"📊 Encontrados {len(motoristas)} motoristas")
     
     # Build consolidated view
     resumo_motoristas = []
@@ -718,50 +733,206 @@ async def get_resumo_semanal_parceiro(
     
     for motorista in motoristas:
         motorista_id = motorista["id"]
-        relatorio = relatorios_map.get(motorista_id, {})
+        motorista_email = motorista.get("email", "")
+        uuid_uber = motorista.get("uuid_motorista_uber", "")
+        id_bolt = motorista.get("identificador_motorista_bolt", "")
+        veiculo_id = motorista.get("veiculo_atribuido")
         
-        # Get vehicle info for this motorista
+        # Get vehicle info
         veiculo = None
-        if motorista.get("veiculo_id"):
-            veiculo = await db.vehicles.find_one({"id": motorista["veiculo_id"]}, {"_id": 0, "matricula": 1, "marca": 1, "modelo": 1, "valor_semanal": 1})
+        via_verde_id = None
+        obu = None
+        cartao_combustivel = None
+        cartao_eletrico = None
+        aluguer_semanal = motorista.get("valor_aluguer_semanal") or 0
         
-        ganhos_uber = float(relatorio.get("ganhos_uber") or 0)
-        ganhos_bolt = float(relatorio.get("ganhos_bolt") or 0)
+        if veiculo_id:
+            veiculo = await db.vehicles.find_one({"id": veiculo_id}, {"_id": 0})
+            if veiculo:
+                via_verde_id = veiculo.get("via_verde_id")
+                obu = veiculo.get("obu")
+                cartao_combustivel = veiculo.get("cartao_frota_id")
+                cartao_eletrico = veiculo.get("cartao_frota_eletric_id")
+                if aluguer_semanal == 0:
+                    # Try to get from vehicle contract
+                    contrato = veiculo.get("tipo_contrato") or {}
+                    aluguer_semanal = contrato.get("valor_aluguer") or veiculo.get("valor_semanal") or 0
+        
+        # ============ GANHOS UBER ============
+        # Buscar por UUID ou email
+        ganhos_uber = 0.0
+        uber_query = {
+            "$or": [
+                {"uuid_motorista": uuid_uber} if uuid_uber else {"uuid_motorista": None},
+                {"motorista_id": motorista_id},
+                {"email_motorista": motorista_email} if motorista_email else {"email_motorista": None}
+            ],
+            "$and": [
+                {"$or": [
+                    {"semana": semana, "ano": ano},
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                ]}
+            ]
+        }
+        # Clean up empty conditions
+        uber_query["$or"] = [q for q in uber_query["$or"] if list(q.values())[0] is not None]
+        if not uber_query["$or"]:
+            uber_query.pop("$or")
+            uber_query["motorista_id"] = motorista_id
+        
+        uber_records = await db.ganhos_uber.find(uber_query, {"_id": 0}).to_list(100)
+        for r in uber_records:
+            ganhos_uber += float(r.get("pago_total") or r.get("rendimentos_total") or r.get("ganhos") or 0)
+        
+        logger.info(f"  {motorista.get('name')}: Uber query returned {len(uber_records)} records, total €{ganhos_uber:.2f}")
+        
+        # ============ GANHOS BOLT ============
+        ganhos_bolt = 0.0
+        bolt_query = {
+            "$or": [
+                {"identificador_motorista": id_bolt} if id_bolt else {"identificador_motorista": None},
+                {"motorista_id": motorista_id},
+                {"email_motorista": motorista_email} if motorista_email else {"email_motorista": None}
+            ],
+            "$and": [
+                {"$or": [
+                    {"semana": semana, "ano": ano},
+                    {"periodo_inicio": data_inicio},
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                ]}
+            ]
+        }
+        bolt_query["$or"] = [q for q in bolt_query["$or"] if list(q.values())[0] is not None]
+        if not bolt_query["$or"]:
+            bolt_query.pop("$or")
+            bolt_query["motorista_id"] = motorista_id
+        
+        bolt_records = await db.ganhos_bolt.find(bolt_query, {"_id": 0}).to_list(100)
+        for r in bolt_records:
+            ganhos_bolt += float(r.get("ganhos_liquidos") or r.get("ganhos") or r.get("earnings") or 0)
+        
+        logger.info(f"  {motorista.get('name')}: Bolt query returned {len(bolt_records)} records, total €{ganhos_bolt:.2f}")
+        
+        # ============ VIA VERDE ============
+        via_verde_total = 0.0
+        vv_query_conditions = [{"motorista_id": motorista_id}]
+        if via_verde_id:
+            vv_query_conditions.append({"via_verde_id": via_verde_id})
+        if obu:
+            vv_query_conditions.append({"obu": obu})
+        if veiculo_id:
+            vv_query_conditions.append({"vehicle_id": veiculo_id})
+        if veiculo and veiculo.get("matricula"):
+            vv_query_conditions.append({"matricula": veiculo.get("matricula")})
+        
+        vv_query = {
+            "$or": vv_query_conditions,
+            "$and": [
+                {"$or": [
+                    {"semana": semana, "ano": ano},
+                    {"entry_date": {"$gte": data_inicio, "$lte": data_fim}},
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                ]}
+            ]
+        }
+        
+        vv_records = await db.portagens_viaverde.find(vv_query, {"_id": 0}).to_list(500)
+        # Filter only portagens and parques
+        for r in vv_records:
+            market_desc = str(r.get("market_description", "")).strip().lower()
+            if market_desc in ["portagens", "parques"]:
+                via_verde_total += float(r.get("liquid_value") or r.get("value") or 0)
+        
+        logger.info(f"  {motorista.get('name')}: Via Verde query returned {len(vv_records)} records, total €{via_verde_total:.2f}")
+        
+        # ============ COMBUSTÍVEL FÓSSIL ============
+        combustivel_total = 0.0
+        if cartao_combustivel or veiculo_id:
+            comb_query_conditions = []
+            if cartao_combustivel:
+                comb_query_conditions.append({"cartao": cartao_combustivel})
+                comb_query_conditions.append({"cartao_frota_id": cartao_combustivel})
+            if veiculo_id:
+                comb_query_conditions.append({"vehicle_id": veiculo_id})
+            comb_query_conditions.append({"motorista_id": motorista_id})
+            
+            comb_query = {
+                "$or": comb_query_conditions,
+                "$and": [
+                    {"$or": [
+                        {"semana": semana, "ano": ano},
+                        {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                    ]}
+                ]
+            }
+            
+            comb_records = await db.abastecimentos_combustivel.find(comb_query, {"_id": 0}).to_list(100)
+            for r in comb_records:
+                combustivel_total += float(r.get("valor_liquido") or r.get("total") or r.get("valor") or 0)
+            
+            logger.info(f"  {motorista.get('name')}: Combustível query returned {len(comb_records)} records, total €{combustivel_total:.2f}")
+        
+        # ============ CARREGAMENTO ELÉTRICO ============
+        eletrico_total = 0.0
+        if cartao_eletrico or veiculo_id:
+            elet_query_conditions = []
+            if cartao_eletrico:
+                elet_query_conditions.append({"cartao": cartao_eletrico})
+                elet_query_conditions.append({"CardCode": cartao_eletrico})
+            if veiculo_id:
+                elet_query_conditions.append({"vehicle_id": veiculo_id})
+            if veiculo and veiculo.get("matricula"):
+                elet_query_conditions.append({"MobileRegistration": veiculo.get("matricula")})
+            elet_query_conditions.append({"motorista_id": motorista_id})
+            
+            elet_query = {
+                "$or": elet_query_conditions,
+                "$and": [
+                    {"$or": [
+                        {"semana": semana, "ano": ano},
+                        {"data": {"$gte": data_inicio, "$lte": data_fim}},
+                        {"StartDate": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}
+                    ]}
+                ]
+            }
+            
+            elet_records = await db.despesas_combustivel.find(elet_query, {"_id": 0}).to_list(100)
+            for r in elet_records:
+                eletrico_total += float(r.get("TotalValueWithTaxes") or r.get("valor_total") or r.get("valor") or 0)
+            
+            logger.info(f"  {motorista.get('name')}: Elétrico query returned {len(elet_records)} records, total €{eletrico_total:.2f}")
+        
+        # ============ CALCULAR TOTAIS ============
         total_ganhos = ganhos_uber + ganhos_bolt
-        
-        combustivel = float(relatorio.get("total_combustivel") or relatorio.get("combustivel_total") or 0)
-        eletrico = float(relatorio.get("total_eletrico") or relatorio.get("carregamentos_eletricos") or 0)
-        via_verde = float(relatorio.get("total_via_verde") or relatorio.get("via_verde_total") or relatorio.get("portagens_viaverde") or 0)
-        aluguer = float(relatorio.get("valor_aluguer") or 0)
-        
-        # If no aluguer in report, get from vehicle
-        if aluguer == 0 and veiculo:
-            aluguer = float(veiculo.get("valor_semanal") or 0)
-        
-        total_despesas = combustivel + eletrico + via_verde + aluguer
+        total_despesas = combustivel_total + eletrico_total + via_verde_total + aluguer_semanal
         valor_liquido = total_ganhos - total_despesas
         
         motorista_resumo = {
             "motorista_id": motorista_id,
             "motorista_nome": motorista.get("name"),
-            "motorista_email": motorista.get("email"),
+            "motorista_email": motorista_email,
             "veiculo_matricula": veiculo.get("matricula") if veiculo else None,
-            "tem_relatorio": motorista_id in relatorios_map,
-            "relatorio_id": relatorio.get("id"),
-            "status": relatorio.get("status"),
+            "veiculo_id": veiculo_id,
+            "tem_relatorio": True if (ganhos_uber > 0 or ganhos_bolt > 0) else False,
+            "relatorio_id": None,
+            "status": "calculado",
             # Ganhos
             "ganhos_uber": round(ganhos_uber, 2),
             "ganhos_bolt": round(ganhos_bolt, 2),
             "total_ganhos": round(total_ganhos, 2),
             # Despesas
-            "combustivel": round(combustivel, 2),
-            "carregamento_eletrico": round(eletrico, 2),
-            "via_verde": round(via_verde, 2),
-            "via_verde_semana_referencia": relatorio.get("via_verde_semana_referencia"),
-            "aluguer_veiculo": round(aluguer, 2),
+            "combustivel": round(combustivel_total, 2),
+            "carregamento_eletrico": round(eletrico_total, 2),
+            "via_verde": round(via_verde_total, 2),
+            "via_verde_semana_referencia": f"Semana {semana}/{ano}",
+            "aluguer_veiculo": round(aluguer_semanal, 2),
             "total_despesas": round(total_despesas, 2),
             # Total
-            "valor_liquido": round(valor_liquido, 2)
+            "valor_liquido": round(valor_liquido, 2),
+            # Detalhes dos cartões
+            "cartao_combustivel": cartao_combustivel,
+            "cartao_eletrico": cartao_eletrico,
+            "via_verde_id": via_verde_id
         }
         
         resumo_motoristas.append(motorista_resumo)
@@ -770,10 +941,10 @@ async def get_resumo_semanal_parceiro(
         totais["total_ganhos_uber"] += ganhos_uber
         totais["total_ganhos_bolt"] += ganhos_bolt
         totais["total_ganhos"] += total_ganhos
-        totais["total_combustivel"] += combustivel
-        totais["total_eletrico"] += eletrico
-        totais["total_via_verde"] += via_verde
-        totais["total_aluguer"] += aluguer
+        totais["total_combustivel"] += combustivel_total
+        totais["total_eletrico"] += eletrico_total
+        totais["total_via_verde"] += via_verde_total
+        totais["total_aluguer"] += aluguer_semanal
         totais["total_despesas"] += total_despesas
         totais["total_liquido"] += valor_liquido
     
@@ -781,12 +952,17 @@ async def get_resumo_semanal_parceiro(
     for key in totais:
         totais[key] = round(totais[key], 2)
     
+    # Sort by name
+    resumo_motoristas.sort(key=lambda x: x.get("motorista_nome", "") or "")
+    
     return {
         "semana": semana,
         "ano": ano,
-        "periodo": f"Semana {semana}/{ano}",
+        "periodo": f"Semana {semana}/{ano} ({data_inicio} a {data_fim})",
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
         "total_motoristas": len(motoristas),
-        "motoristas_com_relatorio": len(relatorios),
+        "motoristas_com_relatorio": len([m for m in resumo_motoristas if m["tem_relatorio"]]),
         "motoristas": resumo_motoristas,
         "totais": totais
     }
