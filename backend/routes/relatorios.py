@@ -344,15 +344,15 @@ async def gerar_relatorio_semanal(
         
         portagens_viaverde = await db.portagens_viaverde.find(portagens_vv_query, {"_id": 0}).to_list(1000)
         
-        # REGRA DE NEGÓCIO: Excluir transações onde market_description = "portagens" ou "parques"
-        excluded_market_descriptions = {"portagens", "parques"}
+        # REGRA DE NEGÓCIO: INCLUIR APENAS transações onde market_description = "portagens" ou "parques"
+        included_market_descriptions = {"portagens", "parques"}
         
-        # Adicionar aos registos e somar valores (apenas se market_description não for excluído)
+        # Adicionar aos registos e somar valores (apenas se market_description for válido)
         for pv in portagens_viaverde:
             market_desc = str(pv.get("market_description", "")).strip().lower()
             
-            # Pular transações com market_description excluído
-            if market_desc in excluded_market_descriptions:
+            # Se houver market_description e NÃO for portagens/parques, pular
+            if market_desc and market_desc not in included_market_descriptions:
                 logger.debug(f"📍 Excluído Via Verde: {pv.get('entry_point')} → {pv.get('exit_point')} (market_description={market_desc})")
                 continue
             
