@@ -12275,6 +12275,9 @@ async def importar_viaverde_excel(
                 liquid_value = to_float(get_value('Liquid Value'), 0)
                 discount_vv = to_float(get_value('Discount VV'), 0)
                 
+                # Extrair Market Description (IMPORTANTE para filtrar custos)
+                market_description = str(get_value('Market Description', '')).strip().lower() if get_value('Market Description') else ''
+                
                 # Criar documento
                 documento = {
                     "id": str(uuid.uuid4()),
@@ -12293,6 +12296,7 @@ async def importar_viaverde_excel(
                     "service": str(get_value('Service')),
                     "service_description": str(get_value('Service Description')),
                     "market": str(get_value('Market')),
+                    "market_description": market_description,
                     "value": value,
                     "liquid_value": liquid_value,
                     "discount_vv": discount_vv,

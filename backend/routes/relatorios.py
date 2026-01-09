@@ -693,18 +693,22 @@ async def get_motorista_via_verde_total(
 ):
     """
     Calculate total Via Verde expenses for a driver for a specific week.
-    Uses portagens_viaverde collection and considers via_verde_atraso_semanas from config.
+    Uses portagens_viaverde collection.
+    
+    REGRAS DE NEGÓCIO:
+    - Excluir transações onde market_description = "portagens" ou "parques"
+    - Usar liquid_value para a soma
+    - Sem atraso de semanas (dados da semana X para relatório da semana X)
     """
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Get Via Verde delay from config
-    config = await db.relatorio_config.find_one({}, {"_id": 0})
-    via_verde_atraso = config.get("via_verde_atraso_semanas", 1) if config else 1
+    # NOTA: via_verde_atraso = 0 (sem atraso - relatório semana X usa dados da semana X)
+    via_verde_atraso = 0
     
-    # Calculate the data week (semana - atraso)
-    semana_via_verde = semana - via_verde_atraso if semana > via_verde_atraso else semana
-    ano_via_verde = ano if semana > via_verde_atraso else ano - 1
+    # Calculate the data week (sem atraso)
+    semana_via_verde = semana
+    ano_via_verde = ano
     
     logger.info(f"📍 Calculating Via Verde total for motorista {motorista_id}, report week {semana}/{ano}, data week {semana_via_verde}/{ano_via_verde}")
     
