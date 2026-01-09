@@ -62,8 +62,8 @@ const Layout = ({ children, user, onLogout }) => {
           submenu: [
             { path: '/relatorios', label: '📊 Gerir Relatórios' },
             { path: '/resumo-semanal', label: '📈 Resumo Semanal' },
-            { path: '/historico-relatorios', label: '📜 Histórico' },
-            { path: '/configuracao-relatorios', label: '⚙️ Configurações' }
+            { path: '/importar-ficheiros', label: '📤 Importar Ficheiros' },
+            { path: '/historico-relatorios', label: '📜 Histórico' }
           ]
         },
         { 
@@ -72,6 +72,14 @@ const Layout = ({ children, user, onLogout }) => {
           submenu: [
             { path: '/pagamentos-parceiro', label: 'Pagamentos' },
             { path: '/verificar-recibos', label: 'Verificar Recibos' }
+          ]
+        },
+        { 
+          label: 'Configurações', 
+          icon: Settings,
+          submenu: [
+            { path: '/credenciais-plataformas', label: '🔐 Credenciais Plataformas' },
+            { path: '/configuracao-relatorios', label: '⚙️ Configurações' }
           ]
         },
         { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' }
