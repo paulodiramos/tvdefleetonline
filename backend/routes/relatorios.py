@@ -761,12 +761,14 @@ async def get_resumo_semanal_parceiro(
         # ============ GANHOS UBER ============
         # Buscar por UUID ou email
         ganhos_uber = 0.0
+        uber_query_conditions = [{"motorista_id": motorista_id}]
+        if uuid_uber:
+            uber_query_conditions.append({"uuid_motorista": uuid_uber})
+        if motorista_email:
+            uber_query_conditions.append({"motorista_email": motorista_email})
+        
         uber_query = {
-            "$or": [
-                {"uuid_motorista": uuid_uber} if uuid_uber else {"uuid_motorista": None},
-                {"motorista_id": motorista_id},
-                {"email_motorista": motorista_email} if motorista_email else {"email_motorista": None}
-            ],
+            "$or": uber_query_conditions,
             "$and": [
                 {"$or": [
                     {"semana": semana, "ano": ano},
@@ -774,11 +776,6 @@ async def get_resumo_semanal_parceiro(
                 ]}
             ]
         }
-        # Clean up empty conditions
-        uber_query["$or"] = [q for q in uber_query["$or"] if list(q.values())[0] is not None]
-        if not uber_query["$or"]:
-            uber_query.pop("$or")
-            uber_query["motorista_id"] = motorista_id
         
         uber_records = await db.ganhos_uber.find(uber_query, {"_id": 0}).to_list(100)
         for r in uber_records:
