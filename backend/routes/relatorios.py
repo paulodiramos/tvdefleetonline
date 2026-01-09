@@ -664,6 +664,133 @@ async def get_resumos_motoristas(
     return resumos
 
 
+@router.get("/parceiro/resumo-semanal")
+async def get_resumo_semanal_parceiro(
+    semana: Optional[int] = None,
+    ano: Optional[int] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Vista consolidada do resumo semanal para parceiros.
+    Mostra todos os motoristas do parceiro com os seus ganhos, despesas e balanço.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Default to current week if not specified
+    now = datetime.now()
+    if not semana:
+        semana = now.isocalendar()[1]
+    if not ano:
+        ano = now.year
+    
+    # Build query based on user role
+    query = {"semana": semana, "ano": ano}
+    if current_user["role"] == UserRole.PARCEIRO:
+        query["parceiro_id"] = current_user["id"]
+    
+    # Get all reports for the specified week
+    relatorios = await db.relatorios_semanais.find(query, {"_id": 0}).to_list(1000)
+    
+    # Get all motoristas for the parceiro (to include even those without reports)
+    motoristas_query = {}
+    if current_user["role"] == UserRole.PARCEIRO:
+        motoristas_query["parceiro_id"] = current_user["id"]
+    
+    motoristas = await db.motoristas.find(motoristas_query, {"_id": 0, "id": 1, "name": 1, "email": 1, "veiculo_id": 1}).to_list(1000)
+    
+    # Create a map of motorista_id to report
+    relatorios_map = {r["motorista_id"]: r for r in relatorios}
+    
+    # Build consolidated view
+    resumo_motoristas = []
+    totais = {
+        "total_ganhos_uber": 0,
+        "total_ganhos_bolt": 0,
+        "total_ganhos": 0,
+        "total_combustivel": 0,
+        "total_eletrico": 0,
+        "total_via_verde": 0,
+        "total_aluguer": 0,
+        "total_despesas": 0,
+        "total_liquido": 0
+    }
+    
+    for motorista in motoristas:
+        motorista_id = motorista["id"]
+        relatorio = relatorios_map.get(motorista_id, {})
+        
+        # Get vehicle info for this motorista
+        veiculo = None
+        if motorista.get("veiculo_id"):
+            veiculo = await db.vehicles.find_one({"id": motorista["veiculo_id"]}, {"_id": 0, "matricula": 1, "marca": 1, "modelo": 1, "valor_semanal": 1})
+        
+        ganhos_uber = float(relatorio.get("ganhos_uber") or 0)
+        ganhos_bolt = float(relatorio.get("ganhos_bolt") or 0)
+        total_ganhos = ganhos_uber + ganhos_bolt
+        
+        combustivel = float(relatorio.get("total_combustivel") or relatorio.get("combustivel_total") or 0)
+        eletrico = float(relatorio.get("total_eletrico") or relatorio.get("carregamentos_eletricos") or 0)
+        via_verde = float(relatorio.get("total_via_verde") or relatorio.get("via_verde_total") or relatorio.get("portagens_viaverde") or 0)
+        aluguer = float(relatorio.get("valor_aluguer") or 0)
+        
+        # If no aluguer in report, get from vehicle
+        if aluguer == 0 and veiculo:
+            aluguer = float(veiculo.get("valor_semanal") or 0)
+        
+        total_despesas = combustivel + eletrico + via_verde + aluguer
+        valor_liquido = total_ganhos - total_despesas
+        
+        motorista_resumo = {
+            "motorista_id": motorista_id,
+            "motorista_nome": motorista.get("name"),
+            "motorista_email": motorista.get("email"),
+            "veiculo_matricula": veiculo.get("matricula") if veiculo else None,
+            "tem_relatorio": motorista_id in relatorios_map,
+            "relatorio_id": relatorio.get("id"),
+            "status": relatorio.get("status"),
+            # Ganhos
+            "ganhos_uber": round(ganhos_uber, 2),
+            "ganhos_bolt": round(ganhos_bolt, 2),
+            "total_ganhos": round(total_ganhos, 2),
+            # Despesas
+            "combustivel": round(combustivel, 2),
+            "carregamento_eletrico": round(eletrico, 2),
+            "via_verde": round(via_verde, 2),
+            "via_verde_semana_referencia": relatorio.get("via_verde_semana_referencia"),
+            "aluguer_veiculo": round(aluguer, 2),
+            "total_despesas": round(total_despesas, 2),
+            # Total
+            "valor_liquido": round(valor_liquido, 2)
+        }
+        
+        resumo_motoristas.append(motorista_resumo)
+        
+        # Update totals
+        totais["total_ganhos_uber"] += ganhos_uber
+        totais["total_ganhos_bolt"] += ganhos_bolt
+        totais["total_ganhos"] += total_ganhos
+        totais["total_combustivel"] += combustivel
+        totais["total_eletrico"] += eletrico
+        totais["total_via_verde"] += via_verde
+        totais["total_aluguer"] += aluguer
+        totais["total_despesas"] += total_despesas
+        totais["total_liquido"] += valor_liquido
+    
+    # Round totals
+    for key in totais:
+        totais[key] = round(totais[key], 2)
+    
+    return {
+        "semana": semana,
+        "ano": ano,
+        "periodo": f"Semana {semana}/{ano}",
+        "total_motoristas": len(motoristas),
+        "motoristas_com_relatorio": len(relatorios),
+        "motoristas": resumo_motoristas,
+        "totais": totais
+    }
+
 
 @router.get("/motorista/{motorista_id}/semanais")
 async def get_relatorios_motorista(
