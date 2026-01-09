@@ -868,33 +868,29 @@ async def get_resumo_semanal_parceiro(
         
         # ============ CARREGAMENTO ELÉTRICO ============
         eletrico_total = 0.0
-        if cartao_eletrico or veiculo_id:
-            elet_query_conditions = []
-            if cartao_eletrico:
-                elet_query_conditions.append({"cartao": cartao_eletrico})
-                elet_query_conditions.append({"CardCode": cartao_eletrico})
-            if veiculo_id:
-                elet_query_conditions.append({"vehicle_id": veiculo_id})
-            if veiculo and veiculo.get("matricula"):
-                elet_query_conditions.append({"MobileRegistration": veiculo.get("matricula")})
-            elet_query_conditions.append({"motorista_id": motorista_id})
-            
-            elet_query = {
-                "$or": elet_query_conditions,
-                "$and": [
-                    {"$or": [
-                        {"semana": semana, "ano": ano},
-                        {"data": {"$gte": data_inicio, "$lte": data_fim}},
-                        {"StartDate": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}
-                    ]}
-                ]
-            }
-            
-            elet_records = await db.despesas_combustivel.find(elet_query, {"_id": 0}).to_list(100)
-            for r in elet_records:
-                eletrico_total += float(r.get("TotalValueWithTaxes") or r.get("valor_total") or r.get("valor") or 0)
-            
-            logger.info(f"  {motorista.get('name')}: Elétrico query returned {len(elet_records)} records, total €{eletrico_total:.2f}")
+        elet_query_conditions = [{"motorista_id": motorista_id}]
+        if cartao_eletrico:
+            elet_query_conditions.append({"card_code": cartao_eletrico})
+        if veiculo_id:
+            elet_query_conditions.append({"vehicle_id": veiculo_id})
+        if veiculo and veiculo.get("matricula"):
+            elet_query_conditions.append({"matricula": veiculo.get("matricula")})
+        
+        elet_query = {
+            "$or": elet_query_conditions,
+            "$and": [
+                {"$or": [
+                    {"semana": semana, "ano": ano},
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                ]}
+            ]
+        }
+        
+        elet_records = await db.despesas_combustivel.find(elet_query, {"_id": 0}).to_list(100)
+        for r in elet_records:
+            eletrico_total += float(r.get("valor_total") or r.get("TotalValueWithTaxes") or r.get("valor") or 0)
+        
+        logger.info(f"  {motorista.get('name')}: Elétrico query returned {len(elet_records)} records, total €{eletrico_total:.2f}")
         
         # ============ CALCULAR TOTAIS ============
         total_ganhos = ganhos_uber + ganhos_bolt
