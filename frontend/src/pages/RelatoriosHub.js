@@ -1204,7 +1204,14 @@ const RelatoriosHub = ({ user, onLogout }) => {
                 </div>
                 <div>
                   <Label className="flex items-center justify-between">
-                    <span>Via Verde (€)</span>
+                    <span className="flex items-center gap-2">
+                      Via Verde (€)
+                      {novoRelatorio.via_verde_semana_ref && (
+                        <span className="text-xs text-blue-600 font-normal">
+                          (ref. {novoRelatorio.via_verde_semana_ref})
+                        </span>
+                      )}
+                    </span>
                     <Button 
                       type="button"
                       variant="ghost" 
