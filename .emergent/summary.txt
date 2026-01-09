@@ -1,186 +1,199 @@
 <analysis>**original_problem_statement:**
-O utilizador iniciou a sessão com um conjunto de objetivos de refatoração e implementação de funcionalidades. Durante a sessão, o foco mudou para a correção de uma série de bugs críticos e a melhoria do sistema de importação de dados, culminando num novo pedido de funcionalidade:
+O utilizador fez um novo pedido detalhado para refinar o sistema de relatórios semanais para o perfil de parceiro.
 
-1.  **Correção de Bugs Críticos (Agora Resolvidos):**
-    *   O relatório de ROI do veículo não funcionava com filtros de datas.
-    *   Ganhos da Uber e Bolt, bem como despesas (Via Verde, combustível, elétrico) e KMs de GPS não apareciam nos relatórios dos motoristas.
-2.  **Melhorias na Importação de Dados (Agora Implementadas):**
-    *   Garantir que os ganhos líquidos, portagens e gorjetas dos CSVs da Uber e Bolt são corretamente mapeados e importados.
-    *   Associar os dados importados ao motorista correto usando os seus IDs de plataforma (UUIDs).
-    *   Ao importar dados para uma semana que já tem um relatório em rascunho, o sistema deve **atualizar** o rascunho existente em vez de criar um novo.
-    *   Prevenir a criação de registos duplicados no banco de dados ao reimportar o mesmo ficheiro.
-3.  **Melhoria de UI (Agora Implementada):**
-    *   Exibir um resumo financeiro (ganhos, despesas, total) na lista principal de motoristas.
-4.  **Novo Pedido de Funcionalidade:**
-    *   Implementar a importação de despesas da **Via Verde** a partir de um ficheiro Excel (). O sistema deve associar as despesas ao veículo através do ID do OBU, somar os valores e detalhar as transações no relatório final em PDF.
+**Requisitos Principais:**
+1.  Criar um sistema de relatórios semanais simples e eficaz no perfil do parceiro.
+2.  O sistema deve importar ficheiros das plataformas: Uber, Bolt, Via Verde, combustível (diesel), elétrico e GPS (com KMs efetuados).
+3.  Toda a informação deve estar ligada a um motorista e ao seu veículo associado.
+4.  O veículo deve ter configurado: o cartão de frota, a Via Verde, e os detalhes do contrato, incluindo **quilómetros semanais contratados** e o **preço por km extra** (que podem ser fixos ou sazonais).
+5.  O utilizador forneceu novos ficheiros (, , , , ) e dois exemplos detalhados:
+    *   **Nelson:**
+        *   Ganhos Uber: €607,54
+        *   Ganhos Bolt: €136,74
+        *   Veículo: AS-83-NX
+        *   Via Verde ID: 601073900511, Gasto: €27,10
+        *   Cartão Combustível: 7824731736480002, Gasto: €5,35
+        *   Aluguer Semanal: €249,99
+    *   **Jorge Macaia:**
+        *   Ganhos Uber: €677,00
+        *   Ganhos Bolt: €299,61
+        *   Veículo: BQ-32-RS
+        *   Cartão Elétrico: PTPRIO6087131736480002, Gasto: €135,80
+        *   Aluguer Semanal: €249,99
+        *   Via Verde Gasto: €42,60
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação é um sistema de gestão de frotas (React + FastAPI + MongoDB). O agente atual resolveu com sucesso uma longa lista de bugs e implementou várias melhorias críticas no sistema de importação de dados. As principais funcionalidades e correções incluem:
--   **Seletores de Semana:** Adicionados seletores de semana/ano às páginas de importação de GPS, combustível e carregamentos elétricos, uniformizando a UI.
--   **Histórico de Atribuições Melhorado:** A página de detalhes do motorista agora exibe um histórico de atribuições mais completo, com detalhes do veículo e do contrato.
--   **Correções no Relatório do Motorista:** O relatório semanal do motorista agora agrega corretamente os ganhos da Uber/Bolt e as despesas de múltiplas fontes de dados (combustível, eletricidade, GPS).
--   **Sistema de Importação Robusto:** A lógica de importação de CSVs da Uber e Bolt foi completamente revista. Agora, o sistema:
-    *   Mapeia corretamente todos os campos financeiros (ganhos, gorjetas, portagens).
-    *   Associa os dados ao motorista usando os seus IDs únicos da plataforma.
-    *   Previne a criação de duplicados através de uma lógica update or create (upsert).
-    *   Atualiza relatórios rascunho existentes, permitindo a importação incremental de dados de várias fontes para a mesma semana.
--   **Melhoria na UI da Lista de Motoristas:** A página principal de motoristas agora exibe um resumo financeiro do relatório mais recente para cada motorista, oferecendo uma visão geral rápida da performance.
+A aplicação possui um sistema de importação de ficheiros bastante robusto. Foram implementados e testados endpoints e interfaces de utilizador para:
+1.  **Importação de Ficheiros**: Lógica para processar ficheiros CSV e Excel de Uber, Bolt, Via Verde, carregamentos elétricos e combustível fóssil. A lógica lida com diferentes formatos e particularidades (ex: BOM em CSVs).
+2.  **Relatórios Semanais**: Geração de relatórios que consolidam ganhos e despesas por motorista.
+3.  **Interfaces de Utilizador (UI)**:
+    *   Uma página unificada para o parceiro importar todos os ficheiros ().
+    *   Uma página para o administrador configurar o mapeamento de colunas dos ficheiros ().
+    *   Uma página para o parceiro gerir credenciais de plataformas para sincronização automática ().
+    *   Uma página de resumo semanal que exibe totais e uma tabela detalhada por motorista ().
+4.  **Indicação da Semana na Via Verde**: A UI e a API foram atualizadas para mostrar de que semana são os dados da Via Verde.
+
+Todo este trabalho foi concluído antes do utilizador fornecer o novo requisito detalhado, que agora se tornou a prioridade.
 
 **Last working item**:
--   **Last item agent was working:** O agente acabou de receber um novo pedido de funcionalidade do utilizador: implementar a importação de despesas da **Via Verde** a partir de um ficheiro Excel. O agente analisou o ficheiro  fornecido para compreender a sua estrutura.
--   **Status:** NOT STARTED
--   **Agent Testing Done:** N/A
--   **Which testing method agent to use?** backend testing agent. O agente deverá:
-    1.  Testar o novo endpoint de importação da Via Verde com um ficheiro de teste.
-    2.  Verificar se os dados são corretamente guardados numa nova coleção (ex: ).
-    3.  Validar que a geração do relatório semanal do motorista inclui corretamente o total das despesas da Via Verde.
-    4.  (Numa fase posterior) Validar que o relatório em PDF inclui a lista detalhada das transações.
--   **User Testing Done:** N
+*   **Last item agent was working:** O agente estava a iniciar o trabalho no novo e detalhado requisito do utilizador. Começou por analisar os 5 novos ficheiros fornecidos (, , , , ) para compreender os dados para os motoristas Nelson e Jorge Macaia.
+*   **Status:** IN PROGRESS
+*   **Agent Testing Done:** N
+*   **Which testing method agent to use?** both
+*   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Implementar Importação de Despesas Via Verde a partir de Excel (P0)**
+-   **Issue 1: Implementar o novo Sistema de Relatórios Semanais (P0)**
 -   **Issue 2: Refatoração do Backend Incompleta (P1)**
--   **Issue 3: Lógica de Automação RPA Não Implementada (P2)**
+-   **Issue 3: Implementar a lógica de Sincronização Automática (RPA) (P2)**
 
 Issues Detail:
--   **Issue 1: Implementar Importação de Despesas Via Verde a partir de Excel (P0)**
-    -   **Attempted fixes:** Nenhuma. É um novo requisito.
+-   **Issue 1: Implementar o novo Sistema de Relatórios Semanais (P0)**
+    -   **Attempted fixes:** O agente iniciou a análise dos novos ficheiros.
     -   **Next debug checklist:**
-        1.  Identificar e modificar a função  no ficheiro  para processar o formato do novo ficheiro .
-        2.  Para cada linha do Excel, usar o valor da coluna  para encontrar o veículo correspondente na coleção .
-        3.  Após encontrar o veículo, identificar o motorista que lhe estava atribuído na data da transação.
-        4.  Guardar cada transação (linha do Excel) numa coleção dedicada, por exemplo , incluindo todos os detalhes relevantes (matrícula, serviço, data, local, valor).
-        5.  Modificar a lógica de geração de relatórios em  para consultar esta nova coleção e somar os valores no campo  do relatório semanal.
-    -   **Why fix this issue and what will be achieved with the fix?** Automatizar a importação de um tipo de despesa fundamental para a frota, completando o ciclo de automação de custos.
-    -   **Status:** NOT STARTED
+        1.  Adicionar os novos campos (, ) ao modelo de dados dos veículos ou a um novo modelo de contratos.
+        2.  Atualizar a UI de gestão de veículos/contratos para permitir a configuração destes novos campos.
+        3.  Localizar o motorista Jorge Macaia e o veículo BQ-32-RS na base de dados. Se não existirem, criá-los.
+        4.  Verificar e atualizar os veículos de Nelson (AS-83-NX) e Jorge (BQ-32-RS) com os IDs de cartão (combustível, elétrico) e Via Verde corretos, conforme a nova solicitação.
+        5.  Adaptar a lógica de importação e geração de relatórios para usar os novos dados e calcular os totais de acordo com os exemplos fornecidos.
+        6.  Garantir que os relatórios exibem todos os dados solicitados de forma simples e eficaz.
+    -   **Why fix this issue and what will be achieved with the fix?** Implementar a versão refinada e final da funcionalidade principal de relatórios do parceiro, conforme a especificação mais recente do utilizador.
+    -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Should Test frontend/backend/both after fix?** both
 
 -   **Issue 2: Refatoração do Backend Incompleta (P1)**
-    -   **Attempted fixes:** O agente anterior moveu com sucesso vários endpoints para routers modulares, mas  continua a ser um monólito.
-    -   **Next debug checklist:** Continuar a migrar grupos lógicos de endpoints (ex: , , ou a lógica de importação) de  para os seus próprios ficheiros de rota ou serviços.
-    -   **Why fix this issue and what will be achieved with the fix?** Melhorar a manutenibilidade, escalabilidade e organização do código backend.
-    -   **Status:** IN PROGRESS
+    -   **Attempted fixes:** Nenhuma nesta sessão. O ficheiro  continua a ser um monólito que contém toda a lógica de importação de ficheiros.
+    -   **Next debug checklist:** Criar um novo diretório  e mover a lógica de importação de cada plataforma (Uber, Bolt, etc.) para módulos separados (ex: ).
+    -   **Why fix this issue and what will be achieved with the fix?** Melhora a manutenibilidade, escalabilidade e organização do código, facilitando futuras modificações.
+    -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** backend
 
--   **Issue 3: Lógica de Automação RPA Não Implementada (P2)**
-    -   **Attempted fixes:** Nenhuma. A UI existe mas o backend não está implementado.
-    -   **Next debug checklist:** Implementar a função  em  usando Playwright para executar as automações definidas.
-    -   **Why fix this issue and what will be achieved with the fix?** Tornar a funcionalidade de automação RPA, que já tem UI, efetivamente operacional.
+-   **Issue 3: Implementar a lógica de Sincronização Automática (RPA) (P2)**
+    -   **Attempted fixes:** Foi criada uma UI para configurar a sincronização automática (), mas a lógica de backend não foi implementada.
+    -   **Next debug checklist:**
+        1.  Implementar a lógica no endpoint  para guardar as configurações de frequência e estado da automação.
+        2.  Implementar a função  em  para executar as importações automáticas com base nas credenciais e configurações guardadas.
+        3.  Garantir que as senhas são devidamente encriptadas e desencriptadas durante o processo.
+    -   **Why fix this issue and what will be achieved with the fix?** Habilitar a funcionalidade de importação automática, um requisito chave do utilizador.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** backend
 
 **In progress Task List**:
--   None
+-   **Task 1: Análise e planeamento da nova solicitação de relatórios**
+    -   **Where to resume:** A análise dos ficheiros foi concluída. O próximo passo é definir o plano de implementação para os novos requisitos: adicionar campos de contrato (KMs), atualizar os dados dos motoristas/veículos (Nelson, Jorge), e adaptar a lógica de cálculo dos relatórios.
+    -   **What will be achieved with this?** Um plano claro para modificar a aplicação existente para corresponder aos novos requisitos detalhados do utilizador.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** both
+    -   **Blocked on something:** Não
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   (P0) **Issue 1**: Implementar importação de despesas Via Verde a partir de Excel.
-    -   (P1) **Issue 2**: Continuar a refatoração do backend.
+    -   (P1) **Issue 2**: Refatorar o backend para separar a lógica de importação.
+    -   (P2) **Issue 3**: Implementar a lógica de backend para a sincronização automática (RPA).
 -   **Future Tasks:**
-    -   (P2) **Issue 3**: Implementar o motor de execução RPA.
     -   (P3) Modificar a geração do PDF do relatório semanal para incluir a lista detalhada das transações da Via Verde.
-    -   (P4) Criar um editor visual para os passos de automação RPA.
-    -   (P5) Expandir o sistema RPA para suportar novos fornecedores.
+    -   (P4) Adicionar notificações para o parceiro sobre o estado da importação (sucesso/erro).
+    -   (P5) Criar um editor visual para os passos de automação RPA.
 
 **Completed work in this session**
--   **Correção de Bugs de Relatórios:**
-    -   Resolvido o bug do cálculo de ROI na ficha do veículo com a adição de um filtro de datas personalizado (Entre Datas).
-    -   Corrigida a lógica de geração de relatórios () para agregar corretamente os ganhos da Uber/Bolt e despesas de combustível, eletricidade e KMs de GPS, consultando múltiplas coleções.
--   **Melhoria da Importação de Dados (Uber/Bolt):**
-    -   Refinada a lógica de importação em  para mapear corretamente todos os campos financeiros (ganhos líquidos, gorjetas, portagens).
-    -   Assegurada a associação correta dos dados ao motorista através dos seus UUIDs de plataforma.
-    -   Implementada uma lógica de update or create para **prevenir a criação de registos duplicados** em reimportações.
-    -   Implementada a **atualização de relatórios rascunho existentes**, permitindo a importação faseada de dados de diferentes plataformas para a mesma semana.
-    -   Realizada uma limpeza completa de dados duplicados existentes nas coleções  e .
--   **Melhorias de UI:**
-    -   Adicionada a funcionalidade de seletores de semana/ano a todas as páginas de importação.
-    -   Melhorada a vista de histórico de atribuições na página do motorista.
-    -   Adicionado um resumo financeiro (Ganhos, Despesas, Líquido) ao card de cada motorista na página principal .
+-   **Sistema de Importação Melhorado (UI/Config) (CONCLUÍDO):**
+    -   Criadas UIs para importação unificada, configuração de mapeamento (admin) e gestão de credenciais (parceiro).
+-   **Vista Consolidada Resumo Semanal do Parceiro (CONCLUÍDO):**
+    -   Criada uma nova página () e API () que exibe um resumo financeiro e uma tabela detalhada de todos os motoristas de um parceiro para uma dada semana.
+-   **Indicação da Semana de Referência da Via Verde (CONCLUÍDO):**
+    -   O backend foi modificado para retornar a semana de referência dos dados da Via Verde.
+    -   O frontend foi atualizado para exibir essa informação () na UI de relatórios.
+-   **Importação de Relatórios de Parceiro (v1) (CONCLUÍDO e TESTADO):**
+    -   Implementada e validada com  a importação de ficheiros para Uber, Bolt, Via Verde, Elétrico e Combustível para os motoristas Karen e Nelson. Foram corrigidos múltiplos bugs relacionados com a análise de ficheiros (BOM), associação de dados e duplicação de registos.
 
 **Earlier issues found/mentioned but not fixed**
--   None.
+-   Nenhum. Todos os problemas identificados foram resolvidos ou estão listados como pendentes.
 
 **Known issue recurrence from previous fork**
--   None.
+-   **Refatoração do Backend:** A necessidade de refatorar o  monolítico continua a ser adiada em favor de novas funcionalidades.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Lógica de Upsert (Update or Create):** O agente implementou uma lógica crucial em  para a importação de dados. Antes de inserir um novo registo da Uber/Bolt, o sistema verifica se já existe um para o mesmo motorista, semana e ano. Se existir, atualiza-o; caso contrário, cria um novo. Isto previne a duplicação de dados.
--   **Atualização de Relatórios Rascunho:** A função  foi modificada para, em vez de ignorar, encontrar e **atualizar** um relatório rascunho existente quando novos dados da mesma semana são importados, permitindo uma consolidação de dados de múltiplas fontes.
--   **Agregação de Dados de Múltiplas Coleções:** A lógica de geração de relatórios em  foi corrigida para fazer queries a várias coleções (, , , etc.) e somar os totais corretamente.
--   **Frontend Dinâmico:** A página  agora faz uma chamada a um novo endpoint () para obter e exibir dinamicamente os totais financeiros mais recentes para cada motorista.
+-   **Processamento de Ficheiros (Pandas):** Essencial para a importação de ficheiros CSV e Excel.
+-   **FastAPI Backend:** Criação e modificação de endpoints, gestão de uploads, e lógica de negócio complexa.
+-   **MongoDB (motor):** Uso de queries e agregações para consolidar dados de múltiplas coleções (, , , , ).
+-   **React Frontend:** Desenvolvimento de novas páginas e componentes, gestão de estado, e integração com a API via .
+-   **Gestão de Credenciais:** Introduzido o conceito de armazenamento de credenciais de plataforma, com encriptação como próximo passo.
 
 **key DB schema**
--   ** / **: Coleções que agora armazenam os dados de ganhos de forma única (sem duplicados), com campos detalhados como  e .
--   ****: O schema foi enriquecido com campos para , , , . A lógica de atualização desta coleção agora soma corretamente os valores de importações incrementais.
--   ****: Contém os campos  e , que são essenciais para a associação automática de dados durante a importação.
-
-**changes in tech stack**
--   Nenhuma.
+-   ****: Contém , , . Necessita da adição dos campos  e .
+-   ** / **: Coleções que armazenam os ganhos por plataforma.
+-   ****: Armazena transações da Via Verde.
+-   ****: Armazena abastecimentos de combustível fóssil.
+-   ****: Armazena carregamentos elétricos.
+-   ****: Nova coleção para armazenar credenciais de plataformas por parceiro.
+-   ****: Nova coleção para armazenar configurações de mapeamento de importação.
+-   ****: O resultado consolidado que agrega todos os dados.
 
 **All files of reference**
--   **/app/backend/server.py**: Ficheiro central para toda a lógica de importação, que foi significativamente refatorado para garantir a integridade dos dados.
--   **/app/backend/routes/relatorios.py**: Ficheiro principal para a geração de relatórios, corrigido para agregar dados corretamente e enriquecido com um novo endpoint de resumo.
--   **/app/frontend/src/pages/Motoristas.js**: Página principal de motoristas, agora com resumos financeiros por motorista.
--   **/app/frontend/src/pages/FichaVeiculo.js**: Página de detalhes do veículo, onde o relatório financeiro foi corrigido.
--   **, , **: Ficheiros de exemplo fornecidos pelo utilizador, cruciais para o desenvolvimento.
+-   **/app/backend/server.py**: Modificado extensivamente para nova lógica de importação, correção de bugs e novos endpoints de configuração.
+-   **/app/backend/routes/relatorios.py**: Modificado para adicionar a referência da semana da Via Verde e o novo endpoint de resumo semanal.
+-   **/app/frontend/src/pages/ResumoSemanalParceiro.js**: Ficheiro novo para a vista de resumo.
+-   **/app/frontend/src/pages/ImportarFicheirosParceiro.js**: Ficheiro novo para a UI de importação unificada.
+-   **/app/frontend/src/pages/ConfiguracaoMapeamento.js**: Ficheiro novo para a UI de configuração de mapeamento.
+-   **/app/frontend/src/pages/CredenciaisPlataformas.js**: Ficheiro novo para a UI de gestão de credenciais.
+-   **/app/frontend/src/App.js**: Modificado para adicionar as novas rotas.
+-   **/app/frontend/src/components/Layout.js**: Modificado para adicionar os novos links no menu.
+-   , , , , : **Novos ficheiros** fornecidos pelo utilizador para o requisito mais recente.
+-   **/app/memory/PRD.md**: Atualizado para refletir o trabalho concluído.
 
 **Areas that need refactoring**:
--   ****: A lógica de importação, apesar de funcional, é complexa e está toda dentro de . Extrair esta lógica para um módulo de serviço () seria o próximo passo ideal na refatoração.
--   ****: Continua a ser um componente muito grande e complexo, necessitando de ser dividido em subcomponentes.
+-   ****: A lógica de importação de ficheiros de múltiplas plataformas deve ser extraída para módulos de serviço dedicados para melhorar a organização e manutenibilidade do código.
 
 **key api endpoints**
--   : Lógica de backend em  foi fortemente modificada para incluir de-duplicação e atualização de rascunhos.
--   : Novo endpoint em  que fornece os dados para os resumos financeiros na lista de motoristas.
--   : Lógica em  foi corrigida para agregar dados de múltiplas coleções.
+-   : Endpoint genérico de importação, modificado para suportar múltiplos formatos.
+-   : Novo endpoint para a vista consolidada do parceiro.
+-   : Modificado para retornar a semana de referência.
+-   : Novo endpoint para guardar credenciais.
+-   : Novo endpoint para guardar configurações de mapeamento.
 
 **Critical Info for New Agent**
--   **Prioridade Máxima:** A tarefa mais importante é implementar a importação de despesas da Via Verde a partir do ficheiro Excel, conforme o último pedido do utilizador.
--   **Integridade dos Dados é Chave:** O agente anterior dedicou muito esforço a corrigir problemas de duplicação e agregação de dados. A lógica de upsert implementada na importação da Uber/Bolt em  é um padrão a seguir para a nova importação da Via Verde para evitar problemas semelhantes.
--   **Nome da Base de Dados:** Para qualquer operação manual ou de verificação na base de dados, é crucial usar o nome correto da DB, que é ****, obtido da variável de ambiente .
+-   **NOVA PRIORIDADE MÁXIMA:** O foco é total no último pedido do utilizador: um sistema de relatórios semanais refinado. Use os novos ficheiros e os exemplos específicos (Nelson, Jorge Macaia) como a fonte da verdade.
+-   **REAPROVEITAR CÓDIGO EXISTENTE:** Grande parte da base necessária já foi construída e testada. A tarefa é adaptar e estender o trabalho anterior para incluir os novos requisitos, como os campos de contrato (KMs e preço extra) e a lógica de cálculo específica.
+-   **REQUISITOS DE CONTRATO:** Uma parte fundamental da nova tarefa é adicionar os campos quilómetros atribuídos e preço por km extra ao sistema, tanto na base de dados como na UI, e usá-los nos cálculos dos relatórios.
+-   **AUTOMAÇÃO (RPA) É O PRÓXIMO PASSO:** Após a conclusão do relatório manual, a implementação da lógica de backend para a sincronização automática () será a próxima prioridade.
 
 **documents and test reports created in this job**
--    (atualizado consistentemente)
--   Artefactos de utilizador: , , 
+-   /app/test_reports/iteration_2.json
+-   /app/memory/PRD.md
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User ():** Aponta que os ganhos não aparecem na lista de motoristas.
-2.  **Agent:** Implementa a funcionalidade, adicionando um resumo financeiro a cada motorista na lista.
-3.  **User ():** Pede para configurar a importação da Via Verde a partir de um ficheiro Excel, detalhando os requisitos. (PENDING)
-4.  **User ():** Aponta que a correção dos duplicados deve aplicar-se a todos os motoristas, não apenas a um.
-5.  **Agent:** Executa uma limpeza completa dos dados duplicados para todos os motoristas e valida que os totais estão corretos.
-6.  **User ():** Reporta que os valores de ganhos do motorista estão incorretos e muito altos.
-7.  **Agent:** Investiga e descobre que o problema são registos duplicados de múltiplas importações, implementando uma lógica para prevenir duplicados.
-8.  **User ():** Pede para melhorar a importação da Uber/Bolt, detalhando todas as colunas a serem mapeadas.
-9.  **Agent:** Implementa o mapeamento detalhado para Uber e Bolt, incluindo gorjetas e portagens.
-10. **User ():** Pede que, ao importar um ficheiro, o sistema atualize um relatório rascunho existente em vez de criar um novo.
-11. **Agent:** Implementa com sucesso a lógica de atualização de relatórios rascunho.
+1.  **User ():** Pede para melhorar o sistema de importação com uma UI unificada para o parceiro, uma tela de configuração de mapeamento para o admin e o armazenamento encriptado de credenciais.
+2.  **User ():** Confirma os detalhes da implementação do sistema de importação melhorado.
+3.  **Agent ():** Finaliza a implementação do sistema de importação melhorado e pergunta os próximos passos.
+4.  **User ():** **MENSAGEM CRÍTICA.** Fornece um novo requisito muito detalhado para criar um sistema de relatórios semanais simples e eficaz, com novos exemplos de motoristas (Nelson, Jorge Macaia), valores específicos, e anexa 5 novos ficheiros. Este pedido redefine a prioridade atual.
+5.  **Agent ( a ):** Começa a trabalhar na nova solicitação, iniciando a análise dos novos ficheiros fornecidos.
 
 **Project Health Check:**
--   **Broken:** Nenhuma funcionalidade crítica está quebrada.
--   **Mocked:** O serviço de execução de automação RPA () permanece como um placeholder.
+-   **Broken:** Nenhuma funcionalidade principal está quebrada.
+-   **Mocked:** A lógica de automação/RPA (sincronização automática) está pendente. As UIs foram criadas, mas o backend que as executa ainda não foi implementado.
 
 **3rd Party Integrations**
--   **Playwright:** Instalado para automação RPA (execução pendente).
--   **Cryptography:** Usado para encriptação de credenciais.
--   **pandas / openpyxl / xlrd:** Usados para ler ficheiros CSV e Excel durante a importação.
+-   **Playwright:** Instalado, mas a sua utilização para automação RPA está pendente.
+-   **pandas / openpyxl:** Usados extensivamente e de forma crucial para a importação de ficheiros Excel e CSV.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES. O agente usou o testing agent de forma consistente e com sucesso para validar todas as correções e novas funcionalidades.
+-   **Testing agent used after significant changes:** YES. Usado com sucesso para validar a primeira versão da funcionalidade de importação de parceiros (v1).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None
--   **Known regressions:** None
+-   **Test files created:**
+    -   /app/test_reports/iteration_2.json
+-   **Known regressions:** Nenhuma conhecida.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
 -   **Parceiro:**  / 
 
 **What agent forgot to execute**
--   O agente não se esqueceu de nada. Concluiu uma longa e complexa série de correções e melhorias solicitadas pelo utilizador e está pronto para iniciar o próximo grande requisito.</analysis>
+-   Nada foi esquecido. O agente seguiu as prioridades do utilizador. As tarefas pendentes (refatoração, RPA) são conhecidas e estão listadas.</analysis>

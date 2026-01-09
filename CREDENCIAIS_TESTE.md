@@ -58,7 +58,7 @@
 
 ### Login via Frontend
 ```
-1. Acesse: https://driver-expenses-1.preview.emergentagent.com/login
+1. Acesse: https://drivedocs.preview.emergentagent.com/login
 2. Use qualquer credencial acima
 3. Navegue conforme as permissões do role
 ```
