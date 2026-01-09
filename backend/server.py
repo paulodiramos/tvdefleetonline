@@ -11612,14 +11612,17 @@ async def importar_combustivel_excel(
                         if vehicle:
                             logger.info(f"✅ Veículo encontrado por DESC. CARTÃO (matrícula): {desc_cartao}")
                     
-                    # Se não encontrou por matrícula, tentar por cartao_frota_id
+                    # Se não encontrou por matrícula, tentar por cartao_frota_id ou cartao_frota_fossil_id
                     if not vehicle:
                         vehicle = await db.vehicles.find_one(
-                            {"cartao_frota_id": desc_cartao},
+                            {"$or": [
+                                {"cartao_frota_id": desc_cartao},
+                                {"cartao_frota_fossil_id": desc_cartao}
+                            ]},
                             {"_id": 0}
                         )
                         if vehicle:
-                            logger.info(f"✅ Veículo encontrado por DESC. CARTÃO (cartao_frota_id): {desc_cartao}")
+                            logger.info(f"✅ Veículo encontrado por DESC. CARTÃO: {desc_cartao}")
                 
                 # 3. Tentar por OBU
                 if not vehicle and obu:
