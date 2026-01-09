@@ -7,104 +7,95 @@ Sistema de gestão de frotas para empresas TVDE (React + FastAPI + MongoDB). A a
 
 ### Janeiro 2026
 
-#### 1. Importação de Relatórios de Parceiro ✅
+#### 1. Sistema de Importação Melhorado ✅
 **Status: COMPLETO**
 
-Funcionalidades:
+**Nova página unificada de importação para Parceiro** (`/importar-ficheiros`):
+- Interface única para todas as plataformas: Uber, Bolt, Via Verde, Combustível, Elétrico
+- Selector de Semana/Ano com navegação por setas
+- Drag & drop para seleccionar ficheiros
+- Importação individual ou em lote ("Importar Todos")
+- Histórico de importações
+
+**Configuração de Mapeamento para Admin** (`/configuracao-mapeamento`):
+- Tabs para cada plataforma
+- Tabela editável de mapeamento de campos (Campo do Sistema ↔ Coluna no Ficheiro)
+- Indicação de campos obrigatórios/opcionais
+- Configuração de sincronização automática (Diário/Semanal/Mensal)
+
+**Credenciais Encriptadas para Parceiro** (`/credenciais-plataformas`):
+- Cards para: Uber, Bolt, Via Verde, Prio Energy, GPS
+- Passwords encriptadas antes de armazenar
+- Botão para testar conexão
+- Aviso de segurança sobre encriptação
+
+**Novos Endpoints:**
+- `GET/POST /api/parceiro/credenciais-plataformas` - Gestão de credenciais do parceiro
+- `POST /api/parceiro/testar-conexao/{plataforma}` - Testar conexão
+- `GET/POST /api/configuracao/mapeamento-campos` - Mapeamento de campos
+- `GET/POST /api/configuracao/sincronizacao-auto` - Config sync automática
+
+#### 2. Importação de Relatórios de Parceiro ✅
+**Status: COMPLETO**
+
+Funcionalidades implementadas e validadas:
 - Importação Bolt CSV com suporte BOM (UTF-8-sig)
-- Importação Uber CSV corrigida
+- Importação Uber CSV 
 - Importação Carregamentos Elétricos CSV (formato PRIOENERGY)
-- Importação Combustível Excel com `cartao_frota_fossil_id`
-- Valores de aluguer configurados nos veículos
+- Importação Combustível Excel
+- Aluguer obtido automaticamente do veículo atribuído
 
-Dados Validados (Karen & Nelson):
-| Motorista | Bolt | Uber | Elétrico | Combustível | Aluguer |
-|-----------|------|------|----------|-------------|---------|
-| Karen Souza | €323,86 ✅ | €85,89 ✅ | €119,16 ✅ | - | €400 ✅ |
-| Nelson Francisco | €136,74 ✅ | €607,54 ✅ | - | €144,63 ✅ | €249,99 ✅ |
-
-#### 2. Indicação da Semana de Referência Via Verde ✅
+#### 3. Indicação da Semana de Referência Via Verde ✅
 **Status: COMPLETO**
 
-- Backend retorna `semana_referencia` no endpoint `/api/relatorios/motorista/{id}/via-verde-total`
-- Backend inclui `via_verde_semana_referencia` nos relatórios gerados
+- Backend retorna `semana_referencia` 
 - Frontend mostra "(ref. Semana X/AAAA)" junto ao campo Via Verde
-- Funciona no modal de criação e edição de relatórios
 
-#### 3. Vista Consolidada "Resumo Semanal do Parceiro" ✅
+#### 4. Vista Consolidada "Resumo Semanal do Parceiro" ✅
 **Status: COMPLETO**
 
 Nova página `/resumo-semanal` com:
-- Selector de semana/ano com navegação por setas
-- 4 cards de resumo: Total Ganhos, Total Despesas, Valor Líquido, Motoristas
-- Tabela detalhada por motorista com todas as colunas:
-  - Uber, Bolt, Total Ganhos
-  - Combustível, Elétrico, Via Verde (com ref. semana), Aluguer
-  - Total Despesas, Valor Líquido, Status
-- Acessível via menu Relatórios → Resumo Semanal
-
-**Endpoint novo**: `GET /api/relatorios/parceiro/resumo-semanal?semana=X&ano=YYYY`
+- 4 cards de resumo (Ganhos, Despesas, Líquido, Motoristas)
+- Tabela detalhada por motorista
 
 ---
 
-### Correção do Cálculo Via Verde (Sessão Anterior) ✅
-**Status: COMPLETO**
+## Architecture
 
-Regras de negócio implementadas:
-1. Filtro por `market_description` = "portagens" ou "parques"
-2. Usar `liquid_value` para soma
-3. Sem atraso de semanas
+### New Files Created
+**Frontend:**
+- `/app/frontend/src/pages/ImportarFicheirosParceiro.js` - Interface unificada de importação
+- `/app/frontend/src/pages/ConfiguracaoMapeamento.js` - Config mapeamento (admin)
+- `/app/frontend/src/pages/CredenciaisPlataformas.js` - Credenciais encriptadas (parceiro)
+- `/app/frontend/src/pages/ResumoSemanalParceiro.js` - Vista consolidada
+
+**Backend:**
+- Novos endpoints em `/app/backend/server.py` para credenciais e configurações
+
+### Menu Structure
+**Parceiro:**
+- Relatórios → Gerir Relatórios | Resumo Semanal | **Importar Ficheiros** | Histórico
+- **Configurações → Credenciais Plataformas** | Configurações
+
+**Admin:**
+- Relatórios → Criar Relatório | Resumo Semanal | **Importar Ficheiros** | Ficheiros Importados
+- Configurações → **Mapeamento Importação** | Automação RPA | Config CSV
 
 ---
 
 ## Prioritized Backlog
 
 ### P2 - Média Prioridade
-- [ ] Refatoração do backend - mover lógica de importação para `services/`
-- [ ] Melhorar validação de duplicados na importação
+- [ ] Implementar conexão real com plataformas (Uber, Bolt API)
+- [ ] Refatoração do backend - mover lógica para `services/`
 
 ### P3 - Baixa Prioridade
-- [ ] Implementar motor de execução RPA
-- [ ] Incluir lista detalhada de transações Via Verde no PDF
-- [ ] Criar editor visual para automação RPA
+- [ ] Motor de execução RPA
 - [ ] Exportar resumo semanal para Excel/PDF
-
----
-
-## Technical Architecture
-
-### Stack
-- **Frontend**: React + Shadcn/UI
-- **Backend**: FastAPI (Python)
-- **Database**: MongoDB
-- **File Processing**: pandas + openpyxl
-
-### Key Collections
-- `ganhos_bolt`: Ganhos importados da Bolt
-- `ganhos_uber`: Ganhos importados da Uber
-- `relatorios_semanais`: Relatórios consolidados por motorista
-- `portagens_viaverde`: Transações Via Verde
-- `despesas_combustivel`: Carregamentos elétricos
-- `abastecimentos_combustivel`: Abastecimentos de combustível fóssil
-- `vehicles`: Veículos com valor_semanal, cartao_frota_eletric_id, cartao_frota_fossil_id
-- `motoristas`: Dados dos motoristas
-
-### Key API Endpoints
-- `POST /api/importar/{plataforma}`: Importação genérica
-- `GET /api/relatorios/parceiro/resumo-semanal`: **NOVO** - Vista consolidada
-- `GET /api/relatorios/motorista/{id}/via-verde-total`: Cálculo Via Verde com semana_referencia
-- `POST /api/relatorios/gerar-semanal`: Geração de relatório com via_verde_semana_referencia
-
-### New Files Created
-- `/app/frontend/src/pages/ResumoSemanalParceiro.js`: Componente da vista consolidada
-- `/app/backend/routes/relatorios.py`: Endpoint `get_resumo_semanal_parceiro`
+- [ ] Editor visual para automação
 
 ---
 
 ## Test Credentials
 - **Admin**: admin@tvdefleet.com / 123456
 - **Parceiro**: parceiro@tvdefleet.com / 123456
-
-## Test Reports
-- `/app/test_reports/iteration_1.json`: Testes Via Verde API
-- `/app/test_reports/iteration_2.json`: Testes importação de dados (17 testes, 100% passados)
