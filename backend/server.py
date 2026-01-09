@@ -17681,11 +17681,26 @@ async def importar_ganhos_bolt(
                 
                 # Salvar no banco
                 await db.ganhos_bolt.insert_one(ganho)
-                ganhos_importados.append(ganho)
+                # Remove _id before adding to list (MongoDB adds it after insert)
+                ganho_copy = {k: v for k, v in ganho.items() if k != '_id'}
+                ganhos_importados.append(ganho_copy)
                 total_ganhos += ganhos_liquidos
                 
             except Exception as e:
                 erros.append(f"Linha {row_num}: {str(e)}")
+        
+        # Serialize ganhos for response (remove _id and convert datetime)
+        ganhos_serializados = []
+        for g in ganhos_importados[:10]:
+            ganho_serial = {}
+            for k, v in g.items():
+                if k == '_id':
+                    continue
+                if isinstance(v, datetime):
+                    ganho_serial[k] = v.isoformat()
+                else:
+                    ganho_serial[k] = v
+            ganhos_serializados.append(ganho_serial)
         
         return {
             'success': True,
@@ -17694,7 +17709,7 @@ async def importar_ganhos_bolt(
             'motoristas_nao_encontrados': motoristas_nao_encontrados,
             'total_ganhos': round(total_ganhos, 2),
             'periodo': f"{periodo_ano}W{periodo_semana}" if periodo_ano else None,
-            'ganhos_importados': ganhos_importados[:10],  # Primeiros 10 para preview
+            'ganhos_importados': ganhos_serializados,
             'erros': erros
         }
         
