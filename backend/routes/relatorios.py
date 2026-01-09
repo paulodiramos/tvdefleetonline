@@ -788,18 +788,22 @@ async def get_motorista_via_verde_total(
     portagens = await db.portagens_viaverde.find(query, {"_id": 0}).to_list(5000)
     
     # Filter by date if semana is None (manual check)
-    # REGRA DE NEGÓCIO: INCLUIR APENAS transações onde market_description = "portagens" ou "parques"
-    # (Os valores esperados pelo utilizador - €23,20 para Marco Coelho e €0 para Arlei - confirmam esta regra)
+    # REGRA DE NEGÓCIO: 
+    # 1. APENAS documentos que têm market_description preenchido (importação nova)
+    # 2. INCLUIR APENAS transações onde market_description = "portagens" ou "parques"
     filtered_portagens = []
     included_market_descriptions = {"portagens", "parques"}
     
     for p in portagens:
-        # Verificar market_description - incluir APENAS portagens e parques
+        # Verificar market_description - OBRIGATÓRIO para novos dados
         market_desc = str(p.get("market_description", "")).strip().lower()
         
-        # Se não houver market_description (dados antigos), incluir por defeito
-        # Se houver, só incluir se for "portagens" ou "parques"
-        if market_desc and market_desc not in included_market_descriptions:
+        # Se não houver market_description, ignorar (dados antigos sem este campo)
+        if not market_desc:
+            continue
+        
+        # Se houver market_description, só incluir se for "portagens" ou "parques"
+        if market_desc not in included_market_descriptions:
             logger.debug(f"📍 Excluído: {p.get('entry_point')} → {p.get('exit_point')} (market_description={market_desc})")
             continue
         
