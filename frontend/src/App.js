@@ -532,6 +532,24 @@ function App() {
             }
           />
           <Route
+            path="/importar-ficheiros"
+            element={
+              user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? <ImportarFicheirosParceiro user={user} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
+            path="/configuracao-mapeamento"
+            element={
+              user && (user.role === 'admin' || user.role === 'gestao') ? <ConfiguracaoMapeamento user={user} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
+            path="/credenciais-plataformas"
+            element={
+              user && user.role === 'parceiro' ? <CredenciaisPlataformas user={user} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
             path="/vehicle-data"
             element={
               user ? <VehicleData user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
