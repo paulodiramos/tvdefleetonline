@@ -240,7 +240,8 @@ class TestJorgeMacaiaData:
         # Find Jorge in motoristas list
         jorge = None
         for m in data.get("motoristas", []):
-            if "Jorge" in m.get("motorista_nome", ""):
+            nome = m.get("motorista_nome") or ""
+            if "Jorge" in nome:
                 jorge = m
                 break
         
@@ -260,7 +261,8 @@ class TestJorgeMacaiaData:
         
         jorge = None
         for m in data.get("motoristas", []):
-            if "Jorge" in m.get("motorista_nome", ""):
+            nome = m.get("motorista_nome") or ""
+            if "Jorge" in nome:
                 jorge = m
                 break
         
@@ -280,7 +282,8 @@ class TestJorgeMacaiaData:
         
         jorge = None
         for m in data.get("motoristas", []):
-            if "Jorge" in m.get("motorista_nome", ""):
+            nome = m.get("motorista_nome") or ""
+            if "Jorge" in nome:
                 jorge = m
                 break
         
@@ -300,7 +303,8 @@ class TestJorgeMacaiaData:
         
         jorge = None
         for m in data.get("motoristas", []):
-            if "Jorge" in m.get("motorista_nome", ""):
+            nome = m.get("motorista_nome") or ""
+            if "Jorge" in nome:
                 jorge = m
                 break
         
