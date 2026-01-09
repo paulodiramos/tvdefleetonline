@@ -297,9 +297,9 @@ async def gerar_relatorio_semanal(
         
         # ======= NOVA LÓGICA: Buscar da coleção portagens_viaverde =======
         # Esta coleção é preenchida pelo import de Excel Via Verde
-        # IMPORTANTE: Considerar o atraso da Via Verde (semana dos dados = semana_relatorio - via_verde_atraso)
-        semana_via_verde = semana_relatorio - via_verde_atraso if semana_relatorio > via_verde_atraso else semana_relatorio
-        ano_via_verde = ano_relatorio if semana_relatorio > via_verde_atraso else ano_relatorio - 1
+        # NOTA: Sem atraso - usar mesma semana do relatório
+        semana_via_verde = semana_relatorio
+        ano_via_verde = ano_relatorio
         
         portagens_vv_query = {
             "motorista_id": motorista_id,
