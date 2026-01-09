@@ -1576,6 +1576,11 @@ class Vehicle(BaseModel):
     valor_semanal: Optional[float] = None  # Valor semanal do aluguer ou comissão (€)
     condicoes_contrato: Optional[str] = None  # Condições do contrato
     
+    # Quilómetros Contratados
+    km_atribuidos: Optional[int] = None  # Quilómetros semanais contratados
+    valor_km_extra: Optional[float] = None  # Preço por km extra (€)
+    km_tipo_atribuicao: Optional[str] = "semanal"  # "semanal" | "mensal" | "sazonal"
+    
     ultima_revisao_km: Optional[int] = None  # KM da última revisão
     data_seguro_ate: Optional[str] = None  # Validade do seguro (alias para insurance.data_validade)
     data_inspecao_ate: Optional[str] = None  # Validade da inspeção (alias para inspection.proxima_inspecao)
