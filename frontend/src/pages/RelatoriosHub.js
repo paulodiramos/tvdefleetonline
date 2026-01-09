@@ -1221,8 +1221,12 @@ const RelatoriosHub = ({ user, onLogout }) => {
                             `${API_URL}/api/relatorios/motorista/${novoRelatorio.motorista_id}/via-verde-total?semana=${novoRelatorio.semana}&ano=${novoRelatorio.ano}`,
                             { headers: { Authorization: `Bearer ${token}` } }
                           );
-                          setNovoRelatorio({ ...novoRelatorio, via_verde_total: response.data.total_via_verde });
-                          toast.success(`Via Verde calculado: €${response.data.total_via_verde} (${response.data.registos_portagens} registos)`);
+                          setNovoRelatorio({ 
+                            ...novoRelatorio, 
+                            via_verde_total: response.data.total_via_verde,
+                            via_verde_semana_ref: response.data.semana_referencia || `Semana ${response.data.semana_dados}/${response.data.ano_dados}`
+                          });
+                          toast.success(`Via Verde calculado: €${response.data.total_via_verde} (${response.data.registos_portagens} registos) - ref. ${response.data.semana_referencia || `Semana ${response.data.semana_dados}/${response.data.ano_dados}`}`);
                         } catch (error) {
                           console.error('Erro ao calcular Via Verde:', error);
                           toast.error('Erro ao calcular Via Verde');
