@@ -1603,7 +1603,14 @@ const RelatoriosHub = ({ user, onLogout }) => {
                   </div>
                   <div>
                     <Label className="flex items-center justify-between">
-                      <span>Via Verde (€)</span>
+                      <span className="flex items-center gap-2">
+                        Via Verde (€)
+                        {relatorioEditando.via_verde_semana_referencia && (
+                          <span className="text-xs text-blue-600 font-normal">
+                            (ref. {relatorioEditando.via_verde_semana_referencia})
+                          </span>
+                        )}
+                      </span>
                       <Button 
                         type="button"
                         variant="ghost" 
@@ -1620,8 +1627,12 @@ const RelatoriosHub = ({ user, onLogout }) => {
                               `${API_URL}/api/relatorios/motorista/${relatorioEditando.motorista_id}/via-verde-total?semana=${relatorioEditando.semana}&ano=${relatorioEditando.ano}`,
                               { headers: { Authorization: `Bearer ${token}` } }
                             );
-                            setRelatorioEditando({ ...relatorioEditando, via_verde_total: response.data.total_via_verde });
-                            toast.success(`Via Verde calculado: €${response.data.total_via_verde} (${response.data.registos_portagens} registos)`);
+                            setRelatorioEditando({ 
+                              ...relatorioEditando, 
+                              via_verde_total: response.data.total_via_verde,
+                              via_verde_semana_referencia: response.data.semana_referencia || `Semana ${response.data.semana_dados}/${response.data.ano_dados}`
+                            });
+                            toast.success(`Via Verde calculado: €${response.data.total_via_verde} (${response.data.registos_portagens} registos) - ref. ${response.data.semana_referencia || `Semana ${response.data.semana_dados}/${response.data.ano_dados}`}`);
                           } catch (error) {
                             console.error('Erro ao calcular Via Verde:', error);
                             toast.error('Erro ao calcular Via Verde');
