@@ -777,8 +777,17 @@ async def get_motorista_via_verde_total(
     portagens = await db.portagens_viaverde.find(query, {"_id": 0}).to_list(5000)
     
     # Filter by date if semana is None (manual check)
+    # TAMBÉM filtrar por market_description (excluir "portagens" e "parques")
     filtered_portagens = []
+    excluded_market_descriptions = {"portagens", "parques"}
+    
     for p in portagens:
+        # Verificar market_description - excluir portagens e parques
+        market_desc = str(p.get("market_description", "")).strip().lower()
+        if market_desc in excluded_market_descriptions:
+            logger.debug(f"📍 Excluído: {p.get('entry_point')} → {p.get('exit_point')} (market_description={market_desc})")
+            continue
+        
         entry_date = p.get("entry_date", "")
         if entry_date:
             try:
