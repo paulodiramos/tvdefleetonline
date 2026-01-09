@@ -826,17 +826,20 @@ async def get_resumo_semanal_parceiro(
             "$and": [
                 {"$or": [
                     {"semana": semana, "ano": ano},
-                    {"entry_date": {"$gte": data_inicio, "$lte": data_fim}},
+                    {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}},
                     {"data": {"$gte": data_inicio, "$lte": data_fim}}
                 ]}
             ]
         }
         
-        vv_records = await db.portagens_viaverde.find(vv_query, {"_id": 0}).to_list(500)
-        # Filter only portagens and parques
+        vv_records = await db.portagens_viaverde.find(vv_query, {"_id": 0}).to_list(1000)
+        # Incluir:
+        # 1. Registos com market_description = "portagens" ou "parques" (novos dados)
+        # 2. Registos sem market_description (dados antigos) - assumir que são portagens
         for r in vv_records:
             market_desc = str(r.get("market_description", "")).strip().lower()
-            if market_desc in ["portagens", "parques"]:
+            # Se não tem market_description ou é portagens/parques, incluir
+            if not market_desc or market_desc in ["portagens", "parques"]:
                 via_verde_total += float(r.get("liquid_value") or r.get("value") or 0)
         
         logger.info(f"  {motorista.get('name')}: Via Verde query returned {len(vv_records)} records, total €{via_verde_total:.2f}")
