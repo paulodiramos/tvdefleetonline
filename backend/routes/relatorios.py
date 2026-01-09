@@ -847,28 +847,22 @@ async def get_resumo_semanal_parceiro(
         
         # ============ COMBUSTÍVEL FÓSSIL ============
         combustivel_total = 0.0
-        if cartao_combustivel or veiculo_id:
-            comb_query_conditions = []
-            if cartao_combustivel:
-                comb_query_conditions.append({"cartao": cartao_combustivel})
-                comb_query_conditions.append({"cartao_frota_id": cartao_combustivel})
-            if veiculo_id:
-                comb_query_conditions.append({"vehicle_id": veiculo_id})
-            comb_query_conditions.append({"motorista_id": motorista_id})
-            
-            comb_query = {
-                "$or": comb_query_conditions,
-                "$and": [
-                    {"$or": [
-                        {"semana": semana, "ano": ano},
-                        {"data": {"$gte": data_inicio, "$lte": data_fim}}
-                    ]}
-                ]
-            }
-            
-            comb_records = await db.abastecimentos_combustivel.find(comb_query, {"_id": 0}).to_list(100)
-            for r in comb_records:
-                combustivel_total += float(r.get("valor_liquido") or r.get("total") or r.get("valor") or 0)
+        comb_query_conditions = [{"motorista_id": motorista_id}]
+        if cartao_combustivel:
+            comb_query_conditions.append({"cartao_via_verde": cartao_combustivel})
+        if veiculo_id:
+            comb_query_conditions.append({"vehicle_id": veiculo_id})
+        if veiculo and veiculo.get("matricula"):
+            comb_query_conditions.append({"matricula": veiculo.get("matricula")})
+        
+        comb_query = {
+            "$or": comb_query_conditions,
+            "data": {"$gte": data_inicio, "$lte": data_fim}
+        }
+        
+        comb_records = await db.abastecimentos_combustivel.find(comb_query, {"_id": 0}).to_list(100)
+        for r in comb_records:
+            combustivel_total += float(r.get("valor_liquido") or r.get("total") or r.get("valor") or 0)
             
             logger.info(f"  {motorista.get('name')}: Combustível query returned {len(comb_records)} records, total €{combustivel_total:.2f}")
         
