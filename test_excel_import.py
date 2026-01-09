@@ -10,7 +10,7 @@ import openpyxl
 from io import BytesIO
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://fleet-import.preview.emergentagent.com/api"
+BACKEND_URL = "https://driver-expenses-1.preview.emergentagent.com/api"
 
 # Test credentials (from review request)
 TEST_CREDENTIALS = {
