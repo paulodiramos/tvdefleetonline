@@ -112,9 +112,8 @@ const Layout = ({ children, user, onLogout }) => {
           { path: '/criar-relatorio-semanal', label: 'Criar Relatório' },
           { path: '/resumo-semanal', label: '📈 Resumo Semanal' },
           { path: '/gestao-pagamentos-recibos', label: 'Pagamentos & Recibos' },
-          { path: '/gestao-credenciais', label: 'Sincronização Auto' },
-          { path: '/importar-dados', label: 'Importar Dados CSV' },
-          { path: '/ficheiros-importados', label: 'Ficheiros Importados' }
+          { path: '/importar-ficheiros', label: '📤 Importar Ficheiros' },
+          { path: '/ficheiros-importados', label: '📁 Ficheiros Importados' }
         ]
       },
       { 
@@ -134,6 +133,7 @@ const Layout = ({ children, user, onLogout }) => {
         label: 'Configurações', 
         icon: Settings,
         submenu: [
+          { path: '/configuracao-mapeamento', label: '🗺️ Mapeamento Importação' },
           { path: '/automacao', label: '🤖 Automação RPA' },
           { path: '/configuracao-csv', label: '📊 Configuração CSV' },
           { path: '/importar-despesas', label: '📥 Importar Despesas' }
