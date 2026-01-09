@@ -12125,6 +12125,210 @@ async def importar_carregamentos_excel(
         raise HTTPException(status_code=400, detail=f"Erro ao processar Excel: {str(e)}")
 
 
+async def importar_carregamentos_csv(
+    file_content: bytes,
+    current_user: dict,
+    periodo_inicio: str,
+    periodo_fim: str,
+    semana: Optional[int] = None,
+    ano: Optional[int] = None
+):
+    """
+    Importar carregamentos elétricos de CSV - FORMATO PRIOENERGY/GALP
+    Colunas: StartDate,CardCode,MobileCard,MobileRegistration,IdUsage,IdChargingStation,
+             TotalDuration,Energy,TotalValueWithTaxes
+    Identificador: CardCode → cartao_frota_eletric_id no veículo
+    Fallback: MobileRegistration (matrícula) → matrícula no veículo
+    """
+    try:
+        import csv
+        import io
+        from datetime import datetime, timezone
+        
+        # Decode CSV
+        decoded = None
+        for encoding in ['utf-8-sig', 'utf-8', 'latin-1', 'iso-8859-1', 'cp1252']:
+            try:
+                decoded = file_content.decode(encoding)
+                logger.info(f"CSV carregamentos decodificado com sucesso usando {encoding}")
+                break
+            except UnicodeDecodeError:
+                continue
+        
+        if decoded is None:
+            raise HTTPException(status_code=400, detail="Erro ao processar CSV: codificação não suportada")
+        
+        # Detect delimiter
+        delimiter = ';' if ';' in decoded.split('\n')[0] else ','
+        csv_reader = csv.DictReader(io.StringIO(decoded), delimiter=delimiter)
+        
+        sucesso = 0
+        erros = 0
+        erros_detalhes = []
+        registos_importados = []
+        total_despesas = 0.0
+        total_energia = 0.0
+        despesas_por_motorista = {}
+        
+        parceiro_id = current_user.get("id") if current_user.get("role") == "parceiro" else None
+        
+        for row_num, row in enumerate(csv_reader, start=2):
+            try:
+                # Get CardCode and MobileRegistration (matricula)
+                card_code = row.get('CardCode', '').strip()
+                matricula = row.get('MobileRegistration', '').strip()
+                
+                if not card_code and not matricula:
+                    continue
+                
+                # Find vehicle by CardCode first, then by matricula
+                vehicle = None
+                if card_code:
+                    vehicle = await db.vehicles.find_one(
+                        {"cartao_frota_eletric_id": card_code},
+                        {"_id": 0}
+                    )
+                
+                if not vehicle and matricula:
+                    vehicle = await db.vehicles.find_one(
+                        {"matricula": matricula},
+                        {"_id": 0}
+                    )
+                
+                if not vehicle:
+                    erros += 1
+                    erros_detalhes.append(
+                        f"Linha {row_num}: Veículo não encontrado (CardCode: {card_code}, Matrícula: {matricula})"
+                    )
+                    continue
+                
+                logger.info(f"✅ Veículo encontrado: {vehicle.get('matricula')} (CardCode: {card_code})")
+                
+                # Get motorist assigned to the vehicle
+                motorista = None
+                motorista_id = None
+                motorista_nome = ""
+                if vehicle.get('motorista_atribuido'):
+                    motorista = await db.motoristas.find_one(
+                        {"id": vehicle['motorista_atribuido']},
+                        {"_id": 0}
+                    )
+                    if motorista:
+                        motorista_id = motorista.get("id")
+                        motorista_nome = motorista.get("name", "")
+                        logger.info(f"✅ Motorista associado: {motorista_nome}")
+                
+                # Parse date (format: 12/21/2025 8:41:26 PM or similar)
+                start_date_str = row.get('StartDate', '')
+                if start_date_str:
+                    try:
+                        # Try MM/DD/YYYY HH:MM:SS AM/PM format
+                        data_dt = datetime.strptime(start_date_str, '%m/%d/%Y %I:%M:%S %p')
+                        data = data_dt.strftime('%Y-%m-%d')
+                        hora = data_dt.strftime('%H:%M:%S')
+                    except:
+                        try:
+                            # Try other common formats
+                            data_dt = datetime.strptime(start_date_str[:19], '%Y-%m-%d %H:%M:%S')
+                            data = data_dt.strftime('%Y-%m-%d')
+                            hora = data_dt.strftime('%H:%M:%S')
+                        except:
+                            data = periodo_inicio if periodo_inicio else datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                            hora = '00:00:00'
+                else:
+                    data = periodo_inicio if periodo_inicio else datetime.now(timezone.utc).strftime('%Y-%m-%d')
+                    hora = '00:00:00'
+                
+                # Parse values
+                def parse_float(val):
+                    if not val or val == '':
+                        return 0.0
+                    try:
+                        return float(str(val).replace(',', '.'))
+                    except:
+                        return 0.0
+                
+                energia = parse_float(row.get('Energy', '0'))
+                duracao = parse_float(row.get('TotalDuration', '0'))
+                valor_total = parse_float(row.get('TotalValueWithTaxes', '0'))
+                
+                # Fallback to ChargingTotalValue if TotalValueWithTaxes is 0
+                if valor_total == 0:
+                    valor_total = parse_float(row.get('ChargingTotalValue', '0'))
+                
+                id_carregamento = row.get('IdUsage', '') or ''
+                posto = row.get('IdChargingStation', '') or ''
+                
+                # Create record
+                registo_id = str(uuid.uuid4())
+                registo = {
+                    "id": registo_id,
+                    "parceiro_id": parceiro_id or vehicle.get('parceiro_id'),
+                    "vehicle_id": vehicle.get("id"),
+                    "matricula": vehicle.get("matricula"),
+                    "motorista_id": motorista_id,
+                    "motorista_nome": motorista_nome,
+                    "card_code": card_code,
+                    "data": data,
+                    "hora": hora,
+                    "id_carregamento": id_carregamento,
+                    "posto": posto,
+                    "energia_kwh": energia,
+                    "duracao_minutos": duracao,
+                    "valor_total": valor_total,
+                    "tipo_transacao": "carregamento_eletrico",
+                    "plataforma": "carregamentos",
+                    "semana": semana,
+                    "ano": ano,
+                    "ficheiro_nome": "carregamentos_csv_import",
+                    "data_importacao": datetime.now(timezone.utc),
+                    "importado_por": current_user.get("id")
+                }
+                
+                # Save to collection
+                await db.despesas_combustivel.insert_one(registo)
+                registos_importados.append(registo_id)
+                sucesso += 1
+                total_despesas += valor_total
+                total_energia += energia
+                
+                # Track by motorist
+                if motorista_id:
+                    if motorista_id not in despesas_por_motorista:
+                        despesas_por_motorista[motorista_id] = {
+                            "motorista_id": motorista_id,
+                            "motorista_nome": motorista_nome,
+                            "total_despesas": 0,
+                            "total_energia_kwh": 0,
+                            "total_carregamentos": 0
+                        }
+                    despesas_por_motorista[motorista_id]["total_despesas"] += valor_total
+                    despesas_por_motorista[motorista_id]["total_energia_kwh"] += energia
+                    despesas_por_motorista[motorista_id]["total_carregamentos"] += 1
+                
+            except Exception as e:
+                erros += 1
+                erros_detalhes.append(f"Linha {row_num}: {str(e)}")
+        
+        logger.info(f"📊 IMPORTAÇÃO CARREGAMENTOS CSV - {sucesso} sucesso, {erros} erros, Total: €{total_despesas:.2f}")
+        
+        return {
+            "message": f"Importação concluída: {sucesso} carregamentos importados",
+            "sucesso": sucesso,
+            "erros": erros,
+            "erros_detalhes": erros_detalhes[:20] if erros_detalhes else [],
+            "totais": {
+                "total_despesas": round(total_despesas, 2),
+                "total_energia_kwh": round(total_energia, 2)
+            },
+            "despesas_por_motorista": list(despesas_por_motorista.values())
+        }
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao processar CSV de carregamentos: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Erro ao processar CSV: {str(e)}")
+
+
 async def importar_viaverde_excel(
     file_content: bytes,
     current_user: Dict,
