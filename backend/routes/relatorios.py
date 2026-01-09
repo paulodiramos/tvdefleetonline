@@ -344,8 +344,18 @@ async def gerar_relatorio_semanal(
         
         portagens_viaverde = await db.portagens_viaverde.find(portagens_vv_query, {"_id": 0}).to_list(1000)
         
-        # Adicionar aos registos e somar valores
+        # REGRA DE NEGÓCIO: Excluir transações onde market_description = "portagens" ou "parques"
+        excluded_market_descriptions = {"portagens", "parques"}
+        
+        # Adicionar aos registos e somar valores (apenas se market_description não for excluído)
         for pv in portagens_viaverde:
+            market_desc = str(pv.get("market_description", "")).strip().lower()
+            
+            # Pular transações com market_description excluído
+            if market_desc in excluded_market_descriptions:
+                logger.debug(f"📍 Excluído Via Verde: {pv.get('entry_point')} → {pv.get('exit_point')} (market_description={market_desc})")
+                continue
+            
             valor = float(pv.get("liquid_value") or pv.get("value") or 0)
             via_verde_records.append({
                 "data": pv.get("entry_date") or pv.get("data"),
@@ -353,11 +363,12 @@ async def gerar_relatorio_semanal(
                 "local": f"{pv.get('entry_point', '')} → {pv.get('exit_point', '')}",
                 "tipo": "importado_excel",
                 "service": pv.get("service"),
-                "matricula": pv.get("matricula")
+                "matricula": pv.get("matricula"),
+                "market_description": pv.get("market_description")
             })
             total_via_verde += valor
         
-        logger.info(f"📍 Via Verde portagens: {len(portagens_viaverde)} registos, total: €{total_via_verde:.2f}")
+        logger.info(f"📍 Via Verde portagens: {len(portagens_viaverde)} registos totais, {len(via_verde_records)} após filtro, total: €{total_via_verde:.2f}")
         
         # Check imported despesas from CSV (Via Verde)
         # Priority 1: Use semana_relatorio field if available (new import system)
