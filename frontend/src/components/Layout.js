@@ -102,6 +102,7 @@ const Layout = ({ children, user, onLogout }) => {
         icon: TrendingUp,
         submenu: [
           { path: '/criar-relatorio-semanal', label: 'Criar Relatório' },
+          { path: '/resumo-semanal', label: '📈 Resumo Semanal' },
           { path: '/gestao-pagamentos-recibos', label: 'Pagamentos & Recibos' },
           { path: '/gestao-credenciais', label: 'Sincronização Auto' },
           { path: '/importar-dados', label: 'Importar Dados CSV' },
