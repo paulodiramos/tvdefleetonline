@@ -523,6 +523,12 @@ function App() {
             }
           />
           <Route
+            path="/resumo-semanal"
+            element={
+              user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? <ResumoSemanalParceiro user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
             path="/vehicle-data"
             element={
               user ? <VehicleData user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
