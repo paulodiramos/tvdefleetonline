@@ -36,6 +36,7 @@ const RelatoriosHub = ({ user, onLogout }) => {
     ganhos_bolt: 0,
     combustivel_total: 0,
     via_verde_total: 0,
+    via_verde_semana_ref: '',
     caucao_semanal: 0,
     outros: 0,
     divida_anterior: 0
