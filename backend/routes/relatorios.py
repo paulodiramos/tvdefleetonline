@@ -924,7 +924,10 @@ async def get_resumo_semanal_parceiro(
             # Detalhes dos cartões
             "cartao_combustivel": cartao_combustivel,
             "cartao_eletrico": cartao_eletrico,
-            "via_verde_id": via_verde_id
+            "via_verde_id": via_verde_id,
+            # Detalhes do contrato
+            "km_atribuidos": km_atribuidos,
+            "valor_km_extra": valor_km_extra
         }
         
         resumo_motoristas.append(motorista_resumo)
