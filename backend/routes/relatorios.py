@@ -788,24 +788,23 @@ async def get_resumo_semanal_parceiro(
         
         # ============ GANHOS BOLT ============
         ganhos_bolt = 0.0
+        bolt_query_conditions = [{"motorista_id": motorista_id}]
+        if id_bolt:
+            bolt_query_conditions.append({"identificador_motorista_bolt": id_bolt})
+        if motorista_email:
+            bolt_query_conditions.append({"email_motorista": motorista_email})
+        
         bolt_query = {
-            "$or": [
-                {"identificador_motorista": id_bolt} if id_bolt else {"identificador_motorista": None},
-                {"motorista_id": motorista_id},
-                {"email_motorista": motorista_email} if motorista_email else {"email_motorista": None}
-            ],
+            "$or": bolt_query_conditions,
             "$and": [
                 {"$or": [
+                    {"periodo_semana": semana, "periodo_ano": ano},
                     {"semana": semana, "ano": ano},
                     {"periodo_inicio": data_inicio},
                     {"data": {"$gte": data_inicio, "$lte": data_fim}}
                 ]}
             ]
         }
-        bolt_query["$or"] = [q for q in bolt_query["$or"] if list(q.values())[0] is not None]
-        if not bolt_query["$or"]:
-            bolt_query.pop("$or")
-            bolt_query["motorista_id"] = motorista_id
         
         bolt_records = await db.ganhos_bolt.find(bolt_query, {"_id": 0}).to_list(100)
         for r in bolt_records:
