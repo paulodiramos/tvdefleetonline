@@ -745,6 +745,8 @@ async def get_resumo_semanal_parceiro(
         cartao_combustivel = None
         cartao_eletrico = None
         aluguer_semanal = motorista.get("valor_aluguer_semanal") or 0
+        km_atribuidos = None
+        valor_km_extra = None
         
         if veiculo_id:
             veiculo = await db.vehicles.find_one({"id": veiculo_id}, {"_id": 0})
@@ -753,10 +755,11 @@ async def get_resumo_semanal_parceiro(
                 obu = veiculo.get("obu")
                 cartao_combustivel = veiculo.get("cartao_frota_id")
                 cartao_eletrico = veiculo.get("cartao_frota_eletric_id")
+                km_atribuidos = veiculo.get("km_atribuidos")
+                valor_km_extra = veiculo.get("valor_km_extra")
                 if aluguer_semanal == 0:
-                    # Try to get from vehicle contract
-                    contrato = veiculo.get("tipo_contrato") or {}
-                    aluguer_semanal = contrato.get("valor_aluguer") or veiculo.get("valor_semanal") or 0
+                    # Get from vehicle valor_semanal
+                    aluguer_semanal = veiculo.get("valor_semanal") or 0
         
         # ============ GANHOS UBER ============
         # Buscar por UUID ou email
