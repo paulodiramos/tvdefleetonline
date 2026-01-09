@@ -9914,10 +9914,10 @@ async def gerar_relatorio_semanal(
             "formato_numero_relatorio": "xxxxx/ano"
         }
     
-    # Calculate data inicio/fim for via verde (with delay)
-    via_verde_atraso = config.get("via_verde_atraso_semanas", 1)
-    data_inicio_via_verde = (datetime.fromisoformat(data_inicio) - timedelta(weeks=via_verde_atraso)).strftime("%Y-%m-%d")
-    data_fim_via_verde = (datetime.fromisoformat(data_fim) - timedelta(weeks=via_verde_atraso)).strftime("%Y-%m-%d")
+    # NOTA: Sem atraso da Via Verde (dados da semana X para relatório da semana X)
+    via_verde_atraso = 0
+    data_inicio_via_verde = data_inicio
+    data_fim_via_verde = data_fim
     
     debug_log(f"Via Verde atraso: {via_verde_atraso} semanas")
     debug_log(f"Período relatório: {data_inicio} a {data_fim}")
