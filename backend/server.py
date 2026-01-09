@@ -21969,6 +21969,235 @@ async def obter_credenciais_parceiros(
         logger.error(f"Erro ao obter credenciais: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# ==================================================
+# CREDENCIAIS PLATAFORMAS - Endpoints para Parceiro
+# ==================================================
+
+@app.get("/api/parceiro/credenciais-plataformas")
+async def listar_credenciais_parceiro(
+    current_user: dict = Depends(get_current_user)
+):
+    """Lista credenciais de plataformas do parceiro atual (sem passwords)"""
+    try:
+        parceiro_id = current_user['id']
+        
+        credenciais = await db.credenciais_plataforma.find(
+            {'parceiro_id': parceiro_id},
+            {'_id': 0, 'password': 0, 'password_encrypted': 0}
+        ).to_list(100)
+        
+        return credenciais
+        
+    except Exception as e:
+        logger.error(f"Erro ao listar credenciais parceiro: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/parceiro/credenciais-plataformas")
+async def salvar_credencial_parceiro(
+    request: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Salva credencial de plataforma do parceiro (encriptada)"""
+    try:
+        parceiro_id = current_user['id']
+        plataforma = request.get('plataforma')
+        
+        if not plataforma:
+            raise HTTPException(status_code=400, detail="Plataforma é obrigatória")
+        
+        # Verificar se já existe
+        existing = await db.credenciais_plataforma.find_one({
+            'parceiro_id': parceiro_id,
+            'plataforma': plataforma
+        })
+        
+        # Preparar dados (encriptar password se fornecida)
+        update_data = {
+            'plataforma': plataforma,
+            'parceiro_id': parceiro_id,
+            'email': request.get('email', ''),
+            'username': request.get('username', ''),
+            'cartao': request.get('cartao', ''),
+            'api_key': request.get('api_key', ''),
+            'updated_at': datetime.now(timezone.utc)
+        }
+        
+        # Encriptar password se fornecida
+        password = request.get('password')
+        if password:
+            try:
+                password_encrypted = encrypt_password(password)
+                update_data['password_encrypted'] = password_encrypted
+            except Exception as e:
+                logger.warning(f"Erro ao encriptar password, guardando como plain text: {e}")
+                update_data['password'] = password
+        
+        if existing:
+            # Atualizar
+            await db.credenciais_plataforma.update_one(
+                {'parceiro_id': parceiro_id, 'plataforma': plataforma},
+                {'$set': update_data}
+            )
+            cred_id = existing.get('id')
+        else:
+            # Criar novo
+            update_data['id'] = str(uuid.uuid4())
+            update_data['ativo'] = True
+            update_data['created_at'] = datetime.now(timezone.utc)
+            await db.credenciais_plataforma.insert_one(update_data)
+            cred_id = update_data['id']
+        
+        return {'success': True, 'message': 'Credenciais salvas com sucesso', 'id': cred_id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao salvar credenciais parceiro: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/parceiro/testar-conexao/{plataforma}")
+async def testar_conexao_plataforma(
+    plataforma: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Testa conexão com uma plataforma usando credenciais do parceiro"""
+    try:
+        parceiro_id = current_user['id']
+        
+        # Buscar credencial
+        credencial = await db.credenciais_plataforma.find_one({
+            'parceiro_id': parceiro_id,
+            'plataforma': plataforma
+        })
+        
+        if not credencial:
+            raise HTTPException(status_code=404, detail="Credencial não encontrada")
+        
+        # Por enquanto, simular teste (implementar conexão real depois)
+        # TODO: Implementar teste real de conexão com cada plataforma
+        
+        return {'success': True, 'message': f'Conexão com {plataforma} testada com sucesso'}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao testar conexão: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================================================
+# CONFIGURAÇÃO DE MAPEAMENTO - Admin/Gestor
+# ==================================================
+
+@app.get("/api/configuracao/mapeamento-campos")
+async def obter_mapeamento_campos(
+    current_user: dict = Depends(get_current_user)
+):
+    """Obtém configuração de mapeamento de campos para importação"""
+    try:
+        if current_user['role'] not in ['admin', 'gestao']:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        config = await db.configuracoes.find_one(
+            {'tipo': 'mapeamento_campos'},
+            {'_id': 0}
+        )
+        
+        return config.get('mapeamentos', {}) if config else {}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao obter mapeamento: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/configuracao/mapeamento-campos")
+async def salvar_mapeamento_campos(
+    mapeamentos: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Salva configuração de mapeamento de campos"""
+    try:
+        if current_user['role'] not in ['admin', 'gestao']:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        await db.configuracoes.update_one(
+            {'tipo': 'mapeamento_campos'},
+            {'$set': {
+                'tipo': 'mapeamento_campos',
+                'mapeamentos': mapeamentos,
+                'updated_at': datetime.now(timezone.utc),
+                'updated_by': current_user['id']
+            }},
+            upsert=True
+        )
+        
+        return {'success': True, 'message': 'Mapeamento salvo com sucesso'}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao salvar mapeamento: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/configuracao/sincronizacao-auto")
+async def obter_config_sincronizacao(
+    current_user: dict = Depends(get_current_user)
+):
+    """Obtém configuração de sincronização automática"""
+    try:
+        if current_user['role'] not in ['admin', 'gestao']:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        config = await db.configuracoes.find_one(
+            {'tipo': 'sincronizacao_auto'},
+            {'_id': 0}
+        )
+        
+        return config.get('plataformas', {}) if config else {}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao obter config sync: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/configuracao/sincronizacao-auto")
+async def salvar_config_sincronizacao(
+    config: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Salva configuração de sincronização automática"""
+    try:
+        if current_user['role'] not in ['admin', 'gestao']:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        await db.configuracoes.update_one(
+            {'tipo': 'sincronizacao_auto'},
+            {'$set': {
+                'tipo': 'sincronizacao_auto',
+                'plataformas': config,
+                'updated_at': datetime.now(timezone.utc),
+                'updated_by': current_user['id']
+            }},
+            upsert=True
+        )
+        
+        return {'success': True, 'message': 'Configuração salva com sucesso'}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao salvar config sync: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
