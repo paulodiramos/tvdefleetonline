@@ -12993,6 +12993,21 @@ async def importar_plataforma(
                 logger.info("📄 Detectado: Excel de Portagens Via Verde")
                 return await importar_viaverde_excel(content, current_user, periodo_inicio, periodo_fim, semana, ano)
         
+        # Para carregamento (plataforma específica), verificar CSV
+        if plataforma == 'carregamento' and file.filename.endswith('.csv'):
+            # Verificar se é CSV com formato PRIOENERGY (StartDate, CardCode, etc.)
+            decoded_check = None
+            for encoding in ['utf-8-sig', 'utf-8', 'latin-1']:
+                try:
+                    decoded_check = content.decode(encoding)
+                    break
+                except:
+                    continue
+            
+            if decoded_check and ('StartDate' in decoded_check or 'CardCode' in decoded_check or 'TotalValueWithTaxes' in decoded_check):
+                logger.info("📄 Detectado: CSV de Carregamentos Elétricos (formato PRIOENERGY)")
+                return await importar_carregamentos_csv(content, current_user, periodo_inicio, periodo_fim, semana, ano)
+        
         # Para CSV: tentar múltiplas codificações
         decoded = None
         for encoding in ['utf-8-sig', 'utf-8', 'latin-1', 'iso-8859-1', 'cp1252']:
