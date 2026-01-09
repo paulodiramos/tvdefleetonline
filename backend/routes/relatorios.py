@@ -528,6 +528,9 @@ async def gerar_relatorio_semanal(
         "total_combustivel": total_combustivel,
         "total_eletrico": total_eletrico,
         "total_via_verde": total_via_verde,
+        "via_verde_semana_referencia": f"Semana {semana_via_verde}/{ano_via_verde}",
+        "via_verde_semana": semana_via_verde,
+        "via_verde_ano": ano_via_verde,
         "valor_aluguer": valor_aluguer,
         "aluguer_proporcional": len(aluguer_detalhes) > 1,  # True se houve troca de veículo
         "aluguer_detalhes": aluguer_detalhes if aluguer_detalhes else None,
