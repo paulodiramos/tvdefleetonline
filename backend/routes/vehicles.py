@@ -1781,6 +1781,58 @@ async def upload_documento_inspecao(
     return {"message": "Documento de inspeção uploaded successfully", "url": document_path}
 
 
+@router.post("/{vehicle_id}/upload-dua-frente")
+async def upload_dua_frente(
+    vehicle_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload DUA (Documento Único Automóvel) - Frente"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    file_id = f"dua_frente_{vehicle_id}_{uuid.uuid4()}"
+    file_info = await process_uploaded_file(file, VEHICLE_DOCS_UPLOAD_DIR, file_id)
+    document_path = file_info.get("pdf_path") or file_info.get("original_path")
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"documento_dua_frente": document_path}}
+    )
+    
+    return {"message": "DUA (frente) uploaded successfully", "url": document_path}
+
+
+@router.post("/{vehicle_id}/upload-dua-verso")
+async def upload_dua_verso(
+    vehicle_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload DUA (Documento Único Automóvel) - Verso"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    file_id = f"dua_verso_{vehicle_id}_{uuid.uuid4()}"
+    file_info = await process_uploaded_file(file, VEHICLE_DOCS_UPLOAD_DIR, file_id)
+    document_path = file_info.get("pdf_path") or file_info.get("original_path")
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$set": {"documento_dua_verso": document_path}}
+    )
+    
+    return {"message": "DUA (verso) uploaded successfully", "url": document_path}
+
+
 # ==================== VEHICLE KM AND STATUS ====================
 
 @router.put("/{vehicle_id}/update-km")
