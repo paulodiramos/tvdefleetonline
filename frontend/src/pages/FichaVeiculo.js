@@ -1970,6 +1970,85 @@ const FichaVeiculo = ({ user, onLogout }) => {
                         </p>
                       )}
                     </div>
+
+                    {/* Publicação no Marketplace */}
+                    <div className="col-span-2 mt-4 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-lg">
+                      <Label className="font-semibold text-emerald-800 mb-3 block">📢 Publicação na Página de Veículos</Label>
+                      <p className="text-sm text-emerald-600 mb-3">
+                        Marque estas opções para o veículo aparecer na página pública ({window.location.origin}/veiculos)
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                          {canEdit && editMode ? (
+                            <input 
+                              type="checkbox" 
+                              id="disponivel_para_aluguer"
+                              checked={vehicle.disponivel_para_aluguer || false}
+                              onChange={async (e) => {
+                                const newValue = e.target.checked;
+                                try {
+                                  const token = localStorage.getItem('token');
+                                  await axios.put(`${API}/vehicles/${vehicleId}`,
+                                    { disponivel_para_aluguer: newValue },
+                                    { headers: { Authorization: `Bearer ${token}` }}
+                                  );
+                                  setVehicle({...vehicle, disponivel_para_aluguer: newValue});
+                                  toast.success(newValue ? 'Veículo publicado para aluguer!' : 'Veículo removido do marketplace');
+                                } catch (error) {
+                                  toast.error('Erro ao atualizar');
+                                }
+                              }}
+                              className="h-5 w-5 rounded border-emerald-300 text-emerald-600"
+                            />
+                          ) : (
+                            <span className={vehicle.disponivel_para_aluguer ? "text-green-600 text-xl" : "text-gray-400 text-xl"}>
+                              {vehicle.disponivel_para_aluguer ? "✓" : "✗"}
+                            </span>
+                          )}
+                          <div>
+                            <Label htmlFor="disponivel_para_aluguer" className="cursor-pointer font-medium">Disponível para Aluguer</Label>
+                            <p className="text-xs text-slate-500">Aparece na lista pública para motoristas interessados</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 p-3 bg-white rounded-lg border">
+                          {canEdit && editMode ? (
+                            <input 
+                              type="checkbox" 
+                              id="disponivel_venda"
+                              checked={vehicle.disponivel_venda || false}
+                              onChange={async (e) => {
+                                const newValue = e.target.checked;
+                                try {
+                                  const token = localStorage.getItem('token');
+                                  await axios.put(`${API}/vehicles/${vehicleId}`,
+                                    { disponivel_venda: newValue },
+                                    { headers: { Authorization: `Bearer ${token}` }}
+                                  );
+                                  setVehicle({...vehicle, disponivel_venda: newValue});
+                                  toast.success(newValue ? 'Veículo publicado para venda!' : 'Veículo removido do marketplace');
+                                } catch (error) {
+                                  toast.error('Erro ao atualizar');
+                                }
+                              }}
+                              className="h-5 w-5 rounded border-emerald-300 text-emerald-600"
+                            />
+                          ) : (
+                            <span className={vehicle.disponivel_venda ? "text-green-600 text-xl" : "text-gray-400 text-xl"}>
+                              {vehicle.disponivel_venda ? "✓" : "✗"}
+                            </span>
+                          )}
+                          <div>
+                            <Label htmlFor="disponivel_venda" className="cursor-pointer font-medium">Disponível para Venda</Label>
+                            <p className="text-xs text-slate-500">Aparece na lista pública para potenciais compradores</p>
+                          </div>
+                        </div>
+                      </div>
+                      {(vehicle.disponivel_para_aluguer || vehicle.disponivel_venda) && !vehicle.motorista_atribuido && (
+                        <p className="mt-3 text-xs text-emerald-700 bg-emerald-100 p-2 rounded">
+                          ✓ Este veículo está publicado e visível na página pública
+                        </p>
+                      )}
+                    </div>
                   </div>
 
                   {/* Informação de associação automática */}
