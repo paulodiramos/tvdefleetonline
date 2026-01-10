@@ -61,8 +61,13 @@ class TipoContrato(BaseModel):
     semanada_por_epoca: bool = False
     semanada_epoca_alta: Optional[float] = None  # Valor em € para época alta
     semanada_epoca_baixa: Optional[float] = None  # Valor em € para época baixa
+    semanada_meses_epoca_alta: List[int] = []  # Meses de época alta (1-12)
+    semanada_meses_epoca_baixa: List[int] = []  # Meses de época baixa (1-12)
     # Periodicidade de Pagamento do Slot
     slot_periodicidade: Optional[str] = "semanal"  # semanal, mensal, anual
+    slot_valor_semanal: Optional[float] = None
+    slot_valor_mensal: Optional[float] = None
+    slot_valor_anual: Optional[float] = None
 
 
 class CategoriasUber(BaseModel):
