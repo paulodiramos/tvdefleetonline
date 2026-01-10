@@ -2411,98 +2411,98 @@ const FichaVeiculo = ({ user, onLogout }) => {
                     </div>
                     )}
 
-// TEMP:                     {/* Valores do Slot por Periodicidade */}
-// TEMP:                     <div className="col-span-2 bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg mt-2">
-// TEMP:                       <div className="flex items-center gap-2 mb-3">
-// TEMP:                         <Label className="font-semibold text-green-800">
-// TEMP:                           💳 Valores do Slot por Periodicidade
-// TEMP:                         </Label>
-// TEMP:                       </div>
-// TEMP:                       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-// TEMP:                         {/* Periodicidade */}
-// TEMP:                         <div className="bg-white p-3 rounded-lg border">
-// TEMP:                           <Label className="text-sm text-green-800">Periodicidade</Label>
-// TEMP:                           {canEdit && editMode ? (
-// TEMP:                             <select
-// TEMP:                               value={infoForm.slot_periodicidade || 'semanal'}
-// TEMP:                               onChange={(e) => setInfoForm({...infoForm, slot_periodicidade: e.target.value})}
-// TEMP:                               className="w-full p-2 border rounded-md bg-white mt-1"
-// TEMP:                             >
-// TEMP:                               <option value="semanal">Semanal</option>
-// TEMP:                               <option value="mensal">Mensal</option>
-// TEMP:                               <option value="anual">Anual</option>
-// TEMP:                             </select>
-// TEMP:                           ) : (
-// TEMP:                             <p className="font-bold text-lg text-green-800 capitalize">
-// TEMP:                               {vehicle.tipo_contrato?.slot_periodicidade || 'Semanal'}
-// TEMP:                             </p>
-// TEMP:                           )}
-// TEMP:                         </div>
-// TEMP:                         
-// TEMP:                         {/* Valor Semanal */}
-// TEMP:                         <div className={`p-3 rounded-lg ${(editMode ? infoForm.slot_periodicidade : vehicle.tipo_contrato?.slot_periodicidade) === 'semanal' ? 'bg-green-200 ring-2 ring-green-500' : 'bg-white'}`}>
-// TEMP:                           <Label className="text-sm text-green-800">Valor Semanal (€)</Label>
-// TEMP:                           {canEdit && editMode ? (
-// TEMP:                             <Input
-// TEMP:                               type="number"
-// TEMP:                               step="0.01"
-// TEMP:                               value={infoForm.slot_valor_semanal || ''}
-// TEMP:                               onChange={(e) => setInfoForm({...infoForm, slot_valor_semanal: e.target.value})}
-// TEMP:                               placeholder="Ex: 50.00"
-// TEMP:                               className="mt-1"
-// TEMP:                             />
-// TEMP:                           ) : (
-// TEMP:                             <p className="font-bold text-lg text-green-800">
-// TEMP:                               €{(vehicle.tipo_contrato?.slot_valor_semanal || 0).toFixed(2)}
-// TEMP:                             </p>
-// TEMP:                           )}
-// TEMP:                         </div>
-// TEMP:                         
-// TEMP:                         {/* Valor Mensal */}
-// TEMP:                         <div className={`p-3 rounded-lg ${(editMode ? infoForm.slot_periodicidade : vehicle.tipo_contrato?.slot_periodicidade) === 'mensal' ? 'bg-green-200 ring-2 ring-green-500' : 'bg-white'}`}>
-// TEMP:                           <Label className="text-sm text-green-800">Valor Mensal (€)</Label>
-// TEMP:                           {canEdit && editMode ? (
-// TEMP:                             <Input
-// TEMP:                               type="number"
-// TEMP:                               step="0.01"
-// TEMP:                               value={infoForm.slot_valor_mensal || ''}
-// TEMP:                               onChange={(e) => setInfoForm({...infoForm, slot_valor_mensal: e.target.value})}
-// TEMP:                               placeholder="Ex: 180.00"
-// TEMP:                               className="mt-1"
-// TEMP:                             />
-// TEMP:                           ) : (
-// TEMP:                             <p className="font-bold text-lg text-green-800">
-// TEMP:                               €{(vehicle.tipo_contrato?.slot_valor_mensal || 0).toFixed(2)}
-// TEMP:                             </p>
-// TEMP:                           )}
-// TEMP:                         </div>
-// TEMP:                         
-// TEMP:                         {/* Valor Anual */}
-// TEMP:                         <div className={`p-3 rounded-lg ${(editMode ? infoForm.slot_periodicidade : vehicle.tipo_contrato?.slot_periodicidade) === 'anual' ? 'bg-green-200 ring-2 ring-green-500' : 'bg-white'}`}>
-// TEMP:                           <Label className="text-sm text-green-800">Valor Anual (€)</Label>
-// TEMP:                           {canEdit && editMode ? (
-// TEMP:                             <Input
-// TEMP:                               type="number"
-// TEMP:                               step="0.01"
-// TEMP:                               value={infoForm.slot_valor_anual || ''}
-// TEMP:                               onChange={(e) => setInfoForm({...infoForm, slot_valor_anual: e.target.value})}
-// TEMP:                               placeholder="Ex: 2000.00"
-// TEMP:                               className="mt-1"
-// TEMP:                             />
-// TEMP:                           ) : (
-// TEMP:                             <p className="font-bold text-lg text-green-800">
-// TEMP:                               €{(vehicle.tipo_contrato?.slot_valor_anual || 0).toFixed(2)}
-// TEMP:                             </p>
-// TEMP:                           )}
-// TEMP:                         </div>
-// TEMP:                       </div>
-// TEMP:                     </div>
-// TEMP: 
-// TEMP:                     {/* Garantia do Veículo */}
-// TEMP:                     <div className="col-span-2 bg-gradient-to-r from-amber-50 to-yellow-50 p-4 rounded-lg mt-2">
-// TEMP:                       <div className="flex items-center gap-2 mb-3">
-// TEMP:                         {canEdit && editMode ? (
-// TEMP:                           <input
+                    {/* Valores do Slot por Periodicidade */}
+                    <div className="col-span-2 bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg mt-2">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Label className="font-semibold text-green-800">
+                          💳 Valores do Slot por Periodicidade
+                        </Label>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        {/* Periodicidade */}
+                        <div className="bg-white p-3 rounded-lg border">
+                          <Label className="text-sm text-green-800">Periodicidade</Label>
+                          {canEdit && editMode ? (
+                            <select
+                              value={infoForm.slot_periodicidade || 'semanal'}
+                              onChange={(e) => setInfoForm({...infoForm, slot_periodicidade: e.target.value})}
+                              className="w-full p-2 border rounded-md bg-white mt-1"
+                            >
+                              <option value="semanal">Semanal</option>
+                              <option value="mensal">Mensal</option>
+                              <option value="anual">Anual</option>
+                            </select>
+                          ) : (
+                            <p className="font-bold text-lg text-green-800 capitalize">
+                              {vehicle.tipo_contrato?.slot_periodicidade || 'Semanal'}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Valor Semanal */}
+                        <div className={`p-3 rounded-lg ${(editMode ? infoForm.slot_periodicidade : vehicle.tipo_contrato?.slot_periodicidade) === 'semanal' ? 'bg-green-200 ring-2 ring-green-500' : 'bg-white'}`}>
+                          <Label className="text-sm text-green-800">Valor Semanal (€)</Label>
+                          {canEdit && editMode ? (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={infoForm.slot_valor_semanal || ''}
+                              onChange={(e) => setInfoForm({...infoForm, slot_valor_semanal: e.target.value})}
+                              placeholder="Ex: 50.00"
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="font-bold text-lg text-green-800">
+                              €{(vehicle.tipo_contrato?.slot_valor_semanal || 0).toFixed(2)}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Valor Mensal */}
+                        <div className={`p-3 rounded-lg ${(editMode ? infoForm.slot_periodicidade : vehicle.tipo_contrato?.slot_periodicidade) === 'mensal' ? 'bg-green-200 ring-2 ring-green-500' : 'bg-white'}`}>
+                          <Label className="text-sm text-green-800">Valor Mensal (€)</Label>
+                          {canEdit && editMode ? (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={infoForm.slot_valor_mensal || ''}
+                              onChange={(e) => setInfoForm({...infoForm, slot_valor_mensal: e.target.value})}
+                              placeholder="Ex: 180.00"
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="font-bold text-lg text-green-800">
+                              €{(vehicle.tipo_contrato?.slot_valor_mensal || 0).toFixed(2)}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Valor Anual */}
+                        <div className={`p-3 rounded-lg ${(editMode ? infoForm.slot_periodicidade : vehicle.tipo_contrato?.slot_periodicidade) === 'anual' ? 'bg-green-200 ring-2 ring-green-500' : 'bg-white'}`}>
+                          <Label className="text-sm text-green-800">Valor Anual (€)</Label>
+                          {canEdit && editMode ? (
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={infoForm.slot_valor_anual || ''}
+                              onChange={(e) => setInfoForm({...infoForm, slot_valor_anual: e.target.value})}
+                              placeholder="Ex: 2000.00"
+                              className="mt-1"
+                            />
+                          ) : (
+                            <p className="font-bold text-lg text-green-800">
+                              €{(vehicle.tipo_contrato?.slot_valor_anual || 0).toFixed(2)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Garantia do Veículo */}
+                    <div className="col-span-2 bg-gradient-to-r from-amber-50 to-yellow-50 p-4 rounded-lg mt-2">
+                      <div className="flex items-center gap-2 mb-3">
+                        {canEdit && editMode ? (
+                          <input
                             type="checkbox"
                             id="tem_garantia"
                             checked={infoForm.tem_garantia}
