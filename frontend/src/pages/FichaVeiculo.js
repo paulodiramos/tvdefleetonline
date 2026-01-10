@@ -139,7 +139,15 @@ const FichaVeiculo = ({ user, onLogout }) => {
     tem_limite_km: false,
     km_semanais_disponiveis: '',
     valor_extra_km: '',
-    km_acumula_semanal: false, // Se os KM não usados acumulam para a próxima semana
+    km_acumula_semanal: false,
+    // KM por Época (se aplicável)
+    km_por_epoca: false,
+    km_epoca_alta: '',
+    km_epoca_baixa: '',
+    meses_epoca_alta: [], // Array de meses [6, 7, 8, 9] para Jun-Set
+    meses_epoca_baixa: [], // Array de meses restantes
+    // Contratos
+    contratos: [], // Lista de contratos {id, data, tipo, documento_url, assinado_motorista, assinado_parceiro}
     // Compra do Veículo
     valor_compra_veiculo: '',
     numero_semanas_compra: '',
