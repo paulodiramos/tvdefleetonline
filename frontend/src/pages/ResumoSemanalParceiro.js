@@ -3,7 +3,6 @@ import axios from 'axios';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -13,8 +12,6 @@ import {
   Loader2,
   Users,
   BarChart3,
-  Car,
-  Receipt,
   Download,
   Trash2,
   Edit,
@@ -43,7 +40,6 @@ const ResumoSemanalParceiro = () => {
     const startOfYear = new Date(now.getFullYear(), 0, 1);
     const days = Math.floor((now - startOfYear) / (24 * 60 * 60 * 1000));
     const currentWeek = Math.ceil((days + startOfYear.getDay() + 1) / 7);
-    
     setSemana(currentWeek);
     setAno(now.getFullYear());
   }, []);
@@ -81,34 +77,22 @@ const ResumoSemanalParceiro = () => {
       );
       setHistorico(response.data.historico || []);
     } catch (error) {
-      console.error('Erro ao carregar histórico:', error);
       setHistorico([]);
     }
   };
 
   const handlePreviousWeek = () => {
-    if (semana > 1) {
-      setSemana(semana - 1);
-    } else {
-      setSemana(52);
-      setAno(ano - 1);
-    }
+    if (semana > 1) setSemana(semana - 1);
+    else { setSemana(52); setAno(ano - 1); }
   };
 
   const handleNextWeek = () => {
-    if (semana < 52) {
-      setSemana(semana + 1);
-    } else {
-      setSemana(1);
-      setAno(ano + 1);
-    }
+    if (semana < 52) setSemana(semana + 1);
+    else { setSemana(1); setAno(ano + 1); }
   };
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('pt-PT', {
-      style: 'currency',
-      currency: 'EUR'
-    }).format(value || 0);
+    return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(value || 0);
   };
 
   const handleEditMotorista = (motorista) => {
@@ -129,37 +113,28 @@ const ResumoSemanalParceiro = () => {
       const token = localStorage.getItem('token');
       await axios.put(
         `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}`,
-        {
-          semana,
-          ano,
-          ...editForm
-        },
+        { semana, ano, ...editForm },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success('Valores atualizados com sucesso!');
+      toast.success('Valores atualizados!');
       setEditingMotorista(null);
       fetchResumo();
     } catch (error) {
-      console.error('Erro ao atualizar valores:', error);
       toast.error('Erro ao atualizar valores');
     }
   };
 
   const handleDeleteMotoristaData = async (motoristaId, motoristaName) => {
-    if (!window.confirm(`Tem a certeza que deseja eliminar todos os dados da semana ${semana}/${ano} para ${motoristaName}?`)) {
-      return;
-    }
-    
+    if (!window.confirm(`Eliminar todos os dados da semana ${semana}/${ano} para ${motoristaName}?`)) return;
     try {
       const token = localStorage.getItem('token');
       await axios.delete(
         `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}?semana=${semana}&ano=${ano}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success(`Dados de ${motoristaName} eliminados com sucesso!`);
+      toast.success(`Dados de ${motoristaName} eliminados!`);
       fetchResumo();
     } catch (error) {
-      console.error('Erro ao eliminar dados:', error);
       toast.error('Erro ao eliminar dados');
     }
   };
@@ -171,12 +146,11 @@ const ResumoSemanalParceiro = () => {
         `${API}/api/relatorios/parceiro/resumo-semanal/all?semana=${semana}&ano=${ano}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success(`Todos os dados da semana ${semana}/${ano} foram eliminados!`);
+      toast.success(`Dados da semana ${semana}/${ano} eliminados!`);
       setShowDeleteAllConfirm(false);
       fetchResumo();
     } catch (error) {
-      console.error('Erro ao eliminar dados:', error);
-      toast.error('Erro ao eliminar dados da semana');
+      toast.error('Erro ao eliminar dados');
     }
   };
 
@@ -186,12 +160,8 @@ const ResumoSemanalParceiro = () => {
       const token = localStorage.getItem('token');
       const response = await axios.get(
         `${API}/api/relatorios/parceiro/resumo-semanal/pdf?semana=${semana}&ano=${ano}`,
-        { 
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: 'blob'
-        }
+        { headers: { Authorization: `Bearer ${token}` }, responseType: 'blob' }
       );
-      
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -199,11 +169,8 @@ const ResumoSemanalParceiro = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-      window.URL.revokeObjectURL(url);
-      
-      toast.success('PDF descarregado com sucesso!');
+      toast.success('PDF descarregado!');
     } catch (error) {
-      console.error('Erro ao descarregar PDF:', error);
       toast.error('Erro ao descarregar PDF');
     } finally {
       setDownloadingPdf(false);
@@ -212,10 +179,10 @@ const ResumoSemanalParceiro = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="p-4">
         <Card>
-          <CardContent className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <CardContent className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
           </CardContent>
         </Card>
       </div>
@@ -224,109 +191,60 @@ const ResumoSemanalParceiro = () => {
 
   const totais = resumo?.totais || {};
   const motoristas = resumo?.motoristas || [];
-  
-  // Receitas do Parceiro
   const totalAluguer = totais.total_aluguer || 0;
   const totalExtras = totais.total_extras || 0;
   const totalVendas = totais.total_vendas || 0;
   const totalReceitas = totais.total_receitas_parceiro || (totalAluguer + totalExtras + totalVendas);
-  
-  // Despesas Operacionais
   const totalDespesas = totais.total_despesas_operacionais || 0;
-  
-  // Líquido do Parceiro
   const liquidoParceiro = totais.total_liquido_parceiro || (totalReceitas - totalDespesas);
   const isPositive = liquidoParceiro >= 0;
-
-  // Max value for chart
-  const maxValue = Math.max(
-    ...historico.map(h => Math.max(h.ganhos || 0, h.despesas || 0, Math.abs(h.liquido || 0))),
-    1
-  );
+  const maxValue = Math.max(...historico.map(h => Math.max(h.ganhos || 0, h.despesas || 0, Math.abs(h.liquido || 0))), 1);
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header com navegação e ações */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="p-4 space-y-4">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Resumo Semanal do Parceiro</h1>
-          <p className="text-slate-500">Gestão de ganhos e despesas semanais</p>
+          <h1 className="text-lg font-bold text-slate-800">Resumo Semanal</h1>
+          <p className="text-xs text-slate-500">Ganhos e despesas semanais</p>
         </div>
-        
-        <div className="flex items-center gap-3">
-          {/* Navegação de semanas */}
-          <div className="flex items-center gap-2 bg-white rounded-lg border px-3 py-2">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handlePreviousWeek}
-              className="h-8 w-8 p-0"
-            >
-              <ChevronLeft className="w-4 h-4" />
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 bg-white rounded border px-2 py-1">
+            <Button variant="ghost" size="sm" onClick={handlePreviousWeek} className="h-6 w-6 p-0">
+              <ChevronLeft className="w-3 h-3" />
             </Button>
-            <span className="text-sm font-medium min-w-[100px] text-center">
-              Semana {semana}/{ano}
-            </span>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={handleNextWeek}
-              className="h-8 w-8 p-0"
-            >
-              <ChevronRight className="w-4 h-4" />
+            <span className="text-xs font-medium min-w-[80px] text-center">S{semana}/{ano}</span>
+            <Button variant="ghost" size="sm" onClick={handleNextWeek} className="h-6 w-6 p-0">
+              <ChevronRight className="w-3 h-3" />
             </Button>
           </div>
-          
-          {/* Botões de ação */}
-          <Button 
-            variant="outline" 
-            onClick={handleDownloadPdf}
-            disabled={downloadingPdf}
-            data-testid="download-pdf-btn"
-          >
-            {downloadingPdf ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Download className="w-4 h-4 mr-2" />
-            )}
-            Download PDF
+          <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={downloadingPdf} className="h-7 text-xs">
+            {downloadingPdf ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3 mr-1" />}
+            PDF
           </Button>
-          
-          <Button 
-            variant="destructive" 
-            onClick={() => setShowDeleteAllConfirm(true)}
-            data-testid="delete-all-btn"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Eliminar Semana
+          <Button size="sm" variant="destructive" onClick={() => setShowDeleteAllConfirm(true)} className="h-7 text-xs">
+            <Trash2 className="w-3 h-3 mr-1" />
+            Limpar
           </Button>
         </div>
       </div>
 
-      {/* Modal de confirmação de eliminação */}
+      {/* Modal de confirmação */}
       {showDeleteAllConfirm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md mx-4">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-red-600">
-                <AlertTriangle className="w-5 h-5" />
+          <Card className="w-full max-w-sm mx-4">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-red-600 text-sm">
+                <AlertTriangle className="w-4 h-4" />
                 Confirmar Eliminação
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <p>
-                Tem a certeza que deseja eliminar <strong>TODOS</strong> os dados da semana {semana}/{ano}?
-              </p>
-              <p className="text-sm text-slate-500">
-                Esta ação irá eliminar todos os registos de ganhos, despesas e extras de todos os motoristas nesta semana. Esta ação não pode ser desfeita.
-              </p>
-              <div className="flex gap-3 justify-end">
-                <Button variant="outline" onClick={() => setShowDeleteAllConfirm(false)}>
-                  Cancelar
-                </Button>
-                <Button variant="destructive" onClick={handleDeleteAllWeekData}>
-                  Eliminar Tudo
-                </Button>
+            <CardContent className="space-y-3">
+              <p className="text-sm">Eliminar <strong>TODOS</strong> os dados da semana {semana}/{ano}?</p>
+              <p className="text-xs text-slate-500">Esta ação não pode ser desfeita.</p>
+              <div className="flex gap-2 justify-end">
+                <Button size="sm" variant="outline" onClick={() => setShowDeleteAllConfirm(false)}>Cancelar</Button>
+                <Button size="sm" variant="destructive" onClick={handleDeleteAllWeekData}>Eliminar</Button>
               </div>
             </CardContent>
           </Card>
@@ -334,121 +252,83 @@ const ResumoSemanalParceiro = () => {
       )}
 
       {/* Cards de Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Receitas do Parceiro */}
-        <Card className="border-l-4 border-l-green-500">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-green-600 mb-2">
-              <TrendingUp className="w-5 h-5" />
-              <span className="font-medium">Receitas Parceiro</span>
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="border-l-2 border-l-green-500">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-1 text-green-600 mb-1">
+              <TrendingUp className="w-3 h-3" />
+              <span className="text-xs font-medium">Receitas</span>
             </div>
-            <p className="text-3xl font-bold text-green-700">
-              {formatCurrency(totalReceitas)}
-            </p>
-            <div className="text-sm text-green-600 mt-3 space-y-1">
-              <div className="flex justify-between">
-                <span className="flex items-center gap-1"><Car className="w-3 h-3" /> Aluguer:</span>
-                <span className="font-medium">{formatCurrency(totalAluguer)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="flex items-center gap-1"><Receipt className="w-3 h-3" /> Extras:</span>
-                <span className="font-medium">{formatCurrency(totalExtras)}</span>
-              </div>
-              {totalVendas > 0 && (
-                <div className="flex justify-between border-t pt-1">
-                  <span>Vendas:</span>
-                  <span className="font-medium">{formatCurrency(totalVendas)}</span>
-                </div>
-              )}
+            <p className="text-lg font-bold text-green-700">{formatCurrency(totalReceitas)}</p>
+            <div className="text-xs text-green-600 mt-1 space-y-0.5">
+              <div className="flex justify-between"><span>Aluguer:</span><span>{formatCurrency(totalAluguer)}</span></div>
+              <div className="flex justify-between"><span>Extras:</span><span>{formatCurrency(totalExtras)}</span></div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Despesas Operacionais */}
-        <Card className="border-l-4 border-l-red-500">
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 text-red-600 mb-2">
-              <TrendingDown className="w-5 h-5" />
-              <span className="font-medium">Despesas</span>
+        <Card className="border-l-2 border-l-red-500">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-1 text-red-600 mb-1">
+              <TrendingDown className="w-3 h-3" />
+              <span className="text-xs font-medium">Despesas</span>
             </div>
-            <p className="text-3xl font-bold text-red-700">
-              {formatCurrency(totalDespesas)}
-            </p>
-            <div className="text-sm text-red-600 mt-3 space-y-1">
-              <div className="flex justify-between">
-                <span>Combustível:</span>
-                <span>{formatCurrency(totais.total_combustivel)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Via Verde:</span>
-                <span>{formatCurrency(totais.total_via_verde)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Elétrico:</span>
-                <span>{formatCurrency(totais.total_eletrico)}</span>
-              </div>
+            <p className="text-lg font-bold text-red-700">{formatCurrency(totalDespesas)}</p>
+            <div className="text-xs text-red-600 mt-1 space-y-0.5">
+              <div className="flex justify-between"><span>Combustível:</span><span>{formatCurrency(totais.total_combustivel)}</span></div>
+              <div className="flex justify-between"><span>Via Verde:</span><span>{formatCurrency(totais.total_via_verde)}</span></div>
+              <div className="flex justify-between"><span>Elétrico:</span><span>{formatCurrency(totais.total_eletrico)}</span></div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Líquido Parceiro */}
-        <Card className={`border-l-4 ${isPositive ? 'border-l-blue-500' : 'border-l-orange-500'}`}>
-          <CardContent className="pt-6">
-            <div className={`flex items-center gap-2 mb-2 ${isPositive ? 'text-blue-600' : 'text-orange-600'}`}>
-              <DollarSign className="w-5 h-5" />
-              <span className="font-medium">Líquido Parceiro</span>
+        <Card className={`border-l-2 ${isPositive ? 'border-l-blue-500' : 'border-l-orange-500'}`}>
+          <CardContent className="p-3">
+            <div className={`flex items-center gap-1 mb-1 ${isPositive ? 'text-blue-600' : 'text-orange-600'}`}>
+              <DollarSign className="w-3 h-3" />
+              <span className="text-xs font-medium">Líquido</span>
             </div>
-            <p className={`text-3xl font-bold ${isPositive ? 'text-blue-700' : 'text-orange-700'}`}>
-              {formatCurrency(liquidoParceiro)}
-            </p>
-            <div className="flex items-center gap-2 mt-3">
-              <Users className="w-4 h-4 text-slate-500" />
-              <span className="text-sm text-slate-600">
-                {resumo?.total_motoristas || motoristas.length} motoristas
-              </span>
+            <p className={`text-lg font-bold ${isPositive ? 'text-blue-700' : 'text-orange-700'}`}>{formatCurrency(liquidoParceiro)}</p>
+            <div className="flex items-center gap-1 mt-1">
+              <Users className="w-3 h-3 text-slate-400" />
+              <span className="text-xs text-slate-500">{motoristas.length} motoristas</span>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Info dos Ganhos dos Motoristas */}
-      <Card className="bg-slate-50">
-        <CardContent className="py-3">
-          <div className="flex items-center justify-center gap-4 text-sm text-slate-600">
-            <span>
-              <strong>Ganhos Motoristas (informativo):</strong> {formatCurrency(totais.total_ganhos)}
-            </span>
-            <span className="text-slate-400">|</span>
-            <span>Uber: {formatCurrency(totais.total_ganhos_uber)}</span>
-            <span className="text-slate-400">|</span>
-            <span>Bolt: {formatCurrency(totais.total_ganhos_bolt)}</span>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Info Motoristas */}
+      <div className="bg-slate-50 rounded p-2 text-center text-xs text-slate-600">
+        <span>Ganhos Motoristas: {formatCurrency(totais.total_ganhos)}</span>
+        <span className="mx-2 text-slate-300">|</span>
+        <span>Uber: {formatCurrency(totais.total_ganhos_uber)}</span>
+        <span className="mx-2 text-slate-300">|</span>
+        <span>Bolt: {formatCurrency(totais.total_ganhos_bolt)}</span>
+      </div>
 
-      {/* Tabela de Motoristas com Edição */}
+      {/* Tabela de Motoristas */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="w-5 h-5" />
+        <CardHeader className="py-2 px-3">
+          <CardTitle className="flex items-center gap-1 text-sm">
+            <FileText className="w-4 h-4" />
             Detalhes por Motorista
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-xs">
               <thead>
                 <tr className="border-b bg-slate-50">
-                  <th className="text-left p-3">Motorista</th>
-                  <th className="text-right p-3">Uber</th>
-                  <th className="text-right p-3">Bolt</th>
-                  <th className="text-right p-3">Via Verde</th>
-                  <th className="text-right p-3">Combustível</th>
-                  <th className="text-right p-3">Elétrico</th>
-                  <th className="text-right p-3">Aluguer</th>
-                  <th className="text-right p-3">Extras</th>
-                  <th className="text-right p-3">Líquido</th>
-                  <th className="text-center p-3">Ações</th>
+                  <th className="text-left p-2">Motorista</th>
+                  <th className="text-right p-2">Uber</th>
+                  <th className="text-right p-2">Bolt</th>
+                  <th className="text-right p-2">Via Verde</th>
+                  <th className="text-right p-2">Comb.</th>
+                  <th className="text-right p-2">Elétr.</th>
+                  <th className="text-right p-2">Aluguer</th>
+                  <th className="text-right p-2">Extras</th>
+                  <th className="text-right p-2">Líquido</th>
+                  <th className="text-center p-2 w-16">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -458,149 +338,61 @@ const ResumoSemanalParceiro = () => {
                   
                   return (
                     <tr key={m.motorista_id} className="border-b hover:bg-slate-50">
-                      <td className="p-3 font-medium">{m.motorista_nome}</td>
-                      
+                      <td className="p-2 font-medium">{m.motorista_nome}</td>
                       {isEditing ? (
                         <>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={editForm.ganhos_uber}
-                              onChange={(e) => setEditForm({...editForm, ganhos_uber: parseFloat(e.target.value) || 0})}
-                              className="w-24 text-right"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={editForm.ganhos_bolt}
-                              onChange={(e) => setEditForm({...editForm, ganhos_bolt: parseFloat(e.target.value) || 0})}
-                              className="w-24 text-right"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={editForm.via_verde}
-                              onChange={(e) => setEditForm({...editForm, via_verde: parseFloat(e.target.value) || 0})}
-                              className="w-24 text-right"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={editForm.combustivel}
-                              onChange={(e) => setEditForm({...editForm, combustivel: parseFloat(e.target.value) || 0})}
-                              className="w-24 text-right"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={editForm.eletrico}
-                              onChange={(e) => setEditForm({...editForm, eletrico: parseFloat(e.target.value) || 0})}
-                              className="w-24 text-right"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={editForm.aluguer}
-                              onChange={(e) => setEditForm({...editForm, aluguer: parseFloat(e.target.value) || 0})}
-                              className="w-24 text-right"
-                            />
-                          </td>
-                          <td className="p-2">
-                            <Input
-                              type="number"
-                              value={editForm.extras}
-                              onChange={(e) => setEditForm({...editForm, extras: parseFloat(e.target.value) || 0})}
-                              className="w-24 text-right"
-                            />
-                          </td>
+                          <td className="p-1"><Input type="number" value={editForm.ganhos_uber} onChange={(e) => setEditForm({...editForm, ganhos_uber: parseFloat(e.target.value) || 0})} className="w-16 h-6 text-xs text-right" /></td>
+                          <td className="p-1"><Input type="number" value={editForm.ganhos_bolt} onChange={(e) => setEditForm({...editForm, ganhos_bolt: parseFloat(e.target.value) || 0})} className="w-16 h-6 text-xs text-right" /></td>
+                          <td className="p-1"><Input type="number" value={editForm.via_verde} onChange={(e) => setEditForm({...editForm, via_verde: parseFloat(e.target.value) || 0})} className="w-16 h-6 text-xs text-right" /></td>
+                          <td className="p-1"><Input type="number" value={editForm.combustivel} onChange={(e) => setEditForm({...editForm, combustivel: parseFloat(e.target.value) || 0})} className="w-16 h-6 text-xs text-right" /></td>
+                          <td className="p-1"><Input type="number" value={editForm.eletrico} onChange={(e) => setEditForm({...editForm, eletrico: parseFloat(e.target.value) || 0})} className="w-16 h-6 text-xs text-right" /></td>
+                          <td className="p-1"><Input type="number" value={editForm.aluguer} onChange={(e) => setEditForm({...editForm, aluguer: parseFloat(e.target.value) || 0})} className="w-16 h-6 text-xs text-right" /></td>
+                          <td className="p-1"><Input type="number" value={editForm.extras} onChange={(e) => setEditForm({...editForm, extras: parseFloat(e.target.value) || 0})} className="w-16 h-6 text-xs text-right" /></td>
                         </>
                       ) : (
                         <>
-                          <td className="p-3 text-right text-green-600">{formatCurrency(m.ganhos_uber)}</td>
-                          <td className="p-3 text-right text-green-600">{formatCurrency(m.ganhos_bolt)}</td>
-                          <td className="p-3 text-right text-red-600">{formatCurrency(m.via_verde)}</td>
-                          <td className="p-3 text-right text-red-600">{formatCurrency(m.combustivel)}</td>
-                          <td className="p-3 text-right text-red-600">{formatCurrency(m.carregamento_eletrico)}</td>
-                          <td className="p-3 text-right text-blue-600">{formatCurrency(m.aluguer_veiculo)}</td>
-                          <td className="p-3 text-right text-orange-600">{formatCurrency(m.extras)}</td>
+                          <td className="p-2 text-right text-green-600">{formatCurrency(m.ganhos_uber)}</td>
+                          <td className="p-2 text-right text-green-600">{formatCurrency(m.ganhos_bolt)}</td>
+                          <td className="p-2 text-right text-red-600">{formatCurrency(m.via_verde)}</td>
+                          <td className="p-2 text-right text-red-600">{formatCurrency(m.combustivel)}</td>
+                          <td className="p-2 text-right text-red-600">{formatCurrency(m.carregamento_eletrico)}</td>
+                          <td className="p-2 text-right text-blue-600">{formatCurrency(m.aluguer_veiculo)}</td>
+                          <td className="p-2 text-right text-orange-600">{formatCurrency(m.extras)}</td>
                         </>
                       )}
-                      
-                      <td className={`p-3 text-right font-bold ${liquido >= 0 ? 'text-green-700' : 'text-red-700'}`}>
-                        {formatCurrency(liquido)}
-                      </td>
-                      
-                      <td className="p-3 text-center">
+                      <td className={`p-2 text-right font-bold ${liquido >= 0 ? 'text-green-700' : 'text-red-700'}`}>{formatCurrency(liquido)}</td>
+                      <td className="p-2 text-center">
                         {isEditing ? (
                           <div className="flex gap-1 justify-center">
-                            <Button 
-                              size="sm" 
-                              variant="default"
-                              onClick={() => handleSaveEdit(m.motorista_id)}
-                            >
-                              <Save className="w-3 h-3" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => setEditingMotorista(null)}
-                            >
-                              <X className="w-3 h-3" />
-                            </Button>
+                            <Button size="sm" variant="default" onClick={() => handleSaveEdit(m.motorista_id)} className="h-5 w-5 p-0"><Save className="w-3 h-3" /></Button>
+                            <Button size="sm" variant="outline" onClick={() => setEditingMotorista(null)} className="h-5 w-5 p-0"><X className="w-3 h-3" /></Button>
                           </div>
                         ) : (
                           <div className="flex gap-1 justify-center">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => handleEditMotorista(m)}
-                              data-testid={`edit-motorista-${m.motorista_id}`}
-                            >
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="destructive"
-                              onClick={() => handleDeleteMotoristaData(m.motorista_id, m.motorista_nome)}
-                              data-testid={`delete-motorista-${m.motorista_id}`}
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => handleEditMotorista(m)} className="h-5 w-5 p-0"><Edit className="w-3 h-3" /></Button>
+                            <Button size="sm" variant="destructive" onClick={() => handleDeleteMotoristaData(m.motorista_id, m.motorista_nome)} className="h-5 w-5 p-0"><Trash2 className="w-3 h-3" /></Button>
                           </div>
                         )}
                       </td>
                     </tr>
                   );
                 })}
-                
                 {motoristas.length === 0 && (
-                  <tr>
-                    <td colSpan="10" className="text-center py-8 text-slate-500">
-                      Nenhum dado encontrado para esta semana
-                    </td>
-                  </tr>
+                  <tr><td colSpan="10" className="text-center py-6 text-slate-500">Nenhum dado encontrado</td></tr>
                 )}
               </tbody>
-              
               {motoristas.length > 0 && (
                 <tfoot>
-                  <tr className="bg-slate-100 font-bold">
-                    <td className="p-3">TOTAIS</td>
-                    <td className="p-3 text-right text-green-700">{formatCurrency(totais.total_ganhos_uber)}</td>
-                    <td className="p-3 text-right text-green-700">{formatCurrency(totais.total_ganhos_bolt)}</td>
-                    <td className="p-3 text-right text-red-700">{formatCurrency(totais.total_via_verde)}</td>
-                    <td className="p-3 text-right text-red-700">{formatCurrency(totais.total_combustivel)}</td>
-                    <td className="p-3 text-right text-red-700">{formatCurrency(totais.total_eletrico)}</td>
-                    <td className="p-3 text-right text-blue-700">{formatCurrency(totalAluguer)}</td>
-                    <td className="p-3 text-right text-orange-700">{formatCurrency(totalExtras)}</td>
-                    <td className={`p-3 text-right ${isPositive ? 'text-green-700' : 'text-red-700'}`}>
-                      {formatCurrency(liquidoParceiro)}
-                    </td>
+                  <tr className="bg-slate-100 font-bold text-xs">
+                    <td className="p-2">TOTAIS</td>
+                    <td className="p-2 text-right text-green-700">{formatCurrency(totais.total_ganhos_uber)}</td>
+                    <td className="p-2 text-right text-green-700">{formatCurrency(totais.total_ganhos_bolt)}</td>
+                    <td className="p-2 text-right text-red-700">{formatCurrency(totais.total_via_verde)}</td>
+                    <td className="p-2 text-right text-red-700">{formatCurrency(totais.total_combustivel)}</td>
+                    <td className="p-2 text-right text-red-700">{formatCurrency(totais.total_eletrico)}</td>
+                    <td className="p-2 text-right text-blue-700">{formatCurrency(totalAluguer)}</td>
+                    <td className="p-2 text-right text-orange-700">{formatCurrency(totalExtras)}</td>
+                    <td className={`p-2 text-right ${isPositive ? 'text-green-700' : 'text-red-700'}`}>{formatCurrency(liquidoParceiro)}</td>
                     <td></td>
                   </tr>
                 </tfoot>
@@ -613,69 +405,38 @@ const ResumoSemanalParceiro = () => {
       {/* Gráfico de Evolução */}
       {historico.length > 0 && (
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5" />
-              Evolução Semanal
+          <CardHeader className="py-2 px-3">
+            <CardTitle className="flex items-center gap-1 text-sm">
+              <BarChart3 className="w-4 h-4" />
+              Evolução
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            {/* Legenda */}
-            <div className="flex justify-center gap-6 mb-4 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-green-500"></div>
-                <span>Receitas</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-red-500"></div>
-                <span>Despesas</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded bg-blue-500"></div>
-                <span>Líquido</span>
-              </div>
+          <CardContent className="p-3">
+            <div className="flex justify-center gap-4 mb-2 text-xs">
+              <div className="flex items-center gap-1"><div className="w-2 h-2 rounded bg-green-500"></div><span>Receitas</span></div>
+              <div className="flex items-center gap-1"><div className="w-2 h-2 rounded bg-red-500"></div><span>Despesas</span></div>
+              <div className="flex items-center gap-1"><div className="w-2 h-2 rounded bg-blue-500"></div><span>Líquido</span></div>
             </div>
-
-            {/* Barras do Gráfico */}
-            <div className="flex items-end justify-between gap-2 h-40 px-4">
+            <div className="flex items-end justify-between gap-1 h-24 px-2">
               {historico.map((item, index) => {
                 const receitaHeight = ((item.receitas || item.ganhos || 0) / maxValue) * 100;
                 const despesaHeight = ((item.despesas || 0) / maxValue) * 100;
                 const liquidoHeight = (Math.abs(item.liquido || 0) / maxValue) * 100;
                 const isLiquidoPositivo = (item.liquido || 0) >= 0;
-                
                 return (
                   <div key={index} className="flex-1 flex flex-col items-center group relative">
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full mb-2 hidden group-hover:block bg-slate-800 text-white text-xs p-2 rounded shadow-lg z-10 whitespace-nowrap">
-                      <div className="font-semibold mb-1">Semana {item.semana}/{item.ano}</div>
-                      <div className="text-green-300">Receitas: {formatCurrency(item.receitas || item.ganhos)}</div>
-                      <div className="text-red-300">Despesas: {formatCurrency(item.despesas)}</div>
-                      <div className={isLiquidoPositivo ? 'text-blue-300' : 'text-orange-300'}>
-                        Líquido: {formatCurrency(item.liquido)}
-                      </div>
+                    <div className="absolute bottom-full mb-1 hidden group-hover:block bg-slate-800 text-white text-xs p-1 rounded shadow z-10 whitespace-nowrap">
+                      <div className="font-semibold">S{item.semana}/{item.ano}</div>
+                      <div className="text-green-300">R: {formatCurrency(item.receitas || item.ganhos)}</div>
+                      <div className="text-red-300">D: {formatCurrency(item.despesas)}</div>
+                      <div className={isLiquidoPositivo ? 'text-blue-300' : 'text-orange-300'}>L: {formatCurrency(item.liquido)}</div>
                     </div>
-                    
-                    {/* Barras */}
-                    <div className="flex gap-1 items-end h-32">
-                      <div 
-                        className="w-4 bg-green-500 rounded-t transition-all duration-300 hover:bg-green-400"
-                        style={{ height: `${Math.max(receitaHeight, 4)}%` }}
-                      ></div>
-                      <div 
-                        className="w-4 bg-red-500 rounded-t transition-all duration-300 hover:bg-red-400"
-                        style={{ height: `${Math.max(despesaHeight, 4)}%` }}
-                      ></div>
-                      <div 
-                        className={`w-4 rounded-t transition-all duration-300 ${isLiquidoPositivo ? 'bg-blue-500 hover:bg-blue-400' : 'bg-orange-500 hover:bg-orange-400'}`}
-                        style={{ height: `${Math.max(liquidoHeight, 4)}%` }}
-                      ></div>
+                    <div className="flex gap-0.5 items-end h-20">
+                      <div className="w-2 bg-green-500 rounded-t" style={{ height: `${Math.max(receitaHeight, 4)}%` }}></div>
+                      <div className="w-2 bg-red-500 rounded-t" style={{ height: `${Math.max(despesaHeight, 4)}%` }}></div>
+                      <div className={`w-2 rounded-t ${isLiquidoPositivo ? 'bg-blue-500' : 'bg-orange-500'}`} style={{ height: `${Math.max(liquidoHeight, 4)}%` }}></div>
                     </div>
-                    
-                    {/* Label da semana */}
-                    <span className="text-sm text-slate-600 mt-2 font-medium">
-                      S{item.semana}
-                    </span>
+                    <span className="text-xs text-slate-500 mt-1">S{item.semana}</span>
                   </div>
                 );
               })}
@@ -684,10 +445,7 @@ const ResumoSemanalParceiro = () => {
         </Card>
       )}
 
-      {/* Info adicional */}
-      <div className="text-center text-sm text-slate-500">
-        {resumo?.periodo || `Semana ${semana}/${ano}`}
-      </div>
+      <div className="text-center text-xs text-slate-400">{resumo?.periodo || `Semana ${semana}/${ano}`}</div>
     </div>
   );
 };
