@@ -656,6 +656,12 @@ const FichaVeiculo = ({ user, onLogout }) => {
           km_extra_escalao_1_limite: vehicleRes.data.tipo_contrato.km_extra_escalao_1_limite || 500,
           km_extra_escalao_1_valor: vehicleRes.data.tipo_contrato.km_extra_escalao_1_valor || '',
           km_extra_escalao_2_valor: vehicleRes.data.tipo_contrato.km_extra_escalao_2_valor || '',
+          // Semanada por Época
+          semanada_por_epoca: vehicleRes.data.tipo_contrato.semanada_por_epoca || false,
+          semanada_epoca_alta: vehicleRes.data.tipo_contrato.semanada_epoca_alta || '',
+          semanada_epoca_baixa: vehicleRes.data.tipo_contrato.semanada_epoca_baixa || '',
+          // Periodicidade do Slot
+          slot_periodicidade: vehicleRes.data.tipo_contrato.slot_periodicidade || 'semanal',
           valor_compra_veiculo: vehicleRes.data.tipo_contrato.valor_compra_veiculo || '',
           numero_semanas_compra: vehicleRes.data.tipo_contrato.numero_semanas_compra || '',
           com_slot: vehicleRes.data.tipo_contrato.com_slot || false,
