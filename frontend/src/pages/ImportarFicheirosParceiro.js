@@ -98,17 +98,9 @@ const ImportarFicheirosParceiro = ({ user }) => {
       formData.append('semana', semana);
       formData.append('ano', ano);
 
-      // Mapear plataforma para endpoint correto
-      const endpoints = {
-        uber: '/api/importar/uber',
-        bolt: '/api/importar/bolt',
-        viaverde: '/api/importar/viaverde',
-        combustivel: '/api/importar/combustivel',
-        eletrico: '/api/importar/carregamento'
-      };
-
+      // Usar endpoint unificado para todas as plataformas
       const response = await axios.post(
-        `${API_URL}${endpoints[plataforma]}`,
+        `${API_URL}/api/importar/${plataforma}`,
         formData,
         {
           headers: {
