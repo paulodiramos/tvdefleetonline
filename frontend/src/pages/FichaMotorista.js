@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Layout from '@/components/Layout';
@@ -16,7 +16,9 @@ import { toast } from 'sonner';
 import { 
   ArrowLeft, User, Mail, Phone, MapPin, CreditCard, Car, FileText,
   Save, Edit, Euro, Percent, Calculator, TrendingUp, Wallet,
-  Receipt, Settings, History, AlertCircle, CheckCircle, Clock
+  Receipt, History, AlertCircle, CheckCircle, Clock, Upload,
+  Calendar, Globe, IdCard, Shield, FileCheck, Home, Building,
+  MessageCircle, Smartphone
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -29,27 +31,79 @@ const FichaMotorista = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState('geral');
+  const [activeTab, setActiveTab] = useState('dados-pessoais');
+  
+  // Dados editáveis do motorista
+  const [dadosMotorista, setDadosMotorista] = useState({
+    // Dados Pessoais
+    name: '',
+    email: '',
+    phone: '',
+    whatsapp: '',
+    
+    // Documentos de Identificação
+    tipo_documento: 'cc', // cc, residencia, passaporte
+    documento_numero: '',
+    documento_validade: '',
+    
+    nif: '',
+    seguranca_social: '',
+    data_nascimento: '',
+    nacionalidade: 'Portuguesa',
+    
+    // Morada
+    morada: '',
+    codigo_postal: '',
+    localidade: '',
+    
+    // Registo Criminal
+    registo_criminal_codigo: '',
+    registo_criminal_validade: '',
+    
+    // Licença TVDE
+    licenca_tvde_numero: '',
+    licenca_tvde_validade: '',
+    
+    // Carta de Condução
+    carta_conducao_numero: '',
+    carta_conducao_emissao: '',
+    carta_conducao_validade: '',
+    
+    // Dados Bancários
+    iban: '',
+    
+    // Emails e Telefones das Plataformas
+    email_uber: '',
+    telefone_uber: '',
+    email_bolt: '',
+    telefone_bolt: '',
+    usar_dados_padrao_plataformas: true
+  });
+  
+  // Documentos
+  const [documentos, setDocumentos] = useState({
+    documento_frente: null,
+    documento_verso: null,
+    carta_conducao_frente: null,
+    carta_conducao_verso: null,
+    licenca_tvde: null,
+    registo_criminal: null,
+    comprovativo_morada: null,
+    comprovativo_iban: null
+  });
   
   // Campos financeiros
   const [configFinanceira, setConfigFinanceira] = useState({
-    // Acumulação Via Verde
     acumular_viaverde: false,
     viaverde_acumulado: 0,
-    viaverde_fonte: 'ambos', // uber, bolt, ambos
-    
-    // Gratificação
-    gratificacao_tipo: 'na_comissao', // na_comissao, fora_comissao
+    viaverde_fonte: 'ambos',
+    gratificacao_tipo: 'na_comissao',
     gratificacao_valor_fixo: 0,
-    
-    // IVA
     incluir_iva_rendimentos: true,
     iva_percentagem: 23,
-    
-    // Comissão personalizada (se diferente do contrato)
     comissao_personalizada: false,
-    comissao_motorista_percentagem: 0,
-    comissao_parceiro_percentagem: 0
+    comissao_motorista_percentagem: 70,
+    comissao_parceiro_percentagem: 30
   });
   
   // Histórico de Via Verde acumulado
@@ -58,17 +112,10 @@ const FichaMotorista = ({ user }) => {
   // Veículo atribuído
   const [veiculo, setVeiculo] = useState(null);
   
-  // Contrato activo
-  const [contrato, setContrato] = useState(null);
+  // Upload states
+  const [uploading, setUploading] = useState({});
 
-  useEffect(() => {
-    if (motoristaId) {
-      fetchMotorista();
-      fetchHistoricoViaVerde();
-    }
-  }, [motoristaId]);
-
-  const fetchMotorista = async () => {
+  const fetchMotorista = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -78,6 +125,43 @@ const FichaMotorista = ({ user }) => {
       
       const motoristaData = response.data;
       setMotorista(motoristaData);
+      
+      // Preencher dados editáveis
+      setDadosMotorista(prev => ({
+        ...prev,
+        name: motoristaData.name || '',
+        email: motoristaData.email || '',
+        phone: motoristaData.phone || '',
+        whatsapp: motoristaData.whatsapp || motoristaData.phone || '',
+        tipo_documento: motoristaData.tipo_documento || 'cc',
+        documento_numero: motoristaData.documento_numero || motoristaData.cc_numero || '',
+        documento_validade: motoristaData.documento_validade || motoristaData.cc_validade || '',
+        nif: motoristaData.nif || '',
+        seguranca_social: motoristaData.seguranca_social || '',
+        data_nascimento: motoristaData.data_nascimento || '',
+        nacionalidade: motoristaData.nacionalidade || 'Portuguesa',
+        morada: motoristaData.morada || motoristaData.morada_completa || '',
+        codigo_postal: motoristaData.codigo_postal || '',
+        localidade: motoristaData.localidade || '',
+        registo_criminal_codigo: motoristaData.registo_criminal_codigo || '',
+        registo_criminal_validade: motoristaData.registo_criminal_validade || '',
+        licenca_tvde_numero: motoristaData.licenca_tvde_numero || '',
+        licenca_tvde_validade: motoristaData.licenca_tvde_validade || '',
+        carta_conducao_numero: motoristaData.carta_conducao_numero || '',
+        carta_conducao_emissao: motoristaData.carta_conducao_emissao || '',
+        carta_conducao_validade: motoristaData.carta_conducao_validade || '',
+        iban: motoristaData.iban || '',
+        email_uber: motoristaData.email_uber || motoristaData.email || '',
+        telefone_uber: motoristaData.telefone_uber || motoristaData.phone || '',
+        email_bolt: motoristaData.email_bolt || motoristaData.email || '',
+        telefone_bolt: motoristaData.telefone_bolt || motoristaData.phone || '',
+        usar_dados_padrao_plataformas: motoristaData.usar_dados_padrao_plataformas !== false
+      }));
+      
+      // Carregar documentos existentes
+      if (motoristaData.documentos) {
+        setDocumentos(prev => ({ ...prev, ...motoristaData.documentos }));
+      }
       
       // Carregar configurações financeiras se existirem
       if (motoristaData.config_financeira) {
@@ -92,16 +176,13 @@ const FichaMotorista = ({ user }) => {
         fetchVeiculo(motoristaData.veiculo_atribuido);
       }
       
-      // Carregar contrato activo
-      fetchContrato(motoristaId);
-      
     } catch (error) {
       console.error('Erro ao carregar motorista:', error);
       toast.error('Erro ao carregar dados do motorista');
     } finally {
       setLoading(false);
     }
-  };
+  }, [motoristaId]);
 
   const fetchVeiculo = async (veiculoId) => {
     try {
@@ -115,21 +196,7 @@ const FichaMotorista = ({ user }) => {
     }
   };
 
-  const fetchContrato = async (motoristaId) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/api/contratos?motorista_id=${motoristaId}&ativo=true`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (response.data && response.data.length > 0) {
-        setContrato(response.data[0]);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar contrato:', error);
-    }
-  };
-
-  const fetchHistoricoViaVerde = async () => {
+  const fetchHistoricoViaVerde = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API}/api/motoristas/${motoristaId}/viaverde-acumulado`, {
@@ -143,8 +210,43 @@ const FichaMotorista = ({ user }) => {
         }));
       }
     } catch (error) {
-      // Endpoint pode não existir ainda
       console.log('Histórico Via Verde não disponível');
+    }
+  }, [motoristaId]);
+
+  useEffect(() => {
+    if (motoristaId) {
+      fetchMotorista();
+      fetchHistoricoViaVerde();
+    }
+  }, [motoristaId, fetchMotorista, fetchHistoricoViaVerde]);
+
+  const handleSaveDadosMotorista = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Se usar dados padrão, copiar para plataformas
+      const dadosParaEnviar = { ...dadosMotorista };
+      if (dadosMotorista.usar_dados_padrao_plataformas) {
+        dadosParaEnviar.email_uber = dadosMotorista.email;
+        dadosParaEnviar.telefone_uber = dadosMotorista.phone;
+        dadosParaEnviar.email_bolt = dadosMotorista.email;
+        dadosParaEnviar.telefone_bolt = dadosMotorista.phone;
+      }
+      
+      await axios.put(`${API}/api/motoristas/${motoristaId}`, dadosParaEnviar, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success('Dados guardados com sucesso!');
+      setIsEditing(false);
+      fetchMotorista();
+    } catch (error) {
+      console.error('Erro ao guardar:', error);
+      toast.error('Erro ao guardar dados');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -187,6 +289,42 @@ const FichaMotorista = ({ user }) => {
     }
   };
 
+  const handleFileUpload = async (tipoDocumento, file) => {
+    if (!file) return;
+    
+    setUploading(prev => ({ ...prev, [tipoDocumento]: true }));
+    
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('tipo_documento', tipoDocumento);
+      
+      const response = await axios.post(
+        `${API}/api/motoristas/${motoristaId}/documentos/upload`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      setDocumentos(prev => ({
+        ...prev,
+        [tipoDocumento]: response.data.url
+      }));
+      
+      toast.success('Documento carregado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao carregar documento:', error);
+      toast.error('Erro ao carregar documento');
+    } finally {
+      setUploading(prev => ({ ...prev, [tipoDocumento]: false }));
+    }
+  };
+
   const getInitials = (name) => {
     if (!name) return '??';
     return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
@@ -194,14 +332,81 @@ const FichaMotorista = ({ user }) => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      ativo: { label: 'Ativo', variant: 'default', className: 'bg-green-500' },
-      inativo: { label: 'Inativo', variant: 'secondary', className: 'bg-gray-500' },
-      pendente: { label: 'Pendente', variant: 'outline', className: 'bg-yellow-500' },
-      suspenso: { label: 'Suspenso', variant: 'destructive', className: 'bg-red-500' }
+      ativo: { label: 'Ativo', className: 'bg-green-500 text-white' },
+      inativo: { label: 'Inativo', className: 'bg-gray-500 text-white' },
+      pendente: { label: 'Pendente', className: 'bg-yellow-500 text-white' },
+      suspenso: { label: 'Suspenso', className: 'bg-red-500 text-white' }
     };
     const config = statusConfig[status] || statusConfig.pendente;
     return <Badge className={config.className}>{config.label}</Badge>;
   };
+
+  const isDocumentoProximoExpirar = (dataValidade) => {
+    if (!dataValidade) return false;
+    const hoje = new Date();
+    const validade = new Date(dataValidade);
+    const diffDias = Math.floor((validade - hoje) / (1000 * 60 * 60 * 24));
+    return diffDias <= 30 && diffDias >= 0;
+  };
+
+  const isDocumentoExpirado = (dataValidade) => {
+    if (!dataValidade) return false;
+    const hoje = new Date();
+    const validade = new Date(dataValidade);
+    return validade < hoje;
+  };
+
+  const getValidadeBadge = (dataValidade) => {
+    if (!dataValidade) return <Badge variant="outline">Não definida</Badge>;
+    if (isDocumentoExpirado(dataValidade)) {
+      return <Badge className="bg-red-500 text-white">Expirado</Badge>;
+    }
+    if (isDocumentoProximoExpirar(dataValidade)) {
+      return <Badge className="bg-yellow-500 text-white">Expira em breve</Badge>;
+    }
+    return <Badge className="bg-green-100 text-green-800">{dataValidade}</Badge>;
+  };
+
+  const DocumentUploadCard = ({ titulo, tipoDocumento, icone: Icone, descricao }) => (
+    <div className="border rounded-lg p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Icone className="w-5 h-5 text-slate-500" />
+          <span className="font-medium">{titulo}</span>
+        </div>
+        {documentos[tipoDocumento] ? (
+          <Badge className="bg-green-100 text-green-800">
+            <CheckCircle className="w-3 h-3 mr-1" /> Carregado
+          </Badge>
+        ) : (
+          <Badge variant="outline">Pendente</Badge>
+        )}
+      </div>
+      <p className="text-sm text-slate-500">{descricao}</p>
+      <div className="flex items-center gap-2">
+        <Input
+          type="file"
+          accept=".pdf,.jpg,.jpeg,.png"
+          onChange={(e) => handleFileUpload(tipoDocumento, e.target.files[0])}
+          disabled={uploading[tipoDocumento]}
+          className="text-sm"
+        />
+        {uploading[tipoDocumento] && (
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+        )}
+      </div>
+      {documentos[tipoDocumento] && (
+        <a 
+          href={`${API}/${documentos[tipoDocumento]}`} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="text-sm text-blue-600 hover:underline"
+        >
+          Ver documento
+        </a>
+      )}
+    </div>
+  );
 
   if (loading) {
     return (
@@ -250,133 +455,641 @@ const FichaMotorista = ({ user }) => {
           </div>
           <div className="flex items-center gap-2">
             {getStatusBadge(motorista.status_motorista || motorista.status)}
-            {contrato && (
-              <Badge variant="outline">
-                {contrato.tipo_contrato === 'comissao' ? 'Comissão' : 'Aluguer'}
-              </Badge>
-            )}
           </div>
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="geral" data-testid="tab-geral">
-              <User className="w-4 h-4 mr-2" /> Geral
-            </TabsTrigger>
-            <TabsTrigger value="financeiro" data-testid="tab-financeiro">
-              <Euro className="w-4 h-4 mr-2" /> Financeiro
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="dados-pessoais" data-testid="tab-dados-pessoais">
+              <User className="w-4 h-4 mr-2" /> Dados Pessoais
             </TabsTrigger>
             <TabsTrigger value="documentos" data-testid="tab-documentos">
               <FileText className="w-4 h-4 mr-2" /> Documentos
             </TabsTrigger>
-            <TabsTrigger value="historico" data-testid="tab-historico">
-              <History className="w-4 h-4 mr-2" /> Histórico
+            <TabsTrigger value="plataformas" data-testid="tab-plataformas">
+              <Smartphone className="w-4 h-4 mr-2" /> Plataformas
+            </TabsTrigger>
+            <TabsTrigger value="veiculo" data-testid="tab-veiculo">
+              <Car className="w-4 h-4 mr-2" /> Veículo
+            </TabsTrigger>
+            <TabsTrigger value="financeiro" data-testid="tab-financeiro">
+              <Euro className="w-4 h-4 mr-2" /> Financeiro
             </TabsTrigger>
           </TabsList>
 
-          {/* Tab Geral */}
-          <TabsContent value="geral" className="space-y-4">
+          {/* Tab Dados Pessoais */}
+          <TabsContent value="dados-pessoais" className="space-y-4">
+            <div className="flex justify-end">
+              {!isEditing ? (
+                <Button onClick={() => setIsEditing(true)} data-testid="btn-editar">
+                  <Edit className="w-4 h-4 mr-2" /> Editar
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setIsEditing(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleSaveDadosMotorista} disabled={saving}>
+                    <Save className="w-4 h-4 mr-2" /> {saving ? 'A guardar...' : 'Guardar'}
+                  </Button>
+                </div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Dados Pessoais */}
+              {/* Identificação */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <User className="w-5 h-5" /> Dados Pessoais
+                    <User className="w-5 h-5" /> Identificação
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label>Nome Completo</Label>
+                    <Input
+                      value={dadosMotorista.name}
+                      onChange={(e) => setDadosMotorista(prev => ({ ...prev, name: e.target.value }))}
+                      disabled={!isEditing}
+                      data-testid="input-nome"
+                    />
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label className="text-slate-500 text-sm">Email</Label>
-                      <p className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-slate-400" />
-                        {motorista.email}
-                      </p>
+                      <Label>Data de Nascimento</Label>
+                      <Input
+                        type="date"
+                        value={dadosMotorista.data_nascimento}
+                        onChange={(e) => setDadosMotorista(prev => ({ ...prev, data_nascimento: e.target.value }))}
+                        disabled={!isEditing}
+                      />
                     </div>
                     <div>
-                      <Label className="text-slate-500 text-sm">Telefone</Label>
-                      <p className="flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-slate-400" />
-                        {motorista.phone || 'N/A'}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-slate-500 text-sm">NIF</Label>
-                      <p>{motorista.nif || 'N/A'}</p>
-                    </div>
-                    <div>
-                      <Label className="text-slate-500 text-sm">IBAN</Label>
-                      <p className="text-sm">{motorista.iban || 'N/A'}</p>
+                      <Label>Nacionalidade</Label>
+                      <Input
+                        value={dadosMotorista.nacionalidade}
+                        onChange={(e) => setDadosMotorista(prev => ({ ...prev, nacionalidade: e.target.value }))}
+                        disabled={!isEditing}
+                      />
                     </div>
                   </div>
-                  <Separator />
                   <div>
-                    <Label className="text-slate-500 text-sm">Morada</Label>
-                    <p className="flex items-center gap-2">
-                      <MapPin className="w-4 h-4 text-slate-400" />
-                      {motorista.morada_completa || 'N/A'}
-                    </p>
+                    <Label>NIF</Label>
+                    <Input
+                      value={dadosMotorista.nif}
+                      onChange={(e) => setDadosMotorista(prev => ({ ...prev, nif: e.target.value }))}
+                      disabled={!isEditing}
+                      placeholder="123456789"
+                    />
+                  </div>
+                  <div>
+                    <Label>Nº Segurança Social</Label>
+                    <Input
+                      value={dadosMotorista.seguranca_social}
+                      onChange={(e) => setDadosMotorista(prev => ({ ...prev, seguranca_social: e.target.value }))}
+                      disabled={!isEditing}
+                      placeholder="12345678901"
+                    />
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Veículo Atribuído */}
+              {/* Contactos */}
               <Card>
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Car className="w-5 h-5" /> Veículo Atribuído
+                    <Phone className="w-5 h-5" /> Contactos
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label className="flex items-center gap-2">
+                      <Mail className="w-4 h-4" /> Email de Contacto
+                    </Label>
+                    <Input
+                      type="email"
+                      value={dadosMotorista.email}
+                      onChange={(e) => setDadosMotorista(prev => ({ ...prev, email: e.target.value }))}
+                      disabled={!isEditing}
+                    />
+                  </div>
+                  <div>
+                    <Label className="flex items-center gap-2">
+                      <Phone className="w-4 h-4" /> Telefone de Contacto
+                    </Label>
+                    <Input
+                      value={dadosMotorista.phone}
+                      onChange={(e) => setDadosMotorista(prev => ({ ...prev, phone: e.target.value }))}
+                      disabled={!isEditing}
+                      placeholder="+351 912 345 678"
+                    />
+                  </div>
+                  <div>
+                    <Label className="flex items-center gap-2">
+                      <MessageCircle className="w-4 h-4" /> WhatsApp
+                    </Label>
+                    <Input
+                      value={dadosMotorista.whatsapp}
+                      onChange={(e) => setDadosMotorista(prev => ({ ...prev, whatsapp: e.target.value }))}
+                      disabled={!isEditing}
+                      placeholder="+351 912 345 678"
+                    />
+                  </div>
+                  <div>
+                    <Label className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4" /> IBAN
+                    </Label>
+                    <Input
+                      value={dadosMotorista.iban}
+                      onChange={(e) => setDadosMotorista(prev => ({ ...prev, iban: e.target.value }))}
+                      disabled={!isEditing}
+                      placeholder="PT50 0000 0000 0000 0000 0000 0"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Documento de Identificação */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <IdCard className="w-5 h-5" /> Documento de Identificação
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label>Tipo de Documento</Label>
+                    <Select
+                      value={dadosMotorista.tipo_documento}
+                      onValueChange={(value) => setDadosMotorista(prev => ({ ...prev, tipo_documento: value }))}
+                      disabled={!isEditing}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cc">Cartão de Cidadão</SelectItem>
+                        <SelectItem value="residencia">Autorização de Residência</SelectItem>
+                        <SelectItem value="passaporte">Passaporte</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Número</Label>
+                      <Input
+                        value={dadosMotorista.documento_numero}
+                        onChange={(e) => setDadosMotorista(prev => ({ ...prev, documento_numero: e.target.value }))}
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <div>
+                      <Label>Validade</Label>
+                      <div className="space-y-1">
+                        <Input
+                          type="date"
+                          value={dadosMotorista.documento_validade}
+                          onChange={(e) => setDadosMotorista(prev => ({ ...prev, documento_validade: e.target.value }))}
+                          disabled={!isEditing}
+                        />
+                        {getValidadeBadge(dadosMotorista.documento_validade)}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Morada */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Home className="w-5 h-5" /> Morada
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <Label>Morada Completa</Label>
+                    <Input
+                      value={dadosMotorista.morada}
+                      onChange={(e) => setDadosMotorista(prev => ({ ...prev, morada: e.target.value }))}
+                      disabled={!isEditing}
+                      placeholder="Rua, número, andar..."
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Código Postal</Label>
+                      <Input
+                        value={dadosMotorista.codigo_postal}
+                        onChange={(e) => setDadosMotorista(prev => ({ ...prev, codigo_postal: e.target.value }))}
+                        disabled={!isEditing}
+                        placeholder="1234-567"
+                      />
+                    </div>
+                    <div>
+                      <Label>Localidade</Label>
+                      <Input
+                        value={dadosMotorista.localidade}
+                        onChange={(e) => setDadosMotorista(prev => ({ ...prev, localidade: e.target.value }))}
+                        disabled={!isEditing}
+                        placeholder="Lisboa"
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Registo Criminal */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Shield className="w-5 h-5" /> Registo Criminal
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Código de Acesso</Label>
+                      <Input
+                        value={dadosMotorista.registo_criminal_codigo}
+                        onChange={(e) => setDadosMotorista(prev => ({ ...prev, registo_criminal_codigo: e.target.value }))}
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <div>
+                      <Label>Validade</Label>
+                      <div className="space-y-1">
+                        <Input
+                          type="date"
+                          value={dadosMotorista.registo_criminal_validade}
+                          onChange={(e) => setDadosMotorista(prev => ({ ...prev, registo_criminal_validade: e.target.value }))}
+                          disabled={!isEditing}
+                        />
+                        {getValidadeBadge(dadosMotorista.registo_criminal_validade)}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Licença TVDE */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <FileCheck className="w-5 h-5" /> Licença TVDE
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Número da Licença</Label>
+                      <Input
+                        value={dadosMotorista.licenca_tvde_numero}
+                        onChange={(e) => setDadosMotorista(prev => ({ ...prev, licenca_tvde_numero: e.target.value }))}
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <div>
+                      <Label>Validade</Label>
+                      <div className="space-y-1">
+                        <Input
+                          type="date"
+                          value={dadosMotorista.licenca_tvde_validade}
+                          onChange={(e) => setDadosMotorista(prev => ({ ...prev, licenca_tvde_validade: e.target.value }))}
+                          disabled={!isEditing}
+                        />
+                        {getValidadeBadge(dadosMotorista.licenca_tvde_validade)}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Carta de Condução */}
+              <Card className="md:col-span-2">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <CreditCard className="w-5 h-5" /> Carta de Condução
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {veiculo ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold text-lg">{veiculo.matricula}</p>
-                          <p className="text-slate-500">{veiculo.marca} {veiculo.modelo}</p>
-                        </div>
-                        <Badge>{veiculo.ano}</Badge>
-                      </div>
-                      <Separator />
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <span className="text-slate-500">Tipo Contrato:</span>
-                          <p className="font-medium">{veiculo.tipo_contrato_veiculo || 'N/A'}</p>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">Valor Semanal:</span>
-                          <p className="font-medium">€{veiculo.valor_semanal || 0}</p>
-                        </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <Label>Número</Label>
+                      <Input
+                        value={dadosMotorista.carta_conducao_numero}
+                        onChange={(e) => setDadosMotorista(prev => ({ ...prev, carta_conducao_numero: e.target.value }))}
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <div>
+                      <Label>Data de Emissão</Label>
+                      <Input
+                        type="date"
+                        value={dadosMotorista.carta_conducao_emissao}
+                        onChange={(e) => setDadosMotorista(prev => ({ ...prev, carta_conducao_emissao: e.target.value }))}
+                        disabled={!isEditing}
+                      />
+                    </div>
+                    <div>
+                      <Label>Validade</Label>
+                      <div className="space-y-1">
+                        <Input
+                          type="date"
+                          value={dadosMotorista.carta_conducao_validade}
+                          onChange={(e) => setDadosMotorista(prev => ({ ...prev, carta_conducao_validade: e.target.value }))}
+                          disabled={!isEditing}
+                        />
+                        {getValidadeBadge(dadosMotorista.carta_conducao_validade)}
                       </div>
                     </div>
-                  ) : (
-                    <div className="text-center py-6 text-slate-500">
-                      <Car className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                      <p>Sem veículo atribuído</p>
-                    </div>
-                  )}
+                  </div>
                 </CardContent>
               </Card>
             </div>
+          </TabsContent>
 
-            {/* Emails Plataformas */}
+          {/* Tab Documentos */}
+          <TabsContent value="documentos" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Emails das Plataformas</CardTitle>
-                <CardDescription>Emails utilizados nas plataformas Uber e Bolt</CardDescription>
+                <CardTitle>Upload de Documentos</CardTitle>
+                <CardDescription>
+                  Carregar os documentos necessários para a ficha do motorista
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-slate-500 text-sm">Email Uber</Label>
-                    <p className="font-medium">{motorista.email_uber || motorista.email}</p>
-                  </div>
-                  <div>
-                    <Label className="text-slate-500 text-sm">Email Bolt</Label>
-                    <p className="font-medium">{motorista.email_bolt || motorista.email}</p>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <DocumentUploadCard
+                    titulo="Documento de Identificação (Frente)"
+                    tipoDocumento="documento_frente"
+                    icone={IdCard}
+                    descricao="CC, Autorização de Residência ou Passaporte - Frente"
+                  />
+                  <DocumentUploadCard
+                    titulo="Documento de Identificação (Verso)"
+                    tipoDocumento="documento_verso"
+                    icone={IdCard}
+                    descricao="CC ou Autorização de Residência - Verso (não necessário para Passaporte)"
+                  />
+                  <DocumentUploadCard
+                    titulo="Carta de Condução (Frente)"
+                    tipoDocumento="carta_conducao_frente"
+                    icone={CreditCard}
+                    descricao="Carta de Condução - Frente"
+                  />
+                  <DocumentUploadCard
+                    titulo="Carta de Condução (Verso)"
+                    tipoDocumento="carta_conducao_verso"
+                    icone={CreditCard}
+                    descricao="Carta de Condução - Verso"
+                  />
+                  <DocumentUploadCard
+                    titulo="Licença TVDE"
+                    tipoDocumento="licenca_tvde"
+                    icone={FileCheck}
+                    descricao="Licença TVDE emitida pelo IMT"
+                  />
+                  <DocumentUploadCard
+                    titulo="Registo Criminal"
+                    tipoDocumento="registo_criminal"
+                    icone={Shield}
+                    descricao="Certificado de Registo Criminal"
+                  />
+                  <DocumentUploadCard
+                    titulo="Comprovativo de Morada"
+                    tipoDocumento="comprovativo_morada"
+                    icone={Home}
+                    descricao="Fatura de serviços ou declaração de morada"
+                  />
+                  <DocumentUploadCard
+                    titulo="Comprovativo de IBAN"
+                    tipoDocumento="comprovativo_iban"
+                    icone={Building}
+                    descricao="Documento bancário com IBAN"
+                  />
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab Plataformas */}
+          <TabsContent value="plataformas" className="space-y-4">
+            <div className="flex justify-end">
+              {!isEditing ? (
+                <Button onClick={() => setIsEditing(true)}>
+                  <Edit className="w-4 h-4 mr-2" /> Editar
+                </Button>
+              ) : (
+                <div className="flex gap-2">
+                  <Button variant="outline" onClick={() => setIsEditing(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleSaveDadosMotorista} disabled={saving}>
+                    <Save className="w-4 h-4 mr-2" /> {saving ? 'A guardar...' : 'Guardar'}
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Dados das Plataformas</CardTitle>
+                <CardDescription>
+                  Configurar os emails e telefones utilizados nas plataformas Uber e Bolt
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                  <div>
+                    <Label className="font-medium">Usar dados de contacto padrão</Label>
+                    <p className="text-sm text-slate-500">
+                      Usar o mesmo email e telefone do motorista para todas as plataformas
+                    </p>
+                  </div>
+                  <Switch
+                    checked={dadosMotorista.usar_dados_padrao_plataformas}
+                    onCheckedChange={(checked) => {
+                      setDadosMotorista(prev => ({
+                        ...prev,
+                        usar_dados_padrao_plataformas: checked,
+                        email_uber: checked ? prev.email : prev.email_uber,
+                        telefone_uber: checked ? prev.phone : prev.telefone_uber,
+                        email_bolt: checked ? prev.email : prev.email_bolt,
+                        telefone_bolt: checked ? prev.phone : prev.telefone_bolt
+                      }));
+                    }}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Uber */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">U</span>
+                        </div>
+                        Uber
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <Mail className="w-4 h-4" /> Email Uber
+                        </Label>
+                        <Input
+                          type="email"
+                          value={dadosMotorista.usar_dados_padrao_plataformas ? dadosMotorista.email : dadosMotorista.email_uber}
+                          onChange={(e) => setDadosMotorista(prev => ({ ...prev, email_uber: e.target.value }))}
+                          disabled={!isEditing || dadosMotorista.usar_dados_padrao_plataformas}
+                          placeholder="email@uber.com"
+                        />
+                      </div>
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <Phone className="w-4 h-4" /> Telefone Uber
+                        </Label>
+                        <Input
+                          value={dadosMotorista.usar_dados_padrao_plataformas ? dadosMotorista.phone : dadosMotorista.telefone_uber}
+                          onChange={(e) => setDadosMotorista(prev => ({ ...prev, telefone_uber: e.target.value }))}
+                          disabled={!isEditing || dadosMotorista.usar_dados_padrao_plataformas}
+                          placeholder="+351 912 345 678"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Bolt */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">B</span>
+                        </div>
+                        Bolt
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <Mail className="w-4 h-4" /> Email Bolt
+                        </Label>
+                        <Input
+                          type="email"
+                          value={dadosMotorista.usar_dados_padrao_plataformas ? dadosMotorista.email : dadosMotorista.email_bolt}
+                          onChange={(e) => setDadosMotorista(prev => ({ ...prev, email_bolt: e.target.value }))}
+                          disabled={!isEditing || dadosMotorista.usar_dados_padrao_plataformas}
+                          placeholder="email@bolt.com"
+                        />
+                      </div>
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <Phone className="w-4 h-4" /> Telefone Bolt
+                        </Label>
+                        <Input
+                          value={dadosMotorista.usar_dados_padrao_plataformas ? dadosMotorista.phone : dadosMotorista.telefone_bolt}
+                          onChange={(e) => setDadosMotorista(prev => ({ ...prev, telefone_bolt: e.target.value }))}
+                          disabled={!isEditing || dadosMotorista.usar_dados_padrao_plataformas}
+                          placeholder="+351 912 345 678"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab Veículo */}
+          <TabsContent value="veiculo" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Car className="w-5 h-5" /> Veículo Atribuído
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {veiculo ? (
+                  <div className="space-y-6">
+                    {/* Info Principal */}
+                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                      <div>
+                        <p className="text-2xl font-bold">{veiculo.matricula}</p>
+                        <p className="text-lg text-slate-600">{veiculo.marca} {veiculo.modelo}</p>
+                      </div>
+                      <Badge className="text-lg px-4 py-2">{veiculo.ano}</Badge>
+                    </div>
+
+                    {/* Detalhes do Contrato */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="border rounded-lg p-4">
+                        <p className="text-sm text-slate-500">Tipo de Contrato</p>
+                        <p className="text-lg font-semibold capitalize">
+                          {veiculo.tipo_contrato_veiculo || 'N/A'}
+                        </p>
+                      </div>
+                      <div className="border rounded-lg p-4">
+                        <p className="text-sm text-slate-500">Valor Semanal</p>
+                        <p className="text-lg font-semibold text-green-600">
+                          €{veiculo.valor_semanal || 0}
+                        </p>
+                      </div>
+                      <div className="border rounded-lg p-4">
+                        <p className="text-sm text-slate-500">Caução</p>
+                        <p className="text-lg font-semibold">
+                          {veiculo.tem_caucao ? `€${veiculo.valor_caucao || 0}` : 'Sem caução'}
+                        </p>
+                      </div>
+                      <div className="border rounded-lg p-4">
+                        <p className="text-sm text-slate-500">Comissão Parceiro</p>
+                        <p className="text-lg font-semibold">
+                          {veiculo.comissao_parceiro || 30}%
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Info Adicional */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="border rounded-lg p-4">
+                        <p className="text-sm text-slate-500 mb-2">Combustível</p>
+                        <Badge variant="outline" className="capitalize">
+                          {veiculo.combustivel || 'N/A'}
+                        </Badge>
+                      </div>
+                      <div className="border rounded-lg p-4">
+                        <p className="text-sm text-slate-500 mb-2">Cor</p>
+                        <Badge variant="outline" className="capitalize">
+                          {veiculo.cor || 'N/A'}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {/* Seguro */}
+                    {veiculo.insurance && (
+                      <div className="border rounded-lg p-4">
+                        <p className="text-sm text-slate-500 mb-2">Seguro</p>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">{veiculo.insurance.companhia || 'N/A'}</p>
+                            <p className="text-sm text-slate-500">Apólice: {veiculo.insurance.numero_apolice || 'N/A'}</p>
+                          </div>
+                          {getValidadeBadge(veiculo.insurance.data_validade)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-12 text-slate-500">
+                    <Car className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                    <p className="text-lg">Sem veículo atribuído</p>
+                    <p className="text-sm">Este motorista ainda não tem um veículo atribuído</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -508,39 +1221,16 @@ const FichaMotorista = ({ user }) => {
                       {configFinanceira.gratificacao_tipo === 'na_comissao' ? (
                         <>
                           <CheckCircle className="w-4 h-4 text-purple-600" />
-                          <span>Gratificações <strong>incluídas</strong> no cálculo da comissão com o parceiro</span>
+                          <span>Gratificações <strong>incluídas</strong> no cálculo da comissão</span>
                         </>
                       ) : (
                         <>
                           <AlertCircle className="w-4 h-4 text-orange-600" />
-                          <span>Gratificações <strong>pagas separadamente</strong> ao motorista (100% para o motorista)</span>
+                          <span>Gratificações <strong>pagas separadamente</strong> (100% motorista)</span>
                         </>
                       )}
                     </div>
                   </div>
-
-                  {configFinanceira.gratificacao_tipo === 'fora_comissao' && (
-                    <div>
-                      <Label>Valor Fixo Adicional (opcional)</Label>
-                      <div className="flex items-center gap-2">
-                        <span className="text-slate-500">€</span>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          value={configFinanceira.gratificacao_valor_fixo}
-                          onChange={(e) => 
-                            setConfigFinanceira(prev => ({ 
-                              ...prev, 
-                              gratificacao_valor_fixo: parseFloat(e.target.value) || 0 
-                            }))
-                          }
-                          disabled={!isEditing}
-                          className="w-32"
-                          data-testid="input-gratificacao-valor"
-                        />
-                      </div>
-                    </div>
-                  )}
                 </CardContent>
               </Card>
 
@@ -648,7 +1338,6 @@ const FichaMotorista = ({ user }) => {
                             }}
                             disabled={!isEditing}
                             className="w-20"
-                            data-testid="input-comissao-motorista"
                           />
                           <span className="text-slate-500">%</span>
                         </div>
@@ -670,7 +1359,6 @@ const FichaMotorista = ({ user }) => {
                             }}
                             disabled={!isEditing}
                             className="w-20"
-                            data-testid="input-comissao-parceiro"
                           />
                           <span className="text-slate-500">%</span>
                         </div>
@@ -679,8 +1367,8 @@ const FichaMotorista = ({ user }) => {
                   ) : (
                     <div className="bg-orange-50 p-4 rounded-lg">
                       <p className="text-sm text-slate-600">
-                        A usar comissão do contrato: <strong>
-                          {contrato ? `${contrato.comissao_motorista || 70}% / ${contrato.comissao_parceiro || 30}%` : 'N/A'}
+                        A usar comissão do veículo: <strong>
+                          {veiculo ? `${100 - (veiculo.comissao_parceiro || 30)}% / ${veiculo.comissao_parceiro || 30}%` : 'N/A'}
                         </strong>
                       </p>
                     </div>
@@ -721,64 +1409,29 @@ const FichaMotorista = ({ user }) => {
                     <p className="text-lg font-bold">
                       {configFinanceira.comissao_personalizada 
                         ? `${configFinanceira.comissao_motorista_percentagem}/${configFinanceira.comissao_parceiro_percentagem}`
-                        : 'Contrato'
+                        : 'Veículo'
                       }
                     </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
 
-          {/* Tab Documentos */}
-          <TabsContent value="documentos" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Documentos do Motorista</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium">Carta de Condução</span>
-                      {motorista.carta_conducao_validade ? (
-                        <Badge variant="outline">{motorista.carta_conducao_validade}</Badge>
-                      ) : (
-                        <Badge variant="destructive">Não definida</Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-slate-500">Nº: {motorista.carta_conducao_numero || 'N/A'}</p>
-                  </div>
-                  <div className="border rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium">Licença TVDE</span>
-                      {motorista.licenca_tvde_validade ? (
-                        <Badge variant="outline">{motorista.licenca_tvde_validade}</Badge>
-                      ) : (
-                        <Badge variant="destructive">Não definida</Badge>
-                      )}
-                    </div>
-                    <p className="text-sm text-slate-500">Nº: {motorista.licenca_tvde_numero || 'N/A'}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Tab Histórico */}
-          <TabsContent value="historico" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Histórico de Via Verde Acumulado</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {historicoViaVerde.length > 0 ? (
-                  <div className="space-y-2">
+            {/* Histórico Via Verde */}
+            {configFinanceira.acumular_viaverde && historicoViaVerde.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <History className="w-5 h-5" /> Histórico Via Verde
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
                     {historicoViaVerde.map((item, index) => (
                       <div key={index} className="flex items-center justify-between border-b py-2">
                         <div>
                           <p className="font-medium">{item.descricao || 'Movimento'}</p>
-                          <p className="text-sm text-slate-500">{item.data}</p>
+                          <p className="text-sm text-slate-500">{item.created_at?.substring(0, 10)}</p>
                         </div>
                         <div className={`font-bold ${item.tipo === 'credito' ? 'text-green-600' : 'text-red-600'}`}>
                           {item.tipo === 'credito' ? '+' : '-'}€{Math.abs(item.valor).toFixed(2)}
@@ -786,14 +1439,9 @@ const FichaMotorista = ({ user }) => {
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="text-center py-8 text-slate-500">
-                    <Clock className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                    <p>Sem histórico de Via Verde</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </div>
