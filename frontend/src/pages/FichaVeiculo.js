@@ -2497,13 +2497,6 @@ const FichaVeiculo = ({ user, onLogout }) => {
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Regime Card */}
-              <Card className="mt-4">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Regime de Trabalho</CardTitle>
-                </CardHeader>
-                <CardContent>
                     <div>
                       <Label htmlFor="regime">Regime</Label>
                       {canEdit && editMode ? (
