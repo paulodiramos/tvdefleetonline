@@ -77,25 +77,19 @@ from routes.reports import router as reports_router
 from routes.gestores import router as gestores_router
 from routes.configuracoes import router as configuracoes_router
 from routes.importacoes import router as importacoes_router
+from routes.admin import router as admin_router
+from routes.alertas import router as alertas_router
+from routes.contratos import router as contratos_router
+
+# Import utilities from refactored modules
+from utils.file_handlers import (
+    safe_parse_date, convert_image_to_pdf, save_uploaded_file,
+    process_uploaded_file, merge_images_to_pdf_a4, ROOT_DIR
+)
+from utils.alerts import check_and_create_alerts, auto_add_to_agenda
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
-
-# ==================== FILE UPLOAD UTILITIES ====================
-
-def safe_parse_date(date_str: str, format: str = "%Y-%m-%d"):
-    """Safely parse date string, return None if empty or invalid"""
-    if not date_str or not date_str.strip():
-        return None
-    try:
-        return datetime.strptime(date_str.strip(), format)
-    except (ValueError, TypeError):
-        return None
-
-async def convert_image_to_pdf(image_path: Path, output_path: Path) -> Path:
-    """Convert an image file to PDF format"""
-    try:
-        img = Image.open(image_path)
         
         # Convert RGBA to RGB if necessary
         if img.mode == 'RGBA':
