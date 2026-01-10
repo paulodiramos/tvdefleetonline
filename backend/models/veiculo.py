@@ -53,6 +53,10 @@ class TipoContrato(BaseModel):
     km_epoca_baixa: Optional[int] = None
     meses_epoca_alta: List[int] = []  # Lista de meses (1-12)
     meses_epoca_baixa: List[int] = []  # Lista de meses restantes
+    # Escalões de KM Extra (custos por exceder limite)
+    km_extra_escalao_1_limite: int = 500  # Limite do primeiro escalão (até X km extra)
+    km_extra_escalao_1_valor: Optional[float] = None  # Valor por km no primeiro escalão (ex: €0.10)
+    km_extra_escalao_2_valor: Optional[float] = None  # Valor por km acima do primeiro escalão (ex: €0.20)
 
 
 class CategoriasUber(BaseModel):
