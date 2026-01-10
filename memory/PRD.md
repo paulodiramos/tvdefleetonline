@@ -1,5 +1,14 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-10)
+### Session Updates:
+- **FIXED**: Cartão Frota (Combustível) não guardava - adicionado `cartao_frota_id` ao modelo Pydantic
+- **FIXED**: Cartão Frota Elétrico não guardava ID - adicionado `cartao_frota_eletric_id` ao modelo Pydantic  
+- **REMOVED**: Secção duplicada "Contrato do Veículo" na ficha do veículo
+- **ADDED**: Atribuição de custos (Motorista/Parceiro) no histórico de manutenções
+- **ADDED**: Tipos de custo: Multa, Dano, Seguro com opção de dedução do motorista
+- **UPDATED**: Modal de manutenção com grupos organizados (Manutenção, Reparação, Custos/Danos)
+
 ## Original Problem Statement
 Sistema de gestão de frotas para empresas TVDE (React + FastAPI + MongoDB). A aplicação permite gestão de motoristas, veículos, relatórios financeiros semanais, importação de dados de plataformas (Uber, Bolt, Via Verde, Carregamentos Elétricos, Combustível), e automações.
 
