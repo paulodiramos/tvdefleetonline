@@ -454,11 +454,11 @@ const ResumoSemanalParceiro = () => {
               <tbody>
                 {motoristas.map((m) => {
                   const isEditing = editingMotorista === m.motorista_id;
-                  const liquido = (m.ganhos_uber || 0) + (m.ganhos_bolt || 0) - (m.via_verde || 0) - (m.combustivel || 0) - (m.eletrico || 0) - (m.aluguer || 0);
+                  const liquido = (m.ganhos_uber || 0) + (m.ganhos_bolt || 0) - (m.via_verde || 0) - (m.combustivel || 0) - (m.carregamento_eletrico || 0) - (m.aluguer_veiculo || 0);
                   
                   return (
                     <tr key={m.motorista_id} className="border-b hover:bg-slate-50">
-                      <td className="p-3 font-medium">{m.nome}</td>
+                      <td className="p-3 font-medium">{m.motorista_nome}</td>
                       
                       {isEditing ? (
                         <>
@@ -525,8 +525,8 @@ const ResumoSemanalParceiro = () => {
                           <td className="p-3 text-right text-green-600">{formatCurrency(m.ganhos_bolt)}</td>
                           <td className="p-3 text-right text-red-600">{formatCurrency(m.via_verde)}</td>
                           <td className="p-3 text-right text-red-600">{formatCurrency(m.combustivel)}</td>
-                          <td className="p-3 text-right text-red-600">{formatCurrency(m.eletrico)}</td>
-                          <td className="p-3 text-right text-blue-600">{formatCurrency(m.aluguer)}</td>
+                          <td className="p-3 text-right text-red-600">{formatCurrency(m.carregamento_eletrico)}</td>
+                          <td className="p-3 text-right text-blue-600">{formatCurrency(m.aluguer_veiculo)}</td>
                           <td className="p-3 text-right text-orange-600">{formatCurrency(m.extras)}</td>
                         </>
                       )}
@@ -566,7 +566,7 @@ const ResumoSemanalParceiro = () => {
                             <Button 
                               size="sm" 
                               variant="destructive"
-                              onClick={() => handleDeleteMotoristaData(m.motorista_id, m.nome)}
+                              onClick={() => handleDeleteMotoristaData(m.motorista_id, m.motorista_nome)}
                               data-testid={`delete-motorista-${m.motorista_id}`}
                             >
                               <Trash2 className="w-3 h-3" />
