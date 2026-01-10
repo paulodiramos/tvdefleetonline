@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -10,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { 
   Upload, FileSpreadsheet, AlertCircle, CheckCircle, Car, Fuel, Zap,
   CreditCard, ChevronLeft, ChevronRight, RefreshCw, History, Settings,
-  FileUp, Check, X, Loader2
+  FileUp, Check, X, Loader2, ArrowLeft, MapPin, Plus, Trash2, Save
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -18,14 +20,43 @@ const API_URL = process.env.REACT_APP_BACKEND_URL;
 
 // Ícones das plataformas
 const PlatformIcons = {
-  uber: () => <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center text-white font-bold text-sm">U</div>,
-  bolt: () => <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">B</div>,
-  viaverde: () => <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">VV</div>,
-  combustivel: () => <Fuel className="w-8 h-8 text-orange-500" />,
-  eletrico: () => <Zap className="w-8 h-8 text-blue-500" />,
+  uber: () => <div className="w-6 h-6 bg-black rounded flex items-center justify-center text-white font-bold text-xs">U</div>,
+  bolt: () => <div className="w-6 h-6 bg-green-500 rounded flex items-center justify-center text-white font-bold text-xs">B</div>,
+  viaverde: () => <div className="w-6 h-6 bg-emerald-600 rounded flex items-center justify-center text-white font-bold text-xs">VV</div>,
+  combustivel: () => <Fuel className="w-6 h-6 text-orange-500" />,
+  eletrico: () => <Zap className="w-6 h-6 text-blue-500" />,
+  gps: () => <MapPin className="w-6 h-6 text-purple-500" />,
+  custom: () => <Settings className="w-6 h-6 text-slate-500" />,
 };
 
-const ImportarFicheirosParceiro = ({ user }) => {
+// Configurações padrão dos campos por tipo de importação
+const defaultFieldMappings = {
+  combustivel: {
+    id_field: 'CardNumber',
+    data_field: 'Date',
+    valor_field: 'TotalAmount',
+    litros_field: 'Quantity',
+    posto_field: 'StationName',
+    matricula_field: 'VehiclePlate'
+  },
+  eletrico: {
+    id_field: 'ChargePointId',
+    data_field: 'StartDate',
+    valor_field: 'TotalValueWithTaxes',
+    kwh_field: 'TotalEnergy',
+    operador_field: 'OperatorName',
+    matricula_field: 'VehiclePlate'
+  },
+  gps: {
+    id_field: 'DeviceId',
+    data_field: 'Timestamp',
+    km_field: 'TotalKm',
+    matricula_field: 'VehiclePlate'
+  }
+};
+
+const ImportarFicheirosParceiro = ({ user, onLogout }) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('upload');
   const [uploading, setUploading] = useState({});
   const [resultados, setResultados] = useState({});
@@ -42,7 +73,27 @@ const ImportarFicheirosParceiro = ({ user }) => {
     bolt: null,
     viaverde: null,
     combustivel: null,
-    eletrico: null
+    eletrico: null,
+    gps: null
+  });
+
+  // Configurações de campos personalizados
+  const [showConfig, setShowConfig] = useState(null);
+  const [fieldMappings, setFieldMappings] = useState(() => {
+    const saved = localStorage.getItem('importFieldMappings');
+    return saved ? JSON.parse(saved) : defaultFieldMappings;
+  });
+
+  // Custom imports
+  const [customImports, setCustomImports] = useState(() => {
+    const saved = localStorage.getItem('customImports');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [showAddCustom, setShowAddCustom] = useState(false);
+  const [newCustomImport, setNewCustomImport] = useState({
+    name: '',
+    endpoint: '',
+    fields: {}
   });
 
   function getCurrentWeek() {
@@ -51,10 +102,17 @@ const ImportarFicheirosParceiro = ({ user }) => {
     return Math.ceil((((now - onejan) / 86400000) + onejan.getDay() + 1) / 7);
   }
 
-  // Carregar histórico de importações
   useEffect(() => {
     fetchHistorico();
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('importFieldMappings', JSON.stringify(fieldMappings));
+  }, [fieldMappings]);
+
+  useEffect(() => {
+    localStorage.setItem('customImports', JSON.stringify(customImports));
+  }, [customImports]);
 
   const fetchHistorico = async () => {
     setLoadingHistorico(true);
@@ -84,11 +142,6 @@ const ImportarFicheirosParceiro = ({ user }) => {
       return;
     }
 
-    if (!semana) {
-      toast.error('Indique a semana de referência');
-      return;
-    }
-
     setUploading(prev => ({ ...prev, [plataforma]: true }));
 
     try {
@@ -97,9 +150,12 @@ const ImportarFicheirosParceiro = ({ user }) => {
       formData.append('file', file);
       formData.append('semana', semana);
       formData.append('ano', ano);
+      
+      // Adicionar mapeamento de campos se configurado
+      if (fieldMappings[plataforma]) {
+        formData.append('field_mappings', JSON.stringify(fieldMappings[plataforma]));
+      }
 
-      // Usar endpoint unificado para todas as plataformas
-      // Mapear "eletrico" para "carregamento" para compatibilidade com backend
       const plataformaBackend = plataforma === 'eletrico' ? 'carregamento' : plataforma;
       
       const response = await axios.post(
@@ -124,7 +180,7 @@ const ImportarFicheirosParceiro = ({ user }) => {
         }
       }));
 
-      toast.success(`${plataforma.charAt(0).toUpperCase() + plataforma.slice(1)} importado com sucesso!`);
+      toast.success(`${plataforma} importado com sucesso!`);
       fetchHistorico();
     } catch (error) {
       console.error('Erro ao importar:', error);
@@ -157,39 +213,63 @@ const ImportarFicheirosParceiro = ({ user }) => {
   };
 
   const handlePreviousWeek = () => {
-    if (semana > 1) {
-      setSemana(semana - 1);
-    } else {
-      setSemana(52);
-      setAno(ano - 1);
-    }
+    if (semana > 1) setSemana(semana - 1);
+    else { setSemana(52); setAno(ano - 1); }
   };
 
   const handleNextWeek = () => {
-    if (semana < 52) {
-      setSemana(semana + 1);
-    } else {
-      setSemana(1);
-      setAno(ano + 1);
-    }
+    if (semana < 52) setSemana(semana + 1);
+    else { setSemana(1); setAno(ano + 1); }
   };
 
-  const renderUploadCard = (plataforma, nome, descricao, formatosAceites) => {
-    const Icon = PlatformIcons[plataforma];
+  const saveFieldMapping = (plataforma, mapping) => {
+    setFieldMappings(prev => ({ ...prev, [plataforma]: mapping }));
+    setShowConfig(null);
+    toast.success('Configuração guardada!');
+  };
+
+  const addCustomImport = () => {
+    if (!newCustomImport.name) {
+      toast.error('Indique um nome para o import');
+      return;
+    }
+    setCustomImports(prev => [...prev, { ...newCustomImport, id: Date.now() }]);
+    setNewCustomImport({ name: '', endpoint: '', fields: {} });
+    setShowAddCustom(false);
+    toast.success('Import personalizado adicionado!');
+  };
+
+  const removeCustomImport = (id) => {
+    setCustomImports(prev => prev.filter(c => c.id !== id));
+  };
+
+  const renderUploadCard = (plataforma, nome, descricao, formatosAceites, configurable = false) => {
+    const Icon = PlatformIcons[plataforma] || PlatformIcons.custom;
     const file = ficheiros[plataforma];
     const resultado = resultados[plataforma];
     const isUploading = uploading[plataforma];
 
     return (
       <Card key={plataforma} className={`transition-all ${file ? 'ring-2 ring-blue-500' : ''}`}>
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-4">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
             <Icon />
-            <div className="flex-1">
-              <h3 className="font-semibold text-lg">{nome}</h3>
-              <p className="text-sm text-slate-500 mb-3">{descricao}</p>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between">
+                <h3 className="font-medium text-sm">{nome}</h3>
+                {configurable && (
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="h-6 w-6 p-0"
+                    onClick={() => setShowConfig(plataforma)}
+                  >
+                    <Settings className="w-3 h-3" />
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-slate-500 mb-2">{descricao}</p>
               
-              {/* Upload area */}
               <div className="relative">
                 <input
                   type="file"
@@ -198,80 +278,52 @@ const ImportarFicheirosParceiro = ({ user }) => {
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                   disabled={isUploading}
                 />
-                <div className={`border-2 border-dashed rounded-lg p-4 text-center transition-colors
-                  ${file ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-400'}`}>
+                <div className={`border-2 border-dashed rounded-lg p-2 text-center transition-colors
+                  ${file ? 'border-blue-500 bg-blue-50' : 'border-slate-200 hover:border-slate-300'}`}>
                   {file ? (
                     <div className="flex items-center justify-center gap-2">
-                      <FileSpreadsheet className="w-5 h-5 text-blue-500" />
-                      <span className="text-sm font-medium truncate max-w-[200px]">{file.name}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleFileChange(plataforma, null);
-                        }}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
+                      <FileSpreadsheet className="w-4 h-4 text-blue-600" />
+                      <span className="text-xs text-blue-600 truncate max-w-[120px]">{file.name}</span>
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center gap-1">
-                      <Upload className="w-6 h-6 text-slate-400" />
-                      <span className="text-sm text-slate-500">Arraste ou clique para selecionar</span>
-                      <span className="text-xs text-slate-400">{formatosAceites}</span>
+                    <div className="flex items-center justify-center gap-1 text-slate-400">
+                      <Upload className="w-4 h-4" />
+                      <span className="text-xs">Arrastar ou clicar</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Result */}
+              {file && !resultado && (
+                <Button
+                  size="sm"
+                  className="w-full mt-2 h-7 text-xs"
+                  onClick={() => handleUpload(plataforma)}
+                  disabled={isUploading}
+                >
+                  {isUploading ? (
+                    <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> A importar...</>
+                  ) : (
+                    <><FileUp className="w-3 h-3 mr-1" /> Importar</>
+                  )}
+                </Button>
+              )}
+
               {resultado && (
-                <div className={`mt-3 p-3 rounded-lg ${resultado.success ? 'bg-green-50' : 'bg-red-50'}`}>
-                  <div className="flex items-center gap-2">
-                    {resultado.success ? (
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                    ) : (
-                      <AlertCircle className="w-4 h-4 text-red-600" />
-                    )}
-                    <span className={`text-sm ${resultado.success ? 'text-green-700' : 'text-red-700'}`}>
-                      {resultado.message}
-                    </span>
-                  </div>
-                  {resultado.success && resultado.sucesso > 0 && (
-                    <div className="mt-2 text-sm text-slate-600">
-                      <span className="font-medium">{resultado.sucesso}</span> registos importados
-                      {resultado.erros > 0 && (
-                        <span className="text-orange-600 ml-2">({resultado.erros} erros)</span>
-                      )}
-                      {resultado.total > 0 && (
-                        <span className="ml-2">• Total: <strong>€{resultado.total.toFixed(2)}</strong></span>
-                      )}
+                <div className={`mt-2 p-2 rounded text-xs ${resultado.success ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                  {resultado.success ? (
+                    <div className="flex items-center gap-1">
+                      <Check className="w-3 h-3" />
+                      <span>{resultado.sucesso} registos</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1">
+                      <X className="w-3 h-3" />
+                      <span>{resultado.message}</span>
                     </div>
                   )}
                 </div>
               )}
-
-              {/* Upload button */}
-              <Button
-                onClick={() => handleUpload(plataforma)}
-                disabled={!file || isUploading}
-                className="mt-3 w-full"
-                variant={file ? 'default' : 'secondary'}
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    A importar...
-                  </>
-                ) : (
-                  <>
-                    <FileUp className="w-4 h-4 mr-2" />
-                    Importar {nome}
-                  </>
-                )}
-              </Button>
             </div>
           </div>
         </CardContent>
@@ -279,202 +331,422 @@ const ImportarFicheirosParceiro = ({ user }) => {
     );
   };
 
-  return (
-    <div className="p-6 space-y-6 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Importar Ficheiros</h1>
-          <p className="text-slate-500">Importe dados das plataformas para os seus motoristas</p>
-        </div>
+  const renderConfigModal = () => {
+    if (!showConfig) return null;
+    
+    const currentMapping = fieldMappings[showConfig] || {};
+    const [tempMapping, setTempMapping] = useState(currentMapping);
+
+    const fieldLabels = {
+      combustivel: [
+        { key: 'id_field', label: 'Campo ID/Cartão' },
+        { key: 'data_field', label: 'Campo Data' },
+        { key: 'valor_field', label: 'Campo Valor' },
+        { key: 'litros_field', label: 'Campo Litros' },
+        { key: 'posto_field', label: 'Campo Posto' },
+        { key: 'matricula_field', label: 'Campo Matrícula' }
+      ],
+      eletrico: [
+        { key: 'id_field', label: 'Campo ID' },
+        { key: 'data_field', label: 'Campo Data' },
+        { key: 'valor_field', label: 'Campo Valor' },
+        { key: 'kwh_field', label: 'Campo kWh' },
+        { key: 'operador_field', label: 'Campo Operador' },
+        { key: 'matricula_field', label: 'Campo Matrícula' }
+      ],
+      gps: [
+        { key: 'id_field', label: 'Campo ID Dispositivo' },
+        { key: 'data_field', label: 'Campo Data/Hora' },
+        { key: 'km_field', label: 'Campo KM Total' },
+        { key: 'matricula_field', label: 'Campo Matrícula' }
+      ]
+    };
+
+    const fields = fieldLabels[showConfig] || [];
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+        <Card className="w-full max-w-md mx-4">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Configurar Campos - {showConfig}
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Mapeie os nomes das colunas do seu ficheiro
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {fields.map(({ key, label }) => (
+              <div key={key} className="grid grid-cols-2 gap-2 items-center">
+                <Label className="text-xs">{label}</Label>
+                <Input
+                  className="h-7 text-xs"
+                  value={tempMapping[key] || ''}
+                  onChange={(e) => setTempMapping(prev => ({ ...prev, [key]: e.target.value }))}
+                  placeholder="Nome da coluna"
+                />
+              </div>
+            ))}
+            <div className="flex gap-2 justify-end pt-2">
+              <Button size="sm" variant="outline" onClick={() => setShowConfig(null)}>Cancelar</Button>
+              <Button size="sm" onClick={() => saveFieldMapping(showConfig, tempMapping)}>
+                <Save className="w-3 h-3 mr-1" />
+                Guardar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+    );
+  };
 
-      {/* Period Selector */}
-      <Card>
-        <CardContent className="py-4">
-          <div className="flex items-center justify-center gap-4">
-            <Button variant="outline" size="icon" onClick={handlePreviousWeek}>
-              <ChevronLeft className="w-4 h-4" />
+  return (
+    <Layout user={user} onLogout={onLogout}>
+      <div className="p-4 space-y-4">
+        {/* Header com botão voltar */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => navigate(-1)} className="h-8">
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Voltar
             </Button>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <Label className="text-sm">Semana:</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  max="53"
-                  value={semana}
-                  onChange={(e) => setSemana(parseInt(e.target.value) || 1)}
-                  className="w-20 text-center"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-sm">Ano:</Label>
-                <Input
-                  type="number"
-                  min="2020"
-                  max="2030"
-                  value={ano}
-                  onChange={(e) => setAno(parseInt(e.target.value) || new Date().getFullYear())}
-                  className="w-24 text-center"
-                />
-              </div>
+            <div>
+              <h1 className="text-lg font-bold text-slate-800">Importar Ficheiros</h1>
+              <p className="text-xs text-slate-500">Carregar dados de plataformas</p>
             </div>
-            <Button variant="outline" size="icon" onClick={handleNextWeek}>
-              <ChevronRight className="w-4 h-4" />
-            </Button>
           </div>
-          <p className="text-center text-slate-500 mt-2 text-sm">
-            Os ficheiros serão associados à <strong>Semana {semana}/{ano}</strong>
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="upload" className="flex items-center gap-2">
-            <Upload className="w-4 h-4" />
-            Importar Ficheiros
-          </TabsTrigger>
-          <TabsTrigger value="historico" className="flex items-center gap-2">
-            <History className="w-4 h-4" />
-            Histórico
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Upload Tab */}
-        <TabsContent value="upload" className="space-y-4">
-          {/* Upload all button */}
-          {Object.values(ficheiros).some(f => f !== null) && (
-            <div className="flex justify-end">
-              <Button onClick={handleUploadAll} className="gap-2">
-                <Upload className="w-4 h-4" />
-                Importar Todos os Selecionados
+          
+          {/* Seletor de semana */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 bg-white rounded border px-2 py-1">
+              <Button variant="ghost" size="sm" onClick={handlePreviousWeek} className="h-6 w-6 p-0">
+                <ChevronLeft className="w-3 h-3" />
+              </Button>
+              <span className="text-xs font-medium min-w-[80px] text-center">S{semana}/{ano}</span>
+              <Button variant="ghost" size="sm" onClick={handleNextWeek} className="h-6 w-6 p-0">
+                <ChevronRight className="w-3 h-3" />
               </Button>
             </div>
-          )}
-
-          {/* Platform cards - Grid 2 columns */}
-          <div className="grid md:grid-cols-2 gap-4">
-            {renderUploadCard(
-              'uber',
-              'Uber',
-              'Ficheiro CSV de ganhos exportado da Uber',
-              '.csv'
-            )}
-            {renderUploadCard(
-              'bolt',
-              'Bolt',
-              'Ficheiro CSV de ganhos exportado da Bolt',
-              '.csv'
-            )}
-            {renderUploadCard(
-              'viaverde',
-              'Via Verde',
-              'Ficheiro Excel de portagens e parques',
-              '.xlsx,.xls'
-            )}
-            {renderUploadCard(
-              'combustivel',
-              'Combustível',
-              'Ficheiro Excel de abastecimentos (Galp, BP, etc.)',
-              '.xlsx,.xls'
-            )}
-            {renderUploadCard(
-              'eletrico',
-              'Carregamentos Elétricos',
-              'Ficheiro CSV de carregamentos (Prio, Mobi-e, etc.)',
-              '.csv,.xlsx'
-            )}
+            <Button size="sm" onClick={handleUploadAll} className="h-8 text-xs">
+              <Upload className="w-3 h-3 mr-1" />
+              Importar Todos
+            </Button>
           </div>
+        </div>
 
-          {/* Info box */}
-          <Card className="bg-blue-50 border-blue-200">
-            <CardContent className="py-4">
-              <div className="flex gap-3">
-                <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-blue-800">
-                  <p className="font-medium mb-1">Dicas de importação:</p>
-                  <ul className="list-disc list-inside space-y-1 text-blue-700">
-                    <li>Os motoristas são associados automaticamente pelo nome ou email</li>
-                    <li>O aluguer do veículo é obtido automaticamente do veículo atribuído</li>
-                    <li>A Via Verde usa apenas transações de "portagens" e "parques"</li>
-                    <li>Verifique se os ficheiros estão no formato correto antes de importar</li>
-                  </ul>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="h-8">
+            <TabsTrigger value="upload" className="text-xs h-6">
+              <Upload className="w-3 h-3 mr-1" />
+              Upload
+            </TabsTrigger>
+            <TabsTrigger value="historico" className="text-xs h-6">
+              <History className="w-3 h-3 mr-1" />
+              Histórico
+            </TabsTrigger>
+            <TabsTrigger value="config" className="text-xs h-6">
+              <Settings className="w-3 h-3 mr-1" />
+              Configurações
+            </TabsTrigger>
+          </TabsList>
 
-        {/* History Tab */}
-        <TabsContent value="historico">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-lg">Histórico de Importações</CardTitle>
-              <Button variant="outline" size="sm" onClick={fetchHistorico} disabled={loadingHistorico}>
-                <RefreshCw className={`w-4 h-4 mr-2 ${loadingHistorico ? 'animate-spin' : ''}`} />
-                Atualizar
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {historico.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
-                  <History className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Nenhuma importação encontrada</p>
+          <TabsContent value="upload" className="mt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {renderUploadCard('uber', 'Uber', 'Relatório de ganhos Uber', '.csv,.xlsx')}
+              {renderUploadCard('bolt', 'Bolt', 'Relatório de ganhos Bolt', '.csv,.xlsx')}
+              {renderUploadCard('viaverde', 'Via Verde', 'Extrato de portagens', '.csv,.xlsx')}
+              {renderUploadCard('combustivel', 'Combustível', 'Abastecimentos de combustível', '.csv,.xlsx', true)}
+              {renderUploadCard('eletrico', 'Carregamentos', 'Carregamentos elétricos', '.csv,.xlsx', true)}
+              {renderUploadCard('gps', 'GPS / KM', 'Dados de quilometragem', '.csv,.xlsx', true)}
+              
+              {/* Custom imports */}
+              {customImports.map(custom => (
+                <Card key={custom.id} className={`transition-all ${ficheiros[`custom_${custom.id}`] ? 'ring-2 ring-blue-500' : ''}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <PlatformIcons.custom />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-medium text-sm">{custom.name}</h3>
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            className="h-6 w-6 p-0 text-red-500"
+                            onClick={() => removeCustomImport(custom.id)}
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                        <p className="text-xs text-slate-500 mb-2">Import personalizado</p>
+                        <div className="relative">
+                          <input
+                            type="file"
+                            accept=".csv,.xlsx"
+                            onChange={(e) => handleFileChange(`custom_${custom.id}`, e.target.files[0])}
+                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                          />
+                          <div className="border-2 border-dashed rounded-lg p-2 text-center border-slate-200 hover:border-slate-300">
+                            <div className="flex items-center justify-center gap-1 text-slate-400">
+                              <Upload className="w-4 h-4" />
+                              <span className="text-xs">Arrastar ou clicar</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+
+              {/* Botão adicionar import personalizado */}
+              <Card className="border-dashed cursor-pointer hover:bg-slate-50" onClick={() => setShowAddCustom(true)}>
+                <CardContent className="p-4 flex items-center justify-center h-full min-h-[120px]">
+                  <div className="text-center text-slate-400">
+                    <Plus className="w-6 h-6 mx-auto mb-1" />
+                    <span className="text-xs">Adicionar Import</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="historico" className="mt-4">
+            <Card>
+              <CardHeader className="py-3 px-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm">Últimas Importações</CardTitle>
+                  <Button size="sm" variant="outline" onClick={fetchHistorico} className="h-7">
+                    <RefreshCw className={`w-3 h-3 mr-1 ${loadingHistorico ? 'animate-spin' : ''}`} />
+                    Atualizar
+                  </Button>
                 </div>
-              ) : (
+              </CardHeader>
+              <CardContent className="p-0">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Plataforma</TableHead>
-                      <TableHead>Ficheiro</TableHead>
-                      <TableHead>Semana</TableHead>
-                      <TableHead>Registos</TableHead>
-                      <TableHead>Data</TableHead>
-                      <TableHead>Status</TableHead>
+                      <TableHead className="text-xs">Plataforma</TableHead>
+                      <TableHead className="text-xs">Semana</TableHead>
+                      <TableHead className="text-xs">Ficheiro</TableHead>
+                      <TableHead className="text-xs">Registos</TableHead>
+                      <TableHead className="text-xs">Data</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {historico.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>
-                          <Badge variant="outline" className="capitalize">
-                            {item.plataforma}
-                          </Badge>
+                    {historico.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="text-xs">
+                          <Badge variant="outline" className="text-xs">{item.plataforma}</Badge>
                         </TableCell>
-                        <TableCell className="max-w-[200px] truncate">
-                          {item.nome_ficheiro}
-                        </TableCell>
-                        <TableCell>{item.semana}/{item.ano}</TableCell>
-                        <TableCell>
-                          <span className="text-green-600">{item.registos_sucesso || 0}</span>
-                          {item.registos_erro > 0 && (
-                            <span className="text-red-600 ml-1">/ {item.registos_erro}</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-slate-500">
-                          {new Date(item.data_importacao).toLocaleDateString('pt-PT')}
-                        </TableCell>
-                        <TableCell>
-                          {item.status === 'concluido' ? (
-                            <Badge className="bg-green-500">Concluído</Badge>
-                          ) : item.status === 'erro' ? (
-                            <Badge className="bg-red-500">Erro</Badge>
-                          ) : (
-                            <Badge className="bg-yellow-500">Pendente</Badge>
-                          )}
-                        </TableCell>
+                        <TableCell className="text-xs">S{item.semana}/{item.ano}</TableCell>
+                        <TableCell className="text-xs truncate max-w-[150px]">{item.nome_ficheiro}</TableCell>
+                        <TableCell className="text-xs">{item.registos_importados || '-'}</TableCell>
+                        <TableCell className="text-xs">{new Date(item.data_upload).toLocaleDateString('pt-PT')}</TableCell>
                       </TableRow>
                     ))}
+                    {historico.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-slate-500 text-xs py-8">
+                          Nenhuma importação encontrada
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="config" className="mt-4">
+            <div className="grid gap-4">
+              <Card>
+                <CardHeader className="py-3 px-4">
+                  <CardTitle className="text-sm">Configurações de Importação</CardTitle>
+                  <CardDescription className="text-xs">
+                    Configure os nomes dos campos para cada tipo de importação
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Combustível Config */}
+                  <div className="border rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Fuel className="w-4 h-4 text-orange-500" />
+                        <span className="font-medium text-sm">Combustível</span>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => setShowConfig('combustivel')} className="h-6 text-xs">
+                        <Settings className="w-3 h-3 mr-1" />
+                        Configurar Campos
+                      </Button>
+                    </div>
+                    <div className="text-xs text-slate-500 grid grid-cols-3 gap-2">
+                      {Object.entries(fieldMappings.combustivel || {}).map(([key, value]) => (
+                        <div key={key}><span className="text-slate-400">{key}:</span> {value}</div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Elétrico Config */}
+                  <div className="border rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-blue-500" />
+                        <span className="font-medium text-sm">Carregamentos Elétricos</span>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => setShowConfig('eletrico')} className="h-6 text-xs">
+                        <Settings className="w-3 h-3 mr-1" />
+                        Configurar Campos
+                      </Button>
+                    </div>
+                    <div className="text-xs text-slate-500 grid grid-cols-3 gap-2">
+                      {Object.entries(fieldMappings.eletrico || {}).map(([key, value]) => (
+                        <div key={key}><span className="text-slate-400">{key}:</span> {value}</div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* GPS Config */}
+                  <div className="border rounded-lg p-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-4 h-4 text-purple-500" />
+                        <span className="font-medium text-sm">GPS / Quilometragem</span>
+                      </div>
+                      <Button size="sm" variant="outline" onClick={() => setShowConfig('gps')} className="h-6 text-xs">
+                        <Settings className="w-3 h-3 mr-1" />
+                        Configurar Campos
+                      </Button>
+                    </div>
+                    <div className="text-xs text-slate-500 grid grid-cols-3 gap-2">
+                      {Object.entries(fieldMappings.gps || {}).map(([key, value]) => (
+                        <div key={key}><span className="text-slate-400">{key}:</span> {value}</div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Modal de configuração */}
+        {showConfig && (
+          <ConfigModal 
+            plataforma={showConfig}
+            mapping={fieldMappings[showConfig] || {}}
+            onSave={(mapping) => saveFieldMapping(showConfig, mapping)}
+            onClose={() => setShowConfig(null)}
+          />
+        )}
+
+        {/* Modal adicionar import personalizado */}
+        {showAddCustom && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="w-full max-w-sm mx-4">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Novo Import Personalizado</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div>
+                  <Label className="text-xs">Nome</Label>
+                  <Input
+                    className="h-8 text-sm"
+                    value={newCustomImport.name}
+                    onChange={(e) => setNewCustomImport(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Ex: Outro Combustível"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Endpoint (opcional)</Label>
+                  <Input
+                    className="h-8 text-sm"
+                    value={newCustomImport.endpoint}
+                    onChange={(e) => setNewCustomImport(prev => ({ ...prev, endpoint: e.target.value }))}
+                    placeholder="Ex: combustivel2"
+                  />
+                </div>
+                <div className="flex gap-2 justify-end pt-2">
+                  <Button size="sm" variant="outline" onClick={() => setShowAddCustom(false)}>Cancelar</Button>
+                  <Button size="sm" onClick={addCustomImport}>
+                    <Plus className="w-3 h-3 mr-1" />
+                    Adicionar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+      </div>
+    </Layout>
+  );
+};
+
+// Componente Modal de Configuração
+const ConfigModal = ({ plataforma, mapping, onSave, onClose }) => {
+  const [tempMapping, setTempMapping] = useState(mapping);
+
+  const fieldLabels = {
+    combustivel: [
+      { key: 'id_field', label: 'Campo ID/Cartão' },
+      { key: 'data_field', label: 'Campo Data' },
+      { key: 'valor_field', label: 'Campo Valor' },
+      { key: 'litros_field', label: 'Campo Litros' },
+      { key: 'posto_field', label: 'Campo Posto' },
+      { key: 'matricula_field', label: 'Campo Matrícula' }
+    ],
+    eletrico: [
+      { key: 'id_field', label: 'Campo ID' },
+      { key: 'data_field', label: 'Campo Data' },
+      { key: 'valor_field', label: 'Campo Valor' },
+      { key: 'kwh_field', label: 'Campo kWh' },
+      { key: 'operador_field', label: 'Campo Operador' },
+      { key: 'matricula_field', label: 'Campo Matrícula' }
+    ],
+    gps: [
+      { key: 'id_field', label: 'Campo ID Dispositivo' },
+      { key: 'data_field', label: 'Campo Data/Hora' },
+      { key: 'km_field', label: 'Campo KM Total' },
+      { key: 'matricula_field', label: 'Campo Matrícula' }
+    ]
+  };
+
+  const fields = fieldLabels[plataforma] || [];
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <Card className="w-full max-w-md mx-4">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Settings className="w-4 h-4" />
+            Configurar Campos - {plataforma}
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Mapeie os nomes das colunas do seu ficheiro CSV/Excel
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {fields.map(({ key, label }) => (
+            <div key={key} className="grid grid-cols-2 gap-2 items-center">
+              <Label className="text-xs">{label}</Label>
+              <Input
+                className="h-7 text-xs"
+                value={tempMapping[key] || ''}
+                onChange={(e) => setTempMapping(prev => ({ ...prev, [key]: e.target.value }))}
+                placeholder="Nome da coluna"
+              />
+            </div>
+          ))}
+          <div className="flex gap-2 justify-end pt-2">
+            <Button size="sm" variant="outline" onClick={onClose}>Cancelar</Button>
+            <Button size="sm" onClick={() => onSave(tempMapping)}>
+              <Save className="w-3 h-3 mr-1" />
+              Guardar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
