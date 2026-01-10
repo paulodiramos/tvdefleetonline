@@ -17723,7 +17723,7 @@ async def listar_ganhos_bolt(
         if periodo_semana:
             query['periodo_semana'] = periodo_semana
         
-        ganhos = await db.ganhos_bolt.find(query).sort('data_importacao', -1).to_list(length=None)
+        ganhos = await db.ganhos_bolt.find(query, {"_id": 0}).sort('data_importacao', -1).to_list(length=None)
         return ganhos
         
     except Exception as e:
@@ -17748,7 +17748,7 @@ async def listar_ganhos_uber(
         if periodo_fim:
             query['periodo_fim'] = periodo_fim
         
-        ganhos = await db.ganhos_uber.find(query).sort('data_importacao', -1).to_list(length=None)
+        ganhos = await db.ganhos_uber.find(query, {"_id": 0}).sort('data_importacao', -1).to_list(length=None)
         return ganhos
         
     except Exception as e:
