@@ -1067,6 +1067,36 @@ async def upload_foto_motorista(
     }
 
 
+
+@router.get("/motoristas/{motorista_id}/foto")
+async def get_foto_motorista(
+    motorista_id: str
+):
+    """Obter foto de perfil do motorista (endpoint público para exibição)"""
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0, "foto_url": 1})
+    
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    foto_url = motorista.get("foto_url")
+    if not foto_url:
+        raise HTTPException(status_code=404, detail="Motorista não tem foto de perfil")
+    
+    # Converter para caminho absoluto
+    file_path = ROOT_DIR / foto_url
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Ficheiro da foto não encontrado")
+    
+    media_type, _ = mimetypes.guess_type(str(file_path))
+    
+    return FileResponse(
+        path=file_path,
+        media_type=media_type or "image/jpeg",
+        filename=file_path.name
+    )
+
+
 @router.delete("/motoristas/{motorista_id}/foto")
 async def delete_foto_motorista(
     motorista_id: str,
