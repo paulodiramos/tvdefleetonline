@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { 
   Car, User, Shield, ClipboardCheck, Wrench, Calendar, 
-  TrendingUp, History, Edit, Save, X, Plus, FileText, Upload, Download, Trash2, AlertCircle, Bell, CheckCircle, CreditCard 
+  TrendingUp, History, Edit, Save, X, Plus, FileText, Upload, Download, Trash2, AlertCircle, Bell, CheckCircle, CreditCard, MapPin 
 } from 'lucide-react';
 
 // Helper function to parse DD/MM/YYYY dates
