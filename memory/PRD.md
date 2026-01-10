@@ -17,6 +17,39 @@ O utilizador solicitou refinamentos ao sistema de relatórios:
 
 ### Janeiro 2026
 
+#### ✅ Refatoração do Backend - Modularização de Rotas (10/01/2026)
+**Status: COMPLETO - Fase 1**
+
+**Novos ficheiros de rotas criados:**
+- `/app/backend/routes/parceiros.py` - CRUD completo para parceiros, alertas, certidão permanente
+- `/app/backend/routes/planos.py` - Gestão de planos, módulos, promoções, subscrições
+- `/app/backend/routes/pagamentos.py` - CRUD de pagamentos, upload de comprovativos
+- `/app/backend/routes/reports.py` - Relatórios de dashboard, ROI, evolução semanal
+- `/app/backend/routes/gestores.py` - Gestão de gestores e atribuição de parceiros
+
+**Endpoints migrados:**
+- `GET/POST /api/parceiros` - Lista e cria parceiros
+- `GET/PUT/DELETE /api/parceiros/{id}` - CRUD individual
+- `GET /api/parceiros/{id}/alertas` - Alertas do parceiro
+- `GET /api/parceiros/{id}/estatisticas` - Estatísticas
+- `GET/PUT/POST /api/parceiros/{id}/certidao-permanente` - Certidão
+- `GET/POST/PUT/DELETE /api/planos` - Gestão de planos
+- `GET/POST /api/admin/planos` - Admin de planos
+- `POST /api/pagamentos` - Criar pagamento
+- `GET /api/pagamentos/semana-atual` - Pagamentos da semana
+- `PUT /api/pagamentos/{id}/marcar-pago` - Marcar como pago
+- `GET /api/reports/dashboard` - Dashboard principal
+- `GET /api/reports/roi/{vehicle_id}` - ROI por veículo
+- `GET /api/reports/parceiro/semanal` - Relatório semanal
+- `GET /api/gestores` - Lista gestores
+- `PUT /api/gestores/{id}/atribuir-parceiros` - Atribuir parceiros
+
+**Benefícios:**
+- Código mais organizado e manutenível
+- Cada domínio em ficheiro separado
+- Facilita testes unitários
+- Reduz risco de conflitos
+
 #### ✅ Sistema de Extras/Dívidas do Motorista (NEW - 10/01/2026)
 **Status: COMPLETO E TESTADO (29/29 testes passaram)**
 
