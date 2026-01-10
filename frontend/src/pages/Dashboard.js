@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { TrendingUp, TrendingDown, AlertCircle, Calendar, Car, Users, DollarSign, Wrench, AlertTriangle, CheckCircle, XCircle, Eye, EyeOff, X, Shield, ClipboardCheck, FileText, Settings, Upload, Key, Clock } from 'lucide-react';
 import { toast } from 'sonner';
+import ResumoSemanalCard from '@/components/ResumoSemanalCard';
 
 // StatCard component moved outside to avoid re-render issues
 const StatCard = ({ title, value, icon: Icon, trend, trendValue, color }) => (
