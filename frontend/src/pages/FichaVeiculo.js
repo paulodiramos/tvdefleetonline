@@ -3044,6 +3044,16 @@ const FichaVeiculo = ({ user, onLogout }) => {
                                 <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded">
                                   {man.data}
                                 </span>
+                                {man.responsavel === 'motorista' && (
+                                  <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded">
+                                    Motorista
+                                  </span>
+                                )}
+                                {man.responsavel === 'parceiro' && (
+                                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">
+                                    Parceiro
+                                  </span>
+                                )}
                               </div>
                               {man.descricao && (
                                 <p className="text-sm text-slate-600 mb-2">{man.descricao}</p>
@@ -3063,6 +3073,12 @@ const FichaVeiculo = ({ user, onLogout }) => {
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                                     </svg>
                                     {man.fornecedor}
+                                  </span>
+                                )}
+                                {man.atribuir_motorista && man.motorista_nome && (
+                                  <span className="flex items-center gap-1 text-orange-600">
+                                    <User className="w-3 h-3" />
+                                    Deduzido: {man.motorista_nome}
                                   </span>
                                 )}
                               </div>
