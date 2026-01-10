@@ -1196,9 +1196,21 @@ async def generate_motorista_pdf(
     motorista_id: str,
     semana: int,
     ano: int,
+    mostrar_matricula: bool = True,
+    mostrar_via_verde: bool = False,
+    mostrar_abastecimentos: bool = False,
+    mostrar_carregamentos: bool = False,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Gerar PDF do relatório semanal individual de um motorista"""
+    """
+    Gerar PDF do relatório semanal individual de um motorista.
+    
+    Query params:
+    - mostrar_matricula: Exibir matrícula do veículo no cabeçalho
+    - mostrar_via_verde: Listar detalhes das transações Via Verde
+    - mostrar_abastecimentos: Listar detalhes dos abastecimentos de combustível
+    - mostrar_carregamentos: Listar detalhes dos carregamentos elétricos
+    """
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
@@ -1207,8 +1219,8 @@ async def generate_motorista_pdf(
         from reportlab.lib.pagesizes import A4
         from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
         from reportlab.lib.units import mm
-        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-        from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
+        from reportlab.lib.enums import TA_CENTER, TA_RIGHT, TA_LEFT
     except ImportError:
         raise HTTPException(status_code=500, detail="ReportLab not installed")
     
@@ -1216,6 +1228,14 @@ async def generate_motorista_pdf(
     motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Buscar veículo atribuído
+    veiculo = None
+    matricula = ""
+    if motorista.get("veiculo_atribuido"):
+        veiculo = await db.vehicles.find_one({"id": motorista.get("veiculo_atribuido")}, {"_id": 0})
+        if veiculo:
+            matricula = veiculo.get("matricula", "")
     
     # Calcular datas da semana
     first_day_of_year = datetime(ano, 1, 1)
@@ -1286,20 +1306,27 @@ async def generate_motorista_pdf(
     
     # Gerar PDF
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20*mm, leftMargin=20*mm, topMargin=20*mm, bottomMargin=20*mm)
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=15*mm, leftMargin=15*mm, topMargin=15*mm, bottomMargin=15*mm)
     
     styles = getSampleStyleSheet()
     title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=16, alignment=TA_CENTER)
     subtitle_style = ParagraphStyle('Subtitle', parent=styles['Normal'], fontSize=10, alignment=TA_CENTER, textColor=colors.grey)
+    section_style = ParagraphStyle('Section', parent=styles['Heading2'], fontSize=11, textColor=colors.HexColor('#1e3a5f'))
     
     elements = []
     
+    # Cabeçalho
     elements.append(Paragraph(f"Relatório Semanal", title_style))
     elements.append(Paragraph(f"{motorista.get('name', 'Motorista')}", subtitle_style))
-    elements.append(Paragraph(f"Semana {semana}/{ano} ({week_start.strftime('%d/%m/%Y')} a {week_end.strftime('%d/%m/%Y')})", subtitle_style))
-    elements.append(Spacer(1, 15*mm))
     
-    # Tabela de dados
+    # Mostrar matrícula se configurado
+    if mostrar_matricula and matricula:
+        elements.append(Paragraph(f"Veículo: {matricula}", subtitle_style))
+    
+    elements.append(Paragraph(f"Semana {semana}/{ano} ({week_start.strftime('%d/%m/%Y')} a {week_end.strftime('%d/%m/%Y')})", subtitle_style))
+    elements.append(Spacer(1, 10*mm))
+    
+    # Tabela de resumo
     data_table = [
         ["Descrição", "Valor"],
         ["Ganhos Uber", f"€{ganhos_uber:.2f}"],
