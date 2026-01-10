@@ -145,6 +145,17 @@ const FichaVeiculo = ({ user, onLogout }) => {
     valor_acumulado: '',
     valor_falta_cobrar: '',
     custo_slot: '',
+    // Financiamento/Prestações do Veículo
+    tem_financiamento: false,
+    valor_aquisicao_veiculo: '',
+    valor_entrada: '',
+    valor_prestacao: '',
+    numero_prestacoes: '',
+    prestacoes_pagas: '',
+    data_inicio_financiamento: '',
+    data_fim_financiamento: '',
+    entidade_financiadora: '',
+    taxa_juro: '',
     categorias_uber: {
       green: false,
       comfort: false,
