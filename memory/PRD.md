@@ -1,5 +1,19 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-11 - Session 6c - Bug Fixes)
+### Session Updates:
+- **BUG FIX**: Motorista desativado aparecia nos relatórios semanais
+  - Adicionado filtro `status_motorista=ativo` na query de motoristas em `routes/relatorios.py`
+  - Agora só motoristas com status "ativo" (ou sem status definido) aparecem no resumo
+- **BUG FIX**: Não era possível eliminar dados Via Verde
+  - A query de delete usava apenas `motorista_id`, mas os dados Via Verde estão ligados por `via_verde_id`
+  - Corrigido para também buscar por `via_verde_id`, `obu` e `matricula` do veículo
+- **BUG FIX**: Importação Bolt CSV não guardava o período (semana/ano)
+  - Adicionados parâmetros `periodo_inicio` e `periodo_fim` ao endpoint `/api/import/bolt/ganhos`
+  - O período é agora calculado automaticamente a partir da data de início
+- **TESTED**: Delete Via Verde eliminou 5 registos para Bruno Coelho S1/2026
+- **TESTED**: Importação Bolt CSV guarda período correctamente (2026W2)
+
 ## Changelog (2026-01-11 - Session 6 - Foto de Perfil & Refatoração)
 ### Session Updates:
 - **IMPLEMENTED**: Funcionalidade de Foto de Perfil do Motorista (P1)
