@@ -1,48 +1,90 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
-import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Download, RefreshCw, TrendingUp, TrendingDown, Wallet, Car, Users, Send, MessageCircle, Mail, ExternalLink, Loader2 } from 'lucide-react';
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign, 
+  ChevronLeft,
+  ChevronRight,
+  Loader2,
+  Users,
+  BarChart3,
+  Car,
+  Receipt,
+  Download,
+  Trash2,
+  Edit,
+  Save,
+  X,
+  AlertTriangle,
+  FileText
+} from 'lucide-react';
+import { toast } from 'sonner';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API = process.env.REACT_APP_BACKEND_URL;
 
-const ResumoSemanalParceiro = ({ user }) => {
-  const [loading, setLoading] = useState(false);
+const ResumoSemanalParceiro = () => {
+  const [loading, setLoading] = useState(true);
   const [resumo, setResumo] = useState(null);
-  const [semana, setSemana] = useState(getCurrentWeek());
-  const [ano, setAno] = useState(new Date().getFullYear());
+  const [historico, setHistorico] = useState([]);
+  const [semana, setSemana] = useState(null);
+  const [ano, setAno] = useState(null);
+  const [editingMotorista, setEditingMotorista] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
-  function getCurrentWeek() {
+  useEffect(() => {
     const now = new Date();
-    const onejan = new Date(now.getFullYear(), 0, 1);
-    return Math.ceil((((now - onejan) / 86400000) + onejan.getDay() + 1) / 7);
-  }
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const days = Math.floor((now - startOfYear) / (24 * 60 * 60 * 1000));
+    const currentWeek = Math.ceil((days + startOfYear.getDay() + 1) / 7);
+    
+    setSemana(currentWeek);
+    setAno(now.getFullYear());
+  }, []);
+
+  useEffect(() => {
+    if (semana && ano) {
+      fetchResumo();
+      fetchHistorico();
+    }
+  }, [semana, ano]);
 
   const fetchResumo = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${API_URL}/api/relatorios/parceiro/resumo-semanal?semana=${semana}&ano=${ano}`,
+        `${API}/api/relatorios/parceiro/resumo-semanal?semana=${semana}&ano=${ano}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setResumo(response.data);
     } catch (error) {
-      console.error('Erro ao carregar resumo:', error);
+      console.error('Erro ao carregar resumo semanal:', error);
       toast.error('Erro ao carregar resumo semanal');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchResumo();
-  }, [semana, ano]);
+  const fetchHistorico = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API}/api/relatorios/parceiro/historico-semanal?semanas=6&semana_atual=${semana}&ano_atual=${ano}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setHistorico(response.data.historico || []);
+    } catch (error) {
+      console.error('Erro ao carregar histórico:', error);
+      setHistorico([]);
+    }
+  };
 
   const handlePreviousWeek = () => {
     if (semana > 1) {
@@ -62,331 +104,590 @@ const ResumoSemanalParceiro = ({ user }) => {
     }
   };
 
-  const [sendingWhatsapp, setSendingWhatsapp] = useState({});
-  const [sendingEmail, setSendingEmail] = useState({});
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-PT', {
+      style: 'currency',
+      currency: 'EUR'
+    }).format(value || 0);
+  };
 
-  const handleEnviarWhatsApp = async (motoristaId, motoristaNome) => {
-    setSendingWhatsapp(prev => ({ ...prev, [motoristaId]: true }));
+  const handleEditMotorista = (motorista) => {
+    setEditingMotorista(motorista.motorista_id);
+    setEditForm({
+      ganhos_uber: motorista.ganhos_uber || 0,
+      ganhos_bolt: motorista.ganhos_bolt || 0,
+      via_verde: motorista.via_verde || 0,
+      combustivel: motorista.combustivel || 0,
+      eletrico: motorista.eletrico || 0,
+      aluguer: motorista.aluguer || 0,
+      extras: motorista.extras || 0
+    });
+  };
+
+  const handleSaveEdit = async (motoristaId) => {
     try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}`,
+        {
+          semana,
+          ano,
+          ...editForm
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Valores atualizados com sucesso!');
+      setEditingMotorista(null);
+      fetchResumo();
+    } catch (error) {
+      console.error('Erro ao atualizar valores:', error);
+      toast.error('Erro ao atualizar valores');
+    }
+  };
+
+  const handleDeleteMotoristaData = async (motoristaId, motoristaName) => {
+    if (!window.confirm(`Tem a certeza que deseja eliminar todos os dados da semana ${semana}/${ano} para ${motoristaName}?`)) {
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(
+        `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}?semana=${semana}&ano=${ano}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Dados de ${motoristaName} eliminados com sucesso!`);
+      fetchResumo();
+    } catch (error) {
+      console.error('Erro ao eliminar dados:', error);
+      toast.error('Erro ao eliminar dados');
+    }
+  };
+
+  const handleDeleteAllWeekData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(
+        `${API}/api/relatorios/parceiro/resumo-semanal/all?semana=${semana}&ano=${ano}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Todos os dados da semana ${semana}/${ano} foram eliminados!`);
+      setShowDeleteAllConfirm(false);
+      fetchResumo();
+    } catch (error) {
+      console.error('Erro ao eliminar dados:', error);
+      toast.error('Erro ao eliminar dados da semana');
+    }
+  };
+
+  const handleDownloadPdf = async () => {
+    try {
+      setDownloadingPdf(true);
       const token = localStorage.getItem('token');
       const response = await axios.get(
-        `${API_URL}/api/relatorios/gerar-link-whatsapp/${motoristaId}?semana=${semana}&ano=${ano}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${API}/api/relatorios/parceiro/resumo-semanal/pdf?semana=${semana}&ano=${ano}`,
+        { 
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: 'blob'
+        }
       );
       
-      if (response.data.whatsapp_link) {
-        window.open(response.data.whatsapp_link, '_blank');
-        toast.success(`Link WhatsApp gerado para ${motoristaNome}`);
-      }
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `resumo_semanal_S${semana}_${ano}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('PDF descarregado com sucesso!');
     } catch (error) {
-      console.error('Erro ao gerar link WhatsApp:', error);
-      toast.error(error.response?.data?.detail || 'Erro ao gerar link WhatsApp');
+      console.error('Erro ao descarregar PDF:', error);
+      toast.error('Erro ao descarregar PDF');
     } finally {
-      setSendingWhatsapp(prev => ({ ...prev, [motoristaId]: false }));
+      setDownloadingPdf(false);
     }
   };
 
-  const handleEnviarEmail = async (motoristaId, motoristaNome) => {
-    setSendingEmail(prev => ({ ...prev, [motoristaId]: true }));
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API_URL}/api/relatorios/enviar-relatorio/${motoristaId}?semana=${semana}&ano=${ano}&enviar_email=true&enviar_whatsapp=false`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      if (response.data.email?.enviado) {
-        toast.success(`Email enviado para ${motoristaNome}`);
-      } else {
-        toast.error(response.data.email?.mensagem || 'Erro ao enviar email');
-      }
-    } catch (error) {
-      console.error('Erro ao enviar email:', error);
-      toast.error(error.response?.data?.detail || 'Erro ao enviar email');
-    } finally {
-      setSendingEmail(prev => ({ ...prev, [motoristaId]: false }));
-    }
-  };
+  if (loading) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardContent className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
-  const handleEnviarTodos = async (tipo) => {
-    const enviarEmail = tipo === 'email' || tipo === 'ambos';
-    const enviarWhatsapp = tipo === 'whatsapp' || tipo === 'ambos';
-    
-    toast.info(`A enviar relatórios...`);
-    
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API_URL}/api/relatorios/enviar-relatorios-em-massa?semana=${semana}&ano=${ano}&enviar_email=${enviarEmail}&enviar_whatsapp=${enviarWhatsapp}`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      toast.success(`Enviados: ${response.data.emails_enviados} emails, ${response.data.whatsapp_links_gerados} WhatsApp`);
-    } catch (error) {
-      console.error('Erro ao enviar relatórios:', error);
-      toast.error('Erro ao enviar relatórios');
-    }
-  };
+  const totais = resumo?.totais || {};
+  const motoristas = resumo?.motoristas || [];
+  
+  // Receitas do Parceiro
+  const totalAluguer = totais.total_aluguer || 0;
+  const totalExtras = totais.total_extras || 0;
+  const totalVendas = totais.total_vendas || 0;
+  const totalReceitas = totais.total_receitas_parceiro || (totalAluguer + totalExtras + totalVendas);
+  
+  // Despesas Operacionais
+  const totalDespesas = totais.total_despesas_operacionais || 0;
+  
+  // Líquido do Parceiro
+  const liquidoParceiro = totais.total_liquido_parceiro || (totalReceitas - totalDespesas);
+  const isPositive = liquidoParceiro >= 0;
 
-  const getStatusBadge = (status) => {
-    switch (status) {
-      case 'pago':
-        return <Badge className="bg-green-500">Pago</Badge>;
-      case 'aprovado':
-        return <Badge className="bg-blue-500">Aprovado</Badge>;
-      case 'pendente':
-        return <Badge className="bg-yellow-500">Pendente</Badge>;
-      case 'rascunho':
-        return <Badge className="bg-gray-500">Rascunho</Badge>;
-      default:
-        return <Badge className="bg-gray-300">-</Badge>;
-    }
-  };
+  // Max value for chart
+  const maxValue = Math.max(
+    ...historico.map(h => Math.max(h.ganhos || 0, h.despesas || 0, Math.abs(h.liquido || 0))),
+    1
+  );
 
   return (
     <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header com navegação e ações */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Resumo Semanal do Parceiro</h1>
-          <p className="text-slate-500">Vista consolidada de todos os motoristas</p>
+          <p className="text-slate-500">Gestão de ganhos e despesas semanais</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => handleEnviarTodos('email')} className="text-blue-600 border-blue-200 hover:bg-blue-50">
-            <Mail className="w-4 h-4 mr-2" />
-            Enviar Emails
+        
+        <div className="flex items-center gap-3">
+          {/* Navegação de semanas */}
+          <div className="flex items-center gap-2 bg-white rounded-lg border px-3 py-2">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handlePreviousWeek}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="text-sm font-medium min-w-[100px] text-center">
+              Semana {semana}/{ano}
+            </span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleNextWeek}
+              className="h-8 w-8 p-0"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+          
+          {/* Botões de ação */}
+          <Button 
+            variant="outline" 
+            onClick={handleDownloadPdf}
+            disabled={downloadingPdf}
+            data-testid="download-pdf-btn"
+          >
+            {downloadingPdf ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            Download PDF
           </Button>
-          <Button onClick={fetchResumo} disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Atualizar
+          
+          <Button 
+            variant="destructive" 
+            onClick={() => setShowDeleteAllConfirm(true)}
+            data-testid="delete-all-btn"
+          >
+            <Trash2 className="w-4 h-4 mr-2" />
+            Eliminar Semana
           </Button>
         </div>
       </div>
 
-      {/* Week Selector */}
-      <Card>
-        <CardContent className="py-4">
-          <div className="flex items-center justify-center gap-4">
-            <Button variant="outline" size="icon" onClick={handlePreviousWeek}>
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <Label>Semana:</Label>
-              <Input
-                type="number"
-                min="1"
-                max="53"
-                value={semana}
-                onChange={(e) => setSemana(parseInt(e.target.value) || 1)}
-                className="w-20 text-center"
-              />
-              <Label>Ano:</Label>
-              <Input
-                type="number"
-                min="2020"
-                max="2030"
-                value={ano}
-                onChange={(e) => setAno(parseInt(e.target.value) || new Date().getFullYear())}
-                className="w-24 text-center"
-              />
-            </div>
-            <Button variant="outline" size="icon" onClick={handleNextWeek}>
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-          {resumo && (
-            <p className="text-center text-slate-500 mt-2 text-sm">
-              {resumo.periodo} • {resumo.motoristas_com_relatorio} de {resumo.total_motoristas} motoristas com relatório
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Summary Cards */}
-      {resumo && (
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-500 rounded-lg">
-                  <TrendingUp className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-green-600">Total Ganhos</p>
-                  <p className="text-2xl font-bold text-green-700">€{resumo.totais.total_ganhos.toFixed(2)}</p>
-                </div>
-              </div>
-              <div className="mt-3 flex gap-4 text-sm text-green-600">
-                <span>Uber: €{resumo.totais.total_ganhos_uber.toFixed(2)}</span>
-                <span>Bolt: €{resumo.totais.total_ganhos_bolt.toFixed(2)}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-red-500 rounded-lg">
-                  <TrendingDown className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-red-600">Total Despesas</p>
-                  <p className="text-2xl font-bold text-red-700">€{resumo.totais.total_despesas.toFixed(2)}</p>
-                </div>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2 text-xs text-red-600">
-                <span>Comb: €{resumo.totais.total_combustivel.toFixed(2)}</span>
-                <span>Elét: €{resumo.totais.total_eletrico.toFixed(2)}</span>
-                <span>VV: €{resumo.totais.total_via_verde.toFixed(2)}</span>
-                <span>Alug: €{resumo.totais.total_aluguer.toFixed(2)}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500 rounded-lg">
-                  <Wallet className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-blue-600">Valor Líquido</p>
-                  <p className={`text-2xl font-bold ${resumo.totais.total_liquido >= 0 ? 'text-blue-700' : 'text-red-700'}`}>
-                    €{resumo.totais.total_liquido.toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-500 rounded-lg">
-                  <Users className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="text-sm text-purple-600">Motoristas</p>
-                  <p className="text-2xl font-bold text-purple-700">{resumo.total_motoristas}</p>
-                </div>
-              </div>
-              <p className="mt-3 text-sm text-purple-600">
-                {resumo.motoristas_com_relatorio} com relatório
+      {/* Modal de confirmação de eliminação */}
+      {showDeleteAllConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-md mx-4">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-red-600">
+                <AlertTriangle className="w-5 h-5" />
+                Confirmar Eliminação
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p>
+                Tem a certeza que deseja eliminar <strong>TODOS</strong> os dados da semana {semana}/{ano}?
               </p>
+              <p className="text-sm text-slate-500">
+                Esta ação irá eliminar todos os registos de ganhos, despesas e extras de todos os motoristas nesta semana. Esta ação não pode ser desfeita.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <Button variant="outline" onClick={() => setShowDeleteAllConfirm(false)}>
+                  Cancelar
+                </Button>
+                <Button variant="destructive" onClick={handleDeleteAllWeekData}>
+                  Eliminar Tudo
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </div>
       )}
 
-      {/* Drivers Table */}
-      {resumo && (
+      {/* Cards de Resumo */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Receitas do Parceiro */}
+        <Card className="border-l-4 border-l-green-500">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 text-green-600 mb-2">
+              <TrendingUp className="w-5 h-5" />
+              <span className="font-medium">Receitas Parceiro</span>
+            </div>
+            <p className="text-3xl font-bold text-green-700">
+              {formatCurrency(totalReceitas)}
+            </p>
+            <div className="text-sm text-green-600 mt-3 space-y-1">
+              <div className="flex justify-between">
+                <span className="flex items-center gap-1"><Car className="w-3 h-3" /> Aluguer:</span>
+                <span className="font-medium">{formatCurrency(totalAluguer)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="flex items-center gap-1"><Receipt className="w-3 h-3" /> Extras:</span>
+                <span className="font-medium">{formatCurrency(totalExtras)}</span>
+              </div>
+              {totalVendas > 0 && (
+                <div className="flex justify-between border-t pt-1">
+                  <span>Vendas:</span>
+                  <span className="font-medium">{formatCurrency(totalVendas)}</span>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Despesas Operacionais */}
+        <Card className="border-l-4 border-l-red-500">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 text-red-600 mb-2">
+              <TrendingDown className="w-5 h-5" />
+              <span className="font-medium">Despesas</span>
+            </div>
+            <p className="text-3xl font-bold text-red-700">
+              {formatCurrency(totalDespesas)}
+            </p>
+            <div className="text-sm text-red-600 mt-3 space-y-1">
+              <div className="flex justify-between">
+                <span>Combustível:</span>
+                <span>{formatCurrency(totais.total_combustivel)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Via Verde:</span>
+                <span>{formatCurrency(totais.total_via_verde)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Elétrico:</span>
+                <span>{formatCurrency(totais.total_eletrico)}</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Líquido Parceiro */}
+        <Card className={`border-l-4 ${isPositive ? 'border-l-blue-500' : 'border-l-orange-500'}`}>
+          <CardContent className="pt-6">
+            <div className={`flex items-center gap-2 mb-2 ${isPositive ? 'text-blue-600' : 'text-orange-600'}`}>
+              <DollarSign className="w-5 h-5" />
+              <span className="font-medium">Líquido Parceiro</span>
+            </div>
+            <p className={`text-3xl font-bold ${isPositive ? 'text-blue-700' : 'text-orange-700'}`}>
+              {formatCurrency(liquidoParceiro)}
+            </p>
+            <div className="flex items-center gap-2 mt-3">
+              <Users className="w-4 h-4 text-slate-500" />
+              <span className="text-sm text-slate-600">
+                {resumo?.total_motoristas || motoristas.length} motoristas
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Info dos Ganhos dos Motoristas */}
+      <Card className="bg-slate-50">
+        <CardContent className="py-3">
+          <div className="flex items-center justify-center gap-4 text-sm text-slate-600">
+            <span>
+              <strong>Ganhos Motoristas (informativo):</strong> {formatCurrency(totais.total_ganhos)}
+            </span>
+            <span className="text-slate-400">|</span>
+            <span>Uber: {formatCurrency(totais.total_ganhos_uber)}</span>
+            <span className="text-slate-400">|</span>
+            <span>Bolt: {formatCurrency(totais.total_ganhos_bolt)}</span>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabela de Motoristas com Edição */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Detalhes por Motorista
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-slate-50">
+                  <th className="text-left p-3">Motorista</th>
+                  <th className="text-right p-3">Uber</th>
+                  <th className="text-right p-3">Bolt</th>
+                  <th className="text-right p-3">Via Verde</th>
+                  <th className="text-right p-3">Combustível</th>
+                  <th className="text-right p-3">Elétrico</th>
+                  <th className="text-right p-3">Aluguer</th>
+                  <th className="text-right p-3">Extras</th>
+                  <th className="text-right p-3">Líquido</th>
+                  <th className="text-center p-3">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {motoristas.map((m) => {
+                  const isEditing = editingMotorista === m.motorista_id;
+                  const liquido = (m.ganhos_uber || 0) + (m.ganhos_bolt || 0) - (m.via_verde || 0) - (m.combustivel || 0) - (m.eletrico || 0) - (m.aluguer || 0);
+                  
+                  return (
+                    <tr key={m.motorista_id} className="border-b hover:bg-slate-50">
+                      <td className="p-3 font-medium">{m.nome}</td>
+                      
+                      {isEditing ? (
+                        <>
+                          <td className="p-2">
+                            <Input
+                              type="number"
+                              value={editForm.ganhos_uber}
+                              onChange={(e) => setEditForm({...editForm, ganhos_uber: parseFloat(e.target.value) || 0})}
+                              className="w-24 text-right"
+                            />
+                          </td>
+                          <td className="p-2">
+                            <Input
+                              type="number"
+                              value={editForm.ganhos_bolt}
+                              onChange={(e) => setEditForm({...editForm, ganhos_bolt: parseFloat(e.target.value) || 0})}
+                              className="w-24 text-right"
+                            />
+                          </td>
+                          <td className="p-2">
+                            <Input
+                              type="number"
+                              value={editForm.via_verde}
+                              onChange={(e) => setEditForm({...editForm, via_verde: parseFloat(e.target.value) || 0})}
+                              className="w-24 text-right"
+                            />
+                          </td>
+                          <td className="p-2">
+                            <Input
+                              type="number"
+                              value={editForm.combustivel}
+                              onChange={(e) => setEditForm({...editForm, combustivel: parseFloat(e.target.value) || 0})}
+                              className="w-24 text-right"
+                            />
+                          </td>
+                          <td className="p-2">
+                            <Input
+                              type="number"
+                              value={editForm.eletrico}
+                              onChange={(e) => setEditForm({...editForm, eletrico: parseFloat(e.target.value) || 0})}
+                              className="w-24 text-right"
+                            />
+                          </td>
+                          <td className="p-2">
+                            <Input
+                              type="number"
+                              value={editForm.aluguer}
+                              onChange={(e) => setEditForm({...editForm, aluguer: parseFloat(e.target.value) || 0})}
+                              className="w-24 text-right"
+                            />
+                          </td>
+                          <td className="p-2">
+                            <Input
+                              type="number"
+                              value={editForm.extras}
+                              onChange={(e) => setEditForm({...editForm, extras: parseFloat(e.target.value) || 0})}
+                              className="w-24 text-right"
+                            />
+                          </td>
+                        </>
+                      ) : (
+                        <>
+                          <td className="p-3 text-right text-green-600">{formatCurrency(m.ganhos_uber)}</td>
+                          <td className="p-3 text-right text-green-600">{formatCurrency(m.ganhos_bolt)}</td>
+                          <td className="p-3 text-right text-red-600">{formatCurrency(m.via_verde)}</td>
+                          <td className="p-3 text-right text-red-600">{formatCurrency(m.combustivel)}</td>
+                          <td className="p-3 text-right text-red-600">{formatCurrency(m.eletrico)}</td>
+                          <td className="p-3 text-right text-blue-600">{formatCurrency(m.aluguer)}</td>
+                          <td className="p-3 text-right text-orange-600">{formatCurrency(m.extras)}</td>
+                        </>
+                      )}
+                      
+                      <td className={`p-3 text-right font-bold ${liquido >= 0 ? 'text-green-700' : 'text-red-700'}`}>
+                        {formatCurrency(liquido)}
+                      </td>
+                      
+                      <td className="p-3 text-center">
+                        {isEditing ? (
+                          <div className="flex gap-1 justify-center">
+                            <Button 
+                              size="sm" 
+                              variant="default"
+                              onClick={() => handleSaveEdit(m.motorista_id)}
+                            >
+                              <Save className="w-3 h-3" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => setEditingMotorista(null)}
+                            >
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-1 justify-center">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => handleEditMotorista(m)}
+                              data-testid={`edit-motorista-${m.motorista_id}`}
+                            >
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="destructive"
+                              onClick={() => handleDeleteMotoristaData(m.motorista_id, m.nome)}
+                              data-testid={`delete-motorista-${m.motorista_id}`}
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+                
+                {motoristas.length === 0 && (
+                  <tr>
+                    <td colSpan="10" className="text-center py-8 text-slate-500">
+                      Nenhum dado encontrado para esta semana
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+              
+              {motoristas.length > 0 && (
+                <tfoot>
+                  <tr className="bg-slate-100 font-bold">
+                    <td className="p-3">TOTAIS</td>
+                    <td className="p-3 text-right text-green-700">{formatCurrency(totais.total_ganhos_uber)}</td>
+                    <td className="p-3 text-right text-green-700">{formatCurrency(totais.total_ganhos_bolt)}</td>
+                    <td className="p-3 text-right text-red-700">{formatCurrency(totais.total_via_verde)}</td>
+                    <td className="p-3 text-right text-red-700">{formatCurrency(totais.total_combustivel)}</td>
+                    <td className="p-3 text-right text-red-700">{formatCurrency(totais.total_eletrico)}</td>
+                    <td className="p-3 text-right text-blue-700">{formatCurrency(totalAluguer)}</td>
+                    <td className="p-3 text-right text-orange-700">{formatCurrency(totalExtras)}</td>
+                    <td className={`p-3 text-right ${isPositive ? 'text-green-700' : 'text-red-700'}`}>
+                      {formatCurrency(liquidoParceiro)}
+                    </td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Gráfico de Evolução */}
+      {historico.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Car className="w-5 h-5" />
-              Detalhes por Motorista
+              <BarChart3 className="w-5 h-5" />
+              Evolução Semanal
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-50">
-                    <TableHead>Motorista</TableHead>
-                    <TableHead>Veículo</TableHead>
-                    <TableHead className="text-right">Uber</TableHead>
-                    <TableHead className="text-right">Bolt</TableHead>
-                    <TableHead className="text-right text-green-600">Ganhos</TableHead>
-                    <TableHead className="text-right text-red-600">Despesas</TableHead>
-                    <TableHead className="text-right text-purple-600">Comissão</TableHead>
-                    <TableHead className="text-right text-blue-600 font-bold">Líquido</TableHead>
-                    <TableHead className="text-center">Enviar</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {resumo.motoristas.map((m) => (
-                    <TableRow key={m.motorista_id} className={!m.tem_relatorio ? 'bg-slate-50 opacity-60' : ''}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{m.motorista_nome}</p>
-                          {m.motorista_email && (
-                            <p className="text-xs text-slate-500">{m.motorista_email}</p>
-                          )}
-                          {!m.tem_relatorio && (
-                            <p className="text-xs text-orange-500">Sem relatório</p>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-slate-600">{m.veiculo_matricula || '-'}</TableCell>
-                      <TableCell className="text-right">€{m.ganhos_uber?.toFixed(2) || '0.00'}</TableCell>
-                      <TableCell className="text-right">€{m.ganhos_bolt?.toFixed(2) || '0.00'}</TableCell>
-                      <TableCell className="text-right text-green-600 font-medium">€{m.total_ganhos?.toFixed(2) || '0.00'}</TableCell>
-                      <TableCell className="text-right text-red-600">
-                        <div className="flex flex-col items-end">
-                          <span>€{(m.total_despesas_operacionais || m.total_despesas || 0).toFixed(2)}</span>
-                          <span className="text-xs text-slate-400">
-                            C:{(m.combustivel || 0).toFixed(0)} VV:{(m.via_verde || 0).toFixed(0)} E:{(m.carregamento_eletrico || 0).toFixed(0)}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right text-purple-600">
-                        €{(m.comissao_motorista || m.aluguer_veiculo || 0).toFixed(2)}
-                      </TableCell>
-                      <TableCell className={`text-right font-bold ${(m.valor_liquido_parceiro || m.valor_liquido || 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                        €{(m.valor_liquido_parceiro || m.valor_liquido || 0).toFixed(2)}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex justify-center gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
-                            onClick={() => handleEnviarWhatsApp(m.motorista_id, m.motorista_nome)}
-                            disabled={sendingWhatsapp[m.motorista_id]}
-                            title="Enviar WhatsApp"
-                          >
-                            {sendingWhatsapp[m.motorista_id] ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <MessageCircle className="w-4 h-4" />
-                            )}
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                            onClick={() => handleEnviarEmail(m.motorista_id, m.motorista_nome)}
-                            disabled={sendingEmail[m.motorista_id] || !m.motorista_email}
-                            title={m.motorista_email ? "Enviar Email" : "Email não disponível"}
-                          >
-                            {sendingEmail[m.motorista_id] ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                              <Mail className="w-4 h-4" />
-                            )}
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            {/* Legenda */}
+            <div className="flex justify-center gap-6 mb-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-green-500"></div>
+                <span>Receitas</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-red-500"></div>
+                <span>Despesas</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 rounded bg-blue-500"></div>
+                <span>Líquido</span>
+              </div>
+            </div>
+
+            {/* Barras do Gráfico */}
+            <div className="flex items-end justify-between gap-2 h-40 px-4">
+              {historico.map((item, index) => {
+                const receitaHeight = ((item.receitas || item.ganhos || 0) / maxValue) * 100;
+                const despesaHeight = ((item.despesas || 0) / maxValue) * 100;
+                const liquidoHeight = (Math.abs(item.liquido || 0) / maxValue) * 100;
+                const isLiquidoPositivo = (item.liquido || 0) >= 0;
+                
+                return (
+                  <div key={index} className="flex-1 flex flex-col items-center group relative">
+                    {/* Tooltip */}
+                    <div className="absolute bottom-full mb-2 hidden group-hover:block bg-slate-800 text-white text-xs p-2 rounded shadow-lg z-10 whitespace-nowrap">
+                      <div className="font-semibold mb-1">Semana {item.semana}/{item.ano}</div>
+                      <div className="text-green-300">Receitas: {formatCurrency(item.receitas || item.ganhos)}</div>
+                      <div className="text-red-300">Despesas: {formatCurrency(item.despesas)}</div>
+                      <div className={isLiquidoPositivo ? 'text-blue-300' : 'text-orange-300'}>
+                        Líquido: {formatCurrency(item.liquido)}
+                      </div>
+                    </div>
+                    
+                    {/* Barras */}
+                    <div className="flex gap-1 items-end h-32">
+                      <div 
+                        className="w-4 bg-green-500 rounded-t transition-all duration-300 hover:bg-green-400"
+                        style={{ height: `${Math.max(receitaHeight, 4)}%` }}
+                      ></div>
+                      <div 
+                        className="w-4 bg-red-500 rounded-t transition-all duration-300 hover:bg-red-400"
+                        style={{ height: `${Math.max(despesaHeight, 4)}%` }}
+                      ></div>
+                      <div 
+                        className={`w-4 rounded-t transition-all duration-300 ${isLiquidoPositivo ? 'bg-blue-500 hover:bg-blue-400' : 'bg-orange-500 hover:bg-orange-400'}`}
+                        style={{ height: `${Math.max(liquidoHeight, 4)}%` }}
+                      ></div>
+                    </div>
+                    
+                    {/* Label da semana */}
+                    <span className="text-sm text-slate-600 mt-2 font-medium">
+                      S{item.semana}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Empty State */}
-      {!loading && (!resumo || resumo.motoristas.length === 0) && (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Users className="w-12 h-12 mx-auto text-slate-300 mb-4" />
-            <p className="text-slate-500">Nenhum motorista encontrado para esta semana</p>
-          </CardContent>
-        </Card>
-      )}
+      {/* Info adicional */}
+      <div className="text-center text-sm text-slate-500">
+        {resumo?.periodo || `Semana ${semana}/${ano}`}
+      </div>
     </div>
   );
 };
