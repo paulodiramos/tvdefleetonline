@@ -298,14 +298,11 @@ const ResumoSemanalParceiro = ({ user }) => {
                     <TableHead>Veículo</TableHead>
                     <TableHead className="text-right">Uber</TableHead>
                     <TableHead className="text-right">Bolt</TableHead>
-                    <TableHead className="text-right text-green-600">Total Ganhos</TableHead>
-                    <TableHead className="text-right">Combustível</TableHead>
-                    <TableHead className="text-right">Elétrico</TableHead>
-                    <TableHead className="text-right">Via Verde</TableHead>
-                    <TableHead className="text-right">Aluguer</TableHead>
-                    <TableHead className="text-right text-red-600">Total Despesas</TableHead>
+                    <TableHead className="text-right text-green-600">Ganhos</TableHead>
+                    <TableHead className="text-right text-red-600">Despesas</TableHead>
+                    <TableHead className="text-right text-purple-600">Comissão</TableHead>
                     <TableHead className="text-right text-blue-600 font-bold">Líquido</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
+                    <TableHead className="text-center">Enviar</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -314,31 +311,64 @@ const ResumoSemanalParceiro = ({ user }) => {
                       <TableCell>
                         <div>
                           <p className="font-medium">{m.motorista_nome}</p>
+                          {m.motorista_email && (
+                            <p className="text-xs text-slate-500">{m.motorista_email}</p>
+                          )}
                           {!m.tem_relatorio && (
                             <p className="text-xs text-orange-500">Sem relatório</p>
                           )}
                         </div>
                       </TableCell>
                       <TableCell className="text-slate-600">{m.veiculo_matricula || '-'}</TableCell>
-                      <TableCell className="text-right">€{m.ganhos_uber.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">€{m.ganhos_bolt.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-green-600 font-medium">€{m.total_ganhos.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">€{m.combustivel.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">€{m.carregamento_eletrico.toFixed(2)}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right">€{m.ganhos_uber?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell className="text-right">€{m.ganhos_bolt?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell className="text-right text-green-600 font-medium">€{m.total_ganhos?.toFixed(2) || '0.00'}</TableCell>
+                      <TableCell className="text-right text-red-600">
                         <div className="flex flex-col items-end">
-                          <span>€{m.via_verde.toFixed(2)}</span>
-                          {m.via_verde_semana_referencia && (
-                            <span className="text-xs text-blue-500">(ref. {m.via_verde_semana_referencia})</span>
-                          )}
+                          <span>€{(m.total_despesas_operacionais || m.total_despesas || 0).toFixed(2)}</span>
+                          <span className="text-xs text-slate-400">
+                            C:{(m.combustivel || 0).toFixed(0)} VV:{(m.via_verde || 0).toFixed(0)} E:{(m.carregamento_eletrico || 0).toFixed(0)}
+                          </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">€{m.aluguer_veiculo.toFixed(2)}</TableCell>
-                      <TableCell className="text-right text-red-600 font-medium">€{m.total_despesas.toFixed(2)}</TableCell>
-                      <TableCell className={`text-right font-bold ${m.valor_liquido >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                        €{m.valor_liquido.toFixed(2)}
+                      <TableCell className="text-right text-purple-600">
+                        €{(m.comissao_motorista || m.aluguer_veiculo || 0).toFixed(2)}
                       </TableCell>
-                      <TableCell className="text-center">{getStatusBadge(m.status)}</TableCell>
+                      <TableCell className={`text-right font-bold ${(m.valor_liquido_parceiro || m.valor_liquido || 0) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                        €{(m.valor_liquido_parceiro || m.valor_liquido || 0).toFixed(2)}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-center gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50"
+                            onClick={() => handleEnviarWhatsApp(m.motorista_id, m.motorista_nome)}
+                            disabled={sendingWhatsapp[m.motorista_id]}
+                            title="Enviar WhatsApp"
+                          >
+                            {sendingWhatsapp[m.motorista_id] ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <MessageCircle className="w-4 h-4" />
+                            )}
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            onClick={() => handleEnviarEmail(m.motorista_id, m.motorista_nome)}
+                            disabled={sendingEmail[m.motorista_id] || !m.motorista_email}
+                            title={m.motorista_email ? "Enviar Email" : "Email não disponível"}
+                          >
+                            {sendingEmail[m.motorista_id] ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Mail className="w-4 h-4" />
+                            )}
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
