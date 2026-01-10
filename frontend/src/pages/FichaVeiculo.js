@@ -2201,192 +2201,349 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 </CardContent>
               </Card>
 
-              {/* Financiamento / Prestações do Veículo */}
+              {/* Investimento / Aquisição do Veículo (para ROI) */}
               <Card className="mt-4">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Financiamento / Prestações
+                    <TrendingUp className="h-5 w-5" />
+                    Investimento do Veículo
                   </CardTitle>
-                  <p className="text-xs text-slate-500">Dados de aquisição para cálculo de ROI</p>
+                  <p className="text-xs text-slate-500">Dados de aquisição para cálculo de ROI (Retorno sobre Investimento)</p>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {/* Toggle financiamento */}
+                    {/* Toggle investimento */}
                     <div className="flex items-center space-x-2">
                       {canEdit && editMode ? (
                         <>
                           <input
                             type="checkbox"
-                            id="tem_financiamento"
-                            checked={infoForm.tem_financiamento || false}
-                            onChange={(e) => setInfoForm({...infoForm, tem_financiamento: e.target.checked})}
+                            id="tem_investimento"
+                            checked={infoForm.tem_investimento || false}
+                            onChange={(e) => setInfoForm({...infoForm, tem_investimento: e.target.checked})}
                             className="w-4 h-4"
                           />
-                          <Label htmlFor="tem_financiamento" className="cursor-pointer font-medium">
-                            Veículo tem financiamento/prestações
+                          <Label htmlFor="tem_investimento" className="cursor-pointer font-medium">
+                            Registar dados de investimento/aquisição
                           </Label>
                         </>
                       ) : (
                         <p className="font-medium">
-                          {vehicle.financiamento?.tem_financiamento ? '✓ Com Financiamento' : '✗ Sem Financiamento'}
+                          {vehicle.investimento?.tem_investimento ? '✓ Com dados de investimento' : '✗ Sem dados de investimento'}
                         </p>
                       )}
                     </div>
 
-                    {(editMode ? infoForm.tem_financiamento : vehicle.financiamento?.tem_financiamento) && (
-                      <div className="bg-blue-50 p-4 rounded-lg space-y-4">
-                        {/* Valores principais */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div>
-                            <Label>Valor de Aquisição (€)</Label>
+                    {(editMode ? infoForm.tem_investimento : vehicle.investimento?.tem_investimento) && (
+                      <div className="space-y-4">
+                        {/* Tipo de Aquisição */}
+                        <div className="bg-slate-50 p-4 rounded-lg">
+                          <Label className="font-semibold mb-2 block">Tipo de Aquisição</Label>
+                          <div className="grid grid-cols-3 gap-4">
                             {canEdit && editMode ? (
-                              <Input
-                                type="number"
-                                step="0.01"
-                                value={infoForm.valor_aquisicao_veiculo || ''}
-                                onChange={(e) => setInfoForm({...infoForm, valor_aquisicao_veiculo: e.target.value})}
-                                placeholder="Ex: 25000.00"
-                              />
+                              <>
+                                <label className={`flex items-center p-3 border rounded-lg cursor-pointer ${infoForm.tipo_aquisicao === 'compra' ? 'bg-blue-100 border-blue-500' : 'bg-white'}`}>
+                                  <input
+                                    type="radio"
+                                    name="tipo_aquisicao"
+                                    value="compra"
+                                    checked={infoForm.tipo_aquisicao === 'compra'}
+                                    onChange={(e) => setInfoForm({...infoForm, tipo_aquisicao: e.target.value})}
+                                    className="mr-2"
+                                  />
+                                  <div>
+                                    <p className="font-medium">Compra</p>
+                                    <p className="text-xs text-slate-500">Pagamento integral</p>
+                                  </div>
+                                </label>
+                                <label className={`flex items-center p-3 border rounded-lg cursor-pointer ${infoForm.tipo_aquisicao === 'credito' ? 'bg-green-100 border-green-500' : 'bg-white'}`}>
+                                  <input
+                                    type="radio"
+                                    name="tipo_aquisicao"
+                                    value="credito"
+                                    checked={infoForm.tipo_aquisicao === 'credito'}
+                                    onChange={(e) => setInfoForm({...infoForm, tipo_aquisicao: e.target.value})}
+                                    className="mr-2"
+                                  />
+                                  <div>
+                                    <p className="font-medium">Crédito</p>
+                                    <p className="text-xs text-slate-500">Prestações s/ IVA</p>
+                                  </div>
+                                </label>
+                                <label className={`flex items-center p-3 border rounded-lg cursor-pointer ${infoForm.tipo_aquisicao === 'leasing' ? 'bg-purple-100 border-purple-500' : 'bg-white'}`}>
+                                  <input
+                                    type="radio"
+                                    name="tipo_aquisicao"
+                                    value="leasing"
+                                    checked={infoForm.tipo_aquisicao === 'leasing'}
+                                    onChange={(e) => setInfoForm({...infoForm, tipo_aquisicao: e.target.value})}
+                                    className="mr-2"
+                                  />
+                                  <div>
+                                    <p className="font-medium">Leasing</p>
+                                    <p className="text-xs text-slate-500">Prestações c/ IVA</p>
+                                  </div>
+                                </label>
+                              </>
                             ) : (
-                              <p className="font-medium text-lg">€{vehicle.financiamento?.valor_aquisicao_veiculo || 0}</p>
-                            )}
-                          </div>
-                          <div>
-                            <Label>Entrada (€)</Label>
-                            {canEdit && editMode ? (
-                              <Input
-                                type="number"
-                                step="0.01"
-                                value={infoForm.valor_entrada || ''}
-                                onChange={(e) => setInfoForm({...infoForm, valor_entrada: e.target.value})}
-                                placeholder="Ex: 5000.00"
-                              />
-                            ) : (
-                              <p className="font-medium">€{vehicle.financiamento?.valor_entrada || 0}</p>
-                            )}
-                          </div>
-                          <div>
-                            <Label>Valor Prestação (€)</Label>
-                            {canEdit && editMode ? (
-                              <Input
-                                type="number"
-                                step="0.01"
-                                value={infoForm.valor_prestacao || ''}
-                                onChange={(e) => setInfoForm({...infoForm, valor_prestacao: e.target.value})}
-                                placeholder="Ex: 350.00"
-                              />
-                            ) : (
-                              <p className="font-medium text-orange-600">€{vehicle.financiamento?.valor_prestacao || 0}/mês</p>
-                            )}
-                          </div>
-                          <div>
-                            <Label>Nº Prestações</Label>
-                            {canEdit && editMode ? (
-                              <Input
-                                type="number"
-                                value={infoForm.numero_prestacoes || ''}
-                                onChange={(e) => setInfoForm({...infoForm, numero_prestacoes: e.target.value})}
-                                placeholder="Ex: 60"
-                              />
-                            ) : (
-                              <p className="font-medium">{vehicle.financiamento?.numero_prestacoes || 0} meses</p>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Progresso e datas */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                          <div>
-                            <Label>Prestações Pagas</Label>
-                            {canEdit && editMode ? (
-                              <Input
-                                type="number"
-                                value={infoForm.prestacoes_pagas || ''}
-                                onChange={(e) => setInfoForm({...infoForm, prestacoes_pagas: e.target.value})}
-                                placeholder="Ex: 12"
-                              />
-                            ) : (
-                              <p className="font-medium">{vehicle.financiamento?.prestacoes_pagas || 0}</p>
-                            )}
-                          </div>
-                          <div>
-                            <Label>Data Início</Label>
-                            {canEdit && editMode ? (
-                              <Input
-                                type="date"
-                                value={infoForm.data_inicio_financiamento || ''}
-                                onChange={(e) => setInfoForm({...infoForm, data_inicio_financiamento: e.target.value})}
-                              />
-                            ) : (
-                              <p className="font-medium">{vehicle.financiamento?.data_inicio_financiamento || 'N/A'}</p>
-                            )}
-                          </div>
-                          <div>
-                            <Label>Data Fim Prevista</Label>
-                            {canEdit && editMode ? (
-                              <Input
-                                type="date"
-                                value={infoForm.data_fim_financiamento || ''}
-                                onChange={(e) => setInfoForm({...infoForm, data_fim_financiamento: e.target.value})}
-                              />
-                            ) : (
-                              <p className="font-medium">{vehicle.financiamento?.data_fim_financiamento || 'N/A'}</p>
-                            )}
-                          </div>
-                          <div>
-                            <Label>Taxa de Juro (%)</Label>
-                            {canEdit && editMode ? (
-                              <Input
-                                type="number"
-                                step="0.01"
-                                value={infoForm.taxa_juro || ''}
-                                onChange={(e) => setInfoForm({...infoForm, taxa_juro: e.target.value})}
-                                placeholder="Ex: 5.5"
-                              />
-                            ) : (
-                              <p className="font-medium">{vehicle.financiamento?.taxa_juro || 0}%</p>
+                              <p className="font-medium capitalize col-span-3">
+                                {vehicle.investimento?.tipo_aquisicao === 'compra' ? '💰 Compra (Pagamento Integral)' :
+                                 vehicle.investimento?.tipo_aquisicao === 'credito' ? '🏦 Crédito (Prestações s/ IVA)' :
+                                 vehicle.investimento?.tipo_aquisicao === 'leasing' ? '📋 Leasing (Prestações c/ IVA)' : 'N/A'}
+                              </p>
                             )}
                           </div>
                         </div>
 
-                        {/* Entidade financiadora */}
-                        <div>
-                          <Label>Entidade Financiadora</Label>
-                          {canEdit && editMode ? (
-                            <Input
-                              value={infoForm.entidade_financiadora || ''}
-                              onChange={(e) => setInfoForm({...infoForm, entidade_financiadora: e.target.value})}
-                              placeholder="Ex: Banco XYZ, Leasing ABC"
-                            />
-                          ) : (
-                            <p className="font-medium">{vehicle.financiamento?.entidade_financiadora || 'N/A'}</p>
-                          )}
+                        {/* Valor de Aquisição */}
+                        <div className="bg-blue-50 p-4 rounded-lg">
+                          <Label className="font-semibold mb-2 block">Valor de Aquisição</Label>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div>
+                              <Label>Valor Total (€)</Label>
+                              {canEdit && editMode ? (
+                                <Input
+                                  type="number"
+                                  step="0.01"
+                                  value={infoForm.valor_aquisicao || ''}
+                                  onChange={(e) => setInfoForm({...infoForm, valor_aquisicao: e.target.value})}
+                                  placeholder="Ex: 25000.00"
+                                />
+                              ) : (
+                                <p className="font-medium text-lg">€{vehicle.investimento?.valor_aquisicao || 0}</p>
+                              )}
+                            </div>
+                            <div>
+                              <Label>IVA (%)</Label>
+                              {canEdit && editMode ? (
+                                <select
+                                  value={infoForm.iva_aquisicao || '23'}
+                                  onChange={(e) => setInfoForm({...infoForm, iva_aquisicao: e.target.value})}
+                                  className="w-full p-2 border rounded-md"
+                                >
+                                  <option value="0">Isento (0%)</option>
+                                  <option value="6">Reduzido (6%)</option>
+                                  <option value="13">Intermédio (13%)</option>
+                                  <option value="23">Normal (23%)</option>
+                                </select>
+                              ) : (
+                                <p className="font-medium">{vehicle.investimento?.iva_aquisicao || 0}%</p>
+                              )}
+                            </div>
+                            <div className="flex items-center">
+                              {canEdit && editMode ? (
+                                <label className="flex items-center cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={infoForm.valor_aquisicao_com_iva || false}
+                                    onChange={(e) => setInfoForm({...infoForm, valor_aquisicao_com_iva: e.target.checked})}
+                                    className="mr-2"
+                                  />
+                                  <span className="text-sm">Valor inclui IVA</span>
+                                </label>
+                              ) : (
+                                <p className="text-sm">{vehicle.investimento?.valor_aquisicao_com_iva ? '✓ Com IVA incluído' : '✗ Sem IVA'}</p>
+                              )}
+                            </div>
+                          </div>
                         </div>
+
+                        {/* Campos de Crédito/Leasing */}
+                        {(editMode ? ['credito', 'leasing'].includes(infoForm.tipo_aquisicao) : ['credito', 'leasing'].includes(vehicle.investimento?.tipo_aquisicao)) && (
+                          <div className={`p-4 rounded-lg ${(editMode ? infoForm.tipo_aquisicao : vehicle.investimento?.tipo_aquisicao) === 'leasing' ? 'bg-purple-50' : 'bg-green-50'}`}>
+                            <Label className="font-semibold mb-2 block">
+                              {(editMode ? infoForm.tipo_aquisicao : vehicle.investimento?.tipo_aquisicao) === 'leasing' ? 'Dados do Leasing' : 'Dados do Crédito'}
+                            </Label>
+                            
+                            {/* Entrada */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                              <div>
+                                <Label>Valor Entrada (€)</Label>
+                                {canEdit && editMode ? (
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    value={infoForm.valor_entrada || ''}
+                                    onChange={(e) => setInfoForm({...infoForm, valor_entrada: e.target.value})}
+                                    placeholder="Ex: 5000.00"
+                                  />
+                                ) : (
+                                  <p className="font-medium">€{vehicle.investimento?.valor_entrada || 0}</p>
+                                )}
+                              </div>
+                              <div className="flex items-end pb-2">
+                                {canEdit && editMode ? (
+                                  <label className="flex items-center cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={infoForm.valor_entrada_com_iva || false}
+                                      onChange={(e) => setInfoForm({...infoForm, valor_entrada_com_iva: e.target.checked})}
+                                      className="mr-2"
+                                    />
+                                    <span className="text-sm">Entrada c/ IVA</span>
+                                  </label>
+                                ) : (
+                                  <p className="text-sm">{vehicle.investimento?.valor_entrada_com_iva ? '✓ c/ IVA' : '✗ s/ IVA'}</p>
+                                )}
+                              </div>
+                              <div>
+                                <Label>Entidade Financiadora</Label>
+                                {canEdit && editMode ? (
+                                  <Input
+                                    value={infoForm.entidade_financiadora || ''}
+                                    onChange={(e) => setInfoForm({...infoForm, entidade_financiadora: e.target.value})}
+                                    placeholder="Ex: Banco XYZ"
+                                  />
+                                ) : (
+                                  <p className="font-medium">{vehicle.investimento?.entidade_financiadora || 'N/A'}</p>
+                                )}
+                              </div>
+                              <div>
+                                <Label>Taxa de Juro (%)</Label>
+                                {canEdit && editMode ? (
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    value={infoForm.taxa_juro || ''}
+                                    onChange={(e) => setInfoForm({...infoForm, taxa_juro: e.target.value})}
+                                    placeholder="Ex: 5.5"
+                                  />
+                                ) : (
+                                  <p className="font-medium">{vehicle.investimento?.taxa_juro || 0}%</p>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Prestações */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                              <div>
+                                <Label>Valor Prestação (€)</Label>
+                                {canEdit && editMode ? (
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    value={infoForm.valor_prestacao || ''}
+                                    onChange={(e) => setInfoForm({...infoForm, valor_prestacao: e.target.value})}
+                                    placeholder="Ex: 350.00"
+                                  />
+                                ) : (
+                                  <p className="font-medium text-orange-600">€{vehicle.investimento?.valor_prestacao || 0}/mês</p>
+                                )}
+                              </div>
+                              <div className="flex items-end pb-2">
+                                {(editMode ? infoForm.tipo_aquisicao : vehicle.investimento?.tipo_aquisicao) === 'leasing' ? (
+                                  <Badge className="bg-purple-100 text-purple-800">Prestação c/ IVA</Badge>
+                                ) : (
+                                  <Badge className="bg-green-100 text-green-800">Prestação s/ IVA</Badge>
+                                )}
+                              </div>
+                              <div>
+                                <Label>Nº Prestações</Label>
+                                {canEdit && editMode ? (
+                                  <Input
+                                    type="number"
+                                    value={infoForm.numero_prestacoes || ''}
+                                    onChange={(e) => setInfoForm({...infoForm, numero_prestacoes: e.target.value})}
+                                    placeholder="Ex: 60"
+                                  />
+                                ) : (
+                                  <p className="font-medium">{vehicle.investimento?.numero_prestacoes || 0} meses</p>
+                                )}
+                              </div>
+                              <div>
+                                <Label>Prestações Pagas</Label>
+                                {canEdit && editMode ? (
+                                  <Input
+                                    type="number"
+                                    value={infoForm.prestacoes_pagas || ''}
+                                    onChange={(e) => setInfoForm({...infoForm, prestacoes_pagas: e.target.value})}
+                                    placeholder="Ex: 12"
+                                  />
+                                ) : (
+                                  <p className="font-medium">{vehicle.investimento?.prestacoes_pagas || 0}</p>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Datas e Valor Residual */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div>
+                                <Label>Data Início</Label>
+                                {canEdit && editMode ? (
+                                  <Input
+                                    type="date"
+                                    value={infoForm.data_inicio_financiamento || ''}
+                                    onChange={(e) => setInfoForm({...infoForm, data_inicio_financiamento: e.target.value})}
+                                  />
+                                ) : (
+                                  <p className="font-medium">{vehicle.investimento?.data_inicio_financiamento || 'N/A'}</p>
+                                )}
+                              </div>
+                              <div>
+                                <Label>Data Fim</Label>
+                                {canEdit && editMode ? (
+                                  <Input
+                                    type="date"
+                                    value={infoForm.data_fim_financiamento || ''}
+                                    onChange={(e) => setInfoForm({...infoForm, data_fim_financiamento: e.target.value})}
+                                  />
+                                ) : (
+                                  <p className="font-medium">{vehicle.investimento?.data_fim_financiamento || 'N/A'}</p>
+                                )}
+                              </div>
+                              {(editMode ? infoForm.tipo_aquisicao : vehicle.investimento?.tipo_aquisicao) === 'leasing' && (
+                                <div>
+                                  <Label>Valor Residual (€)</Label>
+                                  {canEdit && editMode ? (
+                                    <Input
+                                      type="number"
+                                      step="0.01"
+                                      value={infoForm.valor_residual || ''}
+                                      onChange={(e) => setInfoForm({...infoForm, valor_residual: e.target.value})}
+                                      placeholder="Ex: 5000.00"
+                                    />
+                                  ) : (
+                                    <p className="font-medium">€{vehicle.investimento?.valor_residual || 0}</p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
 
                         {/* Resumo ROI */}
-                        {!editMode && vehicle.financiamento?.valor_aquisicao_veiculo && (
-                          <div className="bg-white p-3 rounded-lg border">
-                            <p className="text-sm font-semibold text-slate-700 mb-2">Resumo Financeiro</p>
-                            <div className="grid grid-cols-3 gap-4 text-sm">
-                              <div>
-                                <p className="text-slate-500">Valor Financiado</p>
-                                <p className="font-bold text-blue-600">
-                                  €{((vehicle.financiamento?.valor_aquisicao_veiculo || 0) - (vehicle.financiamento?.valor_entrada || 0)).toFixed(2)}
+                        {!editMode && vehicle.investimento?.valor_aquisicao && (
+                          <div className="bg-white p-4 rounded-lg border-2 border-slate-200">
+                            <p className="text-sm font-bold text-slate-700 mb-3">📊 Resumo do Investimento</p>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div className="p-2 bg-blue-50 rounded">
+                                <p className="text-slate-500">Valor Aquisição</p>
+                                <p className="font-bold text-blue-600 text-lg">
+                                  €{(vehicle.investimento?.valor_aquisicao || 0).toLocaleString('pt-PT', {minimumFractionDigits: 2})}
                                 </p>
                               </div>
-                              <div>
-                                <p className="text-slate-500">Total Pago</p>
-                                <p className="font-bold text-green-600">
-                                  €{((vehicle.financiamento?.valor_entrada || 0) + (vehicle.financiamento?.prestacoes_pagas || 0) * (vehicle.financiamento?.valor_prestacao || 0)).toFixed(2)}
-                                </p>
-                              </div>
-                              <div>
-                                <p className="text-slate-500">Em Falta</p>
-                                <p className="font-bold text-orange-600">
-                                  €{(((vehicle.financiamento?.numero_prestacoes || 0) - (vehicle.financiamento?.prestacoes_pagas || 0)) * (vehicle.financiamento?.valor_prestacao || 0)).toFixed(2)}
-                                </p>
-                              </div>
+                              {['credito', 'leasing'].includes(vehicle.investimento?.tipo_aquisicao) && (
+                                <>
+                                  <div className="p-2 bg-green-50 rounded">
+                                    <p className="text-slate-500">Total Pago</p>
+                                    <p className="font-bold text-green-600 text-lg">
+                                      €{((vehicle.investimento?.valor_entrada || 0) + (vehicle.investimento?.prestacoes_pagas || 0) * (vehicle.investimento?.valor_prestacao || 0)).toLocaleString('pt-PT', {minimumFractionDigits: 2})}
+                                    </p>
+                                  </div>
+                                  <div className="p-2 bg-orange-50 rounded">
+                                    <p className="text-slate-500">Em Falta</p>
+                                    <p className="font-bold text-orange-600 text-lg">
+                                      €{(((vehicle.investimento?.numero_prestacoes || 0) - (vehicle.investimento?.prestacoes_pagas || 0)) * (vehicle.investimento?.valor_prestacao || 0)).toLocaleString('pt-PT', {minimumFractionDigits: 2})}
+                                    </p>
+                                  </div>
+                                  <div className="p-2 bg-purple-50 rounded">
+                                    <p className="text-slate-500">Total c/ Juros</p>
+                                    <p className="font-bold text-purple-600 text-lg">
+                                      €{((vehicle.investimento?.valor_entrada || 0) + (vehicle.investimento?.numero_prestacoes || 0) * (vehicle.investimento?.valor_prestacao || 0) + (vehicle.investimento?.valor_residual || 0)).toLocaleString('pt-PT', {minimumFractionDigits: 2})}
+                                    </p>
+                                  </div>
+                                </>
+                              )}
                             </div>
                           </div>
                         )}
