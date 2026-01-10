@@ -225,6 +225,15 @@ class Vehicle(BaseModel):
     motorista_atribuido: Optional[str] = None
     motorista_atribuido_nome: Optional[str] = None
     status: str = "disponivel"
+    
+    # Contrato de Aluguer/Comissão do Veículo
+    tipo_contrato_veiculo: Optional[str] = None  # "aluguer" | "comissao" | "slot"
+    valor_semanal: Optional[float] = None  # Valor semanal (€)
+    comissao_parceiro: Optional[float] = None  # Percentagem de comissão do parceiro
+    tem_caucao: bool = False  # Se tem caução
+    valor_caucao: Optional[float] = None  # Valor da caução (€)
+    condicoes_contrato: Optional[str] = None  # Condições do contrato
+    
     ultima_revisao_km: Optional[int] = None
     data_seguro_ate: Optional[str] = None
     data_inspecao_ate: Optional[str] = None
