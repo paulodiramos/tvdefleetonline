@@ -2363,13 +2363,15 @@ async def get_historico_importacoes(
         fname = r.get("ficheiro_nome", "uber_import")
         if fname not in uber_by_file:
             uber_by_file[fname] = {
+                "id": fname,  # Use ficheiro_nome as ID for delete/update operations
                 "plataforma": "uber",
                 "ficheiro_nome": fname,
                 "data_importacao": r.get("created_at") or r.get("data_importacao"),
                 "total_registos": 0,
                 "total_valor": 0,
                 "semana": r.get("semana"),
-                "ano": r.get("ano")
+                "ano": r.get("ano"),
+                "estado": r.get("estado", "processado")
             }
         uber_by_file[fname]["total_registos"] += 1
         uber_by_file[fname]["total_valor"] += float(r.get("pago_total") or r.get("ganhos") or 0)
