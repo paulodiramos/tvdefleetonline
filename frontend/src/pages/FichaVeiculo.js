@@ -588,6 +588,17 @@ const FichaVeiculo = ({ user, onLogout }) => {
           valor_acumulado: vehicleRes.data.tipo_contrato.valor_acumulado || '',
           valor_falta_cobrar: vehicleRes.data.tipo_contrato.valor_falta_cobrar || '',
           custo_slot: vehicleRes.data.tipo_contrato.custo_slot || '',
+          // Financiamento
+          tem_financiamento: vehicleRes.data.financiamento?.tem_financiamento || false,
+          valor_aquisicao_veiculo: vehicleRes.data.financiamento?.valor_aquisicao_veiculo || '',
+          valor_entrada: vehicleRes.data.financiamento?.valor_entrada || '',
+          valor_prestacao: vehicleRes.data.financiamento?.valor_prestacao || '',
+          numero_prestacoes: vehicleRes.data.financiamento?.numero_prestacoes || '',
+          prestacoes_pagas: vehicleRes.data.financiamento?.prestacoes_pagas || '',
+          data_inicio_financiamento: vehicleRes.data.financiamento?.data_inicio_financiamento || '',
+          data_fim_financiamento: vehicleRes.data.financiamento?.data_fim_financiamento || '',
+          entidade_financiadora: vehicleRes.data.financiamento?.entidade_financiadora || '',
+          taxa_juro: vehicleRes.data.financiamento?.taxa_juro || '',
           categorias_uber: vehicleRes.data.categorias_uber || {
             green: false,
             comfort: false,
