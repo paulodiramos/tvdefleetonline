@@ -65,7 +65,7 @@ const ListaImportacoes = ({ user }) => {
       setLoading(true);
       const token = localStorage.getItem('token');
       
-      let url = `${API}/api/importacoes/historico`;
+      let url = `${API}/api/relatorios/importacoes/historico`;
       const params = new URLSearchParams();
       
       if (filtroTipo === 'semana') {
