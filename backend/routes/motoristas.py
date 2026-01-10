@@ -836,13 +836,11 @@ async def upload_documento_motorista(
     relative_path = str(file_path.relative_to(ROOT_DIR))
     
     # Atualizar motorista com o caminho do documento
-    documentos = motorista.get("documentos", {})
-    documentos[tipo_documento] = relative_path
-    
+    # Usar $set com dot notation para evitar conflitos
     await db.motoristas.update_one(
         {"id": motorista_id},
         {"$set": {
-            "documentos": documentos,
+            f"documentos.{tipo_documento}": relative_path,
             f"documentos.{tipo_documento}_uploaded_at": datetime.now(timezone.utc).isoformat(),
             f"documentos.{tipo_documento}_uploaded_by": current_user["id"]
         }}
