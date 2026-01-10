@@ -1,0 +1,89 @@
+{
+  "summary": "Completed comprehensive testing of Extras Motorista API and Resumo Semanal with new financial logic. All CRUD operations for extras work correctly. The weekly summary correctly calculates total_extras, total_receitas_parceiro (Aluguer + Extras), and total_liquido_parceiro. Frontend Gestão de Extras page and ResumoSemanalCard dashboard component are fully functional.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "POST /api/extras-motorista",
+        "issue": "Returns 520 status code instead of 400/422 when motorista_id is missing - should return proper validation error",
+        "priority": "LOW"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_extras_motorista.py",
+    "/app/test_reports/pytest/pytest_extras_motorista.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Extras query in resumo-semanal uses $or to match by semana/ano OR by data field within week range - this is intentional behavior",
+    "The financial formula is correctly implemented: Receitas Parceiro = Aluguer + Extras, Líquido Parceiro = Receitas - Despesas Operacionais",
+    "Only unpaid extras (pago=false) are included in the weekly summary calculations"
+  ],
+  "updated_files": [
+    "/app/tests/test_extras_motorista.py"
+  ],
+  "success_rate": {
+    "backend": "100% (29/29 tests passed)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "admin_email": "admin@tvdefleet.com",
+    "admin_password": "123456",
+    "parceiro_email": "parceiro@tvdefleet.com",
+    "parceiro_password": "123456"
+  },
+  "seed_data_creation": "None - used existing test data (Motorista Teste Backend ID: 0eea6d82-625f-453d-ba26-e6681563b2b8)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Extras Motorista API fully tested with 29 pytest tests. Existing extras: Dívida 150€ (semana 51/2025) and Caução Parcelada 50€ (semana 2/2026) for Motorista Teste Backend. The resumo-semanal endpoint correctly includes extras in calculations. Frontend Gestão de Extras page at /gestao-extras works with CRUD operations, filters, and summary cards. ResumoSemanalCard on dashboard shows Receitas Parceiro (Aluguer + Extras), Despesas, and Líquido Parceiro.",
+  "verified_features": {
+    "extras_api": {
+      "GET /api/extras-motorista": "PASS - Lists extras with filters (motorista_id, tipo, semana, ano, pago)",
+      "POST /api/extras-motorista": "PASS - Creates extras (divida, caucao_parcelada, dano, multa, outro)",
+      "PUT /api/extras-motorista/{id}": "PASS - Updates extras (valor, pago, descricao)",
+      "DELETE /api/extras-motorista/{id}": "PASS - Deletes extras"
+    },
+    "resumo_semanal_with_extras": {
+      "total_extras": "PASS - Sum of all unpaid extras for the week",
+      "total_receitas_parceiro": "PASS - Aluguer + Extras + Vendas",
+      "total_liquido_parceiro": "PASS - Receitas - Despesas Operacionais",
+      "motorista_extras_field": "PASS - Each motorista has extras field in response"
+    },
+    "frontend_gestao_extras": {
+      "page_load": "PASS - /gestao-extras loads correctly",
+      "summary_cards": "PASS - Total Extras, Pendentes, Pagos cards",
+      "table": "PASS - Lists extras with Motorista, Tipo, Descrição, Valor, Semana, Status, Ações",
+      "filters": "PASS - Motorista, Tipo, Status filters work",
+      "create_modal": "PASS - Modal with all fields (Motorista, Tipo, Descrição, Valor, Semana, Parcelas, Observações, Pago)",
+      "edit_delete": "PASS - Edit and Delete buttons work"
+    },
+    "frontend_resumo_semanal_card": {
+      "receitas_parceiro": "PASS - Shows Aluguer + Extras breakdown",
+      "despesas": "PASS - Shows Combustível, Via Verde, Elétrico breakdown",
+      "liquido_parceiro": "PASS - Shows calculated value",
+      "week_navigation": "PASS - Previous/Next week buttons work",
+      "evolucao_chart": "PASS - Shows weekly evolution chart"
+    }
+  },
+  "backend_tests": {
+    "total_tests": 29,
+    "passed": 29,
+    "failed": 0,
+    "test_classes": [
+      "TestExtrasMotoristaAuth (2 tests)",
+      "TestExtrasMotoristaList (6 tests)",
+      "TestExtrasMotoristaCreate (5 tests)",
+      "TestExtrasMotoristaUpdate (3 tests)",
+      "TestExtrasMotoristaDelete (2 tests)",
+      "TestResumoSemanalWithExtras (6 tests)",
+      "TestParceiroAccess (3 tests)",
+      "TestExtraDataStructure (2 tests)"
+    ]
+  }
+}
