@@ -1043,11 +1043,8 @@ const Motoristas = ({ user, onLogout }) => {
                       variant="outline" 
                       size="sm" 
                       className="flex-1"
-                      onClick={() => {
-                        setSelectedMotorista(motorista);
-                        setShowDetailDialog(true);
-                        fetchHistoricoAtribuicoes(motorista.id);
-                      }}
+                      onClick={() => navigate(`/motoristas/${motorista.id}`)}
+                      data-testid={`ver-detalhes-${motorista.id}`}
                     >
                       Ver Detalhes
                     </Button>
