@@ -18809,6 +18809,8 @@ app.include_router(importacoes_router, prefix="/api")
 app.include_router(admin_router, prefix="/api")
 app.include_router(alertas_router, prefix="/api")
 app.include_router(contratos_router, prefix="/api")
+app.include_router(sincronizacao_router, prefix="/api")
+app.include_router(public_router, prefix="/api")
 
 # Include main API router LAST (legacy routes - endpoints here are overridden by modular routers above)
 app.include_router(api_router)
