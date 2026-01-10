@@ -1184,7 +1184,6 @@ async def get_historico_importacoes(
     
     # ===== ELÉTRICO =====
     elet_query = {
-        **parceiro_filter,
         "$or": [
             {"semana": semana, "ano": ano} if semana and ano else {},
             {"data": {"$gte": data_inicio, "$lte": data_fim}}
@@ -1193,6 +1192,8 @@ async def get_historico_importacoes(
     elet_query["$or"] = [q for q in elet_query["$or"] if q]
     if not elet_query["$or"]:
         elet_query.pop("$or")
+    if parceiro_motorista_ids:
+        elet_query["motorista_id"] = {"$in": parceiro_motorista_ids}
     
     elet_records = await db.despesas_combustivel.find(elet_query, {"_id": 0}).to_list(1000)
     
