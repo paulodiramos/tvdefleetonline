@@ -198,7 +198,10 @@ class Vehicle(BaseModel):
     categorias_bolt: Optional[CategoriasBolt] = None
     via_verde_disponivel: bool = False
     via_verde_id: Optional[str] = None
+    obu: Optional[str] = None  # OBU Via Verde identifier
     cartao_frota_disponivel: bool = False
+    cartao_frota_id: Optional[str] = None  # Cartão Frota Combustível ID
+    cartao_frota_eletric_id: Optional[str] = None  # Cartão Frota Elétrico ID
     tem_garantia: bool = False
     stand_responsavel: Optional[str] = None
     data_limite_garantia: Optional[str] = None
