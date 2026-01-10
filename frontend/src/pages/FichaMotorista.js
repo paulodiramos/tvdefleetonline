@@ -82,8 +82,8 @@ const FichaMotorista = ({ user }) => {
   
   // Documentos
   const [documentos, setDocumentos] = useState({
-    documento_frente: null,
-    documento_verso: null,
+    cc_frente: null,
+    cc_verso: null,
     carta_conducao_frente: null,
     carta_conducao_verso: null,
     licenca_tvde: null,
