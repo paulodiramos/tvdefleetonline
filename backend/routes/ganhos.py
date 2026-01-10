@@ -1,8 +1,7 @@
 """Ganhos routes - Uber, Bolt earnings"""
 
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional
+from typing import Optional, Dict
 import logging
 
 from utils.auth import get_current_user
@@ -11,12 +10,11 @@ from utils.database import get_database
 router = APIRouter()
 db = get_database()
 logger = logging.getLogger(__name__)
-security = HTTPBearer()
 
 
 @router.get("/ganhos-bolt")
 async def listar_ganhos_bolt(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    current_user: Dict = Depends(get_current_user),
     motorista_id: Optional[str] = None,
     parceiro_id: Optional[str] = None,
     periodo_ano: Optional[str] = None,
@@ -24,8 +22,6 @@ async def listar_ganhos_bolt(
 ):
     """Lista ganhos importados da Bolt"""
     try:
-        user = await get_current_user(credentials)
-        
         query = {}
         if motorista_id:
             query['motorista_id'] = motorista_id
@@ -46,15 +42,13 @@ async def listar_ganhos_bolt(
 
 @router.get("/ganhos-uber")
 async def listar_ganhos_uber(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    current_user: Dict = Depends(get_current_user),
     motorista_id: Optional[str] = None,
     periodo_inicio: Optional[str] = None,
     periodo_fim: Optional[str] = None
 ):
     """Lista ganhos importados da Uber"""
     try:
-        user = await get_current_user(credentials)
-        
         query = {}
         if motorista_id:
             query['motorista_id'] = motorista_id
@@ -74,15 +68,13 @@ async def listar_ganhos_uber(
 @router.get("/dados/{plataforma}")
 async def obter_dados_plataforma(
     plataforma: str,
-    credentials: HTTPAuthorizationCredentials = Depends(security),
+    current_user: Dict = Depends(get_current_user),
     motorista_id: Optional[str] = None,
     semana: Optional[int] = None,
     ano: Optional[int] = None
 ):
     """Obter dados agregados por plataforma"""
     try:
-        user = await get_current_user(credentials)
-        
         if plataforma.lower() == "uber":
             query = {}
             if motorista_id:
