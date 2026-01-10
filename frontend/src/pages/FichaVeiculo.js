@@ -2751,7 +2751,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                     <FileText className="h-5 w-5" />
                     Contratos
                   </CardTitle>
-                  <p className="text-xs text-slate-500">Contratos assinados pelo motorista e parceiro</p>
+                  <p className="text-xs text-slate-500">Contratos assinados pelo motorista, parceiro e gestor</p>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -2794,33 +2794,119 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
                     {/* Lista de contratos */}
                     {vehicle.contratos && vehicle.contratos.length > 0 ? (
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {vehicle.contratos.map((contrato, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border">
-                            <div className="flex items-center gap-3">
-                              <FileText className="h-5 w-5 text-blue-600" />
-                              <div>
-                                <p className="font-medium">{contrato.tipo || 'Contrato'}</p>
-                                <p className="text-xs text-slate-500">
-                                  {contrato.data ? new Date(contrato.data).toLocaleString('pt-PT') : 'Data não disponível'}
-                                </p>
+                          <div key={idx} className="p-4 bg-slate-50 rounded-lg border">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-center gap-3">
+                                <FileText className="h-6 w-6 text-blue-600" />
+                                <div>
+                                  <p className="font-medium">{contrato.tipo || 'Contrato'}</p>
+                                  <p className="text-xs text-slate-500">
+                                    {contrato.data ? new Date(contrato.data).toLocaleString('pt-PT') : 'Data não disponível'}
+                                  </p>
+                                  {contrato.motorista_nome && (
+                                    <p className="text-xs text-slate-600 mt-1">
+                                      Motorista: <strong>{contrato.motorista_nome}</strong>
+                                    </p>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {contrato.assinado_motorista && (
-                                <Badge className="bg-green-100 text-green-800 text-xs">Motorista ✓</Badge>
-                              )}
-                              {contrato.assinado_parceiro && (
-                                <Badge className="bg-blue-100 text-blue-800 text-xs">Parceiro ✓</Badge>
-                              )}
                               <Button
                                 size="sm"
-                                variant="outline"
-                                onClick={() => handleDownloadDocument(contrato.documento_url, `Contrato_${idx + 1}`)}
+                                variant="default"
+                                className="bg-blue-600 hover:bg-blue-700"
+                                onClick={() => handleDownloadDocument(contrato.documento_url, `Contrato_${contrato.tipo || idx + 1}`)}
                               >
                                 <Download className="w-4 h-4 mr-1" />
-                                Download
+                                Download PDF
                               </Button>
+                            </div>
+                            
+                            {/* Assinaturas */}
+                            <div className="mt-3 pt-3 border-t border-slate-200">
+                              <p className="text-xs text-slate-600 mb-2 font-medium">Assinaturas:</p>
+                              <div className="flex flex-wrap gap-2">
+                                {canEdit && editMode ? (
+                                  <>
+                                    <label className="flex items-center gap-1.5 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={contrato.assinado_motorista || false}
+                                        onChange={async (e) => {
+                                          try {
+                                            const token = localStorage.getItem('token');
+                                            await axios.put(
+                                              `${API}/vehicles/${vehicleId}/contratos/${contrato.id}`,
+                                              { assinado_motorista: e.target.checked },
+                                              { headers: { Authorization: `Bearer ${token}` } }
+                                            );
+                                            fetchVehicleData();
+                                          } catch (error) {
+                                            toast.error('Erro ao atualizar assinatura');
+                                          }
+                                        }}
+                                        className="h-4 w-4 rounded border-gray-300"
+                                      />
+                                      <span className="text-sm">Motorista</span>
+                                    </label>
+                                    <label className="flex items-center gap-1.5 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={contrato.assinado_parceiro || false}
+                                        onChange={async (e) => {
+                                          try {
+                                            const token = localStorage.getItem('token');
+                                            await axios.put(
+                                              `${API}/vehicles/${vehicleId}/contratos/${contrato.id}`,
+                                              { assinado_parceiro: e.target.checked },
+                                              { headers: { Authorization: `Bearer ${token}` } }
+                                            );
+                                            fetchVehicleData();
+                                          } catch (error) {
+                                            toast.error('Erro ao atualizar assinatura');
+                                          }
+                                        }}
+                                        className="h-4 w-4 rounded border-gray-300"
+                                      />
+                                      <span className="text-sm">Parceiro</span>
+                                    </label>
+                                    <label className="flex items-center gap-1.5 cursor-pointer">
+                                      <input
+                                        type="checkbox"
+                                        checked={contrato.assinado_gestor || false}
+                                        onChange={async (e) => {
+                                          try {
+                                            const token = localStorage.getItem('token');
+                                            await axios.put(
+                                              `${API}/vehicles/${vehicleId}/contratos/${contrato.id}`,
+                                              { assinado_gestor: e.target.checked },
+                                              { headers: { Authorization: `Bearer ${token}` } }
+                                            );
+                                            fetchVehicleData();
+                                          } catch (error) {
+                                            toast.error('Erro ao atualizar assinatura');
+                                          }
+                                        }}
+                                        className="h-4 w-4 rounded border-gray-300"
+                                      />
+                                      <span className="text-sm">Gestor</span>
+                                    </label>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Badge className={`text-xs ${contrato.assinado_motorista ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-500'}`}>
+                                      {contrato.assinado_motorista ? '✓' : '○'} Motorista
+                                    </Badge>
+                                    <Badge className={`text-xs ${contrato.assinado_parceiro ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-500'}`}>
+                                      {contrato.assinado_parceiro ? '✓' : '○'} Parceiro
+                                    </Badge>
+                                    <Badge className={`text-xs ${contrato.assinado_gestor ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-500'}`}>
+                                      {contrato.assinado_gestor ? '✓' : '○'} Gestor
+                                    </Badge>
+                                  </>
+                                )}
+                              </div>
                             </div>
                           </div>
                         ))}
