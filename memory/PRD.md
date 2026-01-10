@@ -1,5 +1,25 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-11 - Session 6d - GPS Verizon & Manutenção)
+### Session Updates:
+- **IMPLEMENTED**: Sistema de Importação GPS Verizon Fleet
+  - Endpoint `POST /api/import/gps-odometro` - Importa CSV com km dos veículos
+  - Detecção automática de colunas (matrícula, km, data, motorista)
+  - Actualização automática do `km_atual` dos veículos
+  - Só actualiza se o novo km for maior que o actual
+- **IMPLEMENTED**: Sistema de Alertas de Revisão
+  - Alerta automático quando faltam X km para revisão (`km_aviso_manutencao`, default 5000)
+  - Alerta crítico quando km de revisão é ultrapassado
+  - Notificações para parceiro e gestores
+  - Endpoint `GET /api/alertas/revisao` - Lista alertas pendentes
+  - Endpoint `PUT /api/alertas/{id}/resolver` - Marca alerta como resolvido
+- **IMPLEMENTED**: Dashboard de Manutenção
+  - Endpoint `GET /api/dashboard/manutencao` - Resumo da frota
+  - Mostra veículos com revisão em dia, próxima e atrasada
+  - Lista top 20 veículos em alerta ordenados por prioridade
+- **TESTED**: Importação GPS actualiza km e cria alertas automaticamente
+- **TESTED**: Dashboard mostra métricas correctamente
+
 ## Changelog (2026-01-11 - Session 6c - Bug Fixes)
 ### Session Updates:
 - **BUG FIX**: Motorista desativado aparecia nos relatórios semanais
