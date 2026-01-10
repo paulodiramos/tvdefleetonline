@@ -23,6 +23,13 @@ import {
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
+// Helper para classe de input preenchido (cor mais escura quando tem valor)
+const getFilledInputClass = (value) => {
+  return value && value.toString().trim() !== '' 
+    ? 'bg-slate-50 text-slate-900 font-medium border-slate-300' 
+    : '';
+};
+
 const FichaMotorista = ({ user }) => {
   const { motoristaId } = useParams();
   const navigate = useNavigate();
