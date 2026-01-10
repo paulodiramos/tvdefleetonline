@@ -45,8 +45,13 @@ class Conversa(BaseModel):
     ultima_mensagem: Optional[str] = None
     ultima_mensagem_em: Optional[datetime] = None
     criada_em: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    criada_por: str
+    criada_por: Optional[str] = None  # Made optional for system-created conversations
     mensagens_nao_lidas: int = 0
+    # Campos para conversas de interesse em veículos
+    tipo: Optional[str] = None  # 'normal', 'interesse_veiculo', etc.
+    veiculo_id: Optional[str] = None
+    contacto_externo: Optional[dict] = None  # Dados de contacto externo
+    status: Optional[str] = None  # 'ativo', 'arquivado', etc.
 
 
 class ConversaStats(BaseModel):
