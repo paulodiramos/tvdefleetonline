@@ -941,6 +941,9 @@ async def add_custo_veiculo(
     - fornecedor: Nome do fornecedor/oficina (opcional)
     - documento_url: URL do documento/fatura (opcional)
     - observacoes: Notas adicionais (opcional)
+    - responsavel: 'parceiro' ou 'motorista' (opcional, default: parceiro)
+    - atribuir_motorista: bool - se true, registar para dedução do motorista
+    - motorista_id: ID do motorista responsável (opcional)
     """
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
@@ -978,6 +981,9 @@ async def add_custo_veiculo(
         "fornecedor": data.get("fornecedor"),
         "documento_url": data.get("documento_url"),
         "observacoes": data.get("observacoes"),
+        "responsavel": data.get("responsavel", "parceiro"),
+        "atribuir_motorista": data.get("atribuir_motorista", False),
+        "motorista_id": data.get("motorista_id"),
         "created_at": now.isoformat(),
         "created_by": current_user["id"]
     }
