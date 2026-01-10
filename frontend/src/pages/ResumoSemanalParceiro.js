@@ -180,13 +180,15 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
 
   if (loading) {
     return (
-      <div className="p-4">
-        <Card>
-          <CardContent className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-          </CardContent>
-        </Card>
-      </div>
+      <Layout user={user} onLogout={onLogout}>
+        <div className="p-4">
+          <Card>
+            <CardContent className="flex items-center justify-center py-8">
+              <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
     );
   }
 
