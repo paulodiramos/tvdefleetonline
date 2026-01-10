@@ -159,6 +159,7 @@ class Motorista(BaseModel):
     
     # Documents & Validation
     documents: Optional[MotoristaDocuments] = None
+    documentos: Optional[Dict[str, Any]] = None  # Uploaded documents paths
     documents_validacao: Dict[str, DocumentoValidacao] = {}
     documentos_aprovados: bool = False
     observacoes_internas: Optional[str] = None
