@@ -386,7 +386,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                   <th className="text-right p-2">Aluguer</th>
                   <th className="text-right p-2">Extras</th>
                   <th className="text-right p-2">Líquido</th>
-                  <th className="text-center p-2 w-16">Ações</th>
+                  <th className="text-center p-2 w-28">Ações</th>
                 </tr>
               </thead>
               <tbody>
