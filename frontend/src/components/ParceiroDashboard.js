@@ -16,6 +16,7 @@ import {
   Calendar
 } from 'lucide-react';
 import { toast } from 'sonner';
+import ResumoSemanalCard from './ResumoSemanalCard';
 
 const ParceiroDashboard = ({ parceiroId }) => {
   const [alertas, setAlertas] = useState(null);
