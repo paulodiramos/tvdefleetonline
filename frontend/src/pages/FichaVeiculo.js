@@ -396,6 +396,12 @@ const FichaVeiculo = ({ user, onLogout }) => {
           km_semanais_disponiveis: parseInt(infoForm?.km_semanais_disponiveis) || null,
           valor_extra_km: parseFloat(infoForm?.valor_extra_km) || null,
           km_acumula_semanal: infoForm?.km_acumula_semanal || false,
+          // KM por Época
+          km_por_epoca: infoForm?.km_por_epoca || false,
+          km_epoca_alta: parseInt(infoForm?.km_epoca_alta) || null,
+          km_epoca_baixa: parseInt(infoForm?.km_epoca_baixa) || null,
+          meses_epoca_alta: infoForm?.meses_epoca_alta || [],
+          meses_epoca_baixa: infoForm?.meses_epoca_baixa || [],
           valor_compra_veiculo: parseFloat(infoForm?.valor_compra_veiculo) || null,
           numero_semanas_compra: parseInt(infoForm?.numero_semanas_compra) || null,
           com_slot: infoForm?.com_slot || false,
