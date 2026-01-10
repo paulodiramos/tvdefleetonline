@@ -1676,6 +1676,45 @@ class PartnerExpense(BaseModel):
     created_by: str
     created_at: datetime
 
+
+# ==================== EXTRAS DO MOTORISTA ====================
+# Extras são valores cobrados ao motorista: dívidas, caução parcelada, danos, etc.
+
+class ExtraMotoristaCreate(BaseModel):
+    motorista_id: str
+    tipo: str  # "divida", "caucao_parcelada", "dano", "multa", "outro"
+    descricao: str
+    valor: float
+    data: str  # Data do registo
+    semana: Optional[int] = None  # Semana de referência
+    ano: Optional[int] = None  # Ano de referência
+    parcelas_total: Optional[int] = None  # Se for parcelado, total de parcelas
+    parcela_atual: Optional[int] = None  # Parcela atual
+    pago: bool = False  # Se já foi pago
+    observacoes: Optional[str] = None
+
+
+class ExtraMotorista(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str
+    motorista_id: str
+    parceiro_id: str
+    tipo: str  # "divida", "caucao_parcelada", "dano", "multa", "outro"
+    descricao: str
+    valor: float
+    data: str
+    semana: Optional[int] = None
+    ano: Optional[int] = None
+    parcelas_total: Optional[int] = None
+    parcela_atual: Optional[int] = None
+    pago: bool = False
+    data_pagamento: Optional[str] = None
+    observacoes: Optional[str] = None
+    created_by: str
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+
 class PartnerRevenueCreate(BaseModel):
     parceiro_id: str
     descricao: str
