@@ -603,6 +603,14 @@ const FichaMotorista = ({ user }) => {
                         onChange={(e) => setDadosMotorista(prev => ({ ...prev, data_nascimento: e.target.value }))}
                         disabled={!isEditing}
                       />
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {dadosMotorista.data_nascimento && (
+                          <Badge variant="outline">
+                            {calcularIdade(dadosMotorista.data_nascimento)} anos
+                          </Badge>
+                        )}
+                        {getAniversarioBadge(dadosMotorista.data_nascimento)}
+                      </div>
                     </div>
                     <div>
                       <Label>Nacionalidade</Label>
