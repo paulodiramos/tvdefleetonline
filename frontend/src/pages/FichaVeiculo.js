@@ -2240,6 +2240,123 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 </CardContent>
               </Card>
 
+              {/* Condições de Quilometragem */}
+              <Card className="mt-4">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Car className="h-5 w-5" />
+                    Condições de Quilometragem
+                  </CardTitle>
+                  <p className="text-xs text-slate-500">Limite de KM semanais e valor extra por KM excedido</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Toggle limite KM */}
+                    <div className="flex items-center space-x-2">
+                      {canEdit && editMode ? (
+                        <>
+                          <input
+                            type="checkbox"
+                            id="tem_limite_km"
+                            checked={infoForm.tem_limite_km || false}
+                            onChange={(e) => setInfoForm({...infoForm, tem_limite_km: e.target.checked})}
+                            className="w-4 h-4"
+                          />
+                          <Label htmlFor="tem_limite_km" className="cursor-pointer font-medium">
+                            Aplicar limite de quilometragem semanal
+                          </Label>
+                        </>
+                      ) : (
+                        <p className="font-medium">
+                          {vehicle.tipo_contrato?.tem_limite_km ? '✓ Com limite de KM' : '✗ Sem limite de KM'}
+                        </p>
+                      )}
+                    </div>
+
+                    {(editMode ? infoForm.tem_limite_km : vehicle.tipo_contrato?.tem_limite_km) && (
+                      <div className="bg-amber-50 p-4 rounded-lg space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {/* KM Disponíveis */}
+                          <div>
+                            <Label htmlFor="km_semanais_disponiveis">KM Semanais Disponíveis</Label>
+                            {canEdit && editMode ? (
+                              <Input
+                                id="km_semanais_disponiveis"
+                                type="number"
+                                value={infoForm.km_semanais_disponiveis || ''}
+                                onChange={(e) => setInfoForm({...infoForm, km_semanais_disponiveis: e.target.value})}
+                                placeholder="Ex: 1500"
+                              />
+                            ) : (
+                              <p className="font-medium text-lg">{vehicle.tipo_contrato?.km_semanais_disponiveis?.toLocaleString() || 0} km</p>
+                            )}
+                            <p className="text-xs text-slate-500 mt-1">Plafond semanal atribuído</p>
+                          </div>
+
+                          {/* Valor Extra por KM */}
+                          <div>
+                            <Label htmlFor="valor_extra_km">Valor Extra por KM (€)</Label>
+                            {canEdit && editMode ? (
+                              <Input
+                                id="valor_extra_km"
+                                type="number"
+                                step="0.01"
+                                value={infoForm.valor_extra_km || ''}
+                                onChange={(e) => setInfoForm({...infoForm, valor_extra_km: e.target.value})}
+                                placeholder="Ex: 0.15"
+                              />
+                            ) : (
+                              <p className="font-medium text-lg text-orange-600">€{vehicle.tipo_contrato?.valor_extra_km || 0}/km</p>
+                            )}
+                            <p className="text-xs text-slate-500 mt-1">Valor a cobrar por KM excedido</p>
+                          </div>
+
+                          {/* Acumulação */}
+                          <div>
+                            <Label>Acumulação de KM</Label>
+                            {canEdit && editMode ? (
+                              <div className="mt-2">
+                                <label className="flex items-center cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    id="km_acumula_semanal"
+                                    checked={infoForm.km_acumula_semanal || false}
+                                    onChange={(e) => setInfoForm({...infoForm, km_acumula_semanal: e.target.checked})}
+                                    className="mr-2 w-4 h-4"
+                                  />
+                                  <span className="text-sm">KM não usados acumulam</span>
+                                </label>
+                              </div>
+                            ) : (
+                              <p className="font-medium">
+                                {vehicle.tipo_contrato?.km_acumula_semanal 
+                                  ? '✓ Com acumulação semanal' 
+                                  : '✗ Sem acumulação (reset semanal)'}
+                              </p>
+                            )}
+                            <p className="text-xs text-slate-500 mt-1">Se KM não usados passam para próxima semana</p>
+                          </div>
+                        </div>
+
+                        {/* Resumo/Exemplo */}
+                        {!editMode && vehicle.tipo_contrato?.km_semanais_disponiveis && (
+                          <div className="bg-white p-3 rounded-lg border mt-3">
+                            <p className="text-sm font-semibold text-slate-700 mb-2">📊 Exemplo de Cálculo</p>
+                            <p className="text-xs text-slate-600">
+                              Se o motorista fizer <strong>{(vehicle.tipo_contrato?.km_semanais_disponiveis || 0) + 200} km</strong> numa semana, 
+                              excede <strong>200 km</strong> do plafond, resultando em despesa extra de{' '}
+                              <strong className="text-orange-600">
+                                €{(200 * (vehicle.tipo_contrato?.valor_extra_km || 0)).toFixed(2)}
+                              </strong> a adicionar ao relatório.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Investimento / Aquisição do Veículo (para ROI) */}
               <Card className="mt-4">
                 <CardHeader className="pb-2">
