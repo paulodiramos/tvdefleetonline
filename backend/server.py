@@ -18993,6 +18993,7 @@ app.include_router(pagamentos_router, prefix="/api")
 app.include_router(reports_router, prefix="/api")
 app.include_router(gestores_router, prefix="/api")
 app.include_router(configuracoes_router, prefix="/api")
+app.include_router(importacoes_router, prefix="/api")
 
 # Include main API router LAST (legacy routes - endpoints here are overridden by modular routers above)
 app.include_router(api_router)
