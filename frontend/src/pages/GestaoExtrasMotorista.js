@@ -295,36 +295,36 @@ const GestaoExtrasMotorista = () => {
               <span className="text-sm font-medium text-slate-600">Filtros:</span>
             </div>
             
-            <Select value={filtroMotorista} onValueChange={setFiltroMotorista}>
+            <Select value={filtroMotorista || "all"} onValueChange={(v) => setFiltroMotorista(v === "all" ? "" : v)}>
               <SelectTrigger className="w-[180px]" data-testid="filtro-motorista">
                 <SelectValue placeholder="Motorista" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 {motoristas.map(m => (
                   <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={filtroTipo} onValueChange={setFiltroTipo}>
+            <Select value={filtroTipo || "all"} onValueChange={(v) => setFiltroTipo(v === "all" ? "" : v)}>
               <SelectTrigger className="w-[150px]" data-testid="filtro-tipo">
                 <SelectValue placeholder="Tipo" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 {TIPOS_EXTRA.map(t => (
                   <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Select value={filtroPago} onValueChange={setFiltroPago}>
+            <Select value={filtroPago === "" ? "all" : filtroPago} onValueChange={(v) => setFiltroPago(v === "all" ? "" : v)}>
               <SelectTrigger className="w-[130px]" data-testid="filtro-status">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="false">Pendente</SelectItem>
                 <SelectItem value="true">Pago</SelectItem>
               </SelectContent>
