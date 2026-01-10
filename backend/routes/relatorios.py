@@ -1189,6 +1189,405 @@ async def get_historico_semanal_parceiro(
     }
 
 
+# ==================== RELATÓRIO INDIVIDUAL DO MOTORISTA ====================
+
+@router.get("/parceiro/resumo-semanal/motorista/{motorista_id}/pdf")
+async def generate_motorista_pdf(
+    motorista_id: str,
+    semana: int,
+    ano: int,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Gerar PDF do relatório semanal individual de um motorista"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import mm
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+    except ImportError:
+        raise HTTPException(status_code=500, detail="ReportLab not installed")
+    
+    # Buscar motorista
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Calcular datas da semana
+    first_day_of_year = datetime(ano, 1, 1)
+    if first_day_of_year.weekday() <= 3:
+        first_monday = first_day_of_year - timedelta(days=first_day_of_year.weekday())
+    else:
+        first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()))
+    
+    week_start = first_monday + timedelta(weeks=semana - 1)
+    week_end = week_start + timedelta(days=6)
+    data_inicio = week_start.strftime("%Y-%m-%d")
+    data_fim = week_end.strftime("%Y-%m-%d")
+    
+    # Buscar dados do motorista
+    ganhos_uber = 0.0
+    uber_records = await db.ganhos_uber.find({
+        "motorista_id": motorista_id,
+        "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
+    }, {"_id": 0}).to_list(100)
+    for r in uber_records:
+        ganhos_uber += float(r.get("pago_total") or r.get("rendimentos_total") or 0)
+    
+    ganhos_bolt = 0.0
+    bolt_records = await db.ganhos_bolt.find({
+        "motorista_id": motorista_id,
+        "$or": [{"periodo_semana": semana, "periodo_ano": ano}, {"semana": semana, "ano": ano}]
+    }, {"_id": 0}).to_list(100)
+    for r in bolt_records:
+        ganhos_bolt += float(r.get("ganhos_liquidos") or r.get("ganhos") or 0)
+    
+    via_verde = 0.0
+    vv_records = await db.portagens_viaverde.find({
+        "motorista_id": motorista_id,
+        "$or": [{"semana": semana, "ano": ano}, {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}]
+    }, {"_id": 0}).to_list(1000)
+    for r in vv_records:
+        via_verde += float(r.get("liquid_value") or r.get("value") or 0)
+    
+    combustivel = 0.0
+    comb_records = await db.abastecimentos_combustivel.find({
+        "motorista_id": motorista_id,
+        "data": {"$gte": data_inicio, "$lte": data_fim}
+    }, {"_id": 0}).to_list(100)
+    for r in comb_records:
+        combustivel += float(r.get("valor_liquido") or r.get("total") or 0)
+    
+    eletrico = 0.0
+    elet_records = await db.despesas_combustivel.find({
+        "motorista_id": motorista_id,
+        "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
+    }, {"_id": 0}).to_list(100)
+    for r in elet_records:
+        eletrico += float(r.get("valor_total") or r.get("TotalValueWithTaxes") or 0)
+    
+    aluguer = float(motorista.get("valor_aluguer_semanal") or 0)
+    
+    extras = 0.0
+    extras_records = await db.extras_motorista.find({
+        "motorista_id": motorista_id,
+        "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
+    }, {"_id": 0}).to_list(100)
+    for r in extras_records:
+        extras += float(r.get("valor") or 0)
+    
+    total_ganhos = ganhos_uber + ganhos_bolt
+    total_despesas = via_verde + combustivel + eletrico
+    liquido = total_ganhos - total_despesas - aluguer
+    
+    # Gerar PDF
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=20*mm, leftMargin=20*mm, topMargin=20*mm, bottomMargin=20*mm)
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=16, alignment=TA_CENTER)
+    subtitle_style = ParagraphStyle('Subtitle', parent=styles['Normal'], fontSize=10, alignment=TA_CENTER, textColor=colors.grey)
+    
+    elements = []
+    
+    elements.append(Paragraph(f"Relatório Semanal", title_style))
+    elements.append(Paragraph(f"{motorista.get('name', 'Motorista')}", subtitle_style))
+    elements.append(Paragraph(f"Semana {semana}/{ano} ({week_start.strftime('%d/%m/%Y')} a {week_end.strftime('%d/%m/%Y')})", subtitle_style))
+    elements.append(Spacer(1, 15*mm))
+    
+    # Tabela de dados
+    data_table = [
+        ["Descrição", "Valor"],
+        ["Ganhos Uber", f"€{ganhos_uber:.2f}"],
+        ["Ganhos Bolt", f"€{ganhos_bolt:.2f}"],
+        ["Total Ganhos", f"€{total_ganhos:.2f}"],
+        ["", ""],
+        ["Via Verde", f"-€{via_verde:.2f}"],
+        ["Combustível", f"-€{combustivel:.2f}"],
+        ["Carregamento Elétrico", f"-€{eletrico:.2f}"],
+        ["Total Despesas", f"-€{total_despesas:.2f}"],
+        ["", ""],
+        ["Aluguer Veículo", f"-€{aluguer:.2f}"],
+        ["Extras/Dívidas", f"-€{extras:.2f}"],
+        ["", ""],
+        ["VALOR LÍQUIDO", f"€{liquido:.2f}"],
+    ]
+    
+    table = Table(data_table, colWidths=[100*mm, 50*mm])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e3a5f')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ('ALIGN', (1, 1), (1, -1), 'RIGHT'),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#d4edda') if liquido >= 0 else colors.HexColor('#f8d7da')),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 3), (-1, 3), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 8), (-1, 8), 'Helvetica-Bold'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('TOPPADDING', (0, 0), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+    ]))
+    
+    elements.append(table)
+    elements.append(Spacer(1, 15*mm))
+    
+    footer_style = ParagraphStyle('Footer', parent=styles['Normal'], fontSize=8, alignment=TA_CENTER, textColor=colors.grey)
+    elements.append(Paragraph(f"Gerado em {datetime.now().strftime('%d/%m/%Y às %H:%M')} - TVDEFleet", footer_style))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    
+    nome_ficheiro = motorista.get('name', 'motorista').replace(' ', '_')
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=relatorio_{nome_ficheiro}_S{semana}_{ano}.pdf"}
+    )
+
+
+@router.get("/parceiro/resumo-semanal/motorista/{motorista_id}/whatsapp")
+async def get_motorista_whatsapp_link(
+    motorista_id: str,
+    semana: int,
+    ano: int,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Gerar link de WhatsApp com resumo do motorista"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Calcular datas da semana
+    first_day_of_year = datetime(ano, 1, 1)
+    if first_day_of_year.weekday() <= 3:
+        first_monday = first_day_of_year - timedelta(days=first_day_of_year.weekday())
+    else:
+        first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()))
+    
+    week_start = first_monday + timedelta(weeks=semana - 1)
+    week_end = week_start + timedelta(days=6)
+    data_inicio = week_start.strftime("%Y-%m-%d")
+    data_fim = week_end.strftime("%Y-%m-%d")
+    
+    # Buscar dados
+    ganhos_uber = 0.0
+    uber_records = await db.ganhos_uber.find({
+        "motorista_id": motorista_id,
+        "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
+    }, {"_id": 0, "pago_total": 1}).to_list(100)
+    ganhos_uber = sum(float(r.get("pago_total") or 0) for r in uber_records)
+    
+    ganhos_bolt = 0.0
+    bolt_records = await db.ganhos_bolt.find({
+        "motorista_id": motorista_id,
+        "$or": [{"periodo_semana": semana, "periodo_ano": ano}, {"semana": semana, "ano": ano}]
+    }, {"_id": 0, "ganhos_liquidos": 1}).to_list(100)
+    ganhos_bolt = sum(float(r.get("ganhos_liquidos") or 0) for r in bolt_records)
+    
+    via_verde = 0.0
+    vv_records = await db.portagens_viaverde.find({
+        "motorista_id": motorista_id,
+        "$or": [{"semana": semana, "ano": ano}, {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}]
+    }, {"_id": 0, "liquid_value": 1}).to_list(1000)
+    via_verde = sum(float(r.get("liquid_value") or 0) for r in vv_records)
+    
+    combustivel = 0.0
+    comb_records = await db.abastecimentos_combustivel.find({
+        "motorista_id": motorista_id, "data": {"$gte": data_inicio, "$lte": data_fim}
+    }, {"_id": 0, "valor_liquido": 1}).to_list(100)
+    combustivel = sum(float(r.get("valor_liquido") or 0) for r in comb_records)
+    
+    eletrico = 0.0
+    elet_records = await db.despesas_combustivel.find({
+        "motorista_id": motorista_id,
+        "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
+    }, {"_id": 0, "valor_total": 1}).to_list(100)
+    eletrico = sum(float(r.get("valor_total") or 0) for r in elet_records)
+    
+    aluguer = float(motorista.get("valor_aluguer_semanal") or 0)
+    total_ganhos = ganhos_uber + ganhos_bolt
+    total_despesas = via_verde + combustivel + eletrico
+    liquido = total_ganhos - total_despesas - aluguer
+    
+    # Criar mensagem
+    msg = f"""*📊 Relatório Semanal - TVDEFleet*
+*Semana {semana}/{ano}*
+━━━━━━━━━━━━━━━━
+
+👤 *{motorista.get('name')}*
+
+*💰 GANHOS*
+• Uber: €{ganhos_uber:.2f}
+• Bolt: €{ganhos_bolt:.2f}
+• *Total: €{total_ganhos:.2f}*
+
+*💸 DESPESAS*
+• Via Verde: €{via_verde:.2f}
+• Combustível: €{combustivel:.2f}
+• Elétrico: €{eletrico:.2f}
+• *Total: €{total_despesas:.2f}*
+
+*🚗 ALUGUER*
+• Valor: €{aluguer:.2f}
+
+━━━━━━━━━━━━━━━━
+*{'✅' if liquido >= 0 else '⚠️'} LÍQUIDO: €{liquido:.2f}*
+━━━━━━━━━━━━━━━━
+
+_Gerado por TVDEFleet_"""
+    
+    import urllib.parse
+    telefone = motorista.get("telefone", "").replace(" ", "").replace("+", "")
+    if telefone and not telefone.startswith("351"):
+        telefone = "351" + telefone
+    
+    encoded_msg = urllib.parse.quote(msg)
+    whatsapp_link = f"https://wa.me/{telefone}?text={encoded_msg}" if telefone else f"https://wa.me/?text={encoded_msg}"
+    
+    return {
+        "whatsapp_link": whatsapp_link,
+        "telefone": telefone,
+        "motorista_nome": motorista.get("name"),
+        "mensagem": msg
+    }
+
+
+@router.post("/parceiro/resumo-semanal/motorista/{motorista_id}/email")
+async def send_motorista_email(
+    motorista_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Enviar relatório por email ao motorista"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    semana = data.get("semana")
+    ano = data.get("ano")
+    
+    if not semana or not ano:
+        raise HTTPException(status_code=400, detail="Semana e ano são obrigatórios")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    email_destino = motorista.get("email")
+    if not email_destino:
+        raise HTTPException(status_code=400, detail="Motorista não tem email configurado")
+    
+    # Calcular datas da semana
+    first_day_of_year = datetime(ano, 1, 1)
+    if first_day_of_year.weekday() <= 3:
+        first_monday = first_day_of_year - timedelta(days=first_day_of_year.weekday())
+    else:
+        first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()))
+    
+    week_start = first_monday + timedelta(weeks=semana - 1)
+    week_end = week_start + timedelta(days=6)
+    data_inicio = week_start.strftime("%Y-%m-%d")
+    data_fim = week_end.strftime("%Y-%m-%d")
+    
+    # Buscar dados
+    ganhos_uber = sum(float(r.get("pago_total") or 0) for r in await db.ganhos_uber.find({
+        "motorista_id": motorista_id,
+        "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
+    }, {"_id": 0, "pago_total": 1}).to_list(100))
+    
+    ganhos_bolt = sum(float(r.get("ganhos_liquidos") or 0) for r in await db.ganhos_bolt.find({
+        "motorista_id": motorista_id,
+        "$or": [{"periodo_semana": semana, "periodo_ano": ano}, {"semana": semana, "ano": ano}]
+    }, {"_id": 0, "ganhos_liquidos": 1}).to_list(100))
+    
+    via_verde = sum(float(r.get("liquid_value") or 0) for r in await db.portagens_viaverde.find({
+        "motorista_id": motorista_id,
+        "$or": [{"semana": semana, "ano": ano}, {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}]
+    }, {"_id": 0, "liquid_value": 1}).to_list(1000))
+    
+    combustivel = sum(float(r.get("valor_liquido") or 0) for r in await db.abastecimentos_combustivel.find({
+        "motorista_id": motorista_id, "data": {"$gte": data_inicio, "$lte": data_fim}
+    }, {"_id": 0, "valor_liquido": 1}).to_list(100))
+    
+    eletrico = sum(float(r.get("valor_total") or 0) for r in await db.despesas_combustivel.find({
+        "motorista_id": motorista_id,
+        "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
+    }, {"_id": 0, "valor_total": 1}).to_list(100))
+    
+    aluguer = float(motorista.get("valor_aluguer_semanal") or 0)
+    total_ganhos = ganhos_uber + ganhos_bolt
+    total_despesas = via_verde + combustivel + eletrico
+    liquido = total_ganhos - total_despesas - aluguer
+    
+    # Criar HTML do email
+    html_content = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: #1e3a5f; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
+            <h1 style="margin: 0;">📊 Relatório Semanal</h1>
+            <p style="margin: 5px 0 0 0;">Semana {semana}/{ano}</p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 20px; border: 1px solid #dee2e6;">
+            <h2 style="color: #1e3a5f; margin-top: 0;">Olá, {motorista.get('name')}!</h2>
+            
+            <h3 style="color: #28a745;">💰 Ganhos</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr><td>Uber:</td><td style="text-align: right;"><strong>€{ganhos_uber:.2f}</strong></td></tr>
+                <tr><td>Bolt:</td><td style="text-align: right;"><strong>€{ganhos_bolt:.2f}</strong></td></tr>
+                <tr style="background: #d4edda;"><td><strong>Total Ganhos:</strong></td><td style="text-align: right;"><strong>€{total_ganhos:.2f}</strong></td></tr>
+            </table>
+            
+            <h3 style="color: #dc3545;">💸 Despesas</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr><td>Via Verde:</td><td style="text-align: right;">€{via_verde:.2f}</td></tr>
+                <tr><td>Combustível:</td><td style="text-align: right;">€{combustivel:.2f}</td></tr>
+                <tr><td>Elétrico:</td><td style="text-align: right;">€{eletrico:.2f}</td></tr>
+                <tr style="background: #f8d7da;"><td><strong>Total Despesas:</strong></td><td style="text-align: right;"><strong>€{total_despesas:.2f}</strong></td></tr>
+            </table>
+            
+            <h3 style="color: #007bff;">🚗 Aluguer: €{aluguer:.2f}</h3>
+            
+            <div style="background: {'#d4edda' if liquido >= 0 else '#f8d7da'}; padding: 15px; border-radius: 8px; text-align: center; margin-top: 20px;">
+                <h2 style="margin: 0; color: {'#155724' if liquido >= 0 else '#721c24'};">
+                    {'✅' if liquido >= 0 else '⚠️'} Valor Líquido: €{liquido:.2f}
+                </h2>
+            </div>
+        </div>
+        
+        <div style="background: #e9ecef; padding: 10px; text-align: center; border-radius: 0 0 8px 8px; font-size: 12px; color: #6c757d;">
+            Gerado automaticamente por TVDEFleet
+        </div>
+    </body>
+    </html>
+    """
+    
+    # Tentar enviar email via SendGrid
+    try:
+        result = await send_email_sendgrid(
+            to_email=email_destino,
+            subject=f"Relatório Semanal - Semana {semana}/{ano}",
+            html_content=html_content
+        )
+        
+        if result.get("success"):
+            return {"message": f"Email enviado para {email_destino}", "success": True}
+        else:
+            return {"message": "Email não enviado - SendGrid não configurado", "success": False, "error": result.get("error")}
+    except Exception as e:
+        logger.error(f"Erro ao enviar email: {e}")
+        return {"message": f"Erro ao enviar email: {str(e)}", "success": False}
+
+
 # ==================== EDIÇÃO E ELIMINAÇÃO DE DADOS SEMANAIS ====================
 
 @router.put("/parceiro/resumo-semanal/motorista/{motorista_id}")
