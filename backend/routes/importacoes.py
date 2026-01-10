@@ -29,7 +29,8 @@ IMPORT_COLLECTIONS = {
     "viaverde": "portagens_viaverde",
     "via_verde": "portagens_viaverde",
     "combustivel": "abastecimentos_combustivel",
-    "eletrico": "abastecimentos_eletrico",
+    "eletrico": "despesas_combustivel",  # Electric charges are stored here
+    "eletrico_alt": "abastecimentos_eletrico",
     "gps": "viagens_gps"
 }
 
@@ -40,41 +41,42 @@ async def delete_importacao(
     current_user: Dict = Depends(get_current_user)
 ):
     """
-    Delete an import record by ID.
-    This will search through all import collections to find and delete the record.
+    Delete an import record by ID (which is the ficheiro_nome).
+    This will search through all import collections to find and delete the records.
     """
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     logger.info(f"🗑️ Attempting to delete import: {importacao_id}")
     
+    total_deleted = 0
+    deleted_from = []
+    
     # Try to find and delete from the importacoes collection first
     result = await db.importacoes.find_one_and_delete({"id": importacao_id})
     if result:
+        total_deleted += 1
+        deleted_from.append("importacoes")
         logger.info(f"✅ Deleted from importacoes collection: {importacao_id}")
-        return {"success": True, "message": "Importação eliminada com sucesso", "collection": "importacoes"}
     
-    # Try each collection to find the record
+    # Try each collection to find the record by ficheiro_nome
     for plataforma, collection_name in IMPORT_COLLECTIONS.items():
         try:
             collection = db[collection_name]
             
-            # Try to find by id field
-            result = await collection.find_one_and_delete({"id": importacao_id})
-            if result:
-                logger.info(f"✅ Deleted from {collection_name}: {importacao_id}")
-                return {"success": True, "message": "Importação eliminada com sucesso", "collection": collection_name}
-            
-            # Try to find by ficheiro_nome (for grouped imports)
+            # Delete by ficheiro_nome (which is used as ID for grouped imports)
             result = await collection.delete_many({"ficheiro_nome": importacao_id})
             if result.deleted_count > 0:
-                logger.info(f"✅ Deleted {result.deleted_count} records from {collection_name} with ficheiro_nome: {importacao_id}")
-                return {
-                    "success": True, 
-                    "message": f"Eliminados {result.deleted_count} registos da importação",
-                    "collection": collection_name,
-                    "deleted_count": result.deleted_count
-                }
+                total_deleted += result.deleted_count
+                deleted_from.append(f"{collection_name}({result.deleted_count})")
+                logger.info(f"✅ Deleted {result.deleted_count} records from {collection_name}")
+            
+            # Also try by id field (for individual records)
+            result = await collection.find_one_and_delete({"id": importacao_id})
+            if result:
+                total_deleted += 1
+                deleted_from.append(collection_name)
+                logger.info(f"✅ Deleted single record from {collection_name}")
         except Exception as e:
             logger.warning(f"⚠️ Error checking {collection_name}: {e}")
             continue
@@ -83,15 +85,19 @@ async def delete_importacao(
     try:
         result = await db.despesas_fornecedor.delete_many({"ficheiro_nome": importacao_id})
         if result.deleted_count > 0:
+            total_deleted += result.deleted_count
+            deleted_from.append(f"despesas_fornecedor({result.deleted_count})")
             logger.info(f"✅ Deleted {result.deleted_count} records from despesas_fornecedor")
-            return {
-                "success": True,
-                "message": f"Eliminados {result.deleted_count} registos da importação",
-                "collection": "despesas_fornecedor",
-                "deleted_count": result.deleted_count
-            }
     except Exception as e:
         logger.warning(f"⚠️ Error checking despesas_fornecedor: {e}")
+    
+    if total_deleted > 0:
+        return {
+            "success": True, 
+            "message": f"Eliminados {total_deleted} registos da importação",
+            "deleted_count": total_deleted,
+            "collections": deleted_from
+        }
     
     raise HTTPException(status_code=404, detail="Importação não encontrada")
 
@@ -125,6 +131,9 @@ async def update_importacao_status(
         "estado_atualizado_por": current_user["id"]
     }
     
+    total_updated = 0
+    updated_in = []
+    
     # Try to update in importacoes collection first
     result = await db.importacoes.find_one_and_update(
         {"id": importacao_id},
@@ -132,22 +141,14 @@ async def update_importacao_status(
         return_document=True
     )
     if result:
+        total_updated += 1
+        updated_in.append("importacoes")
         logger.info(f"✅ Updated status in importacoes collection")
-        return {"success": True, "message": "Estado atualizado com sucesso", "novo_estado": novo_estado}
     
     # Try each collection
     for plataforma, collection_name in IMPORT_COLLECTIONS.items():
         try:
             collection = db[collection_name]
-            
-            # Try to update by id
-            result = await collection.find_one_and_update(
-                {"id": importacao_id},
-                {"$set": update_data}
-            )
-            if result:
-                logger.info(f"✅ Updated status in {collection_name}")
-                return {"success": True, "message": "Estado atualizado com sucesso", "novo_estado": novo_estado}
             
             # Try to update by ficheiro_nome (for grouped imports)
             result = await collection.update_many(
@@ -155,13 +156,18 @@ async def update_importacao_status(
                 {"$set": update_data}
             )
             if result.modified_count > 0:
+                total_updated += result.modified_count
+                updated_in.append(f"{collection_name}({result.modified_count})")
                 logger.info(f"✅ Updated {result.modified_count} records in {collection_name}")
-                return {
-                    "success": True,
-                    "message": f"Estado atualizado em {result.modified_count} registos",
-                    "novo_estado": novo_estado,
-                    "updated_count": result.modified_count
-                }
+            
+            # Also try by id
+            result = await collection.find_one_and_update(
+                {"id": importacao_id},
+                {"$set": update_data}
+            )
+            if result:
+                total_updated += 1
+                updated_in.append(collection_name)
         except Exception as e:
             logger.warning(f"⚠️ Error updating {collection_name}: {e}")
             continue
@@ -173,15 +179,20 @@ async def update_importacao_status(
             {"$set": update_data}
         )
         if result.modified_count > 0:
+            total_updated += result.modified_count
+            updated_in.append(f"despesas_fornecedor({result.modified_count})")
             logger.info(f"✅ Updated {result.modified_count} records in despesas_fornecedor")
-            return {
-                "success": True,
-                "message": f"Estado atualizado em {result.modified_count} registos",
-                "novo_estado": novo_estado,
-                "updated_count": result.modified_count
-            }
     except Exception as e:
         logger.warning(f"⚠️ Error updating despesas_fornecedor: {e}")
+    
+    if total_updated > 0:
+        return {
+            "success": True,
+            "message": f"Estado atualizado em {total_updated} registos",
+            "novo_estado": novo_estado,
+            "updated_count": total_updated,
+            "collections": updated_in
+        }
     
     raise HTTPException(status_code=404, detail="Importação não encontrada")
 
@@ -202,16 +213,12 @@ async def get_importacao(
     if result:
         return result
     
-    # Try each collection
+    # Try each collection by ficheiro_nome
     for plataforma, collection_name in IMPORT_COLLECTIONS.items():
         try:
             collection = db[collection_name]
-            result = await collection.find_one({"id": importacao_id}, {"_id": 0})
-            if result:
-                result["plataforma"] = plataforma
-                return result
             
-            # Try by ficheiro_nome
+            # Try by ficheiro_nome first (most common case)
             records = await collection.find({"ficheiro_nome": importacao_id}, {"_id": 0}).to_list(1000)
             if records:
                 return {
@@ -222,6 +229,12 @@ async def get_importacao(
                     "registos": records[:10],  # First 10 records as sample
                     "estado": records[0].get("estado", "processado") if records else "processado"
                 }
+            
+            # Try by id field
+            result = await collection.find_one({"id": importacao_id}, {"_id": 0})
+            if result:
+                result["plataforma"] = plataforma
+                return result
         except Exception as e:
             logger.warning(f"⚠️ Error checking {collection_name}: {e}")
             continue
