@@ -2403,13 +2403,15 @@ async def get_historico_importacoes(
         fname = r.get("ficheiro_nome", "bolt_import")
         if fname not in bolt_by_file:
             bolt_by_file[fname] = {
+                "id": fname,  # Use ficheiro_nome as ID for delete/update operations
                 "plataforma": "bolt",
                 "ficheiro_nome": fname,
                 "data_importacao": r.get("created_at") or r.get("data_importacao"),
                 "total_registos": 0,
                 "total_valor": 0,
                 "semana": r.get("periodo_semana") or r.get("semana"),
-                "ano": r.get("periodo_ano") or r.get("ano")
+                "ano": r.get("periodo_ano") or r.get("ano"),
+                "estado": r.get("estado", "processado")
             }
         bolt_by_file[fname]["total_registos"] += 1
         bolt_by_file[fname]["total_valor"] += float(r.get("ganhos_liquidos") or r.get("ganhos") or 0)
