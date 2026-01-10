@@ -98,6 +98,40 @@ async def process_uploaded_file(file: UploadFile, destination_dir: Path, file_id
     return result
 
 
+# ==================== FILE DOWNLOAD ====================
+
+@router.get("/download/{file_path:path}")
+async def download_vehicle_document(
+    file_path: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Download vehicle document with correct content-type
+    """
+    import mimetypes
+    
+    # Construir caminho completo
+    full_path = ROOT_DIR / file_path
+    
+    if not full_path.exists():
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    # Determinar mime type
+    mime_type, _ = mimetypes.guess_type(str(full_path))
+    if mime_type is None:
+        # Default para PDF se não conseguir determinar
+        if str(full_path).endswith('.pdf'):
+            mime_type = 'application/pdf'
+        else:
+            mime_type = 'application/octet-stream'
+    
+    return FileResponse(
+        path=str(full_path),
+        media_type=mime_type,
+        filename=full_path.name
+    )
+
+
 async def auto_add_to_agenda(vehicle_id: str, tipo: str, data_vencimento: str, titulo: str):
     """Automatically add event to vehicle agenda when date is filled"""
     try:
