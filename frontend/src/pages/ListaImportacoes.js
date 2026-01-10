@@ -171,6 +171,54 @@ const ListaImportacoes = ({ user, onLogout }) => {
     ? importacoes 
     : importacoes.filter(imp => imp.plataforma?.toLowerCase() === activeTab);
 
+  const handleDeleteImportacao = async (id) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/api/importacoes/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Importação eliminada com sucesso!');
+      setShowDeleteConfirm(null);
+      fetchImportacoes();
+    } catch (error) {
+      console.error('Erro ao eliminar:', error);
+      toast.error('Erro ao eliminar importação');
+    }
+  };
+
+  const handleChangeStatus = async (id, novoEstado) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(`${API}/api/importacoes/${id}/estado`, 
+        { estado: novoEstado },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Estado atualizado!');
+      setShowStatusMenu(null);
+      fetchImportacoes();
+    } catch (error) {
+      console.error('Erro ao alterar estado:', error);
+      toast.error('Erro ao alterar estado');
+    }
+  };
+
+  const getStatusBadge = (estado) => {
+    const estados = {
+      'processado': { icon: CheckCircle, color: 'bg-green-100 text-green-700', label: 'Processado' },
+      'pendente': { icon: Clock, color: 'bg-yellow-100 text-yellow-700', label: 'Pendente' },
+      'erro': { icon: XCircle, color: 'bg-red-100 text-red-700', label: 'Erro' },
+      'revisto': { icon: CheckCircle, color: 'bg-blue-100 text-blue-700', label: 'Revisto' }
+    };
+    const status = estados[estado?.toLowerCase()] || estados['processado'];
+    const Icon = status.icon;
+    return (
+      <Badge className={`${status.color} text-xs`}>
+        <Icon className="w-3 h-3 mr-1" />
+        {status.label}
+      </Badge>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="max-w-7xl mx-auto">
