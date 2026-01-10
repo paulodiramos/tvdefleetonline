@@ -505,6 +505,8 @@ async def add_vehicle_agenda(
         "data": agenda_data.get("data"),
         "hora": agenda_data.get("hora"),
         "descricao": agenda_data.get("descricao"),
+        "oficina": agenda_data.get("oficina"),
+        "local": agenda_data.get("local"),
         "created_at": datetime.now(timezone.utc).isoformat()
     }
     
