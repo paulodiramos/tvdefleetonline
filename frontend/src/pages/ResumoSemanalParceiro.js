@@ -450,7 +450,8 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
       )}
 
       <div className="text-center text-xs text-slate-400">{resumo?.periodo || `Semana ${semana}/${ano}`}</div>
-    </div>
+      </div>
+    </Layout>
   );
 };
 
