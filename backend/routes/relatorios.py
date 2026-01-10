@@ -1077,7 +1077,6 @@ async def get_historico_importacoes(
     
     # ===== BOLT =====
     bolt_query = {
-        **parceiro_filter,
         "$or": [
             {"periodo_semana": semana, "periodo_ano": ano} if semana and ano else {},
             {"semana": semana, "ano": ano} if semana and ano else {},
@@ -1087,6 +1086,8 @@ async def get_historico_importacoes(
     bolt_query["$or"] = [q for q in bolt_query["$or"] if q]
     if not bolt_query["$or"]:
         bolt_query.pop("$or")
+    if parceiro_motorista_ids:
+        bolt_query["motorista_id"] = {"$in": parceiro_motorista_ids}
     
     bolt_records = await db.ganhos_bolt.find(bolt_query, {"_id": 0}).to_list(1000)
     
