@@ -2302,6 +2302,25 @@ const FichaVeiculo = ({ user, onLogout }) => {
                             <p className="font-medium">€{vehicle.tipo_contrato?.custo_slot || '0.00'}</p>
                           )}
                         </div>
+                        <div>
+                          <Label htmlFor="slot_periodicidade">Periodicidade do Slot</Label>
+                          {canEdit && editMode ? (
+                            <select
+                              id="slot_periodicidade"
+                              value={infoForm.slot_periodicidade || 'semanal'}
+                              onChange={(e) => setInfoForm({...infoForm, slot_periodicidade: e.target.value})}
+                              className="w-full p-2 border rounded-md bg-white"
+                            >
+                              <option value="semanal">Semanal</option>
+                              <option value="mensal">Mensal</option>
+                              <option value="anual">Anual</option>
+                            </select>
+                          ) : (
+                            <p className="font-medium capitalize">
+                              {vehicle.tipo_contrato?.slot_periodicidade || 'Semanal'}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     )}
 
