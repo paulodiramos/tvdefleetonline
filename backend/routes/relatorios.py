@@ -1876,19 +1876,35 @@ async def delete_motorista_weekly_data(
     })
     deleted_counts["via_verde"] = result.deleted_count
     
-    # Eliminar combustível
+    # Eliminar combustível - buscar por motorista_id, matrícula ou cartão frota
+    combustivel_query_conditions = [{"motorista_id": motorista_id}]
+    if veiculo and veiculo.get("matricula"):
+        combustivel_query_conditions.append({"matricula": veiculo.get("matricula")})
+    if veiculo and veiculo.get("cartao_frota_id"):
+        combustivel_query_conditions.append({"cartao_frota_id": veiculo.get("cartao_frota_id")})
+    
     result = await db.abastecimentos_combustivel.delete_many({
-        "motorista_id": motorista_id,
-        "data": {"$gte": data_inicio, "$lte": data_fim}
+        "$and": [
+            {"$or": combustivel_query_conditions},
+            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+        ]
     })
     deleted_counts["combustivel"] = result.deleted_count
     
-    # Eliminar elétrico
+    # Eliminar elétrico - buscar por motorista_id, matrícula ou cartão elétrico
+    eletrico_query_conditions = [{"motorista_id": motorista_id}]
+    if veiculo and veiculo.get("matricula"):
+        eletrico_query_conditions.append({"matricula": veiculo.get("matricula")})
+    if veiculo and veiculo.get("cartao_frota_eletric_id"):
+        eletrico_query_conditions.append({"cartao_frota_id": veiculo.get("cartao_frota_eletric_id")})
+    
     result = await db.despesas_combustivel.delete_many({
-        "motorista_id": motorista_id,
-        "$or": [
-            {"semana": semana, "ano": ano},
-            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+        "$and": [
+            {"$or": eletrico_query_conditions},
+            {"$or": [
+                {"semana": semana, "ano": ano},
+                {"data": {"$gte": data_inicio, "$lte": data_fim}}
+            ]}
         ]
     })
     deleted_counts["eletrico"] = result.deleted_count
