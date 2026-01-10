@@ -90,6 +90,7 @@ import ImportarFicheirosParceiro from "@/pages/ImportarFicheirosParceiro";
 import ConfiguracaoMapeamento from "@/pages/ConfiguracaoMapeamento";
 import CredenciaisPlataformas from "@/pages/CredenciaisPlataformas";
 import ListaImportacoes from "@/pages/ListaImportacoes";
+import GestaoExtrasMotorista from "@/pages/GestaoExtrasMotorista";
 import MeusPlanos from "@/pages/MeusPlanos";
 import MeusRecibosGanhos from "@/pages/MeusRecibosGanhos";
 import ValidacaoDocumentosMotorista from "@/pages/ValidacaoDocumentosMotorista";
