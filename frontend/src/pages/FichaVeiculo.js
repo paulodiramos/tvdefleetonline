@@ -1087,18 +1087,48 @@ const FichaVeiculo = ({ user, onLogout }) => {
     }
 
     try {
-      // Construir URL completo para o ficheiro
+      const token = localStorage.getItem('token');
+      
+      // Usar endpoint dedicado para download com content-type correcto
+      const downloadUrl = `${API}/vehicles/download/${encodeURIComponent(documentPath)}`;
+      
+      // Fazer fetch com autenticação
+      const response = await fetch(downloadUrl, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to download');
+      }
+      
+      // Obter o blob do ficheiro
+      const blob = await response.blob();
+      
+      // Criar URL temporário e fazer download
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Extrair nome do ficheiro
+      const filename = documentPath.split('/').pop() || `${documentName}.pdf`;
+      link.setAttribute('download', filename);
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`Download de ${documentName} concluído`);
+    } catch (error) {
+      console.error('Error downloading document:', error);
+      // Fallback: abrir numa nova tab
       const baseUrl = process.env.REACT_APP_BACKEND_URL;
       const fullUrl = documentPath.startsWith('http') 
         ? documentPath 
         : `${baseUrl}/${documentPath}`;
-      
-      // Abrir numa nova tab - o browser vai mostrar PDF ou fazer download conforme o tipo
       window.open(fullUrl, '_blank');
-      toast.success(`A abrir ${documentName}...`);
-    } catch (error) {
-      console.error('Error downloading document:', error);
-      toast.error('Erro ao carregar documento');
     }
   };
 
