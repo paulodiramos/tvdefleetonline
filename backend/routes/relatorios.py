@@ -2512,13 +2512,15 @@ async def get_historico_importacoes(
         fname = r.get("ficheiro_nome", "combustivel_import")
         if fname not in comb_by_file:
             comb_by_file[fname] = {
+                "id": fname,  # Use ficheiro_nome as ID for delete/update operations
                 "plataforma": "combustivel",
                 "ficheiro_nome": fname,
                 "data_importacao": r.get("created_at") or r.get("data_importacao"),
                 "total_registos": 0,
                 "total_valor": 0,
                 "semana": semana,
-                "ano": ano
+                "ano": ano,
+                "estado": r.get("estado", "processado")
             }
         comb_by_file[fname]["total_registos"] += 1
         comb_by_file[fname]["total_valor"] += float(r.get("valor_liquido") or r.get("total") or 0)
