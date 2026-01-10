@@ -554,6 +554,8 @@ async def update_vehicle_agenda(
             "agenda.$.data": agenda_data.get("data"),
             "agenda.$.hora": agenda_data.get("hora"),
             "agenda.$.descricao": agenda_data.get("descricao"),
+            "agenda.$.oficina": agenda_data.get("oficina"),
+            "agenda.$.local": agenda_data.get("local"),
             "agenda.$.updated_at": datetime.now(timezone.utc).isoformat()
         }}
     )
