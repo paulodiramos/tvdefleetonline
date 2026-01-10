@@ -1554,7 +1554,11 @@ const FichaMotorista = ({ user }) => {
                     <div className="bg-orange-50 p-4 rounded-lg">
                       <p className="text-sm text-slate-600">
                         A usar comissão do veículo: <strong>
-                          {veiculo ? `${100 - (veiculo.comissao_parceiro || 30)}% / ${veiculo.comissao_parceiro || 30}%` : 'N/A'}
+                          {veiculo ? (
+                            veiculo.tipo_contrato?.tipo === 'comissao'
+                              ? `${veiculo.tipo_contrato?.comissao_motorista || 0}% / ${veiculo.tipo_contrato?.comissao_parceiro || 0}%`
+                              : 'N/A (Tipo Aluguer)'
+                          ) : 'N/A'}
                         </strong>
                       </p>
                     </div>
