@@ -204,20 +204,21 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   const maxValue = Math.max(...historico.map(h => Math.max(h.ganhos || 0, h.despesas || 0, Math.abs(h.liquido || 0))), 1);
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div>
-          <h1 className="text-lg font-bold text-slate-800">Resumo Semanal</h1>
-          <p className="text-xs text-slate-500">Ganhos e despesas semanais</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-white rounded border px-2 py-1">
-            <Button variant="ghost" size="sm" onClick={handlePreviousWeek} className="h-6 w-6 p-0">
-              <ChevronLeft className="w-3 h-3" />
-            </Button>
-            <span className="text-xs font-medium min-w-[80px] text-center">S{semana}/{ano}</span>
-            <Button variant="ghost" size="sm" onClick={handleNextWeek} className="h-6 w-6 p-0">
+    <Layout user={user} onLogout={onLogout}>
+      <div className="p-4 space-y-4">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <h1 className="text-lg font-bold text-slate-800">Resumo Semanal</h1>
+            <p className="text-xs text-slate-500">Ganhos e despesas semanais</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 bg-white rounded border px-2 py-1">
+              <Button variant="ghost" size="sm" onClick={handlePreviousWeek} className="h-6 w-6 p-0">
+                <ChevronLeft className="w-3 h-3" />
+              </Button>
+              <span className="text-xs font-medium min-w-[80px] text-center">S{semana}/{ano}</span>
+              <Button variant="ghost" size="sm" onClick={handleNextWeek} className="h-6 w-6 p-0">
               <ChevronRight className="w-3 h-3" />
             </Button>
           </div>
