@@ -20,7 +20,7 @@ import requests
 import os
 
 # Use environment variable for API URL
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://partner-reports-1.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://taxicrew.preview.emergentagent.com')
 
 # Test credentials
 ADMIN_EMAIL = "admin@tvdefleet.com"
