@@ -79,7 +79,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
     titulo: '',
     data: '',
     hora: '',
-    descricao: ''
+    descricao: '',
+    oficina: '',
+    local: ''
   });
   
   const [editingAgendaId, setEditingAgendaId] = useState(null);
