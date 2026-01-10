@@ -894,15 +894,56 @@ async def get_resumo_semanal_parceiro(
         
         logger.info(f"  {motorista.get('name')}: Elétrico query returned {len(elet_records)} records, total €{eletrico_total:.2f}")
         
+        # ============ OBTER DADOS DO CONTRATO ============
+        # Obter configuração de comissão do contrato do veículo
+        comissao_motorista = 0.0
+        tipo_comissao = None
+        valor_comissao_config = 0
+        
+        if veiculo:
+            tipo_contrato = veiculo.get("tipo_contrato") or {}
+            tipo_contrato_veiculo = veiculo.get("tipo_contrato_veiculo", "aluguer")
+            
+            # Verificar tipo de contrato
+            if tipo_contrato_veiculo == "comissao" or tipo_contrato.get("tipo") == "comissao":
+                # Contrato por comissão - motorista recebe % dos ganhos
+                comissao_percentagem = tipo_contrato.get("comissao_motorista") or 70  # Default 70% para motorista
+                tipo_comissao = "percentagem"
+                valor_comissao_config = comissao_percentagem
+                comissao_motorista = total_ganhos * (comissao_percentagem / 100)
+            elif tipo_contrato.get("comissao_motorista"):
+                # Comissão definida no contrato (pode ser % ou valor fixo)
+                comissao_val = tipo_contrato.get("comissao_motorista")
+                if comissao_val <= 100:  # Assume que valores <= 100 são percentagens
+                    tipo_comissao = "percentagem"
+                    valor_comissao_config = comissao_val
+                    comissao_motorista = total_ganhos * (comissao_val / 100)
+                else:
+                    tipo_comissao = "valor_fixo"
+                    valor_comissao_config = comissao_val
+                    comissao_motorista = comissao_val
+            else:
+                # Contrato de aluguer - motorista fica com ganhos - despesas - aluguer
+                tipo_comissao = "aluguer"
+                valor_comissao_config = aluguer_semanal
+                # Neste caso, o "valor do motorista" é o que sobra após despesas e aluguer
+                comissao_motorista = max(0, total_ganhos - (combustivel_total + eletrico_total + via_verde_total + aluguer_semanal))
+        
         # ============ CALCULAR TOTAIS ============
         total_ganhos = ganhos_uber + ganhos_bolt
-        total_despesas = combustivel_total + eletrico_total + via_verde_total + aluguer_semanal
-        valor_liquido = total_ganhos - total_despesas
+        total_despesas_operacionais = combustivel_total + eletrico_total + via_verde_total
+        
+        # Líquido do motorista (o que o motorista recebe)
+        valor_liquido_motorista = comissao_motorista
+        
+        # Líquido do parceiro (o que fica para o parceiro)
+        valor_liquido_parceiro = total_ganhos - total_despesas_operacionais - comissao_motorista
         
         motorista_resumo = {
             "motorista_id": motorista_id,
             "motorista_nome": motorista.get("name"),
             "motorista_email": motorista_email,
+            "motorista_telefone": motorista.get("telefone") or motorista.get("phone"),
             "veiculo_matricula": veiculo.get("matricula") if veiculo else None,
             "veiculo_id": veiculo_id,
             "tem_relatorio": True if (ganhos_uber > 0 or ganhos_bolt > 0) else False,
@@ -912,15 +953,24 @@ async def get_resumo_semanal_parceiro(
             "ganhos_uber": round(ganhos_uber, 2),
             "ganhos_bolt": round(ganhos_bolt, 2),
             "total_ganhos": round(total_ganhos, 2),
-            # Despesas
+            # Despesas Operacionais
             "combustivel": round(combustivel_total, 2),
             "carregamento_eletrico": round(eletrico_total, 2),
             "via_verde": round(via_verde_total, 2),
             "via_verde_semana_referencia": f"Semana {semana}/{ano}",
+            "total_despesas_operacionais": round(total_despesas_operacionais, 2),
+            # Contrato e Comissão
+            "tipo_contrato": tipo_contrato_veiculo if veiculo else None,
+            "tipo_comissao": tipo_comissao,
+            "valor_comissao_config": valor_comissao_config,
+            "comissao_motorista": round(comissao_motorista, 2),
+            # Líquidos
+            "valor_liquido_motorista": round(valor_liquido_motorista, 2),
+            "valor_liquido_parceiro": round(valor_liquido_parceiro, 2),
+            # Legado (manter compatibilidade)
             "aluguer_veiculo": round(aluguer_semanal, 2),
-            "total_despesas": round(total_despesas, 2),
-            # Total
-            "valor_liquido": round(valor_liquido, 2),
+            "total_despesas": round(total_despesas_operacionais + comissao_motorista, 2),
+            "valor_liquido": round(valor_liquido_parceiro, 2),
             # Detalhes dos cartões
             "cartao_combustivel": cartao_combustivel,
             "cartao_eletrico": cartao_eletrico,
@@ -939,9 +989,13 @@ async def get_resumo_semanal_parceiro(
         totais["total_combustivel"] += combustivel_total
         totais["total_eletrico"] += eletrico_total
         totais["total_via_verde"] += via_verde_total
+        totais["total_despesas_operacionais"] = totais.get("total_despesas_operacionais", 0) + total_despesas_operacionais
+        totais["total_comissoes_motoristas"] = totais.get("total_comissoes_motoristas", 0) + comissao_motorista
+        totais["total_liquido_parceiro"] = totais.get("total_liquido_parceiro", 0) + valor_liquido_parceiro
+        # Legado
         totais["total_aluguer"] += aluguer_semanal
-        totais["total_despesas"] += total_despesas
-        totais["total_liquido"] += valor_liquido
+        totais["total_despesas"] = totais.get("total_despesas", 0) + total_despesas_operacionais + comissao_motorista
+        totais["total_liquido"] = totais.get("total_liquido", 0) + valor_liquido_parceiro
     
     # Round totals
     for key in totais:
@@ -963,7 +1017,158 @@ async def get_resumo_semanal_parceiro(
     }
 
 
-# ==================== HISTÓRICO DE IMPORTAÇÕES ====================
+# ==================== HISTÓRICO SEMANAL (GRÁFICOS) ====================
+
+@router.get("/parceiro/historico-semanal")
+async def get_historico_semanal_parceiro(
+    semanas: int = 6,
+    semana_atual: Optional[int] = None,
+    ano_atual: Optional[int] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Retorna histórico das últimas N semanas para gráficos de evolução.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    now = datetime.now()
+    if not semana_atual:
+        semana_atual = now.isocalendar()[1]
+    if not ano_atual:
+        ano_atual = now.year
+    
+    historico = []
+    
+    # Calcular semanas anteriores
+    for i in range(semanas - 1, -1, -1):
+        semana = semana_atual - i
+        ano = ano_atual
+        
+        # Ajustar para ano anterior se necessário
+        while semana <= 0:
+            semana += 52
+            ano -= 1
+        
+        # Buscar resumo desta semana (simplificado para performance)
+        # Calcular datas da semana
+        first_day_of_year = datetime(ano, 1, 1)
+        if first_day_of_year.weekday() <= 3:
+            first_monday = first_day_of_year - timedelta(days=first_day_of_year.weekday())
+        else:
+            first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()))
+        
+        week_start = first_monday + timedelta(weeks=semana - 1)
+        week_end = week_start + timedelta(days=6)
+        
+        data_inicio = week_start.strftime("%Y-%m-%d")
+        data_fim = week_end.strftime("%Y-%m-%d")
+        
+        # Build query for motoristas
+        motoristas_query = {}
+        if current_user["role"] == UserRole.PARCEIRO:
+            motoristas_query["$or"] = [
+                {"parceiro_id": current_user["id"]},
+                {"parceiro_atribuido": current_user["id"]}
+            ]
+        
+        motoristas = await db.motoristas.find(
+            motoristas_query, 
+            {"_id": 0, "id": 1, "veiculo_atribuido": 1}
+        ).to_list(1000)
+        
+        motorista_ids = [m["id"] for m in motoristas]
+        
+        # Calcular totais simplificados
+        total_ganhos = 0.0
+        total_despesas = 0.0
+        total_comissoes = 0.0
+        
+        if motorista_ids:
+            # Uber
+            uber_records = await db.ganhos_uber.find({
+                "motorista_id": {"$in": motorista_ids},
+                "$or": [
+                    {"semana": semana, "ano": ano},
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                ]
+            }, {"_id": 0, "pago_total": 1}).to_list(1000)
+            total_ganhos += sum(float(r.get("pago_total") or 0) for r in uber_records)
+            
+            # Bolt
+            bolt_records = await db.ganhos_bolt.find({
+                "motorista_id": {"$in": motorista_ids},
+                "$or": [
+                    {"periodo_semana": semana, "periodo_ano": ano},
+                    {"semana": semana, "ano": ano}
+                ]
+            }, {"_id": 0, "ganhos_liquidos": 1}).to_list(1000)
+            total_ganhos += sum(float(r.get("ganhos_liquidos") or 0) for r in bolt_records)
+            
+            # Despesas (Via Verde + Combustível + Elétrico)
+            # Obter veículos e matrículas
+            veiculo_ids = [m["veiculo_atribuido"] for m in motoristas if m.get("veiculo_atribuido")]
+            matriculas = []
+            if veiculo_ids:
+                veiculos = await db.vehicles.find({"id": {"$in": veiculo_ids}}, {"_id": 0, "matricula": 1}).to_list(100)
+                matriculas = [v["matricula"] for v in veiculos if v.get("matricula")]
+            
+            # Via Verde
+            if matriculas:
+                vv_records = await db.portagens_viaverde.find({
+                    "$and": [
+                        {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}},
+                        {"$or": [
+                            {"motorista_id": {"$in": motorista_ids}},
+                            {"matricula": {"$in": matriculas}}
+                        ]}
+                    ]
+                }, {"_id": 0, "liquid_value": 1}).to_list(5000)
+                total_despesas += sum(float(r.get("liquid_value") or 0) for r in vv_records)
+            
+            # Combustível
+            if matriculas:
+                comb_records = await db.abastecimentos_combustivel.find({
+                    "$and": [
+                        {"data": {"$gte": data_inicio, "$lte": data_fim}},
+                        {"$or": [
+                            {"motorista_id": {"$in": motorista_ids}},
+                            {"matricula": {"$in": matriculas}}
+                        ]}
+                    ]
+                }, {"_id": 0, "valor_liquido": 1}).to_list(1000)
+                total_despesas += sum(float(r.get("valor_liquido") or 0) for r in comb_records)
+            
+            # Elétrico
+            elet_records = await db.despesas_combustivel.find({
+                "motorista_id": {"$in": motorista_ids},
+                "$or": [
+                    {"semana": semana, "ano": ano},
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                ]
+            }, {"_id": 0, "valor_total": 1}).to_list(1000)
+            total_despesas += sum(float(r.get("valor_total") or 0) for r in elet_records)
+            
+            # Comissões (simplificado - assume 70% para motoristas)
+            total_comissoes = total_ganhos * 0.7
+        
+        total_liquido = total_ganhos - total_despesas - total_comissoes
+        
+        historico.append({
+            "semana": semana,
+            "ano": ano,
+            "periodo": f"S{semana}/{ano}",
+            "ganhos": round(total_ganhos, 2),
+            "despesas": round(total_despesas, 2),
+            "comissoes": round(total_comissoes, 2),
+            "liquido": round(total_liquido, 2)
+        })
+    
+    return {
+        "historico": historico,
+        "semana_atual": semana_atual,
+        "ano_atual": ano_atual
+    }
 
 @router.get("/importacoes/historico")
 async def get_historico_importacoes(
