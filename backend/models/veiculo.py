@@ -89,6 +89,7 @@ class VehicleExtinguisher(BaseModel):
     numero_serie: Optional[str] = None
     data_validade: Optional[str] = None
     proxima_recarga: Optional[str] = None
+    certificado_url: Optional[str] = None  # URL do certificado/documento
 
 
 class VehicleInspection(BaseModel):
@@ -98,6 +99,7 @@ class VehicleInspection(BaseModel):
     resultado: Optional[str] = None
     km_inspecao: Optional[int] = None
     valor: Optional[float] = None
+    documento_url: Optional[str] = None  # URL do documento de inspeção
 
 
 class VehicleAvailability(BaseModel):
