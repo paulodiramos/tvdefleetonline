@@ -51,5 +51,6 @@ __all__ = [
     'contratos_router',
     'sincronizacao_router',
     'public_router',
-    'ganhos_router'
+    'ganhos_router',
+    'manutencao_router'
 ]
