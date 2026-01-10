@@ -840,7 +840,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
       titulo: evento.titulo,
       data: evento.data,
       hora: evento.hora || '',
-      descricao: evento.descricao || ''
+      descricao: evento.descricao || '',
+      oficina: evento.oficina || '',
+      local: evento.local || ''
     });
     setIsAgendaModalOpen(true);
   };
@@ -861,7 +863,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
         titulo: '',
         data: '',
         hora: '',
-        descricao: ''
+        descricao: '',
+        oficina: '',
+        local: ''
       });
       fetchVehicleData();
     } catch (error) {
@@ -895,7 +899,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
       titulo: '',
       data: '',
       hora: '',
-      descricao: ''
+      descricao: '',
+      oficina: '',
+      local: ''
     });
   };
 
