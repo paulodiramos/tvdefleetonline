@@ -430,8 +430,16 @@ const FichaVeiculo = ({ user, onLogout }) => {
           semanada_por_epoca: infoForm?.semanada_por_epoca || false,
           semanada_epoca_alta: parseFloat(infoForm?.semanada_epoca_alta) || null,
           semanada_epoca_baixa: parseFloat(infoForm?.semanada_epoca_baixa) || null,
+          semanada_meses_epoca_alta: infoForm?.semanada_meses_epoca_alta || [],
+          semanada_meses_epoca_baixa: infoForm?.semanada_meses_epoca_baixa || [],
           // Periodicidade do Slot
           slot_periodicidade: infoForm?.slot_periodicidade || 'semanal',
+          slot_valor_semanal: parseFloat(infoForm?.slot_valor_semanal) || null,
+          slot_valor_mensal: parseFloat(infoForm?.slot_valor_mensal) || null,
+          slot_valor_anual: parseFloat(infoForm?.slot_valor_anual) || null,
+          // Garantia
+          tem_garantia: infoForm?.tem_garantia || false,
+          data_limite_garantia: infoForm?.data_limite_garantia || null,
           valor_compra_veiculo: parseFloat(infoForm?.valor_compra_veiculo) || null,
           numero_semanas_compra: parseInt(infoForm?.numero_semanas_compra) || null,
           com_slot: infoForm?.com_slot || false,
