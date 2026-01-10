@@ -1093,25 +1093,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
         ? documentPath 
         : `${baseUrl}/${documentPath}`;
       
-      // Fazer fetch do ficheiro e forçar download
-      const response = await fetch(fullUrl);
-      const blob = await response.blob();
-      
-      // Criar link de download
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      
-      // Extrair nome do ficheiro do path
-      const filename = documentPath.split('/').pop() || `${documentName}.pdf`;
-      link.setAttribute('download', filename);
-      
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-      
-      toast.success(`Download de ${documentName} iniciado`);
+      // Abrir numa nova tab - o browser vai mostrar PDF ou fazer download conforme o tipo
+      window.open(fullUrl, '_blank');
+      toast.success(`A abrir ${documentName}...`);
     } catch (error) {
       console.error('Error downloading document:', error);
       toast.error('Erro ao carregar documento');
