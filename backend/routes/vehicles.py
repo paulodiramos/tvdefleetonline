@@ -1684,7 +1684,7 @@ async def upload_carta_verde(
     current_user: Dict = Depends(get_current_user)
 ):
     """Upload carta verde document"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
@@ -1710,7 +1710,7 @@ async def upload_condicoes(
     current_user: Dict = Depends(get_current_user)
 ):
     """Upload condições document"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
