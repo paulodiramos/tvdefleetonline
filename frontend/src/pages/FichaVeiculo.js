@@ -1067,14 +1067,30 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
     try {
       // Construir URL completo para o ficheiro
-      // O backend serve ficheiros estáticos em /uploads/
       const baseUrl = process.env.REACT_APP_BACKEND_URL;
       const fullUrl = documentPath.startsWith('http') 
         ? documentPath 
         : `${baseUrl}/${documentPath}`;
       
-      // Abrir numa nova tab para download/visualização
-      window.open(fullUrl, '_blank');
+      // Fazer fetch do ficheiro e forçar download
+      const response = await fetch(fullUrl);
+      const blob = await response.blob();
+      
+      // Criar link de download
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Extrair nome do ficheiro do path
+      const filename = documentPath.split('/').pop() || `${documentName}.pdf`;
+      link.setAttribute('download', filename);
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success(`Download de ${documentName} iniciado`);
     } catch (error) {
       console.error('Error downloading document:', error);
       toast.error('Erro ao carregar documento');
