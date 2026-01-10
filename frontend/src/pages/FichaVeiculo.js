@@ -389,18 +389,23 @@ const FichaVeiculo = ({ user, onLogout }) => {
           valor_falta_cobrar: parseFloat(infoForm?.valor_falta_cobrar) || null,
           custo_slot: parseFloat(infoForm?.custo_slot) || null
         },
-        // Financiamento/Prestações
-        financiamento: {
-          tem_financiamento: infoForm?.tem_financiamento || false,
-          valor_aquisicao_veiculo: parseFloat(infoForm?.valor_aquisicao_veiculo) || null,
+        // Investimento/Aquisição do Veículo
+        investimento: {
+          tem_investimento: infoForm?.tem_investimento || false,
+          tipo_aquisicao: infoForm?.tipo_aquisicao || 'compra',
+          valor_aquisicao: parseFloat(infoForm?.valor_aquisicao) || null,
+          valor_aquisicao_com_iva: infoForm?.valor_aquisicao_com_iva || false,
+          iva_aquisicao: infoForm?.iva_aquisicao || '23',
           valor_entrada: parseFloat(infoForm?.valor_entrada) || null,
+          valor_entrada_com_iva: infoForm?.valor_entrada_com_iva || false,
           valor_prestacao: parseFloat(infoForm?.valor_prestacao) || null,
           numero_prestacoes: parseInt(infoForm?.numero_prestacoes) || null,
           prestacoes_pagas: parseInt(infoForm?.prestacoes_pagas) || null,
           data_inicio_financiamento: infoForm?.data_inicio_financiamento || null,
           data_fim_financiamento: infoForm?.data_fim_financiamento || null,
           entidade_financiadora: infoForm?.entidade_financiadora || null,
-          taxa_juro: parseFloat(infoForm?.taxa_juro) || null
+          taxa_juro: parseFloat(infoForm?.taxa_juro) || null,
+          valor_residual: parseFloat(infoForm?.valor_residual) || null
         },
         categorias_uber: infoForm?.categorias_uber || {},
         categorias_bolt: infoForm?.categorias_bolt || {}
