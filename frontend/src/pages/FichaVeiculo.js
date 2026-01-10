@@ -2495,6 +2495,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                           ✓ Periodicidade selecionada: <strong className="capitalize">{(editMode ? infoForm.slot_periodicidade : vehicle.tipo_contrato?.slot_periodicidade) || 'Semanal'}</strong>
                         </p>
                       </div>
+                    </div>
                     )}
 
                     {/* Garantia do Veículo */}
