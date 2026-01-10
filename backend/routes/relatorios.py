@@ -1362,8 +1362,105 @@ async def generate_motorista_pdf(
     ]))
     
     elements.append(table)
-    elements.append(Spacer(1, 15*mm))
+    elements.append(Spacer(1, 10*mm))
     
+    # ==================== LISTAS DETALHADAS ====================
+    
+    # Lista de Via Verde
+    if mostrar_via_verde and vv_records:
+        elements.append(Spacer(1, 5*mm))
+        elements.append(Paragraph("Detalhes Via Verde", section_style))
+        elements.append(Spacer(1, 3*mm))
+        
+        vv_table_data = [["Data/Hora", "Local", "Valor"]]
+        for r in sorted(vv_records, key=lambda x: x.get("entry_date", "")):
+            data_str = r.get("entry_date", "")[:16].replace("T", " ") if r.get("entry_date") else "-"
+            local = r.get("entry_name", r.get("local", "-"))[:30]
+            valor = float(r.get("liquid_value") or r.get("value") or 0)
+            vv_table_data.append([data_str, local, f"€{valor:.2f}"])
+        
+        # Linha de total
+        vv_table_data.append(["", "TOTAL", f"€{via_verde:.2f}"])
+        
+        vv_table = Table(vv_table_data, colWidths=[40*mm, 90*mm, 30*mm])
+        vv_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6c757d')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('ALIGN', (2, 0), (2, -1), 'RIGHT'),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e9ecef')),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        elements.append(vv_table)
+    
+    # Lista de Abastecimentos
+    if mostrar_abastecimentos and comb_records:
+        elements.append(Spacer(1, 8*mm))
+        elements.append(Paragraph("Detalhes Abastecimentos", section_style))
+        elements.append(Spacer(1, 3*mm))
+        
+        comb_table_data = [["Data", "Posto", "Litros", "Valor"]]
+        for r in sorted(comb_records, key=lambda x: x.get("data", "")):
+            data_str = r.get("data", "-")[:10]
+            posto = (r.get("posto", r.get("station_name", "-")))[:25]
+            litros = float(r.get("litros", r.get("quantity", 0)))
+            valor = float(r.get("valor_liquido") or r.get("total") or 0)
+            comb_table_data.append([data_str, posto, f"{litros:.2f}L", f"€{valor:.2f}"])
+        
+        comb_table_data.append(["", "", "TOTAL", f"€{combustivel:.2f}"])
+        
+        comb_table = Table(comb_table_data, colWidths=[30*mm, 80*mm, 25*mm, 30*mm])
+        comb_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6c757d')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('ALIGN', (2, 0), (3, -1), 'RIGHT'),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e9ecef')),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        elements.append(comb_table)
+    
+    # Lista de Carregamentos Elétricos
+    if mostrar_carregamentos and elet_records:
+        elements.append(Spacer(1, 8*mm))
+        elements.append(Paragraph("Detalhes Carregamentos Elétricos", section_style))
+        elements.append(Spacer(1, 3*mm))
+        
+        elet_table_data = [["Data", "Local/Operador", "kWh", "Valor"]]
+        for r in sorted(elet_records, key=lambda x: x.get("data", x.get("StartDate", ""))):
+            data_str = (r.get("data", r.get("StartDate", "-")))[:10]
+            local = (r.get("OperatorName", r.get("local", r.get("operador", "-"))))[:25]
+            kwh = float(r.get("TotalEnergy", r.get("kwh", 0)))
+            valor = float(r.get("valor_total") or r.get("TotalValueWithTaxes") or 0)
+            elet_table_data.append([data_str, local, f"{kwh:.2f}", f"€{valor:.2f}"])
+        
+        elet_table_data.append(["", "", "TOTAL", f"€{eletrico:.2f}"])
+        
+        elet_table = Table(elet_table_data, colWidths=[30*mm, 80*mm, 25*mm, 30*mm])
+        elet_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6c757d')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 8),
+            ('ALIGN', (2, 0), (3, -1), 'RIGHT'),
+            ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e9ecef')),
+            ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+            ('TOPPADDING', (0, 0), (-1, -1), 4),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+        ]))
+        elements.append(elet_table)
+    
+    # Rodapé
+    elements.append(Spacer(1, 10*mm))
     footer_style = ParagraphStyle('Footer', parent=styles['Normal'], fontSize=8, alignment=TA_CENTER, textColor=colors.grey)
     elements.append(Paragraph(f"Gerado em {datetime.now().strftime('%d/%m/%Y às %H:%M')} - TVDEFleet", footer_style))
     
