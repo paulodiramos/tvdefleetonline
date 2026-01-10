@@ -825,6 +825,10 @@ const FichaMotorista = ({ user }) => {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <FileCheck className="w-5 h-5" /> Licença TVDE
+                    {(isDocumentoProximoExpirar(dadosMotorista.licenca_tvde_validade) || 
+                      isDocumentoExpirado(dadosMotorista.licenca_tvde_validade)) && (
+                      <AlertCircle className="w-5 h-5 text-red-500 animate-pulse" />
+                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -846,7 +850,7 @@ const FichaMotorista = ({ user }) => {
                           onChange={(e) => setDadosMotorista(prev => ({ ...prev, licenca_tvde_validade: e.target.value }))}
                           disabled={!isEditing}
                         />
-                        {getValidadeBadge(dadosMotorista.licenca_tvde_validade)}
+                        {getValidadeBadge(dadosMotorista.licenca_tvde_validade, true)}
                       </div>
                     </div>
                   </div>
