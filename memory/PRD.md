@@ -3,92 +3,109 @@
 ## Original Problem Statement
 Sistema de gestão de frotas para empresas TVDE (React + FastAPI + MongoDB). A aplicação permite gestão de motoristas, veículos, relatórios financeiros semanais, importação de dados de plataformas (Uber, Bolt, Via Verde, Carregamentos Elétricos, Combustível), e automações.
 
+### Requisitos de Relatórios para Parceiros
+O utilizador solicitou refinamentos ao sistema de relatórios:
+1. **Relatório Semanal**: Consolidar ganhos (Uber, Bolt) e despesas (Via Verde, combustível, elétrico) para cada motorista
+2. **Nova Lógica Financeira**: O valor líquido do parceiro é calculado como:
+   - **Receitas do Parceiro** = Alugueres + Vendas de Veículos + Extras (dívidas, cauções, danos)
+   - **Despesas Operacionais** = Combustível + Via Verde + Elétrico
+   - **Líquido Parceiro** = Receitas - Despesas
+
+---
+
 ## What's Been Implemented
 
 ### Janeiro 2026
 
-#### 1. Resumo Semanal Refinado para Parceiro ✅ (NEW)
+#### ✅ Sistema de Extras/Dívidas do Motorista (NEW - 10/01/2026)
+**Status: COMPLETO E TESTADO (29/29 testes passaram)**
+
+**Backend:**
+- Novo ficheiro `/app/backend/routes/extras.py` com API CRUD completa
+- `GET /api/extras-motorista` - Lista extras com filtros (motorista_id, tipo, semana, ano, pago)
+- `POST /api/extras-motorista` - Cria extras (divida, caucao_parcelada, dano, multa, outro)
+- `PUT /api/extras-motorista/{id}` - Atualiza extras
+- `DELETE /api/extras-motorista/{id}` - Elimina extras
+- Validação de campos obrigatórios com resposta 422
+
+**Frontend:**
+- Nova página `/gestao-extras` com UI completa
+- Cards de resumo: Total Extras, Pendentes, Pagos
+- Tabela com filtros por Motorista, Tipo, Status
+- Modal de criação/edição com suporte a cauções parceladas
+- Link no menu Financeiro: "💰 Extras/Dívidas"
+
+**Integração:**
+- Resumo semanal inclui extras nos cálculos
+- Card do dashboard mostra Receitas Parceiro (Aluguer + Extras)
+- Fórmula: Líquido Parceiro = Receitas - Despesas Operacionais
+
+#### ✅ Resumo Semanal Refinado para Parceiro
 **Status: COMPLETO**
 
 Card no dashboard e página de resumo com:
-- **Ganhos**: Total Uber + Bolt (discriminado)
+- **Receitas Parceiro**: Aluguer + Extras + Vendas
 - **Despesas Operacionais**: Combustível + Via Verde + Elétrico
-- **Comissões Motoristas**: Baseado no contrato do veículo (% ou valor fixo)
-- **Líquido Parceiro**: Ganhos - Despesas - Comissões
-- Cálculo dinâmico baseado no tipo de contrato do veículo
+- **Líquido Parceiro**: Receitas - Despesas
+- Cálculo dinâmico baseado no contrato do veículo
 
-#### 2. Gráficos de Evolução Semanal ✅ (NEW)
+#### ✅ Gráficos de Evolução Semanal
 **Status: COMPLETO**
 
 - Histórico das últimas 6 semanas
-- Barras para Ganhos (verde), Despesas (laranja), Líquido (azul)
+- Barras para Receitas (verde), Despesas (vermelho), Líquido (azul)
 - Tooltips com valores detalhados
-- Endpoint: `GET /api/relatorios/parceiro/historico-semanal`
 
-#### 3. Sistema de Envio de Relatórios ✅ (NEW)
-**Status: COMPLETO**
+#### ✅ Sistema de Envio de Relatórios
+**Status: PARCIAL**
 
-**WhatsApp (Link Direto)**:
+**WhatsApp (Funcional)**:
 - Gera link `wa.me/numero?text=mensagem`
-- Abre WhatsApp no dispositivo
 - Mensagem formatada com emojis
-- Endpoint: `GET /api/relatorios/gerar-link-whatsapp/{motorista_id}`
 
-**Email (SendGrid)** - Aguarda API Key:
-- Estrutura pronta para integração
-- Template HTML profissional
+**Email (Aguarda API Key)**:
+- Estrutura pronta para SendGrid
 - Endpoint: `POST /api/relatorios/enviar-relatorio/{motorista_id}`
-- Envio em massa: `POST /api/relatorios/enviar-relatorios-em-massa`
-
-**UI de Envio**:
-- Botão "Enviar Emails" no header
-- Botões individuais por motorista (WhatsApp 💬 e Email 📧)
-- Loading states durante envio
-
-#### 4. Lista de Importações ✅
-**Status: COMPLETO**
-
-- Página `/lista-importacoes` com filtros
-- Resumo por plataforma
-- Lista detalhada de ficheiros
-
-#### 5. Sistema de Relatórios Semanais ✅
-**Status: COMPLETO**
-
-- Valores verificados: Nelson (Uber €607.54, Bolt €136.74), Jorge (Uber €677.00, Bolt €299.61)
-
----
-
-## Configuração Pendente
-
-### SendGrid Email
-Para ativar envio de emails, adicionar em `/app/backend/.env`:
-```
-SENDGRID_API_KEY=sua_chave_aqui
-SENDER_EMAIL=relatorios@tvdefleet.com
-```
 
 ---
 
 ## Architecture
 
 ### Key API Endpoints
-- `GET /api/relatorios/parceiro/resumo-semanal` - Resumo semanal com comissões
-- `GET /api/relatorios/parceiro/historico-semanal` - Histórico para gráficos
-- `GET /api/relatorios/importacoes/historico` - Histórico de importações
-- `GET /api/relatorios/gerar-link-whatsapp/{motorista_id}` - Link WhatsApp
-- `POST /api/relatorios/enviar-relatorio/{motorista_id}` - Enviar relatório
-- `POST /api/relatorios/enviar-relatorios-em-massa` - Enviar para todos
+```
+# Extras Motorista
+GET  /api/extras-motorista           # Lista com filtros
+POST /api/extras-motorista           # Criar
+PUT  /api/extras-motorista/{id}      # Atualizar
+DELETE /api/extras-motorista/{id}    # Eliminar
 
-### Backend Services
-- `/app/backend/services/envio_relatorios.py` - Serviço de envio (WhatsApp + Email)
+# Relatórios
+GET /api/relatorios/parceiro/resumo-semanal     # Resumo com extras
+GET /api/relatorios/parceiro/historico-semanal  # Dados para gráficos
+GET /api/relatorios/gerar-link-whatsapp/{id}    # Link WhatsApp
+POST /api/relatorios/enviar-relatorio/{id}      # Enviar por email
+```
 
-### Vehicle Contract Model
-```python
-tipo_contrato_veiculo: "aluguer" | "comissao"
-tipo_contrato: {
-    "comissao_motorista": 70,  # % que vai para o motorista
-    "comissao_parceiro": 30    # % que vai para o parceiro
+### Database Collections
+```javascript
+// extras_motorista
+{
+  id: string,
+  motorista_id: string,
+  parceiro_id: string,
+  tipo: "divida" | "caucao_parcelada" | "dano" | "multa" | "outro",
+  descricao: string,
+  valor: number,
+  data: string,
+  semana: number,
+  ano: number,
+  parcelas_total: number | null,
+  parcela_atual: number | null,
+  pago: boolean,
+  data_pagamento: string | null,
+  observacoes: string | null,
+  created_by: string,
+  created_at: string
 }
 ```
 
@@ -96,15 +113,15 @@ tipo_contrato: {
 
 ## Prioritized Backlog
 
-### P0 - Aguarda Configuração
+### P0 - Bloqueado
 - [ ] Configurar SENDGRID_API_KEY para ativar envio de emails
 
 ### P1 - Alta Prioridade
-- [ ] Refatorar `server.py` - separar lógica de importação
+- [ ] Refatorar `server.py` - separar lógica de importação para services/
 
 ### P2 - Média Prioridade
 - [ ] Implementar sincronização automática (RPA)
-- [ ] Conexão real com APIs (Uber, Bolt)
+- [ ] Registar vendas de veículos
 
 ### P3 - Baixa Prioridade
 - [ ] PDF do relatório semanal
@@ -115,4 +132,12 @@ tipo_contrato: {
 
 ## Test Credentials
 - **Admin**: admin@tvdefleet.com / 123456
-- **Parceiro (Zeny Macaia)**: geral@zmbusines.com / 123456
+- **Parceiro**: parceiro@tvdefleet.com / 123456
+
+## Test Data
+- **Motorista Teste Backend**: ID `0eea6d82-625f-453d-ba26-e6681563b2b8`
+- **Extra Existente**: Dívida €150 (semana 51/2025), Caução Parcelada €50 (semana 2/2026)
+
+## Test Reports
+- `/app/test_reports/iteration_4.json` - 29/29 testes passaram
+- `/app/tests/test_extras_motorista.py` - Suite de testes pytest
