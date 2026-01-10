@@ -862,6 +862,10 @@ const FichaMotorista = ({ user }) => {
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     <CreditCard className="w-5 h-5" /> Carta de Condução
+                    {(isDocumentoProximoExpirar(dadosMotorista.carta_conducao_validade) || 
+                      isDocumentoExpirado(dadosMotorista.carta_conducao_validade)) && (
+                      <AlertCircle className="w-5 h-5 text-red-500 animate-pulse" />
+                    )}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -892,7 +896,7 @@ const FichaMotorista = ({ user }) => {
                           onChange={(e) => setDadosMotorista(prev => ({ ...prev, carta_conducao_validade: e.target.value }))}
                           disabled={!isEditing}
                         />
-                        {getValidadeBadge(dadosMotorista.carta_conducao_validade)}
+                        {getValidadeBadge(dadosMotorista.carta_conducao_validade, true)}
                       </div>
                     </div>
                   </div>
