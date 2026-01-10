@@ -451,7 +451,7 @@ const FichaMotorista = ({ user }) => {
         </div>
         {documentos[tipoDocumento] ? (
           <Badge className="bg-green-100 text-green-800">
-            <CheckCircle className="w-3 h-3 mr-1" /> Carregado
+            <CheckCircle className="w-3 h-3 mr-1" /> PDF
           </Badge>
         ) : (
           <Badge variant="outline">Pendente</Badge>
@@ -467,7 +467,10 @@ const FichaMotorista = ({ user }) => {
           className="text-sm"
         />
         {uploading[tipoDocumento] && (
-          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+          <div className="flex items-center gap-2">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+            <span className="text-sm text-slate-500">A converter para PDF...</span>
+          </div>
         )}
       </div>
       {documentos[tipoDocumento] && (
@@ -475,9 +478,9 @@ const FichaMotorista = ({ user }) => {
           href={`${API}/${documentos[tipoDocumento]}`} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="text-sm text-blue-600 hover:underline"
+          className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
         >
-          Ver documento
+          <FileText className="w-4 h-4" /> Ver PDF
         </a>
       )}
     </div>
