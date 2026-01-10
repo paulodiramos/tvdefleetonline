@@ -191,8 +191,16 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   const handleDownloadMotoristaPdf = async (motoristaId, motoristaNome) => {
     try {
       const token = localStorage.getItem('token');
+      const params = new URLSearchParams({
+        semana,
+        ano,
+        mostrar_matricula: pdfOptions.mostrar_matricula,
+        mostrar_via_verde: pdfOptions.mostrar_via_verde,
+        mostrar_abastecimentos: pdfOptions.mostrar_abastecimentos,
+        mostrar_carregamentos: pdfOptions.mostrar_carregamentos
+      });
       const response = await axios.get(
-        `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}/pdf?semana=${semana}&ano=${ano}`,
+        `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}/pdf?${params}`,
         { headers: { Authorization: `Bearer ${token}` }, responseType: 'blob' }
       );
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -203,9 +211,14 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
       link.click();
       link.remove();
       toast.success(`PDF de ${motoristaNome} descarregado!`);
+      setShowPdfOptions(null);
     } catch (error) {
       toast.error('Erro ao descarregar PDF');
     }
+  };
+
+  const openPdfOptions = (motoristaId) => {
+    setShowPdfOptions(motoristaId);
   };
 
   const handleWhatsApp = async (motoristaId) => {
