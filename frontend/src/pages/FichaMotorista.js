@@ -769,6 +769,7 @@ const FichaMotorista = ({ user }) => {
                       onChange={(e) => setDadosMotorista(prev => ({ ...prev, iban: e.target.value }))}
                       disabled={!isEditing}
                       placeholder="PT50 0000 0000 0000 0000 0000 0"
+                      className={getFilledInputClass(dadosMotorista.iban)}
                     />
                   </div>
                 </CardContent>
