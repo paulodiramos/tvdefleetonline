@@ -356,15 +356,90 @@ const FichaMotorista = ({ user }) => {
     return validade < hoje;
   };
 
-  const getValidadeBadge = (dataValidade) => {
+  const getDiasParaExpirar = (dataValidade) => {
+    if (!dataValidade) return null;
+    const hoje = new Date();
+    const validade = new Date(dataValidade);
+    return Math.floor((validade - hoje) / (1000 * 60 * 60 * 24));
+  };
+
+  const getValidadeBadge = (dataValidade, mostrarDias = false) => {
     if (!dataValidade) return <Badge variant="outline">Não definida</Badge>;
-    if (isDocumentoExpirado(dataValidade)) {
-      return <Badge className="bg-red-500 text-white">Expirado</Badge>;
+    const dias = getDiasParaExpirar(dataValidade);
+    
+    if (dias < 0) {
+      return (
+        <Badge className="bg-red-500 text-white animate-pulse">
+          <AlertCircle className="w-3 h-3 mr-1" /> Expirado há {Math.abs(dias)} dias
+        </Badge>
+      );
     }
-    if (isDocumentoProximoExpirar(dataValidade)) {
-      return <Badge className="bg-yellow-500 text-white">Expira em breve</Badge>;
+    if (dias <= 30) {
+      return (
+        <Badge className="bg-yellow-500 text-white animate-pulse">
+          <AlertCircle className="w-3 h-3 mr-1" /> Expira em {dias} dias
+        </Badge>
+      );
+    }
+    if (mostrarDias && dias <= 60) {
+      return <Badge className="bg-blue-100 text-blue-800">{dataValidade} ({dias} dias)</Badge>;
     }
     return <Badge className="bg-green-100 text-green-800">{dataValidade}</Badge>;
+  };
+
+  const isAniversario = (dataNascimento) => {
+    if (!dataNascimento) return false;
+    const hoje = new Date();
+    const nascimento = new Date(dataNascimento);
+    return hoje.getMonth() === nascimento.getMonth() && hoje.getDate() === nascimento.getDate();
+  };
+
+  const diasParaAniversario = (dataNascimento) => {
+    if (!dataNascimento) return null;
+    const hoje = new Date();
+    const nascimento = new Date(dataNascimento);
+    const aniversarioEsteAno = new Date(hoje.getFullYear(), nascimento.getMonth(), nascimento.getDate());
+    
+    if (aniversarioEsteAno < hoje) {
+      aniversarioEsteAno.setFullYear(hoje.getFullYear() + 1);
+    }
+    
+    return Math.floor((aniversarioEsteAno - hoje) / (1000 * 60 * 60 * 24));
+  };
+
+  const getAniversarioBadge = (dataNascimento) => {
+    if (!dataNascimento) return null;
+    
+    if (isAniversario(dataNascimento)) {
+      return (
+        <Badge className="bg-gradient-to-r from-pink-500 to-purple-500 text-white animate-bounce">
+          🎂 Parabéns! Feliz Aniversário!
+        </Badge>
+      );
+    }
+    
+    const dias = diasParaAniversario(dataNascimento);
+    if (dias !== null && dias <= 7 && dias > 0) {
+      return (
+        <Badge className="bg-pink-100 text-pink-800">
+          🎁 Aniversário em {dias} {dias === 1 ? 'dia' : 'dias'}
+        </Badge>
+      );
+    }
+    
+    return null;
+  };
+
+  const calcularIdade = (dataNascimento) => {
+    if (!dataNascimento) return null;
+    const hoje = new Date();
+    const nascimento = new Date(dataNascimento);
+    let idade = hoje.getFullYear() - nascimento.getFullYear();
+    const m = hoje.getMonth() - nascimento.getMonth();
+    if (m < 0 || (m === 0 && hoje.getDate() < nascimento.getDate())) {
+      idade--;
+    }
+    return idade;
   };
 
   const DocumentUploadCard = ({ titulo, tipoDocumento, icone: Icone, descricao }) => (
