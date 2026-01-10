@@ -1,5 +1,16 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-10 - Session 4)
+### Session Updates:
+- **IMPLEMENTED**: Gestão do Histórico de Importações (`/lista-importacoes`)
+  - Novo ficheiro de rotas: `/app/backend/routes/importacoes.py`
+  - `DELETE /api/importacoes/{id}` - Eliminar importação e todos os registos associados
+  - `PUT /api/importacoes/{id}/estado` - Alterar estado (processado, pendente, erro, revisto)
+  - `GET /api/importacoes/{id}` - Obter detalhes de importação
+- **FIXED**: Código duplicado no `ListaImportacoes.js` que impedia o frontend de compilar
+- **UPDATED**: Endpoint `/api/relatorios/importacoes/historico` agora inclui `id` e `estado` em cada importação
+- **TESTED**: Funcionalidade completa testada via screenshots - alteração de estado e modal de eliminação funcionais
+
 ## Changelog (2026-01-10 - Session 3)
 ### Session Updates:
 - **IMPLEMENTED**: KM por Época - Campos km_por_epoca, km_epoca_alta, km_epoca_baixa, meses_epoca_alta, meses_epoca_baixa no modelo TipoContrato
@@ -41,6 +52,22 @@ O utilizador solicitou refinamentos ao sistema de relatórios:
 ## What's Been Implemented
 
 ### Janeiro 2026
+
+#### ✅ Gestão do Histórico de Importações (10/01/2026 - Session 4)
+**Status: COMPLETO E TESTADO**
+
+**Backend:**
+- Novo ficheiro: `/app/backend/routes/importacoes.py`
+- Endpoints implementados:
+  - `DELETE /api/importacoes/{id}` - Eliminar importação
+  - `PUT /api/importacoes/{id}/estado` - Alterar estado
+  - `GET /api/importacoes/{id}` - Obter detalhes
+- Suporta múltiplas coleções: ganhos_uber, ganhos_bolt, portagens_viaverde, abastecimentos_combustivel, despesas_combustivel
+
+**Frontend:**
+- Corrigido código duplicado em `ListaImportacoes.js`
+- Dropdown de estados funcional (Processado, Pendente, Revisto, Erro)
+- Modal de confirmação de eliminação
 
 #### ✅ KM por Época e Contratos Assinados (10/01/2026 - Session 3)
 **Status: COMPLETO E TESTADO (14/14 testes passaram)**
