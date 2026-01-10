@@ -523,7 +523,7 @@ const FichaMotorista = ({ user }) => {
       </div>
       {documentos[tipoDocumento] && (
         <a 
-          href={`${API}/${documentos[tipoDocumento]}`} 
+          href={`${process.env.REACT_APP_BACKEND_URL}/${documentos[tipoDocumento]}`} 
           target="_blank" 
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline"
