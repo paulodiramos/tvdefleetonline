@@ -273,6 +273,13 @@ const Mensagens = ({ user, onLogout }) => {
                 {conversasFiltradas.map((conversa) => {
                   const participante = conversa.participantes_info?.[0];
                   const isSelected = conversaSelecionada?.id === conversa.id;
+                  const isInteresse = conversa.tipo === 'interesse_veiculo';
+                  
+                  // Nome a mostrar: para interesse, usar contacto externo ou assunto
+                  let nomeDisplay = participante?.name || 'Utilizador';
+                  if (isInteresse && conversa.contacto_externo?.nome) {
+                    nomeDisplay = conversa.contacto_externo.nome;
+                  }
                   
                   return (
                     <div
@@ -285,9 +292,13 @@ const Mensagens = ({ user, onLogout }) => {
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2">
-                            <User className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                            {isInteresse ? (
+                              <span className="text-lg">🚗</span>
+                            ) : (
+                              <User className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                            )}
                             <span className="font-semibold text-slate-900 truncate">
-                              {participante?.name || 'Utilizador'}
+                              {nomeDisplay}
                             </span>
                             {conversa.mensagens_nao_lidas > 0 && (
                               <Badge variant="destructive" className="text-xs">
@@ -295,6 +306,18 @@ const Mensagens = ({ user, onLogout }) => {
                               </Badge>
                             )}
                           </div>
+                          {/* Mostrar assunto para conversas de interesse */}
+                          {conversa.assunto && (
+                            <p className="text-sm font-medium text-blue-600 truncate mt-0.5">
+                              {conversa.assunto}
+                            </p>
+                          )}
+                          {/* Mostrar contacto externo se disponível */}
+                          {isInteresse && conversa.contacto_externo && (
+                            <div className="text-xs text-slate-500 mt-0.5">
+                              📧 {conversa.contacto_externo.email} | 📱 {conversa.contacto_externo.telefone}
+                            </div>
+                          )}
                           <p className="text-sm text-slate-500 truncate mt-1">
                             {conversa.ultima_mensagem || 'Sem mensagens'}
                           </p>
