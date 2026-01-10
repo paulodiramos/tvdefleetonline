@@ -1579,9 +1579,12 @@ class Vehicle(BaseModel):
     status: str = "disponivel"  # disponivel, atribuido, manutencao, venda, condicoes
     
     # Contrato de Aluguer/Comissão do Veículo
-    tipo_contrato_veiculo: Optional[str] = None  # "aluguer" | "comissao" | None (sem contrato)
+    tipo_contrato_veiculo: Optional[str] = None  # "aluguer" | "comissao" | "slot" | None (sem contrato)
     valor_semanal: Optional[float] = None  # Valor semanal do aluguer ou comissão (€)
     condicoes_contrato: Optional[str] = None  # Condições do contrato
+    comissao_parceiro: Optional[float] = None  # Percentagem de comissão do parceiro
+    tem_caucao: Optional[bool] = False  # Se tem caução
+    valor_caucao: Optional[float] = None  # Valor da caução (€)
     
     # Quilómetros Contratados
     km_atribuidos: Optional[int] = None  # Quilómetros semanais contratados
