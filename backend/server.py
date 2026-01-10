@@ -1442,6 +1442,12 @@ class TipoContrato(BaseModel):
     km_extra_escalao_1_limite: int = 500  # Limite do primeiro escalão (até X km extra)
     km_extra_escalao_1_valor: Optional[float] = None  # Valor por km no primeiro escalão (ex: €0.10)
     km_extra_escalao_2_valor: Optional[float] = None  # Valor por km acima do primeiro escalão (ex: €0.20)
+    # Semanada/Aluguer por Época
+    semanada_por_epoca: bool = False
+    semanada_epoca_alta: Optional[float] = None  # Valor em € para época alta
+    semanada_epoca_baixa: Optional[float] = None  # Valor em € para época baixa
+    # Periodicidade de Pagamento do Slot
+    slot_periodicidade: Optional[str] = "semanal"  # semanal, mensal, anual
 
 class CategoriasUber(BaseModel):
     uberx: bool = False
