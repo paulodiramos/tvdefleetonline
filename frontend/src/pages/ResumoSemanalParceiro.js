@@ -25,7 +25,7 @@ import { toast } from 'sonner';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-const ResumoSemanalParceiro = () => {
+const ResumoSemanalParceiro = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [resumo, setResumo] = useState(null);
   const [historico, setHistorico] = useState([]);
