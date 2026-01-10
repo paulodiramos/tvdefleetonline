@@ -2006,6 +2006,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                             <option value="aluguer_epocas_sem_caucao">Aluguer com Épocas sem Caução</option>
                             <option value="aluguer_epocas_caucao">Aluguer com Épocas e Caução</option>
                             <option value="aluguer_epoca_caucao_parcelada">Aluguer Época com Caução Parcelada</option>
+                            <option value="slot">Slot</option>
                             <option value="compra_veiculo">Compra de Veículo</option>
                             <option value="comissao">Comissão</option>
                             <option value="motorista_privado">Motorista Privado</option>
@@ -2020,6 +2021,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                              vehicle.tipo_contrato?.tipo === 'aluguer_epocas_sem_caucao' ? 'Aluguer com Épocas sem Caução' :
                              vehicle.tipo_contrato?.tipo === 'aluguer_epocas_caucao' ? 'Aluguer com Épocas e Caução' :
                              vehicle.tipo_contrato?.tipo === 'aluguer_epoca_caucao_parcelada' ? 'Aluguer Época com Caução Parcelada' :
+                             vehicle.tipo_contrato?.tipo === 'slot' ? 'Slot' :
                              vehicle.tipo_contrato?.tipo === 'compra_veiculo' ? 'Compra de Veículo' :
                              vehicle.tipo_contrato?.tipo === 'comissao' ? 'Comissão' :
                              vehicle.tipo_contrato?.tipo === 'motorista_privado' ? 'Motorista Privado' :
