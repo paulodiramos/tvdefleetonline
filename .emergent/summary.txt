@@ -1,199 +1,189 @@
 <analysis>**original_problem_statement:**
-O utilizador fez um novo pedido detalhado para refinar o sistema de relatórios semanais para o perfil de parceiro.
-
-**Requisitos Principais:**
-1.  Criar um sistema de relatórios semanais simples e eficaz no perfil do parceiro.
-2.  O sistema deve importar ficheiros das plataformas: Uber, Bolt, Via Verde, combustível (diesel), elétrico e GPS (com KMs efetuados).
-3.  Toda a informação deve estar ligada a um motorista e ao seu veículo associado.
-4.  O veículo deve ter configurado: o cartão de frota, a Via Verde, e os detalhes do contrato, incluindo **quilómetros semanais contratados** e o **preço por km extra** (que podem ser fixos ou sazonais).
-5.  O utilizador forneceu novos ficheiros (, , , , ) e dois exemplos detalhados:
-    *   **Nelson:**
-        *   Ganhos Uber: €607,54
-        *   Ganhos Bolt: €136,74
-        *   Veículo: AS-83-NX
-        *   Via Verde ID: 601073900511, Gasto: €27,10
-        *   Cartão Combustível: 7824731736480002, Gasto: €5,35
-        *   Aluguer Semanal: €249,99
-    *   **Jorge Macaia:**
-        *   Ganhos Uber: €677,00
-        *   Ganhos Bolt: €299,61
-        *   Veículo: BQ-32-RS
-        *   Cartão Elétrico: PTPRIO6087131736480002, Gasto: €135,80
-        *   Aluguer Semanal: €249,99
-        *   Via Verde Gasto: €42,60
+O utilizador solicitou uma série de refinamentos ao sistema de relatórios para parceiros, evoluindo a cada etapa:
+1.  **Relatório Semanal Inicial:** Criar um sistema de relatórios semanais que consolide ganhos (Uber, Bolt) e despesas (Via Verde, combustível, elétrico) para cada motorista, com base em ficheiros de exemplo. O relatório deve ser simples e eficaz.
+2.  **Dashboards e Histórico:** Adicionar um card de resumo semanal ao dashboard do parceiro e uma página de histórico de todas as importações de ficheiros, visível para o parceiro e gestor, com filtros por período.
+3.  **Comissões e Gráficos:** Alterar o cálculo para, em vez de aluguer, mostrar comissões pagas aos motoristas (com base no contrato). O valor líquido passa a ser o que fica para o parceiro. Adicionar gráficos de evolução semanal ao dashboard e funcionalidades para enviar o relatório por WhatsApp ou Email (SendGrid).
+4.  **Lógica Financeira Final:** Redefinir o valor líquido do parceiro para ser a soma de:
+    *   Todos os alugueres de veículos ativos na semana.
+    *   Vendas de veículos realizadas.
+    *   Extras (dívidas, cauções parceladas, danos), que devem ser geríveis através de uma nova funcionalidade.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação possui um sistema de importação de ficheiros bastante robusto. Foram implementados e testados endpoints e interfaces de utilizador para:
-1.  **Importação de Ficheiros**: Lógica para processar ficheiros CSV e Excel de Uber, Bolt, Via Verde, carregamentos elétricos e combustível fóssil. A lógica lida com diferentes formatos e particularidades (ex: BOM em CSVs).
-2.  **Relatórios Semanais**: Geração de relatórios que consolidam ganhos e despesas por motorista.
-3.  **Interfaces de Utilizador (UI)**:
-    *   Uma página unificada para o parceiro importar todos os ficheiros ().
-    *   Uma página para o administrador configurar o mapeamento de colunas dos ficheiros ().
-    *   Uma página para o parceiro gerir credenciais de plataformas para sincronização automática ().
-    *   Uma página de resumo semanal que exibe totais e uma tabela detalhada por motorista ().
-4.  **Indicação da Semana na Via Verde**: A UI e a API foram atualizadas para mostrar de que semana são os dados da Via Verde.
-
-Todo este trabalho foi concluído antes do utilizador fornecer o novo requisito detalhado, que agora se tornou a prioridade.
+A aplicação tem um sistema de relatórios semanais funcional, com as seguintes características:
+-   **Dashboard do Parceiro**: Exibe um card de resumo com gráficos () que mostram a evolução semanal de ganhos, despesas e valor líquido.
+-   **Página de Resumo Semanal Detalhada**: Apresenta uma tabela com os ganhos (Uber, Bolt), despesas (combustível, portagens, etc.), comissões e valor líquido para cada motorista. Inclui botões para enviar o relatório individual por WhatsApp (link ) e Email (lógica SendGrid preparada, aguarda API key).
+-   **Página de Histórico de Importações**: Lista todos os ficheiros importados (Uber, Bolt, etc.) num determinado período, com totais de registos e valores.
+-   **Backend**: Os endpoints calculam em tempo real todos os valores a partir das coleções de dados importados, incluindo o cálculo de comissões com base no contrato do veículo. A integração com SendGrid foi instalada e a estrutura de envio de email está pronta.
 
 **Last working item**:
-*   **Last item agent was working:** O agente estava a iniciar o trabalho no novo e detalhado requisito do utilizador. Começou por analisar os 5 novos ficheiros fornecidos (, , , , ) para compreender os dados para os motoristas Nelson e Jorge Macaia.
-*   **Status:** IN PROGRESS
-*   **Agent Testing Done:** N
-*   **Which testing method agent to use?** both
-*   **User Testing Done:** N
+-   **Last item agent was working:** O agente estava a implementar o requisito final do utilizador para redefinir o cálculo do lucro do parceiro. O trabalho envolveu:
+    1.  Adicionar campos de venda (, , ) ao modelo  no .
+    2.  Criar um novo modelo Pydantic () e uma nova coleção no MongoDB para gerir Extras (dívidas, danos, etc.).
+    3.  Criar endpoints CRUD () para gerir esses extras.
+    4.  Começar a modificar o endpoint de resumo semanal () e o card do dashboard () para refletir esta nova lógica de cálculo (Alugueres + Vendas + Extras).
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** both
+-   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Implementar o novo Sistema de Relatórios Semanais (P0)**
--   **Issue 2: Refatoração do Backend Incompleta (P1)**
--   **Issue 3: Implementar a lógica de Sincronização Automática (RPA) (P2)**
+-   **Issue 1: Finalizar a nova lógica de cálculo do Valor Líquido do parceiro (P0)**
+-   **Issue 2: Implementar envio de email com SendGrid (P1)**
+-   **Issue 3: Refatoração do Backend (P2)**
+-   **Issue 4: Implementar a lógica de Sincronização Automática (RPA) (P3)**
 
 Issues Detail:
--   **Issue 1: Implementar o novo Sistema de Relatórios Semanais (P0)**
-    -   **Attempted fixes:** O agente iniciou a análise dos novos ficheiros.
+-   **Issue 1: Finalizar a nova lógica de cálculo do Valor Líquido do parceiro (P0)**
+    -   **Attempted fixes:** O agente já criou os modelos de dados e os endpoints para gerir Extras e Vendas. A lógica no endpoint de resumo semanal () e no componente de frontend () foi parcialmente atualizada.
     -   **Next debug checklist:**
-        1.  Adicionar os novos campos (, ) ao modelo de dados dos veículos ou a um novo modelo de contratos.
-        2.  Atualizar a UI de gestão de veículos/contratos para permitir a configuração destes novos campos.
-        3.  Localizar o motorista Jorge Macaia e o veículo BQ-32-RS na base de dados. Se não existirem, criá-los.
-        4.  Verificar e atualizar os veículos de Nelson (AS-83-NX) e Jorge (BQ-32-RS) com os IDs de cartão (combustível, elétrico) e Via Verde corretos, conforme a nova solicitação.
-        5.  Adaptar a lógica de importação e geração de relatórios para usar os novos dados e calcular os totais de acordo com os exemplos fornecidos.
-        6.  Garantir que os relatórios exibem todos os dados solicitados de forma simples e eficaz.
-    -   **Why fix this issue and what will be achieved with the fix?** Implementar a versão refinada e final da funcionalidade principal de relatórios do parceiro, conforme a especificação mais recente do utilizador.
+        1.  Reiniciar o backend para aplicar as últimas alterações.
+        2.  Testar os novos endpoints CRUD para Extras ().
+        3.  Testar o endpoint principal de resumo () via  para garantir que os cálculos de aluguer, vendas e extras estão corretos.
+        4.  Verificar a UI no dashboard e na página de resumo para confirmar que os novos totais são exibidos corretamente.
+        5.  Criar uma UI para o parceiro/gestor poder adicionar/editar/remover os Extras para cada motorista.
+    -   **Why fix this issue and what will be achieved with the fix?** Implementar a lógica financeira final e mais precisa, conforme solicitado pelo utilizador, para o cálculo do lucro do parceiro.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** both
 
--   **Issue 2: Refatoração do Backend Incompleta (P1)**
-    -   **Attempted fixes:** Nenhuma nesta sessão. O ficheiro  continua a ser um monólito que contém toda a lógica de importação de ficheiros.
-    -   **Next debug checklist:** Criar um novo diretório  e mover a lógica de importação de cada plataforma (Uber, Bolt, etc.) para módulos separados (ex: ).
-    -   **Why fix this issue and what will be achieved with the fix?** Melhora a manutenibilidade, escalabilidade e organização do código, facilitando futuras modificações.
+-   **Issue 2: Implementar envio de email com SendGrid (P1)**
+    -   **Attempted fixes:** O pacote  foi instalado e um serviço () e um endpoint () foram criados. Um placeholder  foi adicionado ao .
+    -   **Next debug checklist:**
+        1.  Obter a API key do utilizador.
+        2.  Adicionar a key ao ficheiro  do backend.
+        3.  Implementar a lógica de envio de email no serviço  usando a key.
+        4.  Testar a funcionalidade de envio de email a partir da UI.
+    -   **Why fix this issue and what will be achieved with the fix?** Habilitar o envio de relatórios semanais por email aos motoristas.
+    -   **Status:** BLOCKED (aguarda API key do utilizador)
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** backend
+
+-   **Issue 3: Refatoração do Backend (P2)**
+    -   **Attempted fixes:** Nenhuma nesta sessão. O ficheiro  continua monolítico.
+    -   **Next debug checklist:** Mover a lógica de endpoints para ficheiros de rotas dedicados (ex: , ) e a lógica de importação para .
+    -   **Why fix this issue and what will be achieved with the fix?** Melhorar a manutenibilidade, escalabilidade e organização do código.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** backend
 
--   **Issue 3: Implementar a lógica de Sincronização Automática (RPA) (P2)**
-    -   **Attempted fixes:** Foi criada uma UI para configurar a sincronização automática (), mas a lógica de backend não foi implementada.
-    -   **Next debug checklist:**
-        1.  Implementar a lógica no endpoint  para guardar as configurações de frequência e estado da automação.
-        2.  Implementar a função  em  para executar as importações automáticas com base nas credenciais e configurações guardadas.
-        3.  Garantir que as senhas são devidamente encriptadas e desencriptadas durante o processo.
-    -   **Why fix this issue and what will be achieved with the fix?** Habilitar a funcionalidade de importação automática, um requisito chave do utilizador.
+-   **Issue 4: Implementar a lógica de Sincronização Automática (RPA) (P3)**
+    -   **Attempted fixes:** Nenhuma nesta sessão. As UIs existem, mas o backend não está implementado.
+    -   **Next debug checklist:** Implementar a lógica no  para executar as importações automáticas com base nas credenciais e configurações guardadas.
+    -   **Why fix this issue and what will be achieved with the fix?** Automatizar a importação de dados, uma funcionalidade chave solicitada pelo utilizador.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** backend
 
 **In progress Task List**:
--   **Task 1: Análise e planeamento da nova solicitação de relatórios**
-    -   **Where to resume:** A análise dos ficheiros foi concluída. O próximo passo é definir o plano de implementação para os novos requisitos: adicionar campos de contrato (KMs), atualizar os dados dos motoristas/veículos (Nelson, Jorge), e adaptar a lógica de cálculo dos relatórios.
-    -   **What will be achieved with this?** Um plano claro para modificar a aplicação existente para corresponder aos novos requisitos detalhados do utilizador.
+-   **Task 1: Implementação da Lógica Financeira Final (P0)**
+    -   **Where to resume:** A implementação está a meio. O agente acabou de modificar os modelos de dados e os endpoints. O próximo passo é testar o backend e depois garantir que a UI reflete as mudanças.
+    -   **What will be achieved with this?** A aplicação calculará e exibirá o lucro do parceiro com base em alugueres, vendas de veículos e extras, conforme a definição mais recente do utilizador.
     -   **Status:** IN PROGRESS
     -   **Should Test frontend/backend/both after fix?** both
     -   **Blocked on something:** Não
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   (P1) **Issue 2**: Refatorar o backend para separar a lógica de importação.
-    -   (P2) **Issue 3**: Implementar a lógica de backend para a sincronização automática (RPA).
+    -   (P1) **Issue 2**: Finalizar a integração com SendGrid assim que o utilizador fornecer a API key.
+    -   (P1) Criar a interface de utilizador para gerir os Extras dos motoristas.
+    -   (P2) **Issue 3**: Refatorar o backend.
+    -   (P3) **Issue 4**: Implementar a lógica de sincronização automática (RPA).
 -   **Future Tasks:**
-    -   (P3) Modificar a geração do PDF do relatório semanal para incluir a lista detalhada das transações da Via Verde.
-    -   (P4) Adicionar notificações para o parceiro sobre o estado da importação (sucesso/erro).
-    -   (P5) Criar um editor visual para os passos de automação RPA.
+    -   Modificar a geração do PDF do relatório semanal para incluir a lista detalhada das transações da Via Verde.
+    -   Adicionar notificações para o parceiro sobre o estado da importação (sucesso/erro).
+    -   Criar um editor visual para os passos de automação RPA.
 
 **Completed work in this session**
--   **Sistema de Importação Melhorado (UI/Config) (CONCLUÍDO):**
-    -   Criadas UIs para importação unificada, configuração de mapeamento (admin) e gestão de credenciais (parceiro).
--   **Vista Consolidada Resumo Semanal do Parceiro (CONCLUÍDO):**
-    -   Criada uma nova página () e API () que exibe um resumo financeiro e uma tabela detalhada de todos os motoristas de um parceiro para uma dada semana.
--   **Indicação da Semana de Referência da Via Verde (CONCLUÍDO):**
-    -   O backend foi modificado para retornar a semana de referência dos dados da Via Verde.
-    -   O frontend foi atualizado para exibir essa informação () na UI de relatórios.
--   **Importação de Relatórios de Parceiro (v1) (CONCLUÍDO e TESTADO):**
-    -   Implementada e validada com  a importação de ficheiros para Uber, Bolt, Via Verde, Elétrico e Combustível para os motoristas Karen e Nelson. Foram corrigidos múltiplos bugs relacionados com a análise de ficheiros (BOM), associação de dados e duplicação de registos.
+-   **Sistema de Relatórios v1 (CONCLUÍDO e TESTADO):** Implementado e validado o relatório semanal com cálculos corretos para ganhos (Uber/Bolt) e despesas de aluguer, correspondendo aos exemplos do utilizador.
+-   **Card de Resumo no Dashboard (CONCLUÍDO):** Criado um card no dashboard do parceiro com um resumo financeiro (ganhos, despesas, comissões, líquido) e um gráfico de evolução semanal.
+-   **Página de Histórico de Importações (CONCLUÍDA):** Criada uma nova página que lista todos os ficheiros importados num período, com totais por plataforma.
+-   **Envio de Relatório por WhatsApp (CONCLUÍDO):** Implementada a geração de um link  para enviar um resumo do relatório a um motorista.
+-   **Cálculo de Comissões (CONCLUÍDO):** A lógica de relatório foi atualizada para calcular a comissão do motorista com base no contrato do seu veículo.
 
 **Earlier issues found/mentioned but not fixed**
--   Nenhum. Todos os problemas identificados foram resolvidos ou estão listados como pendentes.
+-   Nenhum.
 
 **Known issue recurrence from previous fork**
--   **Refatoração do Backend:** A necessidade de refatorar o  monolítico continua a ser adiada em favor de novas funcionalidades.
+-   **Refatoração do Backend:** A necessidade de refatorar o ficheiro monolítico  foi novamente adiada em favor da implementação de novas funcionalidades.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Processamento de Ficheiros (Pandas):** Essencial para a importação de ficheiros CSV e Excel.
--   **FastAPI Backend:** Criação e modificação de endpoints, gestão de uploads, e lógica de negócio complexa.
--   **MongoDB (motor):** Uso de queries e agregações para consolidar dados de múltiplas coleções (, , , , ).
--   **React Frontend:** Desenvolvimento de novas páginas e componentes, gestão de estado, e integração com a API via .
--   **Gestão de Credenciais:** Introduzido o conceito de armazenamento de credenciais de plataforma, com encriptação como próximo passo.
+-   **FastAPI Backend:** Modificação extensiva de endpoints, criação de novos modelos Pydantic.
+-   **MongoDB (motor):** Uso de queries complexas com ,  e agregações para consolidar dados em tempo real.
+-   **React Frontend:** Criação de novos componentes e páginas, gestão de estado, e uso da biblioteca  para gráficos.
+-   **Processamento de Ficheiros (Pandas):** Fundamental para a importação de dados.
 
 **key DB schema**
--   ****: Contém , , . Necessita da adição dos campos  e .
--   ** / **: Coleções que armazenam os ganhos por plataforma.
--   ****: Armazena transações da Via Verde.
--   ****: Armazena abastecimentos de combustível fóssil.
--   ****: Armazena carregamentos elétricos.
--   ****: Nova coleção para armazenar credenciais de plataformas por parceiro.
--   ****: Nova coleção para armazenar configurações de mapeamento de importação.
--   ****: O resultado consolidado que agrega todos os dados.
+-   ****: Contém , , , e os novos campos:  (bool),  (str),  (float).
+-   ****: Nova coleção para armazenar dívidas, cauções, danos, etc. Campos: , , , , .
+-   ****: Armazena credenciais para a futura automação RPA.
+-   Coleções de dados: , , , ,  (elétrico).
 
 **All files of reference**
--   **/app/backend/server.py**: Modificado extensivamente para nova lógica de importação, correção de bugs e novos endpoints de configuração.
--   **/app/backend/routes/relatorios.py**: Modificado para adicionar a referência da semana da Via Verde e o novo endpoint de resumo semanal.
--   **/app/frontend/src/pages/ResumoSemanalParceiro.js**: Ficheiro novo para a vista de resumo.
--   **/app/frontend/src/pages/ImportarFicheirosParceiro.js**: Ficheiro novo para a UI de importação unificada.
--   **/app/frontend/src/pages/ConfiguracaoMapeamento.js**: Ficheiro novo para a UI de configuração de mapeamento.
--   **/app/frontend/src/pages/CredenciaisPlataformas.js**: Ficheiro novo para a UI de gestão de credenciais.
--   **/app/frontend/src/App.js**: Modificado para adicionar as novas rotas.
--   **/app/frontend/src/components/Layout.js**: Modificado para adicionar os novos links no menu.
--   , , , , : **Novos ficheiros** fornecidos pelo utilizador para o requisito mais recente.
--   **/app/memory/PRD.md**: Atualizado para refletir o trabalho concluído.
+-   **/app/backend/server.py**: Modificado para adicionar novos modelos Pydantic (, campos de venda em ) e endpoints CRUD para os extras.
+-   **/app/backend/routes/relatorios.py**: Modificado extensivamente para a nova lógica de cálculo de comissões, totais do parceiro, e para os novos endpoints de histórico e envio.
+-   **/app/backend/services/envio_relatorios.py**: Ficheiro novo para a lógica de envio (WhatsApp, SendGrid).
+-   **/app/frontend/src/pages/Dashboard.js**: Modificado para incluir o novo .
+-   **/app/frontend/src/pages/ResumoSemanalParceiro.js**: Modificado para incluir botões de ação para envio de relatórios.
+-   **/app/frontend/src/pages/ListaImportacoes.js**: Ficheiro novo para a página de histórico de importações.
+-   **/app/frontend/src/components/ResumoSemanalCard.js**: Ficheiro novo, depois modificado, para exibir o resumo financeiro e o gráfico de evolução.
+-   **/app/frontend/src/App.js**: Modificado para adicionar a nova rota .
+-   **/app/frontend/src/components/Layout.js**: Modificado para adicionar o link para a nova página no menu.
+-   **/app/backend/.env**: Modificado para adicionar o placeholder .
 
 **Areas that need refactoring**:
--   ****: A lógica de importação de ficheiros de múltiplas plataformas deve ser extraída para módulos de serviço dedicados para melhorar a organização e manutenibilidade do código.
+-   : Continua a ser um ficheiro monolítico com modelos e rotas misturados, necessitando de uma separação urgente para melhor organização.
 
 **key api endpoints**
--   : Endpoint genérico de importação, modificado para suportar múltiplos formatos.
--   : Novo endpoint para a vista consolidada do parceiro.
--   : Modificado para retornar a semana de referência.
--   : Novo endpoint para guardar credenciais.
--   : Novo endpoint para guardar configurações de mapeamento.
+-   : Endpoint principal de relatórios (modificado).
+-   : Endpoint para a página de histórico de importações (novo).
+-   : Endpoint para os dados do gráfico de evolução (novo).
+-   : Endpoint para gerar link de envio por WhatsApp (novo).
+-   : Endpoint para envio por email (novo, pendente).
+-   : Endpoints para gerir extras (novo).
+-   : Endpoints para gerir extras (novo).
 
 **Critical Info for New Agent**
--   **NOVA PRIORIDADE MÁXIMA:** O foco é total no último pedido do utilizador: um sistema de relatórios semanais refinado. Use os novos ficheiros e os exemplos específicos (Nelson, Jorge Macaia) como a fonte da verdade.
--   **REAPROVEITAR CÓDIGO EXISTENTE:** Grande parte da base necessária já foi construída e testada. A tarefa é adaptar e estender o trabalho anterior para incluir os novos requisitos, como os campos de contrato (KMs e preço extra) e a lógica de cálculo específica.
--   **REQUISITOS DE CONTRATO:** Uma parte fundamental da nova tarefa é adicionar os campos quilómetros atribuídos e preço por km extra ao sistema, tanto na base de dados como na UI, e usá-los nos cálculos dos relatórios.
--   **AUTOMAÇÃO (RPA) É O PRÓXIMO PASSO:** Após a conclusão do relatório manual, a implementação da lógica de backend para a sincronização automática () será a próxima prioridade.
+-   **Prioridade Máxima:** A tarefa mais importante é concluir a implementação da nova lógica de cálculo do lucro do parceiro (alugueres + vendas + extras). O trabalho foi iniciado, mas precisa ser testado e finalizado, incluindo a criação de uma UI para gerir os Extras.
+-   **SendGrid API Key:** A funcionalidade de envio de email está bloqueada, aguardando que o utilizador forneça a API key da SendGrid. A estrutura no backend está pronta.
+-   **Refatoração Pendente:** A dívida técnica de refatorar o  monolítico continua a crescer. Deve ser abordada assim que as funcionalidades de alta prioridade estiverem concluídas.
 
 **documents and test reports created in this job**
--   /app/test_reports/iteration_2.json
--   /app/memory/PRD.md
+-   /app/test_reports/iteration_3.json
+-   /app/memory/PRD.md (atualizado múltiplas vezes)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User ():** Pede para melhorar o sistema de importação com uma UI unificada para o parceiro, uma tela de configuração de mapeamento para o admin e o armazenamento encriptado de credenciais.
-2.  **User ():** Confirma os detalhes da implementação do sistema de importação melhorado.
-3.  **Agent ():** Finaliza a implementação do sistema de importação melhorado e pergunta os próximos passos.
-4.  **User ():** **MENSAGEM CRÍTICA.** Fornece um novo requisito muito detalhado para criar um sistema de relatórios semanais simples e eficaz, com novos exemplos de motoristas (Nelson, Jorge Macaia), valores específicos, e anexa 5 novos ficheiros. Este pedido redefine a prioridade atual.
-5.  **Agent ( a ):** Começa a trabalhar na nova solicitação, iniciando a análise dos novos ficheiros fornecidos.
+-   **#285:** Pede para alterar o cálculo do resumo: despesas devem ser comissões, líquido é o valor do parceiro, e pede gráficos. Pergunta sobre o sistema para enviar relatórios por WhatsApp/Email.
+-   **#288:** Confirma que a comissão depende do contrato e escolhe as opções para o envio de relatórios.
+-   **#291:** Confirma  para WhatsApp, SendGrid para email, e que a comissão está no contrato do veículo.
+-   **#299:** Informa que a API key da SendGrid será fornecida mais tarde.
+-   **#355:** Pede uma nova alteração: o valor líquido do parceiro deve ser a soma de alugueres, vendas de veículos e extras.
+-   **#358:** Confirma os detalhes da nova lógica: somar todos os alugueres ativos, extras incluem dívidas/danos, e pede para criar os campos necessários.
 
 **Project Health Check:**
 -   **Broken:** Nenhuma funcionalidade principal está quebrada.
--   **Mocked:** A lógica de automação/RPA (sincronização automática) está pendente. As UIs foram criadas, mas o backend que as executa ainda não foi implementado.
+-   **Mocked:** O envio de emails via SendGrid e a automação RPA estão pendentes (o primeiro por falta de API key, o segundo por falta de implementação).
 
 **3rd Party Integrations**
--   **Playwright:** Instalado, mas a sua utilização para automação RPA está pendente.
--   **pandas / openpyxl:** Usados extensivamente e de forma crucial para a importação de ficheiros Excel e CSV.
+-   **pandas / openpyxl:** Usado para importação de ficheiros.
+-   **recharts:** Usado no frontend para exibir gráficos de evolução.
+-   **SendGrid:** Instalado no backend, mas a implementação está bloqueada aguardando a API key.
+-   **Playwright:** Instalado, mas a automação (RPA) ainda não foi implementada.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES. Usado com sucesso para validar a primeira versão da funcionalidade de importação de parceiros (v1).
+-   **Testing agent used after significant changes:** YES. Usado com sucesso para validar a v1 do sistema de relatórios.
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:**
-    -   /app/test_reports/iteration_2.json
--   **Known regressions:** Nenhuma conhecida.
+    -   /app/test_reports/iteration_3.json
+-   **Known regressions:** Nenhuma.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
 -   **Parceiro:**  / 
 
 **What agent forgot to execute**
--   Nada foi esquecido. O agente seguiu as prioridades do utilizador. As tarefas pendentes (refatoração, RPA) são conhecidas e estão listadas.</analysis>
+-   Nada foi esquecido. As tarefas pendentes (refatoração, RPA, SendGrid) são conhecidas e estão listadas como bloqueadas ou de menor prioridade, conforme as direções do utilizador.</analysis>
