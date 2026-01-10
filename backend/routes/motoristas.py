@@ -551,3 +551,206 @@ async def get_motorista_historico_atribuicoes(
         "total_registos": len(historico)
     }
 
+
+
+# ==================== CONFIGURAÇÕES FINANCEIRAS ====================
+
+@router.get("/motoristas/{motorista_id}/config-financeira")
+async def get_config_financeira(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter configurações financeiras do motorista"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Valores padrão
+    config_padrao = {
+        "acumular_viaverde": False,
+        "viaverde_acumulado": 0,
+        "viaverde_fonte": "ambos",
+        "gratificacao_tipo": "na_comissao",
+        "gratificacao_valor_fixo": 0,
+        "incluir_iva_rendimentos": True,
+        "iva_percentagem": 23,
+        "comissao_personalizada": False,
+        "comissao_motorista_percentagem": 70,
+        "comissao_parceiro_percentagem": 30
+    }
+    
+    config = motorista.get("config_financeira", config_padrao)
+    
+    # Merge com valores padrão para garantir todos os campos
+    for key, value in config_padrao.items():
+        if key not in config:
+            config[key] = value
+    
+    return config
+
+
+@router.put("/motoristas/{motorista_id}/config-financeira")
+async def update_config_financeira(
+    motorista_id: str,
+    config: Dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar configurações financeiras do motorista"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Verificar permissão do parceiro
+    if current_user["role"] == UserRole.PARCEIRO:
+        if motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Atualizar configuração
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        {"$set": {
+            "config_financeira": config,
+            "config_financeira_updated_at": datetime.now(timezone.utc).isoformat(),
+            "config_financeira_updated_by": current_user["id"]
+        }}
+    )
+    
+    return {"message": "Configurações financeiras atualizadas com sucesso"}
+
+
+@router.get("/motoristas/{motorista_id}/viaverde-acumulado")
+async def get_viaverde_acumulado(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter valor acumulado de Via Verde e histórico"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Buscar histórico de movimentos Via Verde
+    historico = await db.viaverde_acumulado.find(
+        {"motorista_id": motorista_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # Calcular total acumulado
+    total_acumulado = sum(
+        h.get("valor", 0) if h.get("tipo") == "credito" else -h.get("valor", 0) 
+        for h in historico
+    )
+    
+    # Também verificar na config do motorista
+    config = motorista.get("config_financeira", {})
+    viaverde_config = config.get("viaverde_acumulado", 0)
+    
+    return {
+        "motorista_id": motorista_id,
+        "total_acumulado": max(viaverde_config, total_acumulado),
+        "historico": historico
+    }
+
+
+@router.post("/motoristas/{motorista_id}/viaverde-acumular")
+async def acumular_viaverde(
+    motorista_id: str,
+    data: Dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Acumular valor de Via Verde para o motorista"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    valor = data.get("valor", 0)
+    fonte = data.get("fonte", "manual")
+    descricao = data.get("descricao", f"Acumulação Via Verde - {fonte}")
+    
+    # Criar registo de movimento
+    movimento = {
+        "id": str(uuid.uuid4()),
+        "motorista_id": motorista_id,
+        "valor": valor,
+        "tipo": "credito",
+        "fonte": fonte,
+        "descricao": descricao,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"]
+    }
+    
+    await db.viaverde_acumulado.insert_one(movimento)
+    
+    # Atualizar total na config do motorista
+    config = motorista.get("config_financeira", {})
+    config["viaverde_acumulado"] = config.get("viaverde_acumulado", 0) + valor
+    
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        {"$set": {"config_financeira": config}}
+    )
+    
+    return {
+        "message": f"Via Verde acumulado: €{valor:.2f}",
+        "novo_total": config["viaverde_acumulado"]
+    }
+
+
+@router.post("/motoristas/{motorista_id}/viaverde-abater")
+async def abater_viaverde(
+    motorista_id: str,
+    data: Dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Abater valor de Via Verde acumulado (cobrado no relatório)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    valor = data.get("valor", 0)
+    relatorio_id = data.get("relatorio_id")
+    descricao = data.get("descricao", "Abate Via Verde - Relatório Semanal")
+    
+    # Criar registo de movimento
+    movimento = {
+        "id": str(uuid.uuid4()),
+        "motorista_id": motorista_id,
+        "valor": valor,
+        "tipo": "debito",
+        "fonte": "abate_relatorio",
+        "relatorio_id": relatorio_id,
+        "descricao": descricao,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"]
+    }
+    
+    await db.viaverde_acumulado.insert_one(movimento)
+    
+    # Atualizar total na config do motorista (zerar ou reduzir)
+    config = motorista.get("config_financeira", {})
+    config["viaverde_acumulado"] = max(0, config.get("viaverde_acumulado", 0) - valor)
+    
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        {"$set": {"config_financeira": config}}
+    )
+    
+    return {
+        "message": f"Via Verde abatido: €{valor:.2f}",
+        "novo_total": config["viaverde_acumulado"]
+    }
+
