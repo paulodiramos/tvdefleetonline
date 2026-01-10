@@ -1675,8 +1675,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
                     {/* Campos específicos por tipo */}
                     
-                    {/* Valor Aluguer (para todos os tipos de aluguer) */}
-                    {(editMode ? infoForm.tipo : vehicle.tipo_contrato?.tipo)?.includes('aluguer') && (
+                    {/* Valor Aluguer (para todos os tipos de aluguer incluindo legacy) */}
+                    {((editMode ? infoForm.tipo : vehicle.tipo_contrato?.tipo)?.includes('aluguer') || 
+                      (editMode ? infoForm.tipo : vehicle.tipo_contrato?.tipo) === 'periodo_epoca') && (
                       <div>
                         <Label htmlFor="valor_aluguer">Valor Aluguer (€)</Label>
                         {canEdit && editMode ? (
