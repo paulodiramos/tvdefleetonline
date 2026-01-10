@@ -3666,11 +3666,11 @@ const FichaVeiculo = ({ user, onLogout }) => {
       <Dialog open={showAddManutencao} onOpenChange={setShowAddManutencao}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Registar Manutenção</DialogTitle>
+            <DialogTitle>Registar Manutenção / Custo</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleAddManutencao} className="space-y-4">
             <div>
-              <Label>Tipo de Manutenção *</Label>
+              <Label>Tipo de Intervenção/Custo *</Label>
               <select
                 value={novaManutencao.tipo_manutencao}
                 onChange={(e) => setNovaManutencao({...novaManutencao, tipo_manutencao: e.target.value})}
@@ -3678,20 +3678,29 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 required
               >
                 <option value="">Selecione o tipo</option>
-                <option value="Revisão">Revisão</option>
-                <option value="Troca de Óleo">Troca de Óleo</option>
-                <option value="Troca de Filtros">Troca de Filtros</option>
-                <option value="Troca de Pneus">Troca de Pneus</option>
-                <option value="Travões">Travões</option>
-                <option value="Suspensão">Suspensão</option>
-                <option value="Embraiagem">Embraiagem</option>
-                <option value="Correia de Distribuição">Correia de Distribuição</option>
-                <option value="Bateria">Bateria</option>
-                <option value="Ar Condicionado">Ar Condicionado</option>
-                <option value="Reparação Mecânica">Reparação Mecânica</option>
-                <option value="Reparação Elétrica">Reparação Elétrica</option>
-                <option value="Chapa e Pintura">Chapa e Pintura</option>
-                <option value="Outro">Outro</option>
+                <optgroup label="Manutenção">
+                  <option value="Revisão">Revisão</option>
+                  <option value="Troca de Óleo">Troca de Óleo</option>
+                  <option value="Troca de Filtros">Troca de Filtros</option>
+                  <option value="Troca de Pneus">Troca de Pneus</option>
+                  <option value="Travões">Travões</option>
+                  <option value="Suspensão">Suspensão</option>
+                  <option value="Embraiagem">Embraiagem</option>
+                  <option value="Correia de Distribuição">Correia de Distribuição</option>
+                  <option value="Bateria">Bateria</option>
+                  <option value="Ar Condicionado">Ar Condicionado</option>
+                </optgroup>
+                <optgroup label="Reparação">
+                  <option value="Reparação Mecânica">Reparação Mecânica</option>
+                  <option value="Reparação Elétrica">Reparação Elétrica</option>
+                  <option value="Chapa e Pintura">Chapa e Pintura</option>
+                </optgroup>
+                <optgroup label="Custos/Danos">
+                  <option value="Multa">Multa</option>
+                  <option value="Dano">Dano</option>
+                  <option value="Seguro">Seguro</option>
+                  <option value="Outro">Outro</option>
+                </optgroup>
               </select>
             </div>
             <div>
@@ -3714,7 +3723,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 />
               </div>
               <div>
-                <Label>KM na Manutenção</Label>
+                <Label>KM na Intervenção</Label>
                 <Input
                   type="number"
                   value={novaManutencao.km_realizada}
@@ -3744,6 +3753,53 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 />
               </div>
             </div>
+            
+            {/* Secção de Responsabilidade */}
+            <div className="bg-amber-50 p-4 rounded-lg border border-amber-200 space-y-3">
+              <Label className="text-amber-900 font-semibold">Atribuição de Custo</Label>
+              <p className="text-xs text-amber-700">
+                Defina quem é responsável pelo custo. Multas e danos são tipicamente do motorista. 
+                Pneus e seguros podem ser do motorista ou parceiro.
+              </p>
+              <div>
+                <Label>Responsável pelo Custo</Label>
+                <select
+                  value={novaManutencao.responsavel}
+                  onChange={(e) => setNovaManutencao({...novaManutencao, responsavel: e.target.value})}
+                  className="w-full p-2 border rounded-md"
+                >
+                  <option value="parceiro">Parceiro (Empresa)</option>
+                  <option value="motorista">Motorista</option>
+                </select>
+              </div>
+              
+              {novaManutencao.responsavel === 'motorista' && vehicle.motorista_atribuido && (
+                <div className="flex items-center gap-3 p-3 bg-white rounded border">
+                  <input
+                    type="checkbox"
+                    id="atribuir_motorista"
+                    checked={novaManutencao.atribuir_motorista}
+                    onChange={(e) => setNovaManutencao({...novaManutencao, atribuir_motorista: e.target.checked})}
+                    className="w-4 h-4"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="atribuir_motorista" className="font-medium cursor-pointer">
+                      Deduzir do motorista: {vehicle.motorista_atribuido_nome}
+                    </Label>
+                    <p className="text-xs text-slate-500">
+                      O valor será registado para desconto no próximo relatório semanal
+                    </p>
+                  </div>
+                </div>
+              )}
+              
+              {novaManutencao.responsavel === 'motorista' && !vehicle.motorista_atribuido && (
+                <p className="text-xs text-amber-600 italic">
+                  ⚠️ Nenhum motorista atribuído a este veículo
+                </p>
+              )}
+            </div>
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setShowAddManutencao(false)}>
                 Cancelar
