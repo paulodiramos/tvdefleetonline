@@ -436,21 +436,26 @@ async def download_motorista_document(
         if motorista.get("parceiro_atribuido") != current_user["id"]:
             raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Get document path
-    doc_path_key = f"{doc_type}"
-    doc_url = motorista.get("documents", {}).get(doc_path_key) or motorista.get(doc_path_key)
+    # Get document path - check both 'documentos' and 'documents' fields
+    doc_url = (
+        motorista.get("documentos", {}).get(doc_type) or 
+        motorista.get("documents", {}).get(doc_type) or 
+        motorista.get(doc_type)
+    )
     
     if not doc_url:
         raise HTTPException(status_code=404, detail="Document not found")
     
     # Convert URL to file path
-    if doc_url.startswith("/uploads/"):
+    if doc_url.startswith("uploads/"):
+        file_path = ROOT_DIR / doc_url
+    elif doc_url.startswith("/uploads/"):
         file_path = ROOT_DIR / doc_url.lstrip("/")
     else:
         file_path = ROOT_DIR / "uploads" / doc_url
     
     if not file_path.exists():
-        raise HTTPException(status_code=404, detail="Document file not found")
+        raise HTTPException(status_code=404, detail=f"Document file not found: {file_path}")
     
     media_type, _ = mimetypes.guess_type(str(file_path))
     
