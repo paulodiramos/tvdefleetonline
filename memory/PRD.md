@@ -7,90 +7,111 @@ Sistema de gestão de frotas para empresas TVDE (React + FastAPI + MongoDB). A a
 
 ### Janeiro 2026
 
-#### 1. Card de Resumo Semanal no Dashboard ✅ (NEW)
+#### 1. Resumo Semanal Refinado para Parceiro ✅ (NEW)
 **Status: COMPLETO**
 
-Adicionado card de resumo semanal no dashboard do parceiro com:
+Card no dashboard e página de resumo com:
 - **Ganhos**: Total Uber + Bolt (discriminado)
-- **Despesas**: Combustível + Elétrico + Via Verde + Aluguer
-- **Valor Líquido**: Ganhos - Despesas
-- Navegação por semanas (setas anterior/próximo)
-- Número de motoristas
+- **Despesas Operacionais**: Combustível + Via Verde + Elétrico
+- **Comissões Motoristas**: Baseado no contrato do veículo (% ou valor fixo)
+- **Líquido Parceiro**: Ganhos - Despesas - Comissões
+- Cálculo dinâmico baseado no tipo de contrato do veículo
 
-#### 2. Lista de Importações nos Relatórios ✅ (NEW)
+#### 2. Gráficos de Evolução Semanal ✅ (NEW)
 **Status: COMPLETO**
 
-Nova página `/lista-importacoes` com:
-- Filtro por **Semana** ou **Período** de datas
-- Resumo por plataforma (Uber, Bolt, Via Verde, Combustível, Elétrico)
-- Lista detalhada de ficheiros importados com:
-  - Plataforma
-  - Nome do ficheiro
-  - Data de importação
-  - Número de registos
-  - Total em €
-  - Semana de referência
-- Tabs para filtrar por plataforma específica
+- Histórico das últimas 6 semanas
+- Barras para Ganhos (verde), Despesas (laranja), Líquido (azul)
+- Tooltips com valores detalhados
+- Endpoint: `GET /api/relatorios/parceiro/historico-semanal`
 
-**Novo Endpoint:**
-- `GET /api/relatorios/importacoes/historico?semana=X&ano=Y` - Retorna histórico de importações filtrado por período
-
-#### 3. Sistema de Relatórios Semanais Refinado ✅
-**Status: COMPLETO - Testado com 16 testes (100% pass rate)**
-
-**Motoristas Verificados (Semana 51/2025):**
-- **Nelson Francisco** (AS-83-NX): Uber €607.54 ✅, Bolt €136.74 ✅, Aluguer €249.99 ✅
-- **Jorge Macaia** (BQ-32-RS): Uber €677.00 ✅, Bolt €299.61 ✅, Aluguer €249.99 ✅
-
-#### 4. Sistema de Importação Melhorado ✅
+#### 3. Sistema de Envio de Relatórios ✅ (NEW)
 **Status: COMPLETO**
 
-- UI unificada de importação (`/importar-ficheiros`)
-- Configuração de mapeamento (admin)
-- Credenciais encriptadas (parceiro)
+**WhatsApp (Link Direto)**:
+- Gera link `wa.me/numero?text=mensagem`
+- Abre WhatsApp no dispositivo
+- Mensagem formatada com emojis
+- Endpoint: `GET /api/relatorios/gerar-link-whatsapp/{motorista_id}`
+
+**Email (SendGrid)** - Aguarda API Key:
+- Estrutura pronta para integração
+- Template HTML profissional
+- Endpoint: `POST /api/relatorios/enviar-relatorio/{motorista_id}`
+- Envio em massa: `POST /api/relatorios/enviar-relatorios-em-massa`
+
+**UI de Envio**:
+- Botão "Enviar Emails" no header
+- Botões individuais por motorista (WhatsApp 💬 e Email 📧)
+- Loading states durante envio
+
+#### 4. Lista de Importações ✅
+**Status: COMPLETO**
+
+- Página `/lista-importacoes` com filtros
+- Resumo por plataforma
+- Lista detalhada de ficheiros
+
+#### 5. Sistema de Relatórios Semanais ✅
+**Status: COMPLETO**
+
+- Valores verificados: Nelson (Uber €607.54, Bolt €136.74), Jorge (Uber €677.00, Bolt €299.61)
+
+---
+
+## Configuração Pendente
+
+### SendGrid Email
+Para ativar envio de emails, adicionar em `/app/backend/.env`:
+```
+SENDGRID_API_KEY=sua_chave_aqui
+SENDER_EMAIL=relatorios@tvdefleet.com
+```
 
 ---
 
 ## Architecture
 
 ### Key API Endpoints
-- `GET /api/relatorios/parceiro/resumo-semanal?semana=51&ano=2025` - Resumo semanal calculado em tempo real
-- `GET /api/relatorios/importacoes/historico?semana=51&ano=2025` - Histórico de importações
+- `GET /api/relatorios/parceiro/resumo-semanal` - Resumo semanal com comissões
+- `GET /api/relatorios/parceiro/historico-semanal` - Histórico para gráficos
+- `GET /api/relatorios/importacoes/historico` - Histórico de importações
+- `GET /api/relatorios/gerar-link-whatsapp/{motorista_id}` - Link WhatsApp
+- `POST /api/relatorios/enviar-relatorio/{motorista_id}` - Enviar relatório
+- `POST /api/relatorios/enviar-relatorios-em-massa` - Enviar para todos
 
-### Frontend Components
-- `/app/frontend/src/components/ResumoSemanalCard.js` - Card de resumo para dashboard (NEW)
-- `/app/frontend/src/pages/ListaImportacoes.js` - Página de lista de importações (NEW)
-- `/app/frontend/src/pages/Dashboard.js` - Modificado para incluir ResumoSemanalCard
+### Backend Services
+- `/app/backend/services/envio_relatorios.py` - Serviço de envio (WhatsApp + Email)
 
-### Menu Structure
-**Relatórios:**
-- 📊 Gerir Relatórios
-- 📈 Resumo Semanal
-- 📋 Lista Importações (NEW)
-- 📤 Importar Ficheiros
-- 📜 Histórico
+### Vehicle Contract Model
+```python
+tipo_contrato_veiculo: "aluguer" | "comissao"
+tipo_contrato: {
+    "comissao_motorista": 70,  # % que vai para o motorista
+    "comissao_parceiro": 30    # % que vai para o parceiro
+}
+```
 
 ---
 
 ## Prioritized Backlog
 
+### P0 - Aguarda Configuração
+- [ ] Configurar SENDGRID_API_KEY para ativar envio de emails
+
 ### P1 - Alta Prioridade
-- [ ] Refatorar `server.py` - separar lógica de importação em `services/import_service.py`
+- [ ] Refatorar `server.py` - separar lógica de importação
 
 ### P2 - Média Prioridade
-- [ ] Implementar lógica de backend para sincronização automática (RPA)
-- [ ] Implementar conexão real com plataformas (Uber, Bolt API)
+- [ ] Implementar sincronização automática (RPA)
+- [ ] Conexão real com APIs (Uber, Bolt)
 
 ### P3 - Baixa Prioridade
-- [ ] PDF do relatório semanal com detalhes das transações Via Verde
-- [ ] Notificações sobre estado da importação
-- [ ] Editor visual para passos de automação RPA
-- [ ] Exportar resumo semanal para Excel/PDF
+- [ ] PDF do relatório semanal
+- [ ] Notificações sobre importação
+- [ ] Editor visual para automação RPA
 
 ---
-
-## Test Reports
-- `/app/test_reports/iteration_3.json` - 16 testes passaram (100%)
 
 ## Test Credentials
 - **Admin**: admin@tvdefleet.com / 123456
