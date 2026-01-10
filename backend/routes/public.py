@@ -204,7 +204,7 @@ _Este contacto foi recebido através da página pública de veículos._
 async def enviar_notificacao_contacto(contacto: Dict[str, Any], email_destino: str):
     """Send email notification about new contact (placeholder for email service)"""
     # This is a placeholder. In production, integrate with email service like SendGrid, AWS SES, etc.
-    logger.info(f"📧 NOVO CONTACTO RECEBIDO:")
+    logger.info("📧 NOVO CONTACTO RECEBIDO:")
     logger.info(f"   Para: {email_destino}")
     logger.info(f"   De: {contacto.get('nome')} ({contacto.get('email')})")
     logger.info(f"   Assunto: {contacto.get('assunto', 'Contacto do Website')}")
