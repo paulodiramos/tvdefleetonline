@@ -1972,61 +1972,142 @@ const FichaVeiculo = ({ user, onLogout }) => {
                         </div>
                         
                         {(editMode ? infoForm.semanada_por_epoca : vehicle.tipo_contrato?.semanada_por_epoca) && (
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {/* Valor Época Alta */}
-                            <div className="bg-orange-100 p-3 rounded-lg">
-                              <Label className="text-sm text-orange-800 flex items-center gap-1">
-                                ☀️ Valor Época Alta (€)
-                              </Label>
-                              {canEdit && editMode ? (
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  value={infoForm.semanada_epoca_alta || ''}
-                                  onChange={(e) => setInfoForm({...infoForm, semanada_epoca_alta: e.target.value})}
-                                  placeholder="Ex: 280.00"
-                                  className="mt-1"
-                                />
-                              ) : (
-                                <p className="font-bold text-lg text-orange-800">
-                                  €{(vehicle.tipo_contrato?.semanada_epoca_alta || 0).toFixed(2)}
+                          <div className="space-y-4">
+                            {/* Configuração de Meses */}
+                            {canEdit && editMode && (
+                              <div className="bg-white p-3 rounded-lg border">
+                                <Label className="text-sm font-semibold text-purple-800 mb-2 block">
+                                  📆 Configurar Meses por Época
+                                </Label>
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div>
+                                    <p className="text-xs text-orange-700 font-medium mb-1">☀️ Meses Época Alta:</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {[1,2,3,4,5,6,7,8,9,10,11,12].map(mes => (
+                                        <button
+                                          key={mes}
+                                          type="button"
+                                          onClick={() => {
+                                            const mesesAlta = infoForm.semanada_meses_epoca_alta || [];
+                                            const mesesBaixa = infoForm.semanada_meses_epoca_baixa || [];
+                                            if (mesesAlta.includes(mes)) {
+                                              setInfoForm({
+                                                ...infoForm,
+                                                semanada_meses_epoca_alta: mesesAlta.filter(m => m !== mes)
+                                              });
+                                            } else {
+                                              setInfoForm({
+                                                ...infoForm,
+                                                semanada_meses_epoca_alta: [...mesesAlta, mes].sort((a,b) => a-b),
+                                                semanada_meses_epoca_baixa: mesesBaixa.filter(m => m !== mes)
+                                              });
+                                            }
+                                          }}
+                                          className={`px-2 py-1 text-xs rounded ${
+                                            (infoForm.semanada_meses_epoca_alta || []).includes(mes)
+                                              ? 'bg-orange-500 text-white'
+                                              : 'bg-gray-100 hover:bg-orange-100'
+                                          }`}
+                                        >
+                                          {['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][mes-1]}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-blue-700 font-medium mb-1">❄️ Meses Época Baixa:</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {[1,2,3,4,5,6,7,8,9,10,11,12].map(mes => (
+                                        <button
+                                          key={mes}
+                                          type="button"
+                                          onClick={() => {
+                                            const mesesAlta = infoForm.semanada_meses_epoca_alta || [];
+                                            const mesesBaixa = infoForm.semanada_meses_epoca_baixa || [];
+                                            if (mesesBaixa.includes(mes)) {
+                                              setInfoForm({
+                                                ...infoForm,
+                                                semanada_meses_epoca_baixa: mesesBaixa.filter(m => m !== mes)
+                                              });
+                                            } else {
+                                              setInfoForm({
+                                                ...infoForm,
+                                                semanada_meses_epoca_baixa: [...mesesBaixa, mes].sort((a,b) => a-b),
+                                                semanada_meses_epoca_alta: mesesAlta.filter(m => m !== mes)
+                                              });
+                                            }
+                                          }}
+                                          className={`px-2 py-1 text-xs rounded ${
+                                            (infoForm.semanada_meses_epoca_baixa || []).includes(mes)
+                                              ? 'bg-blue-500 text-white'
+                                              : 'bg-gray-100 hover:bg-blue-100'
+                                          }`}
+                                        >
+                                          {['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][mes-1]}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Valor Época Alta */}
+                              <div className="bg-orange-100 p-3 rounded-lg">
+                                <Label className="text-sm text-orange-800 flex items-center gap-1">
+                                  ☀️ Valor Época Alta (€)
+                                </Label>
+                                {canEdit && editMode ? (
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    value={infoForm.semanada_epoca_alta || ''}
+                                    onChange={(e) => setInfoForm({...infoForm, semanada_epoca_alta: e.target.value})}
+                                    placeholder="Ex: 280.00"
+                                    className="mt-1"
+                                  />
+                                ) : (
+                                  <p className="font-bold text-lg text-orange-800">
+                                    €{(vehicle.tipo_contrato?.semanada_epoca_alta || 0).toFixed(2)}
+                                  </p>
+                                )}
+                                <p className="text-xs text-orange-600 mt-1">
+                                  {(editMode ? infoForm.semanada_meses_epoca_alta : vehicle.tipo_contrato?.semanada_meses_epoca_alta)?.length > 0 ? (
+                                    <>Meses: {(editMode ? infoForm.semanada_meses_epoca_alta : vehicle.tipo_contrato?.semanada_meses_epoca_alta)?.map(m => 
+                                      ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][m-1]
+                                    ).join(', ')}</>
+                                  ) : 'Selecione os meses acima'}
                                 </p>
-                              )}
-                              <p className="text-xs text-orange-600 mt-1">
-                                {infoForm.meses_epoca_alta?.length > 0 || vehicle.tipo_contrato?.meses_epoca_alta?.length > 0 ? (
-                                  <>Meses: {(editMode ? infoForm.meses_epoca_alta : vehicle.tipo_contrato?.meses_epoca_alta)?.map(m => 
-                                    ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][m-1]
-                                  ).join(', ')}</>
-                                ) : 'Configure os meses na secção KM por Época'}
-                              </p>
-                            </div>
+                              </div>
 
-                            {/* Valor Época Baixa */}
-                            <div className="bg-blue-100 p-3 rounded-lg">
-                              <Label className="text-sm text-blue-800 flex items-center gap-1">
-                                ❄️ Valor Época Baixa (€)
-                              </Label>
-                              {canEdit && editMode ? (
-                                <Input
-                                  type="number"
-                                  step="0.01"
-                                  value={infoForm.semanada_epoca_baixa || ''}
-                                  onChange={(e) => setInfoForm({...infoForm, semanada_epoca_baixa: e.target.value})}
-                                  placeholder="Ex: 220.00"
-                                  className="mt-1"
-                                />
-                              ) : (
-                                <p className="font-bold text-lg text-blue-800">
-                                  €{(vehicle.tipo_contrato?.semanada_epoca_baixa || 0).toFixed(2)}
+                              {/* Valor Época Baixa */}
+                              <div className="bg-blue-100 p-3 rounded-lg">
+                                <Label className="text-sm text-blue-800 flex items-center gap-1">
+                                  ❄️ Valor Época Baixa (€)
+                                </Label>
+                                {canEdit && editMode ? (
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    value={infoForm.semanada_epoca_baixa || ''}
+                                    onChange={(e) => setInfoForm({...infoForm, semanada_epoca_baixa: e.target.value})}
+                                    placeholder="Ex: 220.00"
+                                    className="mt-1"
+                                  />
+                                ) : (
+                                  <p className="font-bold text-lg text-blue-800">
+                                    €{(vehicle.tipo_contrato?.semanada_epoca_baixa || 0).toFixed(2)}
+                                  </p>
+                                )}
+                                <p className="text-xs text-blue-600 mt-1">
+                                  {(editMode ? infoForm.semanada_meses_epoca_baixa : vehicle.tipo_contrato?.semanada_meses_epoca_baixa)?.length > 0 ? (
+                                    <>Meses: {(editMode ? infoForm.semanada_meses_epoca_baixa : vehicle.tipo_contrato?.semanada_meses_epoca_baixa)?.map(m => 
+                                      ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][m-1]
+                                    ).join(', ')}</>
+                                  ) : 'Selecione os meses acima'}
                                 </p>
-                              )}
-                              <p className="text-xs text-blue-600 mt-1">
-                                {infoForm.meses_epoca_baixa?.length > 0 || vehicle.tipo_contrato?.meses_epoca_baixa?.length > 0 ? (
-                                  <>Meses: {(editMode ? infoForm.meses_epoca_baixa : vehicle.tipo_contrato?.meses_epoca_baixa)?.map(m => 
-                                    ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'][m-1]
-                                  ).join(', ')}</>
-                                ) : 'Configure os meses na secção KM por Época'}
-                              </p>
+                              </div>
                             </div>
                           </div>
                         )}
