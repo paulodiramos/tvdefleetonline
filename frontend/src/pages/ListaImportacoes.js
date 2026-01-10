@@ -430,48 +430,100 @@ const ListaImportacoes = ({ user, onLogout }) => {
                 </CardContent>
               </Card>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {filteredImportacoes.map((imp, index) => (
                   <Card key={imp.id || index} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
+                    <CardContent className="p-3">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                           <Badge className={getPlataformaColor(imp.plataforma)}>
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-1 text-xs">
                               {getPlataformaIcon(imp.plataforma)}
                               {imp.plataforma?.toUpperCase() || 'N/A'}
                             </span>
                           </Badge>
                           <div>
-                            <p className="font-semibold">{imp.ficheiro_nome || 'Ficheiro importado'}</p>
-                            <p className="text-sm text-slate-500">
-                              Importado em: {formatDate(imp.data_importacao)}
+                            <p className="font-medium text-sm">{imp.ficheiro_nome || 'Ficheiro importado'}</p>
+                            <p className="text-xs text-slate-500">
+                              {formatDate(imp.data_importacao)}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-4">
+                          {/* Estado */}
+                          <div className="relative">
+                            <button 
+                              onClick={() => setShowStatusMenu(showStatusMenu === imp.id ? null : imp.id)}
+                              className="cursor-pointer"
+                            >
+                              {getStatusBadge(imp.estado || 'processado')}
+                            </button>
+                            {showStatusMenu === imp.id && (
+                              <div className="absolute right-0 top-full mt-1 bg-white border rounded-lg shadow-lg z-10 py-1 min-w-[120px]">
+                                <button 
+                                  onClick={() => handleChangeStatus(imp.id, 'processado')}
+                                  className="w-full px-3 py-1.5 text-xs text-left hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                  <CheckCircle className="w-3 h-3 text-green-600" /> Processado
+                                </button>
+                                <button 
+                                  onClick={() => handleChangeStatus(imp.id, 'pendente')}
+                                  className="w-full px-3 py-1.5 text-xs text-left hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                  <Clock className="w-3 h-3 text-yellow-600" /> Pendente
+                                </button>
+                                <button 
+                                  onClick={() => handleChangeStatus(imp.id, 'revisto')}
+                                  className="w-full px-3 py-1.5 text-xs text-left hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                  <CheckCircle className="w-3 h-3 text-blue-600" /> Revisto
+                                </button>
+                                <button 
+                                  onClick={() => handleChangeStatus(imp.id, 'erro')}
+                                  className="w-full px-3 py-1.5 text-xs text-left hover:bg-slate-50 flex items-center gap-2"
+                                >
+                                  <XCircle className="w-3 h-3 text-red-600" /> Erro
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                          
+                          {/* Dados */}
                           <div className="text-center">
                             <p className="text-xs text-slate-500">Registos</p>
-                            <p className="font-bold text-lg">{imp.total_registos || 0}</p>
+                            <p className="font-bold text-sm">{imp.total_registos || 0}</p>
                           </div>
                           <div className="text-center">
                             <p className="text-xs text-slate-500">Total</p>
-                            <p className="font-bold text-lg text-blue-600">
+                            <p className="font-bold text-sm text-blue-600">
                               {formatCurrency(imp.total_valor)}
                             </p>
                           </div>
                           <div className="text-center">
                             <p className="text-xs text-slate-500">Semana</p>
-                            <p className="font-semibold">
-                              {imp.semana || '-'}/{imp.ano || '-'}
+                            <p className="font-medium text-sm">
+                              S{imp.semana || '-'}/{imp.ano || '-'}
                             </p>
+                          </div>
+                          
+                          {/* Ações */}
+                          <div className="flex gap-1">
+                            <Button 
+                              size="sm" 
+                              variant="destructive" 
+                              className="h-7 w-7 p-0"
+                              onClick={() => setShowDeleteConfirm(imp.id)}
+                              title="Eliminar"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
                           </div>
                         </div>
                       </div>
                       
                       {/* Detalhes adicionais */}
                       {imp.detalhes && (
-                        <div className="mt-3 pt-3 border-t grid grid-cols-4 gap-4 text-sm">
+                        <div className="mt-2 pt-2 border-t grid grid-cols-4 gap-4 text-xs">
                           {imp.detalhes.motoristas_afetados && (
                             <div>
                               <span className="text-slate-500">Motoristas:</span>
