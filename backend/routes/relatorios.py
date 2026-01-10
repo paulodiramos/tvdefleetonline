@@ -1013,13 +1013,19 @@ async def get_historico_importacoes(
     
     logger.info(f"📋 Histórico importações: {data_inicio} a {data_fim}")
     
-    # Build parceiro filter
-    parceiro_filter = {}
+    # Build parceiro filter based on motoristas associated with the parceiro
+    parceiro_motorista_ids = []
     if current_user["role"] == UserRole.PARCEIRO:
-        parceiro_filter = {"$or": [
-            {"parceiro_id": current_user["id"]},
-            {"uploaded_by": current_user["id"]}
-        ]}
+        # Get motoristas of this parceiro
+        motoristas = await db.motoristas.find(
+            {"$or": [
+                {"parceiro_id": current_user["id"]},
+                {"parceiro_atribuido": current_user["id"]}
+            ]},
+            {"_id": 0, "id": 1}
+        ).to_list(1000)
+        parceiro_motorista_ids = [m["id"] for m in motoristas]
+        logger.info(f"📋 Parceiro {current_user['id']} tem {len(parceiro_motorista_ids)} motoristas")
     
     importacoes = []
     resumo_por_plataforma = {
@@ -1032,12 +1038,14 @@ async def get_historico_importacoes(
     
     # ===== UBER =====
     uber_query = {
-        **parceiro_filter,
         "$or": [
             {"semana": semana, "ano": ano} if semana and ano else {},
             {"data": {"$gte": data_inicio, "$lte": data_fim}}
         ]
     }
+    uber_query["$or"] = [q for q in uber_query["$or"] if q]
+    if parceiro_motorista_ids:
+        uber_query["motorista_id"] = {"$in": parceiro_motorista_ids}
     uber_query["$or"] = [q for q in uber_query["$or"] if q]
     if not uber_query["$or"]:
         uber_query.pop("$or")
