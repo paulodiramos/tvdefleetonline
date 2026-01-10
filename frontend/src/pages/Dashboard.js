@@ -226,6 +226,11 @@ const Dashboard = ({ user, onLogout }) => {
           </Card>
         )}
 
+        {/* Resumo Semanal - Parceiro/Gestor */}
+        {(user.role === 'parceiro' || user.role === 'gestao') && (
+          <ResumoSemanalCard parceiroId={user.id} />
+        )}
+
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
