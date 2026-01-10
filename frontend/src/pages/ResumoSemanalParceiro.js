@@ -153,10 +153,16 @@ const ResumoSemanalParceiro = ({ user }) => {
           <h1 className="text-2xl font-bold text-slate-800">Resumo Semanal do Parceiro</h1>
           <p className="text-slate-500">Vista consolidada de todos os motoristas</p>
         </div>
-        <Button onClick={fetchResumo} disabled={loading}>
-          <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          Atualizar
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => handleEnviarTodos('email')} className="text-blue-600 border-blue-200 hover:bg-blue-50">
+            <Mail className="w-4 h-4 mr-2" />
+            Enviar Emails
+          </Button>
+          <Button onClick={fetchResumo} disabled={loading}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Atualizar
+          </Button>
+        </div>
       </div>
 
       {/* Week Selector */}
