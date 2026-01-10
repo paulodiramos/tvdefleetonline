@@ -135,6 +135,11 @@ const FichaVeiculo = ({ user, onLogout }) => {
     comissao_parceiro: '',
     comissao_motorista: '',
     inclui_combustivel: false,
+    // Condições de KM
+    tem_limite_km: false,
+    km_semanais_disponiveis: '',
+    valor_extra_km: '',
+    km_acumula_semanal: false, // Se os KM não usados acumulam para a próxima semana
     // Compra do Veículo
     valor_compra_veiculo: '',
     numero_semanas_compra: '',
