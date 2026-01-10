@@ -1188,6 +1188,553 @@ async def get_historico_semanal_parceiro(
         "ano_atual": ano_atual
     }
 
+
+# ==================== EDIÇÃO E ELIMINAÇÃO DE DADOS SEMANAIS ====================
+
+@router.put("/parceiro/resumo-semanal/motorista/{motorista_id}")
+async def update_motorista_weekly_data(
+    motorista_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Atualizar valores semanais de um motorista.
+    Cria ou atualiza um registo de ajuste manual.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    semana = data.get("semana")
+    ano = data.get("ano")
+    
+    if not semana or not ano:
+        raise HTTPException(status_code=400, detail="Semana e ano são obrigatórios")
+    
+    # Verificar se o motorista pertence ao parceiro
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    if current_user["role"] == UserRole.PARCEIRO:
+        if motorista.get("parceiro_id") != current_user["id"] and motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Não autorizado a editar este motorista")
+    
+    # Criar ou atualizar registo de ajuste manual
+    ajuste = {
+        "motorista_id": motorista_id,
+        "motorista_nome": motorista.get("name"),
+        "semana": semana,
+        "ano": ano,
+        "ganhos_uber": float(data.get("ganhos_uber", 0)),
+        "ganhos_bolt": float(data.get("ganhos_bolt", 0)),
+        "via_verde": float(data.get("via_verde", 0)),
+        "combustivel": float(data.get("combustivel", 0)),
+        "eletrico": float(data.get("eletrico", 0)),
+        "aluguer": float(data.get("aluguer", 0)),
+        "extras": float(data.get("extras", 0)),
+        "parceiro_id": current_user["id"] if current_user["role"] == UserRole.PARCEIRO else motorista.get("parceiro_id"),
+        "editado_por": current_user["id"],
+        "editado_em": datetime.now(timezone.utc).isoformat(),
+        "is_manual_adjustment": True
+    }
+    
+    # Upsert - atualiza se existir, cria se não existir
+    await db.ajustes_semanais.update_one(
+        {"motorista_id": motorista_id, "semana": semana, "ano": ano},
+        {"$set": ajuste},
+        upsert=True
+    )
+    
+    logger.info(f"✅ Valores semanais atualizados para {motorista.get('name')} - S{semana}/{ano}")
+    
+    return {"message": "Valores atualizados com sucesso"}
+
+
+@router.delete("/parceiro/resumo-semanal/motorista/{motorista_id}")
+async def delete_motorista_weekly_data(
+    motorista_id: str,
+    semana: int,
+    ano: int,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Eliminar todos os dados semanais de um motorista específico.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verificar se o motorista pertence ao parceiro
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    if current_user["role"] == UserRole.PARCEIRO:
+        if motorista.get("parceiro_id") != current_user["id"] and motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Não autorizado a eliminar dados deste motorista")
+    
+    # Calcular datas da semana
+    first_day_of_year = datetime(ano, 1, 1)
+    if first_day_of_year.weekday() <= 3:
+        first_monday = first_day_of_year - timedelta(days=first_day_of_year.weekday())
+    else:
+        first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()))
+    
+    week_start = first_monday + timedelta(weeks=semana - 1)
+    week_end = week_start + timedelta(days=6)
+    
+    data_inicio = week_start.strftime("%Y-%m-%d")
+    data_fim = week_end.strftime("%Y-%m-%d")
+    
+    deleted_counts = {}
+    
+    # Eliminar ganhos Uber
+    result = await db.ganhos_uber.delete_many({
+        "motorista_id": motorista_id,
+        "$or": [
+            {"semana": semana, "ano": ano},
+            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+        ]
+    })
+    deleted_counts["ganhos_uber"] = result.deleted_count
+    
+    # Eliminar ganhos Bolt
+    result = await db.ganhos_bolt.delete_many({
+        "motorista_id": motorista_id,
+        "$or": [
+            {"periodo_semana": semana, "periodo_ano": ano},
+            {"semana": semana, "ano": ano}
+        ]
+    })
+    deleted_counts["ganhos_bolt"] = result.deleted_count
+    
+    # Eliminar Via Verde
+    result = await db.portagens_viaverde.delete_many({
+        "motorista_id": motorista_id,
+        "$or": [
+            {"semana": semana, "ano": ano},
+            {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}
+        ]
+    })
+    deleted_counts["via_verde"] = result.deleted_count
+    
+    # Eliminar combustível
+    result = await db.abastecimentos_combustivel.delete_many({
+        "motorista_id": motorista_id,
+        "data": {"$gte": data_inicio, "$lte": data_fim}
+    })
+    deleted_counts["combustivel"] = result.deleted_count
+    
+    # Eliminar elétrico
+    result = await db.despesas_combustivel.delete_many({
+        "motorista_id": motorista_id,
+        "$or": [
+            {"semana": semana, "ano": ano},
+            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+        ]
+    })
+    deleted_counts["eletrico"] = result.deleted_count
+    
+    # Eliminar extras
+    result = await db.extras_motorista.delete_many({
+        "motorista_id": motorista_id,
+        "$or": [
+            {"semana": semana, "ano": ano},
+            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+        ]
+    })
+    deleted_counts["extras"] = result.deleted_count
+    
+    # Eliminar ajustes manuais
+    result = await db.ajustes_semanais.delete_many({
+        "motorista_id": motorista_id,
+        "semana": semana,
+        "ano": ano
+    })
+    deleted_counts["ajustes"] = result.deleted_count
+    
+    logger.info(f"🗑️ Dados eliminados para {motorista.get('name')} - S{semana}/{ano}: {deleted_counts}")
+    
+    return {
+        "message": f"Dados da semana {semana}/{ano} eliminados com sucesso",
+        "deleted_counts": deleted_counts
+    }
+
+
+@router.delete("/parceiro/resumo-semanal/all")
+async def delete_all_weekly_data(
+    semana: int,
+    ano: int,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Eliminar TODOS os dados semanais de todos os motoristas do parceiro.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Obter motoristas do parceiro
+    motoristas_query = {}
+    if current_user["role"] == UserRole.PARCEIRO:
+        motoristas_query["$or"] = [
+            {"parceiro_id": current_user["id"]},
+            {"parceiro_atribuido": current_user["id"]}
+        ]
+    
+    motoristas = await db.motoristas.find(motoristas_query, {"_id": 0, "id": 1}).to_list(1000)
+    motorista_ids = [m["id"] for m in motoristas]
+    
+    if not motorista_ids:
+        return {"message": "Nenhum motorista encontrado", "deleted_counts": {}}
+    
+    # Calcular datas da semana
+    first_day_of_year = datetime(ano, 1, 1)
+    if first_day_of_year.weekday() <= 3:
+        first_monday = first_day_of_year - timedelta(days=first_day_of_year.weekday())
+    else:
+        first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()))
+    
+    week_start = first_monday + timedelta(weeks=semana - 1)
+    week_end = week_start + timedelta(days=6)
+    
+    data_inicio = week_start.strftime("%Y-%m-%d")
+    data_fim = week_end.strftime("%Y-%m-%d")
+    
+    deleted_counts = {}
+    
+    # Eliminar ganhos Uber
+    result = await db.ganhos_uber.delete_many({
+        "motorista_id": {"$in": motorista_ids},
+        "$or": [
+            {"semana": semana, "ano": ano},
+            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+        ]
+    })
+    deleted_counts["ganhos_uber"] = result.deleted_count
+    
+    # Eliminar ganhos Bolt
+    result = await db.ganhos_bolt.delete_many({
+        "motorista_id": {"$in": motorista_ids},
+        "$or": [
+            {"periodo_semana": semana, "periodo_ano": ano},
+            {"semana": semana, "ano": ano}
+        ]
+    })
+    deleted_counts["ganhos_bolt"] = result.deleted_count
+    
+    # Eliminar Via Verde
+    result = await db.portagens_viaverde.delete_many({
+        "motorista_id": {"$in": motorista_ids},
+        "$or": [
+            {"semana": semana, "ano": ano},
+            {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}
+        ]
+    })
+    deleted_counts["via_verde"] = result.deleted_count
+    
+    # Eliminar combustível
+    result = await db.abastecimentos_combustivel.delete_many({
+        "motorista_id": {"$in": motorista_ids},
+        "data": {"$gte": data_inicio, "$lte": data_fim}
+    })
+    deleted_counts["combustivel"] = result.deleted_count
+    
+    # Eliminar elétrico
+    result = await db.despesas_combustivel.delete_many({
+        "motorista_id": {"$in": motorista_ids},
+        "$or": [
+            {"semana": semana, "ano": ano},
+            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+        ]
+    })
+    deleted_counts["eletrico"] = result.deleted_count
+    
+    # Eliminar extras
+    result = await db.extras_motorista.delete_many({
+        "motorista_id": {"$in": motorista_ids},
+        "$or": [
+            {"semana": semana, "ano": ano},
+            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+        ]
+    })
+    deleted_counts["extras"] = result.deleted_count
+    
+    # Eliminar ajustes manuais
+    result = await db.ajustes_semanais.delete_many({
+        "motorista_id": {"$in": motorista_ids},
+        "semana": semana,
+        "ano": ano
+    })
+    deleted_counts["ajustes"] = result.deleted_count
+    
+    total_deleted = sum(deleted_counts.values())
+    logger.info(f"🗑️ Todos os dados eliminados para S{semana}/{ano}: {total_deleted} registos")
+    
+    return {
+        "message": f"Todos os dados da semana {semana}/{ano} eliminados com sucesso",
+        "total_deleted": total_deleted,
+        "deleted_counts": deleted_counts
+    }
+
+
+@router.get("/parceiro/resumo-semanal/pdf")
+async def generate_resumo_semanal_pdf(
+    semana: int,
+    ano: int,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Gerar PDF do resumo semanal do parceiro.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    try:
+        from reportlab.lib import colors
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import mm
+        from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+        from reportlab.lib.enums import TA_CENTER, TA_RIGHT
+    except ImportError:
+        raise HTTPException(status_code=500, detail="ReportLab not installed")
+    
+    # Calcular datas da semana
+    first_day_of_year = datetime(ano, 1, 1)
+    if first_day_of_year.weekday() <= 3:
+        first_monday = first_day_of_year - timedelta(days=first_day_of_year.weekday())
+    else:
+        first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()))
+    
+    week_start = first_monday + timedelta(weeks=semana - 1)
+    week_end = week_start + timedelta(days=6)
+    
+    data_inicio = week_start.strftime("%Y-%m-%d")
+    data_fim = week_end.strftime("%Y-%m-%d")
+    
+    # Obter motoristas do parceiro
+    motoristas_query = {}
+    if current_user["role"] == UserRole.PARCEIRO:
+        motoristas_query["$or"] = [
+            {"parceiro_id": current_user["id"]},
+            {"parceiro_atribuido": current_user["id"]}
+        ]
+    
+    motoristas = await db.motoristas.find(
+        motoristas_query, 
+        {"_id": 0, "id": 1, "name": 1, "veiculo_atribuido": 1, "valor_aluguer_semanal": 1}
+    ).to_list(1000)
+    
+    # Calcular dados por motorista (simplificado)
+    motoristas_data = []
+    totais = {
+        "ganhos_uber": 0, "ganhos_bolt": 0, "via_verde": 0,
+        "combustivel": 0, "eletrico": 0, "aluguer": 0, "extras": 0
+    }
+    
+    for m in motoristas:
+        motorista_id = m["id"]
+        
+        # Ganhos Uber
+        uber_records = await db.ganhos_uber.find({
+            "motorista_id": motorista_id,
+            "$or": [
+                {"semana": semana, "ano": ano},
+                {"data": {"$gte": data_inicio, "$lte": data_fim}}
+            ]
+        }, {"_id": 0, "pago_total": 1}).to_list(100)
+        ganhos_uber = sum(float(r.get("pago_total") or 0) for r in uber_records)
+        
+        # Ganhos Bolt
+        bolt_records = await db.ganhos_bolt.find({
+            "motorista_id": motorista_id,
+            "$or": [
+                {"periodo_semana": semana, "periodo_ano": ano},
+                {"semana": semana, "ano": ano}
+            ]
+        }, {"_id": 0, "ganhos_liquidos": 1}).to_list(100)
+        ganhos_bolt = sum(float(r.get("ganhos_liquidos") or 0) for r in bolt_records)
+        
+        # Via Verde
+        vv_records = await db.portagens_viaverde.find({
+            "motorista_id": motorista_id,
+            "$or": [
+                {"semana": semana, "ano": ano},
+                {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}
+            ]
+        }, {"_id": 0, "liquid_value": 1}).to_list(1000)
+        via_verde = sum(float(r.get("liquid_value") or 0) for r in vv_records)
+        
+        # Combustível
+        comb_records = await db.abastecimentos_combustivel.find({
+            "motorista_id": motorista_id,
+            "data": {"$gte": data_inicio, "$lte": data_fim}
+        }, {"_id": 0, "valor_liquido": 1}).to_list(100)
+        combustivel = sum(float(r.get("valor_liquido") or 0) for r in comb_records)
+        
+        # Elétrico
+        elet_records = await db.despesas_combustivel.find({
+            "motorista_id": motorista_id,
+            "$or": [
+                {"semana": semana, "ano": ano},
+                {"data": {"$gte": data_inicio, "$lte": data_fim}}
+            ]
+        }, {"_id": 0, "valor_total": 1}).to_list(100)
+        eletrico = sum(float(r.get("valor_total") or 0) for r in elet_records)
+        
+        aluguer = float(m.get("valor_aluguer_semanal") or 0)
+        
+        # Extras
+        extras_records = await db.extras_motorista.find({
+            "motorista_id": motorista_id,
+            "$or": [
+                {"semana": semana, "ano": ano},
+                {"data": {"$gte": data_inicio, "$lte": data_fim}}
+            ]
+        }, {"_id": 0, "valor": 1}).to_list(100)
+        extras = sum(float(r.get("valor") or 0) for r in extras_records)
+        
+        liquido = ganhos_uber + ganhos_bolt - via_verde - combustivel - eletrico - aluguer
+        
+        motoristas_data.append({
+            "nome": m.get("name", ""),
+            "uber": ganhos_uber,
+            "bolt": ganhos_bolt,
+            "via_verde": via_verde,
+            "combustivel": combustivel,
+            "eletrico": eletrico,
+            "aluguer": aluguer,
+            "extras": extras,
+            "liquido": liquido
+        })
+        
+        totais["ganhos_uber"] += ganhos_uber
+        totais["ganhos_bolt"] += ganhos_bolt
+        totais["via_verde"] += via_verde
+        totais["combustivel"] += combustivel
+        totais["eletrico"] += eletrico
+        totais["aluguer"] += aluguer
+        totais["extras"] += extras
+    
+    totais["liquido"] = (
+        totais["ganhos_uber"] + totais["ganhos_bolt"] - 
+        totais["via_verde"] - totais["combustivel"] - totais["eletrico"] - totais["aluguer"]
+    )
+    
+    # Gerar PDF
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=15*mm, leftMargin=15*mm, topMargin=15*mm, bottomMargin=15*mm)
+    
+    styles = getSampleStyleSheet()
+    title_style = ParagraphStyle('Title', parent=styles['Heading1'], fontSize=16, alignment=TA_CENTER)
+    subtitle_style = ParagraphStyle('Subtitle', parent=styles['Normal'], fontSize=10, alignment=TA_CENTER, textColor=colors.grey)
+    
+    elements = []
+    
+    # Título
+    elements.append(Paragraph(f"Resumo Semanal do Parceiro", title_style))
+    elements.append(Paragraph(f"Semana {semana}/{ano} ({week_start.strftime('%d/%m/%Y')} a {week_end.strftime('%d/%m/%Y')})", subtitle_style))
+    elements.append(Spacer(1, 10*mm))
+    
+    # Tabela de motoristas
+    table_data = [
+        ["Motorista", "Uber", "Bolt", "Via Verde", "Comb.", "Elétr.", "Aluguer", "Extras", "Líquido"]
+    ]
+    
+    for m in sorted(motoristas_data, key=lambda x: x["nome"]):
+        table_data.append([
+            m["nome"][:20],
+            f"€{m['uber']:.2f}",
+            f"€{m['bolt']:.2f}",
+            f"€{m['via_verde']:.2f}",
+            f"€{m['combustivel']:.2f}",
+            f"€{m['eletrico']:.2f}",
+            f"€{m['aluguer']:.2f}",
+            f"€{m['extras']:.2f}",
+            f"€{m['liquido']:.2f}"
+        ])
+    
+    # Linha de totais
+    table_data.append([
+        "TOTAIS",
+        f"€{totais['ganhos_uber']:.2f}",
+        f"€{totais['ganhos_bolt']:.2f}",
+        f"€{totais['via_verde']:.2f}",
+        f"€{totais['combustivel']:.2f}",
+        f"€{totais['eletrico']:.2f}",
+        f"€{totais['aluguer']:.2f}",
+        f"€{totais['extras']:.2f}",
+        f"€{totais['liquido']:.2f}"
+    ])
+    
+    col_widths = [45*mm, 18*mm, 18*mm, 20*mm, 18*mm, 18*mm, 18*mm, 18*mm, 20*mm]
+    table = Table(table_data, colWidths=col_widths)
+    
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e3a5f')),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
+        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e8f4fc')),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 1), (-1, -1), 7),
+        ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -2), [colors.white, colors.HexColor('#f9f9f9')]),
+    ]))
+    
+    elements.append(table)
+    elements.append(Spacer(1, 10*mm))
+    
+    # Resumo
+    receitas = totais["aluguer"] + totais["extras"]
+    despesas = totais["via_verde"] + totais["combustivel"] + totais["eletrico"]
+    liquido_parceiro = receitas - despesas
+    
+    summary_data = [
+        ["Receitas do Parceiro", f"€{receitas:.2f}"],
+        ["  Aluguer", f"€{totais['aluguer']:.2f}"],
+        ["  Extras", f"€{totais['extras']:.2f}"],
+        ["Despesas Operacionais", f"€{despesas:.2f}"],
+        ["  Via Verde", f"€{totais['via_verde']:.2f}"],
+        ["  Combustível", f"€{totais['combustivel']:.2f}"],
+        ["  Elétrico", f"€{totais['eletrico']:.2f}"],
+        ["LÍQUIDO PARCEIRO", f"€{liquido_parceiro:.2f}"],
+    ]
+    
+    summary_table = Table(summary_data, colWidths=[80*mm, 40*mm])
+    summary_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (0, 0), 'Helvetica-Bold'),
+        ('FONTNAME', (0, 3), (0, 3), 'Helvetica-Bold'),
+        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE', (0, 0), (-1, -1), 9),
+        ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
+        ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#d4edda') if liquido_parceiro >= 0 else colors.HexColor('#f8d7da')),
+        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+    ]))
+    
+    elements.append(summary_table)
+    
+    # Rodapé
+    elements.append(Spacer(1, 15*mm))
+    footer_style = ParagraphStyle('Footer', parent=styles['Normal'], fontSize=8, alignment=TA_CENTER, textColor=colors.grey)
+    elements.append(Paragraph(f"Gerado em {datetime.now().strftime('%d/%m/%Y às %H:%M')} - TVDEFleet", footer_style))
+    
+    doc.build(elements)
+    buffer.seek(0)
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename=resumo_semanal_S{semana}_{ano}.pdf"
+        }
+    )
+
+
 @router.get("/importacoes/historico")
 async def get_historico_importacoes(
     semana: Optional[int] = None,
