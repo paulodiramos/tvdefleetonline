@@ -152,8 +152,14 @@ const FichaVeiculo = ({ user, onLogout }) => {
     km_extra_escalao_1_limite: 500,
     km_extra_escalao_1_valor: '',
     km_extra_escalao_2_valor: '',
+    // Semanada por Época
+    semanada_por_epoca: false,
+    semanada_epoca_alta: '',
+    semanada_epoca_baixa: '',
+    // Periodicidade do Slot
+    slot_periodicidade: 'semanal',
     // Contratos
-    contratos: [], // Lista de contratos {id, data, tipo, documento_url, assinado_motorista, assinado_parceiro}
+    contratos: [], // Lista de contratos {id, data, tipo, documento_url, assinado_motorista, assinado_parceiro, assinado_gestor}
     // Compra do Veículo
     valor_compra_veiculo: '',
     numero_semanas_compra: '',
