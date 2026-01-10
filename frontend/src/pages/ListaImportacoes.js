@@ -455,7 +455,7 @@ const ListaImportacoes = ({ user, onLogout }) => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </Layout>
   );
 };
 
