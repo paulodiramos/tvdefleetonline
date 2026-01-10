@@ -573,7 +573,7 @@ const FichaMotorista = ({ user }) => {
                 <Avatar className="h-20 w-20 border-2 border-slate-200">
                   {fotoMotorista ? (
                     <img 
-                      src={`${API}/${fotoMotorista}`} 
+                      src={`${API}/api/motoristas/${motoristaId}/foto`} 
                       alt={motorista.name}
                       className="h-full w-full object-cover rounded-full"
                     />
