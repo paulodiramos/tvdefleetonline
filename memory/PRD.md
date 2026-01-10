@@ -1,5 +1,20 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-10 - Session 5b - Bugs & Funcionalidades)
+### Session Updates:
+- **BUG FIX**: Aprovação de documentos agora atualiza `status_motorista` para "ativo"
+- **BUG FIX**: Download de documentos corrigido (procura em `documentos` e `documents`)
+- **BUG FIX**: Endpoint GET motorista retorna todos os campos da base de dados
+- **BUG FIX**: Erro `AttributeError` no endpoint `proximas-datas-dashboard` corrigido
+- **IMPLEMENTED**: Valores do Slot só aparecem quando tipo_contrato="slot"
+- **IMPLEMENTED**: Campos preenchidos têm cor mais escura (função `getFilledInputClass`)
+- **IMPLEMENTED**: Secção "Publicação na Página de Veículos" em FichaVeiculo
+  - Checkboxes: "Disponível para Aluguer" e "Disponível para Venda"
+- **IMPLEMENTED**: Página pública /veiculos mostra veículos sem motorista
+  - Condições contratuais: valor semanal, caução, KM incluídos, garantia
+  - Badge "Disponível para Aluguer"
+- **ADDED**: Tipo de contrato "Slot" nas opções
+
 ## Changelog (2026-01-10 - Session 5 - Refatoração Backend)
 ### Session Updates:
 - **REFACTORED**: Backend - Criados novos ficheiros de rotas organizados por domínio:
