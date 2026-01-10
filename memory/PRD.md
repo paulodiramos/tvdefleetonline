@@ -11,9 +11,19 @@
   - Novos campos: `km_extra_escalao_1_limite`, `km_extra_escalao_1_valor`, `km_extra_escalao_2_valor`
   - Lógica: Até X km extra aplica valor do escalão 1, acima aplica valor do escalão 2
   - UI com fundo gradiente vermelho/laranja e exemplo de cálculo dinâmico
+- **IMPLEMENTED**: Semanada por Época nos Veículos
+  - Novos campos: `semanada_por_epoca`, `semanada_epoca_alta`, `semanada_epoca_baixa`
+  - UI com fundo púrpura/índigo, campos laranja (alta) e azul (baixa)
+  - Usa os mesmos meses configurados na secção KM por Época
+- **IMPLEMENTED**: Periodicidade do Slot
+  - Novo campo: `slot_periodicidade` (semanal, mensal, anual)
+  - Dropdown na secção de compra do veículo
+- **IMPLEMENTED**: Melhorias nos Contratos Assinados
+  - Adicionado checkbox `assinado_gestor` 
+  - Novo endpoint: `PUT /api/vehicles/{id}/contratos/{contrato_id}` para atualizar assinaturas
+  - UI melhorada com checkboxes editáveis e botão "Download PDF"
 - **FIXED**: Código duplicado no `ListaImportacoes.js` que impedia o frontend de compilar
-- **UPDATED**: Endpoint `/api/relatorios/importacoes/historico` agora inclui `id` e `estado` em cada importação
-- **TESTED**: Via screenshots e curl - todas as funcionalidades verificadas
+- **TESTED**: Via screenshots - todas as funcionalidades verificadas
 
 ## Changelog (2026-01-10 - Session 3)
 ### Session Updates:
