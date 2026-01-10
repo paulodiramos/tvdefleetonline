@@ -1,6 +1,13 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-10)
+## Changelog (2026-01-10 - Session 2)
+### Session Updates:
+- **FIXED**: Upload de documento do motorista - erro MongoDB de conflito de path no $set
+- **FIXED**: Duplicação do campo "Valor Aluguer" removida (secção legacy)
+- **VALIDATED**: Comissão de Parceiro só aparece quando tipo = "comissao" (já funcionava)
+- **VALIDATED**: Valor Aluguer aparece apenas para tipos de aluguer
+
+## Changelog (2026-01-10 - Session 1)
 ### Session Updates:
 - **FIXED**: Cartão Frota (Combustível) não guardava - adicionado `cartao_frota_id` ao modelo Pydantic
 - **FIXED**: Cartão Frota Elétrico não guardava ID - adicionado `cartao_frota_eletric_id` ao modelo Pydantic  
