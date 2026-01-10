@@ -2419,3 +2419,136 @@ async def agendar_vistoria(
     except Exception as e:
         logger.error(f"Error scheduling inspection: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================== CONTRATOS ASSINADOS ====================
+
+@router.post("/{vehicle_id}/upload-contrato")
+async def upload_contrato_veiculo(
+    vehicle_id: str,
+    file: UploadFile = File(...),
+    tipo: str = Form("contrato_veiculo"),
+    motorista_id: Optional[str] = Form(None),
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Upload de contrato assinado para o veículo
+    
+    Form data:
+    - file: PDF do contrato assinado
+    - tipo: Tipo do contrato (contrato_veiculo, contrato_aluguer, etc.)
+    - motorista_id: ID do motorista associado (opcional)
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Verificar permissão de parceiro
+    if current_user["role"] == UserRole.PARCEIRO and vehicle.get("parceiro_id") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Not authorized to modify this vehicle")
+    
+    try:
+        contratos_dir = UPLOAD_DIR / "contratos" / vehicle_id
+        contratos_dir.mkdir(parents=True, exist_ok=True)
+        
+        file_id = f"contrato_{vehicle_id}_{uuid.uuid4()}"
+        file_info = await process_uploaded_file(file, contratos_dir, file_id)
+        
+        documento_url = file_info.get("pdf_path") or file_info.get("original_path")
+        now = datetime.now(timezone.utc)
+        
+        # Buscar nome do motorista se fornecido
+        motorista_nome = None
+        if motorista_id:
+            motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0, "name": 1})
+            if motorista:
+                motorista_nome = motorista.get("name")
+        
+        # Criar registo do contrato
+        contrato = {
+            "id": str(uuid.uuid4()),
+            "tipo": tipo,
+            "documento_url": documento_url,
+            "motorista_id": motorista_id or vehicle.get("motorista_atribuido"),
+            "motorista_nome": motorista_nome or vehicle.get("motorista_atribuido_nome"),
+            "assinado_motorista": True,
+            "assinado_parceiro": True,
+            "data": now.isoformat(),
+            "uploaded_by": current_user["id"],
+            "uploaded_at": now.isoformat()
+        }
+        
+        # Adicionar contrato à lista de contratos do veículo
+        await db.vehicles.update_one(
+            {"id": vehicle_id},
+            {
+                "$push": {"contratos": contrato},
+                "$set": {"updated_at": now.isoformat()}
+            }
+        )
+        
+        logger.info(f"✅ Contrato carregado para veículo {vehicle.get('matricula')}: {tipo}")
+        
+        return {
+            "message": "Contrato carregado com sucesso",
+            "contrato": contrato
+        }
+    
+    except Exception as e:
+        logger.error(f"Error uploading contract: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{vehicle_id}/contratos")
+async def get_contratos_veiculo(
+    vehicle_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Obter lista de contratos do veículo
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Verificar permissão de parceiro
+    if current_user["role"] == UserRole.PARCEIRO and vehicle.get("parceiro_id") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Not authorized to view this vehicle's contracts")
+    
+    contratos = vehicle.get("contratos", [])
+    
+    return {
+        "veiculo_id": vehicle_id,
+        "matricula": vehicle.get("matricula"),
+        "contratos": contratos,
+        "total": len(contratos)
+    }
+
+
+@router.delete("/{vehicle_id}/contratos/{contrato_id}")
+async def delete_contrato_veiculo(
+    vehicle_id: str,
+    contrato_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Eliminar contrato do veículo
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    result = await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {"$pull": {"contratos": {"id": contrato_id}}}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    return {"message": "Contrato eliminado com sucesso"}
