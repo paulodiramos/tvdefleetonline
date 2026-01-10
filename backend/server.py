@@ -17739,7 +17739,9 @@ async def get_public_veiculos():
 
 @app.post("/api/public/contacto")
 async def public_contacto(contacto_data: Dict[str, Any]):
-    """Receive public contact form (sends email to configured address)"""
+    """Receive public contact form - sends internal message to partner/manager"""
+    import uuid
+    
     # Get email config
     config = await db.configuracoes.find_one({"tipo": "email"}, {"_id": 0})
     email_destino = config.get("email_contacto", "info@tvdefleet.com") if config else "info@tvdefleet.com"
@@ -17753,10 +17755,101 @@ async def public_contacto(contacto_data: Dict[str, Any]):
     
     await db.contactos.insert_one(contacto_data)
     
-    # Send notification email to admin
+    # Se for interesse em veículo, criar mensagem interna para o parceiro
+    if contacto_data.get("veiculo_id"):
+        vehicle = await db.vehicles.find_one({"id": contacto_data["veiculo_id"]}, {"_id": 0})
+        
+        if vehicle:
+            parceiro_id = vehicle.get("parceiro_id")
+            gestor_id = None
+            
+            # Buscar gestor associado ao parceiro
+            if parceiro_id:
+                parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+                if parceiro:
+                    gestor_id = parceiro.get("gestor_associado_id")
+            
+            # Criar mensagem interna
+            destinatarios = []
+            if parceiro_id:
+                destinatarios.append(parceiro_id)
+            if gestor_id:
+                destinatarios.append(gestor_id)
+            
+            # Se não tiver parceiro, enviar para admins
+            if not destinatarios:
+                admins = await db.users.find({"role": "admin"}, {"_id": 0, "id": 1}).to_list(None)
+                destinatarios = [a["id"] for a in admins]
+            
+            # Criar conversa/mensagem para cada destinatário
+            for destinatario_id in destinatarios:
+                # Criar conversa
+                conversa_id = str(uuid.uuid4())
+                conversa = {
+                    "id": conversa_id,
+                    "tipo": "interesse_veiculo",
+                    "assunto": f"🚗 Interesse em Veículo: {vehicle.get('marca')} {vehicle.get('modelo')} ({vehicle.get('matricula')})",
+                    "participantes": [destinatario_id, "sistema"],
+                    "veiculo_id": vehicle.get("id"),
+                    "contacto_externo": {
+                        "nome": contacto_data.get("nome"),
+                        "email": contacto_data.get("email"),
+                        "telefone": contacto_data.get("telefone")
+                    },
+                    "criada_em": datetime.now(timezone.utc).isoformat(),
+                    "ultima_mensagem_em": datetime.now(timezone.utc).isoformat(),
+                    "status": "ativo"
+                }
+                await db.conversas.insert_one(conversa)
+                
+                # Criar mensagem
+                mensagem_texto = f"""📬 **Novo Interesse em Veículo**
+
+**Veículo:** {vehicle.get('marca')} {vehicle.get('modelo')} ({vehicle.get('matricula')})
+
+**Dados do Interessado:**
+• Nome: {contacto_data.get('nome')}
+• Email: {contacto_data.get('email')}
+• Telefone: {contacto_data.get('telefone')}
+
+**Mensagem:**
+{contacto_data.get('mensagem', 'Sem mensagem adicional.')}
+
+---
+_Este contacto foi recebido através da página pública de veículos._
+"""
+                
+                mensagem = {
+                    "id": str(uuid.uuid4()),
+                    "conversa_id": conversa_id,
+                    "remetente_id": "sistema",
+                    "remetente_nome": "Sistema TVDEFleet",
+                    "conteudo": mensagem_texto,
+                    "tipo": "interesse_veiculo",
+                    "lida": False,
+                    "criada_em": datetime.now(timezone.utc).isoformat()
+                }
+                await db.mensagens.insert_one(mensagem)
+                
+                # Criar notificação
+                notificacao = {
+                    "id": str(uuid.uuid4()),
+                    "user_id": destinatario_id,
+                    "tipo": "interesse_veiculo",
+                    "titulo": f"Novo interesse: {vehicle.get('marca')} {vehicle.get('modelo')}",
+                    "mensagem": f"{contacto_data.get('nome')} demonstrou interesse no veículo {vehicle.get('matricula')}",
+                    "link": f"/mensagens?conversa={conversa_id}",
+                    "lida": False,
+                    "criada_em": datetime.now(timezone.utc).isoformat()
+                }
+                await db.notificacoes.insert_one(notificacao)
+            
+            print(f"📧 INTERESSE EM VEÍCULO - Mensagem interna enviada para: {destinatarios}")
+    
+    # Send notification email to admin (placeholder)
     await enviar_notificacao_contacto(contacto_data, email_destino)
     
-    return {"message": "Contact received successfully", "id": contacto_id}
+    return {"message": "Mensagem enviada com sucesso! Entraremos em contacto em breve.", "id": contacto_id}
 
 async def enviar_notificacao_contacto(contacto: Dict[str, Any], email_destino: str):
     """Send email notification about new contact (placeholder for email service)"""
