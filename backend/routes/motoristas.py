@@ -541,7 +541,7 @@ async def get_motorista_historico_atribuicoes(
                 data_inicio = datetime.fromisoformat(entry["data_inicio"].replace("Z", "+00:00"))
                 data_fim = datetime.fromisoformat(entry["data_fim"].replace("Z", "+00:00")) if entry.get("data_fim") else datetime.now(timezone.utc)
                 entry["duracao_dias"] = (data_fim - data_inicio).days
-            except:
+            except Exception:
                 pass
     
     return {
