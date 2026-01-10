@@ -17547,6 +17547,8 @@ async def importar_ganhos_uber(
 async def importar_ganhos_bolt(
     file: UploadFile = File(...),
     parceiro_id: Optional[str] = Form(None),
+    periodo_inicio: Optional[str] = Form(None),
+    periodo_fim: Optional[str] = Form(None),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
     """Importa ficheiro CSV de ganhos da Bolt"""
