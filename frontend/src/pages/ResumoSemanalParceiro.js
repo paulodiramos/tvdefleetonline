@@ -118,8 +118,8 @@ const ResumoSemanalParceiro = () => {
       ganhos_bolt: motorista.ganhos_bolt || 0,
       via_verde: motorista.via_verde || 0,
       combustivel: motorista.combustivel || 0,
-      eletrico: motorista.eletrico || 0,
-      aluguer: motorista.aluguer || 0,
+      eletrico: motorista.carregamento_eletrico || 0,
+      aluguer: motorista.aluguer_veiculo || 0,
       extras: motorista.extras || 0
     });
   };
