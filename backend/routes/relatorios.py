@@ -1,6 +1,6 @@
 """Relatórios routes for FleeTrack application - Refactored from server.py"""
 
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, BackgroundTasks
 from fastapi.responses import FileResponse, StreamingResponse
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone, timedelta
@@ -11,6 +11,13 @@ from io import BytesIO
 
 from utils.database import get_database
 from utils.auth import get_current_user
+from services.envio_relatorios import (
+    enviar_relatorio_motorista,
+    generate_whatsapp_link,
+    generate_relatorio_motorista_text,
+    generate_relatorio_motorista_html,
+    send_email_sendgrid
+)
 
 logger = logging.getLogger(__name__)
 
