@@ -2412,13 +2412,14 @@ const FichaVeiculo = ({ user, onLogout }) => {
                     )}
 
                     {/* Valores do Slot por Periodicidade */}
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg">
+                    <div className="col-span-2 bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg mt-2">
                       <div className="flex items-center gap-2 mb-3">
                         <Label className="font-semibold text-green-800">
                           💳 Valores do Slot por Periodicidade
                         </Label>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        {/* Periodicidade */}
                         <div className="bg-white p-3 rounded-lg border">
                           <Label className="text-sm text-green-800">Periodicidade</Label>
                           {canEdit && editMode ? (
@@ -2437,66 +2438,116 @@ const FichaVeiculo = ({ user, onLogout }) => {
                             </p>
                           )}
                         </div>
+                        
+                        {/* Valor Semanal */}
                         <div className={`p-3 rounded-lg ${(editMode ? infoForm.slot_periodicidade : vehicle.tipo_contrato?.slot_periodicidade) === 'semanal' ? 'bg-green-200 ring-2 ring-green-500' : 'bg-white'}`}>
-                          <Label className="text-sm text-green-800">Valor Semanal</Label>
+                          <Label className="text-sm text-green-800">Valor Semanal (€)</Label>
                           {canEdit && editMode ? (
-                            <Input type="number" step="0.01" value={infoForm.slot_valor_semanal || ''} onChange={(e) => setInfoForm({...infoForm, slot_valor_semanal: e.target.value})} placeholder="Ex: 50.00" className="mt-1" />
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={infoForm.slot_valor_semanal || ''}
+                              onChange={(e) => setInfoForm({...infoForm, slot_valor_semanal: e.target.value})}
+                              placeholder="Ex: 50.00"
+                              className="mt-1"
+                            />
                           ) : (
-                            <p className="font-bold text-lg text-green-800">€{(vehicle.tipo_contrato?.slot_valor_semanal || 0).toFixed(2)}</p>
+                            <p className="font-bold text-lg text-green-800">
+                              €{(vehicle.tipo_contrato?.slot_valor_semanal || 0).toFixed(2)}
+                            </p>
                           )}
                         </div>
+                        
+                        {/* Valor Mensal */}
                         <div className={`p-3 rounded-lg ${(editMode ? infoForm.slot_periodicidade : vehicle.tipo_contrato?.slot_periodicidade) === 'mensal' ? 'bg-green-200 ring-2 ring-green-500' : 'bg-white'}`}>
-                          <Label className="text-sm text-green-800">Valor Mensal</Label>
+                          <Label className="text-sm text-green-800">Valor Mensal (€)</Label>
                           {canEdit && editMode ? (
-                            <Input type="number" step="0.01" value={infoForm.slot_valor_mensal || ''} onChange={(e) => setInfoForm({...infoForm, slot_valor_mensal: e.target.value})} placeholder="Ex: 180.00" className="mt-1" />
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={infoForm.slot_valor_mensal || ''}
+                              onChange={(e) => setInfoForm({...infoForm, slot_valor_mensal: e.target.value})}
+                              placeholder="Ex: 180.00"
+                              className="mt-1"
+                            />
                           ) : (
-                            <p className="font-bold text-lg text-green-800">€{(vehicle.tipo_contrato?.slot_valor_mensal || 0).toFixed(2)}</p>
+                            <p className="font-bold text-lg text-green-800">
+                              €{(vehicle.tipo_contrato?.slot_valor_mensal || 0).toFixed(2)}
+                            </p>
                           )}
                         </div>
+                        
+                        {/* Valor Anual */}
                         <div className={`p-3 rounded-lg ${(editMode ? infoForm.slot_periodicidade : vehicle.tipo_contrato?.slot_periodicidade) === 'anual' ? 'bg-green-200 ring-2 ring-green-500' : 'bg-white'}`}>
-                          <Label className="text-sm text-green-800">Valor Anual</Label>
+                          <Label className="text-sm text-green-800">Valor Anual (€)</Label>
                           {canEdit && editMode ? (
-                            <Input type="number" step="0.01" value={infoForm.slot_valor_anual || ''} onChange={(e) => setInfoForm({...infoForm, slot_valor_anual: e.target.value})} placeholder="Ex: 2000.00" className="mt-1" />
+                            <Input
+                              type="number"
+                              step="0.01"
+                              value={infoForm.slot_valor_anual || ''}
+                              onChange={(e) => setInfoForm({...infoForm, slot_valor_anual: e.target.value})}
+                              placeholder="Ex: 2000.00"
+                              className="mt-1"
+                            />
                           ) : (
-                            <p className="font-bold text-lg text-green-800">€{(vehicle.tipo_contrato?.slot_valor_anual || 0).toFixed(2)}</p>
+                            <p className="font-bold text-lg text-green-800">
+                              €{(vehicle.tipo_contrato?.slot_valor_anual || 0).toFixed(2)}
+                            </p>
                           )}
                         </div>
                       </div>
                     </div>
 
                     {/* Garantia do Veículo */}
-                    <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-4 rounded-lg">
+                    <div className="col-span-2 bg-gradient-to-r from-amber-50 to-yellow-50 p-4 rounded-lg mt-2">
                       <div className="flex items-center gap-2 mb-3">
                         {canEdit && editMode ? (
-                          <input type="checkbox" id="tem_garantia" checked={infoForm.tem_garantia} onChange={(e) => setInfoForm({...infoForm, tem_garantia: e.target.checked})} className="h-4 w-4 rounded border-gray-300" />
+                          <input
+                            type="checkbox"
+                            id="tem_garantia"
+                            checked={infoForm.tem_garantia}
+                            onChange={(e) => setInfoForm({...infoForm, tem_garantia: e.target.checked})}
+                            className="h-4 w-4 rounded border-gray-300"
+                          />
                         ) : (
                           <span className={vehicle.tipo_contrato?.tem_garantia ? "text-green-600" : "text-gray-400"}>
                             {vehicle.tipo_contrato?.tem_garantia ? "✓" : "✗"}
                           </span>
                         )}
-                        <Label htmlFor="tem_garantia" className="font-semibold text-amber-800">🛡️ Veículo com Garantia</Label>
+                        <Label htmlFor="tem_garantia" className="font-semibold text-amber-800">
+                          🛡️ Veículo com Garantia
+                        </Label>
                       </div>
+                      
                       {(editMode ? infoForm.tem_garantia : vehicle.tipo_contrato?.tem_garantia) && (
                         <div className="bg-white p-3 rounded-lg">
                           <Label className="text-sm text-amber-800">Data Limite da Garantia</Label>
                           {canEdit && editMode ? (
-                            <Input type="date" value={infoForm.data_limite_garantia || ''} onChange={(e) => setInfoForm({...infoForm, data_limite_garantia: e.target.value})} className="mt-1" />
+                            <Input
+                              type="date"
+                              value={infoForm.data_limite_garantia || ''}
+                              onChange={(e) => setInfoForm({...infoForm, data_limite_garantia: e.target.value})}
+                              className="mt-1"
+                            />
                           ) : (
                             <p className="font-bold text-lg text-amber-800">
-                              {vehicle.tipo_contrato?.data_limite_garantia ? new Date(vehicle.tipo_contrato.data_limite_garantia).toLocaleDateString('pt-PT') : 'Não definida'}
+                              {vehicle.tipo_contrato?.data_limite_garantia 
+                                ? new Date(vehicle.tipo_contrato.data_limite_garantia).toLocaleDateString('pt-PT')
+                                : 'Não definida'}
                             </p>
                           )}
                           {vehicle.tipo_contrato?.data_limite_garantia && !editMode && (
                             <p className={`text-xs mt-1 ${new Date(vehicle.tipo_contrato.data_limite_garantia) > new Date() ? 'text-green-600' : 'text-red-600'}`}>
-                              {new Date(vehicle.tipo_contrato.data_limite_garantia) > new Date() ? '✓ Garantia válida' : '⚠️ Garantia expirada'}
+                              {new Date(vehicle.tipo_contrato.data_limite_garantia) > new Date() 
+                                ? '✓ Garantia válida' 
+                                : '⚠️ Garantia expirada'}
                             </p>
                           )}
                         </div>
                       )}
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
+
+                    {/* Regime (Full Time/Part Time) */}
                     <div>
                       <Label htmlFor="regime">Regime</Label>
                       {canEdit && editMode ? (
