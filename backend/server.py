@@ -12731,6 +12731,11 @@ async def importar_plataforma(
                 logger.info("📄 Detectado: Excel de Portagens Via Verde")
                 return await importar_viaverde_excel(content, current_user, periodo_inicio, periodo_fim, semana, ano)
         
+        # Para carregamento em Excel (.xlsx), processar
+        if plataforma == 'carregamento' and (file.filename.endswith('.xlsx') or file.filename.endswith('.xls')):
+            logger.info("📄 Processando Excel de Carregamentos Elétricos (plataforma carregamento)")
+            return await importar_carregamentos_excel(content, current_user, periodo_inicio, periodo_fim, semana, ano)
+        
         # Para carregamento (plataforma específica), verificar CSV
         if plataforma == 'carregamento' and file.filename.endswith('.csv'):
             # Verificar se é CSV com formato PRIOENERGY (StartDate, CardCode, etc.)
