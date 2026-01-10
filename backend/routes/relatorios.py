@@ -1815,7 +1815,7 @@ async def delete_motorista_weekly_data(
     veiculo = None
     via_verde_id = None
     if motorista.get("veiculo_atribuido"):
-        veiculo = await db.vehicles.find_one({"id": motorista["veiculo_atribuido"]}, {"_id": 0, "via_verde_id": 1, "obu": 1, "matricula": 1})
+        veiculo = await db.vehicles.find_one({"id": motorista["veiculo_atribuido"]}, {"_id": 0, "via_verde_id": 1, "obu": 1, "matricula": 1, "cartao_frota_id": 1, "cartao_frota_eletric_id": 1})
         if veiculo:
             via_verde_id = veiculo.get("via_verde_id")
     
