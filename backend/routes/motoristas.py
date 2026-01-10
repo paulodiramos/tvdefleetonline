@@ -137,10 +137,8 @@ async def get_motorista(
         if motorista["id"] != current_user["id"]:
             raise HTTPException(status_code=403, detail="Not authorized")
     
-    if isinstance(motorista.get("created_at"), str):
-        motorista["created_at"] = datetime.fromisoformat(motorista["created_at"])
-    
-    return Motorista(**motorista)
+    # Return all fields directly from MongoDB
+    return motorista
 
 
 @router.put("/motoristas/{motorista_id}/approve")
