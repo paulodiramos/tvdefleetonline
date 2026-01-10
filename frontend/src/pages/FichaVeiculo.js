@@ -202,18 +202,26 @@ const FichaVeiculo = ({ user, onLogout }) => {
     total_juros: '',
     total_pago: '',
     categorias_uber: {
-      green: false,
+      uberx: false,
+      share: false,
+      electric: false,
+      black: false,
       comfort: false,
-      exec: false,
+      xl: false,
+      xxl: false,
       pet: false,
-      xl: false
+      package: false
     },
     categorias_bolt: {
       economy: false,
       comfort: false,
-      exec: false,
-      pet: false,
-      xl: false
+      executive: false,
+      xl: false,
+      xxl: false,
+      green: false,
+      electric: false,
+      motorista_privado: false,
+      pet: false
     }
   });
 
