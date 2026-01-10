@@ -69,6 +69,12 @@ from routes.relatorios import router as relatorios_router
 from routes.automacao import router as automacao_router
 from routes.despesas import router as despesas_router
 from routes.extras import router as extras_router
+# New refactored routers
+from routes.parceiros import router as parceiros_router
+from routes.planos import router as planos_router
+from routes.pagamentos import router as pagamentos_router
+from routes.reports import router as reports_router
+from routes.gestores import router as gestores_router
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
