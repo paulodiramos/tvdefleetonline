@@ -1,5 +1,14 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-10 - Session 3)
+### Session Updates:
+- **IMPLEMENTED**: KM por Época - Campos km_por_epoca, km_epoca_alta, km_epoca_baixa, meses_epoca_alta, meses_epoca_baixa no modelo TipoContrato
+- **IMPLEMENTED**: Upload de Contratos Assinados - Endpoint POST /api/vehicles/{id}/upload-contrato
+- **IMPLEMENTED**: Listagem de Contratos - Endpoint GET /api/vehicles/{id}/contratos
+- **IMPLEMENTED**: Delete de Contratos - Endpoint DELETE /api/vehicles/{id}/contratos/{contrato_id}
+- **TESTED**: 14/14 testes backend passaram (TestKMPorEpoca, TestContratosUpload, TestVehicleDataPersistence, TestUnauthorizedAccess, TestVehicleNotFound)
+- **VERIFIED**: UI das secções Condições de Quilometragem e Contratos na FichaVeiculo.js
+
 ## Changelog (2026-01-10 - Session 2)
 ### Session Updates:
 - **FIXED**: Upload de documento do motorista - erro MongoDB de conflito de path no $set
@@ -33,88 +42,47 @@ O utilizador solicitou refinamentos ao sistema de relatórios:
 
 ### Janeiro 2026
 
+#### ✅ KM por Época e Contratos Assinados (10/01/2026 - Session 3)
+**Status: COMPLETO E TESTADO (14/14 testes passaram)**
+
+**Backend:**
+- Novos campos no modelo TipoContrato: `km_por_epoca`, `km_epoca_alta`, `km_epoca_baixa`, `meses_epoca_alta`, `meses_epoca_baixa`
+- Novo campo no modelo Vehicle: `contratos` (List[Dict])
+- Endpoints de contratos:
+  - `POST /api/vehicles/{id}/upload-contrato` - Upload de PDF de contrato
+  - `GET /api/vehicles/{id}/contratos` - Lista contratos
+  - `DELETE /api/vehicles/{id}/contratos/{contrato_id}` - Remove contrato
+
+**Frontend:**
+- Secção "Condições de Quilometragem" expandida com:
+  - Toggle "KM diferentes por época (Alta/Baixa)"
+  - Inputs para KM época alta e baixa
+  - Botões de seleção de meses para época alta
+- Secção "Contratos" com:
+  - Upload de PDF de contrato assinado
+  - Listagem de contratos com badges Motorista/Parceiro
+  - Botão de download
+
 #### ✅ Refatoração do Backend - Modularização de Rotas (10/01/2026)
 **Status: COMPLETO - Fase 1**
 
 **Novos ficheiros de rotas criados:**
-- `/app/backend/routes/parceiros.py` - CRUD completo para parceiros, alertas, certidão permanente
-- `/app/backend/routes/planos.py` - Gestão de planos, módulos, promoções, subscrições
-- `/app/backend/routes/pagamentos.py` - CRUD de pagamentos, upload de comprovativos
-- `/app/backend/routes/reports.py` - Relatórios de dashboard, ROI, evolução semanal
-- `/app/backend/routes/gestores.py` - Gestão de gestores e atribuição de parceiros
+- `/app/backend/routes/parceiros.py` - CRUD completo para parceiros
+- `/app/backend/routes/planos.py` - Gestão de planos
+- `/app/backend/routes/pagamentos.py` - CRUD de pagamentos
+- `/app/backend/routes/reports.py` - Relatórios
+- `/app/backend/routes/gestores.py` - Gestão de gestores
 
-**Endpoints migrados:**
-- `GET/POST /api/parceiros` - Lista e cria parceiros
-- `GET/PUT/DELETE /api/parceiros/{id}` - CRUD individual
-- `GET /api/parceiros/{id}/alertas` - Alertas do parceiro
-- `GET /api/parceiros/{id}/estatisticas` - Estatísticas
-- `GET/PUT/POST /api/parceiros/{id}/certidao-permanente` - Certidão
-- `GET/POST/PUT/DELETE /api/planos` - Gestão de planos
-- `GET/POST /api/admin/planos` - Admin de planos
-- `POST /api/pagamentos` - Criar pagamento
-- `GET /api/pagamentos/semana-atual` - Pagamentos da semana
-- `PUT /api/pagamentos/{id}/marcar-pago` - Marcar como pago
-- `GET /api/reports/dashboard` - Dashboard principal
-- `GET /api/reports/roi/{vehicle_id}` - ROI por veículo
-- `GET /api/reports/parceiro/semanal` - Relatório semanal
-- `GET /api/gestores` - Lista gestores
-- `PUT /api/gestores/{id}/atribuir-parceiros` - Atribuir parceiros
-
-**Benefícios:**
-- Código mais organizado e manutenível
-- Cada domínio em ficheiro separado
-- Facilita testes unitários
-- Reduz risco de conflitos
-
-#### ✅ Sistema de Extras/Dívidas do Motorista (NEW - 10/01/2026)
+#### ✅ Sistema de Extras/Dívidas do Motorista (10/01/2026)
 **Status: COMPLETO E TESTADO (29/29 testes passaram)**
 
 **Backend:**
-- Novo ficheiro `/app/backend/routes/extras.py` com API CRUD completa
-- `GET /api/extras-motorista` - Lista extras com filtros (motorista_id, tipo, semana, ano, pago)
-- `POST /api/extras-motorista` - Cria extras (divida, caucao_parcelada, dano, multa, outro)
-- `PUT /api/extras-motorista/{id}` - Atualiza extras
-- `DELETE /api/extras-motorista/{id}` - Elimina extras
-- Validação de campos obrigatórios com resposta 422
+- API CRUD completa em `/app/backend/routes/extras.py`
+- Validação de campos obrigatórios
 
 **Frontend:**
-- Nova página `/gestao-extras` com UI completa
+- Página `/gestao-extras` com UI completa
 - Cards de resumo: Total Extras, Pendentes, Pagos
-- Tabela com filtros por Motorista, Tipo, Status
-- Modal de criação/edição com suporte a cauções parceladas
-- Link no menu Financeiro: "💰 Extras/Dívidas"
-
-**Integração:**
-- Resumo semanal inclui extras nos cálculos
-- Card do dashboard mostra Receitas Parceiro (Aluguer + Extras)
-- Fórmula: Líquido Parceiro = Receitas - Despesas Operacionais
-
-#### ✅ Resumo Semanal Refinado para Parceiro
-**Status: COMPLETO**
-
-Card no dashboard e página de resumo com:
-- **Receitas Parceiro**: Aluguer + Extras + Vendas
-- **Despesas Operacionais**: Combustível + Via Verde + Elétrico
-- **Líquido Parceiro**: Receitas - Despesas
-- Cálculo dinâmico baseado no contrato do veículo
-
-#### ✅ Gráficos de Evolução Semanal
-**Status: COMPLETO**
-
-- Histórico das últimas 6 semanas
-- Barras para Receitas (verde), Despesas (vermelho), Líquido (azul)
-- Tooltips com valores detalhados
-
-#### ✅ Sistema de Envio de Relatórios
-**Status: PARCIAL**
-
-**WhatsApp (Funcional)**:
-- Gera link `wa.me/numero?text=mensagem`
-- Mensagem formatada com emojis
-
-**Email (Aguarda API Key)**:
-- Estrutura pronta para SendGrid
-- Endpoint: `POST /api/relatorios/enviar-relatorio/{motorista_id}`
 
 ---
 
@@ -122,6 +90,12 @@ Card no dashboard e página de resumo com:
 
 ### Key API Endpoints
 ```
+# KM por Época e Contratos
+PUT  /api/vehicles/{id}                           # Atualiza tipo_contrato com campos km_por_epoca
+GET  /api/vehicles/{id}/contratos                 # Lista contratos do veículo
+POST /api/vehicles/{id}/upload-contrato           # Upload PDF de contrato
+DELETE /api/vehicles/{id}/contratos/{contrato_id} # Remove contrato
+
 # Extras Motorista
 GET  /api/extras-motorista           # Lista com filtros
 POST /api/extras-motorista           # Criar
@@ -137,24 +111,27 @@ POST /api/relatorios/enviar-relatorio/{id}      # Enviar por email
 
 ### Database Collections
 ```javascript
-// extras_motorista
+// vehicles - tipo_contrato now includes:
 {
-  id: string,
-  motorista_id: string,
-  parceiro_id: string,
-  tipo: "divida" | "caucao_parcelada" | "dano" | "multa" | "outro",
-  descricao: string,
-  valor: number,
-  data: string,
-  semana: number,
-  ano: number,
-  parcelas_total: number | null,
-  parcela_atual: number | null,
-  pago: boolean,
-  data_pagamento: string | null,
-  observacoes: string | null,
-  created_by: string,
-  created_at: string
+  tipo_contrato: {
+    km_por_epoca: boolean,
+    km_epoca_alta: number,
+    km_epoca_baixa: number,
+    meses_epoca_alta: [number],  // e.g., [6,7,8,9]
+    meses_epoca_baixa: [number]
+  },
+  contratos: [{
+    id: string,
+    tipo: string,
+    documento_url: string,
+    motorista_id: string,
+    motorista_nome: string,
+    assinado_motorista: boolean,
+    assinado_parceiro: boolean,
+    data: string,
+    uploaded_by: string,
+    uploaded_at: string
+  }]
 }
 ```
 
@@ -166,15 +143,15 @@ POST /api/relatorios/enviar-relatorio/{id}      # Enviar por email
 - [ ] Configurar SENDGRID_API_KEY para ativar envio de emails
 
 ### P1 - Alta Prioridade
-- [x] ~~Refatorar `server.py` - separar lógica de rotas~~ (FASE 1 COMPLETA)
+- [ ] Implementar foto de perfil do motorista (pendente de sessões anteriores)
 - [ ] Continuar refatoração: mover mais endpoints do `server.py` para ficheiros dedicados
 
 ### P2 - Média Prioridade
 - [ ] Implementar sincronização automática (RPA)
-- [ ] Registar vendas de veículos
+- [ ] Dashboard de ROI com cálculos automáticos usando dados de investimento
 
 ### P3 - Baixa Prioridade
-- [ ] PDF do relatório semanal
+- [ ] PDF do relatório semanal com lista de transações Via Verde
 - [ ] Notificações sobre importação
 - [ ] Editor visual para automação RPA
 
@@ -185,9 +162,13 @@ POST /api/relatorios/enviar-relatorio/{id}      # Enviar por email
 - **Parceiro**: parceiro@tvdefleet.com / 123456
 
 ## Test Data
-- **Motorista Teste Backend**: ID `0eea6d82-625f-453d-ba26-e6681563b2b8`
-- **Extra Existente**: Dívida €150 (semana 51/2025), Caução Parcelada €50 (semana 2/2026)
+- **Test Vehicle**: AB-12-CD (ID: c89c2b6b-2804-4044-b479-f51a91530466)
+  - km_por_epoca: true
+  - km_epoca_alta: 2000
+  - km_epoca_baixa: 1200
+  - meses_epoca_alta: [6, 7, 8, 9]
+  - 2 contratos de teste carregados
 
 ## Test Reports
-- `/app/test_reports/iteration_4.json` - 29/29 testes passaram
-- `/app/tests/test_extras_motorista.py` - Suite de testes pytest
+- `/app/test_reports/iteration_5.json` - 14/14 testes KM por Época e Contratos
+- `/app/tests/test_km_epoca_contratos.py` - Suite de testes pytest
