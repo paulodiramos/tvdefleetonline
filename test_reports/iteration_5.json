@@ -1,0 +1,85 @@
+{
+  "summary": "Completed comprehensive testing of KM por Época and Contratos features in TVDEFleet. All 14 backend tests passed. Frontend UI verified - KM por Época section shows toggle, Época Alta/Baixa inputs with month selection, and Contratos section with PDF upload functionality. Data persistence confirmed via API.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_km_epoca_contratos.py",
+    "/app/test_reports/pytest/pytest_km_epoca_contratos.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "KM por Época fields correctly implemented in TipoContrato model (km_por_epoca, km_epoca_alta, km_epoca_baixa, meses_epoca_alta, meses_epoca_baixa)",
+    "Upload contrato endpoint correctly saves PDF files and creates contrato records with proper metadata",
+    "Frontend correctly displays KM por Época section with toggle, inputs for Alta/Baixa KM, and month selection buttons",
+    "Contratos section shows upload input and lists existing contracts with download/delete options"
+  ],
+  "updated_files": [
+    "/app/tests/test_km_epoca_contratos.py"
+  ],
+  "success_rate": {
+    "backend": "100% (14/14 tests passed)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "admin_email": "admin@tvdefleet.com",
+    "admin_password": "123456",
+    "test_vehicle_id": "c89c2b6b-2804-4044-b479-f51a91530466"
+  },
+  "seed_data_creation": "Created test contratos during testing (2 contracts uploaded)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "KM por Época and Contratos features fully tested. Test vehicle AB-12-CD (ID: c89c2b6b-2804-4044-b479-f51a91530466) has km_por_epoca=true with km_epoca_alta=2000, km_epoca_baixa=1200, meses_epoca_alta=[6,7,8,9]. Vehicle has 2 test contracts uploaded. Backend tests in /app/tests/test_km_epoca_contratos.py cover all CRUD operations for both features.",
+  "verified_features": {
+    "km_por_epoca_backend": {
+      "GET /api/vehicles/{id}": "PASS - Returns km_por_epoca fields in tipo_contrato",
+      "PUT /api/vehicles/{id}": "PASS - Updates km_por_epoca, km_epoca_alta, km_epoca_baixa, meses_epoca_alta correctly",
+      "data_persistence": "PASS - All fields persist after save and reload"
+    },
+    "contratos_backend": {
+      "GET /api/vehicles/{id}/contratos": "PASS - Returns list of contracts with metadata",
+      "POST /api/vehicles/{id}/upload-contrato": "PASS - Uploads PDF and creates contract record",
+      "DELETE /api/vehicles/{id}/contratos/{contrato_id}": "PASS - Removes contract from list"
+    },
+    "km_por_epoca_frontend": {
+      "toggle_checkbox": "PASS - KM diferentes por época checkbox works",
+      "epoca_alta_section": "PASS - Shows KM input and month selection buttons",
+      "epoca_baixa_section": "PASS - Shows KM input and remaining months text",
+      "month_selection": "PASS - Buttons toggle correctly (Jun-Set highlighted for época alta)"
+    },
+    "contratos_frontend": {
+      "section_display": "PASS - Contratos section visible with title and subtitle",
+      "upload_input": "PASS - PDF upload input available in edit mode",
+      "contract_list": "PASS - Lists uploaded contracts"
+    }
+  },
+  "backend_tests": {
+    "total_tests": 14,
+    "passed": 14,
+    "failed": 0,
+    "test_classes": [
+      "TestKMPorEpoca (4 tests) - get_vehicle_with_km_epoca_fields, update_km_por_epoca_enabled, update_km_por_epoca_disabled, update_km_por_epoca_partial",
+      "TestContratosUpload (5 tests) - get_contratos_empty, upload_contrato_pdf, get_contratos_after_upload, upload_contrato_with_motorista, delete_contrato",
+      "TestVehicleDataPersistence (1 test) - full_km_epoca_save_and_load",
+      "TestUnauthorizedAccess (2 tests) - contratos_without_auth, upload_contrato_without_auth",
+      "TestVehicleNotFound (2 tests) - contratos_vehicle_not_found, upload_contrato_vehicle_not_found"
+    ]
+  },
+  "data_verification": {
+    "vehicle_tipo_contrato": {
+      "km_por_epoca": true,
+      "km_epoca_alta": 2000,
+      "km_epoca_baixa": 1200,
+      "meses_epoca_alta": [6, 7, 8, 9],
+      "meses_epoca_baixa": [1, 2, 3, 4, 5, 10, 11, 12]
+    },
+    "contratos_count": 2,
+    "contratos_types": ["contrato_aluguer", "contrato_veiculo"]
+  }
+}
