@@ -2193,15 +2193,16 @@ async def get_proximas_datas_dashboard(current_user: Dict = Depends(get_current_
                 pass
         
         # Check extintor
-        if vehicle.get("extintor", {}).get("data_validade"):
+        extintor = vehicle.get("extintor") or {}
+        if extintor.get("data_validade"):
             try:
-                validade = datetime.fromisoformat(vehicle["extintor"]["data_validade"]).date()
+                validade = datetime.fromisoformat(extintor["data_validade"]).date()
                 dias_restantes = (validade - today).days
                 if dias_restantes <= 60:
                     proximas_datas.append({
                         **vehicle_info,
                         "tipo": "extintor",
-                        "data": vehicle["extintor"]["data_validade"],
+                        "data": extintor["data_validade"],
                         "dias_restantes": dias_restantes,
                         "urgente": dias_restantes <= 15
                     })
