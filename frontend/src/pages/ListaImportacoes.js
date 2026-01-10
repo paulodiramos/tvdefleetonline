@@ -35,12 +35,14 @@ import { toast } from 'sonner';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
-const ListaImportacoes = ({ user }) => {
+const ListaImportacoes = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [importacoes, setImportacoes] = useState([]);
   const [resumoPorPlataforma, setResumoPorPlataforma] = useState({});
   const [activeTab, setActiveTab] = useState('todas');
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [showStatusMenu, setShowStatusMenu] = useState(null);
   
   // Filtros
   const [semana, setSemana] = useState(null);
