@@ -2346,6 +2346,121 @@ const FichaVeiculo = ({ user, onLogout }) => {
                           </div>
                         </div>
 
+                        {/* KM por Época */}
+                        <div className="mt-4">
+                          <div className="flex items-center space-x-2 mb-3">
+                            {canEdit && editMode ? (
+                              <>
+                                <input
+                                  type="checkbox"
+                                  id="km_por_epoca"
+                                  checked={infoForm.km_por_epoca || false}
+                                  onChange={(e) => setInfoForm({...infoForm, km_por_epoca: e.target.checked})}
+                                  className="w-4 h-4"
+                                />
+                                <Label htmlFor="km_por_epoca" className="cursor-pointer font-medium">
+                                  KM diferentes por época (Alta/Baixa)
+                                </Label>
+                              </>
+                            ) : (
+                              <p className="font-medium">
+                                {vehicle.tipo_contrato?.km_por_epoca ? '✓ KM por época' : '✗ KM único todo o ano'}
+                              </p>
+                            )}
+                          </div>
+
+                          {(editMode ? infoForm.km_por_epoca : vehicle.tipo_contrato?.km_por_epoca) && (
+                            <div className="bg-gradient-to-r from-orange-50 to-blue-50 p-4 rounded-lg space-y-4">
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Época Alta */}
+                                <div className="bg-orange-100 p-3 rounded-lg">
+                                  <Label className="font-semibold text-orange-800 flex items-center gap-2">
+                                    ☀️ Época Alta
+                                  </Label>
+                                  <div className="mt-2">
+                                    <Label className="text-sm">KM Semanais</Label>
+                                    {canEdit && editMode ? (
+                                      <Input
+                                        type="number"
+                                        value={infoForm.km_epoca_alta || ''}
+                                        onChange={(e) => setInfoForm({...infoForm, km_epoca_alta: e.target.value})}
+                                        placeholder="Ex: 2000"
+                                        className="mt-1"
+                                      />
+                                    ) : (
+                                      <p className="font-bold text-lg text-orange-700">{vehicle.tipo_contrato?.km_epoca_alta?.toLocaleString() || 0} km</p>
+                                    )}
+                                  </div>
+                                  <div className="mt-2">
+                                    <Label className="text-sm">Meses</Label>
+                                    {canEdit && editMode ? (
+                                      <div className="flex flex-wrap gap-1 mt-1">
+                                        {['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'].map((mes, idx) => (
+                                          <button
+                                            key={idx}
+                                            type="button"
+                                            onClick={() => {
+                                              const meses = infoForm.meses_epoca_alta || [];
+                                              const newMeses = meses.includes(idx + 1)
+                                                ? meses.filter(m => m !== idx + 1)
+                                                : [...meses, idx + 1];
+                                              setInfoForm({...infoForm, meses_epoca_alta: newMeses});
+                                            }}
+                                            className={`px-2 py-1 text-xs rounded ${
+                                              (infoForm.meses_epoca_alta || []).includes(idx + 1)
+                                                ? 'bg-orange-500 text-white'
+                                                : 'bg-white border'
+                                            }`}
+                                          >
+                                            {mes}
+                                          </button>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p className="text-sm text-orange-600">
+                                        {(vehicle.tipo_contrato?.meses_epoca_alta || []).map(m => 
+                                          ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'][m - 1]
+                                        ).join(', ') || 'Não definido'}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Época Baixa */}
+                                <div className="bg-blue-100 p-3 rounded-lg">
+                                  <Label className="font-semibold text-blue-800 flex items-center gap-2">
+                                    ❄️ Época Baixa
+                                  </Label>
+                                  <div className="mt-2">
+                                    <Label className="text-sm">KM Semanais</Label>
+                                    {canEdit && editMode ? (
+                                      <Input
+                                        type="number"
+                                        value={infoForm.km_epoca_baixa || ''}
+                                        onChange={(e) => setInfoForm({...infoForm, km_epoca_baixa: e.target.value})}
+                                        placeholder="Ex: 1200"
+                                        className="mt-1"
+                                      />
+                                    ) : (
+                                      <p className="font-bold text-lg text-blue-700">{vehicle.tipo_contrato?.km_epoca_baixa?.toLocaleString() || 0} km</p>
+                                    )}
+                                  </div>
+                                  <div className="mt-2">
+                                    <Label className="text-sm">Meses (restantes)</Label>
+                                    <p className="text-sm text-blue-600 mt-1">
+                                      {editMode 
+                                        ? `Meses não selecionados na época alta`
+                                        : (vehicle.tipo_contrato?.meses_epoca_baixa || []).map(m => 
+                                            ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'][m - 1]
+                                          ).join(', ') || 'Restantes'}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
                         {/* Resumo/Exemplo */}
                         {!editMode && vehicle.tipo_contrato?.km_semanais_disponiveis && (
                           <div className="bg-white p-3 rounded-lg border mt-3">
@@ -2360,6 +2475,94 @@ const FichaVeiculo = ({ user, onLogout }) => {
                           </div>
                         )}
                       </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Contratos do Veículo */}
+              <Card className="mt-4">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Contratos
+                  </CardTitle>
+                  <p className="text-xs text-slate-500">Contratos assinados pelo motorista e parceiro</p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {/* Upload de novo contrato */}
+                    {canEdit && editMode && (
+                      <div className="bg-slate-50 p-4 rounded-lg">
+                        <Label className="font-semibold mb-2 block">Adicionar Contrato Assinado</Label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-sm">Documento (PDF)</Label>
+                            <Input
+                              type="file"
+                              accept=".pdf"
+                              onChange={async (e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  try {
+                                    const formData = new FormData();
+                                    formData.append('file', file);
+                                    formData.append('tipo', 'contrato_veiculo');
+                                    const token = localStorage.getItem('token');
+                                    const response = await axios.post(
+                                      `${API}/vehicles/${vehicleId}/upload-contrato`,
+                                      formData,
+                                      { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
+                                    );
+                                    toast.success('Contrato carregado com sucesso!');
+                                    fetchVehicleData();
+                                  } catch (error) {
+                                    toast.error('Erro ao carregar contrato');
+                                  }
+                                }
+                              }}
+                              className="mt-1"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Lista de contratos */}
+                    {vehicle.contratos && vehicle.contratos.length > 0 ? (
+                      <div className="space-y-2">
+                        {vehicle.contratos.map((contrato, idx) => (
+                          <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border">
+                            <div className="flex items-center gap-3">
+                              <FileText className="h-5 w-5 text-blue-600" />
+                              <div>
+                                <p className="font-medium">{contrato.tipo || 'Contrato'}</p>
+                                <p className="text-xs text-slate-500">
+                                  {contrato.data ? new Date(contrato.data).toLocaleString('pt-PT') : 'Data não disponível'}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              {contrato.assinado_motorista && (
+                                <Badge className="bg-green-100 text-green-800 text-xs">Motorista ✓</Badge>
+                              )}
+                              {contrato.assinado_parceiro && (
+                                <Badge className="bg-blue-100 text-blue-800 text-xs">Parceiro ✓</Badge>
+                              )}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDownloadDocument(contrato.documento_url, `Contrato_${idx + 1}`)}
+                              >
+                                <Download className="w-4 h-4 mr-1" />
+                                Download
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-500 text-center py-4">Nenhum contrato registado</p>
                     )}
                   </div>
                 </CardContent>
