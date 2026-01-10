@@ -220,21 +220,64 @@ const ListaImportacoes = ({ user, onLogout }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <Button 
-          variant="outline" 
-          onClick={() => navigate(-1)}
-          className="mb-4"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Voltar
-        </Button>
-
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <FileSpreadsheet className="w-8 h-8 text-blue-600" />
+    <Layout user={user} onLogout={onLogout}>
+      <div className="p-4 space-y-4">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => navigate(-1)} className="h-8">
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Voltar
+            </Button>
             <div>
+              <h1 className="text-lg font-bold text-slate-800">Lista de Importações</h1>
+              <p className="text-xs text-slate-500">Histórico de ficheiros importados</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {/* Seletor de semana */}
+            <div className="flex items-center gap-1 bg-white rounded border px-2 py-1">
+              <Button variant="ghost" size="sm" onClick={handlePreviousWeek} className="h-6 w-6 p-0">
+                <ChevronLeft className="w-3 h-3" />
+              </Button>
+              <span className="text-xs font-medium min-w-[80px] text-center">S{semana}/{ano}</span>
+              <Button variant="ghost" size="sm" onClick={handleNextWeek} className="h-6 w-6 p-0">
+                <ChevronRight className="w-3 h-3" />
+              </Button>
+            </div>
+            <Button size="sm" variant="outline" onClick={fetchImportacoes} className="h-8">
+              <RefreshCw className={`w-3 h-3 mr-1 ${loading ? 'animate-spin' : ''}`} />
+              Atualizar
+            </Button>
+            <Button size="sm" onClick={() => navigate('/importar-ficheiros')} className="h-8">
+              <Upload className="w-3 h-3 mr-1" />
+              Importar
+            </Button>
+          </div>
+        </div>
+
+        {/* Modal de confirmação de eliminação */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <Card className="w-full max-w-sm mx-4">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2 text-red-600">
+                  <Trash2 className="w-4 h-4" />
+                  Eliminar Importação
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm">Tem a certeza que deseja eliminar esta importação?</p>
+                <p className="text-xs text-slate-500">Esta ação irá remover todos os registos associados.</p>
+                <div className="flex gap-2 justify-end">
+                  <Button size="sm" variant="outline" onClick={() => setShowDeleteConfirm(null)}>Cancelar</Button>
+                  <Button size="sm" variant="destructive" onClick={() => handleDeleteImportacao(showDeleteConfirm)}>Eliminar</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
               <h1 className="text-3xl font-bold text-slate-800">
                 Lista de Importações
               </h1>
