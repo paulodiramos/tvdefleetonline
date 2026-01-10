@@ -1769,25 +1769,6 @@ const FichaVeiculo = ({ user, onLogout }) => {
                       </div>
                     )}
 
-                    {/* Legacy: Aluguer simples (compatibilidade) */}
-                    {(editMode ? infoForm.tipo : vehicle.tipo_contrato?.tipo) === 'aluguer' && (
-                      <div>
-                        <Label htmlFor="valor_aluguer">Valor Aluguer (€)</Label>
-                        {canEdit && editMode ? (
-                          <Input
-                            id="valor_aluguer"
-                            type="number"
-                            step="0.01"
-                            value={infoForm.valor_aluguer}
-                            onChange={(e) => setInfoForm({...infoForm, valor_aluguer: e.target.value})}
-                            placeholder="Ex: 250.00"
-                          />
-                        ) : (
-                          <p className="font-medium">€{vehicle.tipo_contrato?.valor_aluguer || '0.00'}</p>
-                        )}
-                      </div>
-                    )}
-
                     {(editMode ? infoForm.tipo : vehicle.tipo_contrato?.tipo) === 'comissao' && (
                       <div className="space-y-3 bg-green-50 p-3 rounded-lg">
                         <div className="font-semibold text-sm text-green-900">Comissão</div>
