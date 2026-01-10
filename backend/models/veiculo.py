@@ -257,7 +257,8 @@ class Vehicle(BaseModel):
     documento_inspecao: Optional[str] = None
     documento_dua_frente: Optional[str] = None  # DUA frente
     documento_dua_verso: Optional[str] = None  # DUA verso
-    financiamento: Optional[Dict[str, Any]] = None  # Dados de financiamento/prestações
+    financiamento: Optional[Dict[str, Any]] = None  # Dados de financiamento/prestações (legacy)
+    investimento: Optional[Dict[str, Any]] = None  # Dados de investimento/aquisição para ROI
     created_at: datetime
     updated_at: datetime
     parceiro_id: str
