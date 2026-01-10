@@ -50,10 +50,8 @@ async def check_and_create_alerts():
     admin_settings = await db.admin_settings.find_one({"id": "admin_settings"})
     if not admin_settings:
         # Default settings
-        anos_validade_matricula = 20
         km_aviso_manutencao = 5000
     else:
-        anos_validade_matricula = admin_settings.get("anos_validade_matricula", 20)
         km_aviso_manutencao = admin_settings.get("km_aviso_manutencao", 5000)
     
     today = date.today()
