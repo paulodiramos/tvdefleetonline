@@ -676,8 +676,16 @@ const FichaVeiculo = ({ user, onLogout }) => {
           semanada_por_epoca: vehicleRes.data.tipo_contrato.semanada_por_epoca || false,
           semanada_epoca_alta: vehicleRes.data.tipo_contrato.semanada_epoca_alta || '',
           semanada_epoca_baixa: vehicleRes.data.tipo_contrato.semanada_epoca_baixa || '',
+          semanada_meses_epoca_alta: vehicleRes.data.tipo_contrato.semanada_meses_epoca_alta || [],
+          semanada_meses_epoca_baixa: vehicleRes.data.tipo_contrato.semanada_meses_epoca_baixa || [],
           // Periodicidade do Slot
           slot_periodicidade: vehicleRes.data.tipo_contrato.slot_periodicidade || 'semanal',
+          slot_valor_semanal: vehicleRes.data.tipo_contrato.slot_valor_semanal || '',
+          slot_valor_mensal: vehicleRes.data.tipo_contrato.slot_valor_mensal || '',
+          slot_valor_anual: vehicleRes.data.tipo_contrato.slot_valor_anual || '',
+          // Garantia
+          tem_garantia: vehicleRes.data.tipo_contrato.tem_garantia || false,
+          data_limite_garantia: vehicleRes.data.tipo_contrato.data_limite_garantia || '',
           valor_compra_veiculo: vehicleRes.data.tipo_contrato.valor_compra_veiculo || '',
           numero_semanas_compra: vehicleRes.data.tipo_contrato.numero_semanas_compra || '',
           com_slot: vehicleRes.data.tipo_contrato.com_slot || false,
