@@ -33,6 +33,12 @@ async def listar_ganhos_bolt(
             query['periodo_semana'] = periodo_semana
         
         ganhos = await db.ganhos_bolt.find(query, {"_id": 0}).sort('data_importacao', -1).to_list(length=None)
+        
+        # Convert datetime fields to ISO strings for JSON serialization
+        for g in ganhos:
+            if 'data_importacao' in g and hasattr(g['data_importacao'], 'isoformat'):
+                g['data_importacao'] = g['data_importacao'].isoformat()
+        
         return ganhos
         
     except Exception as e:
