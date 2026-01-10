@@ -1194,25 +1194,47 @@ const FichaMotorista = ({ user }) => {
                       <div className="border rounded-lg p-4">
                         <p className="text-sm text-slate-500">Tipo de Contrato</p>
                         <p className="text-lg font-semibold capitalize">
-                          {veiculo.tipo_contrato_veiculo || 'N/A'}
+                          {veiculo.tipo_contrato?.tipo === 'aluguer_sem_caucao' ? 'Aluguer sem Caução' :
+                           veiculo.tipo_contrato?.tipo === 'aluguer_com_caucao' ? 'Aluguer com Caução' :
+                           veiculo.tipo_contrato?.tipo === 'aluguer_caucao_parcelada' ? 'Aluguer com Caução Parcelada' :
+                           veiculo.tipo_contrato?.tipo === 'periodo_epoca' ? 'Período de Época' :
+                           veiculo.tipo_contrato?.tipo === 'aluguer_epocas_sem_caucao' ? 'Aluguer com Épocas sem Caução' :
+                           veiculo.tipo_contrato?.tipo === 'aluguer_epocas_caucao' ? 'Aluguer com Épocas e Caução' :
+                           veiculo.tipo_contrato?.tipo === 'aluguer_epoca_caucao_parcelada' ? 'Aluguer Época com Caução Parcelada' :
+                           veiculo.tipo_contrato?.tipo === 'compra_veiculo' ? 'Compra de Veículo' :
+                           veiculo.tipo_contrato?.tipo === 'comissao' ? 'Comissão' :
+                           veiculo.tipo_contrato?.tipo === 'motorista_privado' ? 'Motorista Privado' :
+                           veiculo.tipo_contrato?.tipo || veiculo.tipo_contrato_veiculo || 'N/A'}
                         </p>
                       </div>
                       <div className="border rounded-lg p-4">
-                        <p className="text-sm text-slate-500">Valor Semanal</p>
+                        <p className="text-sm text-slate-500">
+                          {veiculo.tipo_contrato?.tipo === 'comissao' ? 'Comissão Motorista' : 'Valor Aluguer'}
+                        </p>
                         <p className="text-lg font-semibold text-green-600">
-                          €{veiculo.valor_semanal || 0}
+                          {veiculo.tipo_contrato?.tipo === 'comissao' 
+                            ? `${veiculo.tipo_contrato?.comissao_motorista || 0}%`
+                            : `€${veiculo.tipo_contrato?.valor_aluguer || veiculo.valor_semanal || 0}`}
                         </p>
                       </div>
                       <div className="border rounded-lg p-4">
                         <p className="text-sm text-slate-500">Caução</p>
                         <p className="text-lg font-semibold">
-                          {veiculo.tem_caucao ? `€${veiculo.valor_caucao || 0}` : 'Sem caução'}
+                          {veiculo.tipo_contrato?.valor_caucao 
+                            ? `€${veiculo.tipo_contrato.valor_caucao}` 
+                            : veiculo.tem_caucao 
+                              ? `€${veiculo.valor_caucao || 0}` 
+                              : 'Sem caução'}
                         </p>
                       </div>
                       <div className="border rounded-lg p-4">
-                        <p className="text-sm text-slate-500">Comissão Parceiro</p>
-                        <p className="text-lg font-semibold">
-                          {veiculo.comissao_parceiro || 30}%
+                        <p className="text-sm text-slate-500">
+                          {veiculo.tipo_contrato?.tipo === 'comissao' ? 'Comissão Parceiro' : 'Periodicidade'}
+                        </p>
+                        <p className="text-lg font-semibold capitalize">
+                          {veiculo.tipo_contrato?.tipo === 'comissao'
+                            ? `${veiculo.tipo_contrato?.comissao_parceiro || 0}%`
+                            : veiculo.tipo_contrato?.periodicidade || 'Semanal'}
                         </p>
                       </div>
                     </div>
