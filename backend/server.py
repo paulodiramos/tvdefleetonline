@@ -17688,20 +17688,52 @@ async def listar_ganhos_uber(
 
 @app.get("/api/public/veiculos")
 async def get_public_veiculos():
-    """Get public vehicles available for sale or rent"""
+    """Get public vehicles available for sale or rent (including vehicles without assigned driver)"""
     veiculos = await db.vehicles.find({
         "$or": [
             {"disponivel_venda": True},
-            {"disponivel_aluguer": True}
+            {"disponivel_aluguer": True},
+            # Veículos sem motorista atribuído que estão disponíveis
+            {
+                "disponivel_para_aluguer": True,
+                "$or": [
+                    {"motorista_atribuido": None},
+                    {"motorista_atribuido": ""},
+                    {"motorista_atribuido": {"$exists": False}}
+                ]
+            }
         ]
     }, {"_id": 0}).to_list(length=None)
     
-    # Convert datetime fields
+    # Enricher com dados e condições contratuais
     for v in veiculos:
+        # Convert datetime fields
         if isinstance(v.get("created_at"), str):
             v["created_at"] = datetime.fromisoformat(v["created_at"])
         if isinstance(v.get("updated_at"), str):
             v["updated_at"] = datetime.fromisoformat(v["updated_at"])
+        
+        # Adicionar resumo das condições contratuais
+        tipo_contrato = v.get("tipo_contrato", {})
+        v["condicoes_resumo"] = {
+            "tipo": tipo_contrato.get("tipo", "aluguer_sem_caucao"),
+            "valor_semanal": tipo_contrato.get("valor_aluguer"),
+            "valor_caucao": tipo_contrato.get("valor_caucao"),
+            "periodicidade": tipo_contrato.get("periodicidade", "semanal"),
+            "km_incluidos": tipo_contrato.get("km_limite_mensal"),
+            "km_extra_preco": tipo_contrato.get("km_extra_preco"),
+            "com_slot": tipo_contrato.get("com_slot", False),
+            "slot_valor_semanal": tipo_contrato.get("slot_valor_semanal"),
+            "slot_valor_mensal": tipo_contrato.get("slot_valor_mensal"),
+            "tem_garantia": tipo_contrato.get("tem_garantia", False),
+            "data_limite_garantia": tipo_contrato.get("data_limite_garantia")
+        }
+        
+        # Flag para indicar se está disponível sem motorista
+        v["disponivel_sem_motorista"] = (
+            not v.get("motorista_atribuido") and 
+            v.get("disponivel_para_aluguer", False)
+        )
     
     return veiculos
 
