@@ -38,6 +38,13 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   const [editForm, setEditForm] = useState({});
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [pdfOptions, setPdfOptions] = useState({
+    mostrar_matricula: true,
+    mostrar_via_verde: false,
+    mostrar_abastecimentos: false,
+    mostrar_carregamentos: false
+  });
+  const [showPdfOptions, setShowPdfOptions] = useState(null); // motorista_id ou null
 
   useEffect(() => {
     const now = new Date();
