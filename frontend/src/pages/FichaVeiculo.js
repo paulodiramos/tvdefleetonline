@@ -721,18 +721,26 @@ const FichaVeiculo = ({ user, onLogout }) => {
           taxa_juro: vehicleRes.data.investimento?.taxa_juro || '',
           valor_residual: vehicleRes.data.investimento?.valor_residual || '',
           categorias_uber: vehicleRes.data.categorias_uber || {
-            green: false,
+            uberx: false,
+            share: false,
+            electric: false,
+            black: false,
             comfort: false,
-            exec: false,
+            xl: false,
+            xxl: false,
             pet: false,
-            xl: false
+            package: false
           },
           categorias_bolt: vehicleRes.data.categorias_bolt || {
             economy: false,
             comfort: false,
-            exec: false,
-            pet: false,
-            xl: false
+            executive: false,
+            xl: false,
+            xxl: false,
+            green: false,
+            electric: false,
+            motorista_privado: false,
+            pet: false
           }
         });
       }
