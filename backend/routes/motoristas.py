@@ -754,3 +754,129 @@ async def abater_viaverde(
         "novo_total": config["viaverde_acumulado"]
     }
 
+
+
+# ==================== UPLOAD DE DOCUMENTOS ====================
+
+@router.post("/motoristas/{motorista_id}/documentos/upload")
+async def upload_documento_motorista(
+    motorista_id: str,
+    file: UploadFile = File(...),
+    tipo_documento: str = Form(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload de documento do motorista"""
+    import shutil
+    
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Verificar permissão do parceiro
+    if current_user["role"] == UserRole.PARCEIRO:
+        if motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Criar diretório para documentos do motorista
+    docs_dir = MOTORISTAS_UPLOAD_DIR / motorista_id / "documentos"
+    docs_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Gerar nome único para o ficheiro
+    file_extension = Path(file.filename).suffix.lower()
+    filename = f"{tipo_documento}_{uuid.uuid4()}{file_extension}"
+    file_path = docs_dir / filename
+    
+    # Guardar ficheiro
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    relative_path = str(file_path.relative_to(ROOT_DIR))
+    
+    # Atualizar motorista com o caminho do documento
+    documentos = motorista.get("documentos", {})
+    documentos[tipo_documento] = relative_path
+    
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        {"$set": {
+            "documentos": documentos,
+            f"documentos.{tipo_documento}_uploaded_at": datetime.now(timezone.utc).isoformat(),
+            f"documentos.{tipo_documento}_uploaded_by": current_user["id"]
+        }}
+    )
+    
+    logger.info(f"Documento {tipo_documento} carregado para motorista {motorista_id}: {relative_path}")
+    
+    return {
+        "message": "Documento carregado com sucesso",
+        "tipo_documento": tipo_documento,
+        "url": relative_path
+    }
+
+
+@router.get("/motoristas/{motorista_id}/documentos")
+async def get_documentos_motorista(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter lista de documentos do motorista"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.MOTORISTA]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Verificar permissões
+    if current_user["role"] == UserRole.PARCEIRO:
+        if motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    elif current_user["role"] == UserRole.MOTORISTA:
+        if motorista_id != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    documentos = motorista.get("documentos", {})
+    
+    return {
+        "motorista_id": motorista_id,
+        "documentos": documentos
+    }
+
+
+@router.delete("/motoristas/{motorista_id}/documentos/{tipo_documento}")
+async def delete_documento_motorista(
+    motorista_id: str,
+    tipo_documento: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Eliminar documento do motorista"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    documentos = motorista.get("documentos", {})
+    
+    if tipo_documento in documentos:
+        # Tentar eliminar o ficheiro físico
+        file_path = ROOT_DIR / documentos[tipo_documento]
+        if file_path.exists():
+            file_path.unlink()
+        
+        # Remover da base de dados
+        del documentos[tipo_documento]
+        
+        await db.motoristas.update_one(
+            {"id": motorista_id},
+            {"$set": {"documentos": documentos}}
+        )
+        
+        return {"message": f"Documento {tipo_documento} eliminado"}
+    
+    raise HTTPException(status_code=404, detail="Documento não encontrado")
+
