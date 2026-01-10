@@ -426,9 +426,22 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                             <Button size="sm" variant="outline" onClick={() => setEditingMotorista(null)} className="h-5 w-5 p-0"><X className="w-3 h-3" /></Button>
                           </div>
                         ) : (
-                          <div className="flex gap-1 justify-center">
-                            <Button size="sm" variant="outline" onClick={() => handleEditMotorista(m)} className="h-5 w-5 p-0"><Edit className="w-3 h-3" /></Button>
-                            <Button size="sm" variant="destructive" onClick={() => handleDeleteMotoristaData(m.motorista_id, m.motorista_nome)} className="h-5 w-5 p-0"><Trash2 className="w-3 h-3" /></Button>
+                          <div className="flex gap-0.5 justify-center">
+                            <Button size="sm" variant="outline" onClick={() => handleDownloadMotoristaPdf(m.motorista_id, m.motorista_nome)} className="h-5 w-5 p-0" title="Download PDF">
+                              <FileDown className="w-3 h-3" />
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => handleWhatsApp(m.motorista_id)} className="h-5 w-5 p-0 text-green-600 hover:text-green-700" title="WhatsApp">
+                              <MessageCircle className="w-3 h-3" />
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => handleEmail(m.motorista_id, m.motorista_nome)} className="h-5 w-5 p-0 text-blue-600 hover:text-blue-700" title="Email">
+                              <Mail className="w-3 h-3" />
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => handleEditMotorista(m)} className="h-5 w-5 p-0" title="Editar">
+                              <Edit className="w-3 h-3" />
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => handleDeleteMotoristaData(m.motorista_id, m.motorista_nome)} className="h-5 w-5 p-0" title="Eliminar">
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
                           </div>
                         )}
                       </td>
