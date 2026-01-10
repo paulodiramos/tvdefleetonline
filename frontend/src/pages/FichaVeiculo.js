@@ -2553,7 +2553,8 @@ const FichaVeiculo = ({ user, onLogout }) => {
                       </div>
                     )}
 
-                    {/* Valores do Slot por Periodicidade */}
+                    {/* Valores do Slot por Periodicidade - Só aparece quando tipo de contrato é 'slot' */}
+                    {((editMode ? infoForm.tipo : vehicle.tipo_contrato?.tipo) === 'slot' || (editMode ? infoForm.com_slot : vehicle.tipo_contrato?.com_slot)) && (
                     <div className="col-span-2 bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg">
                       <Label className="font-semibold text-green-800 mb-3 block">💳 Valores do Slot por Periodicidade</Label>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -2584,6 +2585,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                       </div>
                       <p className="text-xs text-green-600 mt-2">✓ Periodicidade selecionada: <strong className="capitalize">{(editMode ? infoForm.slot_periodicidade : vehicle.tipo_contrato?.slot_periodicidade) || 'Semanal'}</strong></p>
                     </div>
+                    )}
 
                     {/* Garantia do Veículo */}
                     <div className="col-span-2 bg-gradient-to-r from-amber-50 to-yellow-50 p-4 rounded-lg">
