@@ -7,9 +7,13 @@
   - `DELETE /api/importacoes/{id}` - Eliminar importação e todos os registos associados
   - `PUT /api/importacoes/{id}/estado` - Alterar estado (processado, pendente, erro, revisto)
   - `GET /api/importacoes/{id}` - Obter detalhes de importação
+- **IMPLEMENTED**: Escalões de KM Extra nos Veículos
+  - Novos campos: `km_extra_escalao_1_limite`, `km_extra_escalao_1_valor`, `km_extra_escalao_2_valor`
+  - Lógica: Até X km extra aplica valor do escalão 1, acima aplica valor do escalão 2
+  - UI com fundo gradiente vermelho/laranja e exemplo de cálculo dinâmico
 - **FIXED**: Código duplicado no `ListaImportacoes.js` que impedia o frontend de compilar
 - **UPDATED**: Endpoint `/api/relatorios/importacoes/historico` agora inclui `id` e `estado` em cada importação
-- **TESTED**: Funcionalidade completa testada via screenshots - alteração de estado e modal de eliminação funcionais
+- **TESTED**: Via screenshots e curl - todas as funcionalidades verificadas
 
 ## Changelog (2026-01-10 - Session 3)
 ### Session Updates:
