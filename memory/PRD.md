@@ -1,5 +1,14 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-10 - Session 5c - Fixes Adicionais)
+### Session Updates:
+- **BUG FIX**: Campo `disponivel_para_aluguer` adicionado ao modelo Vehicle
+- **BUG FIX**: URL de download de documentos corrigido (removido /api duplicado)
+- **BUG FIX**: Upload de documentos URL corrigido (`${API}/motoristas/...` em vez de `${API}/api/motoristas/...`)
+- **TESTED**: Página pública /veiculos mostra 2 veículos disponíveis com condições
+- **TESTED**: Download de documentos PDF funciona via URL público
+- **TESTED**: Checkbox "Disponível para Aluguer" grava e carrega correctamente
+
 ## Changelog (2026-01-10 - Session 5b - Bugs & Funcionalidades)
 ### Session Updates:
 - **BUG FIX**: Aprovação de documentos agora atualiza `status_motorista` para "ativo"
