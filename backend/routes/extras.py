@@ -129,6 +129,9 @@ async def criar_extra_motorista(
         
         await db.extras_motorista.insert_one(extra_doc)
         
+        # Remove _id from response (MongoDB adds it after insert)
+        extra_doc.pop('_id', None)
+        
         return {'success': True, 'id': extra_id, 'extra': extra_doc}
         
     except HTTPException:
