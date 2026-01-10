@@ -99,8 +99,11 @@ const ImportarFicheirosParceiro = ({ user }) => {
       formData.append('ano', ano);
 
       // Usar endpoint unificado para todas as plataformas
+      // Mapear "eletrico" para "carregamento" para compatibilidade com backend
+      const plataformaBackend = plataforma === 'eletrico' ? 'carregamento' : plataforma;
+      
       const response = await axios.post(
-        `${API_URL}/api/importar/${plataforma}`,
+        `${API_URL}/api/importar/${plataformaBackend}`,
         formData,
         {
           headers: {
