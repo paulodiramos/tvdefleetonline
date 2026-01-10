@@ -4306,6 +4306,24 @@ const FichaVeiculo = ({ user, onLogout }) => {
                           rows="2"
                         />
                       </div>
+                      <div>
+                        <Label htmlFor="oficina">Oficina</Label>
+                        <Input
+                          id="oficina"
+                          value={agendaForm.oficina}
+                          onChange={(e) => setAgendaForm({...agendaForm, oficina: e.target.value})}
+                          placeholder="Nome da oficina"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="local">Local/Morada</Label>
+                        <Input
+                          id="local"
+                          value={agendaForm.local}
+                          onChange={(e) => setAgendaForm({...agendaForm, local: e.target.value})}
+                          placeholder="Endereço ou localização"
+                        />
+                      </div>
                     </div>
                     <div className="flex gap-2">
                       <Button type="submit">
