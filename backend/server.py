@@ -76,6 +76,7 @@ from routes.pagamentos import router as pagamentos_router
 from routes.reports import router as reports_router
 from routes.gestores import router as gestores_router
 from routes.configuracoes import router as configuracoes_router
+from routes.importacoes import router as importacoes_router
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
