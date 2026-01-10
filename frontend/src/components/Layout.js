@@ -124,7 +124,8 @@ const Layout = ({ children, user, onLogout }) => {
         icon: DollarSign,
         submenu: [
           { path: '/pagamentos', label: 'Pagamentos a Motoristas' },
-          { path: '/verificar-recibos', label: 'Verificar Recibos' }
+          { path: '/verificar-recibos', label: 'Verificar Recibos' },
+          { path: '/gestao-extras', label: '💰 Extras/Dívidas' }
         ]
       },
       { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' }
