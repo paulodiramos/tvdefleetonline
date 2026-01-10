@@ -963,7 +963,266 @@ async def get_resumo_semanal_parceiro(
     }
 
 
-@router.get("/motorista/{motorista_id}/semanais")
+# ==================== HISTÓRICO DE IMPORTAÇÕES ====================
+
+@router.get("/importacoes/historico")
+async def get_historico_importacoes(
+    semana: Optional[int] = None,
+    ano: Optional[int] = None,
+    data_inicio: Optional[str] = None,
+    data_fim: Optional[str] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Retorna o histórico de importações com resumo por plataforma.
+    Pode filtrar por semana/ano ou por período de datas.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Build date range
+    if semana and ano:
+        # Calculate date range for the week
+        first_day_of_year = datetime(ano, 1, 1)
+        if first_day_of_year.weekday() <= 3:
+            first_monday = first_day_of_year - timedelta(days=first_day_of_year.weekday())
+        else:
+            first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()))
+        
+        week_start = first_monday + timedelta(weeks=semana - 1)
+        week_end = week_start + timedelta(days=6)
+        
+        data_inicio = week_start.strftime("%Y-%m-%d")
+        data_fim = week_end.strftime("%Y-%m-%d")
+    elif not data_inicio or not data_fim:
+        # Default to current week
+        now = datetime.now()
+        semana = now.isocalendar()[1]
+        ano = now.year
+        first_day_of_year = datetime(ano, 1, 1)
+        if first_day_of_year.weekday() <= 3:
+            first_monday = first_day_of_year - timedelta(days=first_day_of_year.weekday())
+        else:
+            first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()))
+        
+        week_start = first_monday + timedelta(weeks=semana - 1)
+        week_end = week_start + timedelta(days=6)
+        
+        data_inicio = week_start.strftime("%Y-%m-%d")
+        data_fim = week_end.strftime("%Y-%m-%d")
+    
+    logger.info(f"📋 Histórico importações: {data_inicio} a {data_fim}")
+    
+    # Build parceiro filter
+    parceiro_filter = {}
+    if current_user["role"] == UserRole.PARCEIRO:
+        parceiro_filter = {"$or": [
+            {"parceiro_id": current_user["id"]},
+            {"uploaded_by": current_user["id"]}
+        ]}
+    
+    importacoes = []
+    resumo_por_plataforma = {
+        "uber": {"total": 0, "registos": 0, "ficheiros": 0},
+        "bolt": {"total": 0, "registos": 0, "ficheiros": 0},
+        "viaverde": {"total": 0, "registos": 0, "ficheiros": 0},
+        "combustivel": {"total": 0, "registos": 0, "ficheiros": 0},
+        "eletrico": {"total": 0, "registos": 0, "ficheiros": 0}
+    }
+    
+    # ===== UBER =====
+    uber_query = {
+        **parceiro_filter,
+        "$or": [
+            {"semana": semana, "ano": ano} if semana and ano else {},
+            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+        ]
+    }
+    uber_query["$or"] = [q for q in uber_query["$or"] if q]
+    if not uber_query["$or"]:
+        uber_query.pop("$or")
+    
+    uber_records = await db.ganhos_uber.find(uber_query, {"_id": 0}).to_list(1000)
+    
+    # Group by ficheiro_nome
+    uber_by_file = {}
+    for r in uber_records:
+        fname = r.get("ficheiro_nome", "uber_import")
+        if fname not in uber_by_file:
+            uber_by_file[fname] = {
+                "plataforma": "uber",
+                "ficheiro_nome": fname,
+                "data_importacao": r.get("created_at") or r.get("data_importacao"),
+                "total_registos": 0,
+                "total_valor": 0,
+                "semana": r.get("semana"),
+                "ano": r.get("ano")
+            }
+        uber_by_file[fname]["total_registos"] += 1
+        uber_by_file[fname]["total_valor"] += float(r.get("pago_total") or r.get("ganhos") or 0)
+    
+    for f in uber_by_file.values():
+        importacoes.append(f)
+        resumo_por_plataforma["uber"]["total"] += f["total_valor"]
+        resumo_por_plataforma["uber"]["registos"] += f["total_registos"]
+        resumo_por_plataforma["uber"]["ficheiros"] += 1
+    
+    # ===== BOLT =====
+    bolt_query = {
+        **parceiro_filter,
+        "$or": [
+            {"periodo_semana": semana, "periodo_ano": ano} if semana and ano else {},
+            {"semana": semana, "ano": ano} if semana and ano else {},
+            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+        ]
+    }
+    bolt_query["$or"] = [q for q in bolt_query["$or"] if q]
+    if not bolt_query["$or"]:
+        bolt_query.pop("$or")
+    
+    bolt_records = await db.ganhos_bolt.find(bolt_query, {"_id": 0}).to_list(1000)
+    
+    bolt_by_file = {}
+    for r in bolt_records:
+        fname = r.get("ficheiro_nome", "bolt_import")
+        if fname not in bolt_by_file:
+            bolt_by_file[fname] = {
+                "plataforma": "bolt",
+                "ficheiro_nome": fname,
+                "data_importacao": r.get("created_at") or r.get("data_importacao"),
+                "total_registos": 0,
+                "total_valor": 0,
+                "semana": r.get("periodo_semana") or r.get("semana"),
+                "ano": r.get("periodo_ano") or r.get("ano")
+            }
+        bolt_by_file[fname]["total_registos"] += 1
+        bolt_by_file[fname]["total_valor"] += float(r.get("ganhos_liquidos") or r.get("ganhos") or 0)
+    
+    for f in bolt_by_file.values():
+        importacoes.append(f)
+        resumo_por_plataforma["bolt"]["total"] += f["total_valor"]
+        resumo_por_plataforma["bolt"]["registos"] += f["total_registos"]
+        resumo_por_plataforma["bolt"]["ficheiros"] += 1
+    
+    # ===== VIA VERDE =====
+    vv_query = {
+        **parceiro_filter,
+        "$or": [
+            {"semana": semana, "ano": ano} if semana and ano else {},
+            {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}
+        ]
+    }
+    vv_query["$or"] = [q for q in vv_query["$or"] if q]
+    if not vv_query["$or"]:
+        vv_query.pop("$or")
+    
+    vv_records = await db.portagens_viaverde.find(vv_query, {"_id": 0}).to_list(5000)
+    
+    vv_by_file = {}
+    for r in vv_records:
+        fname = r.get("ficheiro_nome", "viaverde_import")
+        if fname not in vv_by_file:
+            vv_by_file[fname] = {
+                "plataforma": "viaverde",
+                "ficheiro_nome": fname,
+                "data_importacao": r.get("created_at") or r.get("data_importacao"),
+                "total_registos": 0,
+                "total_valor": 0,
+                "semana": r.get("semana") or semana,
+                "ano": r.get("ano") or ano
+            }
+        vv_by_file[fname]["total_registos"] += 1
+        vv_by_file[fname]["total_valor"] += float(r.get("liquid_value") or r.get("value") or 0)
+    
+    for f in vv_by_file.values():
+        importacoes.append(f)
+        resumo_por_plataforma["viaverde"]["total"] += f["total_valor"]
+        resumo_por_plataforma["viaverde"]["registos"] += f["total_registos"]
+        resumo_por_plataforma["viaverde"]["ficheiros"] += 1
+    
+    # ===== COMBUSTÍVEL =====
+    comb_query = {
+        **parceiro_filter,
+        "data": {"$gte": data_inicio, "$lte": data_fim}
+    }
+    
+    comb_records = await db.abastecimentos_combustivel.find(comb_query, {"_id": 0}).to_list(1000)
+    
+    comb_by_file = {}
+    for r in comb_records:
+        fname = r.get("ficheiro_nome", "combustivel_import")
+        if fname not in comb_by_file:
+            comb_by_file[fname] = {
+                "plataforma": "combustivel",
+                "ficheiro_nome": fname,
+                "data_importacao": r.get("created_at") or r.get("data_importacao"),
+                "total_registos": 0,
+                "total_valor": 0,
+                "semana": semana,
+                "ano": ano
+            }
+        comb_by_file[fname]["total_registos"] += 1
+        comb_by_file[fname]["total_valor"] += float(r.get("valor_liquido") or r.get("total") or 0)
+    
+    for f in comb_by_file.values():
+        importacoes.append(f)
+        resumo_por_plataforma["combustivel"]["total"] += f["total_valor"]
+        resumo_por_plataforma["combustivel"]["registos"] += f["total_registos"]
+        resumo_por_plataforma["combustivel"]["ficheiros"] += 1
+    
+    # ===== ELÉTRICO =====
+    elet_query = {
+        **parceiro_filter,
+        "$or": [
+            {"semana": semana, "ano": ano} if semana and ano else {},
+            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+        ]
+    }
+    elet_query["$or"] = [q for q in elet_query["$or"] if q]
+    if not elet_query["$or"]:
+        elet_query.pop("$or")
+    
+    elet_records = await db.despesas_combustivel.find(elet_query, {"_id": 0}).to_list(1000)
+    
+    elet_by_file = {}
+    for r in elet_records:
+        fname = r.get("ficheiro_nome", "eletrico_import")
+        if fname not in elet_by_file:
+            elet_by_file[fname] = {
+                "plataforma": "eletrico",
+                "ficheiro_nome": fname,
+                "data_importacao": r.get("created_at") or r.get("data_importacao"),
+                "total_registos": 0,
+                "total_valor": 0,
+                "semana": r.get("semana") or semana,
+                "ano": r.get("ano") or ano
+            }
+        elet_by_file[fname]["total_registos"] += 1
+        elet_by_file[fname]["total_valor"] += float(r.get("valor_total") or r.get("TotalValueWithTaxes") or 0)
+    
+    for f in elet_by_file.values():
+        importacoes.append(f)
+        resumo_por_plataforma["eletrico"]["total"] += f["total_valor"]
+        resumo_por_plataforma["eletrico"]["registos"] += f["total_registos"]
+        resumo_por_plataforma["eletrico"]["ficheiros"] += 1
+    
+    # Sort by date
+    importacoes.sort(key=lambda x: x.get("data_importacao") or "", reverse=True)
+    
+    # Round values
+    for plat in resumo_por_plataforma:
+        resumo_por_plataforma[plat]["total"] = round(resumo_por_plataforma[plat]["total"], 2)
+    
+    return {
+        "importacoes": importacoes,
+        "resumo_por_plataforma": resumo_por_plataforma,
+        "filtro": {
+            "semana": semana,
+            "ano": ano,
+            "data_inicio": data_inicio,
+            "data_fim": data_fim
+        }
+    }
 async def get_relatorios_motorista(
     motorista_id: str,
     current_user: Dict = Depends(get_current_user)
