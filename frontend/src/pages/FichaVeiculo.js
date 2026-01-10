@@ -600,6 +600,11 @@ const FichaVeiculo = ({ user, onLogout }) => {
           comissao_parceiro: vehicleRes.data.tipo_contrato.comissao_parceiro || '',
           comissao_motorista: vehicleRes.data.tipo_contrato.comissao_motorista || '',
           inclui_combustivel: vehicleRes.data.tipo_contrato.inclui_combustivel || false,
+          // Condições de KM
+          tem_limite_km: vehicleRes.data.tipo_contrato.tem_limite_km || false,
+          km_semanais_disponiveis: vehicleRes.data.tipo_contrato.km_semanais_disponiveis || '',
+          valor_extra_km: vehicleRes.data.tipo_contrato.valor_extra_km || '',
+          km_acumula_semanal: vehicleRes.data.tipo_contrato.km_acumula_semanal || false,
           valor_compra_veiculo: vehicleRes.data.tipo_contrato.valor_compra_veiculo || '',
           numero_semanas_compra: vehicleRes.data.tipo_contrato.numero_semanas_compra || '',
           com_slot: vehicleRes.data.tipo_contrato.com_slot || false,
