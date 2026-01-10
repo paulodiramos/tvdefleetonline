@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -22,7 +23,13 @@ import {
   ChevronLeft,
   ChevronRight,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Clock,
+  MoreVertical,
+  Edit
 } from 'lucide-react';
 import { toast } from 'sonner';
 
