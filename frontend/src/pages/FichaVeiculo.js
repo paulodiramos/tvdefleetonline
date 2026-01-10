@@ -2409,6 +2409,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                         </div>
                       </div>
                     </div>
+                    )}
 
                     {/* Valores do Slot por Periodicidade */}
                     <div className="col-span-2 bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg mt-2">
