@@ -198,6 +198,11 @@ const FichaMotorista = ({ user }) => {
         setDocumentos(prev => ({ ...prev, ...motoristaData.documentos }));
       }
       
+      // Carregar foto do motorista
+      if (motoristaData.foto_url) {
+        setFotoMotorista(motoristaData.foto_url);
+      }
+      
       // Carregar configurações financeiras se existirem
       if (motoristaData.config_financeira) {
         setConfigFinanceira(prev => ({
