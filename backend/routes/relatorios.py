@@ -2570,13 +2570,15 @@ async def get_historico_importacoes(
         fname = r.get("ficheiro_nome", "eletrico_import")
         if fname not in elet_by_file:
             elet_by_file[fname] = {
+                "id": fname,  # Use ficheiro_nome as ID for delete/update operations
                 "plataforma": "eletrico",
                 "ficheiro_nome": fname,
                 "data_importacao": r.get("created_at") or r.get("data_importacao"),
                 "total_registos": 0,
                 "total_valor": 0,
                 "semana": r.get("semana") or semana,
-                "ano": r.get("ano") or ano
+                "ano": r.get("ano") or ano,
+                "estado": r.get("estado", "processado")
             }
         elet_by_file[fname]["total_registos"] += 1
         elet_by_file[fname]["total_valor"] += float(r.get("valor_total") or r.get("TotalValueWithTaxes") or 0)
