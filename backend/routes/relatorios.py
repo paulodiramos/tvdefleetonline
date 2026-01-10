@@ -1224,8 +1224,27 @@ async def get_historico_importacoes(
     elet_query["$or"] = [q for q in elet_query["$or"] if q]
     if not elet_query["$or"]:
         elet_query.pop("$or")
-    if parceiro_motorista_ids:
-        elet_query["motorista_id"] = {"$in": parceiro_motorista_ids}
+    
+    # Filter by motorista_id, vehicle_id, or matricula
+    if parceiro_motorista_ids or parceiro_veiculo_ids or parceiro_matriculas:
+        elet_filter_conditions = []
+        if parceiro_motorista_ids:
+            elet_filter_conditions.append({"motorista_id": {"$in": parceiro_motorista_ids}})
+        if parceiro_veiculo_ids:
+            elet_filter_conditions.append({"vehicle_id": {"$in": parceiro_veiculo_ids}})
+        if parceiro_matriculas:
+            elet_filter_conditions.append({"matricula": {"$in": parceiro_matriculas}})
+        if elet_filter_conditions:
+            if "$or" in elet_query:
+                # Combine with existing $or
+                elet_query = {
+                    "$and": [
+                        {"$or": elet_query["$or"]},
+                        {"$or": elet_filter_conditions}
+                    ]
+                }
+            else:
+                elet_query["$or"] = elet_filter_conditions
     
     elet_records = await db.despesas_combustivel.find(elet_query, {"_id": 0}).to_list(1000)
     
