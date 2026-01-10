@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { ChevronLeft, ChevronRight, Download, RefreshCw, TrendingUp, TrendingDown, Wallet, Car, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, RefreshCw, TrendingUp, TrendingDown, Wallet, Car, Users, Send, MessageCircle, Mail, ExternalLink, Loader2 } from 'lucide-react';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
