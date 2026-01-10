@@ -1206,8 +1206,16 @@ async def get_historico_importacoes(
         resumo_por_plataforma["eletrico"]["registos"] += f["total_registos"]
         resumo_por_plataforma["eletrico"]["ficheiros"] += 1
     
-    # Sort by date
-    importacoes.sort(key=lambda x: x.get("data_importacao") or "", reverse=True)
+    # Sort by date (convert all dates to strings for consistent sorting)
+    def get_sort_key(x):
+        d = x.get("data_importacao")
+        if d is None:
+            return ""
+        if isinstance(d, datetime):
+            return d.isoformat()
+        return str(d)
+    
+    importacoes.sort(key=get_sort_key, reverse=True)
     
     # Round values
     for plat in resumo_por_plataforma:
