@@ -2627,47 +2627,108 @@ async def process_combustivel_eletrico_excel(file_content: bytes, parceiro_id: s
         wb = openpyxl.load_workbook(excel_path)
         sheet = wb.active
         
-        # Get headers from first row
-        headers = [cell.value for cell in sheet[1]]
+        # Detectar automaticamente a linha de cabeçalhos
+        header_row = 1
+        for row_num, row in enumerate(sheet.iter_rows(min_row=1, max_row=15, values_only=True), start=1):
+            # Procurar linha que tenha "DATA", "CARTÃO", "MATRÍCULA" ou similar
+            row_str = ' '.join(str(cell or '').upper() for cell in row)
+            if any(keyword in row_str for keyword in ['DATA', 'CARTÃO', 'CARTAO', 'MATRÍCULA', 'MATRICULA', 'ENERGIA', 'POSTO']):
+                header_row = row_num
+                logger.info(f"Cabeçalhos elétrico encontrados na linha {row_num}")
+                break
+        
+        # Get headers from detected row
+        headers = [str(cell.value or '').upper().strip() for cell in sheet[header_row]]
+        logger.info(f"Headers: {headers}")
+        
+        # Mapear índices das colunas dinamicamente
+        col_map = {}
+        for i, h in enumerate(headers):
+            h_clean = h.replace('Nº. ', '').replace('Nº ', '').replace('N.º ', '').strip()
+            if 'DATA' in h:
+                col_map['data'] = i
+            elif 'CART' in h:
+                col_map['cartao'] = i
+            elif 'NOME' in h:
+                col_map['nome'] = i
+            elif 'DESCRI' in h:
+                col_map['descricao'] = i
+            elif 'MATR' in h:
+                col_map['matricula'] = i
+            elif 'CARREGAMENTO' in h:
+                col_map['id_carregamento'] = i
+            elif 'POSTO' in h:
+                col_map['posto'] = i
+            elif 'ENERGIA' in h:
+                col_map['energia'] = i
+            elif 'DURA' in h:
+                col_map['duracao'] = i
+            elif h == 'CUSTO' or 'CUSTO OPC' in h or h == 'OPC':
+                col_map['custo'] = i
+            elif 'IEC' in h:
+                col_map['iec'] = i
+            elif h == 'TOTAL' or h == 'TOTAL SEM IVA':
+                col_map['total'] = i
+            elif 'IVA' in h and 'TOTAL' in h:
+                col_map['total_iva'] = i
+            elif 'FATURA' in h or 'FACTURA' in h:
+                col_map['fatura'] = i
+        
+        logger.info(f"Column mapping: {col_map}")
         
         # Process data rows
         transacoes = []
         total_custo = 0
         total_energia = 0
         
-        for row in sheet.iter_rows(min_row=2, values_only=True):
-            if not row[0]:  # Skip if no card number
+        def get_val(row, key, default=None):
+            idx = col_map.get(key)
+            if idx is not None and idx < len(row):
+                return row[idx]
+            return default
+        
+        def get_float(val):
+            if val is None:
+                return None
+            if isinstance(val, (int, float)):
+                return float(val)
+            try:
+                # Limpar string e converter
+                val_str = str(val).replace(',', '.').replace(' ', '').replace('€', '').strip()
+                return float(val_str) if val_str else None
+            except (ValueError, TypeError):
+                return None
+        
+        for row in sheet.iter_rows(min_row=header_row + 1, values_only=True):
+            # Skip rows without data (check cartao or matricula)
+            cartao = get_val(row, 'cartao')
+            matricula = get_val(row, 'matricula')
+            if not cartao and not matricula:
                 continue
             
-            # Extrair valores com tratamento de erros
-            def get_float(val):
-                try:
-                    return float(val) if val and isinstance(val, (int, float)) else None
-                except (ValueError, TypeError):
-                    return None
-            
-            energia = get_float(row[6]) if len(row) > 6 else None
-            custo = get_float(row[8]) if len(row) > 8 else None
-            total = get_float(row[11]) if len(row) > 11 else None
-            total_iva = get_float(row[12]) if len(row) > 12 else None
+            energia = get_float(get_val(row, 'energia'))
+            custo = get_float(get_val(row, 'custo'))
+            total = get_float(get_val(row, 'total'))
+            total_iva = get_float(get_val(row, 'total_iva'))
             
             transacao = {
                 "id": str(uuid.uuid4()),
                 "parceiro_id": parceiro_id,
-                "numero_cartao": str(row[0] or "") if len(row) > 0 else None,
-                "nome": str(row[1] or "") if len(row) > 1 else None,
-                "descricao": str(row[2] or "") if len(row) > 2 else None,
-                "matricula": str(row[3] or "") if len(row) > 3 else None,
-                "id_carregamento": str(row[4] or "") if len(row) > 4 else None,
-                "posto": str(row[5] or "") if len(row) > 5 else None,
+                "data": str(get_val(row, 'data') or ''),
+                "numero_cartao": str(cartao or ''),
+                "nome": str(get_val(row, 'nome') or ''),
+                "descricao": str(get_val(row, 'descricao') or ''),
+                "matricula": str(matricula or ''),
+                "id_carregamento": str(get_val(row, 'id_carregamento') or ''),
+                "posto": str(get_val(row, 'posto') or ''),
                 "energia": energia,
-                "duracao": get_float(row[7]) if len(row) > 7 else None,
+                "duracao": get_float(get_val(row, 'duracao')),
                 "custo": custo,
-                "opc": get_float(row[9]) if len(row) > 9 else None,
-                "iec": get_float(row[10]) if len(row) > 10 else None,
+                "opc": get_float(get_val(row, 'custo')),  # OPC pode ser o mesmo que custo
+                "iec": get_float(get_val(row, 'iec')),
                 "total": total,
                 "total_com_iva": total_iva,
-                "fatura": str(row[13] or "") if len(row) > 13 else None,
+                "fatura": str(get_val(row, 'fatura') or ''),
                 "periodo_inicio": periodo_inicio,
                 "periodo_fim": periodo_fim,
                 "ficheiro_nome": excel_filename,
@@ -2677,6 +2738,8 @@ async def process_combustivel_eletrico_excel(file_content: bytes, parceiro_id: s
             transacoes.append(transacao)
             if total_iva:
                 total_custo += total_iva
+            elif total:
+                total_custo += total
             if energia:
                 total_energia += energia
         
@@ -2695,6 +2758,8 @@ async def process_combustivel_eletrico_excel(file_content: bytes, parceiro_id: s
     
     except Exception as e:
         logger.error(f"Error processing Electric Fuel Excel: {e}")
+        import traceback
+        traceback.print_exc()
         return {"success": False, "error": str(e)}
 
 async def process_combustivel_fossil_excel(file_content: bytes, parceiro_id: str, periodo_inicio: str, periodo_fim: str) -> Dict[str, Any]:
