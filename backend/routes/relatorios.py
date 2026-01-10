@@ -765,8 +765,9 @@ async def get_resumo_semanal_parceiro(
                 km_atribuidos = veiculo.get("km_atribuidos")
                 valor_km_extra = veiculo.get("valor_km_extra")
                 if aluguer_semanal == 0:
-                    # Get from vehicle valor_semanal
-                    aluguer_semanal = veiculo.get("valor_semanal") or 0
+                    # Get from vehicle - check tipo_contrato.valor_aluguer first, then valor_semanal
+                    tipo_contrato = veiculo.get("tipo_contrato", {})
+                    aluguer_semanal = tipo_contrato.get("valor_aluguer") or veiculo.get("valor_semanal") or 0
         
         # ============ GANHOS UBER ============
         # Buscar por UUID ou email
