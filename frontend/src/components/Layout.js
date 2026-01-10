@@ -62,6 +62,7 @@ const Layout = ({ children, user, onLogout }) => {
           submenu: [
             { path: '/relatorios', label: '📊 Gerir Relatórios' },
             { path: '/resumo-semanal', label: '📈 Resumo Semanal' },
+            { path: '/lista-importacoes', label: '📋 Lista Importações' },
             { path: '/importar-ficheiros', label: '📤 Importar Ficheiros' },
             { path: '/historico-relatorios', label: '📜 Histórico' }
           ]
