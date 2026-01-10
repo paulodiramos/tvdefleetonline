@@ -1030,29 +1030,15 @@ const FichaVeiculo = ({ user, onLogout }) => {
     }
 
     try {
-      const token = localStorage.getItem('token');
-      const filename = documentPath.split('/').pop();
+      // Construir URL completo para o ficheiro
+      // O backend serve ficheiros estáticos em /uploads/
+      const baseUrl = process.env.REACT_APP_BACKEND_URL;
+      const fullUrl = documentPath.startsWith('http') 
+        ? documentPath 
+        : `${baseUrl}/${documentPath}`;
       
-      // Determine folder based on document path
-      let folder = 'vehicle_documents';
-      if (documentPath.includes('extintor_docs')) {
-        folder = 'extintor_docs';
-      }
-      
-      const response = await axios.get(`${API}/files/${folder}/${filename}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: 'blob'
-      });
-
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', filename);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      // Abrir numa nova tab para download/visualização
+      window.open(fullUrl, '_blank');
     } catch (error) {
       console.error('Error downloading document:', error);
       toast.error('Erro ao carregar documento');
