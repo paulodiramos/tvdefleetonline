@@ -212,9 +212,10 @@ GET    /api/importacoes/{id}                    # Detalhes de importação
 
 ### P1 - Alta Prioridade
 - [ ] Implementar foto de perfil do motorista (pendente de sessões anteriores)
-- [ ] Continuar refatoração: mover mais endpoints do `server.py` para ficheiros dedicados
+- [x] ~~Refatoração Backend~~ - Iniciada! Novos ficheiros criados
 
 ### P2 - Média Prioridade
+- [ ] Continuar refatoração: mover mais endpoints do `server.py` para ficheiros dedicados (ainda restam ~21.000 linhas)
 - [ ] Implementar sincronização automática (RPA)
 - [ ] Dashboard de ROI com cálculos automáticos usando dados de investimento
 
@@ -222,6 +223,46 @@ GET    /api/importacoes/{id}                    # Detalhes de importação
 - [ ] PDF do relatório semanal com lista de transações Via Verde
 - [ ] Notificações sobre importação
 - [ ] Editor visual para automação RPA
+
+---
+
+## Architecture Overview
+
+### Backend Structure (Refactored)
+```
+/app/backend/
+├── server.py              # Main FastAPI app (~21.000 linhas - em refatoração)
+├── models/                # Pydantic models
+│   ├── __init__.py       # Exporta todos os modelos
+│   ├── user.py           # User, UserRole, TokenResponse
+│   ├── motorista.py      # Motorista, MotoristaCreate, Documentos
+│   ├── veiculo.py        # Vehicle, TipoContrato, Insurance, etc.
+│   ├── parceiro.py       # Parceiro, ParceiroCreate, AdminSettings (NOVO)
+│   ├── ganhos.py         # GanhoUber, GanhoBolt, ViaVerde, GPS, Combustível (NOVO)
+│   ├── sincronizacao.py  # Credenciais, LogSync (NOVO)
+│   ├── contrato.py       # Contratos motorista
+│   ├── plano.py          # Planos de assinatura
+│   └── relatorio.py      # Relatórios semanais
+├── routes/               # API endpoints (21 routers)
+│   ├── __init__.py       # Exporta todos os routers
+│   ├── auth.py           # Autenticação
+│   ├── admin.py          # Configurações admin (NOVO)
+│   ├── alertas.py        # Alertas e verificações (NOVO)
+│   ├── contratos.py      # CRUD de contratos (NOVO)
+│   ├── vehicles.py       # Veículos (~2600 linhas)
+│   ├── relatorios.py     # Relatórios (~3500 linhas)
+│   ├── motoristas.py     # Motoristas
+│   ├── parceiros.py      # Parceiros
+│   └── ... (outros)
+├── utils/                # Utilities
+│   ├── file_handlers.py  # Upload, conversão PDF (NOVO)
+│   ├── alerts.py         # Verificação de alertas (NOVO)
+│   ├── database.py       # Conexão MongoDB
+│   ├── auth.py           # JWT helpers
+│   └── csv_parsers.py    # Parsers de CSV
+└── services/             # Business logic
+    └── envio_relatorios.py
+```
 
 ---
 
