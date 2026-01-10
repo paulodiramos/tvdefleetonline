@@ -89,6 +89,9 @@ const ParceiroDashboard = ({ parceiroId }) => {
 
   return (
     <div className="space-y-6">
+      {/* Resumo Semanal Card */}
+      <ResumoSemanalCard parceiroId={parceiroId} />
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
