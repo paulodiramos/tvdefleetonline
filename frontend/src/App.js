@@ -89,6 +89,7 @@ import ResumoSemanalParceiro from "@/pages/ResumoSemanalParceiro";
 import ImportarFicheirosParceiro from "@/pages/ImportarFicheirosParceiro";
 import ConfiguracaoMapeamento from "@/pages/ConfiguracaoMapeamento";
 import CredenciaisPlataformas from "@/pages/CredenciaisPlataformas";
+import ListaImportacoes from "@/pages/ListaImportacoes";
 import MeusPlanos from "@/pages/MeusPlanos";
 import MeusRecibosGanhos from "@/pages/MeusRecibosGanhos";
 import ValidacaoDocumentosMotorista from "@/pages/ValidacaoDocumentosMotorista";
