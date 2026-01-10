@@ -19,7 +19,10 @@ import {
   Save,
   X,
   AlertTriangle,
-  FileText
+  FileText,
+  MessageCircle,
+  Mail,
+  FileDown
 } from 'lucide-react';
 import { toast } from 'sonner';
 
