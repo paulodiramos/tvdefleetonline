@@ -1197,8 +1197,14 @@ async def get_historico_importacoes(
             comb_filter_conditions.append({"vehicle_id": {"$in": parceiro_veiculo_ids}})
         if parceiro_matriculas:
             comb_filter_conditions.append({"matricula": {"$in": parceiro_matriculas}})
+        
         if comb_filter_conditions:
-            comb_query["$or"] = comb_filter_conditions
+            comb_query = {
+                "$and": [
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}},
+                    {"$or": comb_filter_conditions}
+                ]
+            }
     
     comb_records = await db.abastecimentos_combustivel.find(comb_query, {"_id": 0}).to_list(1000)
     
