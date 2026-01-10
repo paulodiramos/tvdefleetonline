@@ -2463,13 +2463,15 @@ async def get_historico_importacoes(
         fname = r.get("ficheiro_nome", "viaverde_import")
         if fname not in vv_by_file:
             vv_by_file[fname] = {
+                "id": fname,  # Use ficheiro_nome as ID for delete/update operations
                 "plataforma": "viaverde",
                 "ficheiro_nome": fname,
                 "data_importacao": r.get("created_at") or r.get("data_importacao"),
                 "total_registos": 0,
                 "total_valor": 0,
                 "semana": r.get("semana") or semana,
-                "ano": r.get("ano") or ano
+                "ano": r.get("ano") or ano,
+                "estado": r.get("estado", "processado")
             }
         vv_by_file[fname]["total_registos"] += 1
         vv_by_file[fname]["total_valor"] += float(r.get("liquid_value") or r.get("value") or 0)
