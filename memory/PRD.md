@@ -3,27 +3,23 @@
 ## Changelog (2026-01-10 - Session 4)
 ### Session Updates:
 - **IMPLEMENTED**: Gestão do Histórico de Importações (`/lista-importacoes`)
-  - Novo ficheiro de rotas: `/app/backend/routes/importacoes.py`
-  - `DELETE /api/importacoes/{id}` - Eliminar importação e todos os registos associados
-  - `PUT /api/importacoes/{id}/estado` - Alterar estado (processado, pendente, erro, revisto)
-  - `GET /api/importacoes/{id}` - Obter detalhes de importação
+  - Endpoints: DELETE, PUT estado, GET detalhes de importações
 - **IMPLEMENTED**: Escalões de KM Extra nos Veículos
-  - Novos campos: `km_extra_escalao_1_limite`, `km_extra_escalao_1_valor`, `km_extra_escalao_2_valor`
-  - Lógica: Até X km extra aplica valor do escalão 1, acima aplica valor do escalão 2
-  - UI com fundo gradiente vermelho/laranja e exemplo de cálculo dinâmico
-- **IMPLEMENTED**: Semanada por Época nos Veículos
-  - Novos campos: `semanada_por_epoca`, `semanada_epoca_alta`, `semanada_epoca_baixa`
-  - UI com fundo púrpura/índigo, campos laranja (alta) e azul (baixa)
-  - Usa os mesmos meses configurados na secção KM por Época
-- **IMPLEMENTED**: Periodicidade do Slot
-  - Novo campo: `slot_periodicidade` (semanal, mensal, anual)
-  - Dropdown na secção de compra do veículo
+  - Campos: `km_extra_escalao_1_limite`, `km_extra_escalao_1_valor`, `km_extra_escalao_2_valor`
+- **IMPLEMENTED**: Semanada por Época com configuração de meses própria
+  - Campos: `semanada_por_epoca`, `semanada_epoca_alta`, `semanada_epoca_baixa`
+  - Campos: `semanada_meses_epoca_alta`, `semanada_meses_epoca_baixa` (arrays de meses 1-12)
+  - UI: Botões clicáveis para selecionar meses de época alta/baixa
+- **IMPLEMENTED**: Valores do Slot por Periodicidade
+  - Campos: `slot_periodicidade` (semanal/mensal/anual)
+  - Campos: `slot_valor_semanal`, `slot_valor_mensal`, `slot_valor_anual`
+  - UI: 3 campos com destaque visual do valor da periodicidade selecionada
+- **IMPLEMENTED**: Garantia do Veículo
+  - Campos: `tem_garantia`, `data_limite_garantia`
+  - UI: Checkbox + campo de data + indicador de validade (válida/expirada)
 - **IMPLEMENTED**: Melhorias nos Contratos Assinados
-  - Adicionado checkbox `assinado_gestor` 
-  - Novo endpoint: `PUT /api/vehicles/{id}/contratos/{contrato_id}` para atualizar assinaturas
-  - UI melhorada com checkboxes editáveis e botão "Download PDF"
-- **FIXED**: Código duplicado no `ListaImportacoes.js` que impedia o frontend de compilar
-- **TESTED**: Via screenshots - todas as funcionalidades verificadas
+  - Adicionado `assinado_gestor` + endpoint PUT para atualizar assinaturas
+- **TESTED**: Via screenshots - todas as funcionalidades verificadas e funcionais
 
 ## Changelog (2026-01-10 - Session 3)
 ### Session Updates:
