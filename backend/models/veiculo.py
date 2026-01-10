@@ -72,6 +72,7 @@ class TipoContrato(BaseModel):
 
 class CategoriasUber(BaseModel):
     """Uber categories for vehicle"""
+    model_config = ConfigDict(extra="allow")  # Permitir campos extra
     uberx: bool = False
     share: bool = False
     electric: bool = False
@@ -79,14 +80,22 @@ class CategoriasUber(BaseModel):
     comfort: bool = False
     xl: bool = False
     xxl: bool = False
+    pet: bool = False
+    package: bool = False
 
 
 class CategoriasBolt(BaseModel):
     """Bolt categories for vehicle"""
+    model_config = ConfigDict(extra="allow")  # Permitir campos extra
     economy: bool = False
     comfort: bool = False
+    executive: bool = False
     xl: bool = False
+    xxl: bool = False
+    green: bool = False
     electric: bool = False
+    motorista_privado: bool = False
+    pet: bool = False
 
 
 class VehicleInsurance(BaseModel):
