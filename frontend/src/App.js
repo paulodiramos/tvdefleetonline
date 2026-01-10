@@ -533,6 +533,12 @@ function App() {
             }
           />
           <Route
+            path="/lista-importacoes"
+            element={
+              user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? <ListaImportacoes user={user} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
             path="/importar-ficheiros"
             element={
               user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? <ImportarFicheirosParceiro user={user} /> : <Navigate to="/dashboard" />
