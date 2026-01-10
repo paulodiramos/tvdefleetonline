@@ -2,35 +2,50 @@
 Rotas para gestão de Extras dos Motoristas (Dívidas, Caução, Danos)
 """
 from fastapi import APIRouter, HTTPException, Depends, Body
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Optional
 from datetime import datetime, timezone
 import uuid
 import logging
+import os
+import jwt
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/extras-motorista", tags=["Extras Motorista"])
 
+# JWT Configuration
+JWT_SECRET = os.environ.get('JWT_SECRET', 'your-secret-key-change-in-production')
+JWT_ALGORITHM = 'HS256'
 
-def get_db():
-    """Get database connection from server module"""
-    from server import db
-    return db
+security = HTTPBearer()
 
-
-async def get_current_user(credentials=None):
-    """Import get_current_user from server"""
-    from server import get_current_user as server_get_current_user
-    from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-    from fastapi import Depends
-    
-    security = HTTPBearer()
-    # This will be handled by the actual dependency injection
-    pass
+# MongoDB connection
+mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+db_name = os.environ.get('DB_NAME', 'tvdefleet_db')
+client = AsyncIOMotorClient(mongo_url)
+db = client[db_name]
 
 
-# Re-import the actual dependency
-from server import get_current_user
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Validate JWT token and return current user"""
+    try:
+        token = credentials.credentials
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        user_id = payload.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Token inválido")
+        
+        user = await db.users.find_one({"id": user_id}, {"_id": 0})
+        if not user:
+            raise HTTPException(status_code=401, detail="Utilizador não encontrado")
+        
+        return user
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expirado")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Token inválido")
 
 
 @router.get("")
@@ -44,7 +59,6 @@ async def listar_extras_motorista(
 ):
     """Lista extras de motoristas com filtros"""
     try:
-        db = get_db()
         query = {}
         
         # Filtro por parceiro
@@ -79,8 +93,6 @@ async def criar_extra_motorista(
 ):
     """Cria um novo extra para motorista"""
     try:
-        db = get_db()
-        
         if current_user['role'] not in ['admin', 'gestao', 'parceiro']:
             raise HTTPException(status_code=403, detail="Acesso negado")
         
@@ -134,8 +146,6 @@ async def atualizar_extra_motorista(
 ):
     """Atualiza um extra"""
     try:
-        db = get_db()
-        
         if current_user['role'] not in ['admin', 'gestao', 'parceiro']:
             raise HTTPException(status_code=403, detail="Acesso negado")
         
@@ -182,8 +192,6 @@ async def eliminar_extra_motorista(
 ):
     """Elimina um extra"""
     try:
-        db = get_db()
-        
         if current_user['role'] not in ['admin', 'gestao', 'parceiro']:
             raise HTTPException(status_code=403, detail="Acesso negado")
         
