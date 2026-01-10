@@ -62,6 +62,74 @@ const ResumoSemanalParceiro = ({ user }) => {
     }
   };
 
+  const [sendingWhatsapp, setSendingWhatsapp] = useState({});
+  const [sendingEmail, setSendingEmail] = useState({});
+
+  const handleEnviarWhatsApp = async (motoristaId, motoristaNome) => {
+    setSendingWhatsapp(prev => ({ ...prev, [motoristaId]: true }));
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API_URL}/api/relatorios/gerar-link-whatsapp/${motoristaId}?semana=${semana}&ano=${ano}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.whatsapp_link) {
+        window.open(response.data.whatsapp_link, '_blank');
+        toast.success(`Link WhatsApp gerado para ${motoristaNome}`);
+      }
+    } catch (error) {
+      console.error('Erro ao gerar link WhatsApp:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao gerar link WhatsApp');
+    } finally {
+      setSendingWhatsapp(prev => ({ ...prev, [motoristaId]: false }));
+    }
+  };
+
+  const handleEnviarEmail = async (motoristaId, motoristaNome) => {
+    setSendingEmail(prev => ({ ...prev, [motoristaId]: true }));
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_URL}/api/relatorios/enviar-relatorio/${motoristaId}?semana=${semana}&ano=${ano}&enviar_email=true&enviar_whatsapp=false`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.email?.enviado) {
+        toast.success(`Email enviado para ${motoristaNome}`);
+      } else {
+        toast.error(response.data.email?.mensagem || 'Erro ao enviar email');
+      }
+    } catch (error) {
+      console.error('Erro ao enviar email:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao enviar email');
+    } finally {
+      setSendingEmail(prev => ({ ...prev, [motoristaId]: false }));
+    }
+  };
+
+  const handleEnviarTodos = async (tipo) => {
+    const enviarEmail = tipo === 'email' || tipo === 'ambos';
+    const enviarWhatsapp = tipo === 'whatsapp' || tipo === 'ambos';
+    
+    toast.info(`A enviar relatórios...`);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API_URL}/api/relatorios/enviar-relatorios-em-massa?semana=${semana}&ano=${ano}&enviar_email=${enviarEmail}&enviar_whatsapp=${enviarWhatsapp}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      toast.success(`Enviados: ${response.data.emails_enviados} emails, ${response.data.whatsapp_links_gerados} WhatsApp`);
+    } catch (error) {
+      console.error('Erro ao enviar relatórios:', error);
+      toast.error('Erro ao enviar relatórios');
+    }
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'pago':
