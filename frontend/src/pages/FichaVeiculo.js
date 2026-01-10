@@ -1422,6 +1422,128 @@ const FichaVeiculo = ({ user, onLogout }) => {
           </CardContent>
         </Card>
 
+        {/* Resumo do Contrato */}
+        <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center space-x-2 text-indigo-800">
+              <FileText className="w-5 h-5" />
+              <span>Resumo do Contrato</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* Tipo de Contrato */}
+              <div className="bg-white p-3 rounded-lg shadow-sm">
+                <p className="text-xs text-slate-500 mb-1">Tipo de Contrato</p>
+                <p className="font-semibold text-indigo-700 capitalize">
+                  {vehicle.tipo_contrato?.tipo?.replace(/_/g, ' ') || 'Não definido'}
+                </p>
+                {vehicle.tipo_contrato?.slot_periodicidade && (
+                  <p className="text-xs text-slate-500 mt-1">
+                    Pagamento: <span className="capitalize">{vehicle.tipo_contrato.slot_periodicidade}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Valor Atual da Semanada */}
+              <div className="bg-white p-3 rounded-lg shadow-sm">
+                <p className="text-xs text-slate-500 mb-1">Valor Atual</p>
+                {(() => {
+                  const mesAtual = new Date().getMonth() + 1;
+                  const semanada = vehicle.tipo_contrato;
+                  if (semanada?.semanada_por_epoca) {
+                    const isEpocaAlta = (semanada.semanada_meses_epoca_alta || []).includes(mesAtual);
+                    const valor = isEpocaAlta ? semanada.semanada_epoca_alta : semanada.semanada_epoca_baixa;
+                    return (
+                      <>
+                        <p className={`font-bold text-lg ${isEpocaAlta ? 'text-orange-600' : 'text-blue-600'}`}>
+                          €{(valor || 0).toFixed(2)}
+                        </p>
+                        <p className={`text-xs ${isEpocaAlta ? 'text-orange-500' : 'text-blue-500'}`}>
+                          {isEpocaAlta ? '☀️ Época Alta' : '❄️ Época Baixa'}
+                        </p>
+                      </>
+                    );
+                  }
+                  return (
+                    <p className="font-bold text-lg text-indigo-700">
+                      €{(semanada?.valor_aluguer || 0).toFixed(2)}
+                    </p>
+                  );
+                })()}
+              </div>
+
+              {/* Garantia */}
+              <div className="bg-white p-3 rounded-lg shadow-sm">
+                <p className="text-xs text-slate-500 mb-1">Garantia</p>
+                {vehicle.tipo_contrato?.tem_garantia ? (
+                  <>
+                    <p className={`font-semibold ${new Date(vehicle.tipo_contrato.data_limite_garantia) > new Date() ? 'text-green-600' : 'text-red-600'}`}>
+                      {new Date(vehicle.tipo_contrato.data_limite_garantia) > new Date() ? '✓ Válida' : '⚠️ Expirada'}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Até {new Date(vehicle.tipo_contrato.data_limite_garantia).toLocaleDateString('pt-PT')}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-slate-400">Sem garantia</p>
+                )}
+              </div>
+
+              {/* Próxima Manutenção */}
+              <div className="bg-white p-3 rounded-lg shadow-sm">
+                <p className="text-xs text-slate-500 mb-1">Próxima Manutenção</p>
+                {(() => {
+                  const eventos = vehicle.agenda || [];
+                  const hoje = new Date();
+                  const proximoEvento = eventos
+                    .filter(e => new Date(e.data) >= hoje)
+                    .sort((a, b) => new Date(a.data) - new Date(b.data))[0];
+                  
+                  if (proximoEvento) {
+                    const diasRestantes = Math.ceil((new Date(proximoEvento.data) - hoje) / (1000 * 60 * 60 * 24));
+                    return (
+                      <>
+                        <p className={`font-semibold ${diasRestantes <= 7 ? 'text-orange-600' : 'text-green-600'}`}>
+                          {proximoEvento.tipo}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {new Date(proximoEvento.data).toLocaleDateString('pt-PT')}
+                          {diasRestantes <= 7 && <span className="text-orange-500 ml-1">({diasRestantes} dias)</span>}
+                        </p>
+                      </>
+                    );
+                  }
+                  return <p className="text-slate-400">Nenhuma agendada</p>;
+                })()}
+              </div>
+            </div>
+
+            {/* Indicadores KM */}
+            {vehicle.tipo_contrato?.tem_limite_km && (
+              <div className="mt-3 pt-3 border-t border-indigo-100">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-600">Limite KM Semanal:</span>
+                  <span className="font-semibold text-indigo-700">
+                    {(() => {
+                      const mesAtual = new Date().getMonth() + 1;
+                      const km = vehicle.tipo_contrato;
+                      if (km?.km_por_epoca) {
+                        const isEpocaAlta = (km.meses_epoca_alta || []).includes(mesAtual);
+                        return `${(isEpocaAlta ? km.km_epoca_alta : km.km_epoca_baixa || 0).toLocaleString()} km`;
+                      }
+                      return `${(km?.km_semanais_disponiveis || 0).toLocaleString()} km`;
+                    })()}
+                  </span>
+                </div>
+                {vehicle.tipo_contrato?.km_acumula_semanal && (
+                  <p className="text-xs text-green-600 mt-1">✓ KM não usados acumulam</p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-9 w-full">
