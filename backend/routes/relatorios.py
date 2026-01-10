@@ -2152,3 +2152,272 @@ def get_default_relatorio_config():
         "incluir_tabela_combustivel": True,
         "formato_numero_relatorio": "xxxxx/ano"
     }
+
+
+
+# ==================== ENVIO DE RELATÓRIOS (WhatsApp + Email) ====================
+
+@router.post("/enviar-relatorio/{motorista_id}")
+async def enviar_relatorio_para_motorista(
+    motorista_id: str,
+    semana: int,
+    ano: int,
+    enviar_email: bool = True,
+    enviar_whatsapp: bool = True,
+    background_tasks: BackgroundTasks = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Envia relatório semanal para um motorista específico via Email e/ou WhatsApp.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Buscar dados do motorista
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Verificar se parceiro tem acesso a este motorista
+    if current_user["role"] == UserRole.PARCEIRO:
+        parceiro_id = current_user["id"]
+        if motorista.get("parceiro_id") != parceiro_id and motorista.get("parceiro_atribuido") != parceiro_id:
+            raise HTTPException(status_code=403, detail="Não autorizado para este motorista")
+    
+    # Buscar resumo semanal deste motorista
+    # Calcular datas da semana
+    first_day_of_year = datetime(ano, 1, 1)
+    if first_day_of_year.weekday() <= 3:
+        first_monday = first_day_of_year - timedelta(days=first_day_of_year.weekday())
+    else:
+        first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()))
+    
+    week_start = first_monday + timedelta(weeks=semana - 1)
+    week_end = week_start + timedelta(days=6)
+    data_inicio = week_start.strftime("%Y-%m-%d")
+    data_fim = week_end.strftime("%Y-%m-%d")
+    
+    # Construir dados do relatório
+    veiculo = None
+    if motorista.get("veiculo_atribuido"):
+        veiculo = await db.vehicles.find_one({"id": motorista["veiculo_atribuido"]}, {"_id": 0})
+    
+    # Buscar ganhos Uber
+    ganhos_uber = 0.0
+    uber_records = await db.ganhos_uber.find({
+        "motorista_id": motorista_id,
+        "$or": [
+            {"semana": semana, "ano": ano},
+            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+        ]
+    }, {"_id": 0}).to_list(100)
+    ganhos_uber = sum(float(r.get("pago_total") or 0) for r in uber_records)
+    
+    # Buscar ganhos Bolt
+    ganhos_bolt = 0.0
+    bolt_records = await db.ganhos_bolt.find({
+        "motorista_id": motorista_id,
+        "$or": [
+            {"periodo_semana": semana, "periodo_ano": ano},
+            {"semana": semana, "ano": ano}
+        ]
+    }, {"_id": 0}).to_list(100)
+    ganhos_bolt = sum(float(r.get("ganhos_liquidos") or 0) for r in bolt_records)
+    
+    # Buscar despesas
+    combustivel = 0.0
+    eletrico = 0.0
+    via_verde = 0.0
+    
+    if veiculo:
+        matricula = veiculo.get("matricula")
+        veiculo_id = veiculo.get("id")
+        
+        # Via Verde
+        vv_records = await db.portagens_viaverde.find({
+            "$or": [{"motorista_id": motorista_id}, {"matricula": matricula}],
+            "entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}
+        }, {"_id": 0}).to_list(500)
+        via_verde = sum(float(r.get("liquid_value") or 0) for r in vv_records)
+        
+        # Combustível
+        comb_records = await db.abastecimentos_combustivel.find({
+            "$or": [{"motorista_id": motorista_id}, {"matricula": matricula}],
+            "data": {"$gte": data_inicio, "$lte": data_fim}
+        }, {"_id": 0}).to_list(100)
+        combustivel = sum(float(r.get("valor_liquido") or 0) for r in comb_records)
+        
+        # Elétrico
+        elet_records = await db.despesas_combustivel.find({
+            "motorista_id": motorista_id,
+            "$or": [
+                {"semana": semana, "ano": ano},
+                {"data": {"$gte": data_inicio, "$lte": data_fim}}
+            ]
+        }, {"_id": 0}).to_list(100)
+        eletrico = sum(float(r.get("valor_total") or 0) for r in elet_records)
+    
+    total_ganhos = ganhos_uber + ganhos_bolt
+    total_despesas = combustivel + via_verde + eletrico
+    valor_liquido = total_ganhos - total_despesas
+    
+    motorista_data = {
+        "motorista_id": motorista_id,
+        "motorista_nome": motorista.get("name"),
+        "motorista_email": motorista.get("email"),
+        "motorista_telefone": motorista.get("telefone") or motorista.get("phone"),
+        "veiculo_matricula": veiculo.get("matricula") if veiculo else None,
+        "ganhos_uber": ganhos_uber,
+        "ganhos_bolt": ganhos_bolt,
+        "total_ganhos": total_ganhos,
+        "combustivel": combustivel,
+        "carregamento_eletrico": eletrico,
+        "via_verde": via_verde,
+        "total_despesas_operacionais": total_despesas,
+        "valor_liquido_motorista": valor_liquido
+    }
+    
+    # Enviar relatório
+    result = await enviar_relatorio_motorista(motorista_data, semana, ano, enviar_email, enviar_whatsapp)
+    
+    return result
+
+
+@router.get("/gerar-link-whatsapp/{motorista_id}")
+async def gerar_link_whatsapp_motorista(
+    motorista_id: str,
+    semana: int,
+    ano: int,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Gera link do WhatsApp para enviar relatório manualmente.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Buscar motorista
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    telefone = motorista.get("telefone") or motorista.get("phone")
+    if not telefone:
+        raise HTTPException(status_code=400, detail="Motorista não tem telefone cadastrado")
+    
+    # Criar resumo simplificado para WhatsApp
+    # Calcular datas da semana
+    first_day_of_year = datetime(ano, 1, 1)
+    if first_day_of_year.weekday() <= 3:
+        first_monday = first_day_of_year - timedelta(days=first_day_of_year.weekday())
+    else:
+        first_monday = first_day_of_year + timedelta(days=(7 - first_day_of_year.weekday()))
+    
+    week_start = first_monday + timedelta(weeks=semana - 1)
+    week_end = week_start + timedelta(days=6)
+    data_inicio = week_start.strftime("%Y-%m-%d")
+    data_fim = week_end.strftime("%Y-%m-%d")
+    
+    # Buscar dados básicos
+    veiculo = None
+    if motorista.get("veiculo_atribuido"):
+        veiculo = await db.vehicles.find_one({"id": motorista["veiculo_atribuido"]}, {"_id": 0})
+    
+    # Ganhos
+    uber_records = await db.ganhos_uber.find({
+        "motorista_id": motorista_id,
+        "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
+    }, {"_id": 0}).to_list(100)
+    ganhos_uber = sum(float(r.get("pago_total") or 0) for r in uber_records)
+    
+    bolt_records = await db.ganhos_bolt.find({
+        "motorista_id": motorista_id,
+        "$or": [{"periodo_semana": semana, "periodo_ano": ano}, {"semana": semana, "ano": ano}]
+    }, {"_id": 0}).to_list(100)
+    ganhos_bolt = sum(float(r.get("ganhos_liquidos") or 0) for r in bolt_records)
+    
+    motorista_data = {
+        "motorista_nome": motorista.get("name"),
+        "veiculo_matricula": veiculo.get("matricula") if veiculo else "N/A",
+        "ganhos_uber": ganhos_uber,
+        "ganhos_bolt": ganhos_bolt,
+        "total_ganhos": ganhos_uber + ganhos_bolt,
+        "combustivel": 0,
+        "carregamento_eletrico": 0,
+        "via_verde": 0,
+        "total_despesas_operacionais": 0,
+        "valor_liquido_motorista": ganhos_uber + ganhos_bolt
+    }
+    
+    # Gerar mensagem
+    message = generate_relatorio_motorista_text(motorista_data, semana, ano)
+    
+    # Gerar link
+    whatsapp_link = generate_whatsapp_link(telefone, message)
+    
+    return {
+        "motorista_nome": motorista.get("name"),
+        "telefone": telefone,
+        "whatsapp_link": whatsapp_link,
+        "semana": semana,
+        "ano": ano
+    }
+
+
+@router.post("/enviar-relatorios-em-massa")
+async def enviar_relatorios_em_massa(
+    semana: int,
+    ano: int,
+    enviar_email: bool = True,
+    enviar_whatsapp: bool = False,
+    background_tasks: BackgroundTasks = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Envia relatórios semanais para todos os motoristas do parceiro.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Buscar motoristas
+    motoristas_query = {}
+    if current_user["role"] == UserRole.PARCEIRO:
+        motoristas_query["$or"] = [
+            {"parceiro_id": current_user["id"]},
+            {"parceiro_atribuido": current_user["id"]}
+        ]
+    
+    motoristas = await db.motoristas.find(motoristas_query, {"_id": 0, "id": 1, "name": 1, "email": 1}).to_list(1000)
+    
+    results = {
+        "total_motoristas": len(motoristas),
+        "emails_enviados": 0,
+        "whatsapp_links_gerados": 0,
+        "erros": [],
+        "detalhes": []
+    }
+    
+    for motorista in motoristas:
+        try:
+            # Chamar endpoint individual
+            # (simplificado - em produção usar background tasks)
+            result = await enviar_relatorio_para_motorista(
+                motorista["id"], semana, ano, enviar_email, enviar_whatsapp, None, current_user
+            )
+            
+            if result.get("email", {}).get("enviado"):
+                results["emails_enviados"] += 1
+            if result.get("whatsapp", {}).get("link"):
+                results["whatsapp_links_gerados"] += 1
+            
+            results["detalhes"].append({
+                "motorista": motorista.get("name"),
+                "resultado": result
+            })
+        except Exception as e:
+            results["erros"].append({
+                "motorista": motorista.get("name"),
+                "erro": str(e)
+            })
+    
+    return results
