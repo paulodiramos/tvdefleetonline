@@ -1136,8 +1136,18 @@ async def get_historico_importacoes(
     vv_query["$or"] = [q for q in vv_query["$or"] if q]
     if not vv_query["$or"]:
         vv_query.pop("$or")
-    if parceiro_motorista_ids:
-        vv_query["motorista_id"] = {"$in": parceiro_motorista_ids}
+    
+    # Filter by motorista_id, vehicle_id, or matricula
+    if parceiro_motorista_ids or parceiro_veiculo_ids or parceiro_matriculas:
+        vv_filter_conditions = []
+        if parceiro_motorista_ids:
+            vv_filter_conditions.append({"motorista_id": {"$in": parceiro_motorista_ids}})
+        if parceiro_veiculo_ids:
+            vv_filter_conditions.append({"vehicle_id": {"$in": parceiro_veiculo_ids}})
+        if parceiro_matriculas:
+            vv_filter_conditions.append({"matricula": {"$in": parceiro_matriculas}})
+        if vv_filter_conditions:
+            vv_query["$or"] = vv_query.get("$or", []) + vv_filter_conditions if vv_query.get("$or") else vv_filter_conditions
     
     vv_records = await db.portagens_viaverde.find(vv_query, {"_id": 0}).to_list(5000)
     
