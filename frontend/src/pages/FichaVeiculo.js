@@ -2412,7 +2412,7 @@ const FichaVeiculo = ({ user, onLogout }) => {
                     )}
 
                     {/* Valores do Slot por Periodicidade */}
-                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg mt-2">
+                    <div className="col-span-2 bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg mt-2">
                       <div className="flex items-center gap-2 mb-3">
                         <Label className="font-semibold text-green-800">
                           💳 Valores do Slot por Periodicidade
