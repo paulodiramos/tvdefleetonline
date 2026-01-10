@@ -25,6 +25,7 @@ from .contratos import router as contratos_router
 from .sincronizacao import router as sincronizacao_router
 from .public import router as public_router
 from .ganhos import router as ganhos_router
+from .manutencao import router as manutencao_router
 
 __all__ = [
     'auth_router',
