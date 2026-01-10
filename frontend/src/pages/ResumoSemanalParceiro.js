@@ -518,7 +518,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                           </div>
                         ) : (
                           <div className="flex gap-0.5 justify-center">
-                            <Button size="sm" variant="outline" onClick={() => handleDownloadMotoristaPdf(m.motorista_id, m.motorista_nome)} className="h-5 w-5 p-0" title="Download PDF">
+                            <Button size="sm" variant="outline" onClick={() => openPdfOptions(m.motorista_id)} className="h-5 w-5 p-0" title="Download PDF">
                               <FileDown className="w-3 h-3" />
                             </Button>
                             <Button size="sm" variant="outline" onClick={() => handleWhatsApp(m.motorista_id)} className="h-5 w-5 p-0 text-green-600 hover:text-green-700" title="WhatsApp">
