@@ -7,11 +7,18 @@
   - Endpoint `GET /api/motoristas/{id}/foto` - Visualização da foto
   - Endpoint `DELETE /api/motoristas/{id}/foto` - Eliminar foto
   - Processamento automático: redimensionamento 300x300, crop quadrado, JPEG otimizado
+- **BUG FIX**: Resumo semanal não mostrava valor do aluguer
+  - Corrigido para buscar `tipo_contrato.valor_aluguer` quando `valor_semanal` está vazio
+- **BUG FIX**: Endpoints ganhos-bolt e ganhos-uber falhavam com ObjectId error
+  - Adicionado `{"_id": 0}` nas queries MongoDB
 - **REFACTORED**: Backend - Criados novos ficheiros de rotas:
   - `routes/sincronizacao.py` (599 linhas) - Sincronização e credenciais de plataformas
   - `routes/public.py` (211 linhas) - Endpoints públicos (veículos, contacto, parceiros)
-- **UPDATED**: `routes/__init__.py` - Total de 23 routers exportados
+  - `routes/ganhos.py` (140 linhas) - Endpoints de ganhos Uber/Bolt
+- **UPDATED**: `routes/__init__.py` - Total de 24 routers exportados
 - **TESTED**: Foto de perfil funciona via curl e frontend
+- **TESTED**: Resumo semanal retorna aluguer correctamente (€2859.95)
+- **TESTED**: Ganhos Bolt retorna 9 registos
 
 ## Changelog (2026-01-10 - Session 5c - Fixes Adicionais)
 ### Session Updates:
