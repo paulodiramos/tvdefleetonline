@@ -7,7 +7,7 @@ import requests
 import json
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://carkm-manager.preview.emergentagent.com/api"
+BACKEND_URL = "https://dev-timeline-7.preview.emergentagent.com/api"
 
 # Test credentials
 TEST_CREDENTIALS = {
