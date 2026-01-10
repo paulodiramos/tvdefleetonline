@@ -299,6 +299,7 @@ const FichaMotorista = ({ user }) => {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('tipo_documento', tipoDocumento);
+      formData.append('converter_pdf', 'true'); // Sempre converter para PDF
       
       const response = await axios.post(
         `${API}/api/motoristas/${motoristaId}/documentos/upload`,
@@ -316,7 +317,7 @@ const FichaMotorista = ({ user }) => {
         [tipoDocumento]: response.data.url
       }));
       
-      toast.success('Documento carregado com sucesso!');
+      toast.success(`Documento convertido para PDF e guardado!`);
     } catch (error) {
       console.error('Erro ao carregar documento:', error);
       toast.error('Erro ao carregar documento');
