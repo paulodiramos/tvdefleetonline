@@ -1,5 +1,23 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-10 - Session 5 - Refatoração Backend)
+### Session Updates:
+- **REFACTORED**: Backend - Criados novos ficheiros de rotas organizados por domínio:
+  - `routes/admin.py` - Endpoints de configurações administrativas
+  - `routes/alertas.py` - Endpoints de alertas e verificação
+  - `routes/contratos.py` - Endpoints CRUD de contratos
+- **REFACTORED**: Backend - Criados novos ficheiros de utilitários:
+  - `utils/file_handlers.py` - Funções de upload e conversão de ficheiros
+  - `utils/alerts.py` - Lógica de verificação e criação de alertas
+- **REFACTORED**: Backend - Criados novos ficheiros de modelos:
+  - `models/parceiro.py` - Modelos Parceiro, ParceiroCreate, AdminSettings
+  - `models/ganhos.py` - Modelos GanhoUber, GanhoBolt, ViaVerde, GPS, Combustível
+  - `models/sincronizacao.py` - Modelos CredenciaisPlataforma, LogSincronizacao
+- **UPDATED**: `models/__init__.py` - Exporta todos os novos modelos
+- **UPDATED**: `routes/__init__.py` - Exporta todos os routers (21 total)
+- **UPDATED**: `server.py` - Importa utilitários dos novos módulos
+- **TESTED**: Novos endpoints funcionais via curl
+
 ## Changelog (2026-01-10 - Session 4)
 ### Session Updates:
 - **IMPLEMENTED**: Gestão do Histórico de Importações (`/lista-importacoes`)
