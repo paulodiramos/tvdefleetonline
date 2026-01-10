@@ -1604,6 +1604,14 @@ class Vehicle(BaseModel):
     documento_condicoes: Optional[str] = None  # Documento de condições
     documento_recibo_seguro: Optional[str] = None  # Recibo de pagamento do seguro
     documento_inspecao: Optional[str] = None  # Documento/certificado da inspeção
+    
+    # Venda do Veículo
+    vendido: bool = False  # Se o veículo foi vendido
+    data_venda: Optional[str] = None  # Data da venda
+    valor_venda: Optional[float] = None  # Valor pelo qual foi vendido
+    comprador_nome: Optional[str] = None  # Nome do comprador
+    comprador_contacto: Optional[str] = None  # Contacto do comprador
+    
     created_at: datetime
     updated_at: datetime
     parceiro_id: str
