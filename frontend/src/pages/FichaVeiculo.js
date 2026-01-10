@@ -148,6 +148,10 @@ const FichaVeiculo = ({ user, onLogout }) => {
     km_epoca_baixa: '',
     meses_epoca_alta: [], // Array de meses [6, 7, 8, 9] para Jun-Set
     meses_epoca_baixa: [], // Array de meses restantes
+    // Escalões de KM Extra
+    km_extra_escalao_1_limite: 500,
+    km_extra_escalao_1_valor: '',
+    km_extra_escalao_2_valor: '',
     // Contratos
     contratos: [], // Lista de contratos {id, data, tipo, documento_url, assinado_motorista, assinado_parceiro}
     // Compra do Veículo
