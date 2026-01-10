@@ -196,8 +196,47 @@ const VeiculosPublico = () => {
                     </div>
                   </div>
 
+                  {/* Badge para veículo disponível sem motorista */}
+                  {veiculo.disponivel_sem_motorista && (
+                    <div className="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded-full inline-flex items-center gap-1">
+                      <Car className="w-3 h-3" />
+                      Disponível para Aluguer
+                    </div>
+                  )}
+
                   {veiculo.descricao_marketplace && (
                     <p className="text-sm text-slate-600">{veiculo.descricao_marketplace}</p>
+                  )}
+
+                  {/* Condições do Contrato */}
+                  {veiculo.condicoes_resumo && (
+                    <div className="bg-slate-50 rounded-lg p-3 space-y-2 text-sm">
+                      <p className="font-semibold text-slate-700">Condições:</p>
+                      {veiculo.condicoes_resumo.valor_semanal && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Valor Semanal:</span>
+                          <span className="font-bold text-blue-600">{veiculo.condicoes_resumo.valor_semanal}€</span>
+                        </div>
+                      )}
+                      {veiculo.condicoes_resumo.valor_caucao > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">Caução:</span>
+                          <span className="font-medium">{veiculo.condicoes_resumo.valor_caucao}€</span>
+                        </div>
+                      )}
+                      {veiculo.condicoes_resumo.km_incluidos && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-600">KM Incluídos/Mês:</span>
+                          <span className="font-medium">{veiculo.condicoes_resumo.km_incluidos} km</span>
+                        </div>
+                      )}
+                      {veiculo.condicoes_resumo.tem_garantia && (
+                        <div className="text-green-600 flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          Garantia até {new Date(veiculo.condicoes_resumo.data_limite_garantia).toLocaleDateString('pt-PT')}
+                        </div>
+                      )}
+                    </div>
                   )}
 
                   <div className="border-t pt-3 space-y-2">
