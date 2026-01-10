@@ -4360,7 +4360,23 @@ const FichaVeiculo = ({ user, onLogout }) => {
                             <div className="flex-1">
                               <p className="font-medium">{evento.titulo}</p>
                               <p className="text-sm text-slate-600">{evento.descricao}</p>
-                              <p className="text-xs text-slate-500">
+                              {(evento.oficina || evento.local) && (
+                                <div className="text-sm text-slate-600 mt-1">
+                                  {evento.oficina && (
+                                    <span className="inline-flex items-center gap-1 mr-3">
+                                      <Wrench className="w-3 h-3" />
+                                      {evento.oficina}
+                                    </span>
+                                  )}
+                                  {evento.local && (
+                                    <span className="inline-flex items-center gap-1">
+                                      <MapPin className="w-3 h-3" />
+                                      {evento.local}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                              <p className="text-xs text-slate-500 mt-1">
                                 {new Date(evento.data).toLocaleDateString('pt-PT')}
                                 {evento.hora && ` às ${evento.hora}`}
                               </p>
