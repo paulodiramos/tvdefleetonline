@@ -18981,6 +18981,12 @@ app.include_router(motoristas_router, prefix="/api")
 app.include_router(notificacoes_router, prefix="/api")
 app.include_router(mensagens_router, prefix="/api")
 app.include_router(ifthenpay_router)
+# NEW: Refactored modular routers
+app.include_router(parceiros_router, prefix="/api")
+app.include_router(planos_router, prefix="/api")
+app.include_router(pagamentos_router, prefix="/api")
+app.include_router(reports_router, prefix="/api")
+app.include_router(gestores_router, prefix="/api")
 
 # Include main API router LAST (legacy routes - endpoints here are overridden by modular routers above)
 app.include_router(api_router)
