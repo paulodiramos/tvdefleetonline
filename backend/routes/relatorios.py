@@ -1153,9 +1153,10 @@ async def get_historico_importacoes(
     
     # ===== COMBUSTÍVEL =====
     comb_query = {
-        **parceiro_filter,
         "data": {"$gte": data_inicio, "$lte": data_fim}
     }
+    if parceiro_motorista_ids:
+        comb_query["motorista_id"] = {"$in": parceiro_motorista_ids}
     
     comb_records = await db.abastecimentos_combustivel.find(comb_query, {"_id": 0}).to_list(1000)
     
