@@ -110,6 +110,12 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(value || 0);
   };
 
+  const formatShort = (value) => {
+    const num = value || 0;
+    if (num >= 1000) return `${(num/1000).toFixed(1)}k`;
+    return num.toFixed(0);
+  };
+
   const handleEditMotorista = (motorista) => {
     setEditingMotorista(motorista.motorista_id);
     setEditForm({
