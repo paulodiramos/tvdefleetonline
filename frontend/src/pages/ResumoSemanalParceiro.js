@@ -32,6 +32,7 @@ import { useNavigate } from 'react-router-dom';
 const API = process.env.REACT_APP_BACKEND_URL;
 
 const ResumoSemanalParceiro = ({ user, onLogout }) => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [resumo, setResumo] = useState(null);
   const [historico, setHistorico] = useState([]);
