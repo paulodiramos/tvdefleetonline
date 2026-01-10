@@ -24,6 +24,7 @@ from .alertas import router as alertas_router
 from .contratos import router as contratos_router
 from .sincronizacao import router as sincronizacao_router
 from .public import router as public_router
+from .ganhos import router as ganhos_router
 
 __all__ = [
     'auth_router',
@@ -48,5 +49,6 @@ __all__ = [
     'alertas_router',
     'contratos_router',
     'sincronizacao_router',
-    'public_router'
+    'public_router',
+    'ganhos_router'
 ]
