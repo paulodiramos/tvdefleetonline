@@ -114,6 +114,41 @@ const FichaMotorista = ({ user }) => {
   
   // Upload states
   const [uploading, setUploading] = useState({});
+  
+  // Foto do motorista
+  const [fotoMotorista, setFotoMotorista] = useState(null);
+  const [uploadingFoto, setUploadingFoto] = useState(false);
+
+  const handleFotoUpload = async (file) => {
+    if (!file) return;
+    
+    setUploadingFoto(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await axios.post(
+        `${API}/api/motoristas/${motoristaId}/foto`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      setFotoMotorista(response.data.url);
+      toast.success('Foto atualizada com sucesso!');
+    } catch (error) {
+      console.error('Erro ao carregar foto:', error);
+      toast.error('Erro ao carregar foto');
+    } finally {
+      setUploadingFoto(false);
+    }
+  };
 
   const fetchMotorista = useCallback(async () => {
     setLoading(true);
