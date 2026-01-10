@@ -42,6 +42,17 @@ class TipoContrato(BaseModel):
     horario_turno_2: Optional[str] = None
     horario_turno_3: Optional[str] = None
     horario_turno_4: Optional[str] = None
+    # Condições de KM
+    tem_limite_km: bool = False
+    km_semanais_disponiveis: Optional[int] = None
+    valor_extra_km: Optional[float] = None
+    km_acumula_semanal: bool = False
+    # KM por Época
+    km_por_epoca: bool = False
+    km_epoca_alta: Optional[int] = None
+    km_epoca_baixa: Optional[int] = None
+    meses_epoca_alta: List[int] = []  # Lista de meses (1-12)
+    meses_epoca_baixa: List[int] = []  # Lista de meses restantes
 
 
 class CategoriasUber(BaseModel):
@@ -196,6 +207,7 @@ class Vehicle(BaseModel):
     caixa: Optional[str] = ""
     lugares: Optional[int] = 5
     tipo_contrato: Optional[TipoContrato] = None
+    contratos: List[Dict[str, Any]] = []  # Lista de contratos assinados
     categorias_uber: Optional[CategoriasUber] = None
     categorias_bolt: Optional[CategoriasBolt] = None
     via_verde_disponivel: bool = False
