@@ -1013,8 +1013,11 @@ async def get_historico_importacoes(
     
     logger.info(f"📋 Histórico importações: {data_inicio} a {data_fim}")
     
-    # Build parceiro filter based on motoristas associated with the parceiro
+    # Build parceiro filter based on motoristas and their vehicles
     parceiro_motorista_ids = []
+    parceiro_veiculo_ids = []
+    parceiro_matriculas = []
+    
     if current_user["role"] == UserRole.PARCEIRO:
         # Get motoristas of this parceiro
         motoristas = await db.motoristas.find(
@@ -1022,10 +1025,20 @@ async def get_historico_importacoes(
                 {"parceiro_id": current_user["id"]},
                 {"parceiro_atribuido": current_user["id"]}
             ]},
-            {"_id": 0, "id": 1}
+            {"_id": 0, "id": 1, "veiculo_atribuido": 1}
         ).to_list(1000)
         parceiro_motorista_ids = [m["id"] for m in motoristas]
-        logger.info(f"📋 Parceiro {current_user['id']} tem {len(parceiro_motorista_ids)} motoristas")
+        parceiro_veiculo_ids = [m["veiculo_atribuido"] for m in motoristas if m.get("veiculo_atribuido")]
+        
+        # Get matriculas for these vehicles
+        if parceiro_veiculo_ids:
+            veiculos = await db.vehicles.find(
+                {"id": {"$in": parceiro_veiculo_ids}},
+                {"_id": 0, "id": 1, "matricula": 1}
+            ).to_list(1000)
+            parceiro_matriculas = [v["matricula"] for v in veiculos if v.get("matricula")]
+        
+        logger.info(f"📋 Parceiro tem {len(parceiro_motorista_ids)} motoristas, {len(parceiro_veiculo_ids)} veículos, {len(parceiro_matriculas)} matrículas")
     
     importacoes = []
     resumo_por_plataforma = {
@@ -1046,7 +1059,6 @@ async def get_historico_importacoes(
     uber_query["$or"] = [q for q in uber_query["$or"] if q]
     if parceiro_motorista_ids:
         uber_query["motorista_id"] = {"$in": parceiro_motorista_ids}
-    uber_query["$or"] = [q for q in uber_query["$or"] if q]
     if not uber_query["$or"]:
         uber_query.pop("$or")
     
