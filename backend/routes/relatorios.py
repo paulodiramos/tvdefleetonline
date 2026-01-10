@@ -1114,8 +1114,8 @@ async def get_historico_importacoes(
         resumo_por_plataforma["bolt"]["ficheiros"] += 1
     
     # ===== VIA VERDE =====
+    # Para Via Verde, filtrar por veículos dos motoristas do parceiro
     vv_query = {
-        **parceiro_filter,
         "$or": [
             {"semana": semana, "ano": ano} if semana and ano else {},
             {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}
@@ -1124,6 +1124,8 @@ async def get_historico_importacoes(
     vv_query["$or"] = [q for q in vv_query["$or"] if q]
     if not vv_query["$or"]:
         vv_query.pop("$or")
+    if parceiro_motorista_ids:
+        vv_query["motorista_id"] = {"$in": parceiro_motorista_ids}
     
     vv_records = await db.portagens_viaverde.find(vv_query, {"_id": 0}).to_list(5000)
     
