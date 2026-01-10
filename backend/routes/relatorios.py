@@ -707,13 +707,28 @@ async def get_resumo_semanal_parceiro(
     
     logger.info(f"📊 Resumo Semanal: Semana {semana}/{ano} ({data_inicio} a {data_fim})")
     
-    # Get all motoristas for the parceiro
-    motoristas_query = {}
-    if current_user["role"] == UserRole.PARCEIRO:
-        motoristas_query["$or"] = [
-            {"parceiro_id": current_user["id"]},
-            {"parceiro_atribuido": current_user["id"]}
+    # Get all motoristas for the parceiro (only active ones)
+    motoristas_query = {
+        "$or": [
+            {"status_motorista": "ativo"},
+            {"status_motorista": {"$exists": False}},  # Legacy: se não tiver status, assumir ativo
+            {"status_motorista": None}
         ]
+    }
+    if current_user["role"] == UserRole.PARCEIRO:
+        motoristas_query = {
+            "$and": [
+                {"$or": [
+                    {"parceiro_id": current_user["id"]},
+                    {"parceiro_atribuido": current_user["id"]}
+                ]},
+                {"$or": [
+                    {"status_motorista": "ativo"},
+                    {"status_motorista": {"$exists": False}},
+                    {"status_motorista": None}
+                ]}
+            ]
+        }
     
     motoristas = await db.motoristas.find(
         motoristas_query, 
