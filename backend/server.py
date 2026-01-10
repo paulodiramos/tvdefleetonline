@@ -3610,13 +3610,17 @@ async def aprovar_todos_documentos(
                 "observacoes": "Aprovação em lote"
             }
     
-    # Set documentos_aprovados = True
+    # Set documentos_aprovados = True AND update status_motorista to ativo
     await db.motoristas.update_one(
         {"id": motorista_id},
         {
             "$set": {
                 "documentos_aprovados": True,
-                "documents_validacao": documents_validacao
+                "documents_validacao": documents_validacao,
+                "status_motorista": "ativo",  # IMPORTANTE: Atualizar status para ativo
+                "approved": True,
+                "approved_at": datetime.now(timezone.utc).isoformat(),
+                "approved_by": current_user["id"]
             }
         }
     )
