@@ -2493,17 +2493,127 @@ const FichaVeiculo = ({ user, onLogout }) => {
                           )}
                         </div>
 
-                        {/* Resumo/Exemplo */}
+                        {/* Escalões de KM Extra */}
+                        <div className="mt-4 bg-gradient-to-r from-red-50 to-orange-50 p-4 rounded-lg">
+                          <Label className="font-semibold text-red-800 flex items-center gap-2 mb-3">
+                            💰 Custos por KM Extra (Escalões)
+                          </Label>
+                          <p className="text-xs text-slate-600 mb-3">
+                            Define valores diferentes para escalões de quilometragem extra
+                          </p>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {/* Limite do Escalão 1 */}
+                            <div className="bg-white p-3 rounded-lg border">
+                              <Label className="text-sm text-orange-700">Limite Escalão 1 (km)</Label>
+                              {canEdit && editMode ? (
+                                <Input
+                                  type="number"
+                                  value={infoForm.km_extra_escalao_1_limite || 500}
+                                  onChange={(e) => setInfoForm({...infoForm, km_extra_escalao_1_limite: e.target.value})}
+                                  placeholder="500"
+                                  className="mt-1"
+                                />
+                              ) : (
+                                <p className="font-bold text-lg text-orange-700">
+                                  {vehicle.tipo_contrato?.km_extra_escalao_1_limite || 500} km
+                                </p>
+                              )}
+                              <p className="text-xs text-slate-500 mt-1">Até X km extra</p>
+                            </div>
+
+                            {/* Valor Escalão 1 */}
+                            <div className="bg-orange-100 p-3 rounded-lg">
+                              <Label className="text-sm text-orange-800">Valor por KM (Escalão 1)</Label>
+                              {canEdit && editMode ? (
+                                <div className="relative mt-1">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">€</span>
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    value={infoForm.km_extra_escalao_1_valor || ''}
+                                    onChange={(e) => setInfoForm({...infoForm, km_extra_escalao_1_valor: e.target.value})}
+                                    placeholder="0.10"
+                                    className="pl-8"
+                                  />
+                                </div>
+                              ) : (
+                                <p className="font-bold text-lg text-orange-800">
+                                  €{(vehicle.tipo_contrato?.km_extra_escalao_1_valor || 0).toFixed(2)}/km
+                                </p>
+                              )}
+                              <p className="text-xs text-orange-600 mt-1">
+                                Até +{infoForm.km_extra_escalao_1_limite || vehicle.tipo_contrato?.km_extra_escalao_1_limite || 500} km extra
+                              </p>
+                            </div>
+
+                            {/* Valor Escalão 2 */}
+                            <div className="bg-red-100 p-3 rounded-lg">
+                              <Label className="text-sm text-red-800">Valor por KM (Escalão 2)</Label>
+                              {canEdit && editMode ? (
+                                <div className="relative mt-1">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">€</span>
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    value={infoForm.km_extra_escalao_2_valor || ''}
+                                    onChange={(e) => setInfoForm({...infoForm, km_extra_escalao_2_valor: e.target.value})}
+                                    placeholder="0.20"
+                                    className="pl-8"
+                                  />
+                                </div>
+                              ) : (
+                                <p className="font-bold text-lg text-red-800">
+                                  €{(vehicle.tipo_contrato?.km_extra_escalao_2_valor || 0).toFixed(2)}/km
+                                </p>
+                              )}
+                              <p className="text-xs text-red-600 mt-1">
+                                Acima de +{infoForm.km_extra_escalao_1_limite || vehicle.tipo_contrato?.km_extra_escalao_1_limite || 500} km extra
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Resumo/Exemplo com Escalões */}
                         {!editMode && vehicle.tipo_contrato?.km_semanais_disponiveis && (
                           <div className="bg-white p-3 rounded-lg border mt-3">
-                            <p className="text-sm font-semibold text-slate-700 mb-2">📊 Exemplo de Cálculo</p>
-                            <p className="text-xs text-slate-600">
-                              Se o motorista fizer <strong>{(vehicle.tipo_contrato?.km_semanais_disponiveis || 0) + 200} km</strong> numa semana, 
-                              excede <strong>200 km</strong> do plafond, resultando em despesa extra de{' '}
-                              <strong className="text-orange-600">
-                                €{(200 * (vehicle.tipo_contrato?.valor_extra_km || 0)).toFixed(2)}
-                              </strong> a adicionar ao relatório.
-                            </p>
+                            <p className="text-sm font-semibold text-slate-700 mb-2">📊 Exemplo de Cálculo com Escalões</p>
+                            {(() => {
+                              const limite = vehicle.tipo_contrato?.km_semanais_disponiveis || 0;
+                              const limiteEscalao1 = vehicle.tipo_contrato?.km_extra_escalao_1_limite || 500;
+                              const valorEscalao1 = vehicle.tipo_contrato?.km_extra_escalao_1_valor || 0;
+                              const valorEscalao2 = vehicle.tipo_contrato?.km_extra_escalao_2_valor || 0;
+                              const kmFeitos = limite + limiteEscalao1 + 200; // Exemplo: ultrapassa ambos escalões
+                              const kmExtra = kmFeitos - limite;
+                              const kmEscalao1 = Math.min(kmExtra, limiteEscalao1);
+                              const kmEscalao2 = Math.max(0, kmExtra - limiteEscalao1);
+                              const custoEscalao1 = kmEscalao1 * valorEscalao1;
+                              const custoEscalao2 = kmEscalao2 * valorEscalao2;
+                              const custoTotal = custoEscalao1 + custoEscalao2;
+                              
+                              return (
+                                <div className="text-xs text-slate-600 space-y-1">
+                                  <p>
+                                    Limite: <strong>{limite.toLocaleString()} km</strong> | 
+                                    KM feitos: <strong>{kmFeitos.toLocaleString()} km</strong> | 
+                                    Excede: <strong className="text-orange-600">{kmExtra} km</strong>
+                                  </p>
+                                  <div className="flex gap-4 mt-2">
+                                    <span className="bg-orange-100 px-2 py-1 rounded">
+                                      Escalão 1: {kmEscalao1} km × €{valorEscalao1.toFixed(2)} = <strong>€{custoEscalao1.toFixed(2)}</strong>
+                                    </span>
+                                    {kmEscalao2 > 0 && (
+                                      <span className="bg-red-100 px-2 py-1 rounded">
+                                        Escalão 2: {kmEscalao2} km × €{valorEscalao2.toFixed(2)} = <strong>€{custoEscalao2.toFixed(2)}</strong>
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p className="mt-2 font-semibold text-red-700">
+                                    💰 Total Extra: €{custoTotal.toFixed(2)}
+                                  </p>
+                                </div>
+                              );
+                            })()}
                           </div>
                         )}
                       </div>
