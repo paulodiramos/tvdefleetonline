@@ -966,16 +966,8 @@ async def get_resumo_semanal_parceiro(
             "receitas_parceiro": round(receitas_parceiro, 2),
             # Contrato
             "tipo_contrato": tipo_contrato_veiculo,
-            "tipo_comissao": tipo_comissao,
-            "valor_comissao_config": valor_comissao_config,
-            "comissao_motorista": round(comissao_motorista, 2),
-            # Líquidos
+            # Líquido do Motorista
             "valor_liquido_motorista": round(valor_liquido_motorista, 2),
-            "valor_liquido_parceiro": round(valor_liquido_parceiro, 2),
-            # Legado (manter compatibilidade)
-            "aluguer_veiculo": round(aluguer_semanal, 2),
-            "total_despesas": round(total_despesas_operacionais + comissao_motorista, 2),
-            "valor_liquido": round(valor_liquido_parceiro, 2),
             # Detalhes dos cartões
             "cartao_combustivel": cartao_combustivel,
             "cartao_eletrico": cartao_eletrico,
@@ -995,12 +987,32 @@ async def get_resumo_semanal_parceiro(
         totais["total_eletrico"] += eletrico_total
         totais["total_via_verde"] += via_verde_total
         totais["total_despesas_operacionais"] = totais.get("total_despesas_operacionais", 0) + total_despesas_operacionais
-        totais["total_comissoes_motoristas"] = totais.get("total_comissoes_motoristas", 0) + comissao_motorista
-        totais["total_liquido_parceiro"] = totais.get("total_liquido_parceiro", 0) + valor_liquido_parceiro
-        # Legado
-        totais["total_aluguer"] += aluguer_semanal
-        totais["total_despesas"] = totais.get("total_despesas", 0) + total_despesas_operacionais + comissao_motorista
-        totais["total_liquido"] = totais.get("total_liquido", 0) + valor_liquido_parceiro
+        totais["total_aluguer"] = totais.get("total_aluguer", 0) + receita_aluguer
+        totais["total_extras"] = totais.get("total_extras", 0) + receita_extras
+        totais["total_receitas_parceiro"] = totais.get("total_receitas_parceiro", 0) + receitas_parceiro
+    
+    # ============ VENDAS DE VEÍCULOS NA SEMANA ============
+    vendas_query = {
+        "data_venda": {"$gte": data_inicio, "$lte": data_fim}
+    }
+    if current_user["role"] == UserRole.PARCEIRO:
+        vendas_query["parceiro_id"] = current_user["id"]
+    
+    vendas = await db.vehicles.find(
+        {**vendas_query, "vendido": True},
+        {"_id": 0, "matricula": 1, "valor_venda": 1, "data_venda": 1, "comprador_nome": 1}
+    ).to_list(100)
+    
+    total_vendas = sum(float(v.get("valor_venda") or 0) for v in vendas)
+    totais["total_vendas"] = round(total_vendas, 2)
+    totais["total_receitas_parceiro"] = totais.get("total_receitas_parceiro", 0) + total_vendas
+    
+    # ============ LÍQUIDO FINAL DO PARCEIRO ============
+    # Líquido = Receitas (Aluguer + Extras + Vendas) - Despesas Operacionais
+    totais["total_liquido_parceiro"] = round(
+        totais.get("total_receitas_parceiro", 0) - totais.get("total_despesas_operacionais", 0),
+        2
+    )
     
     # Round totals
     for key in totais:
@@ -1018,6 +1030,7 @@ async def get_resumo_semanal_parceiro(
         "total_motoristas": len(motoristas),
         "motoristas_com_relatorio": len([m for m in resumo_motoristas if m["tem_relatorio"]]),
         "motoristas": resumo_motoristas,
+        "vendas_semana": vendas,
         "totais": totais
     }
 
