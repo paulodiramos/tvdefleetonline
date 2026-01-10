@@ -150,7 +150,8 @@ POST /api/relatorios/enviar-relatorio/{id}      # Enviar por email
 - [ ] Configurar SENDGRID_API_KEY para ativar envio de emails
 
 ### P1 - Alta Prioridade
-- [ ] Refatorar `server.py` - separar lógica de importação para services/
+- [x] ~~Refatorar `server.py` - separar lógica de rotas~~ (FASE 1 COMPLETA)
+- [ ] Continuar refatoração: mover mais endpoints do `server.py` para ficheiros dedicados
 
 ### P2 - Média Prioridade
 - [ ] Implementar sincronização automática (RPA)
