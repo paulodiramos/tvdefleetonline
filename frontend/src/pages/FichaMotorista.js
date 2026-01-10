@@ -713,6 +713,7 @@ const FichaMotorista = ({ user }) => {
                       onChange={(e) => setDadosMotorista(prev => ({ ...prev, seguranca_social: e.target.value }))}
                       disabled={!isEditing}
                       placeholder="12345678901"
+                      className={getFilledInputClass(dadosMotorista.seguranca_social)}
                     />
                   </div>
                 </CardContent>
