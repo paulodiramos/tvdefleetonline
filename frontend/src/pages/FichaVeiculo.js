@@ -180,7 +180,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
     data: new Date().toISOString().split('T')[0],
     km_realizada: '',
     valor: '',
-    fornecedor: ''
+    fornecedor: '',
+    responsavel: 'parceiro', // 'motorista' ou 'parceiro'
+    atribuir_motorista: false // se true, deduz do motorista atribuído
   });
 
   const [relatorioGanhos, setRelatorioGanhos] = useState({
