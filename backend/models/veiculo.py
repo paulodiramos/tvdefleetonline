@@ -275,6 +275,7 @@ class Vehicle(BaseModel):
     campos_customizados: Dict[str, Any] = {}
     disponivel_venda: bool = False
     disponivel_aluguer: bool = False
+    disponivel_para_aluguer: bool = False  # Usado para publicar na página pública
     preco_venda: Optional[float] = None
     preco_aluguer_mensal: Optional[float] = None
     descricao_marketplace: Optional[str] = None
