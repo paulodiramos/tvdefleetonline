@@ -10,7 +10,9 @@ import {
   ChevronRight,
   Loader2,
   Users,
-  BarChart3
+  BarChart3,
+  Car,
+  Receipt
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -94,13 +96,6 @@ const ResumoSemanalCard = ({ parceiroId }) => {
     }).format(value || 0);
   };
 
-  const formatCurrencyShort = (value) => {
-    if (value >= 1000) {
-      return `€${(value / 1000).toFixed(1)}k`;
-    }
-    return `€${Math.round(value || 0)}`;
-  };
-
   if (loading) {
     return (
       <Card data-testid="resumo-semanal-card">
@@ -113,11 +108,17 @@ const ResumoSemanalCard = ({ parceiroId }) => {
 
   const totais = resumo?.totais || {};
   
-  // Cálculos do parceiro
-  const totalGanhos = totais.total_ganhos || 0;
-  const totalDespesasOperacionais = (totais.total_combustivel || 0) + (totais.total_eletrico || 0) + (totais.total_via_verde || 0);
-  const totalComissoesMotoristas = totais.total_comissoes_motoristas || 0;
-  const liquidoParceiro = totais.total_liquido_parceiro || (totalGanhos - totalDespesasOperacionais - totalComissoesMotoristas);
+  // Receitas do Parceiro
+  const totalAluguer = totais.total_aluguer || 0;
+  const totalExtras = totais.total_extras || 0;
+  const totalVendas = totais.total_vendas || 0;
+  const totalReceitas = totais.total_receitas_parceiro || (totalAluguer + totalExtras + totalVendas);
+  
+  // Despesas Operacionais
+  const totalDespesas = totais.total_despesas_operacionais || 0;
+  
+  // Líquido do Parceiro = Receitas - Despesas
+  const liquidoParceiro = totais.total_liquido_parceiro || (totalReceitas - totalDespesas);
   const isPositive = liquidoParceiro >= 0;
 
   // Calcular altura máxima para o gráfico
@@ -158,66 +159,86 @@ const ResumoSemanalCard = ({ parceiroId }) => {
         </div>
       </CardHeader>
       <CardContent>
-        {/* Cards de Resumo - 4 colunas */}
-        <div className="grid grid-cols-4 gap-3 mb-4">
-          {/* Ganhos */}
-          <div className="bg-green-50 rounded-lg p-3 text-center">
+        {/* Cards de Resumo - 3 colunas principais */}
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {/* Receitas do Parceiro */}
+          <div className="bg-green-50 rounded-lg p-3">
             <div className="flex items-center justify-center gap-1 text-green-600 mb-1">
               <TrendingUp className="w-4 h-4" />
-              <span className="text-xs font-medium">Ganhos</span>
+              <span className="text-xs font-medium">Receitas Parceiro</span>
             </div>
-            <p className="text-lg font-bold text-green-700">
-              {formatCurrency(totalGanhos)}
+            <p className="text-xl font-bold text-green-700 text-center">
+              {formatCurrency(totalReceitas)}
             </p>
-            <div className="text-xs text-green-600 mt-1">
-              <div>Uber: {formatCurrency(totais.total_ganhos_uber)}</div>
-              <div>Bolt: {formatCurrency(totais.total_ganhos_bolt)}</div>
+            <div className="text-xs text-green-600 mt-2 space-y-1">
+              <div className="flex justify-between">
+                <span className="flex items-center gap-1"><Car className="w-3 h-3" /> Aluguer:</span>
+                <span className="font-medium">{formatCurrency(totalAluguer)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="flex items-center gap-1"><Receipt className="w-3 h-3" /> Extras:</span>
+                <span className="font-medium">{formatCurrency(totalExtras)}</span>
+              </div>
+              {totalVendas > 0 && (
+                <div className="flex justify-between border-t pt-1 mt-1">
+                  <span>Vendas:</span>
+                  <span className="font-medium">{formatCurrency(totalVendas)}</span>
+                </div>
+              )}
             </div>
           </div>
 
           {/* Despesas Operacionais */}
-          <div className="bg-orange-50 rounded-lg p-3 text-center">
-            <div className="flex items-center justify-center gap-1 text-orange-600 mb-1">
+          <div className="bg-red-50 rounded-lg p-3">
+            <div className="flex items-center justify-center gap-1 text-red-600 mb-1">
               <TrendingDown className="w-4 h-4" />
               <span className="text-xs font-medium">Despesas</span>
             </div>
-            <p className="text-lg font-bold text-orange-700">
-              {formatCurrency(totalDespesasOperacionais)}
+            <p className="text-xl font-bold text-red-700 text-center">
+              {formatCurrency(totalDespesas)}
             </p>
-            <div className="text-xs text-orange-600 mt-1">
-              <div>Comb: {formatCurrency(totais.total_combustivel)}</div>
-              <div>VV: {formatCurrency(totais.total_via_verde)}</div>
-              <div>Elét: {formatCurrency(totais.total_eletrico)}</div>
+            <div className="text-xs text-red-600 mt-2 space-y-1">
+              <div className="flex justify-between">
+                <span>Combustível:</span>
+                <span>{formatCurrency(totais.total_combustivel)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Via Verde:</span>
+                <span>{formatCurrency(totais.total_via_verde)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Elétrico:</span>
+                <span>{formatCurrency(totais.total_eletrico)}</span>
+              </div>
             </div>
-          </div>
-
-          {/* Comissões Motoristas */}
-          <div className="bg-purple-50 rounded-lg p-3 text-center">
-            <div className="flex items-center justify-center gap-1 text-purple-600 mb-1">
-              <Users className="w-4 h-4" />
-              <span className="text-xs font-medium">Comissões</span>
-            </div>
-            <p className="text-lg font-bold text-purple-700">
-              {formatCurrency(totalComissoesMotoristas)}
-            </p>
-            <p className="text-xs text-purple-600 mt-1">
-              {resumo?.total_motoristas || 0} motoristas
-            </p>
           </div>
 
           {/* Líquido Parceiro */}
-          <div className={`rounded-lg p-3 text-center ${isPositive ? 'bg-blue-50' : 'bg-red-50'}`}>
-            <div className={`flex items-center justify-center gap-1 mb-1 ${isPositive ? 'text-blue-600' : 'text-red-600'}`}>
+          <div className={`rounded-lg p-3 ${isPositive ? 'bg-blue-50' : 'bg-orange-50'}`}>
+            <div className={`flex items-center justify-center gap-1 mb-1 ${isPositive ? 'text-blue-600' : 'text-orange-600'}`}>
               <DollarSign className="w-4 h-4" />
-              <span className="text-xs font-medium">Líquido</span>
+              <span className="text-xs font-medium">Líquido Parceiro</span>
             </div>
-            <p className={`text-xl font-bold ${isPositive ? 'text-blue-700' : 'text-red-700'}`}>
+            <p className={`text-2xl font-bold text-center ${isPositive ? 'text-blue-700' : 'text-orange-700'}`}>
               {formatCurrency(liquidoParceiro)}
             </p>
-            <p className={`text-xs mt-1 ${isPositive ? 'text-blue-600' : 'text-red-600'}`}>
-              Parceiro
-            </p>
+            <div className="flex items-center justify-center gap-1 mt-2">
+              <Users className="w-3 h-3 text-slate-500" />
+              <span className="text-xs text-slate-600">
+                {resumo?.total_motoristas || 0} motoristas
+              </span>
+            </div>
           </div>
+        </div>
+
+        {/* Info dos Ganhos dos Motoristas */}
+        <div className="bg-slate-50 rounded-lg p-2 mb-4 text-center">
+          <span className="text-xs text-slate-500">
+            Ganhos Motoristas (informativo): {formatCurrency(totais.total_ganhos)} 
+            <span className="text-slate-400 ml-2">
+              (Uber: {formatCurrency(totais.total_ganhos_uber)} | Bolt: {formatCurrency(totais.total_ganhos_bolt)})
+            </span>
+          </span>
         </div>
 
         {/* Gráfico de Evolução */}
@@ -232,10 +253,10 @@ const ResumoSemanalCard = ({ parceiroId }) => {
             <div className="flex justify-center gap-4 mb-3 text-xs">
               <div className="flex items-center gap-1">
                 <div className="w-3 h-3 rounded bg-green-500"></div>
-                <span>Ganhos</span>
+                <span>Receitas</span>
               </div>
               <div className="flex items-center gap-1">
-                <div className="w-3 h-3 rounded bg-orange-500"></div>
+                <div className="w-3 h-3 rounded bg-red-500"></div>
                 <span>Despesas</span>
               </div>
               <div className="flex items-center gap-1">
@@ -247,19 +268,19 @@ const ResumoSemanalCard = ({ parceiroId }) => {
             {/* Barras do Gráfico */}
             <div className="flex items-end justify-between gap-1 h-32 px-2">
               {historico.map((item, index) => {
-                const ganhoHeight = (item.ganhos / maxValue) * 100;
-                const despesaHeight = (item.despesas / maxValue) * 100;
-                const liquidoHeight = (Math.abs(item.liquido) / maxValue) * 100;
-                const isLiquidoPositivo = item.liquido >= 0;
+                const receitaHeight = ((item.receitas || item.ganhos || 0) / maxValue) * 100;
+                const despesaHeight = ((item.despesas || 0) / maxValue) * 100;
+                const liquidoHeight = (Math.abs(item.liquido || 0) / maxValue) * 100;
+                const isLiquidoPositivo = (item.liquido || 0) >= 0;
                 
                 return (
                   <div key={index} className="flex-1 flex flex-col items-center group relative">
                     {/* Tooltip */}
                     <div className="absolute bottom-full mb-2 hidden group-hover:block bg-slate-800 text-white text-xs p-2 rounded shadow-lg z-10 whitespace-nowrap">
                       <div className="font-semibold mb-1">S{item.semana}/{item.ano}</div>
-                      <div className="text-green-300">Ganhos: {formatCurrency(item.ganhos)}</div>
-                      <div className="text-orange-300">Despesas: {formatCurrency(item.despesas)}</div>
-                      <div className={isLiquidoPositivo ? 'text-blue-300' : 'text-red-300'}>
+                      <div className="text-green-300">Receitas: {formatCurrency(item.receitas || item.ganhos)}</div>
+                      <div className="text-red-300">Despesas: {formatCurrency(item.despesas)}</div>
+                      <div className={isLiquidoPositivo ? 'text-blue-300' : 'text-orange-300'}>
                         Líquido: {formatCurrency(item.liquido)}
                       </div>
                     </div>
@@ -268,14 +289,14 @@ const ResumoSemanalCard = ({ parceiroId }) => {
                     <div className="flex gap-0.5 items-end h-24">
                       <div 
                         className="w-2 bg-green-500 rounded-t transition-all duration-300 hover:bg-green-400"
-                        style={{ height: `${Math.max(ganhoHeight, 2)}%` }}
+                        style={{ height: `${Math.max(receitaHeight, 2)}%` }}
                       ></div>
                       <div 
-                        className="w-2 bg-orange-500 rounded-t transition-all duration-300 hover:bg-orange-400"
+                        className="w-2 bg-red-500 rounded-t transition-all duration-300 hover:bg-red-400"
                         style={{ height: `${Math.max(despesaHeight, 2)}%` }}
                       ></div>
                       <div 
-                        className={`w-2 rounded-t transition-all duration-300 ${isLiquidoPositivo ? 'bg-blue-500 hover:bg-blue-400' : 'bg-red-500 hover:bg-red-400'}`}
+                        className={`w-2 rounded-t transition-all duration-300 ${isLiquidoPositivo ? 'bg-blue-500 hover:bg-blue-400' : 'bg-orange-500 hover:bg-orange-400'}`}
                         style={{ height: `${Math.max(liquidoHeight, 2)}%` }}
                       ></div>
                     </div>
