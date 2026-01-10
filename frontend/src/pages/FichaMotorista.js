@@ -987,13 +987,13 @@ const FichaMotorista = ({ user }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <DocumentUploadCard
                     titulo="Documento de Identificação (Frente)"
-                    tipoDocumento="documento_frente"
+                    tipoDocumento="cc_frente"
                     icone={IdCard}
                     descricao="CC, Autorização de Residência ou Passaporte - Frente"
                   />
                   <DocumentUploadCard
                     titulo="Documento de Identificação (Verso)"
-                    tipoDocumento="documento_verso"
+                    tipoDocumento="cc_verso"
                     icone={IdCard}
                     descricao="CC ou Autorização de Residência - Verso (não necessário para Passaporte)"
                   />
