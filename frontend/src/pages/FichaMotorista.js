@@ -561,13 +561,42 @@ const FichaMotorista = ({ user }) => {
               <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
             </Button>
             <div className="flex items-center gap-4">
-              <Avatar className="h-16 w-16">
-                <AvatarFallback className="bg-blue-100 text-blue-600 text-xl">
-                  {getInitials(motorista.name)}
-                </AvatarFallback>
-              </Avatar>
+              {/* Foto do Motorista com Upload */}
+              <div className="relative group">
+                <Avatar className="h-20 w-20 border-2 border-slate-200">
+                  {fotoMotorista ? (
+                    <img 
+                      src={`${API}/${fotoMotorista}`} 
+                      alt={motorista.name}
+                      className="h-full w-full object-cover rounded-full"
+                    />
+                  ) : (
+                    <AvatarFallback className="bg-blue-100 text-blue-600 text-2xl">
+                      {getInitials(motorista.name)}
+                    </AvatarFallback>
+                  )}
+                </Avatar>
+                {/* Overlay para upload */}
+                <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => handleFotoUpload(e.target.files[0])}
+                    disabled={uploadingFoto}
+                  />
+                  {uploadingFoto ? (
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                  ) : (
+                    <Upload className="w-6 h-6 text-white" />
+                  )}
+                </label>
+              </div>
               <div>
-                <h1 className="text-2xl font-bold" data-testid="motorista-nome">{motorista.name}</h1>
+                <div className="flex items-center gap-2">
+                  <h1 className="text-2xl font-bold" data-testid="motorista-nome">{motorista.name}</h1>
+                  {getAniversarioBadge(dadosMotorista.data_nascimento)}
+                </div>
                 <p className="text-slate-500">{motorista.email}</p>
               </div>
             </div>
