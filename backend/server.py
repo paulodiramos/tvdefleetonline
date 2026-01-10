@@ -68,6 +68,7 @@ from routes.csv_config import router as csv_config_router
 from routes.relatorios import router as relatorios_router
 from routes.automacao import router as automacao_router
 from routes.despesas import router as despesas_router
+from routes.extras import router as extras_router
 
 app = FastAPI()
 api_router = APIRouter(prefix="/api")
