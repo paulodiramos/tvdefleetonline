@@ -1811,6 +1811,14 @@ async def delete_motorista_weekly_data(
         if motorista.get("parceiro_id") != current_user["id"] and motorista.get("parceiro_atribuido") != current_user["id"]:
             raise HTTPException(status_code=403, detail="Não autorizado a eliminar dados deste motorista")
     
+    # Buscar veículo para obter via_verde_id
+    veiculo = None
+    via_verde_id = None
+    if motorista.get("veiculo_atribuido"):
+        veiculo = await db.vehicles.find_one({"id": motorista["veiculo_atribuido"]}, {"_id": 0, "via_verde_id": 1, "obu": 1, "matricula": 1})
+        if veiculo:
+            via_verde_id = veiculo.get("via_verde_id")
+    
     # Calcular datas da semana
     first_day_of_year = datetime(ano, 1, 1)
     if first_day_of_year.weekday() <= 3:
@@ -1846,12 +1854,24 @@ async def delete_motorista_weekly_data(
     })
     deleted_counts["ganhos_bolt"] = result.deleted_count
     
-    # Eliminar Via Verde
+    # Eliminar Via Verde - buscar por motorista_id OU via_verde_id do veículo
+    via_verde_query_conditions = [
+        {"motorista_id": motorista_id}
+    ]
+    if via_verde_id:
+        via_verde_query_conditions.append({"via_verde_id": via_verde_id})
+    if veiculo and veiculo.get("obu"):
+        via_verde_query_conditions.append({"obu": veiculo.get("obu")})
+    if veiculo and veiculo.get("matricula"):
+        via_verde_query_conditions.append({"matricula": veiculo.get("matricula")})
+    
     result = await db.portagens_viaverde.delete_many({
-        "motorista_id": motorista_id,
-        "$or": [
-            {"semana": semana, "ano": ano},
-            {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}
+        "$and": [
+            {"$or": via_verde_query_conditions},
+            {"$or": [
+                {"semana": semana, "ano": ano},
+                {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}
+            ]}
         ]
     })
     deleted_counts["via_verde"] = result.deleted_count
