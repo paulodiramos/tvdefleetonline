@@ -96,6 +96,16 @@ async def criar_extra_motorista(
         if current_user['role'] not in ['admin', 'gestao', 'parceiro']:
             raise HTTPException(status_code=403, detail="Acesso negado")
         
+        # Validar campos obrigatórios
+        if not extra.get('motorista_id'):
+            raise HTTPException(status_code=422, detail="Campo motorista_id é obrigatório")
+        if not extra.get('tipo'):
+            raise HTTPException(status_code=422, detail="Campo tipo é obrigatório")
+        if not extra.get('descricao'):
+            raise HTTPException(status_code=422, detail="Campo descricao é obrigatório")
+        if extra.get('valor') is None:
+            raise HTTPException(status_code=422, detail="Campo valor é obrigatório")
+        
         # Determinar parceiro_id
         parceiro_id = current_user['id'] if current_user['role'] == 'parceiro' else extra.get('parceiro_id')
         
