@@ -383,6 +383,11 @@ const FichaVeiculo = ({ user, onLogout }) => {
           comissao_parceiro: parseFloat(infoForm?.comissao_parceiro) || null,
           comissao_motorista: parseFloat(infoForm?.comissao_motorista) || null,
           inclui_combustivel: infoForm?.inclui_combustivel || false,
+          // Condições de KM
+          tem_limite_km: infoForm?.tem_limite_km || false,
+          km_semanais_disponiveis: parseInt(infoForm?.km_semanais_disponiveis) || null,
+          valor_extra_km: parseFloat(infoForm?.valor_extra_km) || null,
+          km_acumula_semanal: infoForm?.km_acumula_semanal || false,
           valor_compra_veiculo: parseFloat(infoForm?.valor_compra_veiculo) || null,
           numero_semanas_compra: parseInt(infoForm?.numero_semanas_compra) || null,
           com_slot: infoForm?.com_slot || false,
