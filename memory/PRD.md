@@ -256,7 +256,8 @@ GET    /api/importacoes/{id}                    # Detalhes de importação
 
 ### P1 - Alta Prioridade
 - [x] ~~Implementar foto de perfil do motorista~~ - COMPLETO (Session 6)
-- [x] ~~Refatoração Backend~~ - Em progresso (23 routers criados)
+- [x] ~~Bug: Resumo semanal não busca aluguer do veículo~~ - COMPLETO (Session 6)
+- [x] ~~Refatoração Backend~~ - Em progresso (24 routers criados)
 
 ### P2 - Média Prioridade
 - [ ] Continuar refatoração: mover mais endpoints do `server.py` para ficheiros dedicados (ainda restam ~22.000 linhas)
