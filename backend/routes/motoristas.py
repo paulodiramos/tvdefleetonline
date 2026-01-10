@@ -763,10 +763,13 @@ async def upload_documento_motorista(
     motorista_id: str,
     file: UploadFile = File(...),
     tipo_documento: str = Form(...),
+    converter_pdf: str = Form(default="false"),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Upload de documento do motorista"""
+    """Upload de documento do motorista com conversão para PDF"""
     import shutil
+    from PIL import Image
+    from io import BytesIO
     
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
@@ -784,14 +787,51 @@ async def upload_documento_motorista(
     docs_dir = MOTORISTAS_UPLOAD_DIR / motorista_id / "documentos"
     docs_dir.mkdir(parents=True, exist_ok=True)
     
-    # Gerar nome único para o ficheiro
+    # Ler conteúdo do ficheiro
+    file_content = await file.read()
     file_extension = Path(file.filename).suffix.lower()
-    filename = f"{tipo_documento}_{uuid.uuid4()}{file_extension}"
-    file_path = docs_dir / filename
     
-    # Guardar ficheiro
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+    # Converter para PDF se solicitado e se for imagem
+    should_convert = converter_pdf.lower() == "true"
+    is_image = file_extension in ['.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif']
+    
+    if should_convert and is_image:
+        try:
+            # Abrir imagem
+            image = Image.open(BytesIO(file_content))
+            
+            # Converter para RGB se necessário (para PNG com transparência)
+            if image.mode in ('RGBA', 'LA', 'P'):
+                background = Image.new('RGB', image.size, (255, 255, 255))
+                if image.mode == 'P':
+                    image = image.convert('RGBA')
+                background.paste(image, mask=image.split()[-1] if image.mode == 'RGBA' else None)
+                image = background
+            elif image.mode != 'RGB':
+                image = image.convert('RGB')
+            
+            # Gerar nome do ficheiro PDF
+            filename = f"{tipo_documento}_{uuid.uuid4()}.pdf"
+            file_path = docs_dir / filename
+            
+            # Guardar como PDF
+            image.save(str(file_path), 'PDF', resolution=100.0)
+            
+            logger.info(f"Imagem convertida para PDF: {file_path}")
+            
+        except Exception as e:
+            logger.error(f"Erro ao converter para PDF: {e}")
+            # Fallback: guardar ficheiro original
+            filename = f"{tipo_documento}_{uuid.uuid4()}{file_extension}"
+            file_path = docs_dir / filename
+            with open(file_path, "wb") as buffer:
+                buffer.write(file_content)
+    else:
+        # Guardar ficheiro como está
+        filename = f"{tipo_documento}_{uuid.uuid4()}{file_extension}"
+        file_path = docs_dir / filename
+        with open(file_path, "wb") as buffer:
+            buffer.write(file_content)
     
     relative_path = str(file_path.relative_to(ROOT_DIR))
     
@@ -813,7 +853,8 @@ async def upload_documento_motorista(
     return {
         "message": "Documento carregado com sucesso",
         "tipo_documento": tipo_documento,
-        "url": relative_path
+        "url": relative_path,
+        "convertido_pdf": should_convert and is_image
     }
 
 
