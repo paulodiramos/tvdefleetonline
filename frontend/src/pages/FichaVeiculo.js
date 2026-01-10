@@ -156,8 +156,16 @@ const FichaVeiculo = ({ user, onLogout }) => {
     semanada_por_epoca: false,
     semanada_epoca_alta: '',
     semanada_epoca_baixa: '',
+    semanada_meses_epoca_alta: [],
+    semanada_meses_epoca_baixa: [],
     // Periodicidade do Slot
     slot_periodicidade: 'semanal',
+    slot_valor_semanal: '',
+    slot_valor_mensal: '',
+    slot_valor_anual: '',
+    // Garantia do Veículo
+    tem_garantia: false,
+    data_limite_garantia: '',
     // Contratos
     contratos: [], // Lista de contratos {id, data, tipo, documento_url, assinado_motorista, assinado_parceiro, assinado_gestor}
     // Compra do Veículo
