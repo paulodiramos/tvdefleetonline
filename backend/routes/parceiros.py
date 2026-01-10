@@ -419,7 +419,7 @@ async def get_parceiro_alertas(parceiro_id: str, current_user: Dict = Depends(ge
                         "data_vencimento": v["insurance"]["data_validade"],
                         "prioridade": "alta" if dias_restantes <= 7 else "media"
                     })
-            except:
+            except Exception:
                 pass
         
         # Check inspeção expiry
@@ -437,7 +437,7 @@ async def get_parceiro_alertas(parceiro_id: str, current_user: Dict = Depends(ge
                         "data_vencimento": v["inspection"]["proxima_inspecao"],
                         "prioridade": "alta" if dias_restantes <= 7 else "media"
                     })
-            except:
+            except Exception:
                 pass
         
         # Check extintor expiry
@@ -455,7 +455,7 @@ async def get_parceiro_alertas(parceiro_id: str, current_user: Dict = Depends(ge
                         "data_vencimento": v["extintor"]["data_validade"],
                         "prioridade": "alta" if dias_restantes <= 7 else "media"
                     })
-            except:
+            except Exception:
                 pass
         
         # Check revisão por KM
@@ -494,7 +494,7 @@ async def get_parceiro_alertas(parceiro_id: str, current_user: Dict = Depends(ge
                         "data_vencimento": m["licenca_tvde_validade"],
                         "prioridade": "alta"
                     })
-            except:
+            except Exception:
                 pass
         
         # Check carta de condução
@@ -512,7 +512,7 @@ async def get_parceiro_alertas(parceiro_id: str, current_user: Dict = Depends(ge
                         "data_vencimento": m["carta_conducao_validade"],
                         "prioridade": "alta"
                     })
-            except:
+            except Exception:
                 pass
     
     # Sort by priority

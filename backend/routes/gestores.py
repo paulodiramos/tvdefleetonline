@@ -228,7 +228,7 @@ async def remover_parceiro_do_gestor(
     )
     
     return {
-        "message": f"Parceiro removido do gestor",
+        "message": "Parceiro removido do gestor",
         "gestor_id": gestor_id,
         "parceiro_id": parceiro_id
     }

@@ -339,7 +339,7 @@ async def get_proximas_despesas(current_user: Dict = Depends(get_current_user)):
                         "valor_estimado": v["insurance"].get("valor", 0),
                         "dias_restantes": (data_validade - today).days
                     })
-            except:
+            except Exception:
                 pass
         
         # Check inspection
@@ -356,7 +356,7 @@ async def get_proximas_despesas(current_user: Dict = Depends(get_current_user)):
                         "valor_estimado": v["inspection"].get("custo", 30),
                         "dias_restantes": (data_inspecao - today).days
                     })
-            except:
+            except Exception:
                 pass
         
         # Check next revision
@@ -373,7 +373,7 @@ async def get_proximas_despesas(current_user: Dict = Depends(get_current_user)):
                         "valor_estimado": v.get("proxima_revisao_valor_previsto", 200),
                         "dias_restantes": (data_revisao - today).days
                     })
-            except:
+            except Exception:
                 pass
         
         # Check extintor
@@ -390,7 +390,7 @@ async def get_proximas_despesas(current_user: Dict = Depends(get_current_user)):
                         "valor_estimado": v["extintor"].get("preco", 50),
                         "dias_restantes": (data_extintor - today).days
                     })
-            except:
+            except Exception:
                 pass
     
     # Sort by date
