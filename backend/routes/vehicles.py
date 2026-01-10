@@ -1652,7 +1652,7 @@ async def upload_extintor_document(
     current_user: Dict = Depends(get_current_user)
 ):
     """Upload fire extinguisher certificate"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     extintor_docs_dir = UPLOAD_DIR / "extintor_docs"
