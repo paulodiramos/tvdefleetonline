@@ -146,17 +146,28 @@ const FichaVeiculo = ({ user, onLogout }) => {
     valor_acumulado: '',
     valor_falta_cobrar: '',
     custo_slot: '',
-    // Financiamento/Prestações do Veículo
-    tem_financiamento: false,
-    valor_aquisicao_veiculo: '',
+    // Investimento/Aquisição do Veículo (para ROI)
+    tem_investimento: false,
+    tipo_aquisicao: 'compra', // 'compra', 'credito', 'leasing'
+    // Valores de Compra
+    valor_aquisicao: '',
+    valor_aquisicao_com_iva: true,
+    iva_aquisicao: '23',
+    // Crédito/Leasing
     valor_entrada: '',
+    valor_entrada_com_iva: false,
     valor_prestacao: '',
+    valor_prestacao_com_iva: false, // false para crédito, true para leasing
     numero_prestacoes: '',
     prestacoes_pagas: '',
     data_inicio_financiamento: '',
     data_fim_financiamento: '',
     entidade_financiadora: '',
     taxa_juro: '',
+    valor_residual: '', // Para leasing
+    // Totais calculados
+    total_juros: '',
+    total_pago: '',
     categorias_uber: {
       green: false,
       comfort: false,
