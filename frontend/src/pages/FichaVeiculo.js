@@ -874,6 +874,10 @@ const FichaVeiculo = ({ user, onLogout }) => {
         km_realizada: parseInt(novaManutencao.km_realizada) || 0,
         valor: parseFloat(novaManutencao.valor) || 0,
         fornecedor: novaManutencao.fornecedor,
+        responsavel: novaManutencao.responsavel || 'parceiro',
+        atribuir_motorista: novaManutencao.atribuir_motorista || false,
+        motorista_id: novaManutencao.atribuir_motorista ? vehicle.motorista_atribuido : null,
+        motorista_nome: novaManutencao.atribuir_motorista ? vehicle.motorista_atribuido_nome : null,
         created_at: new Date().toISOString()
       };
 
@@ -890,11 +894,16 @@ const FichaVeiculo = ({ user, onLogout }) => {
       // Também adicionar aos custos do veículo para o ROI
       if (manutencaoData.valor > 0) {
         await axios.post(`${API}/vehicles/${vehicleId}/custos`, {
-          categoria: 'revisao',
+          categoria: novaManutencao.tipo_manutencao === 'Troca de Pneus' ? 'pneus' : 
+                    novaManutencao.tipo_manutencao === 'Chapa e Pintura' ? 'reparacao' :
+                    ['Multa', 'Dano'].includes(novaManutencao.tipo_manutencao) ? 'multa' : 'revisao',
           descricao: `${manutencaoData.tipo_manutencao}: ${manutencaoData.descricao || 'Sem descrição'}`,
           valor: manutencaoData.valor,
           data: manutencaoData.data,
-          fornecedor: manutencaoData.fornecedor
+          fornecedor: manutencaoData.fornecedor,
+          responsavel: manutencaoData.responsavel,
+          atribuir_motorista: manutencaoData.atribuir_motorista,
+          motorista_id: manutencaoData.motorista_id
         }, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -908,7 +917,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
         data: new Date().toISOString().split('T')[0],
         km_realizada: '',
         valor: '',
-        fornecedor: ''
+        fornecedor: '',
+        responsavel: 'parceiro',
+        atribuir_motorista: false
       });
       fetchVehicleData();
     } catch (error) {
