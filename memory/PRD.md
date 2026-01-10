@@ -134,6 +134,11 @@ GET /api/relatorios/parceiro/resumo-semanal     # Resumo com extras
 GET /api/relatorios/parceiro/historico-semanal  # Dados para gráficos
 GET /api/relatorios/gerar-link-whatsapp/{id}    # Link WhatsApp
 POST /api/relatorios/enviar-relatorio/{id}      # Enviar por email
+
+# Gestão de Importações (NEW - Session 4)
+DELETE /api/importacoes/{id}                    # Eliminar importação
+PUT    /api/importacoes/{id}/estado             # Alterar estado
+GET    /api/importacoes/{id}                    # Detalhes de importação
 ```
 
 ### Database Collections
@@ -159,6 +164,14 @@ POST /api/relatorios/enviar-relatorio/{id}      # Enviar por email
     uploaded_by: string,
     uploaded_at: string
   }]
+}
+
+// Import records (in multiple collections) now include:
+{
+  ficheiro_nome: string,      // Used as ID for grouped imports
+  estado: string,             // processado, pendente, erro, revisto
+  estado_atualizado_em: string,
+  estado_atualizado_por: string
 }
 ```
 
