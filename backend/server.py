@@ -17761,20 +17761,42 @@ async def public_contacto(contacto_data: Dict[str, Any]):
         
         if vehicle:
             parceiro_id = vehicle.get("parceiro_id")
-            gestor_id = None
-            
-            # Buscar gestor associado ao parceiro
-            if parceiro_id:
-                parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
-                if parceiro:
-                    gestor_id = parceiro.get("gestor_associado_id")
-            
-            # Criar mensagem interna
             destinatarios = []
+            
             if parceiro_id:
-                destinatarios.append(parceiro_id)
-            if gestor_id:
-                destinatarios.append(gestor_id)
+                # Verificar se parceiro_id existe na colecção de users
+                parceiro_user = await db.users.find_one({"id": parceiro_id, "role": "parceiro"}, {"_id": 0})
+                
+                if parceiro_user:
+                    # parceiro_id é o ID do utilizador
+                    destinatarios.append(parceiro_id)
+                    
+                    # Buscar dados do parceiro na colecção parceiros pelo mesmo ID
+                    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+                    if parceiro and parceiro.get("gestor_associado_id"):
+                        destinatarios.append(parceiro["gestor_associado_id"])
+                else:
+                    # parceiro_id pode ser ID da colecção parceiros
+                    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+                    if parceiro:
+                        # Adicionar o próprio parceiro_id (pode ter user com mesmo ID)
+                        destinatarios.append(parceiro_id)
+                        
+                        # Verificar se existe user associado a este parceiro
+                        parceiro_user = await db.users.find_one({
+                            "$or": [
+                                {"id": parceiro_id},
+                                {"email": parceiro.get("email")}
+                            ],
+                            "role": "parceiro"
+                        }, {"_id": 0})
+                        
+                        if parceiro_user and parceiro_user["id"] not in destinatarios:
+                            destinatarios.append(parceiro_user["id"])
+                        
+                        # Adicionar gestor associado
+                        if parceiro.get("gestor_associado_id"):
+                            destinatarios.append(parceiro["gestor_associado_id"])
             
             # Se não tiver parceiro, enviar para admins
             if not destinatarios:
