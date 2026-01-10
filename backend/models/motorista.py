@@ -92,6 +92,8 @@ class Motorista(BaseModel):
     # Tax & Social
     nif: Optional[str] = None
     numero_seguranca_social: Optional[str] = None
+    seguranca_social: Optional[str] = None  # Alias para UI
+    niss: Optional[str] = None  # Alias para UI
     numero_cartao_utente: Optional[str] = None
     
     # Driving License
