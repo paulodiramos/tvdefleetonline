@@ -1126,16 +1126,16 @@ async def get_historico_importacoes(
         resumo_por_plataforma["bolt"]["ficheiros"] += 1
     
     # ===== VIA VERDE =====
-    # Para Via Verde, filtrar por veículos dos motoristas do parceiro
-    vv_query = {
-        "$or": [
-            {"semana": semana, "ano": ano} if semana and ano else {},
-            {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}
-        ]
-    }
-    vv_query["$or"] = [q for q in vv_query["$or"] if q]
-    if not vv_query["$or"]:
-        vv_query.pop("$or")
+    # Para Via Verde, filtrar por período E por veículos/matrículas do parceiro
+    vv_date_filter = {"$or": [
+        {"semana": semana, "ano": ano} if semana and ano else {},
+        {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}
+    ]}
+    vv_date_filter["$or"] = [q for q in vv_date_filter["$or"] if q]
+    
+    vv_query = {}
+    if vv_date_filter.get("$or"):
+        vv_query = vv_date_filter
     
     # Filter by motorista_id, vehicle_id, or matricula
     if parceiro_motorista_ids or parceiro_veiculo_ids or parceiro_matriculas:
@@ -1146,8 +1146,18 @@ async def get_historico_importacoes(
             vv_filter_conditions.append({"vehicle_id": {"$in": parceiro_veiculo_ids}})
         if parceiro_matriculas:
             vv_filter_conditions.append({"matricula": {"$in": parceiro_matriculas}})
+        
         if vv_filter_conditions:
-            vv_query["$or"] = vv_query.get("$or", []) + vv_filter_conditions if vv_query.get("$or") else vv_filter_conditions
+            # Combine date filter AND parceiro filter
+            if vv_query:
+                vv_query = {
+                    "$and": [
+                        vv_query,
+                        {"$or": vv_filter_conditions}
+                    ]
+                }
+            else:
+                vv_query = {"$or": vv_filter_conditions}
     
     vv_records = await db.portagens_viaverde.find(vv_query, {"_id": 0}).to_list(5000)
     
