@@ -1,5 +1,18 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-11 - Session 6 - Foto de Perfil & Refatoração)
+### Session Updates:
+- **IMPLEMENTED**: Funcionalidade de Foto de Perfil do Motorista (P1)
+  - Endpoint `POST /api/motoristas/{id}/foto` - Upload com processamento de imagem
+  - Endpoint `GET /api/motoristas/{id}/foto` - Visualização da foto
+  - Endpoint `DELETE /api/motoristas/{id}/foto` - Eliminar foto
+  - Processamento automático: redimensionamento 300x300, crop quadrado, JPEG otimizado
+- **REFACTORED**: Backend - Criados novos ficheiros de rotas:
+  - `routes/sincronizacao.py` (599 linhas) - Sincronização e credenciais de plataformas
+  - `routes/public.py` (211 linhas) - Endpoints públicos (veículos, contacto, parceiros)
+- **UPDATED**: `routes/__init__.py` - Total de 23 routers exportados
+- **TESTED**: Foto de perfil funciona via curl e frontend
+
 ## Changelog (2026-01-10 - Session 5c - Fixes Adicionais)
 ### Session Updates:
 - **BUG FIX**: Campo `disponivel_para_aluguer` adicionado ao modelo Vehicle
