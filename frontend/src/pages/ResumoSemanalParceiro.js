@@ -181,6 +181,57 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     }
   };
 
+  const handleDownloadMotoristaPdf = async (motoristaId, motoristaNome) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}/pdf?semana=${semana}&ano=${ano}`,
+        { headers: { Authorization: `Bearer ${token}` }, responseType: 'blob' }
+      );
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `relatorio_${motoristaNome.replace(/\s+/g, '_')}_S${semana}_${ano}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast.success(`PDF de ${motoristaNome} descarregado!`);
+    } catch (error) {
+      toast.error('Erro ao descarregar PDF');
+    }
+  };
+
+  const handleWhatsApp = async (motoristaId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}/whatsapp?semana=${semana}&ano=${ano}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      window.open(response.data.whatsapp_link, '_blank');
+    } catch (error) {
+      toast.error('Erro ao gerar link WhatsApp');
+    }
+  };
+
+  const handleEmail = async (motoristaId, motoristaNome) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}/email`,
+        { semana, ano },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.success) {
+        toast.success(`Email enviado para ${motoristaNome}!`);
+      } else {
+        toast.error(response.data.message || 'Erro ao enviar email');
+      }
+    } catch (error) {
+      toast.error('Erro ao enviar email');
+    }
+  };
+
   if (loading) {
     return (
       <Layout user={user} onLogout={onLogout}>
