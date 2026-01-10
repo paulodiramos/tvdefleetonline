@@ -329,6 +329,77 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
         </div>
       )}
 
+      {/* Modal de opções de PDF */}
+      {showPdfOptions && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-sm mx-4">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <FileDown className="w-4 h-4" />
+                Opções do PDF
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs text-slate-500">Selecione o que incluir no relatório:</p>
+              
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={pdfOptions.mostrar_matricula}
+                  onChange={(e) => setPdfOptions({...pdfOptions, mostrar_matricula: e.target.checked})}
+                  className="rounded"
+                />
+                <span>Mostrar matrícula do veículo</span>
+              </label>
+              
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={pdfOptions.mostrar_via_verde}
+                  onChange={(e) => setPdfOptions({...pdfOptions, mostrar_via_verde: e.target.checked})}
+                  className="rounded"
+                />
+                <span>Lista de transações Via Verde</span>
+              </label>
+              
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={pdfOptions.mostrar_abastecimentos}
+                  onChange={(e) => setPdfOptions({...pdfOptions, mostrar_abastecimentos: e.target.checked})}
+                  className="rounded"
+                />
+                <span>Lista de abastecimentos</span>
+              </label>
+              
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  checked={pdfOptions.mostrar_carregamentos}
+                  onChange={(e) => setPdfOptions({...pdfOptions, mostrar_carregamentos: e.target.checked})}
+                  className="rounded"
+                />
+                <span>Lista de carregamentos elétricos</span>
+              </label>
+              
+              <div className="flex gap-2 justify-end pt-2">
+                <Button size="sm" variant="outline" onClick={() => setShowPdfOptions(null)}>Cancelar</Button>
+                <Button 
+                  size="sm" 
+                  onClick={() => {
+                    const m = motoristas.find(x => x.motorista_id === showPdfOptions);
+                    if (m) handleDownloadMotoristaPdf(showPdfOptions, m.motorista_nome);
+                  }}
+                >
+                  <Download className="w-3 h-3 mr-1" />
+                  Gerar PDF
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Cards de Resumo */}
       <div className="grid grid-cols-3 gap-3">
         <Card className="border-l-2 border-l-green-500">
