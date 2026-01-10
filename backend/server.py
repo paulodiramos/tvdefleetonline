@@ -17582,13 +17582,23 @@ async def importar_ganhos_bolt(
         erros = []
         total_ganhos = 0.0
         
-        # Extrair período do nome do ficheiro (ex: 2025W45)
+        # Extrair período do nome do ficheiro (ex: 2025W45) ou dos parâmetros
         periodo_match = re.search(r'(\d{4})W(\d{2})', file.filename)
         periodo_ano = None
         periodo_semana = None
         if periodo_match:
             periodo_ano = periodo_match.group(1)
             periodo_semana = periodo_match.group(2)
+        elif periodo_inicio:
+            # Calcular semana a partir da data de início
+            try:
+                data_inicio = datetime.strptime(periodo_inicio, "%Y-%m-%d")
+                iso_cal = data_inicio.isocalendar()
+                periodo_ano = iso_cal[0]
+                periodo_semana = iso_cal[1]
+                logger.info(f"Período calculado a partir de {periodo_inicio}: {periodo_ano}W{periodo_semana}")
+            except ValueError:
+                logger.warning(f"Não foi possível calcular período a partir de: {periodo_inicio}")
         
         for row_num, row in enumerate(csv_reader, start=2):
             try:
