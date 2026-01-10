@@ -2556,3 +2556,34 @@ async def delete_contrato_veiculo(
         raise HTTPException(status_code=404, detail="Contract not found")
     
     return {"message": "Contrato eliminado com sucesso"}
+
+
+@router.put("/{vehicle_id}/contratos/{contrato_id}")
+async def update_contrato_veiculo(
+    vehicle_id: str,
+    contrato_id: str,
+    data: Dict[str, Any],
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Atualizar assinaturas de um contrato do veículo
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Campos permitidos para atualização
+    allowed_fields = ["assinado_motorista", "assinado_parceiro", "assinado_gestor"]
+    update_data = {f"contratos.$.{k}": v for k, v in data.items() if k in allowed_fields}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+    
+    result = await db.vehicles.update_one(
+        {"id": vehicle_id, "contratos.id": contrato_id},
+        {"$set": update_data}
+    )
+    
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Contract not found")
+    
+    return {"message": "Contrato atualizado com sucesso"}
