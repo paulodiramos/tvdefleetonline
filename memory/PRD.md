@@ -248,11 +248,11 @@ GET    /api/importacoes/{id}                    # Detalhes de importação
 - [ ] Configurar SENDGRID_API_KEY para ativar envio de emails
 
 ### P1 - Alta Prioridade
-- [ ] Implementar foto de perfil do motorista (pendente de sessões anteriores)
-- [x] ~~Refatoração Backend~~ - Iniciada! Novos ficheiros criados
+- [x] ~~Implementar foto de perfil do motorista~~ - COMPLETO (Session 6)
+- [x] ~~Refatoração Backend~~ - Em progresso (23 routers criados)
 
 ### P2 - Média Prioridade
-- [ ] Continuar refatoração: mover mais endpoints do `server.py` para ficheiros dedicados (ainda restam ~21.000 linhas)
+- [ ] Continuar refatoração: mover mais endpoints do `server.py` para ficheiros dedicados (ainda restam ~22.000 linhas)
 - [ ] Implementar sincronização automática (RPA)
 - [ ] Dashboard de ROI com cálculos automáticos usando dados de investimento
 
