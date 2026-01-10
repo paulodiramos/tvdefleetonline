@@ -374,20 +374,45 @@ async def aprovar_todos_documentos(
     motorista_id: str,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Approve all motorista documents"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+    """Approve all motorista documents and set status to ativo"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     motorista = await db.motoristas.find_one({"id": motorista_id})
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista not found")
     
-    # Update all document statuses
-    update_docs = {}
-    for doc_key in ["documento_identificacao_status", "licenca_tvde_status", "registo_criminal_status"]:
-        update_docs[doc_key] = "aprovado"
+    # Check if parceiro is assigned
+    if current_user["role"] == UserRole.PARCEIRO:
+        if motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
     
-    await db.motoristas.update_one({"id": motorista_id}, {"$set": update_docs})
+    # Update all document statuses and set motorista as ativo
+    update_data = {
+        "documento_identificacao_status": "aprovado",
+        "licenca_tvde_status": "aprovado",
+        "registo_criminal_status": "aprovado",
+        "documentos_aprovados": True,
+        "status_motorista": "ativo",  # IMPORTANTE: Mudar status para ativo
+        "approved": True,
+        "approved_at": datetime.now(timezone.utc).isoformat(),
+        "approved_by": current_user["id"]
+    }
+    
+    # Update document validations
+    documents_validacao = motorista.get("documents_validacao", {})
+    for doc_type in motorista.get("documents", {}).keys():
+        if motorista.get("documents", {}).get(doc_type):
+            documents_validacao[doc_type] = {
+                "validado": True,
+                "validado_por": current_user.get("name", "Admin"),
+                "validado_em": datetime.now(timezone.utc).isoformat(),
+                "observacoes": "Aprovação em lote"
+            }
+    
+    update_data["documents_validacao"] = documents_validacao
+    
+    await db.motoristas.update_one({"id": motorista_id}, {"$set": update_data})
     
     return {"message": "All documents approved successfully"}
 
