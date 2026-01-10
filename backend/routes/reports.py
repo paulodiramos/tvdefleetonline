@@ -319,7 +319,6 @@ async def get_proximas_despesas(current_user: Dict = Depends(get_current_user)):
     vehicles = await db.vehicles.find(query, {"_id": 0}).to_list(1000)
     
     today = date.today()
-    proximos_30_dias = today + timedelta(days=30)
     proximos_90_dias = today + timedelta(days=90)
     
     despesas_proximas = []
