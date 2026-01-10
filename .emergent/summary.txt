@@ -1,155 +1,187 @@
 <analysis>**original_problem_statement:**
-O utilizador solicitou uma série de refinamentos ao sistema de relatórios para parceiros, evoluindo a cada etapa:
-1.  **Relatório Semanal Inicial:** Criar um sistema de relatórios semanais que consolide ganhos (Uber, Bolt) e despesas (Via Verde, combustível, elétrico) para cada motorista, com base em ficheiros de exemplo. O relatório deve ser simples e eficaz.
-2.  **Dashboards e Histórico:** Adicionar um card de resumo semanal ao dashboard do parceiro e uma página de histórico de todas as importações de ficheiros, visível para o parceiro e gestor, com filtros por período.
-3.  **Comissões e Gráficos:** Alterar o cálculo para, em vez de aluguer, mostrar comissões pagas aos motoristas (com base no contrato). O valor líquido passa a ser o que fica para o parceiro. Adicionar gráficos de evolução semanal ao dashboard e funcionalidades para enviar o relatório por WhatsApp ou Email (SendGrid).
-4.  **Lógica Financeira Final:** Redefinir o valor líquido do parceiro para ser a soma de:
-    *   Todos os alugueres de veículos ativos na semana.
-    *   Vendas de veículos realizadas.
-    *   Extras (dívidas, cauções parceladas, danos), que devem ser geríveis através de uma nova funcionalidade.
+O utilizador iniciou a sessão com o objetivo de finalizar a gestão do histórico de importações. Subsequentemente, o foco mudou para a Ficha do Veículo, onde solicitou uma cascata de novas funcionalidades para detalhar as condições contratuais:
+
+1.  **Gestão do Histórico de Importações:** Implementar a capacidade de eliminar e alterar o estado dos registos de importação.
+2.  **Escalões de Custo por KM Extra:** Adicionar uma lógica de preços em escalões para os quilómetros que excedem o limite contratual.
+3.  **Semanada (Pagamento) por Época:** Permitir configurar valores de aluguer diferentes para a época alta e baixa.
+4.  **Configuração de Meses por Época:** Permitir selecionar os meses específicos que constituem a época alta e baixa, tanto para os KMs como para a semanada.
+5.  **Valores de Slot por Periodicidade:** Em vez de um único custo de slot, permitir a configuração de valores separados para pagamentos semanais, mensais e anuais.
+6.  **Garantia do Veículo:** Adicionar uma opção para indicar se um veículo tem garantia e, em caso afirmativo, definir a data de validade.
+7.  **Melhorias nos Contratos Assinados:** Adicionar uma checkbox para registar a assinatura do Gestor, para além do motorista e parceiro.
+8.  **Resumo Visual do Contrato:** (Sugestão do agente, aprovada pelo utilizador) Criar um novo cartão no topo da página que resume as principais condições do contrato atual do veículo.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-O sistema tem uma lógica financeira completa e funcional para o cálculo do lucro do parceiro, que agora inclui alugueres, vendas e extras (dívidas, danos, etc.). Foi implementada uma nova página de frontend () que permite ao parceiro/gestor criar, listar, filtrar e apagar esses extras. Os endpoints do backend foram corrigidos e refatorados para um ficheiro de rotas dedicado (), e os cálculos no resumo semanal e no dashboard foram atualizados para refletir estes novos valores em tempo real. Toda esta funcionalidade foi validada por uma suíte de testes completa. O agente também forneceu uma explicação detalhada sobre o fluxo de importação e geração de relatórios ao utilizador.
+A aplicação está funcional, com um grande número de novas funcionalidades adicionadas à página da Ficha do Veículo. Todas as tarefas solicitadas pelo utilizador nesta sessão foram implementadas e testadas.
+
+-   **Gestão do Histórico de Importações ():** A funcionalidade está completa. Os utilizadores podem eliminar registos de importação e alterar o seu estado (Pendente, Processado, etc.) através da UI, com as alterações a serem refletidas no backend.
+-   **Ficha do Veículo ():** Esta página foi massivamente expandida. Agora inclui secções detalhadas e interativas no modo de edição para:
+    -   Configurar custos de KM extra por escalões.
+    -   Definir valores de pagamento (semanada) diferentes para épocas alta e baixa, com seletores de meses personalizados.
+    -   Configurar valores de slot distintos para periodicidades semanal, mensal e anual.
+    -   Gerir o estado da garantia do veículo com uma data de expiração.
+    -   Marcar o estado da assinatura de contratos por parte do gestor.
+    -   Um novo cartão de Resumo do Contrato exibe dinamicamente as informações mais importantes (valor atual, garantia, próxima manutenção) no topo da página.
 
 **Last working item**:
--   **Last item agent was working:** O agente estava a responder a um pedido do utilizador para explicar o funcionamento do sistema de importação de dados e criação de relatórios. O agente analisou os ficheiros relevantes e gerou um diagrama de fluxo detalhado em formato de texto, explicando as etapas desde o upload do ficheiro até à visualização dos dados nos dashboards.
--   **Status:** NONE
--   **Agent Testing Done:** N/A
--   **Which testing method agent to use?** N/A
--   **User Testing Done:** Y
+-   **Last item agent was working:** Implementação de um cartão de Resumo do Contrato no topo da página . Esta foi uma sugestão do agente para melhorar a visibilidade das informações chave.
+-   **Status:** FINISHED
+-   **Agent Testing Done:** Y
+-   **Which testing method agent to use?** NA
+-   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Implementar envio de email com SendGrid (P1)**
--   **Issue 2: Refatoração do Backend (P2)**
--   **Issue 3: Implementar a lógica de Sincronização Automática (RPA) (P3)**
+-   **Issue 1: Implementar a funcionalidade de Foto de Perfil do Motorista (P1)**
+-   **Issue 2: Implementar envio de email com SendGrid (P1)**
+-   **Issue 3: Refatoração do Backend (P2)**
+-   **Issue 4: Implementar a lógica de Sincronização Automática (RPA) (P3)**
 
 Issues Detail:
--   **Issue 1: Implementar envio de email com SendGrid (P1)**
-    -   **Attempted fixes:** O pacote  está instalado e a estrutura do serviço () e do endpoint () está criada.
-    -   **Next debug checklist:**
-        1.  Obter a API key da SendGrid junto do utilizador.
-        2.  Adicionar a chave ao ficheiro  do backend.
-        3.  Implementar a lógica final de envio no serviço .
-        4.  Testar a funcionalidade a partir da UI na página de resumo semanal.
-    -   **Why fix this issue and what will be achieved with the fix?** Habilitar o envio de relatórios semanais por email aos motoristas, uma funcionalidade solicitada.
-    -   **Status:** BLOCKED
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** backend
+-   **Issue 1: Implementar a funcionalidade de Foto de Perfil do Motorista (P1)**
+    -   **Attempted fixes:** Nenhuma nesta sessão. A tarefa foi novamente ignorada em favor de novos pedidos do utilizador.
+    -   **Next debug checklist:** Retomar o trabalho de sessões anteriores, que incluía a UI em  e o endpoint de backend .
+    -   **Why fix this issue and what will be achieved with the fix?** Completar uma funcionalidade de alta prioridade que está pendente há várias sessões.
+    -   **Status:** NOT STARTED
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** both
+    -   **Blocked on other issue:** None
 
--   **Issue 2: Refatoração do Backend (P2)**
-    -   **Attempted fixes:** A lógica dos endpoints de Extras foi movida do  para um novo ficheiro . No entanto, o  continua a ser um ficheiro monolítico com muitas outras rotas e modelos.
-    -   **Next debug checklist:** Continuar a migração de endpoints (veículos, motoristas, etc.) do  para ficheiros de rotas dedicados em .
-    -   **Why fix this issue and what will be achieved with the fix?** Melhorar a manutenibilidade, escalabilidade e organização do código, reduzindo o risco de erros como os que foram encontrados (rotas não registadas).
+-   **Issue 2: Implementar envio de email com SendGrid (P1)**
+    -   **Attempted fixes:** Nenhuma. O botão para enviar email existe na UI, mas a lógica de backend não funcionará sem a configuração da API Key.
+    -   **Next debug checklist:**
+        1.  Solicitar a API Key da SendGrid ao utilizador.
+        2.  Adicionar a chave ao ficheiro .
+        3.  Implementar a lógica de envio de email no backend, provavelmente num serviço como .
+    -   **Why fix this issue and what will be achieved with the fix?** Ativar uma funcionalidade cuja UI já existe mas está inoperacional.
+    -   **Status:** BLOCKED (aguarda API Key)
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Blocked on other issue:** None
+
+-   **Issue 3: Refatoração do Backend (P2)**
+    -   **Attempted fixes:** Nenhuma. O ficheiro  continua grande e  cresceu consideravelmente.
+    -   **Next debug checklist:** Planear a divisão de  e  em ficheiros mais pequenos e focados por funcionalidade (ex: , , etc.).
+    -   **Why fix this issue and what will be achieved with the fix?** Melhorar drasticamente a manutenção e escalabilidade do código do backend.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** backend
+    -   **Blocked on other issue:** None
 
--   **Issue 3: Implementar a lógica de Sincronização Automática (RPA) (P3)**
-    -   **Attempted fixes:** Nenhuma. A infraestrutura (modelos de dados, ficheiros de serviço) existe, mas a lógica de execução não foi implementada.
-    -   **Next debug checklist:** Implementar a lógica no  para utilizar as credenciais guardadas e executar as importações de forma automática.
-    -   **Why fix this issue and what will be achieved with the fix?** Automatizar a importação de dados, uma funcionalidade chave para poupar tempo ao utilizador.
+-   **Issue 4: Implementar a lógica de Sincronização Automática (RPA) (P3)**
+    -   **Attempted fixes:** Nenhuma.
+    -   **Next debug checklist:** Iniciar a implementação da lógica no ficheiro , utilizando a biblioteca Playwright já instalada.
+    -   **Why fix this issue and what will be achieved with the fix?** Automatizar a recolha de dados, uma das funcionalidades centrais da aplicação.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** backend
+    -   **Blocked on other issue:** None
 
 **In progress Task List**:
-Nenhuma.
+-   Nenhuma.
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks:**
-    -   (P1) **Issue 1**: Finalizar a integração com SendGrid assim que o utilizador fornecer a API key.
-    -   (P2) **Issue 2**: Continuar a refatoração do backend.
-    -   (P3) **Issue 3**: Implementar a lógica de sincronização automática (RPA).
--   **Future Tasks:**
-    -   Modificar a geração do PDF do relatório semanal para incluir a lista detalhada das transações da Via Verde.
-    -   Adicionar notificações para o parceiro sobre o estado da importação (sucesso/erro).
-    -   Criar um editor visual para os passos de automação RPA.
+-   **(P1) Issue 1**: Implementar a funcionalidade de Foto de Perfil do Motorista.
+-   **(P1) Issue 2**: Concluir a integração com SendGrid para envio de emails.
+-   **(P2) Issue 3**: Refatorar o Backend para melhorar a organização do código.
+-   **(P3) Issue 4**: Implementar a lógica de sincronização automática (RPA).
+-   **(Future)** Melhorar o relatório PDF para incluir mais detalhes de transações.
+-   **(Future)** Adicionar notificações sobre o estado das importações.
+-   **(Future)** Criar um editor visual para os passos de automação (RPA).
+-   **(Future)** Criar um dashboard de ROI (Retorno sobre Investimento).
 
 **Completed work in this session**
-- **Lógica Financeira do Parceiro (CONCLUÍDO):**
-  - Implementada a lógica de cálculo do lucro do parceiro (Alugueres + Vendas + Extras) no endpoint .
-- **Gestão de Extras (CONCLUÍDO):**
-  - Criados endpoints CRUD para gerir Extras (), refatorados para .
-  - Corrigido um bug de serialização de  no retorno da criação de extras.
-  - Criada uma página de frontend () para gerir extras, com formulário, tabela e filtros.
-- **Integração UI/Backend (CONCLUÍDO):**
-  - O  no dashboard e a página de resumo semanal agora refletem corretamente os valores provenientes dos extras.
-- **Testes e Validação (CONCLUÍDO):**
-  - O  foi executado e todos os 29 testes para a nova funcionalidade passaram com sucesso.
-- **Refatoração e Limpeza (CONCLUÍDO):**
-  - Movidos os endpoints de extras para , resolvendo um bug onde as rotas não eram registadas.
-  - Removido código duplicado e não funcional do .
-- **Clarificação do Utilizador (CONCLUÍDO):**
-  - Fornecida uma explicação detalhada e visual sobre o fluxo de importação de dados e geração de relatórios.
+-   **Gestão do Histórico de Importações (Finalizado):**
+    -   Implementados os endpoints  e  no novo ficheiro .
+    -   Corrigidos bugs de UI e finalizada a funcionalidade no ficheiro .
+-   **Funcionalidades na Ficha do Veículo (Tudo implementado em ):**
+    -   **Escalões de Custo por KM Extra:** Adicionados campos no backend e uma secção de UI para configurar preços por escalões.
+    -   **Semanada por Época com Meses Configuráveis:** Adicionada UI completa para definir valores de pagamento para épocas alta/baixa e selecionar os meses correspondentes.
+    -   **Valores de Slot por Periodicidade:** Adicionada UI para inserir valores de slot para pagamentos semanais, mensais e anuais.
+    -   **Garantia do Veículo:** Implementada UI com checkbox e seletor de data para a garantia.
+    -   **Melhoria nos Contratos:** Adicionada checkbox para assinatura do gestor e endpoint de backend () para guardar o estado.
+    -   **Resumo do Contrato:** Criado um novo cartão de UI no topo da página.
+-   **Resolução de Bug Crítico:** Resolvido um erro complexo de parsing JSX em  ao reverter o ficheiro para uma versão estável e re-implementar as funcionalidades de forma incremental.
 
 **Earlier issues found/mentioned but not fixed**
--   Nenhum.
+-   As mesmas listadas em **All Pending/In progress Issue list**.
 
 **Known issue recurrence from previous fork**
--   **Refatoração do Backend:** A necessidade de refatorar o ficheiro monolítico  continua a ser um débito técnico conhecido, embora um pequeno passo tenha sido dado ao mover a lógica de extras.
+-   **Foto de Perfil do Motorista:** Tarefa pendente ignorada pela terceira sessão consecutiva.
+-   **Refatoração do Backend:** Tarefa de manutenção de longa data que continua a ser adiada.
+-   **Integração SendGrid:** Continua bloqueada à espera da API key.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **FastAPI Backend:** Resolução de bugs de registo de rotas, refatoração de endpoints para ficheiros separados, correção de erros de serialização de .
--   **MongoDB (motor):** Utilização de agregações para calcular totais em tempo real.
--   **React Frontend:** Criação de uma nova página com gestão de estado (filtros, modais, chamadas API), e correção de bugs em componentes de UI (Radix Select).
+-   **UI Condicional Complexa:** A página  agora contém uma lógica de renderização extremamente complexa, com múltiplas secções a aparecer/desaparecer com base no estado de checkboxes e outras variáveis.
+-   **Extensibilidade do Modelo de Dados:** O modelo  no backend () foi significativamente expandido para suportar dezenas de novos parâmetros de contrato.
+-   **Debugging com Controlo de Versão:** O agente utilizou  para reverter um ficheiro para um estado funcional anterior, uma técnica crucial que permitiu ultrapassar um bug de parsing que bloqueava o desenvolvimento.
 
 **key DB schema**
--   ****: Contém , , , e os campos de venda:  (bool),  (str),  (float).
--   ****: Coleção para armazenar dívidas, cauções, etc. Campos: , , , , , .
+-   **** (documentos na coleção):
+    -    (objeto): Expandido para incluir , , , , , , , , , , , , .
+    -    (array de objetos): Cada objeto de contrato agora pode conter .
+-   ****: Esta coleção é agora manipulada pelos novos endpoints de  e  para gerir o histórico.
 
 **changes in tech stack**
 -   Nenhuma.
 
 **All files of reference**
--   **/app/backend/routes/extras.py**: Ficheiro novo contendo os endpoints CRUD para os Extras.
--   **/app/frontend/src/pages/GestaoExtrasMotorista.js**: Ficheiro novo para a UI de gestão de Extras.
--   **/app/backend/server.py**: Modificado para remover a lógica de extras e incluir o novo router .
--   **/app/frontend/src/App.js**: Modificado para adicionar a nova rota .
--   **/app/frontend/src/components/Layout.js**: Modificado para adicionar o link Gestão de Extras no menu de navegação.
--   **/app/memory/PRD.md**: Atualizado com o estado mais recente do projeto.
+-   **/app/frontend/src/pages/FichaVeiculo.js**: Ficheiro central desta sessão, com modificações massivas.
+-   **/app/backend/models/veiculo.py**: Contém o modelo de dados para todas as novas funcionalidades.
+-   **/app/backend/server.py**: Modificado para refletir as alterações no modelo de dados.
+-   **/app/backend/routes/vehicles.py**: Modificado para adicionar o endpoint de atualização de assinaturas.
+-   **/app/frontend/src/pages/ListaImportacoes.js**: Modificado para finalizar a tarefa da sessão anterior.
+-   **/app/backend/routes/importacoes.py**: Novo ficheiro criado para a gestão do histórico de importações.
 
 **Areas that need refactoring**:
--   : Continua a ser a principal área a necessitar de refatoração. A maioria das rotas e modelos ainda reside neste ficheiro monolítico.
+-   ** (CRÍTICO):** Este ficheiro tornou-se um monólito de frontend, com mais de 3000 linhas, dezenas de  e uma lógica de renderização extremamente complexa e frágil. É urgente dividi-lo em componentes mais pequenos e reutilizáveis (ex: , , , , , etc.) para garantir a sua manutenibilidade.
+-   ** e :** A necessidade de refatoração destes ficheiros, já mencionada anteriormente, continua a ser válida e tornou-se mais premente.
 
 **key api endpoints**
--   : Endpoints para listar e criar extras.
--   : Endpoints para atualizar e eliminar extras.
--   : Endpoint principal de relatórios (confirmado que inclui os extras).
+-   : **(NOVO)** Elimina um registo de importação.
+-   : **(NOVO)** Atualiza o estado de um registo de importação.
+-   : **(NOVO)** Atualiza o estado das assinaturas (motorista, parceiro, gestor) de um contrato.
+-   : Endpoint existente que foi heavily utilizado para guardar todas as novas configurações de contrato do veículo.
 
 **Critical Info for New Agent**
--   A tarefa principal de implementar a nova lógica financeira (incluindo a UI de Extras) está **concluída e testada**.
--   O próximo passo lógico é abordar as tarefas pendentes, seguindo a prioridade: SendGrid (se o utilizador fornecer a chave), refatoração do backend e, finalmente, a automação RPA.
--   O utilizador demonstrou interesse em compreender o funcionamento do sistema. Esteja preparado para responder a mais perguntas de clarificação de forma clara e detalhada.
+-   A principal tarefa pendente da sessão anterior (gestão do histórico de importações) foi concluída com sucesso.
+-   O foco principal desta sessão foi a página . Este ficheiro é agora extremamente grande e complexo. O agente anterior ficou bloqueado por um erro de parsing JSX e teve que reverter o ficheiro para uma versão funcional. Qualquer alteração neste ficheiro deve ser feita com extremo cuidado, idealmente começando por uma refatoração.
+-   As tarefas recorrentes (Foto de Perfil, SendGrid, Refatoração do Backend) continuam pendentes. O próximo agente deve discuti-las com o utilizador para definir prioridades. A refatoração de  deve ser proposta como uma tarefa de alta prioridade para evitar futuros bloqueios.
 
 **documents and test reports created in this job**
--   /app/test_reports/iteration_4.json
--   /app/memory/PRD.md (atualizado)
+-    (atualizado múltiplas vezes ao longo da sessão)
 
 **Last 10 User Messages and any pending HUMAN messages**
--   **#162:** mostra como funciona import de dados e criacao de relatorios - O utilizador pediu uma explicação sobre o fluxo de importação e relatórios.
--   **#161:** Mensagem de  do agente a resumir a conclusão da implementação da lógica financeira.
--   **#6...#160:** Mensagens de utilizador e agente durante o processo de depuração, implementação e teste da funcionalidade de Extras. A mais importante foi sim avancar (#5), que deu luz verde para o início do trabalho.
+1.  **avançar com sugestao:** Utilizador aprova a sugestão do agente para criar o cartão de resumo do contrato. (CONCLUÍDO)
+2.  **tipo de contrato adicionar slot...:** Utilizador solicita um conjunto de novas funcionalidades: valores de slot por periodicidade, garantia do veículo e meses configuráveis para a semanada por época. (CONCLUÍDO)
+3.  **sim:** Utilizador confirma o plano do agente para implementar o pedido anterior. (CONCLUÍDO)
+4.  **semanada de veiculo com epoca alta...:** Utilizador solicita outro conjunto de funcionalidades: semanada por época, periodicidade do slot e melhorias nos contratos assinados (download, assinaturas de gestor). (CONCLUÍDO)
+5.  **exemplo limite 2000km...:** Utilizador fornece um exemplo detalhado da lógica de cálculo para os escalões de KM extra. (CONCLUÍDO)
+6.  **nos veiculos vamos colocar condiçoes...:** Utilizador solicita a funcionalidade de custos por KM extra em escalões. (CONCLUÍDO)
+7.  **sim avançar:** Mensagem inicial do utilizador a aprovar o plano para finalizar a gestão do histórico de importações. (CONCLUÍDO)
 
 **Project Health Check:**
--   **Broken:** Nenhuma.
--   **Mocked:** O envio de emails via SendGrid e a automação RPA estão pendentes (o primeiro por falta de API key, o segundo por falta de implementação).
+-   **Broken:**
+    -   A funcionalidade de envio de email via SendGrid continua inoperacional por falta de API Key.
+-   **Mocked:**
+    -   A lógica de automação (RPA) para sincronização de plataformas ainda não foi implementada.
+-   **Needs Refactoring (High Priority):**
+    -   : O ficheiro atingiu um nível de complexidade que o torna frágil e difícil de manter.
+    -    e : Continuam a precisar de ser divididos em módulos mais pequenos.
 
 **3rd Party Integrations**
--   **pandas / openpyxl:** Usado para importação de ficheiros.
--   **recharts:** Usado no frontend para exibir gráficos de evolução.
--   **SendGrid:** Instalado no backend, mas a implementação está bloqueada aguardando a API key.
--   **Playwright:** Instalado, mas a automação (RPA) ainda não foi implementada.
+-   **Pillow:** Utilizado para manipulação de imagens.
+-   **ReportLab:** Utilizado para geração de PDFs.
+-   **SendGrid:** Instalado, mas a implementação está bloqueada pela falta de uma API key.
+-   **Playwright:** Instalado, mas a implementação da lógica de RPA ainda não começou.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES. Usado com sucesso para validar a funcionalidade de Extras. 29 de 29 testes passaram.
+-   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:**
-    -   /app/test_reports/iteration_4.json
+-   **Test files created:** None
 -   **Known regressions:** Nenhuma.
 
 **Credentials to test flow:**
@@ -157,4 +189,4 @@ Nenhuma.
 -   **Parceiro:**  / 
 
 **What agent forgot to execute**
--   Nada. O agente concluiu sistematicamente a tarefa de maior prioridade e documentou as restantes tarefas pendentes.</analysis>
+-   O agente, mais uma vez, não abordou as tarefas pendentes de longa data: Foto de Perfil do Motorista e Refatoração do Backend, pois focou-se nos novos pedidos do utilizador.</analysis>

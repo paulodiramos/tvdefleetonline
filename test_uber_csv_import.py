@@ -9,7 +9,7 @@ import json
 import sys
 
 # Backend URL from frontend .env
-BACKEND_URL = "https://fleet-analytics-17.preview.emergentagent.com/api"
+BACKEND_URL = "https://carkm-manager.preview.emergentagent.com/api"
 
 # Admin credentials from review request
 ADMIN_CREDENTIALS = {"email": "admin@tvdefleet.com", "password": "o72ocUHy"}
