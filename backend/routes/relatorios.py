@@ -901,50 +901,44 @@ async def get_resumo_semanal_parceiro(
         
         logger.info(f"  {motorista.get('name')}: Elétrico query returned {len(elet_records)} records, total €{eletrico_total:.2f}")
         
+        # ============ EXTRAS DO MOTORISTA ============
+        # Buscar extras (dívidas, caução parcelada, danos, etc.)
+        extras_total = 0.0
+        extras_query = {
+            "motorista_id": motorista_id,
+            "pago": False,  # Apenas não pagos
+            "$or": [
+                {"semana": semana, "ano": ano},
+                {"data": {"$gte": data_inicio, "$lte": data_fim}}
+            ]
+        }
+        extras_records = await db.extras_motorista.find(extras_query, {"_id": 0}).to_list(100)
+        for r in extras_records:
+            extras_total += float(r.get("valor") or 0)
+        
+        logger.info(f"  {motorista.get('name')}: Extras query returned {len(extras_records)} records, total €{extras_total:.2f}")
+        
         # ============ OBTER DADOS DO CONTRATO ============
-        # Obter configuração de comissão do contrato do veículo
-        comissao_motorista = 0.0
-        tipo_comissao = None
-        valor_comissao_config = 0
+        tipo_contrato_veiculo = None
         
         if veiculo:
-            tipo_contrato = veiculo.get("tipo_contrato") or {}
             tipo_contrato_veiculo = veiculo.get("tipo_contrato_veiculo", "aluguer")
-            
-            # Verificar tipo de contrato
-            if tipo_contrato_veiculo == "comissao" or tipo_contrato.get("tipo") == "comissao":
-                # Contrato por comissão - motorista recebe % dos ganhos
-                comissao_percentagem = tipo_contrato.get("comissao_motorista") or 70  # Default 70% para motorista
-                tipo_comissao = "percentagem"
-                valor_comissao_config = comissao_percentagem
-                comissao_motorista = total_ganhos * (comissao_percentagem / 100)
-            elif tipo_contrato.get("comissao_motorista"):
-                # Comissão definida no contrato (pode ser % ou valor fixo)
-                comissao_val = tipo_contrato.get("comissao_motorista")
-                if comissao_val <= 100:  # Assume que valores <= 100 são percentagens
-                    tipo_comissao = "percentagem"
-                    valor_comissao_config = comissao_val
-                    comissao_motorista = total_ganhos * (comissao_val / 100)
-                else:
-                    tipo_comissao = "valor_fixo"
-                    valor_comissao_config = comissao_val
-                    comissao_motorista = comissao_val
-            else:
-                # Contrato de aluguer - motorista fica com ganhos - despesas - aluguer
-                tipo_comissao = "aluguer"
-                valor_comissao_config = aluguer_semanal
-                # Neste caso, o "valor do motorista" é o que sobra após despesas e aluguer
-                comissao_motorista = max(0, total_ganhos - (combustivel_total + eletrico_total + via_verde_total + aluguer_semanal))
         
         # ============ CALCULAR TOTAIS ============
         total_ganhos = ganhos_uber + ganhos_bolt
         total_despesas_operacionais = combustivel_total + eletrico_total + via_verde_total
         
-        # Líquido do motorista (o que o motorista recebe)
-        valor_liquido_motorista = comissao_motorista
+        # RECEITAS DO PARCEIRO:
+        # 1. Aluguer semanal (se contrato de aluguer)
+        # 2. Extras cobrados ao motorista (dívidas, caução, danos)
+        receita_aluguer = aluguer_semanal if tipo_contrato_veiculo == "aluguer" else 0
+        receita_extras = extras_total
         
-        # Líquido do parceiro (o que fica para o parceiro)
-        valor_liquido_parceiro = total_ganhos - total_despesas_operacionais - comissao_motorista
+        # Total receitas do parceiro por este motorista
+        receitas_parceiro = receita_aluguer + receita_extras
+        
+        # Líquido do motorista = Ganhos - Despesas - Aluguer - Extras
+        valor_liquido_motorista = total_ganhos - total_despesas_operacionais - receita_aluguer - receita_extras
         
         motorista_resumo = {
             "motorista_id": motorista_id,
@@ -956,7 +950,7 @@ async def get_resumo_semanal_parceiro(
             "tem_relatorio": True if (ganhos_uber > 0 or ganhos_bolt > 0) else False,
             "relatorio_id": None,
             "status": "calculado",
-            # Ganhos
+            # Ganhos do Motorista
             "ganhos_uber": round(ganhos_uber, 2),
             "ganhos_bolt": round(ganhos_bolt, 2),
             "total_ganhos": round(total_ganhos, 2),
@@ -966,8 +960,12 @@ async def get_resumo_semanal_parceiro(
             "via_verde": round(via_verde_total, 2),
             "via_verde_semana_referencia": f"Semana {semana}/{ano}",
             "total_despesas_operacionais": round(total_despesas_operacionais, 2),
-            # Contrato e Comissão
-            "tipo_contrato": tipo_contrato_veiculo if veiculo else None,
+            # Receitas do Parceiro
+            "aluguer_veiculo": round(receita_aluguer, 2),
+            "extras": round(receita_extras, 2),
+            "receitas_parceiro": round(receitas_parceiro, 2),
+            # Contrato
+            "tipo_contrato": tipo_contrato_veiculo,
             "tipo_comissao": tipo_comissao,
             "valor_comissao_config": valor_comissao_config,
             "comissao_motorista": round(comissao_motorista, 2),
