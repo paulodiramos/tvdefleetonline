@@ -947,3 +947,154 @@ async def delete_documento_motorista(
     
     raise HTTPException(status_code=404, detail="Documento não encontrado")
 
+
+
+# ==================== FOTO DE PERFIL ====================
+
+@router.post("/motoristas/{motorista_id}/foto")
+async def upload_foto_motorista(
+    motorista_id: str,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Upload da foto de perfil do motorista"""
+    from PIL import Image
+    from io import BytesIO
+    
+    # Verificar permissões
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        # Motorista só pode atualizar a própria foto
+        if current_user["role"] != UserRole.MOTORISTA or current_user["id"] != motorista_id:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Verificar permissão do parceiro
+    if current_user["role"] == UserRole.PARCEIRO:
+        if motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Validar tipo de ficheiro
+    allowed_types = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+    if file.content_type not in allowed_types:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Tipo de ficheiro não suportado. Use: {', '.join(allowed_types)}"
+        )
+    
+    # Criar diretório para fotos do motorista
+    fotos_dir = MOTORISTAS_UPLOAD_DIR / motorista_id / "foto"
+    fotos_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Ler e processar a imagem
+    file_content = await file.read()
+    
+    try:
+        # Abrir imagem com Pillow
+        image = Image.open(BytesIO(file_content))
+        
+        # Converter para RGB se necessário
+        if image.mode in ('RGBA', 'LA', 'P'):
+            background = Image.new('RGB', image.size, (255, 255, 255))
+            if image.mode == 'P':
+                image = image.convert('RGBA')
+            if image.mode in ('RGBA', 'LA'):
+                background.paste(image, mask=image.split()[-1])
+            image = background
+        elif image.mode != 'RGB':
+            image = image.convert('RGB')
+        
+        # Redimensionar para tamanho máximo (mantendo proporção)
+        max_size = (500, 500)
+        image.thumbnail(max_size, Image.Resampling.LANCZOS)
+        
+        # Criar imagem quadrada (crop centralizado)
+        width, height = image.size
+        min_dim = min(width, height)
+        left = (width - min_dim) // 2
+        top = (height - min_dim) // 2
+        right = left + min_dim
+        bottom = top + min_dim
+        image = image.crop((left, top, right, bottom))
+        
+        # Redimensionar para tamanho final
+        image = image.resize((300, 300), Image.Resampling.LANCZOS)
+        
+        # Gerar nome único para o ficheiro
+        filename = f"foto_{uuid.uuid4()}.jpg"
+        file_path = fotos_dir / filename
+        
+        # Guardar imagem otimizada
+        image.save(str(file_path), 'JPEG', quality=85, optimize=True)
+        
+        logger.info(f"Foto de perfil processada e guardada: {file_path}")
+        
+    except Exception as e:
+        logger.error(f"Erro ao processar imagem: {e}")
+        raise HTTPException(status_code=400, detail="Erro ao processar a imagem")
+    
+    # Caminho relativo para guardar na DB
+    relative_path = str(file_path.relative_to(ROOT_DIR))
+    
+    # Eliminar foto anterior se existir
+    old_foto = motorista.get("foto_url")
+    if old_foto:
+        old_path = ROOT_DIR / old_foto
+        if old_path.exists():
+            try:
+                old_path.unlink()
+                logger.info(f"Foto anterior eliminada: {old_path}")
+            except Exception as e:
+                logger.warning(f"Não foi possível eliminar foto anterior: {e}")
+    
+    # Atualizar motorista com o caminho da nova foto
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        {"$set": {
+            "foto_url": relative_path,
+            "foto_updated_at": datetime.now(timezone.utc).isoformat(),
+            "foto_updated_by": current_user["id"]
+        }}
+    )
+    
+    logger.info(f"Foto de perfil atualizada para motorista {motorista_id}: {relative_path}")
+    
+    return {
+        "message": "Foto atualizada com sucesso",
+        "url": relative_path
+    }
+
+
+@router.delete("/motoristas/{motorista_id}/foto")
+async def delete_foto_motorista(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Eliminar foto de perfil do motorista"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    foto_url = motorista.get("foto_url")
+    if not foto_url:
+        raise HTTPException(status_code=404, detail="Motorista não tem foto de perfil")
+    
+    # Eliminar ficheiro físico
+    file_path = ROOT_DIR / foto_url
+    if file_path.exists():
+        file_path.unlink()
+        logger.info(f"Foto eliminada: {file_path}")
+    
+    # Remover da base de dados
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        {"$unset": {"foto_url": "", "foto_updated_at": "", "foto_updated_by": ""}}
+    )
+    
+    return {"message": "Foto eliminada com sucesso"}
+
