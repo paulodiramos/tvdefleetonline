@@ -300,6 +300,10 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
               <ChevronRight className="w-3 h-3" />
             </Button>
           </div>
+          <Button size="sm" variant="outline" onClick={() => navigate('/importar-ficheiros')} className="h-7 text-xs">
+            <Upload className="w-3 h-3 mr-1" />
+            Importar
+          </Button>
           <Button size="sm" variant="outline" onClick={handleDownloadPdf} disabled={downloadingPdf} className="h-7 text-xs">
             {downloadingPdf ? <Loader2 className="w-3 h-3 animate-spin" /> : <Download className="w-3 h-3 mr-1" />}
             PDF
