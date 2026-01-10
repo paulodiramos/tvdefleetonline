@@ -1449,6 +1449,89 @@ const FichaVeiculo = ({ user, onLogout }) => {
                 </CardContent>
               </Card>
 
+              {/* Card de DUA - Documento Único Automóvel */}
+              <Card className="mt-4">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    DUA - Documento Único Automóvel
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* DUA Frente */}
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className="text-base font-medium">DUA - Frente</Label>
+                        {vehicle.documento_dua_frente && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownloadDocument(vehicle.documento_dua_frente, 'DUA_Frente')}
+                          >
+                            <Download className="w-4 h-4 mr-1" />
+                            Ver/Download
+                          </Button>
+                        )}
+                      </div>
+                      {canEdit && editMode && (
+                        <Input
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) handleUploadDocument(file, 'dua-frente');
+                          }}
+                          disabled={uploadingDoc}
+                          className="mt-2"
+                        />
+                      )}
+                      <p className="text-xs text-slate-500 mt-1">Formatos: PDF, JPG, PNG</p>
+                      {vehicle.documento_dua_frente && (
+                        <Badge className="mt-2 bg-green-100 text-green-800">
+                          <CheckCircle className="w-3 h-3 mr-1" /> Carregado
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* DUA Verso */}
+                    <div className="border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Label className="text-base font-medium">DUA - Verso</Label>
+                        {vehicle.documento_dua_verso && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDownloadDocument(vehicle.documento_dua_verso, 'DUA_Verso')}
+                          >
+                            <Download className="w-4 h-4 mr-1" />
+                            Ver/Download
+                          </Button>
+                        )}
+                      </div>
+                      {canEdit && editMode && (
+                        <Input
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => {
+                            const file = e.target.files[0];
+                            if (file) handleUploadDocument(file, 'dua-verso');
+                          }}
+                          disabled={uploadingDoc}
+                          className="mt-2"
+                        />
+                      )}
+                      <p className="text-xs text-slate-500 mt-1">Formatos: PDF, JPG, PNG</p>
+                      {vehicle.documento_dua_verso && (
+                        <Badge className="mt-2 bg-green-100 text-green-800">
+                          <CheckCircle className="w-3 h-3 mr-1" /> Carregado
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
               {/* Card de Atribuição - Motorista, Via Verde e Cartões */}
               <Card className="mt-4 border-2 border-blue-200">
                 <CardHeader className="pb-2 bg-blue-50">
