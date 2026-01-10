@@ -224,6 +224,12 @@ function App() {
             }
           />
           <Route
+            path="/motoristas/:motoristaId"
+            element={
+              user ? <FichaMotorista user={user} /> : <Navigate to="/login" />
+            }
+          />
+          <Route
             path="/notificacoes"
             element={
               user ? <Notificacoes user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
