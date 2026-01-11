@@ -1822,6 +1822,9 @@ async def get_motorista_whatsapp_link(
                 if aluguer == 0 and veiculo.get("tipo_contrato"):
                     aluguer = float(veiculo["tipo_contrato"].get("valor_semanal") or 0)
     
+    # Initialize extras (for consistency with other functions)
+    extras = 0.0
+    
     total_ganhos = ganhos_uber + ganhos_bolt
     total_despesas = via_verde + combustivel + eletrico
     liquido = total_ganhos - total_despesas - aluguer - extras
