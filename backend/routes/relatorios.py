@@ -117,13 +117,13 @@ async def gerar_relatorio_semanal(
     # 1. Check ganhos_uber collection (main import collection)
     ganhos_uber_records = await db.ganhos_uber.find(uber_query, {"_id": 0}).to_list(1000)
     for record in ganhos_uber_records:
-        total_ganhos_uber += record.get("pago_total", 0) or record.get("rendimentos_total", 0) or record.get("ganhos", 0) or 0
+        total_ganhos_uber += record.get("rendimentos", 0) or record.get("pago_total", 0) or record.get("rendimentos_total", 0) or record.get("ganhos", 0) or 0
         total_viagens_uber += record.get("viagens", 1)
     
     # 2. Check dados_uber collection (fallback/legacy)
     dados_uber_records = await db.dados_uber.find(uber_query, {"_id": 0}).to_list(1000)
     for record in dados_uber_records:
-        total_ganhos_uber += record.get("pago_total", 0) or record.get("rendimentos_total", 0) or 0
+        total_ganhos_uber += record.get("rendimentos", 0) or record.get("pago_total", 0) or record.get("rendimentos_total", 0) or 0
         total_viagens_uber += record.get("viagens", 1)
     
     # Query dados_bolt from multiple collections
