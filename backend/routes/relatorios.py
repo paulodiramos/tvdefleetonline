@@ -826,41 +826,38 @@ async def get_resumo_semanal_parceiro(
         if motorista_email:
             bolt_query_conditions.append({"email_motorista": motorista_email})
         
-        # Query mais flexível para encontrar registos por semana/ano ou período
-        bolt_query = {
-            "$or": bolt_query_conditions,
-            "$or": [
-                {"semana": semana, "ano": ano},
-                {"periodo_semana": semana, "periodo_ano": ano},
-                {"periodo_inicio": data_inicio},
-                {"$and": [
-                    {"periodo_inicio": {"$gte": data_inicio}},
-                    {"periodo_fim": {"$lte": data_fim}}
-                ]},
-                {"$and": [
-                    {"created_at": {"$gte": data_inicio}},
-                    {"created_at": {"$lte": data_fim + "T23:59:59"}}
-                ]}
-            ]
-        }
-        
-        # Simplificar query para maior compatibilidade
+        # Query para encontrar registos por semana/ano
         bolt_query = {
             "$and": [
                 {"$or": bolt_query_conditions},
                 {"$or": [
                     {"semana": semana, "ano": ano},
-                    {"periodo_inicio": {"$regex": f"^{data_inicio[:7]}"}},  # Mesmo mês
+                    {"periodo_inicio": {"$regex": f"^{data_inicio[:7]}"}},
                     {"periodo_inicio": data_inicio}
                 ]}
             ]
         }
         
+        # Buscar de ganhos_bolt
         bolt_records = await db.ganhos_bolt.find(bolt_query, {"_id": 0}).to_list(100)
         for r in bolt_records:
             ganhos_bolt += float(r.get("ganhos_liquidos") or r.get("ganhos") or r.get("earnings") or 0)
         
-        logger.info(f"  {motorista.get('name')}: Bolt query returned {len(bolt_records)} records, total €{ganhos_bolt:.2f}")
+        # Buscar também de viagens_bolt (coleção alternativa)
+        viagens_bolt_query = {
+            "$and": [
+                {"$or": [{"motorista_id": motorista_id}]},
+                {"semana": semana, "ano": ano}
+            ]
+        }
+        if id_bolt:
+            viagens_bolt_query["$and"][0]["$or"].append({"identificador_motorista_bolt": id_bolt})
+        
+        viagens_bolt_records = await db.viagens_bolt.find(viagens_bolt_query, {"_id": 0}).to_list(100)
+        for r in viagens_bolt_records:
+            ganhos_bolt += float(r.get("ganhos_liquidos") or r.get("total_ganhos") or 0)
+        
+        logger.info(f"  {motorista.get('name')}: Bolt query returned {len(bolt_records)} ganhos + {len(viagens_bolt_records)} viagens, total €{ganhos_bolt:.2f}")
         
         # ============ VIA VERDE ============
         via_verde_total = 0.0
