@@ -2329,6 +2329,8 @@ async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio
                 "nome_motorista": dados["nome"],
                 "periodo_inicio": periodo_inicio,
                 "periodo_fim": periodo_fim,
+                "semana": semana,  # Adicionar semana para queries
+                "ano": ano,        # Adicionar ano para queries
                 "rendimentos": round(dados["rendimentos"], 2),  # Novo campo - rendimentos líquidos
                 "uber_portagens": round(dados["portagens"], 2),  # Novo campo - portagens Uber
                 "total_pago": round(dados["rendimentos"], 2),  # Manter compatibilidade
