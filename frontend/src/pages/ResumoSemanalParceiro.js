@@ -552,6 +552,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                       ) : (
                         <>
                           <td className="p-2 text-right text-green-600">{formatCurrency(m.ganhos_uber)}</td>
+                          <td className="p-2 text-right text-emerald-500 text-[10px]">{formatCurrency(m.uber_portagens || 0)}</td>
                           <td className="p-2 text-right text-green-600">{formatCurrency(m.ganhos_bolt)}</td>
                           <td className="p-2 text-right">
                             <div className="flex flex-col items-end">
