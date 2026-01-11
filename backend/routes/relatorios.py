@@ -1344,20 +1344,31 @@ async def generate_motorista_pdf(
     
     # Buscar dados do motorista
     ganhos_uber = 0.0
+    uber_portagens = 0.0
     uber_records = await db.ganhos_uber.find({
         "motorista_id": motorista_id,
         "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
     }, {"_id": 0}).to_list(100)
     for r in uber_records:
         ganhos_uber += float(r.get("pago_total") or r.get("rendimentos_total") or 0)
+        uber_portagens += float(r.get("uber_portagens") or r.get("portagens") or 0)
     
     ganhos_bolt = 0.0
+    # Buscar em ganhos_bolt
     bolt_records = await db.ganhos_bolt.find({
         "motorista_id": motorista_id,
         "$or": [{"periodo_semana": semana, "periodo_ano": ano}, {"semana": semana, "ano": ano}]
     }, {"_id": 0}).to_list(100)
     for r in bolt_records:
         ganhos_bolt += float(r.get("ganhos_liquidos") or r.get("ganhos") or 0)
+    
+    # Também buscar em viagens_bolt
+    viagens_bolt_records = await db.viagens_bolt.find({
+        "motorista_id": motorista_id,
+        "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
+    }, {"_id": 0}).to_list(100)
+    for r in viagens_bolt_records:
+        ganhos_bolt += float(r.get("ganhos_liquidos") or r.get("ganhos") or r.get("valor_liquido") or 0)
     
     via_verde = 0.0
     vv_records = await db.portagens_viaverde.find({
