@@ -984,7 +984,8 @@ async def get_resumo_semanal_parceiro(
             "veiculo_id": veiculo_id,
             "tem_relatorio": True if (ganhos_uber > 0 or ganhos_bolt > 0) else False,
             "relatorio_id": None,
-            "status": "calculado",
+            "status": "editado_manual" if has_manual_adjustment else "calculado",
+            "tem_ajuste_manual": has_manual_adjustment,
             # Ganhos do Motorista
             "ganhos_uber": round(ganhos_uber, 2),
             "ganhos_bolt": round(ganhos_bolt, 2),
