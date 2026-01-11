@@ -2367,7 +2367,16 @@ async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio
         return {"success": False, "error": str(e)}
 
 async def process_bolt_csv(file_content: bytes, parceiro_id: str, periodo_inicio: str, periodo_fim: str) -> Dict[str, Any]:
-    """Process Bolt CSV file and extract earnings data (for parceiro/operacional)"""
+    """Process Bolt CSV file and extract earnings data (for parceiro/operacional)
+    
+    Colunas importantes do CSV Bolt:
+    - 'Motorista' - Nome do motorista
+    - 'Email' - Email do motorista
+    - 'Identificador do motorista' - ID do motorista na Bolt
+    - 'Identificador individual' - ID individual (alternativo)
+    - 'Ganhos líquidos|€' - Ganhos líquidos
+    - 'Ganhos brutos (total)|€' - Ganhos brutos
+    """
     try:
         # Save original CSV file for audit/backup
         csv_dir = UPLOAD_DIR / "csv" / "bolt"
@@ -2390,84 +2399,160 @@ async def process_bolt_csv(file_content: bytes, parceiro_id: str, periodo_inicio
         
         csv_reader = csv.DictReader(io.StringIO(csv_text), delimiter=delimiter)
         
+        # Log header para debug
+        fieldnames = csv_reader.fieldnames or []
+        logger.info(f"📄 Colunas CSV Bolt: {fieldnames}")
+        
+        # Calcular semana e ano a partir do periodo
+        semana = None
+        ano = None
+        if periodo_inicio:
+            try:
+                dt = datetime.strptime(periodo_inicio, '%Y-%m-%d')
+                semana = dt.isocalendar()[1]
+                ano = dt.year
+            except:
+                pass
+        
         # Process CSV rows (can have multiple motoristas)
         total_registos = 0
         total_ganhos_liquidos = 0
         total_viagens = 0
         motoristas_nao_encontrados = []
-        motoristas_unicos = set()
+        motoristas_processados = {}
+        
+        def parse_float(value):
+            """Parse float from CSV value"""
+            if not value:
+                return 0.0
+            try:
+                return float(str(value).replace(",", ".").replace(" ", "").strip())
+            except:
+                return 0.0
         
         for row in csv_reader:
             nome = row.get("Motorista", "").strip()
             email = row.get("Email", "").strip()
             telefone = row.get("Telemóvel", "").strip()
+            
+            # Tentar ambas as colunas de identificador
             identificador_bolt = row.get("Identificador do motorista", "").strip()
-            ganhos_brutos = float(row.get("Ganhos brutos (total)|€", "0").replace(",", ".") or 0)
-            ganhos_liquidos = float(row.get("Ganhos líquidos|€", "0").replace(",", ".") or 0)
-            viagens = int(row.get("Viagens terminadas", "0") or 0)
+            identificador_individual = row.get("Identificador individual", "").strip()
+            
+            # Usar identificador_individual como primário (conforme pedido do utilizador)
+            id_para_associar = identificador_individual or identificador_bolt
+            
+            ganhos_brutos = parse_float(row.get("Ganhos brutos (total)|€"))
+            ganhos_liquidos = parse_float(row.get("Ganhos líquidos|€"))
+            viagens = 0
+            try:
+                viagens = int(row.get("Viagens terminadas") or 0)
+            except:
+                pass
+            
+            # Extrair portagens da Bolt (se existir)
+            portagens_bolt = parse_float(row.get("Portagens|€"))
             
             if nome:  # Only process if there's a name
-                # Check if motorista exists
-                motorista_key = f"{nome}_{email}_{identificador_bolt}"
-                if motorista_key not in motoristas_unicos:
-                    motoristas_unicos.add(motorista_key)
-                    
-                    # PRIORITY 1: Try to find motorista by Bolt ID (new primary key)
+                motorista_key = f"{nome}_{email}"
+                
+                if motorista_key not in motoristas_processados:
+                    # PRIORITY 1: Try to find motorista by Bolt ID (identificador_individual)
                     motorista = None
-                    if identificador_bolt:
-                        motorista = await db.motoristas.find_one({"identificador_motorista_bolt": identificador_bolt}, {"_id": 0})
+                    if id_para_associar:
+                        motorista = await db.motoristas.find_one(
+                            {"identificador_motorista_bolt": id_para_associar}, 
+                            {"_id": 0, "id": 1, "name": 1}
+                        )
                         if motorista:
-                            logger.info(f"Motorista encontrado pelo ID Bolt: {identificador_bolt}")
+                            logger.info(f"✅ Motorista encontrado pelo ID Bolt: {id_para_associar}")
                     
-                    # PRIORITY 2: Fallback to email search
-                    if not motorista and email:
-                        motorista = await db.motoristas.find_one({"email": email}, {"_id": 0})
+                    # PRIORITY 2: Tentar pelo identificador_bolt se diferente
+                    if not motorista and identificador_bolt and identificador_bolt != id_para_associar:
+                        motorista = await db.motoristas.find_one(
+                            {"identificador_motorista_bolt": identificador_bolt}, 
+                            {"_id": 0, "id": 1, "name": 1}
+                        )
                         if motorista:
-                            logger.info(f"Motorista encontrado pelo email: {email}")
+                            logger.info(f"✅ Motorista encontrado pelo ID Bolt alternativo: {identificador_bolt}")
                     
-                    # PRIORITY 3: Fallback to Bolt-specific email
+                    # PRIORITY 3: Fallback to email search
                     if not motorista and email:
-                        motorista = await db.motoristas.find_one({"email_bolt": email}, {"_id": 0})
+                        motorista = await db.motoristas.find_one(
+                            {"$or": [{"email": email}, {"email_bolt": email}]}, 
+                            {"_id": 0, "id": 1, "name": 1}
+                        )
                         if motorista:
-                            logger.info(f"Motorista encontrado pelo email Bolt: {email}")
+                            logger.info(f"✅ Motorista encontrado pelo email: {email}")
                     
                     # PRIORITY 4: Fallback to name search
                     if not motorista:
-                        motorista = await db.motoristas.find_one({"name": nome}, {"_id": 0})
+                        motorista = await db.motoristas.find_one(
+                            {"name": nome}, 
+                            {"_id": 0, "id": 1, "name": 1}
+                        )
                         if motorista:
-                            logger.info(f"Motorista encontrado pelo nome: {nome}")
+                            logger.info(f"✅ Motorista encontrado pelo nome: {nome}")
+                    
+                    motoristas_processados[motorista_key] = {
+                        "motorista": motorista,
+                        "nome": nome,
+                        "email": email,
+                        "telefone": telefone,
+                        "identificador_bolt": identificador_bolt,
+                        "identificador_individual": identificador_individual,
+                        "ganhos_brutos": 0.0,
+                        "ganhos_liquidos": 0.0,
+                        "viagens": 0,
+                        "portagens": 0.0
+                    }
                     
                     if not motorista:
-                        # Motorista não encontrado
                         motoristas_nao_encontrados.append({
                             "nome": nome,
                             "email": email,
                             "telefone": telefone,
-                            "identificador_bolt": identificador_bolt
+                            "identificador_bolt": identificador_bolt,
+                            "identificador_individual": identificador_individual
                         })
                 
-                # Store in database with motorista_id if found
-                motorista_id = motorista.get("id") if motorista else None
-                ganho = {
-                    "id": str(uuid.uuid4()),
-                    "parceiro_id": parceiro_id,
-                    "motorista_id": motorista_id,
-                    "identificador_motorista_bolt": identificador_bolt,
-                    "email_motorista": email,
-                    "nome_motorista": nome,
-                    "periodo_inicio": periodo_inicio,
-                    "periodo_fim": periodo_fim,
-                    "ganhos_brutos": ganhos_brutos,
-                    "ganhos_liquidos": ganhos_liquidos,
-                    "viagens_terminadas": viagens,
-                    "csv_original": f"uploads/csv/bolt/{csv_filename}",
-                    "created_at": datetime.now(timezone.utc).isoformat()
-                }
-                
-                await db.ganhos_bolt.insert_one(ganho)
+                # Acumular valores por motorista
+                motoristas_processados[motorista_key]["ganhos_brutos"] += ganhos_brutos
+                motoristas_processados[motorista_key]["ganhos_liquidos"] += ganhos_liquidos
+                motoristas_processados[motorista_key]["viagens"] += viagens
+                motoristas_processados[motorista_key]["portagens"] += portagens_bolt
                 total_registos += 1
-                total_ganhos_liquidos += ganhos_liquidos
-                total_viagens += viagens
+        
+        # Gravar dados agrupados por motorista
+        for motorista_key, dados in motoristas_processados.items():
+            motorista = dados["motorista"]
+            motorista_id = motorista.get("id") if motorista else None
+            
+            ganho = {
+                "id": str(uuid.uuid4()),
+                "parceiro_id": parceiro_id,
+                "motorista_id": motorista_id,
+                "identificador_motorista_bolt": dados["identificador_individual"] or dados["identificador_bolt"],
+                "identificador_bolt_alternativo": dados["identificador_bolt"],
+                "email_motorista": dados["email"],
+                "nome_motorista": dados["nome"],
+                "periodo_inicio": periodo_inicio,
+                "periodo_fim": periodo_fim,
+                "semana": semana,
+                "ano": ano,
+                "ganhos_brutos": round(dados["ganhos_brutos"], 2),
+                "ganhos_liquidos": round(dados["ganhos_liquidos"], 2),
+                "portagens_bolt": round(dados["portagens"], 2),
+                "viagens_terminadas": dados["viagens"],
+                "csv_original": f"uploads/csv/bolt/{csv_filename}",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            await db.ganhos_bolt.insert_one(ganho)
+            total_ganhos_liquidos += dados["ganhos_liquidos"]
+            total_viagens += dados["viagens"]
+            
+            logger.info(f"💰 Bolt gravado: {dados['nome']} - €{dados['ganhos_liquidos']:.2f} (motorista_id: {motorista_id})")
         
         return {
             "success": True,
