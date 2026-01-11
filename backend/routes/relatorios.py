@@ -1478,7 +1478,7 @@ async def generate_motorista_pdf(
             else:
                 local = "-"
             
-            valor = float(r.get("liquid_value") or r.get("value") or 0)
+            valor = float(r.get("value") or 0)
             vv_table_data.append([data_str, local, f"€{valor:.2f}"])
         
         # Linha de total
@@ -1671,8 +1671,8 @@ async def get_motorista_whatsapp_link(
     vv_records = await db.portagens_viaverde.find({
         "motorista_id": motorista_id,
         "$or": [{"semana": semana, "ano": ano}, {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}]
-    }, {"_id": 0, "liquid_value": 1}).to_list(1000)
-    via_verde = sum(float(r.get("liquid_value") or 0) for r in vv_records)
+    }, {"_id": 0, "value": 1}).to_list(1000)
+    via_verde = sum(float(r.get("value") or 0) for r in vv_records)
     
     combustivel = 0.0
     comb_records = await db.abastecimentos_combustivel.find({
@@ -1782,10 +1782,10 @@ async def send_motorista_email(
         "$or": [{"periodo_semana": semana, "periodo_ano": ano}, {"semana": semana, "ano": ano}]
     }, {"_id": 0, "ganhos_liquidos": 1}).to_list(100))
     
-    via_verde = sum(float(r.get("liquid_value") or 0) for r in await db.portagens_viaverde.find({
+    via_verde = sum(float(r.get("value") or 0) for r in await db.portagens_viaverde.find({
         "motorista_id": motorista_id,
         "$or": [{"semana": semana, "ano": ano}, {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}]
-    }, {"_id": 0, "liquid_value": 1}).to_list(1000))
+    }, {"_id": 0, "value": 1}).to_list(1000))
     
     combustivel = sum(float(r.get("valor_total") or r.get("valor") or r.get("valor_liquido") or 0) for r in await db.abastecimentos_combustivel.find({
         "motorista_id": motorista_id, "data": {"$gte": data_inicio, "$lte": data_fim}
