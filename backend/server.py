@@ -2221,7 +2221,7 @@ async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio
         motoristas_unicos = set()
         
         for row in csv_reader:
-            uuid_uber = row.get("UUID do motorista", "")
+            uuid_uber = row.get("UUID do motorista", "").strip()
             nome = f"{row.get('Nome próprio do motorista', '')} {row.get('Apelido do motorista', '')}".strip()
             total_pago = float(row.get("Pago a si", "0").replace(",", ".") or 0)
             
@@ -2231,8 +2231,18 @@ async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio
                 if motorista_key not in motoristas_unicos:
                     motoristas_unicos.add(motorista_key)
                     
-                    # Try to find motorista by nome or email
-                    motorista = await db.motoristas.find_one({"name": nome}, {"_id": 0})
+                    # PRIORITY 1: Try to find motorista by UUID (new primary key)
+                    motorista = None
+                    if uuid_uber:
+                        motorista = await db.motoristas.find_one({"uuid_motorista_uber": uuid_uber}, {"_id": 0})
+                        if motorista:
+                            logger.info(f"Motorista encontrado pelo UUID Uber: {uuid_uber}")
+                    
+                    # PRIORITY 2: Fallback to name search
+                    if not motorista:
+                        motorista = await db.motoristas.find_one({"name": nome}, {"_id": 0})
+                        if motorista:
+                            logger.info(f"Motorista encontrado pelo nome: {nome}")
                     
                     if not motorista:
                         # Motorista não encontrado
@@ -2243,10 +2253,12 @@ async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio
                             "telefone": ""
                         })
                 
-                # Store in database
+                # Store in database with motorista_id if found
+                motorista_id = motorista.get("id") if motorista else None
                 ganho = {
                     "id": str(uuid.uuid4()),
                     "parceiro_id": parceiro_id,
+                    "motorista_id": motorista_id,
                     "uuid_motorista_uber": uuid_uber,
                     "nome_motorista": nome,
                     "periodo_inicio": periodo_inicio,
