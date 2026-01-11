@@ -552,7 +552,23 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                         <>
                           <td className="p-2 text-right text-green-600">{formatCurrency(m.ganhos_uber)}</td>
                           <td className="p-2 text-right text-green-600">{formatCurrency(m.ganhos_bolt)}</td>
-                          <td className="p-2 text-right text-red-600">{formatCurrency(m.via_verde)}</td>
+                          <td className="p-2 text-right">
+                            <div className="flex flex-col items-end">
+                              <span className={m.acumular_viaverde ? "text-slate-400 line-through" : "text-red-600"}>
+                                {formatCurrency(m.via_verde_total_importado || m.via_verde || 0)}
+                              </span>
+                              {m.acumular_viaverde && m.viaverde_acumulado > 0 && (
+                                <button 
+                                  onClick={() => openAbaterViaVerde(m)}
+                                  className="text-[10px] text-amber-600 hover:text-amber-800 flex items-center gap-0.5"
+                                  title="Clique para abater do acumulado"
+                                >
+                                  <Wallet className="w-3 h-3" />
+                                  €{(m.viaverde_acumulado || 0).toFixed(0)}
+                                </button>
+                              )}
+                            </div>
+                          </td>
                           <td className="p-2 text-right text-red-600">{formatCurrency(m.combustivel)}</td>
                           <td className="p-2 text-right text-red-600">{formatCurrency(m.carregamento_eletrico)}</td>
                           <td className="p-2 text-right text-blue-600">{formatCurrency(m.aluguer_veiculo)}</td>
