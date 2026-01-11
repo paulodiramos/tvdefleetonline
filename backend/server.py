@@ -12306,6 +12306,18 @@ async def importar_viaverde_excel(
                 await db.portagens_viaverde.insert_one(documento)
                 sucesso += 1
                 
+                # Se o motorista tem acumular_viaverde activo, adicionar ao acumulado
+                if motorista:
+                    config_financeira = motorista.get("config_financeira", {})
+                    if config_financeira.get("acumular_viaverde", False):
+                        # Adicionar valor ao acumulado do motorista
+                        novo_acumulado = config_financeira.get("viaverde_acumulado", 0) + liquid_value
+                        await db.motoristas.update_one(
+                            {"id": motorista["id"]},
+                            {"$set": {"config_financeira.viaverde_acumulado": novo_acumulado}}
+                        )
+                        logger.info(f"💰 Via Verde acumulado: €{liquid_value:.2f} -> Total: €{novo_acumulado:.2f} ({motorista.get('name')})")
+                
             except Exception as e:
                 erros += 1
                 erros_detalhes.append(f"Linha {row_num}: {str(e)}")
