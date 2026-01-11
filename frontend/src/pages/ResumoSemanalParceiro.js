@@ -58,6 +58,8 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     mostrar_carregamentos: false
   });
   const [showPdfOptions, setShowPdfOptions] = useState(null); // motorista_id ou null
+  const [showAbaterViaVerde, setShowAbaterViaVerde] = useState(null); // motorista data ou null
+  const [valorAbater, setValorAbater] = useState(0);
 
   useEffect(() => {
     const now = new Date();
