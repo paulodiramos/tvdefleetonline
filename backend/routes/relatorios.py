@@ -3808,7 +3808,8 @@ async def gerar_link_whatsapp_motorista(
         "motorista_id": motorista_id,
         "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
     }, {"_id": 0}).to_list(100)
-    ganhos_uber = sum(float(r.get("pago_total") or 0) for r in uber_records)
+    ganhos_uber = sum(float(r.get("rendimentos") or r.get("pago_total") or 0) for r in uber_records)
+    uber_portagens = sum(float(r.get("uber_portagens") or 0) for r in uber_records)
     
     bolt_records = await db.ganhos_bolt.find({
         "motorista_id": motorista_id,
@@ -3816,10 +3817,18 @@ async def gerar_link_whatsapp_motorista(
     }, {"_id": 0}).to_list(100)
     ganhos_bolt = sum(float(r.get("ganhos_liquidos") or 0) for r in bolt_records)
     
+    # Também buscar em viagens_bolt
+    viagens_bolt_records = await db.viagens_bolt.find({
+        "motorista_id": motorista_id,
+        "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
+    }, {"_id": 0}).to_list(100)
+    ganhos_bolt += sum(float(r.get("ganhos_liquidos") or r.get("valor_liquido") or 0) for r in viagens_bolt_records)
+    
     motorista_data = {
         "motorista_nome": motorista.get("name"),
         "veiculo_matricula": veiculo.get("matricula") if veiculo else "N/A",
         "ganhos_uber": ganhos_uber,
+        "uber_portagens": uber_portagens,
         "ganhos_bolt": ganhos_bolt,
         "total_ganhos": ganhos_uber + ganhos_bolt,
         "combustivel": 0,
