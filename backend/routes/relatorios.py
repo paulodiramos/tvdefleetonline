@@ -25,6 +25,56 @@ router = APIRouter(prefix="/relatorios", tags=["relatorios"])
 
 db = get_database()
 
+def calcular_aluguer_semanal(veiculo: dict, semana: int, ano: int) -> float:
+    """
+    Calcula o valor do aluguer semanal baseado no tipo de contrato e época.
+    
+    Args:
+        veiculo: Dicionário com dados do veículo
+        semana: Número da semana (1-53)
+        ano: Ano
+    
+    Returns:
+        Valor do aluguer semanal
+    """
+    if not veiculo:
+        return 0.0
+    
+    tipo_contrato = veiculo.get("tipo_contrato", {})
+    if not tipo_contrato:
+        # Fallback para campos no nível raiz do veículo
+        return float(veiculo.get("valor_aluguer_semanal") or veiculo.get("valor_semanal") or 0)
+    
+    # Verificar se é contrato de aluguer
+    tipo = tipo_contrato.get("tipo", "").lower()
+    if tipo == "comissao":
+        return 0.0  # Contrato de comissão não tem aluguer
+    
+    # Obter o mês correspondente à semana
+    from datetime import datetime, timedelta
+    # Calcular a data do início da semana
+    primeiro_dia_ano = datetime(ano, 1, 1)
+    dias_ate_segunda = (7 - primeiro_dia_ano.weekday()) % 7
+    primeira_segunda = primeiro_dia_ano + timedelta(days=dias_ate_segunda)
+    data_semana = primeira_segunda + timedelta(weeks=semana - 1)
+    mes_semana = data_semana.month
+    
+    # Verificar se tem época alta/baixa configurada
+    meses_epoca_alta = tipo_contrato.get("meses_epoca_alta", [])
+    valor_epoca_alta = float(tipo_contrato.get("valor_epoca_alta") or 0)
+    valor_epoca_baixa = float(tipo_contrato.get("valor_epoca_baixa") or 0)
+    valor_padrao = float(tipo_contrato.get("valor_aluguer") or tipo_contrato.get("valor_semanal") or 0)
+    
+    # Se tem configuração de épocas
+    if meses_epoca_alta and (valor_epoca_alta > 0 or valor_epoca_baixa > 0):
+        if mes_semana in meses_epoca_alta:
+            return valor_epoca_alta if valor_epoca_alta > 0 else valor_padrao
+        else:
+            return valor_epoca_baixa if valor_epoca_baixa > 0 else valor_padrao
+    
+    # Fallback para valor padrão
+    return valor_padrao
+
 # Upload directory
 ROOT_DIR = Path(__file__).parent.parent
 UPLOAD_DIR = ROOT_DIR / "uploads"
