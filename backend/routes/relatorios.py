@@ -161,7 +161,11 @@ async def gerar_relatorio_semanal(
             {"email": motorista.get("email")},
             {"uuid_motorista": motorista.get("uuid_motorista_uber")}
         ],
-        "data": {"$gte": data_inicio, "$lte": data_fim}
+        "$or": [
+            {"data": {"$gte": data_inicio, "$lte": data_fim}},
+            {"periodo_inicio": {"$gte": data_inicio, "$lte": data_fim}},
+            {"semana": semana, "ano": ano}
+        ]
     }
     
     # 1. Check ganhos_uber collection (main import collection)
