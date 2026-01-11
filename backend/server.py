@@ -2712,8 +2712,8 @@ async def process_viaverde_excel(file_content: bytes, parceiro_id: str, periodo_
         if movimentos:
             await db.viaverde_movimentos.insert_many(movimentos)
         
-        # Use liquid_value (valor líquido) for totals instead of value
-        total_value = sum(m["liquid_value"] for m in movimentos if m["liquid_value"])
+        # Use value for totals
+        total_value = sum(m["value"] for m in movimentos if m["value"])
         
         return {
             "success": True,
