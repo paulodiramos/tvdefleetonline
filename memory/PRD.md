@@ -1,5 +1,31 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-11 - Session 8 - Credenciais Plataformas)
+
+### Página Credenciais Plataformas REDESENHADA (COMPLETO)
+- **IMPLEMENTED**: Top menu com Layout padrão da aplicação
+- **IMPLEMENTED**: Seta de voltar para navegação intuitiva
+- **IMPLEMENTED**: Sistema de tabs: Plataformas, Combustível, GPS
+- **IMPLEMENTED**: Plataformas fixas:
+  - **Uber**: Email, Telemóvel, Código SMS (1x) - autenticação via SMS
+  - **Bolt**: Email, Password
+  - **Via Verde**: Utilizador, Password
+- **IMPLEMENTED**: Combustíveis variáveis:
+  - Prio Energy (principal) por defeito
+  - Botão "Adicionar Fornecedor" para mais fornecedores
+  - Campos: Email, Password, Nº Cartão (opcional)
+- **IMPLEMENTED**: GPS variáveis:
+  - Verifon (principal) e Radius por defeito
+  - Botão "Adicionar Sistema GPS" para mais sistemas
+  - Campos: Utilizador, Password, API Key (opcional)
+  - Fornecedores não principais podem ser removidos
+- **TESTED**: Screenshots confirmam funcionamento ✅
+
+### Teste PDF Relatório Semanal (PASSADO)
+- **TESTED**: Geração de PDF com novas colunas de detalhe
+- **VERIFIED**: PDF gerado correctamente (HTTP 200, início %PDF-1.4)
+- Colunas adicionadas: Data/Hora, Local (Via Verde), Tempo (Carregamentos)
+
 ## Changelog (2026-01-11 - Session 7 - COMPLETO)
 
 ### Bug Fix: Ganhos Bolt no Resumo Semanal
