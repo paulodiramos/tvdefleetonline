@@ -1,5 +1,19 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-11 - Session 6f - Bug Fixes Importação Elétrico)
+### Session Updates:
+- **BUG FIX**: Carregamentos elétricos eram gravados na colecção errada (`portagens_viaverde`)
+  - Corrigido para gravar em `despesas_combustivel`
+  - Migrados 1498 registos da colecção errada para a correcta
+- **BUG FIX**: Valor do carregamento elétrico não era lido correctamente
+  - Adicionada leitura das colunas TOTAL e TOTAL c/ IVA
+  - Campo `valor_total` agora é correctamente guardado
+  - Adicionados campos `cartao_frota_id` e `valor` para compatibilidade
+- **BUG FIX**: Query de elétrico no resumo não encontrava registos
+  - Adicionada busca por `cartao_frota_id` além de `card_code`
+- **TESTED**: Importação eletrico.xlsx S3/2026 - €301.73 total (20 registos)
+- **TESTED**: Resumo semanal mostra correctamente os valores elétricos
+
 ## Changelog (2026-01-11 - Session 6e - Bug Fixes Resumo & Importação)
 ### Session Updates:
 - **BUG FIX**: Edição manual no resumo semanal não gravava
