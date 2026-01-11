@@ -12420,7 +12420,7 @@ async def importar_viaverde_excel(
                 exit_date = get_value('Exit Date')
                 payment_date = get_value('Payment Date')
                 
-                # Converter datas para formato YYYY-MM-DD
+                # Converter datas para formato YYYY-MM-DD (só data, sem hora)
                 def parse_date(date_val):
                     if isinstance(date_val, datetime):
                         return date_val.strftime('%Y-%m-%d')
@@ -12432,22 +12432,36 @@ async def importar_viaverde_excel(
                             return str(date_val).split()[0] if date_val else None
                     return None
                 
+                # Função para extrair data e hora separadamente
+                def parse_datetime_parts(date_val):
+                    """Retorna (data, hora) de um valor datetime"""
+                    data_part = ""
+                    hora_part = ""
+                    if isinstance(date_val, datetime):
+                        data_part = date_val.strftime('%Y-%m-%d')
+                        hora_part = date_val.strftime('%H:%M')
+                    elif date_val:
+                        date_str = str(date_val).strip()
+                        # Formato esperado: "2026-01-04 23:54:26" ou "2026-01-04"
+                        if " " in date_str:
+                            parts = date_str.split(" ")
+                            data_part = parts[0]
+                            if len(parts) > 1:
+                                hora_part = parts[1][:5] if len(parts[1]) >= 5 else parts[1]
+                        elif "T" in date_str:
+                            parts = date_str.split("T")
+                            data_part = parts[0]
+                            if len(parts) > 1:
+                                hora_part = parts[1][:5] if len(parts[1]) >= 5 else parts[1]
+                        else:
+                            data_part = date_str[:10]
+                    return data_part, hora_part
+                
                 entry_date_formatted = parse_date(entry_date)
                 exit_date_formatted = parse_date(exit_date)
                 
                 # Separar data e hora do exit_date (usado para detalhes)
-                data_detalhe = ""
-                hora_detalhe = ""
-                if exit_date_formatted:
-                    try:
-                        # Formato esperado: "2026-01-04 23:54:26" ou "2026-01-04"
-                        parts = str(exit_date_formatted).split(" ")
-                        if len(parts) >= 1:
-                            data_detalhe = parts[0]  # "2026-01-04"
-                        if len(parts) >= 2:
-                            hora_detalhe = parts[1][:5] if len(parts[1]) >= 5 else parts[1]  # "23:54"
-                    except:
-                        data_detalhe = str(exit_date_formatted)[:10]
+                data_detalhe, hora_detalhe = parse_datetime_parts(exit_date)
                 
                 # Extrair valores
                 value = to_float(get_value('Value'), 0)
