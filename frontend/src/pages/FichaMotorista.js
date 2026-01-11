@@ -293,6 +293,156 @@ const FichaMotorista = ({ user }) => {
     }
   }, [motoristaId]);
 
+  // Funções para Extras/Dívidas
+  const fetchExtras = useCallback(async () => {
+    setExtrasLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/api/motoristas/${motoristaId}/despesas-extras`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setExtras(response.data || []);
+    } catch (error) {
+      console.log('Extras não disponíveis:', error);
+    } finally {
+      setExtrasLoading(false);
+    }
+  }, [motoristaId]);
+
+  const resetExtraForm = () => {
+    setExtraForm({
+      tipo: 'divida',
+      descricao: '',
+      valor: '',
+      semana: '',
+      ano: new Date().getFullYear(),
+      parcelas_total: '',
+      parcela_atual: '',
+      pago: false,
+      observacoes: ''
+    });
+    setEditingExtra(null);
+  };
+
+  const openExtraModal = (extra = null) => {
+    if (extra) {
+      setEditingExtra(extra);
+      setExtraForm({
+        tipo: extra.tipo,
+        descricao: extra.descricao,
+        valor: extra.valor.toString(),
+        semana: extra.semana?.toString() || '',
+        ano: extra.ano || new Date().getFullYear(),
+        parcelas_total: extra.parcelas_total?.toString() || '',
+        parcela_atual: extra.parcela_atual?.toString() || '',
+        pago: extra.pago,
+        observacoes: extra.observacoes || ''
+      });
+    } else {
+      resetExtraForm();
+    }
+    setExtraModalOpen(true);
+  };
+
+  const handleSaveExtra = async () => {
+    if (!extraForm.descricao || !extraForm.valor) {
+      toast.error('Preencha a descrição e o valor');
+      return;
+    }
+
+    setSavingExtra(true);
+    try {
+      const token = localStorage.getItem('token');
+      const payload = {
+        ...extraForm,
+        motorista_id: motoristaId,
+        valor: parseFloat(extraForm.valor),
+        semana: extraForm.semana ? parseInt(extraForm.semana) : null,
+        ano: extraForm.ano ? parseInt(extraForm.ano) : null,
+        parcelas_total: extraForm.parcelas_total ? parseInt(extraForm.parcelas_total) : null,
+        parcela_atual: extraForm.parcela_atual ? parseInt(extraForm.parcela_atual) : null
+      };
+
+      if (editingExtra) {
+        await axios.put(
+          `${API}/api/motoristas/${motoristaId}/despesas-extras/${editingExtra.id}`,
+          payload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success('Extra atualizado com sucesso');
+      } else {
+        await axios.post(
+          `${API}/api/motoristas/${motoristaId}/despesas-extras`,
+          payload,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        toast.success('Extra criado com sucesso');
+      }
+
+      setExtraModalOpen(false);
+      resetExtraForm();
+      fetchExtras();
+    } catch (error) {
+      console.error('Erro ao guardar extra:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao guardar extra');
+    } finally {
+      setSavingExtra(false);
+    }
+  };
+
+  const handleDeleteExtra = async (extraId) => {
+    if (!window.confirm('Tem certeza que deseja eliminar este extra?')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/api/motoristas/${motoristaId}/despesas-extras/${extraId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Extra eliminado');
+      fetchExtras();
+    } catch (error) {
+      console.error('Erro ao eliminar extra:', error);
+      toast.error('Erro ao eliminar extra');
+    }
+  };
+
+  const handleTogglePago = async (extra) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/api/motoristas/${motoristaId}/despesas-extras/${extra.id}`,
+        { ...extra, pago: !extra.pago },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(extra.pago ? 'Marcado como pendente' : 'Marcado como pago');
+      fetchExtras();
+    } catch (error) {
+      toast.error('Erro ao atualizar estado');
+    }
+  };
+
+  const getTipoBadge = (tipo) => {
+    const tipoConfig = TIPOS_EXTRA.find(t => t.value === tipo);
+    if (!tipoConfig) return <Badge variant="secondary">{tipo}</Badge>;
+    return <Badge className={tipoConfig.color}>{tipoConfig.label}</Badge>;
+  };
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-PT', {
+      style: 'currency',
+      currency: 'EUR'
+    }).format(value || 0);
+  };
+
+  const totalExtras = extras.reduce((sum, e) => {
+    if (e.tipo === 'credito') return sum - (e.valor || 0);
+    return sum + (e.valor || 0);
+  }, 0);
+  const totalPendentes = extras.filter(e => !e.pago).reduce((sum, e) => {
+    if (e.tipo === 'credito') return sum - (e.valor || 0);
+    return sum + (e.valor || 0);
+  }, 0);
+
   useEffect(() => {
     if (motoristaId) {
       fetchMotorista();
