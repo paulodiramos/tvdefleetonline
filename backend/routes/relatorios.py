@@ -1906,7 +1906,7 @@ async def delete_motorista_weekly_data(
     })
     deleted_counts["ganhos_uber"] = result.deleted_count
     
-    # Eliminar ganhos Bolt
+    # Eliminar ganhos Bolt (de ganhos_bolt)
     result = await db.ganhos_bolt.delete_many({
         "motorista_id": motorista_id,
         "$or": [
@@ -1915,6 +1915,14 @@ async def delete_motorista_weekly_data(
         ]
     })
     deleted_counts["ganhos_bolt"] = result.deleted_count
+    
+    # Eliminar ganhos Bolt (de viagens_bolt - coleção alternativa)
+    result = await db.viagens_bolt.delete_many({
+        "motorista_id": motorista_id,
+        "semana": semana,
+        "ano": ano
+    })
+    deleted_counts["viagens_bolt"] = result.deleted_count
     
     # Eliminar Via Verde - buscar por motorista_id OU via_verde_id do veículo
     via_verde_query_conditions = [
