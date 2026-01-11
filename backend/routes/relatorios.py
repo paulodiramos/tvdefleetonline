@@ -2151,7 +2151,7 @@ async def delete_motorista_weekly_data(
     deleted_counts["eletrico"] = result.deleted_count
     
     # Eliminar extras
-    result = await db.extras_motorista.delete_many({
+    result = await db.despesas_extras.delete_many({
         "motorista_id": motorista_id,
         "$or": [
             {"semana": semana, "ano": ano},
