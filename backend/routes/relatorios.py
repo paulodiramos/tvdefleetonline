@@ -1589,37 +1589,52 @@ async def generate_motorista_pdf(
         # Colunas: Data, Hora, Posto, Tempo, kWh, Valor
         elet_table_data = [["Data", "Hora", "Posto", "Tempo", "kWh", "Valor"]]
         for r in sorted(elet_records, key=lambda x: x.get("data", x.get("StartDate", ""))):
-            # Separar Data e Hora
-            data_raw = r.get("data", r.get("StartDate", "-"))
-            data_str = "-"
-            hora_str = "-"
-            if data_raw and data_raw != "-":
-                try:
-                    data_raw_str = str(data_raw)
-                    if "T" in data_raw_str:
-                        data_raw_str = data_raw_str.replace("T", " ")
-                    
-                    parts = data_raw_str.split(" ")
-                    if len(parts) >= 1:
-                        date_part = parts[0]
-                        # Formato "YYYY-MM-DD" ou "D/M/YY"
-                        if "-" in date_part:
-                            date_nums = date_part.split("-")
-                            if len(date_nums) == 3:
-                                data_str = f"{date_nums[2]}/{date_nums[1]}/{date_nums[0][2:]}"
-                        elif "/" in date_part:
-                            date_nums = date_part.split("/")
-                            if len(date_nums) >= 2:
-                                data_str = f"{date_nums[0].zfill(2)}/{date_nums[1].zfill(2)}"
+            # Usar campos data_detalhe e hora_detalhe se existirem
+            data_str = r.get("data_detalhe", "")
+            hora_str = r.get("hora_detalhe", r.get("hora", ""))
+            
+            # Fallback: extrair de data se campos não existirem
+            if not data_str:
+                data_raw = r.get("data", r.get("StartDate", "-"))
+                if data_raw and data_raw != "-":
+                    try:
+                        data_raw_str = str(data_raw)
+                        if "T" in data_raw_str:
+                            data_raw_str = data_raw_str.replace("T", " ")
+                        
+                        parts = data_raw_str.split(" ")
+                        if len(parts) >= 1:
+                            date_part = parts[0]
+                            if "-" in date_part:
+                                date_nums = date_part.split("-")
                                 if len(date_nums) == 3:
-                                    data_str += f"/{date_nums[2][-2:]}"
-                        else:
-                            data_str = date_part[:10]
-                    
-                    if len(parts) >= 2:
-                        hora_str = parts[1][:5]
+                                    data_str = f"{date_nums[2]}/{date_nums[1]}/{date_nums[0][2:]}"
+                            elif "/" in date_part:
+                                date_nums = date_part.split("/")
+                                if len(date_nums) >= 2:
+                                    data_str = f"{date_nums[0].zfill(2)}/{date_nums[1].zfill(2)}"
+                                    if len(date_nums) == 3:
+                                        data_str += f"/{date_nums[2][-2:]}"
+                            else:
+                                data_str = date_part[:10]
+                        
+                        if len(parts) >= 2 and not hora_str:
+                            hora_str = parts[1][:5]
+                    except:
+                        data_str = str(data_raw)[:10]
+            else:
+                # Formatar data_detalhe de "2026-01-04" para "04/01/26"
+                try:
+                    date_parts = data_str.split("-")
+                    if len(date_parts) == 3:
+                        data_str = f"{date_parts[2]}/{date_parts[1]}/{date_parts[0][2:]}"
                 except:
-                    data_str = str(data_raw)[:10]
+                    pass
+            
+            if not data_str:
+                data_str = "-"
+            if not hora_str:
+                hora_str = "-"
             
             # Posto/Local/Operador - usar estacao_id que é onde POSTO é guardado
             posto = r.get("estacao_id", r.get("estacao", r.get("posto", r.get("OperatorName", r.get("local", "-")))))
