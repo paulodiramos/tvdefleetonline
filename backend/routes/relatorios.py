@@ -1572,8 +1572,8 @@ async def get_motorista_whatsapp_link(
     combustivel = 0.0
     comb_records = await db.abastecimentos_combustivel.find({
         "motorista_id": motorista_id, "data": {"$gte": data_inicio, "$lte": data_fim}
-    }, {"_id": 0, "valor_liquido": 1}).to_list(100)
-    combustivel = sum(float(r.get("valor_liquido") or 0) for r in comb_records)
+    }, {"_id": 0, "valor_total": 1, "valor": 1, "valor_liquido": 1}).to_list(100)
+    combustivel = sum(float(r.get("valor_total") or r.get("valor") or r.get("valor_liquido") or 0) for r in comb_records)
     
     eletrico = 0.0
     elet_records = await db.despesas_combustivel.find({
