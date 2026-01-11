@@ -760,6 +760,11 @@ async def get_resumo_semanal_parceiro(
         id_bolt = motorista.get("identificador_motorista_bolt", "")
         veiculo_id = motorista.get("veiculo_atribuido")
         
+        # ============ CONFIGURAÇÃO FINANCEIRA DO MOTORISTA ============
+        config_financeira = motorista.get("config_financeira", {})
+        acumular_viaverde = config_financeira.get("acumular_viaverde", False)
+        viaverde_acumulado = config_financeira.get("viaverde_acumulado", 0)
+        
         # Get vehicle info
         veiculo = None
         via_verde_id = None
