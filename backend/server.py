@@ -11726,10 +11726,17 @@ async def importar_carregamentos_excel(
                 posto = str(row.get(col_map.get('posto', 'POSTO'), '') or '').strip()
                 energia = float(row.get(col_map.get('energia', 'ENERGIA'), 0) or 0)
                 duracao = float(row.get(col_map.get('duracao', 'DURAÇÃO'), 0) or 0)
-                custo = float(row.get(col_map.get('custo', 'CUSTO'), 0) or 0)
-                valor_total = float(row.get(col_map.get('valor_total', 'TOTAL c/ IVA'), 0) or 0)
+                custo = float(row.get(col_map.get('custo', 'CUSTO OPC'), 0) or 0)
                 
-                # Se não tem valor total mas tem custo, usar custo
+                # Extrair TOTAL (sem IVA) e TOTAL c/ IVA
+                valor_sem_iva = float(row.get('TOTAL', 0) or 0)
+                valor_total = float(row.get('TOTAL c/ IVA', 0) or row.get(col_map.get('valor_total', 'TOTAL c/ IVA'), 0) or 0)
+                
+                # Usar TOTAL c/ IVA como valor principal, ou TOTAL se não houver
+                if valor_total == 0 and valor_sem_iva > 0:
+                    valor_total = valor_sem_iva
+                
+                # Se ainda não tem valor mas tem custo, usar custo
                 if valor_total == 0 and custo > 0:
                     valor_total = custo
                 
