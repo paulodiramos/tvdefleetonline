@@ -1,6 +1,6 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-11 - Session 7 - IDs Plataformas + Via Verde Acumulado)
+## Changelog (2026-01-11 - Session 7 - IDs Plataformas + Via Verde Acumulado COMPLETO)
 ### Session Updates:
 - **IMPLEMENTED**: Campos de ID de Plataforma para Motoristas (P0)
   - Frontend: Campos `ID Uber (UUID)` e `ID Bolt` na tab "Plataformas"
@@ -17,8 +17,21 @@
     - `viaverde_acumulado` - total acumulado até agora
     - `viaverde_semana_acumulado` - valor acumulado esta semana
   - Corrigida projecção da query de motoristas para incluir `config_financeira`
-- **TESTED**: API IDs plataforma funciona
-- **TESTED**: Via Verde acumulado funciona (descontado=0 quando activo)
+- **IMPLEMENTED**: UI Via Verde Acumulado no Frontend (ResumoSemanalParceiro.js)
+  - Na tabela de motoristas: Via Verde riscado quando está a acumular
+  - Badge clicável mostra valor acumulado total (€151)
+  - Modal "Abater Via Verde Acumulado" com:
+    - Info do motorista e valores
+    - Input para valor a abater
+    - Botões "Abater Tudo" e "Abater 50%"
+    - Botão de confirmação
+- **IMPLEMENTED**: Importação Via Verde adiciona automaticamente ao acumulado
+  - Quando `acumular_viaverde=true`, valor importado vai para `viaverde_acumulado`
+  - Log de cada incremento no acumulado
+- **TESTED**: API IDs plataforma funciona ✅
+- **TESTED**: Via Verde acumulado funciona (descontado=0 quando activo) ✅
+- **TESTED**: Modal de abate Via Verde abre correctamente ✅
+- **TESTED**: Screenshot UI confirmou funcionalidade visual ✅
 
 ## Changelog (2026-01-11 - Session 6g - Bug Fixes Bolt & Combustível)
 ### Session Updates:
