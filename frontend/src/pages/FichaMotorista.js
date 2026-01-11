@@ -1860,6 +1860,277 @@ const FichaMotorista = ({ user }) => {
               </Card>
             )}
           </TabsContent>
+
+          {/* Tab Extras/Dívidas */}
+          <TabsContent value="extras" className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">Extras, Dívidas e Créditos</h2>
+                <p className="text-sm text-slate-500">Gerir valores a debitar ou creditar ao motorista</p>
+              </div>
+              <Button onClick={() => openExtraModal()} data-testid="btn-novo-extra">
+                <Plus className="w-4 h-4 mr-2" /> Novo Extra
+              </Button>
+            </div>
+
+            {/* Resumo Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200">
+                <CardContent className="pt-4 pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-slate-600">Total Registado</div>
+                    <Receipt className="w-4 h-4 text-slate-400" />
+                  </div>
+                  <div className="text-2xl font-bold text-slate-700 mt-1">
+                    {formatCurrency(Math.abs(totalExtras))}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
+                <CardContent className="pt-4 pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-amber-700">Pendente</div>
+                    <AlertCircle className="w-4 h-4 text-amber-500" />
+                  </div>
+                  <div className="text-2xl font-bold text-amber-700 mt-1">
+                    {formatCurrency(Math.abs(totalPendentes))}
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                <CardContent className="pt-4 pb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm text-green-700">Registos</div>
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                  </div>
+                  <div className="text-2xl font-bold text-green-700 mt-1">
+                    {extras.length}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Tabela de Extras */}
+            <Card>
+              <CardContent className="p-0">
+                {extrasLoading ? (
+                  <div className="flex items-center justify-center p-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
+                  </div>
+                ) : extras.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center p-8 text-slate-500">
+                    <Banknote className="w-12 h-12 mb-3 text-slate-300" />
+                    <p className="text-sm">Nenhum extra registado</p>
+                    <Button variant="link" onClick={() => openExtraModal()} className="mt-2">
+                      <Plus className="w-4 h-4 mr-1" /> Adicionar primeiro extra
+                    </Button>
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Descrição</TableHead>
+                        <TableHead className="text-center">Semana</TableHead>
+                        <TableHead className="text-right">Valor</TableHead>
+                        <TableHead className="text-center">Estado</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {extras.map((extra) => (
+                        <TableRow key={extra.id}>
+                          <TableCell>{getTipoBadge(extra.tipo)}</TableCell>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{extra.descricao}</p>
+                              {extra.parcelas_total && (
+                                <p className="text-xs text-slate-500">
+                                  Parcela {extra.parcela_atual || 1}/{extra.parcelas_total}
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {extra.semana && extra.ano ? (
+                              <span className="text-sm">S{extra.semana}/{extra.ano}</span>
+                            ) : (
+                              <span className="text-slate-400">-</span>
+                            )}
+                          </TableCell>
+                          <TableCell className={`text-right font-semibold ${extra.tipo === 'credito' ? 'text-green-600' : 'text-red-600'}`}>
+                            {extra.tipo === 'credito' ? '+' : '-'}{formatCurrency(extra.valor)}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleTogglePago(extra)}
+                              className={extra.pago ? 'text-green-600' : 'text-amber-600'}
+                            >
+                              {extra.pago ? (
+                                <><CheckCircle className="w-4 h-4 mr-1" /> Pago</>
+                              ) : (
+                                <><Clock className="w-4 h-4 mr-1" /> Pendente</>
+                              )}
+                            </Button>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openExtraModal(extra)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-500 hover:text-red-700"
+                                onClick={() => handleDeleteExtra(extra.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Modal de Extra */}
+            <Dialog open={extraModalOpen} onOpenChange={setExtraModalOpen}>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>{editingExtra ? 'Editar Extra' : 'Novo Extra'}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Tipo *</Label>
+                    <Select 
+                      value={extraForm.tipo} 
+                      onValueChange={(v) => setExtraForm(prev => ({ ...prev, tipo: v }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIPOS_EXTRA.map(tipo => (
+                          <SelectItem key={tipo.value} value={tipo.value}>
+                            {tipo.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Descrição *</Label>
+                    <Input
+                      value={extraForm.descricao}
+                      onChange={(e) => setExtraForm(prev => ({ ...prev, descricao: e.target.value }))}
+                      placeholder="Ex: Dano no para-choques traseiro"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>Valor (€) *</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={extraForm.valor}
+                        onChange={(e) => setExtraForm(prev => ({ ...prev, valor: e.target.value }))}
+                        placeholder="0.00"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Semana</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          type="number"
+                          min="1"
+                          max="53"
+                          value={extraForm.semana}
+                          onChange={(e) => setExtraForm(prev => ({ ...prev, semana: e.target.value }))}
+                          placeholder="S"
+                          className="w-16"
+                        />
+                        <Input
+                          type="number"
+                          min="2020"
+                          max="2030"
+                          value={extraForm.ano}
+                          onChange={(e) => setExtraForm(prev => ({ ...prev, ano: e.target.value }))}
+                          placeholder="Ano"
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {(extraForm.tipo === 'caucao_parcelada' || extraForm.tipo === 'divida') && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Total de Parcelas</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={extraForm.parcelas_total}
+                          onChange={(e) => setExtraForm(prev => ({ ...prev, parcelas_total: e.target.value }))}
+                          placeholder="Ex: 4"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Parcela Atual</Label>
+                        <Input
+                          type="number"
+                          min="1"
+                          value={extraForm.parcela_atual}
+                          onChange={(e) => setExtraForm(prev => ({ ...prev, parcela_atual: e.target.value }))}
+                          placeholder="Ex: 1"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <Label>Observações</Label>
+                    <Textarea
+                      value={extraForm.observacoes}
+                      onChange={(e) => setExtraForm(prev => ({ ...prev, observacoes: e.target.value }))}
+                      placeholder="Notas adicionais..."
+                      rows={2}
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Switch
+                      checked={extraForm.pago}
+                      onCheckedChange={(v) => setExtraForm(prev => ({ ...prev, pago: v }))}
+                    />
+                    <Label>Marcar como pago</Label>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setExtraModalOpen(false)}>
+                    Cancelar
+                  </Button>
+                  <Button onClick={handleSaveExtra} disabled={savingExtra}>
+                    {savingExtra ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> A guardar...</>
+                    ) : (
+                      <><Save className="w-4 h-4 mr-2" /> Guardar</>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </TabsContent>
         </Tabs>
       </div>
     </Layout>
