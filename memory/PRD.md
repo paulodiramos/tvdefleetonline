@@ -2,6 +2,12 @@
 
 ## Changelog (2026-01-11 - Session 8 - Credenciais Plataformas)
 
+### Correcção Via Verde - Usar Liquid Value (COMPLETO)
+- **FIXED**: Importação Via Verde agora usa `liquid_value` em vez de `value`
+- **IMPACT**: Total de Via Verde calculado correctamente no resumo
+- **NOTE**: Dados existentes na BD já usam `liquid_value` no cálculo do resumo
+- A próxima importação irá mostrar os valores correctos
+
 ### Coluna Uber Portagens no Resumo Semanal (COMPLETO)
 - **IMPLEMENTED**: Nova coluna "Uber Port." na tabela de motoristas
 - **IMPLEMENTED**: Coluna posicionada entre "Uber" e "Bolt"
