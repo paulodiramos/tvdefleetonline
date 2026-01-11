@@ -1165,6 +1165,21 @@ const FichaMotorista = ({ user }) => {
                     <CardContent className="space-y-4">
                       <div>
                         <Label className="flex items-center gap-2">
+                          <Hash className="w-4 h-4" /> ID Bolt
+                        </Label>
+                        <Input
+                          value={dadosMotorista.identificador_motorista_bolt || ''}
+                          onChange={(e) => setDadosMotorista(prev => ({ ...prev, identificador_motorista_bolt: e.target.value }))}
+                          disabled={!isEditing}
+                          placeholder="ID do motorista na Bolt"
+                          className="font-mono text-sm"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Usado para identificar o motorista nas importações Bolt
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="flex items-center gap-2">
                           <Mail className="w-4 h-4" /> Email Bolt
                         </Label>
                         <Input
