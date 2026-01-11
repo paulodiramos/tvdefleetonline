@@ -542,6 +542,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                       {isEditing ? (
                         <>
                           <td className="p-1"><Input type="number" step="0.01" value={editForm.ganhos_uber} onChange={(e) => setEditForm({...editForm, ganhos_uber: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" /></td>
+                          <td className="p-1"><Input type="number" step="0.01" value={editForm.uber_portagens || 0} onChange={(e) => setEditForm({...editForm, uber_portagens: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" /></td>
                           <td className="p-1"><Input type="number" step="0.01" value={editForm.ganhos_bolt} onChange={(e) => setEditForm({...editForm, ganhos_bolt: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" /></td>
                           <td className="p-1"><Input type="number" step="0.01" value={editForm.via_verde} onChange={(e) => setEditForm({...editForm, via_verde: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" /></td>
                           <td className="p-1"><Input type="number" step="0.01" value={editForm.combustivel} onChange={(e) => setEditForm({...editForm, combustivel: parseFloat(e.target.value) || 0})} className="w-14 h-5 text-xs text-right px-1" /></td>
