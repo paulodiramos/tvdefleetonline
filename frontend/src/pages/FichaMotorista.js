@@ -434,11 +434,12 @@ const FichaMotorista = ({ user }) => {
     }).format(value || 0);
   };
 
-  const totalExtras = extras.reduce((sum, e) => {
+  const extrasArray = Array.isArray(extras) ? extras : [];
+  const totalExtras = extrasArray.reduce((sum, e) => {
     if (e.tipo === 'credito') return sum - (e.valor || 0);
     return sum + (e.valor || 0);
   }, 0);
-  const totalPendentes = extras.filter(e => !e.pago).reduce((sum, e) => {
+  const totalPendentes = extrasArray.filter(e => !e.pago).reduce((sum, e) => {
     if (e.tipo === 'credito') return sum - (e.valor || 0);
     return sum + (e.valor || 0);
   }, 0);
