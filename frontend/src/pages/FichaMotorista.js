@@ -1113,6 +1113,21 @@ const FichaMotorista = ({ user }) => {
                     <CardContent className="space-y-4">
                       <div>
                         <Label className="flex items-center gap-2">
+                          <Hash className="w-4 h-4" /> ID Uber (UUID)
+                        </Label>
+                        <Input
+                          value={dadosMotorista.uuid_uber || ''}
+                          onChange={(e) => setDadosMotorista(prev => ({ ...prev, uuid_uber: e.target.value }))}
+                          disabled={!isEditing}
+                          placeholder="UUID do motorista na Uber"
+                          className="font-mono text-sm"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Usado para identificar o motorista nas importações Uber
+                        </p>
+                      </div>
+                      <div>
+                        <Label className="flex items-center gap-2">
                           <Mail className="w-4 h-4" /> Email Uber
                         </Label>
                         <Input
