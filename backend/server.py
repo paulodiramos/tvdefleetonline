@@ -2320,22 +2320,41 @@ async def process_bolt_csv(file_content: bytes, parceiro_id: str, periodo_inicio
             nome = row.get("Motorista", "").strip()
             email = row.get("Email", "").strip()
             telefone = row.get("Telemóvel", "").strip()
+            identificador_bolt = row.get("Identificador do motorista", "").strip()
             ganhos_brutos = float(row.get("Ganhos brutos (total)|€", "0").replace(",", ".") or 0)
             ganhos_liquidos = float(row.get("Ganhos líquidos|€", "0").replace(",", ".") or 0)
             viagens = int(row.get("Viagens terminadas", "0") or 0)
             
             if nome:  # Only process if there's a name
                 # Check if motorista exists
-                motorista_key = f"{nome}_{email}"
+                motorista_key = f"{nome}_{email}_{identificador_bolt}"
                 if motorista_key not in motoristas_unicos:
                     motoristas_unicos.add(motorista_key)
                     
-                    # Try to find motorista by email or name
+                    # PRIORITY 1: Try to find motorista by Bolt ID (new primary key)
                     motorista = None
-                    if email:
+                    if identificador_bolt:
+                        motorista = await db.motoristas.find_one({"identificador_motorista_bolt": identificador_bolt}, {"_id": 0})
+                        if motorista:
+                            logger.info(f"Motorista encontrado pelo ID Bolt: {identificador_bolt}")
+                    
+                    # PRIORITY 2: Fallback to email search
+                    if not motorista and email:
                         motorista = await db.motoristas.find_one({"email": email}, {"_id": 0})
+                        if motorista:
+                            logger.info(f"Motorista encontrado pelo email: {email}")
+                    
+                    # PRIORITY 3: Fallback to Bolt-specific email
+                    if not motorista and email:
+                        motorista = await db.motoristas.find_one({"email_bolt": email}, {"_id": 0})
+                        if motorista:
+                            logger.info(f"Motorista encontrado pelo email Bolt: {email}")
+                    
+                    # PRIORITY 4: Fallback to name search
                     if not motorista:
                         motorista = await db.motoristas.find_one({"name": nome}, {"_id": 0})
+                        if motorista:
+                            logger.info(f"Motorista encontrado pelo nome: {nome}")
                     
                     if not motorista:
                         # Motorista não encontrado
@@ -2343,13 +2362,16 @@ async def process_bolt_csv(file_content: bytes, parceiro_id: str, periodo_inicio
                             "nome": nome,
                             "email": email,
                             "telefone": telefone,
-                            "identificador_bolt": row.get("Identificador do motorista", "")
+                            "identificador_bolt": identificador_bolt
                         })
                 
-                # Store in database
+                # Store in database with motorista_id if found
+                motorista_id = motorista.get("id") if motorista else None
                 ganho = {
                     "id": str(uuid.uuid4()),
                     "parceiro_id": parceiro_id,
+                    "motorista_id": motorista_id,
+                    "identificador_motorista_bolt": identificador_bolt,
                     "email_motorista": email,
                     "nome_motorista": nome,
                     "periodo_inicio": periodo_inicio,
