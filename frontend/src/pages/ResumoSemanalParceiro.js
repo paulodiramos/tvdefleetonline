@@ -674,6 +674,82 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
       )}
 
       <div className="text-center text-xs text-slate-400">{resumo?.periodo || `Semana ${semana}/${ano}`}</div>
+      
+      {/* Modal para Abater Via Verde Acumulado */}
+      <Dialog open={!!showAbaterViaVerde} onOpenChange={() => setShowAbaterViaVerde(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-amber-600" />
+              Abater Via Verde Acumulado
+            </DialogTitle>
+          </DialogHeader>
+          {showAbaterViaVerde && (
+            <div className="space-y-4">
+              <div className="bg-slate-50 p-3 rounded-lg">
+                <p className="text-sm text-slate-600">Motorista:</p>
+                <p className="font-semibold">{showAbaterViaVerde.motorista_nome}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-amber-50 p-3 rounded-lg">
+                  <p className="text-xs text-amber-600">Acumulado Total</p>
+                  <p className="text-xl font-bold text-amber-700">€{(showAbaterViaVerde.viaverde_acumulado || 0).toFixed(2)}</p>
+                </div>
+                <div className="bg-green-50 p-3 rounded-lg">
+                  <p className="text-xs text-green-600">Via Verde Semana</p>
+                  <p className="text-xl font-bold text-green-700">€{(showAbaterViaVerde.via_verde_total_importado || 0).toFixed(2)}</p>
+                </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-slate-700">Valor a abater (€):</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max={showAbaterViaVerde.viaverde_acumulado || 0}
+                  value={valorAbater}
+                  onChange={(e) => setValorAbater(Math.min(parseFloat(e.target.value) || 0, showAbaterViaVerde.viaverde_acumulado || 0))}
+                  className="mt-1"
+                  data-testid="input-valor-abater"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Este valor será descontado do acumulado e adicionado às despesas desta semana
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setValorAbater(showAbaterViaVerde.viaverde_acumulado || 0)}
+                  className="flex-1"
+                >
+                  Abater Tudo
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => setValorAbater((showAbaterViaVerde.viaverde_acumulado || 0) / 2)}
+                  className="flex-1"
+                >
+                  Abater 50%
+                </Button>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAbaterViaVerde(null)}>Cancelar</Button>
+            <Button 
+              onClick={handleAbaterViaVerde}
+              disabled={valorAbater <= 0}
+              className="bg-amber-600 hover:bg-amber-700"
+              data-testid="btn-confirmar-abater"
+            >
+              <MinusCircle className="w-4 h-4 mr-2" />
+              Abater €{valorAbater.toFixed(2)}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       </div>
     </Layout>
   );
