@@ -2408,14 +2408,23 @@ async def generate_resumo_semanal_pdf(
         aluguer = float(m.get("valor_aluguer_semanal") or 0)
         
         # Extras
-        extras_records = await db.extras_motorista.find({
+        extras_records = await db.despesas_extras.find({
             "motorista_id": motorista_id,
             "$or": [
                 {"semana": semana, "ano": ano},
                 {"data": {"$gte": data_inicio, "$lte": data_fim}}
             ]
         }, {"_id": 0, "valor": 1}).to_list(100)
-        extras = sum(float(r.get("valor") or 0) for r in extras_records)
+        extras = 0.0
+        for r in extras_records:
+            # Só somar extras não pagos ou pendentes
+            if r.get("status", "pendente") != "cancelado":
+                valor_extra = float(r.get("valor") or 0)
+                # Se for crédito, subtrair; se for débito, somar
+                if r.get("tipo") == "credito":
+                    extras -= valor_extra
+                else:
+                    extras += valor_extra
         
         liquido = ganhos_uber + ganhos_bolt - via_verde - combustivel - eletrico - aluguer
         
