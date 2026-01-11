@@ -10995,9 +10995,9 @@ async def gerar_relatorios_em_massa(
                             # Carregamentos elétricos
                             carregamentos_total += float(d.get('valor_total_com_taxas') or 0)
                         else:
-                            # Portagens tradicionais
+                            # Portagens tradicionais - usar value
                             via_verde_total += (
-                                float(d.get('liquid_value') or 0) or
+                                float(d.get('value') or 0) or
                                 float(d.get('valor_total_com_taxas') or 0) or
                                 float(d.get('valor') or 0)
                             )
