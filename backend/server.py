@@ -12221,7 +12221,7 @@ async def importar_viaverde_excel(
                 if vehicle.get('motorista_atribuido'):
                     motorista = await db.motoristas.find_one(
                         {"id": vehicle['motorista_atribuido']},
-                        {"_id": 0}
+                        {"_id": 0, "id": 1, "name": 1, "email": 1, "config_financeira": 1}
                     )
                 
                 # Extrair dados da portagem
