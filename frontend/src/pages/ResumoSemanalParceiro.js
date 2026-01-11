@@ -617,6 +617,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                   <tr className="bg-slate-100 font-bold text-xs">
                     <td className="p-2">TOTAIS</td>
                     <td className="p-2 text-right text-green-700">{formatCurrency(totais.total_ganhos_uber)}</td>
+                    <td className="p-2 text-right text-emerald-600 text-[10px]">{formatCurrency(totais.total_uber_portagens || 0)}</td>
                     <td className="p-2 text-right text-green-700">{formatCurrency(totais.total_ganhos_bolt)}</td>
                     <td className="p-2 text-right text-red-700">{formatCurrency(totais.total_via_verde)}</td>
                     <td className="p-2 text-right text-red-700">{formatCurrency(totais.total_combustivel)}</td>
