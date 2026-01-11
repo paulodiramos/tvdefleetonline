@@ -1682,9 +1682,9 @@ async def send_motorista_email(
         "$or": [{"semana": semana, "ano": ano}, {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}]
     }, {"_id": 0, "liquid_value": 1}).to_list(1000))
     
-    combustivel = sum(float(r.get("valor_liquido") or 0) for r in await db.abastecimentos_combustivel.find({
+    combustivel = sum(float(r.get("valor_total") or r.get("valor") or r.get("valor_liquido") or 0) for r in await db.abastecimentos_combustivel.find({
         "motorista_id": motorista_id, "data": {"$gte": data_inicio, "$lte": data_fim}
-    }, {"_id": 0, "valor_liquido": 1}).to_list(100))
+    }, {"_id": 0, "valor_total": 1, "valor": 1, "valor_liquido": 1}).to_list(100))
     
     eletrico = sum(float(r.get("valor_total") or 0) for r in await db.despesas_combustivel.find({
         "motorista_id": motorista_id,
