@@ -895,6 +895,7 @@ async def get_resumo_semanal_parceiro(
         eletrico_total = 0.0
         elet_query_conditions = [{"motorista_id": motorista_id}]
         if cartao_eletrico:
+            elet_query_conditions.append({"cartao_frota_id": cartao_eletrico})
             elet_query_conditions.append({"card_code": cartao_eletrico})
         if veiculo_id:
             elet_query_conditions.append({"vehicle_id": veiculo_id})
