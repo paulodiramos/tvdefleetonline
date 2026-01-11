@@ -2412,9 +2412,9 @@ async def generate_resumo_semanal_pdf(
             "motorista_id": motorista_id,
             "$or": [
                 {"semana": semana, "ano": ano},
-                {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                {"semana": None}
             ]
-        }, {"_id": 0, "valor": 1}).to_list(100)
+        }, {"_id": 0, "valor": 1, "tipo": 1, "status": 1}).to_list(100)
         extras = 0.0
         for r in extras_records:
             # Só somar extras não pagos ou pendentes
