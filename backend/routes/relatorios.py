@@ -1350,7 +1350,8 @@ async def generate_motorista_pdf(
         "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
     }, {"_id": 0}).to_list(100)
     for r in uber_records:
-        ganhos_uber += float(r.get("pago_total") or r.get("rendimentos_total") or 0)
+        # Usar 'rendimentos' (campo da nova importação) ou fallback para campos antigos
+        ganhos_uber += float(r.get("rendimentos") or r.get("pago_total") or r.get("rendimentos_total") or 0)
         uber_portagens += float(r.get("uber_portagens") or r.get("portagens") or 0)
     
     ganhos_bolt = 0.0
