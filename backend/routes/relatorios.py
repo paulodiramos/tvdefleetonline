@@ -940,6 +940,25 @@ async def get_resumo_semanal_parceiro(
         if veiculo:
             tipo_contrato_veiculo = veiculo.get("tipo_contrato_veiculo", "aluguer")
         
+        # ============ VERIFICAR AJUSTES MANUAIS ============
+        ajuste_manual = await db.ajustes_semanais.find_one(
+            {"motorista_id": motorista_id, "semana": semana, "ano": ano},
+            {"_id": 0}
+        )
+        
+        has_manual_adjustment = False
+        if ajuste_manual:
+            has_manual_adjustment = True
+            # Substituir valores pelos valores do ajuste manual
+            ganhos_uber = ajuste_manual.get("ganhos_uber", ganhos_uber)
+            ganhos_bolt = ajuste_manual.get("ganhos_bolt", ganhos_bolt)
+            via_verde_total = ajuste_manual.get("via_verde", via_verde_total)
+            combustivel_total = ajuste_manual.get("combustivel", combustivel_total)
+            eletrico_total = ajuste_manual.get("eletrico", eletrico_total)
+            aluguer_semanal = ajuste_manual.get("aluguer", aluguer_semanal)
+            extras_total = ajuste_manual.get("extras", extras_total)
+            logger.info(f"📝 Ajuste manual aplicado para {motorista.get('name')} - S{semana}/{ano}")
+        
         # ============ CALCULAR TOTAIS ============
         total_ganhos = ganhos_uber + ganhos_bolt
         total_despesas_operacionais = combustivel_total + eletrico_total + via_verde_total
