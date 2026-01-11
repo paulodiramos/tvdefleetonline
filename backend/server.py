@@ -2191,7 +2191,14 @@ async def check_feature_access(user: Dict, feature_name: str) -> bool:
 # ==================== CSV PROCESSING UTILITIES ====================
 
 async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio: str, periodo_fim: str) -> Dict[str, Any]:
-    """Process Uber CSV file and extract earnings data (for parceiro/operacional)"""
+    """Process Uber CSV file and extract earnings data (for parceiro/operacional)
+    
+    Colunas importantes do CSV Uber:
+    - 'Pago a si:Os seus rendimentos' - Rendimentos líquidos do motorista
+    - 'Pago a si:Saldo da viagem:Reembolsos:Portagem' - Portagens reembolsadas
+    - 'Pago a si:Saldo da viagem:Impostos:Imposto sobre a tarifa' - Imposto sobre tarifa
+    - 'UUID do motorista' - ID único do motorista na Uber
+    """
     try:
         # Save original CSV file for audit/backup
         csv_dir = UPLOAD_DIR / "csv" / "uber"
@@ -2214,70 +2221,146 @@ async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio
         
         csv_reader = csv.DictReader(io.StringIO(csv_text), delimiter=delimiter)
         
+        # Log header para debug
+        fieldnames = csv_reader.fieldnames or []
+        logger.info(f"📄 Colunas CSV Uber: {fieldnames[:10]}...")
+        
         # Process CSV rows (can have multiple motoristas)
         total_registos = 0
-        total_pago_all = 0
+        total_rendimentos_all = 0
+        total_portagens_all = 0
         motoristas_nao_encontrados = []
-        motoristas_unicos = set()
+        motoristas_processados = {}  # Agrupar por motorista
+        
+        def parse_float(value):
+            """Parse float from CSV value"""
+            if not value:
+                return 0.0
+            try:
+                return float(str(value).replace(",", ".").replace(" ", "").strip())
+            except:
+                return 0.0
         
         for row in csv_reader:
             uuid_uber = row.get("UUID do motorista", "").strip()
             nome = f"{row.get('Nome próprio do motorista', '')} {row.get('Apelido do motorista', '')}".strip()
-            total_pago = float(row.get("Pago a si", "0").replace(",", ".") or 0)
+            
+            # NOVAS COLUNAS - Rendimentos e Portagens
+            # Tentar múltiplas variações do nome da coluna
+            rendimentos = 0.0
+            portagens = 0.0
+            imposto_tarifa = 0.0
+            
+            # Rendimentos - coluna principal
+            for col_name in ['Pago a si:Os seus rendimentos', 'Pago a si', 'Os seus rendimentos', 'Rendimentos']:
+                if col_name in row and row[col_name]:
+                    rendimentos = parse_float(row[col_name])
+                    break
+            
+            # Portagens reembolsadas
+            for col_name in ['Pago a si:Saldo da viagem:Reembolsos:Portagem', 'Reembolsos:Portagem', 'Portagem', 'Portagens']:
+                if col_name in row and row[col_name]:
+                    portagens = parse_float(row[col_name])
+                    break
+            
+            # Imposto sobre tarifa
+            for col_name in ['Pago a si:Saldo da viagem:Impostos:Imposto sobre a tarifa', 'Imposto sobre a tarifa', 'Impostos:Imposto sobre a tarifa']:
+                if col_name in row and row[col_name]:
+                    imposto_tarifa = parse_float(row[col_name])
+                    break
+            
+            # Total de portagens Uber = Portagens + Imposto sobre tarifa
+            uber_portagens = portagens + imposto_tarifa
             
             if nome:  # Only process if there's a name
-                # Check if motorista exists
                 motorista_key = f"{nome}_{uuid_uber}"
-                if motorista_key not in motoristas_unicos:
-                    motoristas_unicos.add(motorista_key)
-                    
+                
+                if motorista_key not in motoristas_processados:
                     # PRIORITY 1: Try to find motorista by UUID (new primary key)
                     motorista = None
                     if uuid_uber:
-                        motorista = await db.motoristas.find_one({"uuid_motorista_uber": uuid_uber}, {"_id": 0})
+                        motorista = await db.motoristas.find_one(
+                            {"uuid_motorista_uber": uuid_uber}, 
+                            {"_id": 0, "id": 1, "name": 1, "config_financeira": 1}
+                        )
                         if motorista:
                             logger.info(f"Motorista encontrado pelo UUID Uber: {uuid_uber}")
                     
                     # PRIORITY 2: Fallback to name search
                     if not motorista:
-                        motorista = await db.motoristas.find_one({"name": nome}, {"_id": 0})
+                        motorista = await db.motoristas.find_one(
+                            {"name": nome}, 
+                            {"_id": 0, "id": 1, "name": 1, "config_financeira": 1}
+                        )
                         if motorista:
                             logger.info(f"Motorista encontrado pelo nome: {nome}")
                     
+                    motoristas_processados[motorista_key] = {
+                        "motorista": motorista,
+                        "nome": nome,
+                        "uuid_uber": uuid_uber,
+                        "rendimentos": 0.0,
+                        "portagens": 0.0
+                    }
+                    
                     if not motorista:
-                        # Motorista não encontrado
                         motoristas_nao_encontrados.append({
                             "nome": nome,
                             "uuid_uber": uuid_uber,
-                            "email": "",  # Uber CSV não tem email
+                            "email": "",
                             "telefone": ""
                         })
                 
-                # Store in database with motorista_id if found
-                motorista_id = motorista.get("id") if motorista else None
-                ganho = {
-                    "id": str(uuid.uuid4()),
-                    "parceiro_id": parceiro_id,
-                    "motorista_id": motorista_id,
-                    "uuid_motorista_uber": uuid_uber,
-                    "nome_motorista": nome,
-                    "periodo_inicio": periodo_inicio,
-                    "periodo_fim": periodo_fim,
-                    "total_pago": total_pago,
-                    "csv_original": f"uploads/csv/uber/{csv_filename}",
-                    "created_at": datetime.now(timezone.utc).isoformat()
-                }
-                
-                await db.ganhos_uber.insert_one(ganho)
+                # Acumular valores por motorista
+                motoristas_processados[motorista_key]["rendimentos"] += rendimentos
+                motoristas_processados[motorista_key]["portagens"] += uber_portagens
                 total_registos += 1
-                total_pago_all += total_pago
+        
+        # Gravar dados agrupados por motorista
+        for motorista_key, dados in motoristas_processados.items():
+            motorista = dados["motorista"]
+            motorista_id = motorista.get("id") if motorista else None
+            
+            ganho = {
+                "id": str(uuid.uuid4()),
+                "parceiro_id": parceiro_id,
+                "motorista_id": motorista_id,
+                "uuid_motorista_uber": dados["uuid_uber"],
+                "nome_motorista": dados["nome"],
+                "periodo_inicio": periodo_inicio,
+                "periodo_fim": periodo_fim,
+                "rendimentos": round(dados["rendimentos"], 2),  # Novo campo - rendimentos líquidos
+                "uber_portagens": round(dados["portagens"], 2),  # Novo campo - portagens Uber
+                "total_pago": round(dados["rendimentos"], 2),  # Manter compatibilidade
+                "csv_original": f"uploads/csv/uber/{csv_filename}",
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            await db.ganhos_uber.insert_one(ganho)
+            total_rendimentos_all += dados["rendimentos"]
+            total_portagens_all += dados["portagens"]
+            
+            # Se motorista tem acumular_viaverde activo, adicionar portagens ao acumulado
+            if motorista and dados["portagens"] > 0:
+                config_financeira = motorista.get("config_financeira", {})
+                if config_financeira.get("acumular_viaverde", False):
+                    novo_acumulado = config_financeira.get("viaverde_acumulado", 0) + dados["portagens"]
+                    await db.motoristas.update_one(
+                        {"id": motorista_id},
+                        {"$set": {"config_financeira.viaverde_acumulado": round(novo_acumulado, 2)}}
+                    )
+                    logger.info(f"💰 Portagens Uber acumuladas: €{dados['portagens']:.2f} -> Total: €{novo_acumulado:.2f} ({dados['nome']})")
         
         return {
             "success": True,
             "registos_importados": total_registos,
-            "total_pago": total_pago_all,
+            "motoristas_processados": len(motoristas_processados),
+            "total_rendimentos": round(total_rendimentos_all, 2),
+            "total_portagens_uber": round(total_portagens_all, 2),
             "periodo": f"{periodo_inicio} a {periodo_fim}",
             "csv_salvo": csv_filename,
+            "motoristas_nao_encontrados": motoristas_nao_encontrados
+        }
             "motoristas_nao_encontrados": motoristas_nao_encontrados
         }
     
