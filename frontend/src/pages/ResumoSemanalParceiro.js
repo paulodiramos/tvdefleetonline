@@ -183,7 +183,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${API}/api/motoristas/${showAbaterViaVerde.motorista_id}/abater-viaverde`,
+        `${API}/api/motoristas/${showAbaterViaVerde.motorista_id}/viaverde-abater`,
         { valor: valorAbater, semana, ano },
         { headers: { Authorization: `Bearer ${token}` } }
       );
