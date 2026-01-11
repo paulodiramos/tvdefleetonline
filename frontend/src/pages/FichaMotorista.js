@@ -798,7 +798,7 @@ const FichaMotorista = ({ user }) => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="dados-pessoais" data-testid="tab-dados-pessoais">
               <User className="w-4 h-4 mr-2" /> Dados Pessoais
             </TabsTrigger>
@@ -813,6 +813,9 @@ const FichaMotorista = ({ user }) => {
             </TabsTrigger>
             <TabsTrigger value="financeiro" data-testid="tab-financeiro">
               <Euro className="w-4 h-4 mr-2" /> Financeiro
+            </TabsTrigger>
+            <TabsTrigger value="extras" data-testid="tab-extras">
+              <Banknote className="w-4 h-4 mr-2" /> Extras
             </TabsTrigger>
           </TabsList>
 
