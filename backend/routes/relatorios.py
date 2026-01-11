@@ -1452,24 +1452,39 @@ async def generate_motorista_pdf(
         
         vv_table_data = [["Data", "Hora", "Local", "Valor"]]
         for r in sorted(vv_records, key=lambda x: x.get("exit_date", x.get("entry_date", ""))):
-            # Data e Hora: usar exit_date (formato "2026-01-04 23:54:26")
-            exit_date = r.get("exit_date", r.get("entry_date", ""))
-            data_str = "-"
-            hora_str = "-"
-            if exit_date:
+            # Usar campos data_detalhe e hora_detalhe se existirem
+            data_str = r.get("data_detalhe", "")
+            hora_str = r.get("hora_detalhe", "")
+            
+            # Fallback: extrair de exit_date se campos não existirem
+            if not data_str:
+                exit_date = r.get("exit_date", r.get("entry_date", ""))
+                if exit_date:
+                    try:
+                        if "T" in str(exit_date):
+                            exit_date = exit_date.replace("T", " ")
+                        parts = str(exit_date).split(" ")
+                        if len(parts) >= 1:
+                            date_parts = parts[0].split("-")
+                            if len(date_parts) == 3:
+                                data_str = f"{date_parts[2]}/{date_parts[1]}/{date_parts[0][2:]}"
+                        if len(parts) >= 2 and not hora_str:
+                            hora_str = parts[1][:5]
+                    except:
+                        data_str = str(exit_date)[:10]
+            else:
+                # Formatar data_detalhe de "2026-01-04" para "04/01/26"
                 try:
-                    if "T" in str(exit_date):
-                        exit_date = exit_date.replace("T", " ")
-                    # Separar data e hora
-                    parts = str(exit_date).split(" ")
-                    if len(parts) >= 1:
-                        date_parts = parts[0].split("-")
-                        if len(date_parts) == 3:
-                            data_str = f"{date_parts[2]}/{date_parts[1]}/{date_parts[0][2:]}"  # "04/01/26"
-                    if len(parts) >= 2:
-                        hora_str = parts[1][:5]  # "23:54"
+                    date_parts = data_str.split("-")
+                    if len(date_parts) == 3:
+                        data_str = f"{date_parts[2]}/{date_parts[1]}/{date_parts[0][2:]}"
                 except:
-                    data_str = str(exit_date)[:10]
+                    pass
+            
+            if not data_str:
+                data_str = "-"
+            if not hora_str:
+                hora_str = "-"
             
             # Local: usar exit_point
             local = r.get("exit_point", r.get("entry_name", r.get("local", "-")))
