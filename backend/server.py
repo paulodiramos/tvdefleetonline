@@ -11992,7 +11992,9 @@ async def importar_carregamentos_excel(
                     "TotalValueWithTaxes": valor_total,  # Campo alternativo
                     "valor": valor_total,  # Campo alternativo
                     "data": data,
+                    "data_detalhe": data,
                     "hora": hora,
+                    "hora_detalhe": hora,
                     "nome_cartao": nome,
                     "descricao_veiculo": descricao,
                     "matricula_ficheiro": matricula_ficheiro,
