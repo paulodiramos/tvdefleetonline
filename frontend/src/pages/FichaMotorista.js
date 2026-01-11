@@ -1905,7 +1905,7 @@ const FichaMotorista = ({ user }) => {
                     <CheckCircle className="w-4 h-4 text-green-500" />
                   </div>
                   <div className="text-2xl font-bold text-green-700 mt-1">
-                    {extras.length}
+                    {extrasArray.length}
                   </div>
                 </CardContent>
               </Card>
@@ -1918,7 +1918,7 @@ const FichaMotorista = ({ user }) => {
                   <div className="flex items-center justify-center p-8">
                     <Loader2 className="w-6 h-6 animate-spin text-blue-500" />
                   </div>
-                ) : extras.length === 0 ? (
+                ) : extrasArray.length === 0 ? (
                   <div className="flex flex-col items-center justify-center p-8 text-slate-500">
                     <Banknote className="w-12 h-12 mb-3 text-slate-300" />
                     <p className="text-sm">Nenhum extra registado</p>
@@ -1939,7 +1939,7 @@ const FichaMotorista = ({ user }) => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {extras.map((extra) => (
+                      {extrasArray.map((extra) => (
                         <TableRow key={extra.id}>
                           <TableCell>{getTipoBadge(extra.tipo)}</TableCell>
                           <TableCell>
