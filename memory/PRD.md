@@ -2,6 +2,13 @@
 
 ## Changelog (2026-01-11 - Session 8 - Credenciais Plataformas)
 
+### Coluna Uber Portagens no Resumo Semanal (COMPLETO)
+- **IMPLEMENTED**: Nova coluna "Uber Port." na tabela de motoristas
+- **IMPLEMENTED**: Coluna posicionada entre "Uber" e "Bolt"
+- **IMPLEMENTED**: Suporte para edição do valor
+- **IMPLEMENTED**: Total na linha de rodapé da tabela
+- **TESTED**: Screenshot confirma funcionamento ✅
+
 ### UI Sistema de Extras na Ficha do Motorista (COMPLETO)
 - **IMPLEMENTED**: Nova tab "Extras" na Ficha do Motorista
 - **IMPLEMENTED**: Cards de resumo (Total Registado, Pendente, Registos)
