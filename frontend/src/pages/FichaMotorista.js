@@ -119,6 +119,33 @@ const FichaMotorista = ({ user }) => {
   // Histórico de Via Verde acumulado
   const [historicoViaVerde, setHistoricoViaVerde] = useState([]);
   
+  // Extras/Dívidas do motorista
+  const [extras, setExtras] = useState([]);
+  const [extrasLoading, setExtrasLoading] = useState(false);
+  const [extraModalOpen, setExtraModalOpen] = useState(false);
+  const [editingExtra, setEditingExtra] = useState(null);
+  const [savingExtra, setSavingExtra] = useState(false);
+  const [extraForm, setExtraForm] = useState({
+    tipo: 'divida',
+    descricao: '',
+    valor: '',
+    semana: '',
+    ano: new Date().getFullYear(),
+    parcelas_total: '',
+    parcela_atual: '',
+    pago: false,
+    observacoes: ''
+  });
+  
+  const TIPOS_EXTRA = [
+    { value: 'divida', label: 'Dívida', color: 'bg-red-100 text-red-700 border-red-300' },
+    { value: 'caucao_parcelada', label: 'Caução Parcelada', color: 'bg-amber-100 text-amber-700 border-amber-300' },
+    { value: 'dano', label: 'Dano no Veículo', color: 'bg-orange-100 text-orange-700 border-orange-300' },
+    { value: 'multa', label: 'Multa', color: 'bg-purple-100 text-purple-700 border-purple-300' },
+    { value: 'credito', label: 'Crédito/Reembolso', color: 'bg-green-100 text-green-700 border-green-300' },
+    { value: 'outro', label: 'Outro', color: 'bg-slate-100 text-slate-700 border-slate-300' }
+  ];
+  
   // Veículo atribuído
   const [veiculo, setVeiculo] = useState(null);
   
