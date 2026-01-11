@@ -12826,9 +12826,9 @@ async def criar_relatorios_rascunho_apos_importacao(
                         # Carregamentos elétricos usam TotalValueWithTaxes
                         carregamentos_total += float(d.get('valor_total_com_taxas') or 0)
                     else:
-                        # Portagens usam liquid_value
+                        # Portagens usam value
                         portagens_viaverde += (
-                            float(d.get('liquid_value') or 0) or
+                            float(d.get('value') or 0) or
                             float(d.get('valor_total_com_taxas') or 0) or
                             float(d.get('valor') or 0)
                         )
