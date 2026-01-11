@@ -171,6 +171,31 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     }
   };
 
+  // Abrir modal para abater Via Verde acumulado
+  const openAbaterViaVerde = (motorista) => {
+    setShowAbaterViaVerde(motorista);
+    setValorAbater(motorista.viaverde_acumulado || 0);
+  };
+
+  // Confirmar abate do Via Verde acumulado
+  const handleAbaterViaVerde = async () => {
+    if (!showAbaterViaVerde) return;
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/api/motoristas/${showAbaterViaVerde.motorista_id}/abater-viaverde`,
+        { valor: valorAbater, semana, ano },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Via Verde abatido: €${valorAbater.toFixed(2)}`);
+      setShowAbaterViaVerde(null);
+      setValorAbater(0);
+      fetchResumo();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao abater Via Verde');
+    }
+  };
+
   const handleDeleteAllWeekData = async () => {
     try {
       const token = localStorage.getItem('token');
