@@ -1,5 +1,21 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-11 - Session 6g - Bug Fixes Bolt & Combustível)
+### Session Updates:
+- **BUG FIX**: Import Bolt não encontrava motoristas
+  - Adicionada busca por email além do identificador Bolt
+  - Se encontra por email, actualiza automaticamente o `identificador_motorista_bolt`
+  - Resultado: 9 motoristas encontrados (antes era só 1)
+- **BUG FIX**: Combustível usava coluna errada (VALOR LÍQUIDO em vez de TOTAL)
+  - Adicionado campo `valor_total` e `valor` à importação
+  - `valor` agora usa TOTAL (com IVA) como valor principal
+- **BUG FIX**: Combustível não aparecia no resumo semanal
+  - Query só procurava por data, mas dados têm semana/ano diferente
+  - Corrigida query para buscar por `data` OU `semana/ano`
+- **TESTED**: Import Bolt - 9 motoristas encontrados
+- **TESTED**: Import Combustível - 9 registos, valores correctos (€339.58 + €262.59 = €602.17)
+- **TESTED**: Resumo S2/2026 mostra combustível correctamente
+
 ## Changelog (2026-01-11 - Session 6f - Bug Fixes Importação Elétrico)
 ### Session Updates:
 - **BUG FIX**: Carregamentos elétricos eram gravados na colecção errada (`portagens_viaverde`)
