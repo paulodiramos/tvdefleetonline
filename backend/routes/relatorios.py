@@ -1324,7 +1324,7 @@ async def generate_motorista_pdf(
         "data": {"$gte": data_inicio, "$lte": data_fim}
     }, {"_id": 0}).to_list(100)
     for r in comb_records:
-        combustivel += float(r.get("valor_liquido") or r.get("total") or 0)
+        combustivel += float(r.get("valor_total") or r.get("valor") or r.get("valor_liquido") or r.get("total") or 0)
     
     eletrico = 0.0
     elet_records = await db.despesas_combustivel.find({
