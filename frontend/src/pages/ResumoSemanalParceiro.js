@@ -24,10 +24,19 @@ import {
   Mail,
   FileDown,
   Upload,
-  Settings
+  Settings,
+  Wallet,
+  MinusCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
