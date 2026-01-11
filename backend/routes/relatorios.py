@@ -2426,7 +2426,7 @@ async def generate_resumo_semanal_pdf(
                 else:
                     extras += valor_extra
         
-        liquido = ganhos_uber + ganhos_bolt - via_verde - combustivel - eletrico - aluguer
+        liquido = ganhos_uber + ganhos_bolt - via_verde - combustivel - eletrico - aluguer - extras
         
         motoristas_data.append({
             "nome": m.get("name", ""),
