@@ -890,7 +890,7 @@ async def get_resumo_semanal_parceiro(
             market_desc = str(r.get("market_description", "")).strip().lower()
             # Se não tem market_description ou é portagens/parques, incluir
             if not market_desc or market_desc in ["portagens", "parques"]:
-                via_verde_total += float(r.get("liquid_value") or r.get("value") or 0)
+                via_verde_total += float(r.get("value") or 0)
         
         logger.info(f"  {motorista.get('name')}: Via Verde query returned {len(vv_records)} records, total €{via_verde_total:.2f}")
         
@@ -1219,8 +1219,8 @@ async def get_historico_semanal_parceiro(
                             {"matricula": {"$in": matriculas}}
                         ]}
                     ]
-                }, {"_id": 0, "liquid_value": 1}).to_list(5000)
-                total_despesas += sum(float(r.get("liquid_value") or 0) for r in vv_records)
+                }, {"_id": 0, "value": 1}).to_list(5000)
+                total_despesas += sum(float(r.get("value") or 0) for r in vv_records)
             
             # Combustível
             if matriculas:
@@ -1350,7 +1350,7 @@ async def generate_motorista_pdf(
         "$or": [{"semana": semana, "ano": ano}, {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}]
     }, {"_id": 0}).to_list(1000)
     for r in vv_records:
-        via_verde += float(r.get("liquid_value") or r.get("value") or 0)
+        via_verde += float(r.get("value") or 0)
     
     combustivel = 0.0
     comb_records = await db.abastecimentos_combustivel.find({
