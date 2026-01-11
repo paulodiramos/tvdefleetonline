@@ -3416,7 +3416,7 @@ async def enviar_relatorio_para_motorista(
             "$or": [{"motorista_id": motorista_id}, {"matricula": matricula}],
             "data": {"$gte": data_inicio, "$lte": data_fim}
         }, {"_id": 0}).to_list(100)
-        combustivel = sum(float(r.get("valor_liquido") or 0) for r in comb_records)
+        combustivel = sum(float(r.get("valor_total") or r.get("valor") or r.get("valor_liquido") or 0) for r in comb_records)
         
         # Elétrico
         elet_records = await db.despesas_combustivel.find({
