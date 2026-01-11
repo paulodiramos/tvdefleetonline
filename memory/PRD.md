@@ -1,5 +1,26 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-11 - Session 7 - IDs Plataformas Uber/Bolt)
+### Session Updates:
+- **IMPLEMENTED**: Campos de ID de Plataforma para Motoristas (P0)
+  - Frontend: Campos `ID Uber (UUID)` e `ID Bolt` na tab "Plataformas" em `FichaMotorista.js`
+  - Backend: Modelo Pydantic `Motorista` já tinha os campos `uuid_motorista_uber` e `identificador_motorista_bolt`
+  - Endpoint `PUT /api/motoristas/{id}` aceita e persiste os novos campos
+  - Adicionado ícone `Hash` aos imports do lucide-react
+- **UPDATED**: Lógica de importação Uber (`process_uber_csv` em `server.py`)
+  - Prioridade 1: Pesquisa por `uuid_motorista_uber`
+  - Prioridade 2: Fallback para pesquisa por nome
+  - Guarda `motorista_id` quando encontra correspondência
+- **UPDATED**: Lógica de importação Bolt (`process_bolt_csv` em `server.py`)
+  - Prioridade 1: Pesquisa por `identificador_motorista_bolt`
+  - Prioridade 2: Fallback para email principal
+  - Prioridade 3: Fallback para email_bolt
+  - Prioridade 4: Fallback para nome
+  - Guarda `motorista_id` quando encontra correspondência
+- **TESTED**: API aceita e retorna os novos campos correctamente
+- **TESTED**: UI mostra e permite editar os IDs nas plataformas
+- **TESTED**: Gravação funciona com mensagem "Dados guardados com sucesso!"
+
 ## Changelog (2026-01-11 - Session 6g - Bug Fixes Bolt & Combustível)
 ### Session Updates:
 - **BUG FIX**: Import Bolt não encontrava motoristas
