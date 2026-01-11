@@ -974,7 +974,10 @@ async def get_resumo_semanal_parceiro(
         
         # ============ CALCULAR TOTAIS ============
         total_ganhos = ganhos_uber + ganhos_bolt
-        total_despesas_operacionais = combustivel_total + eletrico_total + via_verde_total
+        
+        # Se acumular_viaverde está activo, Via Verde vai para o acumulado (não desconta)
+        via_verde_a_descontar = 0.0 if acumular_viaverde else via_verde_total
+        total_despesas_operacionais = combustivel_total + eletrico_total + via_verde_a_descontar
         
         # RECEITAS DO PARCEIRO:
         # 1. Aluguer semanal (se contrato de aluguer)
