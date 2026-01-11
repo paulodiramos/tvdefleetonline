@@ -1,6 +1,6 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-11 - Session 7 - IDs Plataformas Uber/Bolt)
+## Changelog (2026-01-11 - Session 7 - IDs Plataformas Uber/Bolt + Correções P1)
 ### Session Updates:
 - **IMPLEMENTED**: Campos de ID de Plataforma para Motoristas (P0)
   - Frontend: Campos `ID Uber (UUID)` e `ID Bolt` na tab "Plataformas" em `FichaMotorista.js`
@@ -17,9 +17,16 @@
   - Prioridade 3: Fallback para email_bolt
   - Prioridade 4: Fallback para nome
   - Guarda `motorista_id` quando encontra correspondência
-- **TESTED**: API aceita e retorna os novos campos correctamente
-- **TESTED**: UI mostra e permite editar os IDs nas plataformas
-- **TESTED**: Gravação funciona com mensagem "Dados guardados com sucesso!"
+- **BUG FIX**: Correção do campo de combustível em múltiplos endpoints
+  - Alterado de `valor_liquido` para usar ordem: `valor_total` → `valor` → `valor_liquido`
+  - Afectados: WhatsApp, Email, PDF e dashboard de relatórios
+- **VERIFIED**: Edição de resumo semanal funciona correctamente
+  - Ajustes são gravados em `ajustes_semanais` e lidos no cálculo
+  - Status mostra `editado_manual` e `tem_ajuste_manual=True`
+- **VERIFIED**: Importação de elétrico (new-line error) já foi corrigida em sessões anteriores
+- **TESTED**: API IDs plataforma funciona
+- **TESTED**: UI mostra e permite editar os IDs
+- **TESTED**: Edição resumo semanal grava e lê correctamente
 
 ## Changelog (2026-01-11 - Session 6g - Bug Fixes Bolt & Combustível)
 ### Session Updates:
