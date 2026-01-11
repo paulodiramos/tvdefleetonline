@@ -1452,11 +1452,10 @@ async def generate_motorista_pdf(
     if aluguer == 0:
         veiculo_id = motorista.get("veiculo_id") or motorista.get("vehicle_id")
         if veiculo_id:
-            veiculo = await db.vehicles.find_one({"id": veiculo_id}, {"_id": 0, "valor_aluguer_semanal": 1, "tipo_contrato": 1})
+            veiculo = await db.vehicles.find_one({"id": veiculo_id}, {"_id": 0})
             if veiculo:
-                aluguer = float(veiculo.get("valor_aluguer_semanal") or 0)
-                if aluguer == 0 and veiculo.get("tipo_contrato"):
-                    aluguer = float(veiculo["tipo_contrato"].get("valor_semanal") or 0)
+                # Usar função que calcula com base na época alta/baixa
+                aluguer = calcular_aluguer_semanal(veiculo, semana, ano)
     
     extras = 0.0
     extras_records = await db.despesas_extras.find({
