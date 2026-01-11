@@ -783,6 +783,153 @@ async def abater_viaverde(
     }
 
 
+# ==================== DESPESAS EXTRAS (DANOS, DÍVIDAS, CRÉDITOS) ====================
+
+@router.get("/motoristas/{motorista_id}/despesas-extras")
+async def get_despesas_extras(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Listar despesas extras do motorista (danos, dívidas, créditos)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0, "id": 1})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    despesas = await db.despesas_extras.find(
+        {"motorista_id": motorista_id},
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(100)
+    
+    # Calcular saldo
+    total_debitos = sum(d.get("valor", 0) for d in despesas if d.get("tipo") == "debito")
+    total_creditos = sum(d.get("valor", 0) for d in despesas if d.get("tipo") == "credito")
+    saldo = total_creditos - total_debitos
+    
+    return {
+        "despesas": despesas,
+        "total_debitos": round(total_debitos, 2),
+        "total_creditos": round(total_creditos, 2),
+        "saldo": round(saldo, 2)
+    }
+
+
+@router.post("/motoristas/{motorista_id}/despesas-extras")
+async def add_despesa_extra(
+    motorista_id: str,
+    data: Dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Adicionar despesa extra ao motorista (danos, dívidas, créditos de dias)
+    
+    Tipos de despesa:
+    - debito: danos, dívidas, multas (valor positivo a cobrar)
+    - credito: crédito de dias, reembolsos (valor positivo a devolver)
+    
+    Categorias:
+    - danos: Danos no veículo
+    - divida: Dívida pendente
+    - multa: Multa de trânsito
+    - credito_dias: Crédito de dias (férias, folgas)
+    - reembolso: Reembolso de despesas
+    - outro: Outros
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0, "id": 1, "name": 1})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    tipo = data.get("tipo", "debito")  # debito ou credito
+    categoria = data.get("categoria", "outro")
+    valor = float(data.get("valor", 0))
+    descricao = data.get("descricao", "")
+    semana = data.get("semana")
+    ano = data.get("ano")
+    
+    if valor <= 0:
+        raise HTTPException(status_code=400, detail="Valor deve ser maior que zero")
+    
+    despesa = {
+        "id": str(uuid.uuid4()),
+        "motorista_id": motorista_id,
+        "motorista_nome": motorista.get("name"),
+        "tipo": tipo,
+        "categoria": categoria,
+        "valor": round(valor, 2),
+        "descricao": descricao,
+        "semana": semana,
+        "ano": ano,
+        "status": "pendente",  # pendente, pago, cancelado
+        "parceiro_id": current_user["id"] if current_user["role"] == UserRole.PARCEIRO else data.get("parceiro_id"),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"]
+    }
+    
+    await db.despesas_extras.insert_one(despesa)
+    
+    tipo_texto = "Débito" if tipo == "debito" else "Crédito"
+    return {
+        "message": f"{tipo_texto} de €{valor:.2f} adicionado com sucesso",
+        "despesa": {k: v for k, v in despesa.items() if k != "_id"}
+    }
+
+
+@router.put("/motoristas/{motorista_id}/despesas-extras/{despesa_id}")
+async def update_despesa_extra(
+    motorista_id: str,
+    despesa_id: str,
+    data: Dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar despesa extra (status, valor, etc.)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    despesa = await db.despesas_extras.find_one({"id": despesa_id, "motorista_id": motorista_id})
+    if not despesa:
+        raise HTTPException(status_code=404, detail="Despesa não encontrada")
+    
+    update_data = {}
+    if "status" in data:
+        update_data["status"] = data["status"]
+    if "valor" in data:
+        update_data["valor"] = round(float(data["valor"]), 2)
+    if "descricao" in data:
+        update_data["descricao"] = data["descricao"]
+    
+    if update_data:
+        update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        update_data["updated_by"] = current_user["id"]
+        
+        await db.despesas_extras.update_one(
+            {"id": despesa_id},
+            {"$set": update_data}
+        )
+    
+    return {"message": "Despesa atualizada com sucesso"}
+
+
+@router.delete("/motoristas/{motorista_id}/despesas-extras/{despesa_id}")
+async def delete_despesa_extra(
+    motorista_id: str,
+    despesa_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Eliminar despesa extra"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    result = await db.despesas_extras.delete_one({"id": despesa_id, "motorista_id": motorista_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Despesa não encontrada")
+    
+    return {"message": "Despesa eliminada com sucesso"}
+
 
 # ==================== UPLOAD DE DOCUMENTOS ====================
 
