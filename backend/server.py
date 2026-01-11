@@ -2361,8 +2361,6 @@ async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio
             "csv_salvo": csv_filename,
             "motoristas_nao_encontrados": motoristas_nao_encontrados
         }
-            "motoristas_nao_encontrados": motoristas_nao_encontrados
-        }
     
     except Exception as e:
         logger.error(f"Error processing Uber CSV: {e}")
