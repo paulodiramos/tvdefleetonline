@@ -734,7 +734,7 @@ async def get_resumo_semanal_parceiro(
         motoristas_query, 
         {"_id": 0, "id": 1, "name": 1, "email": 1, "veiculo_atribuido": 1, 
          "uuid_motorista_uber": 1, "identificador_motorista_bolt": 1,
-         "valor_aluguer_semanal": 1}
+         "valor_aluguer_semanal": 1, "config_financeira": 1}
     ).to_list(1000)
     
     logger.info(f"📊 Encontrados {len(motoristas)} motoristas")
