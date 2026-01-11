@@ -1536,23 +1536,70 @@ async def generate_motorista_pdf(
         elements.append(Paragraph("Detalhes Carregamentos Elétricos", section_style))
         elements.append(Spacer(1, 3*mm))
         
-        elet_table_data = [["Data", "Local/Operador", "kWh", "Valor"]]
+        # Colunas: Data/Hora, Posto, Tempo, kWh, Valor
+        elet_table_data = [["Data/Hora", "Posto", "Tempo", "kWh", "Valor"]]
         for r in sorted(elet_records, key=lambda x: x.get("data", x.get("StartDate", ""))):
-            data_str = (r.get("data", r.get("StartDate", "-")))[:10]
-            local = (r.get("OperatorName", r.get("local", r.get("operador", "-"))))[:25]
-            kwh = float(r.get("TotalEnergy", r.get("kwh", 0)))
+            # Data/Hora: formato "4/1/26 19:34:14" ou similar
+            data_raw = r.get("data", r.get("StartDate", "-"))
+            if data_raw and data_raw != "-":
+                try:
+                    # Tentar formatar para "DD/MM HH:MM"
+                    data_str = str(data_raw)[:16]
+                    # Se tem formato "4/1/26 19:34:14", converter
+                    if "/" in data_str and " " in data_str:
+                        parts = data_str.split(" ")
+                        date_part = parts[0]
+                        time_part = parts[1][:5] if len(parts) > 1 else ""
+                        date_nums = date_part.split("/")
+                        if len(date_nums) >= 2:
+                            data_str = f"{date_nums[0].zfill(2)}/{date_nums[1].zfill(2)} {time_part}"
+                except:
+                    data_str = str(data_raw)[:16]
+            else:
+                data_str = "-"
+            
+            # Posto/Local/Operador
+            posto = r.get("posto", r.get("OperatorName", r.get("local", r.get("operador", "-"))))
+            if posto:
+                posto = str(posto)[:20]
+            else:
+                posto = "-"
+            
+            # Tempo/Duração
+            duracao = r.get("duracao", r.get("Duration", r.get("tempo", "")))
+            if duracao:
+                # Converter minutos para formato legível se for número
+                try:
+                    if isinstance(duracao, (int, float)):
+                        mins = int(duracao)
+                        if mins >= 60:
+                            tempo_str = f"{mins // 60}h{mins % 60:02d}m"
+                        else:
+                            tempo_str = f"{mins}m"
+                    else:
+                        tempo_str = str(duracao)[:10]
+                except:
+                    tempo_str = str(duracao)[:10]
+            else:
+                tempo_str = "-"
+            
+            # kWh/Energia
+            kwh = float(r.get("energia", r.get("TotalEnergy", r.get("kwh", 0))))
+            
+            # Valor
             valor = float(r.get("valor_total") or r.get("TotalValueWithTaxes") or 0)
-            elet_table_data.append([data_str, local, f"{kwh:.2f}", f"€{valor:.2f}"])
+            
+            elet_table_data.append([data_str, posto, tempo_str, f"{kwh:.2f}", f"€{valor:.2f}"])
         
-        elet_table_data.append(["", "", "TOTAL", f"€{eletrico:.2f}"])
+        elet_table_data.append(["", "", "", "TOTAL", f"€{eletrico:.2f}"])
         
-        elet_table = Table(elet_table_data, colWidths=[30*mm, 80*mm, 25*mm, 30*mm])
+        elet_table = Table(elet_table_data, colWidths=[30*mm, 55*mm, 20*mm, 20*mm, 30*mm])
         elet_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6c757d')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 8),
-            ('ALIGN', (2, 0), (3, -1), 'RIGHT'),
+            ('ALIGN', (2, 0), (4, -1), 'RIGHT'),
             ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e9ecef')),
             ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
