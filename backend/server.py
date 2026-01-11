@@ -2557,15 +2557,20 @@ async def process_bolt_csv(file_content: bytes, parceiro_id: str, periodo_inicio
         return {
             "success": True,
             "registos_importados": total_registos,
-            "ganhos_liquidos": total_ganhos_liquidos,
+            "motoristas_processados": len(motoristas_processados),
+            "ganhos_liquidos": round(total_ganhos_liquidos, 2),
             "viagens": total_viagens,
             "periodo": f"{periodo_inicio} a {periodo_fim}",
+            "semana": semana,
+            "ano": ano,
             "csv_salvo": csv_filename,
             "motoristas_nao_encontrados": motoristas_nao_encontrados
         }
     
     except Exception as e:
         logger.error(f"Error processing Bolt CSV: {e}")
+        import traceback
+        traceback.print_exc()
         return {"success": False, "error": str(e)}
 
 async def process_prio_excel(file_content: bytes, parceiro_id: str) -> Dict[str, Any]:
