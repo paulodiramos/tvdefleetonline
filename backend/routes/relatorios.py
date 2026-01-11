@@ -1203,8 +1203,8 @@ async def get_historico_semanal_parceiro(
                     {"semana": semana, "ano": ano},
                     {"data": {"$gte": data_inicio, "$lte": data_fim}}
                 ]
-            }, {"_id": 0, "pago_total": 1}).to_list(1000)
-            total_ganhos += sum(float(r.get("pago_total") or 0) for r in uber_records)
+            }, {"_id": 0, "rendimentos": 1, "pago_total": 1}).to_list(1000)
+            total_ganhos += sum(float(r.get("rendimentos") or r.get("pago_total") or 0) for r in uber_records)
             
             # Bolt
             bolt_records = await db.ganhos_bolt.find({
