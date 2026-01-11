@@ -1876,7 +1876,9 @@ const FichaMotorista = ({ user }) => {
                       <div key={index} className="flex items-center justify-between border-b py-2">
                         <div>
                           <p className="font-medium">{item.descricao || 'Movimento'}</p>
-                          <p className="text-sm text-slate-500">{item.created_at?.substring(0, 10)}</p>
+                          <p className="text-sm text-slate-500">
+                            {item.created_at?.substring(0, 10)} {item.created_at?.substring(11, 16) || ''}
+                          </p>
                         </div>
                         <div className={`font-bold ${item.tipo === 'credito' ? 'text-green-600' : 'text-red-600'}`}>
                           {item.tipo === 'credito' ? '+' : '-'}€{Math.abs(item.valor).toFixed(2)}
