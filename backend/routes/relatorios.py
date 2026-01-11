@@ -826,14 +826,32 @@ async def get_resumo_semanal_parceiro(
         if motorista_email:
             bolt_query_conditions.append({"email_motorista": motorista_email})
         
+        # Query mais flexível para encontrar registos por semana/ano ou período
         bolt_query = {
             "$or": bolt_query_conditions,
+            "$or": [
+                {"semana": semana, "ano": ano},
+                {"periodo_semana": semana, "periodo_ano": ano},
+                {"periodo_inicio": data_inicio},
+                {"$and": [
+                    {"periodo_inicio": {"$gte": data_inicio}},
+                    {"periodo_fim": {"$lte": data_fim}}
+                ]},
+                {"$and": [
+                    {"created_at": {"$gte": data_inicio}},
+                    {"created_at": {"$lte": data_fim + "T23:59:59"}}
+                ]}
+            ]
+        }
+        
+        # Simplificar query para maior compatibilidade
+        bolt_query = {
             "$and": [
+                {"$or": bolt_query_conditions},
                 {"$or": [
-                    {"periodo_semana": semana, "periodo_ano": ano},
                     {"semana": semana, "ano": ano},
-                    {"periodo_inicio": data_inicio},
-                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                    {"periodo_inicio": {"$regex": f"^{data_inicio[:7]}"}},  # Mesmo mês
+                    {"periodo_inicio": data_inicio}
                 ]}
             ]
         }
