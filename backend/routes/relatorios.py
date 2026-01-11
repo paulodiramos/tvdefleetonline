@@ -809,10 +809,14 @@ async def get_resumo_semanal_parceiro(
         }
         
         uber_records = await db.ganhos_uber.find(uber_query, {"_id": 0}).to_list(100)
+        uber_portagens = 0.0  # Novo campo para portagens Uber
         for r in uber_records:
-            ganhos_uber += float(r.get("pago_total") or r.get("rendimentos_total") or r.get("ganhos") or 0)
+            # Usar 'rendimentos' (novo) ou fallback para campos antigos
+            ganhos_uber += float(r.get("rendimentos") or r.get("pago_total") or r.get("rendimentos_total") or r.get("total_pago") or r.get("ganhos") or 0)
+            # Somar portagens Uber (se existir)
+            uber_portagens += float(r.get("uber_portagens") or 0)
         
-        logger.info(f"  {motorista.get('name')}: Uber query returned {len(uber_records)} records, total €{ganhos_uber:.2f}")
+        logger.info(f"  {motorista.get('name')}: Uber query returned {len(uber_records)} records, total €{ganhos_uber:.2f}, portagens €{uber_portagens:.2f}")
         
         # ============ GANHOS BOLT ============
         ganhos_bolt = 0.0
