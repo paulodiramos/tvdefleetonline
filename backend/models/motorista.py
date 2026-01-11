@@ -143,6 +143,7 @@ class Motorista(BaseModel):
     tipo_pagamento: Optional[str] = None
     tipo_pagamento_outro: Optional[str] = None
     id_cartao_frota_combustivel: Optional[str] = None
+    contacto_energia: Optional[str] = None  # Contacto/ID para carregamentos elétricos
     
     # Emergency Contact
     emergencia_nome: Optional[str] = None
