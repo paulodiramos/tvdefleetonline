@@ -17625,8 +17625,31 @@ async def importar_ganhos_bolt(
                 if not identificador_motorista:
                     continue
                 
-                # Procurar motorista pelo identificador Bolt
+                # Procurar motorista pelo identificador Bolt, email ou nome
                 motorista = await db.motoristas.find_one({'identificador_motorista_bolt': identificador_individual})
+                
+                # Se não encontrou pelo ID, tentar por email
+                if not motorista:
+                    email_motorista = row.get('Email', '').strip().lower()
+                    if email_motorista:
+                        motorista = await db.motoristas.find_one({
+                            '$or': [
+                                {'email': {'$regex': f'^{email_motorista}$', '$options': 'i'}},
+                                {'email_bolt': {'$regex': f'^{email_motorista}$', '$options': 'i'}}
+                            ]
+                        }, {"_id": 0})
+                        
+                        # Se encontrou, actualizar o identificador Bolt
+                        if motorista:
+                            await db.motoristas.update_one(
+                                {'id': motorista['id']},
+                                {'$set': {
+                                    'identificador_motorista_bolt': identificador_individual,
+                                    'bolt_driver_id': identificador_motorista
+                                }}
+                            )
+                            logger.info(f"✅ Motorista {motorista.get('name')} ligado ao Bolt ID: {identificador_individual}")
+                
                 motorista_id = motorista['id'] if motorista else None
                 
                 if motorista:
