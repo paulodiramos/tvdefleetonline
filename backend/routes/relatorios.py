@@ -1781,8 +1781,8 @@ async def get_motorista_whatsapp_link(
     uber_records = await db.ganhos_uber.find({
         "motorista_id": motorista_id,
         "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
-    }, {"_id": 0, "pago_total": 1}).to_list(100)
-    ganhos_uber = sum(float(r.get("pago_total") or 0) for r in uber_records)
+    }, {"_id": 0, "rendimentos": 1, "pago_total": 1}).to_list(100)
+    ganhos_uber = sum(float(r.get("rendimentos") or r.get("pago_total") or 0) for r in uber_records)
     
     ganhos_bolt = 0.0
     bolt_records = await db.ganhos_bolt.find({
@@ -1790,6 +1790,13 @@ async def get_motorista_whatsapp_link(
         "$or": [{"periodo_semana": semana, "periodo_ano": ano}, {"semana": semana, "ano": ano}]
     }, {"_id": 0, "ganhos_liquidos": 1}).to_list(100)
     ganhos_bolt = sum(float(r.get("ganhos_liquidos") or 0) for r in bolt_records)
+    
+    # Também buscar em viagens_bolt
+    viagens_bolt_records = await db.viagens_bolt.find({
+        "motorista_id": motorista_id,
+        "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
+    }, {"_id": 0, "ganhos_liquidos": 1, "valor_liquido": 1}).to_list(100)
+    ganhos_bolt += sum(float(r.get("ganhos_liquidos") or r.get("valor_liquido") or 0) for r in viagens_bolt_records)
     
     via_verde = 0.0
     vv_records = await db.portagens_viaverde.find({
