@@ -18,7 +18,7 @@ import {
   Save, Edit, Euro, Percent, Calculator, TrendingUp, Wallet,
   Receipt, History, AlertCircle, CheckCircle, Clock, Upload,
   Calendar, Globe, IdCard, Shield, FileCheck, Home, Building,
-  MessageCircle, Smartphone, Hash, Plus, Trash2, Loader2, Banknote
+  MessageCircle, Smartphone, Hash, Plus, Trash2, Loader2, Banknote, Zap
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
