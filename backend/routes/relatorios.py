@@ -1452,6 +1452,7 @@ async def generate_motorista_pdf(
     data_table = [
         ["Descrição", "Valor"],
         ["Ganhos Uber", f"€{ganhos_uber:.2f}"],
+        ["Uber Portagens", f"€{uber_portagens:.2f}"],
         ["Ganhos Bolt", f"€{ganhos_bolt:.2f}"],
         ["Total Ganhos", f"€{total_ganhos:.2f}"],
         ["", ""],
