@@ -1392,6 +1392,33 @@ const FichaMotorista = ({ user }) => {
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* Energia */}
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Zap className="w-5 h-5 text-yellow-500" />
+                        Energia
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label className="flex items-center gap-2">
+                          <CreditCard className="w-4 h-4" /> Contacto de Energia
+                        </Label>
+                        <Input
+                          value={dadosMotorista.contacto_energia || ''}
+                          onChange={(e) => setDadosMotorista(prev => ({ ...prev, contacto_energia: e.target.value }))}
+                          disabled={!isEditing}
+                          placeholder="ID do cartão ou contacto de energia"
+                          data-testid="input-contacto-energia"
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Usado para identificar o motorista nas importações de carregamentos elétricos
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
               </CardContent>
             </Card>
