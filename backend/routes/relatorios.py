@@ -1402,7 +1402,7 @@ async def generate_motorista_pdf(
     
     total_ganhos = ganhos_uber + ganhos_bolt
     total_despesas = via_verde + combustivel + eletrico
-    liquido = total_ganhos - total_despesas - aluguer
+    liquido = total_ganhos - total_despesas - aluguer - extras
     
     # Gerar PDF
     buffer = BytesIO()
@@ -1790,7 +1790,7 @@ async def get_motorista_whatsapp_link(
     aluguer = float(motorista.get("valor_aluguer_semanal") or 0)
     total_ganhos = ganhos_uber + ganhos_bolt
     total_despesas = via_verde + combustivel + eletrico
-    liquido = total_ganhos - total_despesas - aluguer
+    liquido = total_ganhos - total_despesas - aluguer - extras
     
     # Criar mensagem
     msg = f"""*📊 Relatório Semanal - TVDEFleet*
@@ -1899,7 +1899,7 @@ async def send_motorista_email(
     aluguer = float(motorista.get("valor_aluguer_semanal") or 0)
     total_ganhos = ganhos_uber + ganhos_bolt
     total_despesas = via_verde + combustivel + eletrico
-    liquido = total_ganhos - total_despesas - aluguer
+    liquido = total_ganhos - total_despesas - aluguer - extras
     
     # Criar HTML do email
     html_content = f"""
