@@ -1505,23 +1505,42 @@ async def generate_motorista_pdf(
         elements.append(Paragraph("Detalhes Abastecimentos", section_style))
         elements.append(Spacer(1, 3*mm))
         
-        comb_table_data = [["Data", "Posto", "Litros", "Valor"]]
+        comb_table_data = [["Data", "Hora", "Posto", "Litros", "Valor"]]
         for r in sorted(comb_records, key=lambda x: x.get("data", "")):
-            data_str = r.get("data", "-")[:10]
-            posto = (r.get("posto", r.get("station_name", "-")))[:25]
-            litros = float(r.get("litros", r.get("quantity", 0)))
+            # Separar data e hora
+            data_raw = r.get("data", "-")
+            data_str = "-"
+            hora_str = "-"
+            if data_raw and data_raw != "-":
+                try:
+                    if "T" in str(data_raw):
+                        data_raw = str(data_raw).replace("T", " ")
+                    parts = str(data_raw).split(" ")
+                    if len(parts) >= 1:
+                        date_parts = parts[0].split("-")
+                        if len(date_parts) == 3:
+                            data_str = f"{date_parts[2]}/{date_parts[1]}/{date_parts[0][2:]}"
+                        else:
+                            data_str = parts[0][:10]
+                    if len(parts) >= 2:
+                        hora_str = parts[1][:5]
+                except:
+                    data_str = str(data_raw)[:10]
+            
+            posto = (r.get("posto", r.get("station_name", "-")))[:20]
+            litros = float(r.get("litros", r.get("quantity", 0)) or 0)
             valor = float(r.get("valor_liquido") or r.get("total") or 0)
-            comb_table_data.append([data_str, posto, f"{litros:.2f}L", f"€{valor:.2f}"])
+            comb_table_data.append([data_str, hora_str, posto, f"{litros:.2f}L", f"€{valor:.2f}"])
         
-        comb_table_data.append(["", "", "TOTAL", f"€{combustivel:.2f}"])
+        comb_table_data.append(["", "", "", "TOTAL", f"€{combustivel:.2f}"])
         
-        comb_table = Table(comb_table_data, colWidths=[30*mm, 80*mm, 25*mm, 30*mm])
+        comb_table = Table(comb_table_data, colWidths=[22*mm, 18*mm, 65*mm, 25*mm, 25*mm])
         comb_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6c757d')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 8),
-            ('ALIGN', (2, 0), (3, -1), 'RIGHT'),
+            ('ALIGN', (3, 0), (4, -1), 'RIGHT'),  # Litros e Valor alinhados à direita
             ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e9ecef')),
             ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
