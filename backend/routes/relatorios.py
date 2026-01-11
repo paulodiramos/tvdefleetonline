@@ -1394,7 +1394,18 @@ async def generate_motorista_pdf(
     for r in elet_records:
         eletrico += float(r.get("valor_total") or r.get("TotalValueWithTaxes") or 0)
     
+    # Buscar valor do aluguer
     aluguer = float(motorista.get("valor_aluguer_semanal") or 0)
+    
+    # Se não tiver no motorista, buscar do veículo associado
+    if aluguer == 0:
+        veiculo_id = motorista.get("veiculo_id") or motorista.get("vehicle_id")
+        if veiculo_id:
+            veiculo = await db.vehicles.find_one({"id": veiculo_id}, {"_id": 0, "valor_aluguer_semanal": 1, "tipo_contrato": 1})
+            if veiculo:
+                aluguer = float(veiculo.get("valor_aluguer_semanal") or 0)
+                if aluguer == 0 and veiculo.get("tipo_contrato"):
+                    aluguer = float(veiculo["tipo_contrato"].get("valor_semanal") or 0)
     
     extras = 0.0
     extras_records = await db.despesas_extras.find({
