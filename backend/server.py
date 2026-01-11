@@ -11770,13 +11770,17 @@ async def importar_carregamentos_excel(
                     "motorista_email": motorista_email,
                     "motorista_nome": motorista_nome,
                     "matricula": vehicle.get("matricula"),
+                    "cartao_frota_id": card_code,
                     "card_code": card_code,
                     "id_carregamento": id_carregamento,
                     "estacao_id": posto,
                     "energia_kwh": energia,
                     "duracao_minutos": duracao,
                     "custo_base": custo,
+                    "valor_total": valor_total,  # Campo usado no resumo semanal
                     "valor_total_com_taxas": valor_total,
+                    "TotalValueWithTaxes": valor_total,  # Campo alternativo
+                    "valor": valor_total,  # Campo alternativo
                     "data": data,
                     "hora": hora,
                     "nome_cartao": nome,
@@ -11792,8 +11796,8 @@ async def importar_carregamentos_excel(
                     "created_by": current_user["id"]
                 }
                 
-                # Inserir no MongoDB
-                await db.portagens_viaverde.insert_one(documento)
+                # Inserir no MongoDB - colecção despesas_combustivel para ser lido no resumo
+                await db.despesas_combustivel.insert_one(documento)
                 registos_importados.append(documento)
                 sucesso += 1
                 
