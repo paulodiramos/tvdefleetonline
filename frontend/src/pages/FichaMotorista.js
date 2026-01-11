@@ -18,7 +18,7 @@ import {
   Save, Edit, Euro, Percent, Calculator, TrendingUp, Wallet,
   Receipt, History, AlertCircle, CheckCircle, Clock, Upload,
   Calendar, Globe, IdCard, Shield, FileCheck, Home, Building,
-  MessageCircle, Smartphone
+  MessageCircle, Smartphone, Hash
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
