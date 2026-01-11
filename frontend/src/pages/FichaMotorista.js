@@ -447,8 +447,9 @@ const FichaMotorista = ({ user }) => {
     if (motoristaId) {
       fetchMotorista();
       fetchHistoricoViaVerde();
+      fetchExtras();
     }
-  }, [motoristaId, fetchMotorista, fetchHistoricoViaVerde]);
+  }, [motoristaId, fetchMotorista, fetchHistoricoViaVerde, fetchExtras]);
 
   const handleSaveDadosMotorista = async () => {
     setSaving(true);
