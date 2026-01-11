@@ -1009,9 +1009,14 @@ async def get_resumo_semanal_parceiro(
             # Despesas Operacionais
             "combustivel": round(combustivel_total, 2),
             "carregamento_eletrico": round(eletrico_total, 2),
-            "via_verde": round(via_verde_total, 2),
+            "via_verde": round(via_verde_a_descontar, 2),  # Valor a descontar (0 se acumular)
+            "via_verde_total_importado": round(via_verde_total, 2),  # Valor total importado
             "via_verde_semana_referencia": f"Semana {semana}/{ano}",
             "total_despesas_operacionais": round(total_despesas_operacionais, 2),
+            # Via Verde Acumulado
+            "acumular_viaverde": acumular_viaverde,
+            "viaverde_acumulado": round(viaverde_acumulado, 2),
+            "viaverde_semana_acumulado": round(via_verde_total, 2) if acumular_viaverde else 0,
             # Receitas do Parceiro
             "aluguer_veiculo": round(receita_aluguer, 2),
             "extras": round(receita_extras, 2),
