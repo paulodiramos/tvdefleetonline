@@ -1522,25 +1522,41 @@ async def generate_motorista_pdf(
         
         comb_table_data = [["Data", "Hora", "Posto", "Litros", "Valor"]]
         for r in sorted(comb_records, key=lambda x: x.get("data", "")):
-            # Separar data e hora
-            data_raw = r.get("data", "-")
-            data_str = "-"
-            hora_str = "-"
-            if data_raw and data_raw != "-":
+            # Usar campos data_detalhe e hora_detalhe se existirem
+            data_str = r.get("data_detalhe", "")
+            hora_str = r.get("hora_detalhe", r.get("hora", ""))
+            
+            # Fallback: extrair de data se campos não existirem
+            if not data_str:
+                data_raw = r.get("data", "-")
+                if data_raw and data_raw != "-":
+                    try:
+                        if "T" in str(data_raw):
+                            data_raw = str(data_raw).replace("T", " ")
+                        parts = str(data_raw).split(" ")
+                        if len(parts) >= 1:
+                            date_parts = parts[0].split("-")
+                            if len(date_parts) == 3:
+                                data_str = f"{date_parts[2]}/{date_parts[1]}/{date_parts[0][2:]}"
+                            else:
+                                data_str = parts[0][:10]
+                        if len(parts) >= 2 and not hora_str:
+                            hora_str = parts[1][:5]
+                    except:
+                        data_str = str(data_raw)[:10]
+            else:
+                # Formatar data_detalhe de "2026-01-04" para "04/01/26"
                 try:
-                    if "T" in str(data_raw):
-                        data_raw = str(data_raw).replace("T", " ")
-                    parts = str(data_raw).split(" ")
-                    if len(parts) >= 1:
-                        date_parts = parts[0].split("-")
-                        if len(date_parts) == 3:
-                            data_str = f"{date_parts[2]}/{date_parts[1]}/{date_parts[0][2:]}"
-                        else:
-                            data_str = parts[0][:10]
-                    if len(parts) >= 2:
-                        hora_str = parts[1][:5]
+                    date_parts = data_str.split("-")
+                    if len(date_parts) == 3:
+                        data_str = f"{date_parts[2]}/{date_parts[1]}/{date_parts[0][2:]}"
                 except:
-                    data_str = str(data_raw)[:10]
+                    pass
+            
+            if not data_str:
+                data_str = "-"
+            if not hora_str:
+                hora_str = "-"
             
             posto = (r.get("posto", r.get("station_name", "-")))[:20]
             litros = float(r.get("litros", r.get("quantity", 0)) or 0)
