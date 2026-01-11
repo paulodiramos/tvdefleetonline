@@ -1,37 +1,41 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-11 - Session 7 - IDs Plataformas + Via Verde Acumulado COMPLETO)
+## Changelog (2026-01-11 - Session 7 - Uber Portagens + Sistema Despesas Extras)
 ### Session Updates:
-- **IMPLEMENTED**: Campos de ID de Plataforma para Motoristas (P0)
-  - Frontend: Campos `ID Uber (UUID)` e `ID Bolt` na tab "Plataformas"
-  - Backend: Importação Uber/Bolt usa IDs como chave primária de pesquisa
-- **BUG FIX**: Correção do campo de combustível em múltiplos endpoints
-  - Alterado de `valor_liquido` para usar ordem: `valor_total` → `valor` → `valor_liquido`
-- **IMPLEMENTED**: Lógica de Via Verde Acumulado no Resumo Semanal
-  - Adicionada verificação de `config_financeira.acumular_viaverde` por motorista
-  - Se activo: Via Verde vai para acumulado (não é descontado semanalmente)
-  - Novos campos no resumo:
-    - `via_verde` - valor a descontar (0 se acumular)
-    - `via_verde_total_importado` - valor total importado da semana
-    - `acumular_viaverde` - se opção está activa
-    - `viaverde_acumulado` - total acumulado até agora
-    - `viaverde_semana_acumulado` - valor acumulado esta semana
-  - Corrigida projecção da query de motoristas para incluir `config_financeira`
-- **IMPLEMENTED**: UI Via Verde Acumulado no Frontend (ResumoSemanalParceiro.js)
-  - Na tabela de motoristas: Via Verde riscado quando está a acumular
-  - Badge clicável mostra valor acumulado total (€151)
-  - Modal "Abater Via Verde Acumulado" com:
-    - Info do motorista e valores
-    - Input para valor a abater
-    - Botões "Abater Tudo" e "Abater 50%"
-    - Botão de confirmação
-- **IMPLEMENTED**: Importação Via Verde adiciona automaticamente ao acumulado
-  - Quando `acumular_viaverde=true`, valor importado vai para `viaverde_acumulado`
-  - Log de cada incremento no acumulado
-- **TESTED**: API IDs plataforma funciona ✅
-- **TESTED**: Via Verde acumulado funciona (descontado=0 quando activo) ✅
-- **TESTED**: Modal de abate Via Verde abre correctamente ✅
-- **TESTED**: Screenshot UI confirmou funcionalidade visual ✅
+
+#### Importação Uber - Nova Lógica de Colunas
+- **MODIFIED**: `process_uber_csv` agora lê colunas correctas:
+  - `Pago a si:Os seus rendimentos` → Rendimentos líquidos
+  - `Pago a si:Saldo da viagem:Reembolsos:Portagem` → Portagens reembolsadas
+  - `Pago a si:Saldo da viagem:Impostos:Imposto sobre a tarifa` → Imposto tarifa
+  - **Uber Portagens** = Portagens + Imposto (vai para acumulado se `acumular_viaverde=true`)
+- **ADDED**: Novo campo `uber_portagens` nos registos e resumo semanal
+- **ADDED**: Agrupamento por motorista na importação (soma valores de múltiplas linhas)
+
+#### Via Verde Acumulado - Lógica Corrigida
+- **CHANGED**: Importação Via Verde agora CONSOME o acumulado (não adiciona)
+  - Se acumulado >= valor: desconta do acumulado, marca como `pago_pelo_acumulado`
+  - Se acumulado < valor: usa o que tem, regista diferença em `valor_a_pagar`
+- **ADDED**: Importação Uber adiciona portagens ao acumulado automaticamente
+
+#### Sistema de Despesas Extras (NOVO)
+- **ADDED**: Endpoints CRUD para despesas extras:
+  - `GET /api/motoristas/{id}/despesas-extras` - Listar com saldo
+  - `POST /api/motoristas/{id}/despesas-extras` - Adicionar
+  - `PUT /api/motoristas/{id}/despesas-extras/{despesa_id}` - Atualizar
+  - `DELETE /api/motoristas/{id}/despesas-extras/{despesa_id}` - Eliminar
+- **TIPOS**: `debito` (danos, dívidas, multas) | `credito` (crédito dias, reembolsos)
+- **CATEGORIAS**: danos, divida, multa, credito_dias, reembolso, outro
+- **TESTED**: API funciona correctamente ✅
+
+#### Campos Implementados P0
+- **COMPLETED**: IDs Plataforma Uber/Bolt na ficha do motorista
+- **COMPLETED**: UI Via Verde acumulado com modal de abate
+
+### Testado:
+- ✅ Despesas extras - criar, listar, calcular saldo
+- ✅ Via Verde acumulado mostra correctamente
+- ✅ Uber portagens campo adicionado ao resumo
 
 ## Changelog (2026-01-11 - Session 6g - Bug Fixes Bolt & Combustível)
 ### Session Updates:
