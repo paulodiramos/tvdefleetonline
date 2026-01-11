@@ -18,8 +18,11 @@ import {
   Save, Edit, Euro, Percent, Calculator, TrendingUp, Wallet,
   Receipt, History, AlertCircle, CheckCircle, Clock, Upload,
   Calendar, Globe, IdCard, Shield, FileCheck, Home, Building,
-  MessageCircle, Smartphone, Hash
+  MessageCircle, Smartphone, Hash, Plus, Trash2, Loader2, Banknote
 } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
