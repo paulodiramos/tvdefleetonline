@@ -1,5 +1,18 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-11 - Session 6e - Bug Fixes Resumo & Importação)
+### Session Updates:
+- **BUG FIX**: Edição manual no resumo semanal não gravava
+  - Os valores eram guardados em `ajustes_semanais` mas nunca eram lidos
+  - Adicionada verificação de ajustes manuais ao calcular resumo
+  - Valores do ajuste manual substituem os valores calculados
+  - Adicionado flag `tem_ajuste_manual` e `status: editado_manual`
+- **BUG FIX**: Importação de ficheiro elétrico Excel dava erro "new-line character"
+  - Adicionado suporte para `plataforma=carregamento` com ficheiros `.xlsx`
+  - Agora detecta automaticamente e chama `importar_carregamentos_excel()`
+- **TESTED**: Edição manual de Arlei Oliveira S2/2026 - valores guardados e aplicados
+- **TESTED**: Importação de eletrico.xlsx - 20 carregamentos importados
+
 ## Changelog (2026-01-11 - Session 6d - GPS Verizon & Manutenção)
 ### Session Updates:
 - **IMPLEMENTED**: Sistema de Importação GPS Verizon Fleet
