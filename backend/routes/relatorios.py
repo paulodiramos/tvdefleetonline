@@ -1396,7 +1396,11 @@ async def generate_motorista_pdf(
     uber_portagens = 0.0
     uber_records = await db.ganhos_uber.find({
         "motorista_id": motorista_id,
-        "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
+        "$or": [
+            {"semana": semana, "ano": ano},
+            {"data": {"$gte": data_inicio, "$lte": data_fim}},
+            {"periodo_inicio": {"$gte": data_inicio, "$lte": data_fim}}
+        ]
     }, {"_id": 0}).to_list(100)
     for r in uber_records:
         # Usar 'rendimentos' (campo da nova importação) ou fallback para campos antigos
