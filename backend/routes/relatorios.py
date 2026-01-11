@@ -2435,8 +2435,8 @@ async def generate_resumo_semanal_pdf(
                 {"semana": semana, "ano": ano},
                 {"data": {"$gte": data_inicio, "$lte": data_fim}}
             ]
-        }, {"_id": 0, "pago_total": 1}).to_list(100)
-        ganhos_uber = sum(float(r.get("pago_total") or 0) for r in uber_records)
+        }, {"_id": 0, "rendimentos": 1, "pago_total": 1}).to_list(100)
+        ganhos_uber = sum(float(r.get("rendimentos") or r.get("pago_total") or 0) for r in uber_records)
         
         # Ganhos Bolt
         bolt_records = await db.ganhos_bolt.find({
