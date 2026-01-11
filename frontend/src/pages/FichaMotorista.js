@@ -1116,11 +1116,12 @@ const FichaMotorista = ({ user }) => {
                           <Hash className="w-4 h-4" /> ID Uber (UUID)
                         </Label>
                         <Input
-                          value={dadosMotorista.uuid_uber || ''}
-                          onChange={(e) => setDadosMotorista(prev => ({ ...prev, uuid_uber: e.target.value }))}
+                          value={dadosMotorista.uuid_motorista_uber || ''}
+                          onChange={(e) => setDadosMotorista(prev => ({ ...prev, uuid_motorista_uber: e.target.value }))}
                           disabled={!isEditing}
                           placeholder="UUID do motorista na Uber"
                           className="font-mono text-sm"
+                          data-testid="input-uuid-uber"
                         />
                         <p className="text-xs text-muted-foreground mt-1">
                           Usado para identificar o motorista nas importações Uber
@@ -1173,6 +1174,7 @@ const FichaMotorista = ({ user }) => {
                           disabled={!isEditing}
                           placeholder="ID do motorista na Bolt"
                           className="font-mono text-sm"
+                          data-testid="input-id-bolt"
                         />
                         <p className="text-xs text-muted-foreground mt-1">
                           Usado para identificar o motorista nas importações Bolt
