@@ -2251,8 +2251,8 @@ async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio
             portagens = 0.0
             imposto_tarifa = 0.0
             
-            # Rendimentos - coluna principal
-            for col_name in ['Pago a si:Os seus rendimentos', 'Pago a si', 'Os seus rendimentos', 'Rendimentos']:
+            # Rendimentos - coluna principal (NÃO usar 'Pago a si' que é o total)
+            for col_name in ['Pago a si:Os seus rendimentos', 'Os seus rendimentos', 'Rendimentos']:
                 if col_name in row and row[col_name]:
                     rendimentos = parse_float(row[col_name])
                     break
