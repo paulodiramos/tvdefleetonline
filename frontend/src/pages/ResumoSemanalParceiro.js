@@ -131,6 +131,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     setEditingMotorista(motorista.motorista_id);
     setEditForm({
       ganhos_uber: motorista.ganhos_uber || 0,
+      uber_portagens: motorista.uber_portagens || 0,
       ganhos_bolt: motorista.ganhos_bolt || 0,
       via_verde: motorista.via_verde || 0,
       combustivel: motorista.combustivel || 0,
