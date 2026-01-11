@@ -1450,41 +1450,41 @@ async def generate_motorista_pdf(
         elements.append(Paragraph("Detalhes Via Verde", section_style))
         elements.append(Spacer(1, 3*mm))
         
-        vv_table_data = [["Data/Hora", "Local", "Valor"]]
+        vv_table_data = [["Data", "Hora", "Local", "Valor"]]
         for r in sorted(vv_records, key=lambda x: x.get("exit_date", x.get("entry_date", ""))):
-            # Data/Hora: usar exit_date (formato "2026-01-04 23:54:26")
+            # Data e Hora: usar exit_date (formato "2026-01-04 23:54:26")
             exit_date = r.get("exit_date", r.get("entry_date", ""))
+            data_str = "-"
+            hora_str = "-"
             if exit_date:
-                # Formatar data: "2026-01-04 23:54:26" -> "04/01 23:54"
                 try:
                     if "T" in str(exit_date):
                         exit_date = exit_date.replace("T", " ")
-                    data_str = exit_date[:16]  # "2026-01-04 23:54"
-                    # Converter para formato mais legível
-                    parts = data_str.split(" ")
-                    if len(parts) >= 2:
+                    # Separar data e hora
+                    parts = str(exit_date).split(" ")
+                    if len(parts) >= 1:
                         date_parts = parts[0].split("-")
                         if len(date_parts) == 3:
-                            data_str = f"{date_parts[2]}/{date_parts[1]} {parts[1][:5]}"
+                            data_str = f"{date_parts[2]}/{date_parts[1]}/{date_parts[0][2:]}"  # "04/01/26"
+                    if len(parts) >= 2:
+                        hora_str = parts[1][:5]  # "23:54"
                 except:
-                    data_str = str(exit_date)[:16]
-            else:
-                data_str = "-"
+                    data_str = str(exit_date)[:10]
             
             # Local: usar exit_point
             local = r.get("exit_point", r.get("entry_name", r.get("local", "-")))
             if local:
-                local = str(local)[:30]
+                local = str(local)[:25]
             else:
                 local = "-"
             
             valor = float(r.get("value") or 0)
-            vv_table_data.append([data_str, local, f"€{valor:.2f}"])
+            vv_table_data.append([data_str, hora_str, local, f"€{valor:.2f}"])
         
         # Linha de total
-        vv_table_data.append(["", "TOTAL", f"€{via_verde:.2f}"])
+        vv_table_data.append(["", "", "TOTAL", f"€{via_verde:.2f}"])
         
-        vv_table = Table(vv_table_data, colWidths=[40*mm, 90*mm, 30*mm])
+        vv_table = Table(vv_table_data, colWidths=[22*mm, 18*mm, 90*mm, 25*mm])
         vv_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6c757d')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
