@@ -1,41 +1,31 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-11 - Session 7 - Uber Portagens + Sistema Despesas Extras)
-### Session Updates:
+## Changelog (2026-01-11 - Session 7 - COMPLETO)
 
-#### Importação Uber - Nova Lógica de Colunas
-- **MODIFIED**: `process_uber_csv` agora lê colunas correctas:
-  - `Pago a si:Os seus rendimentos` → Rendimentos líquidos
-  - `Pago a si:Saldo da viagem:Reembolsos:Portagem` → Portagens reembolsadas
-  - `Pago a si:Saldo da viagem:Impostos:Imposto sobre a tarifa` → Imposto tarifa
-  - **Uber Portagens** = Portagens + Imposto (vai para acumulado se `acumular_viaverde=true`)
-- **ADDED**: Novo campo `uber_portagens` nos registos e resumo semanal
-- **ADDED**: Agrupamento por motorista na importação (soma valores de múltiplas linhas)
+### Bug Fix: Ganhos Bolt no Resumo Semanal
+- **FIXED**: Resumo semanal agora busca ganhos de `ganhos_bolt` E `viagens_bolt`
+- **FIXED**: Query melhorada para encontrar registos por múltiplos critérios (motorista_id, identificador_bolt, email)
+- **IMPROVED**: Importação Bolt agora usa `Identificador individual` como chave primária
+- **ADDED**: Campos `semana` e `ano` adicionados aos registos de importação Bolt
+- **TESTED**: Screenshot confirma ganhos Bolt a aparecer correctamente ✅
 
-#### Via Verde Acumulado - Lógica Corrigida
-- **CHANGED**: Importação Via Verde agora CONSOME o acumulado (não adiciona)
-  - Se acumulado >= valor: desconta do acumulado, marca como `pago_pelo_acumulado`
-  - Se acumulado < valor: usa o que tem, regista diferença em `valor_a_pagar`
-- **ADDED**: Importação Uber adiciona portagens ao acumulado automaticamente
+### Importação Uber - Nova Lógica de Colunas
+- `Pago a si:Os seus rendimentos` → Rendimentos líquidos
+- `Portagem + Imposto sobre tarifa` → Uber Portagens (vai para acumulado)
+- Novo campo `uber_portagens` no resumo semanal
 
-#### Sistema de Despesas Extras (NOVO)
-- **ADDED**: Endpoints CRUD para despesas extras:
-  - `GET /api/motoristas/{id}/despesas-extras` - Listar com saldo
-  - `POST /api/motoristas/{id}/despesas-extras` - Adicionar
-  - `PUT /api/motoristas/{id}/despesas-extras/{despesa_id}` - Atualizar
-  - `DELETE /api/motoristas/{id}/despesas-extras/{despesa_id}` - Eliminar
-- **TIPOS**: `debito` (danos, dívidas, multas) | `credito` (crédito dias, reembolsos)
-- **CATEGORIAS**: danos, divida, multa, credito_dias, reembolso, outro
-- **TESTED**: API funciona correctamente ✅
+### Via Verde Acumulado
+- Importação Uber **adiciona** portagens ao acumulado
+- Importação Via Verde **consome** o acumulado para pagar portagens
+- UI com badge clicável e modal de abate
 
-#### Campos Implementados P0
-- **COMPLETED**: IDs Plataforma Uber/Bolt na ficha do motorista
-- **COMPLETED**: UI Via Verde acumulado com modal de abate
+### Sistema de Despesas Extras (NOVO)
+- Endpoints CRUD: `GET/POST/PUT/DELETE /api/motoristas/{id}/despesas-extras`
+- Tipos: `debito` (danos, dívidas) | `credito` (crédito dias, reembolsos)
 
-### Testado:
-- ✅ Despesas extras - criar, listar, calcular saldo
-- ✅ Via Verde acumulado mostra correctamente
-- ✅ Uber portagens campo adicionado ao resumo
+### Campos IDs Plataforma
+- `uuid_motorista_uber` e `identificador_motorista_bolt` na ficha do motorista
+- Importação usa estes IDs como chave primária de pesquisa
 
 ## Changelog (2026-01-11 - Session 6g - Bug Fixes Bolt & Combustível)
 ### Session Updates:
