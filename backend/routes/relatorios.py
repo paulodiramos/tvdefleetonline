@@ -3675,6 +3675,7 @@ async def enviar_relatorio_para_motorista(
     
     # Buscar ganhos Uber
     ganhos_uber = 0.0
+    uber_portagens = 0.0
     uber_records = await db.ganhos_uber.find({
         "motorista_id": motorista_id,
         "$or": [
@@ -3682,7 +3683,8 @@ async def enviar_relatorio_para_motorista(
             {"data": {"$gte": data_inicio, "$lte": data_fim}}
         ]
     }, {"_id": 0}).to_list(100)
-    ganhos_uber = sum(float(r.get("pago_total") or 0) for r in uber_records)
+    ganhos_uber = sum(float(r.get("rendimentos") or r.get("pago_total") or 0) for r in uber_records)
+    uber_portagens = sum(float(r.get("uber_portagens") or 0) for r in uber_records)
     
     # Buscar ganhos Bolt
     ganhos_bolt = 0.0
@@ -3694,6 +3696,13 @@ async def enviar_relatorio_para_motorista(
         ]
     }, {"_id": 0}).to_list(100)
     ganhos_bolt = sum(float(r.get("ganhos_liquidos") or 0) for r in bolt_records)
+    
+    # Também buscar em viagens_bolt
+    viagens_bolt_records = await db.viagens_bolt.find({
+        "motorista_id": motorista_id,
+        "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
+    }, {"_id": 0}).to_list(100)
+    ganhos_bolt += sum(float(r.get("ganhos_liquidos") or r.get("valor_liquido") or 0) for r in viagens_bolt_records)
     
     # Buscar despesas
     combustivel = 0.0
