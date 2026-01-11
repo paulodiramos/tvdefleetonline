@@ -1631,7 +1631,7 @@ async def generate_motorista_pdf(
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
             ('FONTSIZE', (0, 0), (-1, -1), 8),
-            ('ALIGN', (2, 0), (4, -1), 'RIGHT'),
+            ('ALIGN', (3, 0), (5, -1), 'RIGHT'),  # Tempo, kWh, Valor alinhados à direita
             ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#e9ecef')),
             ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
