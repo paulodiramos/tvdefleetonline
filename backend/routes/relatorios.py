@@ -1558,15 +1558,15 @@ async def generate_motorista_pdf(
             else:
                 data_str = "-"
             
-            # Posto/Local/Operador
-            posto = r.get("posto", r.get("OperatorName", r.get("local", r.get("operador", "-"))))
+            # Posto/Local/Operador - usar estacao_id que é onde POSTO é guardado
+            posto = r.get("estacao_id", r.get("estacao", r.get("posto", r.get("OperatorName", r.get("local", "-")))))
             if posto:
                 posto = str(posto)[:20]
             else:
                 posto = "-"
             
-            # Tempo/Duração
-            duracao = r.get("duracao", r.get("Duration", r.get("tempo", "")))
+            # Tempo/Duração - usar duracao_minutos que é onde DURAÇÃO é guardado
+            duracao = r.get("duracao_minutos", r.get("duracao", r.get("Duration", r.get("tempo", ""))))
             if duracao:
                 # Converter minutos para formato legível se for número
                 try:
@@ -1583,8 +1583,8 @@ async def generate_motorista_pdf(
             else:
                 tempo_str = "-"
             
-            # kWh/Energia
-            kwh = float(r.get("energia", r.get("TotalEnergy", r.get("kwh", 0))))
+            # kWh/Energia - usar energia_kwh que é onde ENERGIA é guardado
+            kwh = float(r.get("energia_kwh", r.get("energia", r.get("TotalEnergy", r.get("kwh", 0)))) or 0)
             
             # Valor
             valor = float(r.get("valor_total") or r.get("TotalValueWithTaxes") or 0)
