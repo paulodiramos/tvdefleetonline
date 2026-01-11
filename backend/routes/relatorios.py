@@ -420,8 +420,12 @@ async def gerar_relatorio_semanal(
         for desp in despesas_via_verde:
             via_verde_records.append({
                 "data": desp.get("data_entrada"),
+                "data_detalhe": desp.get("data_detalhe", ""),
+                "hora_detalhe": desp.get("hora_detalhe", ""),
                 "valor": desp.get("valor_liquido", 0.0),
                 "local": f"{desp.get('ponto_entrada', '')} → {desp.get('ponto_saida', '')}",
+                "exit_point": desp.get("ponto_saida", ""),
+                "entry_point": desp.get("ponto_entrada", ""),
                 "tipo": "importado_csv",
                 "semana_dados": desp.get("semana_dados"),
                 "semana_relatorio": desp.get("semana_relatorio")
