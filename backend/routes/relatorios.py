@@ -865,7 +865,8 @@ async def get_resumo_semanal_parceiro(
             "$and": [
                 {"$or": [
                     {"semana": semana, "ano": ano},
-                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}},
+                    {"periodo_inicio": {"$gte": data_inicio, "$lte": data_fim}}
                 ]}
             ]
         }
