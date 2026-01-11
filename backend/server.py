@@ -12431,6 +12431,20 @@ async def importar_viaverde_excel(
                 entry_date_formatted = parse_date(entry_date)
                 exit_date_formatted = parse_date(exit_date)
                 
+                # Separar data e hora do exit_date (usado para detalhes)
+                data_detalhe = ""
+                hora_detalhe = ""
+                if exit_date_formatted:
+                    try:
+                        # Formato esperado: "2026-01-04 23:54:26" ou "2026-01-04"
+                        parts = str(exit_date_formatted).split(" ")
+                        if len(parts) >= 1:
+                            data_detalhe = parts[0]  # "2026-01-04"
+                        if len(parts) >= 2:
+                            hora_detalhe = parts[1][:5] if len(parts[1]) >= 5 else parts[1]  # "23:54"
+                    except:
+                        data_detalhe = str(exit_date_formatted)[:10]
+                
                 # Extrair valores
                 value = to_float(get_value('Value'), 0)
                 liquid_value = to_float(get_value('Liquid Value'), 0)
@@ -12450,6 +12464,8 @@ async def importar_viaverde_excel(
                     "motorista_email": motorista.get("email") if motorista else None,
                     "parceiro_id": current_user["id"],
                     "data": entry_date_formatted or datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+                    "data_detalhe": data_detalhe,
+                    "hora_detalhe": hora_detalhe,
                     "entry_date": entry_date_formatted,
                     "exit_date": exit_date_formatted,
                     "entry_point": str(get_value('Entry Point')),
