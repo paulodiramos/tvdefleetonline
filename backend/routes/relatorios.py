@@ -1555,32 +1555,45 @@ async def generate_motorista_pdf(
         elements.append(Paragraph("Detalhes Carregamentos Elétricos", section_style))
         elements.append(Spacer(1, 3*mm))
         
-        # Colunas: Data/Hora, Posto, Tempo, kWh, Valor
-        elet_table_data = [["Data/Hora", "Posto", "Tempo", "kWh", "Valor"]]
+        # Colunas: Data, Hora, Posto, Tempo, kWh, Valor
+        elet_table_data = [["Data", "Hora", "Posto", "Tempo", "kWh", "Valor"]]
         for r in sorted(elet_records, key=lambda x: x.get("data", x.get("StartDate", ""))):
-            # Data/Hora: formato "4/1/26 19:34:14" ou similar
+            # Separar Data e Hora
             data_raw = r.get("data", r.get("StartDate", "-"))
+            data_str = "-"
+            hora_str = "-"
             if data_raw and data_raw != "-":
                 try:
-                    # Tentar formatar para "DD/MM HH:MM"
-                    data_str = str(data_raw)[:16]
-                    # Se tem formato "4/1/26 19:34:14", converter
-                    if "/" in data_str and " " in data_str:
-                        parts = data_str.split(" ")
+                    data_raw_str = str(data_raw)
+                    if "T" in data_raw_str:
+                        data_raw_str = data_raw_str.replace("T", " ")
+                    
+                    parts = data_raw_str.split(" ")
+                    if len(parts) >= 1:
                         date_part = parts[0]
-                        time_part = parts[1][:5] if len(parts) > 1 else ""
-                        date_nums = date_part.split("/")
-                        if len(date_nums) >= 2:
-                            data_str = f"{date_nums[0].zfill(2)}/{date_nums[1].zfill(2)} {time_part}"
+                        # Formato "YYYY-MM-DD" ou "D/M/YY"
+                        if "-" in date_part:
+                            date_nums = date_part.split("-")
+                            if len(date_nums) == 3:
+                                data_str = f"{date_nums[2]}/{date_nums[1]}/{date_nums[0][2:]}"
+                        elif "/" in date_part:
+                            date_nums = date_part.split("/")
+                            if len(date_nums) >= 2:
+                                data_str = f"{date_nums[0].zfill(2)}/{date_nums[1].zfill(2)}"
+                                if len(date_nums) == 3:
+                                    data_str += f"/{date_nums[2][-2:]}"
+                        else:
+                            data_str = date_part[:10]
+                    
+                    if len(parts) >= 2:
+                        hora_str = parts[1][:5]
                 except:
-                    data_str = str(data_raw)[:16]
-            else:
-                data_str = "-"
+                    data_str = str(data_raw)[:10]
             
             # Posto/Local/Operador - usar estacao_id que é onde POSTO é guardado
             posto = r.get("estacao_id", r.get("estacao", r.get("posto", r.get("OperatorName", r.get("local", "-")))))
             if posto:
-                posto = str(posto)[:20]
+                posto = str(posto)[:18]
             else:
                 posto = "-"
             
@@ -1608,11 +1621,11 @@ async def generate_motorista_pdf(
             # Valor
             valor = float(r.get("valor_total") or r.get("TotalValueWithTaxes") or 0)
             
-            elet_table_data.append([data_str, posto, tempo_str, f"{kwh:.2f}", f"€{valor:.2f}"])
+            elet_table_data.append([data_str, hora_str, posto, tempo_str, f"{kwh:.2f}", f"€{valor:.2f}"])
         
-        elet_table_data.append(["", "", "", "TOTAL", f"€{eletrico:.2f}"])
+        elet_table_data.append(["", "", "", "", "TOTAL", f"€{eletrico:.2f}"])
         
-        elet_table = Table(elet_table_data, colWidths=[30*mm, 55*mm, 20*mm, 20*mm, 30*mm])
+        elet_table = Table(elet_table_data, colWidths=[22*mm, 16*mm, 50*mm, 18*mm, 18*mm, 25*mm])
         elet_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6c757d')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
