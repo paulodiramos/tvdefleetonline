@@ -1,32 +1,24 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-11 - Session 7 - IDs Plataformas Uber/Bolt + Correções P1)
+## Changelog (2026-01-11 - Session 7 - IDs Plataformas + Via Verde Acumulado)
 ### Session Updates:
 - **IMPLEMENTED**: Campos de ID de Plataforma para Motoristas (P0)
-  - Frontend: Campos `ID Uber (UUID)` e `ID Bolt` na tab "Plataformas" em `FichaMotorista.js`
-  - Backend: Modelo Pydantic `Motorista` já tinha os campos `uuid_motorista_uber` e `identificador_motorista_bolt`
-  - Endpoint `PUT /api/motoristas/{id}` aceita e persiste os novos campos
-  - Adicionado ícone `Hash` aos imports do lucide-react
-- **UPDATED**: Lógica de importação Uber (`process_uber_csv` em `server.py`)
-  - Prioridade 1: Pesquisa por `uuid_motorista_uber`
-  - Prioridade 2: Fallback para pesquisa por nome
-  - Guarda `motorista_id` quando encontra correspondência
-- **UPDATED**: Lógica de importação Bolt (`process_bolt_csv` em `server.py`)
-  - Prioridade 1: Pesquisa por `identificador_motorista_bolt`
-  - Prioridade 2: Fallback para email principal
-  - Prioridade 3: Fallback para email_bolt
-  - Prioridade 4: Fallback para nome
-  - Guarda `motorista_id` quando encontra correspondência
+  - Frontend: Campos `ID Uber (UUID)` e `ID Bolt` na tab "Plataformas"
+  - Backend: Importação Uber/Bolt usa IDs como chave primária de pesquisa
 - **BUG FIX**: Correção do campo de combustível em múltiplos endpoints
   - Alterado de `valor_liquido` para usar ordem: `valor_total` → `valor` → `valor_liquido`
-  - Afectados: WhatsApp, Email, PDF e dashboard de relatórios
-- **VERIFIED**: Edição de resumo semanal funciona correctamente
-  - Ajustes são gravados em `ajustes_semanais` e lidos no cálculo
-  - Status mostra `editado_manual` e `tem_ajuste_manual=True`
-- **VERIFIED**: Importação de elétrico (new-line error) já foi corrigida em sessões anteriores
+- **IMPLEMENTED**: Lógica de Via Verde Acumulado no Resumo Semanal
+  - Adicionada verificação de `config_financeira.acumular_viaverde` por motorista
+  - Se activo: Via Verde vai para acumulado (não é descontado semanalmente)
+  - Novos campos no resumo:
+    - `via_verde` - valor a descontar (0 se acumular)
+    - `via_verde_total_importado` - valor total importado da semana
+    - `acumular_viaverde` - se opção está activa
+    - `viaverde_acumulado` - total acumulado até agora
+    - `viaverde_semana_acumulado` - valor acumulado esta semana
+  - Corrigida projecção da query de motoristas para incluir `config_financeira`
 - **TESTED**: API IDs plataforma funciona
-- **TESTED**: UI mostra e permite editar os IDs
-- **TESTED**: Edição resumo semanal grava e lê correctamente
+- **TESTED**: Via Verde acumulado funciona (descontado=0 quando activo)
 
 ## Changelog (2026-01-11 - Session 6g - Bug Fixes Bolt & Combustível)
 ### Session Updates:
