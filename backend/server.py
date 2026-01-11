@@ -12704,7 +12704,7 @@ async def criar_relatorios_rascunho_apos_importacao(
                         if d.get('tipo_transacao') == 'carregamento_eletrico':
                             carregamentos_total_novo += float(d.get('valor_total_com_taxas') or 0)
                         else:
-                            portagens_viaverde_novo += float(d.get('liquid_value') or d.get('valor_total_com_taxas') or d.get('valor') or 0)
+                            portagens_viaverde_novo += float(d.get('value') or d.get('valor_total_com_taxas') or d.get('valor') or 0)
                     
                     update_fields = {
                         "portagens_viaverde": portagens_viaverde_novo,
