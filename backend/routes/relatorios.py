@@ -372,8 +372,13 @@ async def gerar_relatorio_semanal(
             valor = float(pv.get("value") or 0)
             via_verde_records.append({
                 "data": pv.get("entry_date") or pv.get("data"),
+                "data_detalhe": pv.get("data_detalhe", ""),
+                "hora_detalhe": pv.get("hora_detalhe", ""),
                 "valor": valor,
                 "local": f"{pv.get('entry_point', '')} → {pv.get('exit_point', '')}",
+                "exit_point": pv.get("exit_point", ""),
+                "entry_point": pv.get("entry_point", ""),
+                "exit_date": pv.get("exit_date", ""),
                 "tipo": "importado_excel",
                 "service": pv.get("service"),
                 "matricula": pv.get("matricula"),
