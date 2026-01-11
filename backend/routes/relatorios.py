@@ -369,7 +369,7 @@ async def gerar_relatorio_semanal(
                 logger.debug(f"📍 Excluído Via Verde: {pv.get('entry_point')} → {pv.get('exit_point')} (market_description={market_desc})")
                 continue
             
-            valor = float(pv.get("liquid_value") or pv.get("value") or 0)
+            valor = float(pv.get("value") or 0)
             via_verde_records.append({
                 "data": pv.get("entry_date") or pv.get("data"),
                 "valor": valor,
