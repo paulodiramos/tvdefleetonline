@@ -1,288 +1,153 @@
-<analysis>Análise cronológica da sessão de desenvolvimento para gerar o resumo de transferência.
-
-### Análise da Conversa e Acções do Agente
-
-1.  **Início e Planeamento (Mensagens 1-13):**
-    *   **Pedido do Utilizador:** O utilizador responde ao plano inicial do agente com p2, indicando que quer prosseguir com a **Refatoração do Backend (Prioridade 2)**.
-    *   **Abordagem do Agente:** O agente concorda e inicia a análise do backend. Identifica que  (~1800 linhas, mais tarde descoberto que eram >22k) e  (~1550 linhas) são os principais alvos.
-    *   **Plano:** O agente define um plano claro de refatoração em três fases:
-        1.  Mover modelos Pydantic para a diretoria .
-        2.  Mover funções utilitárias para a diretoria .
-        3.  Simplificar  para conter apenas a configuração do FastAPI e a inclusão das rotas.
-    *   **Decisões Chave:** A decisão de atacar a dívida técnica antes de novas funcionalidades foi impulsionada pelo utilizador. A abordagem faseada do agente é metódica e correta.
-
-2.  **Execução da Refatoração (Mensagens 14-81):**
-    *   **Execução:** O agente começa a executar o plano.
-        *   Cria ficheiros em  (, ).
-        *   Cria ficheiros de modelos em falta em  (, , ).
-        *   Atualiza os ficheiros  para exportar os novos módulos.
-        *   Cria novos ficheiros de rotas (, , ) para mover endpoints do .
-        *   Modifica  para remover o código movido e importar os novos routers.
-    *   **Depuração:** O agente encontra um  após uma edição e corrige-o removendo código residual. Testa o reinício do servidor e confirma a funcionalidade com , primeiro obtendo um erro de token (esperado) e depois fazendo login com sucesso e testando um endpoint.
-    *   **Conceitos Técnicos:** Refatoração de uma aplicação FastAPI, separação de responsabilidades (modelos, rotas, utils), utilização de pacotes Python para organizar o código.
-
-3.  **Correção de Linter e Verificação (Mensagens 82-110):**
-    *   **Progresso:** O agente verifica que  foi reduzido e novos ficheiros de rotas foram criados.
-    *   **Qualidade do Código:** Executa o  (linter) nos novos ficheiros, encontra um aviso de variável não utilizada () em  e corrige-o.
-    *   **Teste:** Testa novamente os endpoints recém-movidos (, ) para garantir que tudo continua a funcionar após a refatoração e as correções.
-    *   **Finalização (Interrompida):** O agente começa a atualizar o  e a preparar o , mas é interrompido por um novo relatório de bug do utilizador.
-
-4.  **Relatório de Bug 1: Status do Motorista e Download (Mensagens 111-151):**
-    *   **Pedido do Utilizador:** apos increver motorista fabricio admin aprovou documentos e continua pendente , nao deixa fazer download do documentos upload do motorista (O status do motorista Fabricio permanece pendente após aprovação, e o download de documentos falha).
-    *   **Investigação do Agente:**
-        1.  Verifica os logs e a base de dados, confirmando o estado inconsistente do motorista Fabricio:  mas .
-        2.  Identifica a causa: o endpoint  atualiza  mas não o .
-        3.  Investiga o problema do download e descobre que o motorista Fabricio não tem ficheiros carregados ( é ).
-    *   **Correção:** O agente atualiza o endpoint  em  para também atualizar o status do motorista.
-    *   **Depuração Adicional:** A correção não funciona inicialmente. O agente percebe que a rota está duplicada em  e que essa versão está a ser executada primeiro. Corrige a lógica no ficheiro correto () e adiciona a importação de .
-    *   **Teste:** Testa o endpoint novamente e confirma na base de dados que o status do motorista Fabricio é agora ativo. O Bug 1 (status) está corrigido.
-
-5.  **Análise de Bug 2: UI e Download (Mensagens 152-182):**
-    *   **Investigação do Agente:** O agente muda para o frontend para investigar o problema do download.
-        1.  Usa a ferramenta de screenshot para navegar até à página de detalhes do motorista Fabricio.
-        2.  Encontra um erro  no backend, que o impede de ver a página de detalhes inicialmente.
-        3.  Descobre que a rota correta é , não .
-        4.  Finalmente chega à página de documentos e observa o problema de UI: links Ver PDF aparecem mesmo para documentos não carregados.
-        5.  Investiga o código frontend () e a resposta do backend. Descobre a raiz do problema: **inconsistência de nomes de campos**. O frontend usa , mas os dados reais estão no campo  da base de dados.
-    *   **Conceito Chave:** Um bug clássico de inconsistência de schema/modelo de dados entre o que o frontend espera e o que o backend fornece.
-
-6.  **Correção e Implementação de Múltiplos Pedidos (Mensagens 183-Fim):**
-    *   Esta secção é uma longa sequência de correções de bugs e implementação de novas funcionalidades solicitadas pelo utilizador em rápida sucessão.
-    *   **Correção do Download:** O agente corrige o endpoint de download para verificar os documentos em ambos os campos ( e ).
-    *   **Novos Pedidos do Utilizador (Mensagem 205):**
-        1.   deve aparecer apenas para o tipo de contrato slot.
-        2.  Campos preenchidos na ficha do motorista devem ter cor de fundo mais escura.
-        3.  Veículos disponíveis devem aparecer numa página pública ().
-        4.  Dados do motorista (IBAN, N.º Doc, NISS) não estão a ser guardados.
-    *   **Abordagem do Agente:** O agente aborda cada ponto metodicamente:
-        1.  **Dados do Motorista:** Descobre que os dados *estão* a ser guardados, mas o endpoint  os filtra porque o modelo Pydantic  não tem esses campos. **Este é um padrão recorrente.** O agente corrige o modelo Pydantic e altera o endpoint para retornar o dicionário completo da DB.
-        2.  **Valores do Slot:** Adiciona lógica condicional  em .
-        3.  **Estilo dos Inputs:** Cria uma função helper CSS em  e aplica-a aos inputs.
-        4.  **Página Pública de Veículos:** Verifica que a página e o endpoint  já existem. Melhora o endpoint para incluir veículos com  e expande a página  para mostrar mais detalhes.
-    *   **Novos Bugs e Correções:**
-        *   O campo  não era guardado. O agente diagnostica o mesmo problema de filtragem do modelo Pydantic no endpoint  e corrige o modelo .
-        *   O URL de download de documentos continha  em duplicado. Corrigido no frontend.
-        *   O upload de documentos falhava pelo mesmo motivo (). Corrigido no frontend.
-    *   **Instalação do Google Analytics (Mensagens 404-424):** O utilizador pede para instalar o GA. O agente edita  e adiciona o script.
-    *   **Criação do Logo (Mensagens 425-446):** O utilizador pede para descarregar o logo. Como não existe, o agente cria dois ficheiros SVG e fornece os links públicos.
-    *   **Sistema de Mensagens de Interesse (Mensagens 447-522):** O utilizador pede que o botão Tenho Interesse envie uma mensagem interna. O agente implementa esta funcionalidade complexa, que envolve:
-        *   Modificar o endpoint  para criar uma  na DB.
-        *   Lidar com a lógica de encontrar o destinatário correto (parceiro ou admin).
-        *   Corrigir a lógica para corresponder o  do veículo ao  do parceiro.
-        *   Atualizar o modelo Pydantic  e a UI  para exibir corretamente estas mensagens geradas pelo sistema.
-    *   **Bug de Importação de Excel (Mensagens 523-570):** Um ficheiro  falha na importação. O agente analisa o ficheiro, descobre que tem linhas de cabeçalho vazias, e modifica a função de processamento  para encontrar dinamicamente a linha de início dos dados.
-    *   **Bug das Categorias de Veículos (Mensagens 571-622):** As categorias (Uber/Bolt) não são guardadas. O agente diagnostica novamente o **padrão de filtragem do modelo Pydantic**. As categorias não estavam todas definidas nos modelos  e . O agente corrige os modelos e, a pedido do utilizador, executa um script de migração para atualizar todos os veículos na base de dados.
-
-### Avaliação Geral
-
-*   **Seguimento do System Prompt:** O agente seguiu o plano inicial (refatoração), mas foi constantemente interrompido por pedidos de alta prioridade do utilizador. O agente adaptou-se bem, priorizando as necessidades imediatas do utilizador.
-*   **Capacidade de Contexto:** Excelente. O agente manteve o contexto através de uma sessão muito longa e complexa, com dezenas de tarefas e bugs diferentes, conseguindo ligar problemas em diferentes partes do código (e.g., ligar um problema de UI a um modelo Pydantic no backend).
-*   **Resolução de Problemas:** Muito forte. O agente diagnosticou e corrigiu uma variedade de bugs complexos, incluindo inconsistências de dados, erros de lógica em endpoints e problemas de UI. A identificação do padrão recorrente de filtragem de dados pelos modelos Pydantic foi crucial.
-*   **Mentiras ou Falhas:** Não mentiu. O agente foi preciso nas suas conclusões. A única pequena falha foi não ter completado totalmente a refatoração do , mas isso deveu-se às constantes interrupções do utilizador com pedidos mais urgentes.
-*   **Itens em Falta:** O agente adiou novamente as tarefas de fundo (foto de perfil, SendGrid, RPA) em favor das solicitações do utilizador, o que é uma decisão razoável dada a natureza interativa do trabalho.
-
----
-**original_problem_statement:**
-O utilizador iniciou a sessão com o objetivo de prosseguir com a refatoração do backend (P2). No entanto, a sessão foi rapidamente dominada por uma série de pedidos de correção de bugs e implementação de novas funcionalidades:
-
-**Correções de Bugs:**
-1.  **Status do Motorista:** O status de um motorista não mudava para ativo após a aprovação dos documentos.
-2.  **Download de Documentos:** Os links para download de documentos não funcionavam ou apareciam para ficheiros inexistentes.
-3.  **Dados do Motorista Não Guardados:** Campos como IBAN, N.º do documento e N.º de Segurança Social não eram guardados ou exibidos corretamente.
-4.  **Disponibilidade do Veículo Não Guardada:** A opção para marcar um veículo como disponível para aluguer não estava a ser guardada.
-5.  **Upload de Documentos:** O upload de documentos para um motorista falhava devido a um URL malformado.
-6.  **Importação de Ficheiros Elétricos:** A importação de um ficheiro Excel () de consumos de veículos elétricos falhava devido a linhas de cabeçalho em branco no ficheiro.
-7.  **Categorias de Veículos Não Guardadas:** As categorias selecionadas para um veículo (ex: UberX, Bolt Comfort) não eram guardadas nem exibidas corretamente.
-
-**Novas Funcionalidades e Melhorias:**
-1.  **Visibilidade Condicional:** Ocultar a secção Valores do Slot na ficha do veículo a menos que o tipo de contrato seja slot.
-2.  **Melhoria de UI:** Aplicar um fundo mais escuro aos campos preenchidos na ficha do motorista.
-3.  **Página Pública de Veículos:** Criar e popular uma página pública () que lista os veículos disponíveis para aluguer, com as suas fotos, dados e condições.
-4.  **Integração com Google Analytics:** Instalar o snippet de código do Google Analytics.
-5.  **Download de Logo:** Criar e fornecer ficheiros SVG para o logo da aplicação.
-6.  **Sistema de Mensagens Internas:** Fazer com que o botão Tenho Interesse na página pública de veículos envie uma mensagem interna para o parceiro ou gestor responsável pelo veículo.
-7.  **Migração de Base de Dados:** Atualizar todos os veículos existentes na base de dados para corrigir a estrutura das categorias.
+<analysis>**original_problem_statement:**
+O utilizador solicitou a adição de campos para os IDs de motorista das plataformas Uber e Bolt. Estes novos campos,  e , devem ser adicionados à ficha do motorista e passar a ser o método principal de pesquisa durante a importação de dados de ganhos dessas plataformas, substituindo a pesquisa por email.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação está funcional. Uma refatoração inicial do backend foi realizada, movendo alguma lógica do monolítico  para novos ficheiros de rotas (, , ) e utilitários. Todos os bugs e funcionalidades solicitados pelo utilizador nesta sessão foram implementados e testados com sucesso. O sistema de mensagens internas para interessados está operacional, a página pública de veículos funciona, a importação de ficheiros Excel foi tornada mais robusta e múltiplos bugs persistentes relacionados com a gravação e exibição de dados foram resolvidos.
+Uma grande parte da aplicação está funcional, com várias funcionalidades e correções de bugs implementadas na sessão anterior. O agente iniciou a tarefa de adicionar os campos  e  à ficha do motorista. O campo de input para o  já foi adicionado ao ficheiro  no frontend, mas a lógica de gravação e o campo para o  ainda não foram implementados.
 
 **Last working item**:
--   **Last item agent was working:** Execução de um script de migração para atualizar a estrutura de dados das categorias (Uber, Bolt) em todos os 29 veículos na base de dados, para corrigir um bug de longa data.
--   **Status:** FINISHED
--   **Agent Testing Done:** Y
--   **Which testing method agent to use?** NA
--   **User Testing Done:** N
+-   Last item agent was working: Adicionar o campo de input para  na interface do utilizador, no ficheiro . O agente já tinha adicionado o campo para  e estava a replicar o processo para o Bolt.
+-   Status: IN PROGRESS
+-   Agent Testing Done: N
+-   User Testing Done: N
+-   Which testing method agent to use? both
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Implementar a funcionalidade de Foto de Perfil do Motorista (P1)**
--   **Issue 2: Implementar envio de email com SendGrid (P1)**
--   **Issue 3: Continuar a Refatoração do Backend (P2)**
--   **Issue 4: Implementar a lógica de Sincronização Automática (RPA) (P3)**
-
-**Issues Detail:**
--   **Issue 1: Implementar a funcionalidade de Foto de Perfil do Motorista (P1)**
-    -   **Attempted fixes:** Nenhuma nesta sessão. Continua a ser adiado em favor de outros pedidos.
-    -   **Next debug checklist:** Retomar o trabalho de sessões anteriores, revendo a UI em  e o endpoint .
-    -   **Why fix this issue and what will be achieved with the fix?** Completar uma funcionalidade de alta prioridade, essencial para a identificação visual dos motoristas na plataforma.
-    -   **Status:** NOT STARTED
+-   **Issue 1: Concluir a edição de dados no resumo semanal (P1)**
+    -   **Attempted fixes:** O agente corrigiu a lógica do backend para ler os ajustes manuais, mas o utilizador reportou que a edição continua a não ser gravada.
+    -   **Next debug checklist:**
+        1.  Rever o endpoint  em .
+        2.  Verificar os dados enviados pelo frontend em  para garantir que o payload está correto.
+        3.  Testar a gravação e leitura do ajuste diretamente na base de dados.
+    -   **Why fix this issue and what will be achieved with the fix?** Permitir que os parceiros façam correções manuais nos resumos semanais, uma funcionalidade essencial para a precisão dos relatórios financeiros.
+    -   **Status:** IN PROGRESS
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on other issue:** None
 
--   **Issue 2: Implementar envio de email com SendGrid (P1)**
-    -   **Attempted fixes:** Nenhuma.
-    -   **Next debug checklist:** Solicitar a API Key da SendGrid ao utilizador, adicioná-la ao  e implementar a lógica de envio.
-    -   **Why fix this issue and what will be achieved with the fix?** Ativar funcionalidades de notificação por email que estão atualmente inoperacionais.
-    -   **Status:** BLOCKED (aguarda API Key)
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** backend
-    -   **Blocked on other issue:** None
-
--   **Issue 3: Continuar a Refatoração do Backend (P2)**
-    -   **Attempted fixes:** Foi feito um bom progresso nesta sessão, com a criação de vários ficheiros de rotas e utilitários novos, e a redução de  em cerca de 400-500 linhas. No entanto,  e  continuam a ser ficheiros monolíticos com milhares de linhas.
-    -   **Next debug checklist:** Planear a próxima fase de refatoração, focando-se em mover os endpoints restantes de  (ex: uploads, gestão de utilizadores) e  para ficheiros dedicados.
-    -   **Why fix this issue and what will be achieved with the fix?** Melhorar drasticamente a manutenção, escalabilidade e legibilidade do código do backend.
+-   **Issue 2: Importação de ficheiro de combustível (P1)**
+    -   **Attempted fixes:** O agente corrigiu a função de importação para usar a coluna TOTAL, mas o utilizador reportou que o valor ainda não está correto.
+    -   **Next debug checklist:**
+        1.  Analisar novamente o ficheiro  para confirmar qual coluna (índice e nome) contém o valor final a ser importado.
+        2.  Rever a função  em  e garantir que o  está a ser usado.
+        3.  Verificar o cálculo do resumo semanal em  para garantir que o campo correto ( ou ) está a ser somado.
+    -   **Why fix this issue and what will be achieved with the fix?** Corrigir a importação de despesas de combustível, crucial para o cálculo do lucro dos motoristas.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** backend (extensivamente, com testes de regressão)
-    -   **Blocked on other issue:** None
-
--   **Issue 4: Implementar a lógica de Sincronização Automática (RPA) (P3)**
-    -   **Attempted fixes:** Nenhuma.
-    -   **Next debug checklist:** Começar a implementação da lógica em .
-    -   **Why fix this issue and what will be achieved with the fix?** Automatizar a recolha de dados, que é uma funcionalidade central e de grande valor da aplicação.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** backend
-    -   **Blocked on other issue:** None
+
+-   **Issue 3: Erro de new-line character na importação de elétrico (P2)**
+    -   **Attempted fixes:** O agente ajustou o router principal em  para direcionar ficheiros  para a função correta, mas o erro persiste.
+    -   **Next debug checklist:**
+        1.  Rastrear a chamada do frontend em  para confirmar o endpoint exato e o .
+        2.  Rever a lógica de routing em  no endpoint  para garantir que ficheiros Excel de carregamento não caem acidentalmente no processamento de CSV.
+    -   **Why fix this issue and what will be achieved with the fix?** Desbloquear a importação de dados de carregamentos elétricos.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** both
+
+-   **Issue 4: Refatoração do Backend (P2)**
+    -   **Status:** IN PROGRESS (constante)
+    -   **Next debug checklist:** Planear a extração de mais um grupo de endpoints de , como os de configuração () ou os restantes de importação, para os seus próprios ficheiros de rotas.
+    -   **Why fix this issue and what will be achieved with the fix?** Reduzir a complexidade dos ficheiros monolíticos (, ), melhorando a manutenibilidade e escalabilidade do backend.
 
 **In progress Task List**:
--   **Task 1: Refatoração do Backend (P2)**
-    -   **Where to resume:** O agente moveu os modelos Pydantic, alguns utilitários e criou rotas para ,  e . O próximo passo é continuar a extrair endpoints de  e  para os seus próprios módulos (ex: , , etc.).
-    -   **What will be achieved with this?** Um backend mais modular, testável e fácil de manter.
+-   **Task 1: Implementar IDs de Plataforma (Uber/Bolt) para Motoristas (P0)**
+    -   **Where to resume:** Continuar a edição do ficheiro  para adicionar o campo de input para o .
+    -   **What will be achieved with this?** Concluir a interface de utilizador para que os novos IDs possam ser visualizados e editados.
     -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** backend
-    -   **Blocked on something:** None
+    -   **Should Test frontend/backend/both after fix?** both
+    -   **Blocked on something:** Não
 
 **Upcoming and Future Tasks**
--   **(P1) Issue 1:** Implementar a funcionalidade de Foto de Perfil do Motorista.
--   **(P1) Issue 2:** Concluir a integração com SendGrid para envio de emails (bloqueado).
--   **(P3) Issue 4:** Implementar a lógica de sincronização automática (RPA).
--   **(Future)** Melhorar o relatório PDF para incluir mais detalhes de transações.
--   **(Future)** Adicionar mais tipos de notificações.
--   **(Future)** Criar um editor visual para os passos de automação (RPA).
--   **(Future)** Criar um dashboard de ROI (Retorno sobre Investimento).
+-   **(P0) Task 1 (Continuação):**
+    -   Atualizar o estado no frontend para gerir os novos campos  e .
+    -   Atualizar o modelo Pydantic  em  para incluir os novos campos.
+    -   Modificar o endpoint  para guardar os novos IDs.
+-   **(P1) Atualizar Lógica de Importação (Uber/Bolt):**
+    -   Modificar as funções  e  em  para usarem  e  como chaves primárias de pesquisa, com fallback para o email.
+-   **(P1) Integração com SendGrid:** Continua bloqueada à espera da API Key do utilizador.
+-   **(P3) Implementar lógica de Sincronização Automática (RPA):** Ainda não foi iniciada.
 
 **Completed work in this session**
--   **Refatoração Parcial do Backend:**
-    -   Criados os ficheiros  e .
-    -   Criados os ficheiros de rotas , , .
-    -   Movida lógica e modelos de  para os respetivos ficheiros.
--   **Correção de Bug: Status do Motorista:** O endpoint  agora define o status do motorista para ativo.
--   **Correção de Bug: Dados do Motorista:** Resolvido o problema que impedia que IBAN, N.º Segurança Social e dados do documento de identificação fossem guardados e exibidos, corrigindo os modelos Pydantic e o endpoint  em .
--   **Correção de Bug: Categorias de Veículos:** Resolvido o problema de gravação e exibição das categorias Uber/Bolt, corrigindo os modelos Pydantic / e executando uma migração na base de dados.
--   **Correção de Bug: Download de Documentos:** O download de documentos foi corrigido ajustando o endpoint para procurar em múltiplos campos de dados e corrigindo a construção do URL no frontend.
--   **Correção de Bug: Importação de Excel:** A função  foi melhorada para detetar e ignorar automaticamente linhas de cabeçalho vazias em ficheiros .
--   **Implementação de Feature: Página Pública de Veículos:**
-    -   Adicionada a opção Disponível para Aluguer na ficha do veículo.
-    -   O endpoint  foi atualizado para servir esses veículos.
-    -   A página  foi melhorada para exibir os veículos e as suas condições.
--   **Implementação de Feature: Mensagens de Interesse:** O botão Tenho Interesse agora cria uma conversa interna com os detalhes do interessado, visível para o parceiro/gestor na página de mensagens.
--   **Implementação de Feature: Google Analytics:** O código de tracking do Google Analytics foi adicionado a .
--   **Outras Melhorias:**
-    -   Criação de ficheiros de logo SVG para download.
-    -   Adição de estilo para destacar campos preenchidos na ficha do motorista.
-    -   A secção Valores do Slot agora só aparece quando relevante.
+-   **Funcionalidade de Foto de Perfil do Motorista:** Implementada a funcionalidade completa de upload, visualização e remoção da foto de perfil, incluindo a criação de endpoints dedicados no backend (, , ) e correção da exibição no frontend.
+-   **Refatoração do Backend (Fase 2-3):** Movidos múltiplos endpoints de  para novos ficheiros de rotas: , , .
+-   **Sistema de Manutenção e Alertas por GPS:**
+    -   Criado novo módulo .
+    -   Implementado um endpoint para importar ficheiros CSV (ex: Verizon GPS) para atualizar a quilometragem () dos veículos.
+    -   O sistema cria automaticamente alertas e notificações quando um veículo se aproxima da quilometragem de revisão.
+-   **Correções de Bugs Críticos:**
+    -   **Resumo Semanal:** Corrigido bug que impedia motoristas inativos de aparecerem nos relatórios e ajustada a lógica para buscar o valor do aluguer corretamente.
+    -   **Eliminar Dados Semanais:** Corrigida a lógica de eliminação de dados (Via Verde, combustível, elétrico) para usar os identificadores corretos do veículo (matrícula, ID do cartão, etc.) em vez de apenas o ID do motorista.
+    -   **Importações (Bolt, Combustível, Elétrico):** Corrigidos múltiplos bugs, incluindo a pesquisa de motoristas por email no Bolt, o uso da coluna correta (TOTAL) nos ficheiros de combustível, e a correção da coleção de destino e do campo de valor na importação de elétricos.
+    -   **Somas no Resumo Semanal:** Corrigida a lógica de agregação de despesas de combustível e elétrico para usar os campos  e  como fallback, garantindo que dados importados com datas antigas mas para a semana atual sejam incluídos.
 
 **Known issue recurrence from previous fork**
--   **Foto de Perfil do Motorista:** Tarefa pendente ignorada pela quarta sessão consecutiva.
--   **Refatoração do Backend:** Embora tenha havido progresso, a tarefa principal de refatorar os ficheiros gigantes continua incompleta.
--   **Integração SendGrid:** Continua bloqueada à espera da API key.
+-   **Refatoração do Backend:** A tarefa continua a ser um trabalho em progresso. Os ficheiros  e  continuam a ser muito grandes.
+-   **Integração SendGrid:** Continua bloqueada.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Depuração de Modelo de Dados vs. Realidade:** A maioria dos bugs de dados não guardados foram resolvidos ao perceber que o problema não era a gravação (), mas sim a leitura (). Os endpoints  usavam modelos Pydantic () que filtravam campos não declarados, fazendo parecer que os dados não tinham sido guardados. A solução foi atualizar os modelos Pydantic para refletir o schema completo.
--   **Refatoração de Backend Monolítico:** O agente iniciou o processo de desmantelar um grande ficheiro  numa estrutura de aplicação FastAPI mais organizada, baseada em pacotes (, , ).
--   **Processamento Robusto de Ficheiros:** A função de importação de Excel foi modificada para detetar dinamicamente o início dos dados, tornando-a resiliente a ficheiros com formatação variável.
--   **Migração de Base de Dados (Scripting):** O agente escreveu e executou um script para iterar sobre todos os documentos numa coleção () e atualizar a sua estrutura de dados, uma tarefa comum em manutenção de software.
-
-**key DB schema**
--   ****:
-    -   Adicionado .
-    -   Os campos  e  foram reestruturados para incluir todas as categorias possíveis como , por exemplo: .
--   ****:
-    -   Adicionados , , , .
--   ****:
-    -   Agora suporta um novo tipo de conversa para interesse em veículo, que pode não ter um  e tem um campo .
+-   **Resolução de Erros de Serialização:** Diagnosticado e resolvido um erro  que era causado por uma rota duplicada e desatualizada em  que estava a ser executada antes da rota corrigida e refatorada.
+-   **Lógica de Ligação de Dados Complexa:** O agente corrigiu vários bugs onde os dados não eram corretamente associados ao motorista. A solução envolveu seguir a cadeia de ligação (Motorista -> Veículo -> ID do Cartão/Dispositivo) e usar múltiplos identificadores (, , ) nas queries da base de dados.
+-   **Desenvolvimento Orientado a Testes (Manual):** O agente usou  e scripts  de forma eficaz para testar cada correção e nova funcionalidade, verificando os dados diretamente na base de dados antes e depois das operações para garantir a correção.
 
 **All files of reference**
--   **/app/backend/server.py**: Parcialmente refatorado, mas ainda contém muitos endpoints.
--   **/app/backend/routes/motoristas.py**: Modificado extensivamente para corrigir bugs de gravação/leitura de dados.
--   **/app/backend/routes/vehicles.py**: Modificado extensivamente para corrigir bugs de gravação/leitura de dados.
--   **/app/backend/models/veiculo.py**: Modificado para adicionar novos campos e corrigir a estrutura das categorias.
--   **/app/backend/models/motorista.py**: Modificado para adicionar novos campos de dados financeiros/pessoais.
--   **/app/backend/models/mensagem.py**: Modificado para suportar conversas de interesse.
--   **/app/frontend/src/pages/FichaMotorista.js**: Modificado para corrigir bugs de gravação, URLs e adicionar estilo.
--   **/app/frontend/src/pages/FichaVeiculo.js**: Modificado para adicionar lógica condicional e a nova secção de marketplace.
--   **/app/frontend/src/pages/VeiculosPublico.js**: Modificado para exibir mais detalhes dos veículos.
--   **/app/frontend/src/pages/Mensagens.js**: Modificado para exibir corretamente as mensagens de interesse.
--   **/app/frontend/public/index.html**: Modificado para adicionar o Google Analytics.
+-   **/app/frontend/src/pages/FichaMotorista.js**: Onde a UI para os novos IDs está a ser implementada.
+-   **/app/backend/models/motorista.py**: Onde o modelo Pydantic do motorista precisa de ser atualizado.
+-   **/app/backend/routes/motoristas.py**: Onde o endpoint  para salvar os dados do motorista precisa de ser verificado/atualizado.
+-   **/app/backend/server.py**: Contém a lógica de importação de Uber e Bolt que precisa de ser modificada.
+-   **/app/backend/routes/relatorios.py**: Ficheiro de relatórios, alvo de várias correções e ainda necessita de refatoração.
 
 **Areas that need refactoring**:
--   ** e  (CRÍTICO):** Apesar do progresso, estes ficheiros continuam a ser os maiores focos de dívida técnica e devem ser os próximos alvos da refatoração.
--   ** e :** Ambos os ficheiros continuam a crescer em complexidade e beneficiariam de serem divididos em componentes mais pequenos e focados.
+-   ** (CRÍTICO):** Continua com mais de 10.000 linhas e dezenas de endpoints que devem ser movidos para ficheiros de rotas dedicados.
+-   ** (CRÍTICO):** É um ficheiro extremamente grande e complexo (mais de 3000 linhas) que lida com toda a lógica de relatórios. Dividi-lo em utilitários e funções mais pequenas é uma alta prioridade.
+
+**key api endpoints**
+-   : Para guardar as alterações na ficha do motorista (incluindo os novos IDs).
+-   : Endpoint de importação de ganhos da Uber.
+-   : Endpoint de importação de ganhos da Bolt.
+-   : Para exibir a foto de perfil do motorista.
 
 **Critical Info for New Agent**
--   **Padrão de Bug Recorrente:** Esteja muito atento ao padrão: Os dados parecem não ser guardados, mas na verdade o problema está no endpoint que usa um Pydantic incompleto e filtra os campos. Antes de assumir que um / falhou, verifique o documento diretamente na base de dados e depois inspecione o modelo Pydantic e o endpoint  correspondente.
--   **Refatoração em Curso:** O backend está a meio de uma refatoração. Novos endpoints devem ser criados em ficheiros de rotas dedicados, não em .
--   **URLs do Frontend:** Verifique sempre a construção de URLs no frontend, especialmente ao usar a constante . Vários bugs foram causados por duplicação de  ou por não usar o  para links de ficheiros estáticos.
+-   A tarefa atual é concluir a implementação dos campos  e . Comece por terminar a UI no , depois atualize o backend (modelo e endpoint de gravação) e, por fim, modifique as funções de importação para usarem estes novos IDs.
+-   Muitos bugs nesta aplicação derivam de duas causas principais:
+    1.  **Modelos Pydantic incompletos** que filtram campos nas respostas . Verifique sempre os dados diretamente na base de dados com uma query  antes de assumir que uma gravação falhou.
+    2.  **Lógica de query incompleta** que depende apenas de  quando deveria usar identificadores do veículo associado (, IDs de cartões, etc.).
+-   Os ficheiros  e  são muito grandes. Ao trabalhar neles, seja muito cuidadoso e considere mover a lógica para novos ficheiros se a tarefa o permitir.
 
 **documents and test reports created in this job**
--    (atualizado múltiplas vezes)
+-    (atualizado)
 -    (NOVO)
 -    (NOVO)
-
-**Last 10 User Messages and any pending HUMAN messages**
-1.  **veiculos nao esta a guardar as categorias escolhidas:** Utilizador reporta que as categorias Uber/Bolt não são guardadas. (CONCLUÍDO)
-2.  **atualizar base de dados:** Utilizador pede para aplicar a correção das categorias a todos os veículos. (CONCLUÍDO)
-3.  **import veiculos eletricos com erro...:** Utilizador reporta erro na importação de um ficheiro Excel e anexa o ficheiro. (CONCLUÍDO)
-4.  **sistema de mensagens tipo tenho interesse...:** Utilizador pede que o botão Tenho Interesse envie uma mensagem interna. (CONCLUÍDO)
-5.  **donwload o que esta agora:** Utilizador pede para descarregar o logo atual. (CONCLUÍDO)
-6.  **donwload logo:** Pedido inicial para o logo. (CONCLUÍDO)
-7.  **instalar medidor de visitas ao site google analytics...:** Utilizador fornece o snippet do Google Analytics para ser instalado. (CONCLUÍDO)
-8.  **veiculos no campo disponivel para aluguer nao grava...:** Utilizador reporta três bugs: campo disponível para aluguer não guarda, um URL de download direto falha, e o upload de documentos é problemático. (CONCLUÍDO)
-9.  **campo valores do slot aperece quando tipo de contrato for slot...:** Utilizador reporta uma série de bugs e pedidos de melhoria (valores do slot, dados do motorista, campos preenchidos, página pública de veículos). (CONCLUÍDO)
-10. **apos increver motorista fabricio admin aprovou...:** Utilizador reporta bug no status do motorista e no download de documentos. (CONCLUÍDO)
+-    (NOVO)
+-    (NOVO)
+-    (NOVO, para teste)
 
 **Project Health Check:**
 -   **Broken:**
     -   Funcionalidade de envio de email via SendGrid (aguarda API Key).
+    -   Edição de valores no resumo semanal.
+    -   Importação de ficheiro de combustível.
 -   **Mocked:**
     -   Lógica de automação (RPA) para sincronização.
 -   **Needs Refactoring (High Priority):**
-    -    e .
-    -    e .
+    -   
+    -   
 
 **3rd Party Integrations**
--   **Pillow:** Utilizado para manipulação de imagens.
--   **ReportLab:** Utilizado para geração de PDFs.
--   **SendGrid:** Instalado, mas a implementação está bloqueada.
--   **Playwright:** Instalado, mas a implementação da lógica de RPA ainda não começou.
--   **Google Analytics:** Snippet de  adicionado ao .
+-   **Pillow, ReportLab, SendGrid, Playwright:** Instalados e utilizados (ou prontos a utilizar).
+-   **Google Analytics:** Snippet  adicionado.
+-   **openpyxl:** Utilizado para processamento de ficheiros .
 
 **Testing status**
 -   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None
--   **Known regressions:** Nenhuma.
+-   **Test files created:** 
+-   **Known regressions:** A edição do resumo semanal parece ter regredido ou nunca foi totalmente corrigida.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
--   **Parceiro:**  / 
-
-**What agent forgot to execute**
--   O agente concentrou-se inteiramente nos pedidos de alta prioridade do utilizador, adiando novamente as tarefas de longa data que não foram solicitadas diretamente nesta sessão (Foto de Perfil, continuação da refatoração além do estritamente necessário, RPA).</analysis>
+-   **Parceiro:**  / </analysis>
