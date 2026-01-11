@@ -214,7 +214,7 @@ async def gerar_relatorio_semanal(
             }
         new_records = await db.abastecimentos_combustivel.find(comb_query_new, {"_id": 0}).to_list(1000)
         for r in new_records:
-            valor = r.get("valor_liquido", 0) or r.get("valor", 0) or 0
+            valor = r.get("valor_total", 0) or r.get("valor", 0) or r.get("valor_liquido", 0) or 0
             total_combustivel += valor
             combustivel_records.append({
                 "data": r.get("data"),
