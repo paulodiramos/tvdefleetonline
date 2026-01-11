@@ -2,6 +2,18 @@
 
 ## Changelog (2026-01-11 - Session 8 - Credenciais Plataformas)
 
+### UI Sistema de Extras na Ficha do Motorista (COMPLETO)
+- **IMPLEMENTED**: Nova tab "Extras" na Ficha do Motorista
+- **IMPLEMENTED**: Cards de resumo (Total Registado, Pendente, Registos)
+- **IMPLEMENTED**: Tabela de extras com colunas: Tipo, Descrição, Semana, Valor, Estado, Ações
+- **IMPLEMENTED**: Modal para criar/editar extras com campos:
+  - Tipo (Dívida, Caução Parcelada, Dano, Multa, Crédito/Reembolso, Outro)
+  - Descrição, Valor, Semana/Ano
+  - Parcelas (para pagamentos parcelados)
+  - Observações, Marcar como pago
+- **IMPLEMENTED**: Ações: Toggle pago/pendente, Editar, Eliminar
+- **TESTED**: Screenshots confirmam funcionamento ✅
+
 ### Página Credenciais Plataformas REDESENHADA (COMPLETO)
 - **IMPLEMENTED**: Top menu com Layout padrão da aplicação
 - **IMPLEMENTED**: Seta de voltar para navegação intuitiva
