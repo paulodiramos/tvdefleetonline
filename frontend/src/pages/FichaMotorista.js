@@ -195,8 +195,10 @@ const FichaMotorista = ({ user }) => {
         iban: motoristaData.iban || '',
         email_uber: motoristaData.email_uber || motoristaData.email || '',
         telefone_uber: motoristaData.telefone_uber || motoristaData.phone || '',
+        uuid_motorista_uber: motoristaData.uuid_motorista_uber || '',
         email_bolt: motoristaData.email_bolt || motoristaData.email || '',
         telefone_bolt: motoristaData.telefone_bolt || motoristaData.phone || '',
+        identificador_motorista_bolt: motoristaData.identificador_motorista_bolt || '',
         usar_dados_padrao_plataformas: motoristaData.usar_dados_padrao_plataformas !== false
       }));
       
