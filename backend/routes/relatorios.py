@@ -880,15 +880,22 @@ async def get_resumo_semanal_parceiro(
         if veiculo and veiculo.get("matricula"):
             comb_query_conditions.append({"matricula": veiculo.get("matricula")})
         
+        # Buscar por data OU por semana/ano
         comb_query = {
-            "$or": comb_query_conditions,
-            "data": {"$gte": data_inicio, "$lte": data_fim}
+            "$and": [
+                {"$or": comb_query_conditions},
+                {"$or": [
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}},
+                    {"semana": semana, "ano": ano}
+                ]}
+            ]
         }
         
         comb_records = await db.abastecimentos_combustivel.find(comb_query, {"_id": 0}).to_list(100)
         for r in comb_records:
             combustivel_total += float(r.get("valor_total") or r.get("valor") or r.get("valor_liquido") or r.get("total") or 0)
-            
+        
+        if comb_records:
             logger.info(f"  {motorista.get('name')}: Combustível query returned {len(comb_records)} records, total €{combustivel_total:.2f}")
         
         # ============ CARREGAMENTO ELÉTRICO ============
