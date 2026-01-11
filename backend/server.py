@@ -11506,6 +11506,8 @@ async def importar_combustivel_excel(
                     "litros": to_float(get_value(['LITROS', 'Litros', 'litros', 'Liters'])),
                     "valor_liquido": to_float(get_value(['VALOR LÍQUIDO', 'Valor Líquido', 'valor_liquido', 'Net Value'])),
                     "iva": to_float(get_value(['IVA', 'iva', 'VAT'])),
+                    "valor_total": to_float(get_value(['TOTAL', 'Total', 'total', 'Total Value'])),
+                    "valor": to_float(get_value(['TOTAL', 'Total', 'total', 'Total Value'])) or to_float(get_value(['VALOR LÍQUIDO', 'Valor Líquido', 'valor_liquido', 'Net Value'])),
                     "km_atual": to_int(get_value(["KM'S", 'KMs', 'kms', 'Kilometers'])),
                     "recibo": str(get_value(['RECIBO', 'Recibo', 'recibo', 'Receipt'])),
                     "estado": str(get_value(['ESTADO', 'Estado', 'estado', 'Status'])),
