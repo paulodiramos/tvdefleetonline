@@ -1008,6 +1008,7 @@ async def get_resumo_semanal_parceiro(
             "tem_ajuste_manual": has_manual_adjustment,
             # Ganhos do Motorista
             "ganhos_uber": round(ganhos_uber, 2),
+            "uber_portagens": round(uber_portagens, 2),  # NOVO: Portagens reembolsadas pela Uber
             "ganhos_bolt": round(ganhos_bolt, 2),
             "total_ganhos": round(total_ganhos, 2),
             # Despesas Operacionais
@@ -1020,7 +1021,7 @@ async def get_resumo_semanal_parceiro(
             # Via Verde Acumulado
             "acumular_viaverde": acumular_viaverde,
             "viaverde_acumulado": round(viaverde_acumulado, 2),
-            "viaverde_semana_acumulado": round(via_verde_total, 2) if acumular_viaverde else 0,
+            "viaverde_semana_acumulado": round(uber_portagens, 2) if acumular_viaverde else 0,  # Portagens Uber da semana
             # Receitas do Parceiro
             "aluguer_veiculo": round(receita_aluguer, 2),
             "extras": round(receita_extras, 2),
@@ -1042,6 +1043,7 @@ async def get_resumo_semanal_parceiro(
         
         # Update totals
         totais["total_ganhos_uber"] += ganhos_uber
+        totais["total_uber_portagens"] = totais.get("total_uber_portagens", 0) + uber_portagens  # NOVO
         totais["total_ganhos_bolt"] += ganhos_bolt
         totais["total_ganhos"] += total_ganhos
         totais["total_combustivel"] += combustivel_total
