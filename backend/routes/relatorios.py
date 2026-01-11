@@ -963,15 +963,21 @@ async def get_resumo_semanal_parceiro(
         extras_total = 0.0
         extras_query = {
             "motorista_id": motorista_id,
-            "pago": False,  # Apenas não pagos
             "$or": [
                 {"semana": semana, "ano": ano},
-                {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                {"semana": None},  # Extras sem semana específica
             ]
         }
-        extras_records = await db.extras_motorista.find(extras_query, {"_id": 0}).to_list(100)
+        extras_records = await db.despesas_extras.find(extras_query, {"_id": 0}).to_list(100)
         for r in extras_records:
-            extras_total += float(r.get("valor") or 0)
+            # Só somar extras não pagos ou pendentes
+            if r.get("status", "pendente") != "cancelado":
+                valor_extra = float(r.get("valor") or 0)
+                # Se for crédito, subtrair; se for débito, somar
+                if r.get("tipo") == "credito":
+                    extras_total -= valor_extra
+                else:
+                    extras_total += valor_extra
         
         logger.info(f"  {motorista.get('name')}: Extras query returned {len(extras_records)} records, total €{extras_total:.2f}")
         
