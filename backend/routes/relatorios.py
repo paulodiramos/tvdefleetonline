@@ -2285,8 +2285,8 @@ async def generate_resumo_semanal_pdf(
                 {"semana": semana, "ano": ano},
                 {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}
             ]
-        }, {"_id": 0, "liquid_value": 1}).to_list(1000)
-        via_verde = sum(float(r.get("liquid_value") or 0) for r in vv_records)
+        }, {"_id": 0, "value": 1}).to_list(1000)
+        via_verde = sum(float(r.get("value") or 0) for r in vv_records)
         
         # Combustível
         comb_records = await db.abastecimentos_combustivel.find({
@@ -2675,7 +2675,7 @@ async def get_historico_importacoes(
                 "estado": r.get("estado", "processado")
             }
         vv_by_file[fname]["total_registos"] += 1
-        vv_by_file[fname]["total_valor"] += float(r.get("liquid_value") or r.get("value") or 0)
+        vv_by_file[fname]["total_valor"] += float(r.get("value") or 0)
     
     for f in vv_by_file.values():
         importacoes.append(f)
@@ -2869,7 +2869,7 @@ async def get_motorista_via_verde_total(
     
     REGRAS DE NEGÓCIO:
     - Excluir transações onde market_description = "portagens" ou "parques"
-    - Usar liquid_value para a soma
+    - Usar value para a soma
     - Sem atraso de semanas (dados da semana X para relatório da semana X)
     """
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
@@ -2985,7 +2985,7 @@ async def get_motorista_via_verde_total(
             filtered_portagens.append(p)
     
     # Calculate total
-    total = sum(float(p.get("liquid_value") or p.get("value") or 0) for p in filtered_portagens)
+    total = sum(float(p.get("value") or 0) for p in filtered_portagens)
     
     # Also check despesas_fornecedor for legacy imports
     despesas_vv = await db.despesas_fornecedor.find({
@@ -3530,7 +3530,7 @@ async def enviar_relatorio_para_motorista(
             "$or": [{"motorista_id": motorista_id}, {"matricula": matricula}],
             "entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}
         }, {"_id": 0}).to_list(500)
-        via_verde = sum(float(r.get("liquid_value") or 0) for r in vv_records)
+        via_verde = sum(float(r.get("value") or 0) for r in vv_records)
         
         # Combustível
         comb_records = await db.abastecimentos_combustivel.find({
