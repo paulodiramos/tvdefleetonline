@@ -1,5 +1,45 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-12 - Session 9 - Bug Fixes Resumo Semanal e PDF)
+
+### Bug Fixes P0 - Resumo Semanal e PDF (COMPLETO - 9/9 testes passaram)
+
+**Problema:** Utilizador reportou bugs no resumo semanal e relatório PDF:
+1. Coluna "Uber Portagens" não editável
+2. Coluna "Extras" não afetava o cálculo do valor líquido
+3. Valor do aluguer incorreto/ausente no PDF
+4. Totais incorretos no relatório PDF
+
+**Correções implementadas:**
+
+1. **Frontend (`ResumoSemanalParceiro.js` - linha 536-542):**
+   - Cálculo do líquido agora usa `editForm` quando em modo edição
+   - Permite atualização em tempo real ao alterar campos
+
+2. **Backend PUT endpoint (`relatorios.py` - linha 2124-2148):**
+   - Adicionado campo `uber_portagens` ao objecto de ajuste manual
+   - Garante persistência dos valores editados
+
+3. **Backend Ajustes Manuais (`relatorios.py` - linha 1044-1062):**
+   - `uber_portagens` agora é aplicado quando existem ajustes manuais
+
+4. **Backend PDF (`relatorios.py` - linha 1495-1512):**
+   - Adicionada verificação de ajustes manuais antes de gerar PDF
+   - Valores do ajuste substituem valores calculados
+
+**Testes realizados:**
+- ✅ Coluna "Uber Portagens" editável em modo edição
+- ✅ Alterações em "Extras" atualizam "Líquido" em tempo real
+- ✅ PDF mostra aluguer correto (€200 para Arlei Oliveira)
+- ✅ Ajustes manuais são aplicados no PDF
+- ✅ PUT endpoint guarda uber_portagens
+- ✅ 9/9 testes backend passaram
+- ✅ 100% testes frontend passaram
+
+**Test Report:** `/app/test_reports/iteration_6.json`
+
+---
+
 ## Changelog (2026-01-11 - Session 8 - Credenciais Plataformas)
 
 ### Correcção Via Verde - Usar Liquid Value (COMPLETO)
