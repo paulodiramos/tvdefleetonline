@@ -1,8 +1,32 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-12 - Session 9 - Novas Funcionalidades)
+## Changelog (2026-01-12 - Session 9)
 
-### Novas Funcionalidades Implementadas
+### Correções e Melhorias
+
+#### 1. Bug Fix: Ganhos Bolt no PDF vs Resumo Semanal (CORRIGIDO)
+- **Problema:** Valores diferentes entre resumo semanal e PDF
+- **Causa:** Campo `valor_liquido` não estava a ser lido no resumo semanal para `viagens_bolt`
+- **Ficheiro:** `/app/backend/routes/relatorios.py` linha 921
+
+#### 2. Menu Configurações do Parceiro (COMPLETO)
+- Adicionado link "📧 Email & Credenciais" no submenu Configurações
+- Ficheiro: `/app/frontend/src/components/Layout.js`
+
+#### 3. Sistema RPA - Nova/Editar Automação (COMPLETO)
+- Botão "Nova Automação" adicionado
+- Modal com campos: Nome, Descrição, Frequência, Ícone, Ativar
+- Botões de Editar e Eliminar em cada automação
+- Badge "Sistema" para automações pré-definidas
+- Ficheiro: `/app/frontend/src/pages/AutomacaoRPA.js`
+
+#### 4. Menu Admin - Automação RPA (COMPLETO)
+- Reorganizado menu admin com `/automacao-rpa` em destaque
+- Ficheiro: `/app/frontend/src/components/Layout.js`
+
+---
+
+### Novas Funcionalidades Implementadas (Sessão Anterior)
 
 #### 1. Sistema de Email por Parceiro (COMPLETO)
 - Página `/configuracoes-parceiro` com configuração SMTP
