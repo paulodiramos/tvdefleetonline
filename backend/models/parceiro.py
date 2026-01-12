@@ -17,6 +17,19 @@ class ConfiguracaoEmailSMTP(BaseModel):
     ativo: bool = False
 
 
+class ConfiguracaoWhatsApp(BaseModel):
+    """Configuração de WhatsApp do parceiro"""
+    telefone: Optional[str] = None  # Número com código país (+351...)
+    nome_exibicao: Optional[str] = None  # Nome que aparece nas mensagens
+    mensagem_boas_vindas: Optional[str] = None
+    mensagem_relatorio: Optional[str] = None  # Template para relatórios
+    ativo: bool = False
+    # Opções de envio
+    enviar_relatorios_semanais: bool = True
+    enviar_alertas_documentos: bool = True
+    enviar_alertas_veiculos: bool = True
+
+
 class CredenciaisPlataforma(BaseModel):
     """Credenciais de acesso às plataformas"""
     # Uber
