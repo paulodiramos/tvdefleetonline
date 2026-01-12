@@ -1459,11 +1459,17 @@ async def generate_motorista_pdf(
     # Se não tiver no motorista, buscar do veículo associado
     if aluguer == 0:
         veiculo_id = motorista.get("veiculo_id") or motorista.get("vehicle_id")
+        logger.info(f"PDF Motorista {motorista.get('name')}: veiculo_id={veiculo_id}")
         if veiculo_id:
             veiculo = await db.vehicles.find_one({"id": veiculo_id}, {"_id": 0})
             if veiculo:
                 # Usar função que calcula com base na época alta/baixa
                 aluguer = calcular_aluguer_semanal(veiculo, semana, ano)
+                logger.info(f"PDF Motorista {motorista.get('name')}: aluguer calculado={aluguer}")
+            else:
+                logger.warning(f"PDF Motorista {motorista.get('name')}: veículo não encontrado")
+        else:
+            logger.warning(f"PDF Motorista {motorista.get('name')}: sem veiculo_id")
     
     extras = 0.0
     extras_records = await db.despesas_extras.find({
