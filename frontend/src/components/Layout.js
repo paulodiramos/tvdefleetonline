@@ -80,6 +80,7 @@ const Layout = ({ children, user, onLogout }) => {
           label: 'Configurações', 
           icon: Settings,
           submenu: [
+            { path: '/configuracoes-parceiro', label: '📧 Email & Credenciais' },
             { path: '/credenciais-plataformas', label: '🔐 Credenciais Plataformas' },
             { path: '/configuracao-relatorios', label: '⚙️ Configurações' }
           ]
