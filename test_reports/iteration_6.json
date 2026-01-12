@@ -1,0 +1,96 @@
+{
+  "summary": "Completed comprehensive testing of Resumo Semanal bug fixes. All 9 backend tests passed. Frontend UI verified - Uber Portagens column is editable, Extras column affects Líquido calculation in real-time, PDF downloads correctly with manual adjustments applied, and aluguer value (€200) is correctly displayed.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_resumo_semanal_bugs.py",
+    "/app/test_reports/pytest/pytest_resumo_bugs.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Frontend ResumoSemanalParceiro.js correctly calculates Líquido in real-time using editForm values when in edit mode (lines 536-542)",
+    "Backend PUT endpoint correctly saves uber_portagens field (line 2154 in relatorios.py)",
+    "Backend applies manual adjustments (ajustes_semanais) when generating resumo-semanal data (lines 1044-1062)",
+    "Backend applies manual adjustments when generating PDF (lines 1495-1512)",
+    "Aluguer is correctly calculated from vehicle tipo_contrato using calcular_aluguer_semanal function"
+  ],
+  "updated_files": [
+    "/app/tests/test_resumo_semanal_bugs.py"
+  ],
+  "success_rate": {
+    "backend": "100% (9/9 tests passed)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "parceiro_email": "parceiro@tvdefleet.com",
+    "parceiro_password": "123456",
+    "test_motorista_id": "57d6a119-e5af-4c7f-b357-49dc4f618763",
+    "test_motorista_name": "Arlei Oliveira",
+    "test_vehicle_matricula": "AX-38-FH",
+    "test_aluguer": 200
+  },
+  "seed_data_creation": "None - used existing test data. Manual adjustments created during testing were cleaned up.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Resumo Semanal bug fixes fully tested. Test motorista Arlei Oliveira (ID: 57d6a119-e5af-4c7f-b357-49dc4f618763) has vehicle AX-38-FH with aluguer €200. Backend tests in /app/tests/test_resumo_semanal_bugs.py cover PUT endpoint for uber_portagens, extras affecting líquido, PDF generation with manual adjustments, and data persistence.",
+  "verified_features": {
+    "uber_portagens_editable": {
+      "frontend_edit_mode": "PASS - Input field visible and editable in edit mode",
+      "backend_put_endpoint": "PASS - PUT /api/relatorios/parceiro/resumo-semanal/motorista/{id} saves uber_portagens",
+      "data_persistence": "PASS - uber_portagens value persists after save"
+    },
+    "extras_affects_liquido": {
+      "frontend_realtime_calculation": "PASS - Líquido updates in real-time when editing Extras",
+      "backend_calculation": "PASS - Líquido = Ganhos - Despesas - Aluguer - Extras",
+      "data_persistence": "PASS - extras value persists and affects líquido"
+    },
+    "pdf_aluguer": {
+      "aluguer_in_resumo": "PASS - Arlei Oliveira shows aluguer €200 in resumo semanal",
+      "pdf_generation": "PASS - PDF generated successfully with correct filename",
+      "manual_adjustments_applied": "PASS - Manual adjustments are applied when generating PDF"
+    },
+    "pdf_totals": {
+      "pdf_download": "PASS - PDF downloads correctly",
+      "pdf_options_modal": "PASS - PDF options modal shows with checkboxes for matricula, via verde, abastecimentos, carregamentos"
+    }
+  },
+  "backend_tests": {
+    "total_tests": 9,
+    "passed": 9,
+    "failed": 0,
+    "test_classes": [
+      "TestResumoSemanalAPI (2 tests) - test_get_resumo_semanal, test_motorista_has_aluguer",
+      "TestPutEndpointUberPortagens (2 tests) - test_put_saves_uber_portagens, test_put_saves_extras_and_affects_liquido",
+      "TestPDFGeneration (2 tests) - test_pdf_endpoint_returns_pdf, test_pdf_uses_manual_adjustments",
+      "TestManualAdjustmentsPersistence (1 test) - test_manual_adjustments_persist_after_reload",
+      "TestLiquidoCalculation (1 test) - test_liquido_formula",
+      "TestCleanup (1 test) - test_cleanup_manual_adjustments"
+    ]
+  },
+  "frontend_tests": {
+    "login_and_navigation": "PASS - Login as parceiro and navigate to /resumo-semanal",
+    "week_navigation": "PASS - Navigate to S2/2026 using chevron buttons",
+    "edit_mode": "PASS - Click edit button shows 8 input fields for all editable columns",
+    "uber_portagens_input": "PASS - Second input field is Uber Portagens, editable",
+    "extras_input": "PASS - Eighth input field is Extras, editable",
+    "liquido_realtime_update": "PASS - Líquido value updates in real-time during editing",
+    "save_button": "PASS - Save button saves values and shows 'Valores atualizados!' toast",
+    "pdf_button": "PASS - PDF button opens options modal",
+    "pdf_download": "PASS - Gerar PDF button downloads PDF file"
+  },
+  "bugs_fixed_verification": {
+    "bug_1_uber_portagens_not_editable": "FIXED - Uber Portagens column is now editable in edit mode",
+    "bug_2_extras_not_affecting_liquido": "FIXED - Extras column now affects Líquido calculation in real-time",
+    "bug_3_aluguer_not_in_pdf": "FIXED - Aluguer value (€200) is correctly shown and included in PDF",
+    "bug_4_incorrect_totals_in_pdf": "FIXED - PDF uses manual adjustments when available",
+    "bug_5_manual_adjustments_not_applied_to_pdf": "FIXED - Manual adjustments are applied when generating PDF",
+    "bug_6_put_endpoint_not_saving_uber_portagens": "FIXED - PUT endpoint now saves uber_portagens field"
+  }
+}
