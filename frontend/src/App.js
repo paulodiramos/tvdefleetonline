@@ -106,6 +106,8 @@ import ConfiguracaoCSV from "@/pages/ConfiguracaoCSV";
 import ImportarDespesas from "@/pages/ImportarDespesas";
 import Automacao from "@/pages/Automacao";
 import FichaMotorista from "@/pages/FichaMotorista";
+import ConfiguracoesParceiro from "@/pages/ConfiguracoesParceiro";
+import AutomacaoRPA from "@/pages/AutomacaoRPA";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
