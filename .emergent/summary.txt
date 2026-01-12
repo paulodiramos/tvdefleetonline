@@ -1,129 +1,165 @@
 <analysis>**original_problem_statement:**
-O utilizador iniciou com a tarefa de adicionar campos de ID para Uber e Bolt. Ao longo da sessão, o escopo expandiu-se para incluir:
-1.  **Correção de Bugs P1:** Resolver problemas com a edição do resumo semanal, importação de combustível e um erro na importação de elétricos.
-2.  **Lógica de Via Verde (Portagens):** Implementar um sistema de acumulação de crédito de Via Verde, onde o valor das portagens, em vez de ser descontado, é adicionado a um saldo. Implementar uma UI para permitir o abate (desconto) desse saldo.
-3.  **Alterações na Importação Uber:** Modificar a importação de CSV da Uber para usar a coluna  como ganho principal e somar as colunas  e  num novo campo .
-4.  **Sistema de Despesas/Créditos Extras:** Criar um sistema para adicionar transações manuais aos motoristas, como danos, dívidas ou crédito de dias.
-5.  **Correção de Bug de Ganhos Bolt:** Os ganhos da Bolt não apareciam no resumo semanal.
-6.  **Correção de Bug de Eliminação Bolt:** A eliminação de dados semanais não apagava os ganhos da Bolt.
-7.  **Investigação de Dados Via Verde:** Valores de Via Verde no relatório não correspondiam ao esperado pelo utilizador para a semana 1 de 2026.
-8.  **Melhoria no PDF:** Adicionar mais detalhes (local, data/hora, duração) às tabelas de Via Verde e Carregamentos Elétricos no relatório PDF semanal do motorista.
+O utilizador iniciou com a tarefa de adicionar campos de ID para Uber e Bolt, mas a sessão evoluiu para uma série de desenvolvimentos e correções de bugs, incluindo:
+1.  Implementação de um sistema de crédito/débito para portagens (Via Verde Acumulado).
+2.  Criação de um sistema de Despesas/Créditos Extras com UI na ficha do motorista.
+3.  Reformulação da página de Credenciais de Plataformas.
+4.  Múltiplas correções e refinamentos na lógica de importação de CSV/Excel (Uber, Via Verde, Combustível, Elétricos), especificando quais colunas usar para os cálculos.
+5.  Implementação de uma lógica complexa para o cálculo do aluguer do veículo, considerando épocas alta e baixa.
+6.  Melhorias nos relatórios PDF para incluir mais detalhes e separar data e hora.
+7.  Correção de uma série de bugs interligados nos cálculos de totais do resumo semanal e do relatório PDF, que é o problema atual.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação está funcional, com várias funcionalidades implementadas e bugs corrigidos. O agente implementou a lógica de backend para adicionar mais detalhes ao relatório semanal em PDF do motorista, especificamente adicionando colunas para Local e Data/Hora na tabela de Via Verde, e uma coluna de Tempo na tabela de carregamentos elétricos. O código foi escrito mas ainda não foi testado para confirmar que o PDF é gerado corretamente com as novas colunas.
+A aplicação é uma ferramenta de gestão de frotas com funcionalidades de importação de dados (Uber, Bolt, Via Verde, combustível, elétricos), gestão de motoristas e veículos, e geração de relatórios financeiros semanais (em UI e PDF). Recentemente, foi adicionada uma UI para gerir despesas extras diretamente na ficha do motorista e uma nova página para gerir credenciais de plataformas. A lógica de cálculo do aluguer foi tornada mais sofisticada para lidar com preços sazonais. O backend foi modificado para separar data e hora durante a importação para facilitar a sua apresentação.
 
 **Last working item**:
--   Last item agent was working: Adicionar colunas de detalhe (, , ) às tabelas de Via Verde e Carregamentos Elétricos na função de geração de PDF em .
--   Status: IN PROGRESS
--   Agent Testing Done: N
--   Which testing method agent to use? backend testing agent
--   User Testing Done: N
+-   **Last item agent was working:** Corrigir um conjunto de bugs inter-relacionados no resumo semanal e no relatório PDF, reportados pelo utilizador. Os problemas incluem:
+    1.  A coluna Uber Portagens não está editável.
+    2.  Valores inseridos na coluna Extras não são refletidos no cálculo do valor líquido final no resumo semanal.
+    3.  O valor do aluguer do veículo não aparece (ou está incorreto) no relatório PDF.
+    4.  Os totais gerais no relatório PDF estão incorretos.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** N
+-   **Which testing method agent to use?** both
+    -   **Backend:** Utilizar  para testar o endpoint de geração do PDF (). **Crítico:** Antes do teste, é necessário garantir que existe um motorista de teste associado a um veículo que tenha um contrato () com valores de aluguer definidos.
+    -   **Frontend:** Utilizar a  para testar a página . O teste deve incluir clicar em Editar, inserir valores nos campos Uber Portagens e Extras, e verificar se o campo Líquido é atualizado corretamente em tempo real.
+-   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Discrepância de dados na Via Verde (P1)**
-    -   **Description:** O utilizador reportou que os valores de Via Verde para a S1/2026 estão incorretos no relatório (€14.15 em vez de €20.15). A investigação do agente concluiu que a soma dos dados existentes na base de dados para essa semana é de facto €14.15, indicando um problema de dados (registos em falta ou importados incorretamente) e não um bug de cálculo.
+-   **Issue 1: Bugs no Resumo Semanal e Relatório PDF (P0)**
+    -   **Description:** O utilizador reportou que (1) a coluna Uber Portagens não é editável, (2) a coluna Extras não afeta o total líquido, e (3) o aluguer e os totais estão incorretos no PDF.
+    -   **Attempted fixes:** O agente corrigiu o cálculo do líquido no frontend para incluir os extras e corrigiu a query do backend que busca o veículo para o cálculo do aluguer (usando  em vez de ). No entanto, o teste do aluguer falhou por falta de dados de teste (veículo sem contrato), e a edição da coluna Uber Portagens não foi totalmente resolvida.
     -   **Next debug checklist:**
-        1.  Pedir ao utilizador para fornecer o ficheiro de importação original da Via Verde para a S1/2026.
-        2.  Analisar o ficheiro para encontrar os registos em falta que somam a diferença de ~€6.
-        3.  Verificar se esses registos foram atribuídos ao veículo/motorista correto durante a importação.
-        4.  Considerar a limpeza de dados duplicados ou mal classificados de Via Verde de Dezembro 2025 que foram encontrados durante a investigação.
-    -   **Why fix this issue and what will be achieved with the fix?** Garantir a precisão dos relatórios financeiros, que é crucial para a confiança do utilizador na plataforma.
+        1.  **Criar/Verificar Dados de Teste:** Garantir que um motorista de teste está associado a um veículo com um  e valores de aluguer configurados.
+        2.  **Testar Backend (PDF):** Gerar o PDF para o motorista de teste e verificar se o aluguer e os totais estão corretos.
+        3.  **Testar Frontend (Resumo):** Na página do resumo, entrar em modo de edição e confirmar que (a) o campo Uber Portagens é um input editável e (b) inserir um valor em Extras atualiza imediatamente o campo Líquido.
+    -   **Why fix this issue and what will be achieved with the fix?** A precisão dos relatórios financeiros é crítica para a funcionalidade principal da aplicação e para a confiança do utilizador.
     -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** both
+
+-   **Issue 2: Discrepância de Dados na Via Verde (P1)**
+    -   **Description:** O utilizador reportou um valor incorreto no total da Via Verde. Subsequentemente, instruiu o agente a usar a coluna  em vez de  para todos os cálculos, o que foi implementado.
+    -   **Next debug checklist:** A correção no código está feita. O agente deve pedir ao utilizador para reimportar o ficheiro da Via Verde para a semana em questão e confirmar se o problema está resolvido.
+    -   **Why fix this issue and what will be achieved with the fix?** Garante a precisão dos relatórios financeiros.
+    -   **Status:** USER VERIFICATION PENDING
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** backend
-    -   **Blocked on other issue:** Aguarda ficheiro de dados do utilizador.
 
--   **Issue 2: Refatoração do Backend (P2)**
-    -   **Description:** Os ficheiros  e  continuam excessivamente grandes e complexos, dificultando a manutenção.
-    -   **Next debug checklist:** Planear a extração de mais um grupo de endpoints de  (ex: os restantes de importação) para os seus próprios ficheiros de rotas. Planear a divisão de  em funções utilitárias menores.
-    -   **Why fix this issue and what will be achieved with the fix?** Melhorar a manutenibilidade, legibilidade e escalabilidade do código do backend.
-    -   **Status:** NOT STARTED (nesta sessão)
+-   **Issue 3: Refatoração do Backend (P2)**
+    -   **Description:** Os ficheiros  e  continuam monolíticos, complexos e difíceis de manter.
+    -   **Next debug checklist:** Planear e propor ao utilizador a extração da lógica de importação de  para ficheiros de rotas dedicados (ex: ).
+    -   **Why fix this issue and what will be achieved with the fix?** Melhorar a manutenibilidade e escalabilidade do código.
+    -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** backend
 
 **In progress Task List**:
--   **Task 1: Testar Geração do PDF com Novos Detalhes (P0)**
-    -   **Where to resume:** O código em  foi modificado. É necessário chamar o endpoint de geração de PDF () e inspecionar o ficheiro PDF resultante.
-    -   **What will be achieved with this?** Confirmar que as novas colunas (Local, Data/Hora, Tempo) aparecem corretamente nas tabelas de detalhes do PDF, sem quebrar a formatação.
-    -   **Status:** TESTING PENDING
-    -   **Should Test frontend/backend/both after fix?** backend
-    -   **Blocked on something:** Não
+-   Nenhuma. As tarefas atuais são classificadas como correções de bugs.
 
 **Upcoming and Future Tasks**
--   **UI para Sistema de Despesas Extras (P1):** O backend () para adicionar danos, dívidas e créditos está pronto. Falta criar a interface no frontend, provavelmente um modal na ficha do motorista ou no resumo semanal, para adicionar e visualizar estas transações.
--   **Refinar Resumo Semanal (P2):** Adicionar o campo Uber Portagens à tabela de resumo no frontend () para corresponder à alteração já feita no backend.
--   **Integração com SendGrid (P2):** A funcionalidade de envio de email continua bloqueada à espera da API Key do utilizador.
--   **Lógica de Sincronização Automática (RPA) (P3):** Tarefa de longo prazo, ainda não iniciada.
+-   **Future Tasks:**
+    -   **(P2) Integração com SendGrid:** A funcionalidade de envio de email continua bloqueada, aguardando a API Key do utilizador.
+    -   **(P2) UI de Admin para Fornecedores:** Criar uma área de administração para que o utilizador possa configurar a lista de fornecedores de combustível e GPS, em vez de estarem fixos no código.
+    -   **(P3) Lógica de Sincronização Automática (RPA):** Tarefa de longo prazo, ainda não iniciada.
 
 **Completed work in this session**
--   **IDs de Plataforma (Uber/Bolt):** Implementada a funcionalidade completa: UI na ficha do motorista, gravação no backend, e atualização da lógica de importação para usar os novos IDs.
--   **Correção de Edição do Resumo Semanal:** Resolvido o bug que impedia os ajustes manuais de serem refletidos corretamente.
--   **Correção de Importação de Combustível:** Corrigida a lógica de agregação em todo o backend para usar a ordem correta de campos (, , ).
--   **Funcionalidade de Via Verde Acumulado:**
-    -   Implementada a lógica no backend para acumular o valor das portagens em vez de descontar, quando a opção está ativa para um motorista.
-    -   Criada UI no resumo semanal para mostrar o estado de acumulação, o saldo total e um botão para abater o valor.
-    -   Implementado o modal de abate e o endpoint de backend correspondente.
--   **Atualização da Importação Uber:** A função  foi reescrita para usar as novas colunas de ganhos () e calcular o novo campo .
--   **Sistema de Despesas/Créditos Extras:** Criado o endpoint de backend para registar transações manuais (danos, dívidas, etc.).
--   **Correção Ganhos Bolt:** Resolvido o bug que impedia os ganhos da Bolt de aparecerem no resumo, ajustando a query para ler de  e corrigindo o  dos dados de teste.
--   **Correção Eliminação Bolt:** Resolvido o bug que impedia a eliminação de ganhos da Bolt, adicionando a coleção  à lógica de delete.
+-   **UI para Sistema de Extras:** Implementada uma nova tab Extras/Dívidas na página  para adicionar e visualizar transações manuais.
+-   **Nova Página Credenciais Plataformas:** Criada e integrada uma nova página () para gestão de credenciais.
+-   **Coluna Uber Portagens:** Adicionada a coluna Uber Portagens à tabela do .
+-   **Lógica de Cálculo de Aluguer Sazonal:** Implementada uma função no backend () que calcula o valor do aluguer com base nos meses de época alta/baixa definidos no contrato do veículo.
+-   **Correção de Lógica de Importação:** Ajustadas as funções de importação de Via Verde (para usar ), Carregamentos Elétricos (mapeamento de campos) e Uber (para usar as colunas de rendimentos e portagens corretas).
+-   **Separação de Data/Hora:** Modificada a importação para guardar data e hora em campos separados (, ) e atualizados os relatórios PDF para os apresentar em colunas distintas.
+-   **Campo Contacto de Energia:** Adicionado um novo campo no modelo do motorista e na UI da  para identificar o motorista em importações de carregamentos elétricos.
+-   **Unificação da Coleção Extras:** Corrigido um bug crítico ao unificar todo o código para usar a coleção  para transações manuais.
+
+**Earlier issues found/mentioned but not fixed**
+-   Nenhum que não esteja já listado.
+
+**Known issue recurrence from previous fork**
+-   **Issue recurrence in previous fork:** Refatoração do Backend ( e  estão demasiado grandes).
+-   **Recurrence count:** 2
+-   **Status:** NOT STARTED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Debugging de Dados vs. Código:** O agente distinguiu com sucesso entre um bug no código (ex: ganhos Bolt não apareciam) e um problema nos dados (ex: discrepância nos valores de Via Verde), focando a solução no local correto.
--   **Coalescência de Fontes de Dados:** Para corrigir os ganhos da Bolt, o agente modificou a query de resumo para agregar dados de duas coleções diferentes ( e ), resolvendo o problema sem migração de dados.
--   **Feature Flagging Simples:** A implementação do Via Verde Acumulado utiliza um campo de configuração no motorista () para alterar dinamicamente o fluxo de cálculo de despesas, funcionando como uma feature flag a nível de utilizador.
+-   **Lógica de Negócio Complexa:** Implementação de regras de negócio específicas, como o cálculo de aluguer sazonal, diretamente na lógica de relatórios do backend.
+-   **Consistência do Modelo de Dados:** A resolução de um bug chave passou pela unificação do uso de coleções da base de dados (usar  em todo o lado).
+-   **Dependência de Dados de Teste:** A depuração de vários bugs foi dificultada ou bloqueada pela ausência de dados de teste adequados na base de dados (ex: veículo sem contrato para testar o cálculo do aluguer).
+
+**key DB schema**
+-   **motoristas:** Adicionado  (string). Campo  (string, ID) é usado para ligar ao veículo.
+-   **veiculos:** O campo  (objeto) contém a lógica de aluguer sazonal (, , ).
+-   **despesas_extras:** Coleção unificada para transações manuais.
+-   **portagens_viaverde, abastecimentos_combustivel, despesas_combustivel:** As coleções de importação agora contêm os campos  e .
+
+**changes in tech stack**
+-   Nenhuma.
 
 **All files of reference**
--   : Contém a lógica de resumo, eliminação e geração de PDF. **Alvo das últimas modificações.**
--   : Contém a lógica de importação de todos os ficheiros CSV/Excel.
--   : Página do frontend para exibir os resumos semanais.
--   : Contém os endpoints para gerir motoristas, incluindo a nova API de transações.
--   : Página para gerir detalhes de um motorista.
+-   : Contém toda a lógica de geração de relatórios (dados para a UI e ficheiros PDF). É central para os bugs atuais.
+-   : Contém toda a lógica de importação de dados.
+-   : UI principal para o resumo semanal, onde os bugs de cálculo e interatividade são visíveis.
+-   : Página de perfil do motorista.
+-   : Modelo Pydantic do motorista.
 
 **Areas that need refactoring**:
--   ** (CRÍTICO):** Continua monolítico, com toda a lógica de importação de múltiplos formatos num único ficheiro.
--   ** (CRÍTICO):** Ficheiro extremamente grande que mistura queries de agregação, lógica de negócio e geração de PDFs.
+-   ** (CRÍTICO):** Continua a ser um ficheiro monolítico com toda a lógica de importação.
+-   ** (CRÍTICO):** Ficheiro extremamente grande que mistura lógica de negócio, queries à base de dados e geração de PDFs.
 
 **key api endpoints**
--   : Para gerar o relatório semanal do motorista (precisa de ser testado).
--   : (NOVO) Para adicionar débitos/créditos a um motorista.
--   : Para descontar um valor do saldo de Via Verde acumulado.
--   : Endpoint de eliminação de dados semanais.
+-   : Geração do relatório PDF do motorista.
+-   : Fornece os dados para a página do resumo semanal do parceiro.
+-   : Adiciona uma nova transação de extra a um motorista.
 
 **Critical Info for New Agent**
--   A tarefa mais imediata é **testar a geração do PDF** para validar as últimas alterações de código. Use o endpoint  e verifique o ficheiro resultante.
--   O problema dos valores da Via Verde () é um **problema de dados, não de código**. Não tente corrigir o cálculo. O próximo passo é obter e analisar os ficheiros de origem do utilizador.
--   Esteja ciente de que existem duas coleções para os dados da Bolt:  e . A lógica atual lê de ambas, e a lógica de eliminação também apaga de ambas.
--   O backend para despesas extras está pronto, mas o frontend não. Este é um bom próximo passo para propor ao utilizador após concluir as correções pendentes.
+-   A prioridade máxima é resolver os bugs reportados na última mensagem do utilizador ().
+-   **É fundamental criar dados de teste adequados para depurar.** Especificamente, para testar o cálculo do aluguer, tem de garantir que um motorista de teste está ligado a um veículo com um contrato de aluguer totalmente configurado. Sem isso, não conseguirá verificar a correção.
+-   O utilizador é muito detalhado sobre as colunas de CSV a usar. A precisão nos cálculos financeiros é a maior prioridade.
+-   A coleção  é agora a única fonte de verdade para transações manuais. Não use .
+
+**documents and test reports created in this job**
+-    foi atualizado.
+
+**Last 10 User Messages and any pending HUMAN messages**
+1.  : Reportou bugs no resumo semanal e PDF (não editável, cálculo incorreto de extras e aluguer). **Status: IN PROGRESS**
+2.  : Reportou novamente bugs no PDF com um screenshot. **Status: IN PROGRESS**
+3.  : Deu instruções sobre a lógica de importação da Uber e cálculo de aluguer sazonal. **Status: COMPLETED**
+4.  : Clarificou a lógica de importação da Uber. **Status: COMPLETED**
+5.  : Reportou bugs no PDF sobre aluguer, Bolt e portagens Uber. **Status: COMPLETED**
+6.  : Reportou um bug no cálculo da coluna Extra. **Status: COMPLETED**
+7.  : Pediu para adicionar a hora nos detalhes da Via Verde. **Status: COMPLETED**
+8.  : Pediu para separar data/hora na importação da Via Verde. **Status: COMPLETED**
+9.  : Pediu para separar data/hora em todas as importações. **Status: COMPLETED**
+10. : Pediu para separar data e hora nos relatórios PDF. **Status: COMPLETED**
 
 **Project Health Check:**
 -   **Broken:**
-    -   Funcionalidade de envio de email via SendGrid (aguarda API Key).
+    -   Cálculos e interatividade na página de Resumo Semanal ().
+    -   Cálculo de totais no relatório PDF (dependente de dados de teste corretos).
+    -   Integração SendGrid (aguarda API Key).
 -   **Mocked:**
-    -   Lógica de automação (RPA) para sincronização.
--   **Needs Testing:**
-    -   Geração do relatório em PDF com as novas colunas de detalhe.
+    -   Lógica de automação RPA.
 -   **Needs Refactoring (High Priority):**
     -   
     -   
 
 **3rd Party Integrations**
--   Pillow, ReportLab, SendGrid, Playwright, openpyxl, Google Analytics. Nenhuma nova integração foi adicionada.
+-   Pillow, ReportLab, openpyxl, Playwright.
+-   SendGrid (configurado mas inativo).
 
 **Testing status**
 -   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** N/A
--   **Known regressions:** Nenhuma regressão foi identificada nesta sessão. Os bugs reportados foram corrigidos.
+-   **Known regressions:** Os cálculos no resumo semanal e no PDF regrediram ou nunca funcionaram corretamente com todas as novas funcionalidades (extras, aluguer sazonal).
 
 **Credentials to test flow:**
 -   **Admin:**  / 
 -   **Parceiro:**  / 
 
 **What agent forgot to execute**
--   O agente escreveu o código para modificar o relatório PDF em  mas não executou um teste para gerar e verificar o PDF resultante. Este é o passo mais crítico a ser executado a seguir.</analysis>
+-   O agente não concluiu a depuração dos bugs reportados pelo utilizador na última mensagem. Embora tenha identificado as causas prováveis (lógica de frontend, queries de backend), não executou um ciclo de teste completo com os dados corretos para verificar as correções. A questão da coluna Uber Portagens não ser editável também não foi totalmente resolvida.</analysis>
