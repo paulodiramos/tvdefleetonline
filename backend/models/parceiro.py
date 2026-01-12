@@ -5,6 +5,32 @@ from typing import Optional, Dict, Any, List
 from datetime import datetime
 
 
+class ConfiguracaoEmailSMTP(BaseModel):
+    """Configuração de email SMTP do parceiro"""
+    smtp_host: Optional[str] = None
+    smtp_port: Optional[int] = 587
+    smtp_usuario: Optional[str] = None
+    smtp_password: Optional[str] = None
+    email_remetente: Optional[str] = None
+    nome_remetente: Optional[str] = None
+    usar_tls: bool = True
+    ativo: bool = False
+
+
+class CredenciaisPlataforma(BaseModel):
+    """Credenciais de acesso às plataformas"""
+    # Uber
+    uber_email: Optional[str] = None
+    uber_telefone: Optional[str] = None
+    uber_password: Optional[str] = None
+    # Bolt
+    bolt_email: Optional[str] = None
+    bolt_password: Optional[str] = None
+    # Via Verde
+    viaverde_usuario: Optional[str] = None
+    viaverde_password: Optional[str] = None
+
+
 class ParceiroCreate(BaseModel):
     """Model for creating a new parceiro"""
     nome_empresa: str
@@ -77,6 +103,10 @@ class Parceiro(BaseModel):
     dias_aviso_seguro: int = 30
     dias_aviso_inspecao: int = 30
     km_aviso_revisao: int = 5000
+    # Configuração de Email SMTP
+    config_email: Optional[ConfiguracaoEmailSMTP] = None
+    # Credenciais de Plataformas
+    credenciais_plataformas: Optional[CredenciaisPlataforma] = None
     created_at: datetime
     # Campos antigos mantidos como opcionais para compatibilidade
     name: Optional[str] = None
