@@ -9157,6 +9157,18 @@ async def create_plano(plano_data: PlanoCreate, current_user: Dict = Depends(get
     
     return PlanoAssinatura(**plano_dict)
 
+
+@api_router.get("/admin/planos-motorista")
+async def get_planos_motorista_admin(current_user: Dict = Depends(get_current_user)):
+    """Admin: Get motorista plans from planos_sistema collection"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Buscar APENAS da colecção planos_sistema, tipo motorista
+    planos = await db.planos_sistema.find({"tipo_usuario": "motorista"}, {"_id": 0}).to_list(100)
+    return planos
+
+
 @api_router.get("/admin/planos", response_model=List[PlanoAssinatura])
 async def get_planos(current_user: Dict = Depends(get_current_user)):
     """Admin: Get all subscription plans"""
