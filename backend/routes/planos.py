@@ -194,11 +194,16 @@ async def admin_create_plano(
         "nome": plano_data.get("nome"),
         "descricao": plano_data.get("descricao", ""),
         "preco_mensal": plano_data.get("preco_mensal", 0),
+        "preco_semanal": plano_data.get("preco_semanal", 0),
         "preco_anual": plano_data.get("preco_anual"),
         "features": plano_data.get("features", []),
         "tipo_usuario": plano_data.get("tipo_usuario", "parceiro"),
+        "categoria": plano_data.get("categoria"),
         "modulos": plano_data.get("modulos", []),
         "ativo": True,
+        "ordem": plano_data.get("ordem", 0),
+        "cor": plano_data.get("cor", "slate"),
+        "icone": plano_data.get("icone", "package"),
         "permite_trial": plano_data.get("permite_trial", False),
         "dias_trial": plano_data.get("dias_trial", 0),
         "created_at": now,
@@ -208,6 +213,30 @@ async def admin_create_plano(
     await db.planos_sistema.insert_one(plano)
     
     return plano
+
+
+@router.get("/admin/planos-motorista/stats")
+async def admin_get_planos_motorista_stats(current_user: Dict = Depends(get_current_user)):
+    """Get statistics for motorista plans (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Contar total de motoristas
+    total_motoristas = await db.motoristas.count_documents({})
+    total_users_motoristas = await db.users.count_documents({"role": "motorista"})
+    
+    # Contar motoristas por plano
+    por_plano = {}
+    planos = await db.planos_sistema.find({"tipo_usuario": "motorista"}, {"_id": 0, "id": 1, "categoria": 1}).to_list(10)
+    
+    for plano in planos:
+        count = await db.assinaturas.count_documents({"plano_id": plano["id"], "status": "ativo"})
+        por_plano[plano.get("categoria", "basico")] = count
+    
+    return {
+        "total_motoristas": total_motoristas + total_users_motoristas,
+        "por_plano": por_plano
+    }
 
 
 @router.get("/admin/planos")
