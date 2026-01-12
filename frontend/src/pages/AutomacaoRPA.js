@@ -233,6 +233,67 @@ const AutomacaoRPA = ({ user, onLogout }) => {
     }
   };
 
+  const handleNovaAutomacao = () => {
+    setEditingAutomacao(null);
+    setFormAutomacao({
+      nome: '',
+      descricao: '',
+      icone: 'custom',
+      frequencia: 'diario',
+      ativo: false
+    });
+    setShowModal(true);
+  };
+
+  const handleEditarAutomacao = (automacao) => {
+    setEditingAutomacao(automacao);
+    setFormAutomacao({
+      nome: automacao.nome,
+      descricao: automacao.descricao,
+      icone: automacao.icone,
+      frequencia: automacao.frequencia,
+      ativo: automacao.ativo
+    });
+    setShowModal(true);
+  };
+
+  const handleSaveAutomacao = () => {
+    if (!formAutomacao.nome.trim()) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+
+    if (editingAutomacao) {
+      // Editar existente
+      setAutomacoes(prev => prev.map(a => 
+        a.id === editingAutomacao.id 
+          ? { ...a, ...formAutomacao } 
+          : a
+      ));
+      toast.success('Automação atualizada!');
+    } else {
+      // Criar nova
+      const novaAutomacao = {
+        id: `custom_${Date.now()}`,
+        ...formAutomacao,
+        ultima_execucao: null,
+        proxima_execucao: null,
+        status: formAutomacao.ativo ? 'ativo' : 'parado',
+        sistema: false
+      };
+      setAutomacoes(prev => [...prev, novaAutomacao]);
+      toast.success('Nova automação criada!');
+    }
+    setShowModal(false);
+  };
+
+  const handleDeleteAutomacao = (automacaoId) => {
+    if (window.confirm('Tem certeza que deseja eliminar esta automação?')) {
+      setAutomacoes(prev => prev.filter(a => a.id !== automacaoId));
+      toast.success('Automação eliminada!');
+    }
+  };
+
   if (user?.role !== 'admin') {
     return null;
   }
