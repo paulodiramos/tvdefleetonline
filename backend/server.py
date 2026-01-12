@@ -16390,12 +16390,13 @@ async def delete_plano(plano_id: str, current_user: Dict = Depends(get_current_u
     return {"message": "Plan deactivated successfully"}
 
 # ==================== PLANOS MOTORISTA ENDPOINTS ====================
+# NOTA: Estes endpoints usam a colecção planos_sistema (unificada)
 
 @api_router.get("/planos-motorista")
 async def list_planos_motorista(current_user: Dict = Depends(get_current_user)):
     """List all motorista plans"""
     try:
-        planos = await db.planos_motorista.find({"ativo": True}, {"_id": 0}).to_list(100)
+        planos = await db.planos_sistema.find({"tipo_usuario": "motorista", "ativo": True}, {"_id": 0}).to_list(100)
         return planos
     except Exception as e:
         logger.error(f"Error listing motorista plans: {e}")
