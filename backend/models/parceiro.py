@@ -118,6 +118,8 @@ class Parceiro(BaseModel):
     km_aviso_revisao: int = 5000
     # Configuração de Email SMTP
     config_email: Optional[ConfiguracaoEmailSMTP] = None
+    # Configuração de WhatsApp
+    config_whatsapp: Optional[ConfiguracaoWhatsApp] = None
     # Credenciais de Plataformas
     credenciais_plataformas: Optional[CredenciaisPlataforma] = None
     created_at: datetime
