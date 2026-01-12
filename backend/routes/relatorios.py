@@ -1492,6 +1492,24 @@ async def generate_motorista_pdf(
             else:
                 extras += valor_extra
     
+    # ============ VERIFICAR AJUSTES MANUAIS PARA PDF ============
+    ajuste_manual = await db.ajustes_semanais.find_one(
+        {"motorista_id": motorista_id, "semana": semana, "ano": ano},
+        {"_id": 0}
+    )
+    
+    if ajuste_manual:
+        # Substituir valores pelos valores do ajuste manual
+        ganhos_uber = ajuste_manual.get("ganhos_uber", ganhos_uber)
+        uber_portagens = ajuste_manual.get("uber_portagens", uber_portagens)
+        ganhos_bolt = ajuste_manual.get("ganhos_bolt", ganhos_bolt)
+        via_verde = ajuste_manual.get("via_verde", via_verde)
+        combustivel = ajuste_manual.get("combustivel", combustivel)
+        eletrico = ajuste_manual.get("eletrico", eletrico)
+        aluguer = ajuste_manual.get("aluguer", aluguer)
+        extras = ajuste_manual.get("extras", extras)
+        logger.info(f"📝 PDF: Ajuste manual aplicado para {motorista.get('name')} - S{semana}/{ano}")
+    
     total_ganhos = ganhos_uber + ganhos_bolt
     total_despesas = via_verde + combustivel + eletrico
     liquido = total_ganhos - total_despesas - aluguer - extras
