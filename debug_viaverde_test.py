@@ -7,7 +7,7 @@ import requests
 import json
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://tvdemanager-2.preview.emergentagent.com/api"
+BACKEND_URL = "https://partner-portal-47.preview.emergentagent.com/api"
 
 # Test credentials
 TEST_CREDENTIALS = {

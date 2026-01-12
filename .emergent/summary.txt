@@ -1,165 +1,170 @@
 <analysis>**original_problem_statement:**
-O utilizador iniciou com a tarefa de adicionar campos de ID para Uber e Bolt, mas a sessão evoluiu para uma série de desenvolvimentos e correções de bugs, incluindo:
-1.  Implementação de um sistema de crédito/débito para portagens (Via Verde Acumulado).
-2.  Criação de um sistema de Despesas/Créditos Extras com UI na ficha do motorista.
-3.  Reformulação da página de Credenciais de Plataformas.
-4.  Múltiplas correções e refinamentos na lógica de importação de CSV/Excel (Uber, Via Verde, Combustível, Elétricos), especificando quais colunas usar para os cálculos.
-5.  Implementação de uma lógica complexa para o cálculo do aluguer do veículo, considerando épocas alta e baixa.
-6.  Melhorias nos relatórios PDF para incluir mais detalhes e separar data e hora.
-7.  Correção de uma série de bugs interligados nos cálculos de totais do resumo semanal e do relatório PDF, que é o problema atual.
+O utilizador reportou múltiplos problemas e solicitou novas funcionalidades em várias fases:
+1.  **Bugs Iniciais:** O resumo semanal e o relatório PDF tinham cálculos incorretos para Extras, Aluguer e Uber Portagens. A coluna Uber Portagens não era editável.
+2.  **Bugs de Lógica:** Após a correção inicial, foi reportado que a lógica de cálculo das Uber Portagens estava incorreta. O valor deveria ser somado aos ganhos, não subtraído.
+3.  **Novas Funcionalidades (Lote 1):**
+    *   Configuração de email SMTP por parceiro.
+    *   Ativação de campos de contacto de emergência na ficha do motorista.
+    *   Sistema de automação RPA (disponível apenas para admin).
+    *   Gestão de credenciais de login (Uber, Bolt) no perfil do parceiro.
+4.  **Novas Funcionalidades e Bugs (Lote 2):**
+    *   Adicionar a página de configurações ao menu.
+    *   **Bug:** Discrepância de ganhos Bolt entre o resumo semanal e o PDF.
+    *   Funcionalidade de Nova Automação e Editar na página RPA.
+    *   Decisão de não usar SendGrid/WhatsApp genérico, mas sim configurações por parceiro.
+    *   Refatoração do backend.
+5.  **Novas Funcionalidades (Lote 3):**
+    *   Ativar sistema de planos no admin para criar 3 categorias de planos para motoristas (Básico, Standard, Premium com funcionalidades específicas).
+6.  **Novas Funcionalidades e Bugs (Lote 4):**
+    *   **Bug:** Admin não consegue ver/aprovar documentos enviados pelos utilizadores.
+    *   **Bug:** Parceiro não autorizado a carregar fotos de veículos.
+    *   **Bug:** Parceiro recebe erro ao adicionar eventos na agenda do veículo.
+    *   **Bug:** Cartão de combustível do veículo não sincroniza com o motorista atribuído.
+    *   Implementar sistema de WhatsApp para o parceiro (fase de configuração).
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação é uma ferramenta de gestão de frotas com funcionalidades de importação de dados (Uber, Bolt, Via Verde, combustível, elétricos), gestão de motoristas e veículos, e geração de relatórios financeiros semanais (em UI e PDF). Recentemente, foi adicionada uma UI para gerir despesas extras diretamente na ficha do motorista e uma nova página para gerir credenciais de plataformas. A lógica de cálculo do aluguer foi tornada mais sofisticada para lidar com preços sazonais. O backend foi modificado para separar data e hora durante a importação para facilitar a sua apresentação.
+A aplicação é uma ferramenta de gestão de frotas com um backend em FastAPI e frontend em React. As funcionalidades principais incluem: gestão de motoristas e veículos, importação de dados de múltiplas fontes (Uber, Bolt, etc.), e geração de relatórios financeiros semanais (UI e PDF).
+Recentemente, foram adicionadas várias funcionalidades:
+-   **Configurações do Parceiro:** Uma nova página () permite que os parceiros configurem as suas próprias credenciais de SMTP, credenciais de plataformas (Uber, Bolt) e, mais recentemente, configurações de WhatsApp.
+-   **Planos de Motorista:** Uma nova página de administração () foi criada para gerir três planos específicos para motoristas (Básico, Standard, Premium), com funcionalidades distintas.
+-   **Automação RPA:** Uma página de administração () foi implementada para gerir automações, com funcionalidades para criar, editar e visualizar automações do sistema.
+-   **Ficha do Motorista:** A secção de Contacto de Emergência foi ativada na UI.
+-   Foram corrigidos múltiplos bugs de cálculo e permissões.
 
 **Last working item**:
--   **Last item agent was working:** Corrigir um conjunto de bugs inter-relacionados no resumo semanal e no relatório PDF, reportados pelo utilizador. Os problemas incluem:
-    1.  A coluna Uber Portagens não está editável.
-    2.  Valores inseridos na coluna Extras não são refletidos no cálculo do valor líquido final no resumo semanal.
-    3.  O valor do aluguer do veículo não aparece (ou está incorreto) no relatório PDF.
-    4.  Os totais gerais no relatório PDF estão incorretos.
+-   **Last item agent was working:** Implementar a fase inicial do sistema de WhatsApp para parceiros. O agente adicionou os campos de configuração () ao modelo Pydantic do parceiro, criou os endpoints GET/PUT no backend (), e adicionou uma nova tab WhatsApp com os campos de input na página de configurações do parceiro ().
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
 -   **Which testing method agent to use?** both
-    -   **Backend:** Utilizar  para testar o endpoint de geração do PDF (). **Crítico:** Antes do teste, é necessário garantir que existe um motorista de teste associado a um veículo que tenha um contrato () com valores de aluguer definidos.
-    -   **Frontend:** Utilizar a  para testar a página . O teste deve incluir clicar em Editar, inserir valores nos campos Uber Portagens e Extras, e verificar se o campo Líquido é atualizado corretamente em tempo real.
+    -   **Backend:** Utilizar  para testar os novos endpoints  e  em  para garantir que os dados são guardados e lidos corretamente.
+    -   **Frontend:** Utilizar a  para visitar a página , navegar para a tab WhatsApp e verificar se os campos de configuração são apresentados corretamente.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Bugs no Resumo Semanal e Relatório PDF (P0)**
-    -   **Description:** O utilizador reportou que (1) a coluna Uber Portagens não é editável, (2) a coluna Extras não afeta o total líquido, e (3) o aluguer e os totais estão incorretos no PDF.
-    -   **Attempted fixes:** O agente corrigiu o cálculo do líquido no frontend para incluir os extras e corrigiu a query do backend que busca o veículo para o cálculo do aluguer (usando  em vez de ). No entanto, o teste do aluguer falhou por falta de dados de teste (veículo sem contrato), e a edição da coluna Uber Portagens não foi totalmente resolvida.
+-   **Issue 1: Bug de Aprovação de Documentos (P1)**
+    -   **Description:** O utilizador reportou que o admin não consegue ver os documentos pendentes para aprovação. O agente investigou o endpoint , mas um teste com  falhou com um , e a investigação não foi concluída.
     -   **Next debug checklist:**
-        1.  **Criar/Verificar Dados de Teste:** Garantir que um motorista de teste está associado a um veículo com um  e valores de aluguer configurados.
-        2.  **Testar Backend (PDF):** Gerar o PDF para o motorista de teste e verificar se o aluguer e os totais estão corretos.
-        3.  **Testar Frontend (Resumo):** Na página do resumo, entrar em modo de edição e confirmar que (a) o campo Uber Portagens é um input editável e (b) inserir um valor em Extras atualiza imediatamente o campo Líquido.
-    -   **Why fix this issue and what will be achieved with the fix?** A precisão dos relatórios financeiros é crítica para a funcionalidade principal da aplicação e para a confiança do utilizador.
+        1.  Re-examinar o endpoint  em .
+        2.  Corrigir o  que ocorreu durante o teste.
+        3.  Verificar a lógica que agrega documentos de  com  e documentos da coleção  com .
+        4.  Testar o endpoint com  para garantir que retorna uma lista válida de utilizadores/documentos pendentes.
+        5.  Verificar a página  para garantir que consome a API corretamente.
+    -   **Why fix this issue and what will be achieved with the fix?** Esta é uma funcionalidade de compliance crítica para o admin poder aprovar novos motoristas ou documentos.
     -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** Y
+    -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** both
 
--   **Issue 2: Discrepância de Dados na Via Verde (P1)**
-    -   **Description:** O utilizador reportou um valor incorreto no total da Via Verde. Subsequentemente, instruiu o agente a usar a coluna  em vez de  para todos os cálculos, o que foi implementado.
-    -   **Next debug checklist:** A correção no código está feita. O agente deve pedir ao utilizador para reimportar o ficheiro da Via Verde para a semana em questão e confirmar se o problema está resolvido.
-    -   **Why fix this issue and what will be achieved with the fix?** Garante a precisão dos relatórios financeiros.
-    -   **Status:** USER VERIFICATION PENDING
+-   **Issue 2: Bug de Sincronização do Cartão de Combustível (P1)**
+    -   **Description:** Quando um cartão de combustível é alterado nos Dispositivos de um veículo, a alteração não é refletida no motorista que já está atribuído a esse veículo.
+    -   **Attempted fixes:** O agente corrigiu um problema de permissão no endpoint , mas não abordou o fluxo lógico de sincronização pós-atribuição.
+    -   **Next debug checklist:**
+        1.  Modificar o endpoint  em .
+        2.  Dentro deste endpoint, após atualizar o cartão de combustível do veículo, verificar se há um motorista atribuído ().
+        3.  Se houver, atualizar também o campo correspondente () no documento do motorista.
+    -   **Why fix this issue and what will be achieved with the fix?** Garante a consistência dos dados entre veículos e motoristas, que é essencial para relatórios precisos.
+    -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** backend
 
 -   **Issue 3: Refatoração do Backend (P2)**
-    -   **Description:** Os ficheiros  e  continuam monolíticos, complexos e difíceis de manter.
-    -   **Next debug checklist:** Planear e propor ao utilizador a extração da lógica de importação de  para ficheiros de rotas dedicados (ex: ).
-    -   **Why fix this issue and what will be achieved with the fix?** Melhorar a manutenibilidade e escalabilidade do código.
+    -   **Description:** O ficheiro  é um monólito que contém centenas de linhas de código, incluindo definições de rotas, lógica de negócio e queries, o que o torna extremamente difícil de manter.
+    -   **Next debug checklist:** Propor e executar um plano para extrair gradualmente os endpoints de  para ficheiros de rotas dedicados em  (ex: , , etc.).
+    -   **Why fix this issue and what will be achieved with the fix?** Melhorar drasticamente a manutenibilidade, escalabilidade e legibilidade do código do backend.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** backend
 
 **In progress Task List**:
--   Nenhuma. As tarefas atuais são classificadas como correções de bugs.
+-   **Task 1: Concluir e Testar Funcionalidade de WhatsApp (P0)**
+    -   **Where to resume:** A UI e o backend básicos foram criados. O próximo passo é testar.
+    -   **What will be achieved with this?** Permitirá que os parceiros guardem as suas credenciais de WhatsApp na plataforma.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** both
 
 **Upcoming and Future Tasks**
+-   **Upcoming Tasks:**
+    -   **(P1) Implementar Envio de Email via SMTP do Parceiro:** A UI para configurar o SMTP existe, mas o backend para *enviar* emails usando essas credenciais ainda não foi implementado.
+    -   **(P1) Implementar Envio de Mensagens WhatsApp:** A UI de configuração existe, mas a lógica de backend para se conectar à API do WhatsApp e enviar mensagens precisa ser criada.
 -   **Future Tasks:**
-    -   **(P2) Integração com SendGrid:** A funcionalidade de envio de email continua bloqueada, aguardando a API Key do utilizador.
     -   **(P2) UI de Admin para Fornecedores:** Criar uma área de administração para que o utilizador possa configurar a lista de fornecedores de combustível e GPS, em vez de estarem fixos no código.
-    -   **(P3) Lógica de Sincronização Automática (RPA):** Tarefa de longo prazo, ainda não iniciada.
+    -   **(P3) Lógica de Sincronização Automática (RPA):** A UI existe, mas a lógica de backend para executar as automações (ex: com ) precisa ser implementada.
 
 **Completed work in this session**
--   **UI para Sistema de Extras:** Implementada uma nova tab Extras/Dívidas na página  para adicionar e visualizar transações manuais.
--   **Nova Página Credenciais Plataformas:** Criada e integrada uma nova página () para gestão de credenciais.
--   **Coluna Uber Portagens:** Adicionada a coluna Uber Portagens à tabela do .
--   **Lógica de Cálculo de Aluguer Sazonal:** Implementada uma função no backend () que calcula o valor do aluguer com base nos meses de época alta/baixa definidos no contrato do veículo.
--   **Correção de Lógica de Importação:** Ajustadas as funções de importação de Via Verde (para usar ), Carregamentos Elétricos (mapeamento de campos) e Uber (para usar as colunas de rendimentos e portagens corretas).
--   **Separação de Data/Hora:** Modificada a importação para guardar data e hora em campos separados (, ) e atualizados os relatórios PDF para os apresentar em colunas distintas.
--   **Campo Contacto de Energia:** Adicionado um novo campo no modelo do motorista e na UI da  para identificar o motorista em importações de carregamentos elétricos.
--   **Unificação da Coleção Extras:** Corrigido um bug crítico ao unificar todo o código para usar a coleção  para transações manuais.
-
-**Earlier issues found/mentioned but not fixed**
--   Nenhum que não esteja já listado.
+-   **Bugs Financeiros Corrigidos:** Resolvidos múltiplos bugs nos cálculos do resumo semanal e relatório PDF, incluindo a lógica correta para as Uber Portagens (somadas aos ganhos).
+-   **Página de Configurações do Parceiro:** Criada a página  com tabs para configurar Email SMTP, Credenciais de Plataformas e WhatsApp.
+-   **Página de Gestão de Planos de Motorista:** Criada a página  para o admin gerir os 3 planos de motorista. Resolvido um problema complexo de depuração relacionado com bases de dados concorrentes.
+-   **Página de Automação RPA:** Implementada a UI em , incluindo um modal para criar/editar automações.
+-   **Ficha do Motorista:** Ativada e populada a secção Contacto de Emergência.
+-   **Bugs de Permissão Corrigidos:** Resolvido o problema que impedia parceiros de carregarem fotos de veículos e adicionarem eventos à agenda.
+-   **Menu de Navegação:** Adicionados os links para as novas páginas no menu principal ().
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork:** Refatoração do Backend ( e  estão demasiado grandes).
--   **Recurrence count:** 2
+-   **Issue recurrence in previous fork:** Refatoração do Backend ( é monolítico).
+-   **Recurrence count:** 3
 -   **Status:** NOT STARTED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Lógica de Negócio Complexa:** Implementação de regras de negócio específicas, como o cálculo de aluguer sazonal, diretamente na lógica de relatórios do backend.
--   **Consistência do Modelo de Dados:** A resolução de um bug chave passou pela unificação do uso de coleções da base de dados (usar  em todo o lado).
--   **Dependência de Dados de Teste:** A depuração de vários bugs foi dificultada ou bloqueada pela ausência de dados de teste adequados na base de dados (ex: veículo sem contrato para testar o cálculo do aluguer).
+-   **Consistência do Ambiente de Desenvolvimento:** Uma longa sessão de depuração foi causada por uma discrepância entre a base de dados usada pela aplicação () e a base de dados usada pelos scripts de verificação do agente (que usava o valor padrão).
+-   **Precedência de Roteadores FastAPI:** A depuração também envolveu a compreensão de como o FastAPI regista rotas e como rotas duplicadas em diferentes ficheiros ( vs. ) podem entrar em conflito.
+-   **Padrão de Correção de Permissões:** Vários bugs foram causados pela falta do role  na lista de utilizadores autorizados nos decorators dos endpoints.
 
 **key DB schema**
--   **motoristas:** Adicionado  (string). Campo  (string, ID) é usado para ligar ao veículo.
--   **veiculos:** O campo  (objeto) contém a lógica de aluguer sazonal (, , ).
--   **despesas_extras:** Coleção unificada para transações manuais.
--   **portagens_viaverde, abastecimentos_combustivel, despesas_combustivel:** As coleções de importação agora contêm os campos  e .
-
-**changes in tech stack**
--   Nenhuma.
+-   **parceiros:** Adicionados os objetos  e .
+-   **planos_sistema:** Nova coleção para armazenar os planos de motorista definidos pelo admin.
 
 **All files of reference**
--   : Contém toda a lógica de geração de relatórios (dados para a UI e ficheiros PDF). É central para os bugs atuais.
--   : Contém toda a lógica de importação de dados.
--   : UI principal para o resumo semanal, onde os bugs de cálculo e interatividade são visíveis.
--   : Página de perfil do motorista.
--   : Modelo Pydantic do motorista.
+-   : Continua a ser o ficheiro mais crítico e necessitado de refatoração. Contém lógica de negócio e endpoints para múltiplas funcionalidades.
+-   : Contém toda a lógica de relatórios, que foi modificada para corrigir cálculos.
+-   : Contém a lógica de veículos, modificada para corrigir bugs de permissão.
+-   : Contém a lógica para as novas páginas de configuração.
+-   : Nova página central para configurações do parceiro.
+-   : Nova página de admin para gestão de planos.
+-   : Nova página de admin para gestão de RPA.
 
 **Areas that need refactoring**:
--   ** (CRÍTICO):** Continua a ser um ficheiro monolítico com toda a lógica de importação.
--   ** (CRÍTICO):** Ficheiro extremamente grande que mistura lógica de negócio, queries à base de dados e geração de PDFs.
+-   ** (CRÍTICO):** A prioridade máxima de refatoração. A sua complexidade causou problemas de depuração e continua a ser um risco para a manutenção.
 
 **key api endpoints**
--   : Geração do relatório PDF do motorista.
--   : Fornece os dados para a página do resumo semanal do parceiro.
--   : Adiciona uma nova transação de extra a um motorista.
+-   : Atualiza a configuração SMTP do parceiro.
+-   : Atualiza a configuração WhatsApp do parceiro.
+-   : Busca os planos de motorista para a página de admin.
+-   : Carrega fotos de veículos (permissão corrigida).
+-   : Adiciona eventos à agenda (permissão corrigida).
 
 **Critical Info for New Agent**
--   A prioridade máxima é resolver os bugs reportados na última mensagem do utilizador ().
--   **É fundamental criar dados de teste adequados para depurar.** Especificamente, para testar o cálculo do aluguer, tem de garantir que um motorista de teste está ligado a um veículo com um contrato de aluguer totalmente configurado. Sem isso, não conseguirá verificar a correção.
--   O utilizador é muito detalhado sobre as colunas de CSV a usar. A precisão nos cálculos financeiros é a maior prioridade.
--   A coleção  é agora a única fonte de verdade para transações manuais. Não use .
-
-**documents and test reports created in this job**
--    foi atualizado.
+-   **VERIFIQUE O NOME DA BASE DE DADOS:** Ao executar scripts  para interagir com o MongoDB, certifique-se de que se conecta à base de dados correta especificada pela variável de ambiente . Não assuma o valor padrão. Falhar em fazer isso levou a uma sessão de depuração de mais de 100 mensagens.
+-   **PADRÃO DE BUGS DE PERMISSÃO:** O utilizador parceiro () tem sido frequentemente esquecido nas listas de autorização dos endpoints. Ao criar ou modificar endpoints, verifique sempre se o parceiro tem as permissões necessárias.
+-   **PRIORIZE AS CORREÇÕES DE BUGS:** O utilizador frequentemente fornece uma lista mista de bugs e novas funcionalidades. Priorize a correção dos bugs reportados antes de iniciar novas implementações.
+-   **O  é um campo minado:** Tenha muito cuidado ao modificar . Existem rotas duplicadas e uma enorme quantidade de código legado. A refatoração é necessária.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  : Reportou bugs no resumo semanal e PDF (não editável, cálculo incorreto de extras e aluguer). **Status: IN PROGRESS**
-2.  : Reportou novamente bugs no PDF com um screenshot. **Status: IN PROGRESS**
-3.  : Deu instruções sobre a lógica de importação da Uber e cálculo de aluguer sazonal. **Status: COMPLETED**
-4.  : Clarificou a lógica de importação da Uber. **Status: COMPLETED**
-5.  : Reportou bugs no PDF sobre aluguer, Bolt e portagens Uber. **Status: COMPLETED**
-6.  : Reportou um bug no cálculo da coluna Extra. **Status: COMPLETED**
-7.  : Pediu para adicionar a hora nos detalhes da Via Verde. **Status: COMPLETED**
-8.  : Pediu para separar data/hora na importação da Via Verde. **Status: COMPLETED**
-9.  : Pediu para separar data/hora em todas as importações. **Status: COMPLETED**
-10. : Pediu para separar data e hora nos relatórios PDF. **Status: COMPLETED**
+1.  : Pedido para implementar o sistema de planos de motorista com 3 categorias. **Status: COMPLETED**
+2.  : Reportou bug nos ganhos Bolt, pediu para adicionar link ao menu e ativar botões na página RPA. **Status: COMPLETED**
+3.  : Confirmação para prosseguir com a implementação das funcionalidades. **Status: COMPLETED**
+4.  : Esclareceu a lógica de negócio correta para o cálculo das Uber Portagens. **Status: COMPLETED**
+5.  : Pedido para implementar múltiplas funcionalidades (SMTP por parceiro, contacto de emergência, RPA, credenciais). **Status: COMPLETED**
+6.  : Reportou que a correção inicial do bug das portagens estava logicamente incorreta. **Status: COMPLETED**
+7.  : Reportou um novo lote de bugs (aprovação de docs, upload de fotos, agenda do veículo, sync do cartão de combustível) e pediu para avançar com o sistema de WhatsApp. **Status: IN PROGRESS**
 
 **Project Health Check:**
 -   **Broken:**
-    -   Cálculos e interatividade na página de Resumo Semanal ().
-    -   Cálculo de totais no relatório PDF (dependente de dados de teste corretos).
-    -   Integração SendGrid (aguarda API Key).
--   **Mocked:**
-    -   Lógica de automação RPA.
+    -   Fluxo de aprovação de documentos pelo admin.
 -   **Needs Refactoring (High Priority):**
-    -   
     -   
 
 **3rd Party Integrations**
 -   Pillow, ReportLab, openpyxl, Playwright.
--   SendGrid (configurado mas inativo).
 
 **Testing status**
--   **Testing agent used after significant changes:** NO
+-   **Testing agent used after significant changes:** YES (usado no início da sessão para os bugs financeiros).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** N/A
--   **Known regressions:** Os cálculos no resumo semanal e no PDF regrediram ou nunca funcionaram corretamente com todas as novas funcionalidades (extras, aluguer sazonal).
+-   **Known regressions:** Nenhuma conhecida, mas a sincronização do cartão de combustível pode ter um bug de lógica latente.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
--   **Parceiro:**  / 
-
-**What agent forgot to execute**
--   O agente não concluiu a depuração dos bugs reportados pelo utilizador na última mensagem. Embora tenha identificado as causas prováveis (lógica de frontend, queries de backend), não executou um ciclo de teste completo com os dados corretos para verificar as correções. A questão da coluna Uber Portagens não ser editável também não foi totalmente resolvida.</analysis>
+-   **Parceiro:**  / </analysis>
