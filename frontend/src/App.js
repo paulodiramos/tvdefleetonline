@@ -768,6 +768,26 @@ function App() {
             }
           />
           <Route
+            path="/automacao-rpa"
+            element={
+              user && user.role === 'admin' ? (
+                <AutomacaoRPA user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/configuracoes-parceiro"
+            element={
+              user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
+                <ConfiguracoesParceiro user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/gestao-credenciais"
             element={
               user ? (
