@@ -1458,7 +1458,12 @@ async def generate_motorista_pdf(
     aluguer = float(motorista.get("valor_aluguer_semanal") or 0)
     
     # Se não tiver no motorista, buscar do veículo associado
-    if aluguer == 0:
+    if aluguer == 0 and veiculo:
+        # Usar função que calcula com base na época alta/baixa
+        aluguer = calcular_aluguer_semanal(veiculo, semana, ano)
+        logger.info(f"PDF Motorista {motorista.get('name')}: aluguer calculado do veículo={aluguer}")
+    elif aluguer == 0:
+        # Tentar buscar veículo por outros campos
         veiculo_id = motorista.get("veiculo_atribuido") or motorista.get("veiculo_id") or motorista.get("vehicle_id")
         logger.info(f"PDF Motorista {motorista.get('name')}: veiculo_id={veiculo_id}")
         if veiculo_id:
