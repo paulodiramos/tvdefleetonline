@@ -22448,6 +22448,11 @@ async def salvar_config_sincronizacao(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# Include main API router LAST (after ALL routes are defined, including legacy ones)
+# This ensures all @api_router decorated endpoints are registered
+app.include_router(api_router)
+
+
 @app.on_event("shutdown")
 async def shutdown_db_client():
     client.close()
