@@ -845,3 +845,115 @@ async def update_credenciais_plataformas(
     
     logger.info(f"🔐 Credenciais plataformas atualizadas para parceiro {parceiro_id}")
     return {"message": "Credenciais atualizadas com sucesso"}
+
+
+
+# ==================== CONFIGURAÇÃO DE WHATSAPP ====================
+
+class ConfiguracaoWhatsApp(BaseModel):
+    """Configuração de WhatsApp do parceiro"""
+    telefone: Optional[str] = None
+    nome_exibicao: Optional[str] = None
+    mensagem_boas_vindas: Optional[str] = None
+    mensagem_relatorio: Optional[str] = None
+    ativo: bool = False
+    enviar_relatorios_semanais: bool = True
+    enviar_alertas_documentos: bool = True
+    enviar_alertas_veiculos: bool = True
+
+
+@router.get("/{parceiro_id}/config-whatsapp")
+async def get_config_whatsapp(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter configuração de WhatsApp do parceiro"""
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        parceiro = await db.users.find_one({"id": parceiro_id, "role": "parceiro"}, {"_id": 0})
+    
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    return parceiro.get("config_whatsapp", {})
+
+
+@router.put("/{parceiro_id}/config-whatsapp")
+async def update_config_whatsapp(
+    parceiro_id: str,
+    config: ConfiguracaoWhatsApp,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar configuração de WhatsApp do parceiro"""
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    collection = db.parceiros
+    if not parceiro:
+        parceiro = await db.users.find_one({"id": parceiro_id, "role": "parceiro"}, {"_id": 0})
+        collection = db.users
+    
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    config_data = config.model_dump()
+    
+    await collection.update_one(
+        {"id": parceiro_id},
+        {"$set": {"config_whatsapp": config_data}}
+    )
+    
+    logger.info(f"📱 Config WhatsApp atualizada para parceiro {parceiro_id}")
+    return {"message": "Configuração de WhatsApp atualizada com sucesso"}
+
+
+@router.post("/{parceiro_id}/whatsapp/enviar-teste")
+async def enviar_whatsapp_teste(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Enviar mensagem WhatsApp de teste"""
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        parceiro = await db.users.find_one({"id": parceiro_id, "role": "parceiro"}, {"_id": 0})
+    
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    config = parceiro.get("config_whatsapp", {})
+    if not config.get("telefone"):
+        raise HTTPException(status_code=400, detail="Número de WhatsApp não configurado")
+    
+    # Gerar link WhatsApp para teste
+    telefone = config["telefone"].replace("+", "").replace(" ", "")
+    nome = config.get("nome_exibicao") or parceiro.get("nome_empresa", "TVDEFleet")
+    mensagem = f"✅ Teste TVDEFleet - A sua configuração de WhatsApp para {nome} está a funcionar!"
+    
+    # URL encode da mensagem
+    import urllib.parse
+    mensagem_encoded = urllib.parse.quote(mensagem)
+    
+    whatsapp_link = f"https://wa.me/{telefone}?text={mensagem_encoded}"
+    
+    return {
+        "success": True,
+        "message": "Link de teste gerado com sucesso",
+        "whatsapp_link": whatsapp_link,
+        "telefone": config["telefone"]
+    }
