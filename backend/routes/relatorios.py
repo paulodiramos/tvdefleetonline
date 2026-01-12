@@ -1511,7 +1511,8 @@ async def generate_motorista_pdf(
         extras = ajuste_manual.get("extras", extras)
         logger.info(f"📝 PDF: Ajuste manual aplicado para {motorista.get('name')} - S{semana}/{ano}")
     
-    total_ganhos = ganhos_uber + ganhos_bolt
+    # Total Ganhos = Rendimentos Uber + Uber Portagens + Ganhos Bolt
+    total_ganhos = ganhos_uber + uber_portagens + ganhos_bolt
     total_despesas = via_verde + combustivel + eletrico
     liquido = total_ganhos - total_despesas - aluguer - extras
     
