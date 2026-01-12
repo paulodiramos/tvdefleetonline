@@ -615,3 +615,233 @@ async def update_certidao_permanente(
         )
     
     return {"message": "Certidão permanente updated"}
+
+
+
+# ==================== CONFIGURAÇÃO DE EMAIL SMTP ====================
+
+class ConfiguracaoEmailSMTP(BaseModel):
+    """Configuração de email SMTP do parceiro"""
+    smtp_host: Optional[str] = None
+    smtp_port: Optional[int] = 587
+    smtp_usuario: Optional[str] = None
+    smtp_password: Optional[str] = None
+    email_remetente: Optional[str] = None
+    nome_remetente: Optional[str] = None
+    usar_tls: bool = True
+    ativo: bool = False
+
+
+@router.get("/{parceiro_id}/config-email")
+async def get_config_email(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter configuração de email SMTP do parceiro"""
+    # Parceiros podem ver sua própria config, gestores/admin podem ver qualquer uma
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        # Tentar buscar em users (parceiros podem estar em users)
+        parceiro = await db.users.find_one({"id": parceiro_id, "role": "parceiro"}, {"_id": 0})
+    
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    config = parceiro.get("config_email", {})
+    # Não retornar a password por segurança
+    if config.get("smtp_password"):
+        config["smtp_password"] = "********"
+    
+    return config
+
+
+@router.put("/{parceiro_id}/config-email")
+async def update_config_email(
+    parceiro_id: str,
+    config: ConfiguracaoEmailSMTP,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar configuração de email SMTP do parceiro"""
+    # Parceiros podem editar sua própria config, gestores/admin podem editar qualquer uma
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Verificar se parceiro existe em parceiros ou users
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    collection = db.parceiros
+    if not parceiro:
+        parceiro = await db.users.find_one({"id": parceiro_id, "role": "parceiro"}, {"_id": 0})
+        collection = db.users
+    
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    # Se a password for "********", manter a existente
+    config_data = config.model_dump()
+    if config_data.get("smtp_password") == "********":
+        existing_config = parceiro.get("config_email", {})
+        config_data["smtp_password"] = existing_config.get("smtp_password")
+    
+    await collection.update_one(
+        {"id": parceiro_id},
+        {"$set": {"config_email": config_data}}
+    )
+    
+    logger.info(f"📧 Config email atualizada para parceiro {parceiro_id}")
+    return {"message": "Configuração de email atualizada com sucesso"}
+
+
+@router.post("/{parceiro_id}/config-email/testar")
+async def testar_config_email(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Testar configuração de email SMTP enviando email de teste"""
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        parceiro = await db.users.find_one({"id": parceiro_id, "role": "parceiro"}, {"_id": 0})
+    
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    config = parceiro.get("config_email", {})
+    if not config.get("smtp_host") or not config.get("smtp_usuario"):
+        raise HTTPException(status_code=400, detail="Configuração SMTP incompleta")
+    
+    try:
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+        
+        msg = MIMEMultipart()
+        msg['From'] = f"{config.get('nome_remetente', 'TVDEFleet')} <{config.get('email_remetente', config['smtp_usuario'])}>"
+        msg['To'] = config.get('email_remetente', config['smtp_usuario'])
+        msg['Subject'] = "TVDEFleet - Teste de Email"
+        
+        body = """
+        <html>
+        <body style="font-family: Arial, sans-serif;">
+            <h2>✅ Configuração de Email Funcionando!</h2>
+            <p>Este é um email de teste do TVDEFleet.</p>
+            <p>A sua configuração SMTP está correta.</p>
+        </body>
+        </html>
+        """
+        msg.attach(MIMEText(body, 'html'))
+        
+        server = smtplib.SMTP(config['smtp_host'], config.get('smtp_port', 587))
+        if config.get('usar_tls', True):
+            server.starttls()
+        server.login(config['smtp_usuario'], config['smtp_password'])
+        server.send_message(msg)
+        server.quit()
+        
+        return {"success": True, "message": "Email de teste enviado com sucesso!"}
+    except Exception as e:
+        logger.error(f"Erro ao testar email: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Erro ao enviar email: {str(e)}")
+
+
+# ==================== CREDENCIAIS DE PLATAFORMAS ====================
+
+class CredenciaisPlataforma(BaseModel):
+    """Credenciais de acesso às plataformas"""
+    # Uber
+    uber_email: Optional[str] = None
+    uber_telefone: Optional[str] = None
+    uber_password: Optional[str] = None
+    # Bolt
+    bolt_email: Optional[str] = None
+    bolt_password: Optional[str] = None
+    # Via Verde
+    viaverde_usuario: Optional[str] = None
+    viaverde_password: Optional[str] = None
+
+
+@router.get("/{parceiro_id}/credenciais-plataformas")
+async def get_credenciais_plataformas(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter credenciais de plataformas do parceiro"""
+    # Parceiros podem ver suas próprias credenciais, gestores/admin podem ver qualquer uma
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        parceiro = await db.users.find_one({"id": parceiro_id, "role": "parceiro"}, {"_id": 0})
+    
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    creds = parceiro.get("credenciais_plataformas", {})
+    # Mascarar passwords
+    if creds.get("uber_password"):
+        creds["uber_password"] = "********"
+    if creds.get("bolt_password"):
+        creds["bolt_password"] = "********"
+    if creds.get("viaverde_password"):
+        creds["viaverde_password"] = "********"
+    
+    return creds
+
+
+@router.put("/{parceiro_id}/credenciais-plataformas")
+async def update_credenciais_plataformas(
+    parceiro_id: str,
+    creds: CredenciaisPlataforma,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar credenciais de plataformas do parceiro"""
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    collection = db.parceiros
+    if not parceiro:
+        parceiro = await db.users.find_one({"id": parceiro_id, "role": "parceiro"}, {"_id": 0})
+        collection = db.users
+    
+    if not parceiro:
+        raise HTTPException(status_code=404, detail="Parceiro não encontrado")
+    
+    creds_data = creds.model_dump()
+    existing_creds = parceiro.get("credenciais_plataformas", {})
+    
+    # Se as passwords forem "********", manter as existentes
+    if creds_data.get("uber_password") == "********":
+        creds_data["uber_password"] = existing_creds.get("uber_password")
+    if creds_data.get("bolt_password") == "********":
+        creds_data["bolt_password"] = existing_creds.get("bolt_password")
+    if creds_data.get("viaverde_password") == "********":
+        creds_data["viaverde_password"] = existing_creds.get("viaverde_password")
+    
+    await collection.update_one(
+        {"id": parceiro_id},
+        {"$set": {"credenciais_plataformas": creds_data}}
+    )
+    
+    logger.info(f"🔐 Credenciais plataformas atualizadas para parceiro {parceiro_id}")
+    return {"message": "Credenciais atualizadas com sucesso"}
