@@ -1,6 +1,24 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-12 - Session 9)
+## Changelog (2026-01-12 - Session 9 - Final)
+
+### Sistema de Planos de Motorista (COMPLETO)
+**Página:** `/admin/planos-motorista`
+
+**3 Categorias Implementadas:**
+1. **Básico** (€0/mês) - Apenas consulta de ganhos
+2. **Standard** (€9.99/mês) - Consulta + Envio de recibos
+3. **Premium** (€19.99/mês) - Tudo + Relatórios + Autofaturação
+
+**Funcionalidades:**
+- Visualização dos 3 planos em cards
+- Editar nome, descrição, preços e funcionalidades
+- Activar/desactivar planos
+- Tab de categorias com explicação dos módulos
+- Estatísticas de motoristas por plano
+- Endpoint: `/api/admin/planos-motorista-sistema`
+
+---
 
 ### Correções e Melhorias
 
