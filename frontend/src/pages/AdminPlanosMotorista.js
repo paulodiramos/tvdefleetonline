@@ -99,7 +99,8 @@ const AdminPlanosMotorista = ({ user, onLogout }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/api/planos-motorista`, {
+      // Usar endpoint específico para admin
+      const response = await axios.get(`${API}/api/admin/planos-motorista`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPlanos(response.data || []);
