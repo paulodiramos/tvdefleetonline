@@ -87,7 +87,16 @@ const FichaMotorista = ({ user }) => {
     telefone_uber: '',
     email_bolt: '',
     telefone_bolt: '',
-    usar_dados_padrao_plataformas: true
+    usar_dados_padrao_plataformas: true,
+    
+    // Contacto de Emergência
+    emergencia_nome: '',
+    emergencia_telefone: '',
+    emergencia_parentesco: '',
+    emergencia_email: '',
+    emergencia_morada: '',
+    emergencia_codigo_postal: '',
+    emergencia_localidade: ''
   });
   
   // Documentos
