@@ -2,7 +2,32 @@
 
 ## Changelog (2026-01-12 - Session 9 - Bug Fixes Resumo Semanal e PDF)
 
-### Bug Fixes P0 - Resumo Semanal e PDF (COMPLETO - 9/9 testes passaram)
+### Bug Fix: Uber Portagens no Cálculo do Líquido (COMPLETO)
+
+**Problema:** O valor das "Uber Portagens" não estava a ser somado aos ganhos para calcular o líquido.
+
+**Lógica de Negócio Corrigida:**
+- `Rendimentos Uber` = Coluna "Pago a si:Os seus rendimentos" (sem portagens)
+- `Uber Portagens` = Portagem + Imposto (reembolsado pela Uber)
+- **Total Ganhos = Rendimentos Uber + Uber Portagens + Ganhos Bolt**
+- **Líquido = Total Ganhos - Via Verde - Combustível - Elétrico - Aluguer - Extras**
+
+**Ficheiros Corrigidos:**
+- `frontend/ResumoSemanalParceiro.js` - Cálculo do líquido em tempo real
+- `backend/routes/relatorios.py` - 5 locais onde `total_ganhos` era calculado:
+  - Resumo semanal (linha 1065)
+  - PDF motorista (linha 1514)
+  - WhatsApp (linha 1927)
+  - Email (linha 2061)
+  - Enviar relatório (linha 3831)
+
+**Teste Realizado:**
+- Uber=100, UberPort=20, Bolt=50, ViaVerde=10, Comb=30, Eletr=5, Aluguer=100, Extras=10
+- Líquido esperado: (100+20+50) - 45 - 100 - 10 = **€15,00** ✅
+
+---
+
+### Bug Fixes P0 Anteriores (COMPLETO - 9/9 testes passaram)
 
 **Problema:** Utilizador reportou bugs no resumo semanal e relatório PDF:
 1. Coluna "Uber Portagens" não editável
