@@ -1052,6 +1052,7 @@ async def get_resumo_semanal_parceiro(
             has_manual_adjustment = True
             # Substituir valores pelos valores do ajuste manual
             ganhos_uber = ajuste_manual.get("ganhos_uber", ganhos_uber)
+            uber_portagens = ajuste_manual.get("uber_portagens", uber_portagens)
             ganhos_bolt = ajuste_manual.get("ganhos_bolt", ganhos_bolt)
             via_verde_total = ajuste_manual.get("via_verde", via_verde_total)
             combustivel_total = ajuste_manual.get("combustivel", combustivel_total)
