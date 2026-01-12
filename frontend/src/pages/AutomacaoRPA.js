@@ -62,7 +62,6 @@ const AutomacaoRPA = ({ user, onLogout }) => {
       status: 'parado',
       sistema: true
     },
-    },
     {
       id: 'sync_viaverde',
       nome: 'Sincronização Via Verde',
@@ -72,7 +71,8 @@ const AutomacaoRPA = ({ user, onLogout }) => {
       frequencia: 'semanal',
       ultima_execucao: null,
       proxima_execucao: null,
-      status: 'parado'
+      status: 'parado',
+      sistema: true
     },
     {
       id: 'envio_relatorios',
@@ -83,7 +83,8 @@ const AutomacaoRPA = ({ user, onLogout }) => {
       frequencia: 'semanal',
       ultima_execucao: null,
       proxima_execucao: null,
-      status: 'parado'
+      status: 'parado',
+      sistema: true
     },
     {
       id: 'alertas_documentos',
@@ -94,7 +95,8 @@ const AutomacaoRPA = ({ user, onLogout }) => {
       frequencia: 'diario',
       ultima_execucao: null,
       proxima_execucao: null,
-      status: 'parado'
+      status: 'parado',
+      sistema: true
     }
   ]);
   
