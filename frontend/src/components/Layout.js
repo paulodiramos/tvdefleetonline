@@ -138,8 +138,9 @@ const Layout = ({ children, user, onLogout }) => {
         label: 'Configurações', 
         icon: Settings,
         submenu: [
+          { path: '/automacao-rpa', label: '🤖 Automação RPA' },
           { path: '/configuracao-mapeamento', label: '🗺️ Mapeamento Importação' },
-          { path: '/automacao', label: '🤖 Automação RPA' },
+          { path: '/automacao', label: '⚡ Sincronização Auto' },
           { path: '/configuracao-csv', label: '📊 Configuração CSV' },
           { path: '/importar-despesas', label: '📥 Importar Despesas' }
         ]
