@@ -779,6 +779,16 @@ function App() {
             }
           />
           <Route
+            path="/admin/planos-motorista"
+            element={
+              user && user.role === 'admin' ? (
+                <AdminPlanosMotorista user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/configuracoes-parceiro"
             element={
               user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
