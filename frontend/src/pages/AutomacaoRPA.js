@@ -614,6 +614,99 @@ const AutomacaoRPA = ({ user, onLogout }) => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modal Nova/Editar Automação */}
+      <Dialog open={showModal} onOpenChange={setShowModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingAutomacao ? 'Editar Automação' : 'Nova Automação'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingAutomacao 
+                ? 'Modificar configurações da automação' 
+                : 'Criar uma nova automação personalizada'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome *</Label>
+              <Input
+                placeholder="Nome da automação"
+                value={formAutomacao.nome}
+                onChange={(e) => setFormAutomacao(prev => ({ ...prev, nome: e.target.value }))}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Descrição</Label>
+              <Textarea
+                placeholder="Descreva o que esta automação faz"
+                value={formAutomacao.descricao}
+                onChange={(e) => setFormAutomacao(prev => ({ ...prev, descricao: e.target.value }))}
+                rows={3}
+              />
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Frequência</Label>
+                <Select 
+                  value={formAutomacao.frequencia}
+                  onValueChange={(value) => setFormAutomacao(prev => ({ ...prev, frequencia: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="diario">Diário</SelectItem>
+                    <SelectItem value="semanal">Semanal</SelectItem>
+                    <SelectItem value="mensal">Mensal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Ícone</Label>
+                <Select 
+                  value={formAutomacao.icone}
+                  onValueChange={(value) => setFormAutomacao(prev => ({ ...prev, icone: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="custom">Personalizado</SelectItem>
+                    <SelectItem value="uber">Uber</SelectItem>
+                    <SelectItem value="bolt">Bolt</SelectItem>
+                    <SelectItem value="viaverde">Via Verde</SelectItem>
+                    <SelectItem value="email">Email</SelectItem>
+                    <SelectItem value="documento">Documento</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Switch
+                checked={formAutomacao.ativo}
+                onCheckedChange={(checked) => setFormAutomacao(prev => ({ ...prev, ativo: checked }))}
+              />
+              <Label>Ativar automação</Label>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowModal(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveAutomacao}>
+              {editingAutomacao ? 'Guardar' : 'Criar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
