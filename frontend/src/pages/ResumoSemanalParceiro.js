@@ -535,7 +535,10 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
               <tbody>
                 {motoristas.map((m) => {
                   const isEditing = editingMotorista === m.motorista_id;
-                  const liquido = (m.ganhos_uber || 0) + (m.ganhos_bolt || 0) - (m.via_verde || 0) - (m.combustivel || 0) - (m.carregamento_eletrico || 0) - (m.aluguer_veiculo || 0) - (m.extras || 0);
+                  // Se estiver em modo de edição, usar valores do formulário para cálculo em tempo real
+                  const liquido = isEditing 
+                    ? (editForm.ganhos_uber || 0) + (editForm.ganhos_bolt || 0) - (editForm.via_verde || 0) - (editForm.combustivel || 0) - (editForm.eletrico || 0) - (editForm.aluguer || 0) - (editForm.extras || 0)
+                    : (m.ganhos_uber || 0) + (m.ganhos_bolt || 0) - (m.via_verde || 0) - (m.combustivel || 0) - (m.carregamento_eletrico || 0) - (m.aluguer_veiculo || 0) - (m.extras || 0);
                   
                   return (
                     <tr key={m.motorista_id} className="border-b hover:bg-slate-50">
