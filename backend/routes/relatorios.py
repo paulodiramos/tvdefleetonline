@@ -1867,11 +1867,13 @@ async def get_motorista_whatsapp_link(
     
     # Buscar dados
     ganhos_uber = 0.0
+    uber_portagens = 0.0
     uber_records = await db.ganhos_uber.find({
         "motorista_id": motorista_id,
         "$or": [{"semana": semana, "ano": ano}, {"data": {"$gte": data_inicio, "$lte": data_fim}}]
-    }, {"_id": 0, "rendimentos": 1, "pago_total": 1}).to_list(100)
+    }, {"_id": 0, "rendimentos": 1, "pago_total": 1, "uber_portagens": 1}).to_list(100)
     ganhos_uber = sum(float(r.get("rendimentos") or r.get("pago_total") or 0) for r in uber_records)
+    uber_portagens = sum(float(r.get("uber_portagens") or 0) for r in uber_records)
     
     ganhos_bolt = 0.0
     bolt_records = await db.ganhos_bolt.find({
@@ -1921,7 +1923,8 @@ async def get_motorista_whatsapp_link(
     # Initialize extras (for consistency with other functions)
     extras = 0.0
     
-    total_ganhos = ganhos_uber + ganhos_bolt
+    # Total Ganhos = Rendimentos Uber + Uber Portagens + Ganhos Bolt
+    total_ganhos = ganhos_uber + uber_portagens + ganhos_bolt
     total_despesas = via_verde + combustivel + eletrico
     liquido = total_ganhos - total_despesas - aluguer - extras
     
