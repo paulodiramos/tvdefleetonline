@@ -138,6 +138,7 @@ const Layout = ({ children, user, onLogout }) => {
         label: 'Configurações', 
         icon: Settings,
         submenu: [
+          { path: '/admin/planos-motorista', label: '📦 Planos Motorista' },
           { path: '/automacao-rpa', label: '🤖 Automação RPA' },
           { path: '/configuracao-mapeamento', label: '🗺️ Mapeamento Importação' },
           { path: '/automacao', label: '⚡ Sincronização Auto' },
