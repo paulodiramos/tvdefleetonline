@@ -426,9 +426,15 @@ const AutomacaoRPA = ({ user, onLogout }) => {
 
             {/* Lista de Automações */}
             <Card>
-              <CardHeader>
-                <CardTitle>Automações Disponíveis</CardTitle>
-                <CardDescription>Gerir sincronizações automáticas de dados</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Automações Disponíveis</CardTitle>
+                  <CardDescription>Gerir sincronizações automáticas de dados</CardDescription>
+                </div>
+                <Button onClick={handleNovaAutomacao}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nova Automação
+                </Button>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -440,7 +446,12 @@ const AutomacaoRPA = ({ user, onLogout }) => {
                       <div className="flex items-center gap-4">
                         {getIconeAutomacao(automacao.icone)}
                         <div>
-                          <h3 className="font-medium">{automacao.nome}</h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-medium">{automacao.nome}</h3>
+                            {automacao.sistema && (
+                              <Badge variant="outline" className="text-xs">Sistema</Badge>
+                            )}
+                          </div>
                           <p className="text-sm text-slate-500">{automacao.descricao}</p>
                           <div className="flex items-center gap-2 mt-1">
                             {getStatusBadge(automacao.status)}
@@ -456,7 +467,26 @@ const AutomacaoRPA = ({ user, onLogout }) => {
                           </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditarAutomacao(automacao)}
+                          title="Editar"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        {!automacao.sistema && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteAutomacao(automacao.id)}
+                            title="Eliminar"
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
