@@ -10,11 +10,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, Bot, Play, Pause, RefreshCw, Clock, CheckCircle, 
   AlertCircle, Settings, Calendar, FileText, Download, Upload,
-  Car, Users, Loader2, History, Zap, Shield
+  Car, Users, Loader2, History, Zap, Shield, Plus, Edit, Trash2
 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -24,6 +26,15 @@ const AutomacaoRPA = ({ user, onLogout }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('visao-geral');
+  const [showModal, setShowModal] = useState(false);
+  const [editingAutomacao, setEditingAutomacao] = useState(null);
+  const [formAutomacao, setFormAutomacao] = useState({
+    nome: '',
+    descricao: '',
+    icone: 'custom',
+    frequencia: 'diario',
+    ativo: false
+  });
   
   // Estado das automações
   const [automacoes, setAutomacoes] = useState([
@@ -36,7 +47,8 @@ const AutomacaoRPA = ({ user, onLogout }) => {
       frequencia: 'diario',
       ultima_execucao: null,
       proxima_execucao: null,
-      status: 'parado'
+      status: 'parado',
+      sistema: true
     },
     {
       id: 'sync_bolt',
@@ -47,7 +59,9 @@ const AutomacaoRPA = ({ user, onLogout }) => {
       frequencia: 'diario',
       ultima_execucao: null,
       proxima_execucao: null,
-      status: 'parado'
+      status: 'parado',
+      sistema: true
+    },
     },
     {
       id: 'sync_viaverde',
