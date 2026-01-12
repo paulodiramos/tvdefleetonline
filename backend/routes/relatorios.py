@@ -3828,7 +3828,8 @@ async def enviar_relatorio_para_motorista(
         }, {"_id": 0}).to_list(100)
         eletrico = sum(float(r.get("valor_total") or 0) for r in elet_records)
     
-    total_ganhos = ganhos_uber + ganhos_bolt
+    # Total Ganhos = Rendimentos Uber + Uber Portagens + Ganhos Bolt
+    total_ganhos = ganhos_uber + uber_portagens + ganhos_bolt
     total_despesas = combustivel + via_verde + eletrico
     valor_liquido = total_ganhos - total_despesas
     
@@ -3839,6 +3840,7 @@ async def enviar_relatorio_para_motorista(
         "motorista_telefone": motorista.get("telefone") or motorista.get("phone"),
         "veiculo_matricula": veiculo.get("matricula") if veiculo else None,
         "ganhos_uber": ganhos_uber,
+        "uber_portagens": uber_portagens,
         "ganhos_bolt": ganhos_bolt,
         "total_ganhos": total_ganhos,
         "combustivel": combustivel,
