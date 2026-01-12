@@ -7,11 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, Mail, Lock, Server, Send, Eye, EyeOff, 
-  Car, Shield, Save, Loader2, TestTube, CheckCircle, AlertCircle
+  Car, Shield, Save, Loader2, TestTube, CheckCircle, AlertCircle,
+  MessageCircle, Phone, ExternalLink
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -43,6 +45,18 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
     ativo: false
   });
   
+  // Configuração de WhatsApp
+  const [configWhatsApp, setConfigWhatsApp] = useState({
+    telefone: '',
+    nome_exibicao: '',
+    mensagem_boas_vindas: '',
+    mensagem_relatorio: '',
+    ativo: false,
+    enviar_relatorios_semanais: true,
+    enviar_alertas_documentos: true,
+    enviar_alertas_veiculos: true
+  });
+  
   // Credenciais de Plataformas
   const [credenciais, setCredenciais] = useState({
     uber_email: '',
@@ -65,22 +79,30 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
       const headers = { Authorization: `Bearer ${token}` };
       
       // Buscar configurações de email
-      const emailRes = await axios.get(`${API}/api/parceiros/${user.id}/config-email`, { headers });
-      if (emailRes.data) {
-        setConfigEmail(prev => ({ ...prev, ...emailRes.data }));
-      }
+      try {
+        const emailRes = await axios.get(`${API}/api/parceiros/${user.id}/config-email`, { headers });
+        if (emailRes.data) {
+          setConfigEmail(prev => ({ ...prev, ...emailRes.data }));
+        }
+      } catch (e) { /* ignore */ }
+      
+      // Buscar configurações de WhatsApp
+      try {
+        const whatsappRes = await axios.get(`${API}/api/parceiros/${user.id}/config-whatsapp`, { headers });
+        if (whatsappRes.data) {
+          setConfigWhatsApp(prev => ({ ...prev, ...whatsappRes.data }));
+        }
+      } catch (e) { /* ignore */ }
       
       // Buscar credenciais de plataformas
-      const credsRes = await axios.get(`${API}/api/parceiros/${user.id}/credenciais-plataformas`, { headers });
-      if (credsRes.data) {
-        setCredenciais(prev => ({ ...prev, ...credsRes.data }));
-      }
+      try {
+        const credsRes = await axios.get(`${API}/api/parceiros/${user.id}/credenciais-plataformas`, { headers });
+        if (credsRes.data) {
+          setCredenciais(prev => ({ ...prev, ...credsRes.data }));
+        }
+      } catch (e) { /* ignore */ }
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
-      // Não mostrar erro se for 404 (primeira vez)
-      if (error.response?.status !== 404) {
-        toast.error('Erro ao carregar configurações');
-      }
     } finally {
       setLoading(false);
     }
@@ -115,6 +137,46 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
       toast.success(response.data.message || 'Email de teste enviado!');
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Erro ao enviar email de teste');
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const handleSaveWhatsApp = async () => {
+    try {
+      setSaving(true);
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/api/parceiros/${user.id}/config-whatsapp`,
+        configWhatsApp,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Configuração de WhatsApp guardada!');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao guardar configuração');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTestarWhatsApp = async () => {
+    try {
+      setTesting(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/api/parceiros/${user.id}/whatsapp/enviar-teste`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.whatsapp_link) {
+        window.open(response.data.whatsapp_link, '_blank');
+        toast.success('Link WhatsApp aberto!');
+      } else {
+        toast.success(response.data.message);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao testar WhatsApp');
     } finally {
       setTesting(false);
     }
@@ -161,15 +223,19 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
           </Button>
           <div>
             <h1 className="text-xl font-bold text-slate-800">Configurações</h1>
-            <p className="text-sm text-slate-500">Email e credenciais de plataformas</p>
+            <p className="text-sm text-slate-500">Email, WhatsApp e credenciais</p>
           </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-2 w-full max-w-md">
+          <TabsList className="grid grid-cols-3 w-full max-w-lg">
             <TabsTrigger value="email" className="flex items-center gap-2">
               <Mail className="w-4 h-4" />
-              Email SMTP
+              Email
+            </TabsTrigger>
+            <TabsTrigger value="whatsapp" className="flex items-center gap-2">
+              <MessageCircle className="w-4 h-4" />
+              WhatsApp
             </TabsTrigger>
             <TabsTrigger value="credenciais" className="flex items-center gap-2">
               <Lock className="w-4 h-4" />
@@ -287,6 +353,122 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
                   <Button variant="outline" onClick={handleTestarEmail} disabled={testing || !configEmail.smtp_host}>
                     {testing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <TestTube className="w-4 h-4 mr-2" />}
                     Testar Email
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab WhatsApp */}
+          <TabsContent value="whatsapp" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="w-5 h-5 text-green-600" />
+                  Configuração de WhatsApp
+                </CardTitle>
+                <CardDescription>
+                  Configure o WhatsApp para enviar mensagens aos motoristas
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-2">
+                    {configWhatsApp.ativo ? (
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-amber-500" />
+                    )}
+                    <span className="font-medium text-green-800">
+                      {configWhatsApp.ativo ? 'WhatsApp Ativo' : 'WhatsApp Inativo'}
+                    </span>
+                  </div>
+                  <Switch
+                    checked={configWhatsApp.ativo}
+                    onCheckedChange={(checked) => setConfigWhatsApp(prev => ({ ...prev, ativo: checked }))}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Número de WhatsApp</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                      <Input
+                        placeholder="+351 9XX XXX XXX"
+                        value={configWhatsApp.telefone}
+                        onChange={(e) => setConfigWhatsApp(prev => ({ ...prev, telefone: e.target.value }))}
+                        className="pl-10"
+                      />
+                    </div>
+                    <p className="text-xs text-slate-500">Inclua o código do país (+351)</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Nome de Exibição</Label>
+                    <Input
+                      placeholder="Nome da sua empresa"
+                      value={configWhatsApp.nome_exibicao}
+                      onChange={(e) => setConfigWhatsApp(prev => ({ ...prev, nome_exibicao: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Mensagem de Boas-Vindas (opcional)</Label>
+                  <Textarea
+                    placeholder="Olá! Bem-vindo à nossa frota. Este é o canal de comunicação oficial..."
+                    value={configWhatsApp.mensagem_boas_vindas}
+                    onChange={(e) => setConfigWhatsApp(prev => ({ ...prev, mensagem_boas_vindas: e.target.value }))}
+                    rows={3}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Template de Relatório Semanal (opcional)</Label>
+                  <Textarea
+                    placeholder="Olá {nome}! Segue o seu relatório semanal..."
+                    value={configWhatsApp.mensagem_relatorio}
+                    onChange={(e) => setConfigWhatsApp(prev => ({ ...prev, mensagem_relatorio: e.target.value }))}
+                    rows={3}
+                  />
+                  <p className="text-xs text-slate-500">Use {'{nome}'}, {'{semana}'}, {'{total}'} para variáveis</p>
+                </div>
+
+                <div className="space-y-3 p-4 bg-slate-50 rounded-lg">
+                  <h4 className="font-medium text-sm">Notificações Automáticas</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-normal">Relatórios semanais</Label>
+                      <Switch
+                        checked={configWhatsApp.enviar_relatorios_semanais}
+                        onCheckedChange={(checked) => setConfigWhatsApp(prev => ({ ...prev, enviar_relatorios_semanais: checked }))}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-normal">Alertas de documentos</Label>
+                      <Switch
+                        checked={configWhatsApp.enviar_alertas_documentos}
+                        onCheckedChange={(checked) => setConfigWhatsApp(prev => ({ ...prev, enviar_alertas_documentos: checked }))}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-normal">Alertas de veículos</Label>
+                      <Switch
+                        checked={configWhatsApp.enviar_alertas_veiculos}
+                        onCheckedChange={(checked) => setConfigWhatsApp(prev => ({ ...prev, enviar_alertas_veiculos: checked }))}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <Button onClick={handleSaveWhatsApp} disabled={saving} className="bg-green-600 hover:bg-green-700">
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                    Guardar
+                  </Button>
+                  <Button variant="outline" onClick={handleTestarWhatsApp} disabled={testing || !configWhatsApp.telefone}>
+                    {testing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ExternalLink className="w-4 h-4 mr-2" />}
+                    Testar WhatsApp
                   </Button>
                 </div>
               </CardContent>
