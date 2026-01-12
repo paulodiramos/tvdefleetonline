@@ -19174,10 +19174,7 @@ app.include_router(public_router, prefix="/api")
 app.include_router(ganhos_router, prefix="/api")
 app.include_router(manutencao_router, prefix="/api")
 
-# Include main API router LAST (legacy routes - endpoints here are overridden by modular routers above)
-app.include_router(api_router)
-
-# Include main API router (legacy routes - to be migrated)
+# api_router will be included at the very end of the file, after all routes are defined
 # ==================== DOCUMENTO VALIDATION SYSTEM ====================
 
 class DocumentoUpload(BaseModel):
