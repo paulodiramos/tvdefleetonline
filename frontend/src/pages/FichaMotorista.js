@@ -238,7 +238,15 @@ const FichaMotorista = ({ user }) => {
         email_bolt: motoristaData.email_bolt || motoristaData.email || '',
         telefone_bolt: motoristaData.telefone_bolt || motoristaData.phone || '',
         identificador_motorista_bolt: motoristaData.identificador_motorista_bolt || '',
-        usar_dados_padrao_plataformas: motoristaData.usar_dados_padrao_plataformas !== false
+        usar_dados_padrao_plataformas: motoristaData.usar_dados_padrao_plataformas !== false,
+        // Contacto de Emergência
+        emergencia_nome: motoristaData.emergencia_nome || '',
+        emergencia_telefone: motoristaData.emergencia_telefone || '',
+        emergencia_parentesco: motoristaData.emergencia_parentesco || motoristaData.emergencia_ligacao || '',
+        emergencia_email: motoristaData.emergencia_email || '',
+        emergencia_morada: motoristaData.emergencia_morada || '',
+        emergencia_codigo_postal: motoristaData.emergencia_codigo_postal || '',
+        emergencia_localidade: motoristaData.emergencia_localidade || ''
       }));
       
       // Carregar documentos existentes
