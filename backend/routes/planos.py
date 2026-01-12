@@ -239,6 +239,16 @@ async def admin_get_planos_motorista_stats(current_user: Dict = Depends(get_curr
     }
 
 
+@router.get("/admin/planos-motorista")
+async def admin_get_planos_motorista(current_user: Dict = Depends(get_current_user)):
+    """Get all motorista plans from planos_sistema (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    planos = await db.planos_sistema.find({"tipo_usuario": "motorista"}, {"_id": 0}).to_list(100)
+    return planos
+
+
 @router.get("/admin/planos")
 async def admin_get_planos(current_user: Dict = Depends(get_current_user)):
     """Get all plans from planos_sistema (Admin only)"""
