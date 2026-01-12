@@ -1184,6 +1184,91 @@ const FichaMotorista = ({ user }) => {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Contacto de Emergência */}
+              <Card className="md:col-span-2 border-orange-200 bg-orange-50/30">
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2 text-orange-700">
+                    <Shield className="w-5 h-5" /> Contacto de Emergência
+                  </CardTitle>
+                  <CardDescription>Pessoa a contactar em caso de emergência</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label>Nome Completo</Label>
+                      <Input
+                        placeholder="Nome do contacto"
+                        value={dadosMotorista.emergencia_nome}
+                        onChange={(e) => setDadosMotorista(prev => ({ ...prev, emergencia_nome: e.target.value }))}
+                        disabled={!isEditing}
+                        className={getFilledInputClass(dadosMotorista.emergencia_nome)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Telefone</Label>
+                      <Input
+                        placeholder="+351 9XX XXX XXX"
+                        value={dadosMotorista.emergencia_telefone}
+                        onChange={(e) => setDadosMotorista(prev => ({ ...prev, emergencia_telefone: e.target.value }))}
+                        disabled={!isEditing}
+                        className={getFilledInputClass(dadosMotorista.emergencia_telefone)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Parentesco/Ligação</Label>
+                      <Input
+                        placeholder="Ex: Cônjuge, Pai, Mãe, Irmão..."
+                        value={dadosMotorista.emergencia_parentesco}
+                        onChange={(e) => setDadosMotorista(prev => ({ ...prev, emergencia_parentesco: e.target.value }))}
+                        disabled={!isEditing}
+                        className={getFilledInputClass(dadosMotorista.emergencia_parentesco)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Email</Label>
+                      <Input
+                        type="email"
+                        placeholder="email@exemplo.com"
+                        value={dadosMotorista.emergencia_email}
+                        onChange={(e) => setDadosMotorista(prev => ({ ...prev, emergencia_email: e.target.value }))}
+                        disabled={!isEditing}
+                        className={getFilledInputClass(dadosMotorista.emergencia_email)}
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <Label>Morada</Label>
+                      <Input
+                        placeholder="Morada completa"
+                        value={dadosMotorista.emergencia_morada}
+                        onChange={(e) => setDadosMotorista(prev => ({ ...prev, emergencia_morada: e.target.value }))}
+                        disabled={!isEditing}
+                        className={getFilledInputClass(dadosMotorista.emergencia_morada)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Código Postal</Label>
+                      <Input
+                        placeholder="XXXX-XXX"
+                        value={dadosMotorista.emergencia_codigo_postal}
+                        onChange={(e) => setDadosMotorista(prev => ({ ...prev, emergencia_codigo_postal: e.target.value }))}
+                        disabled={!isEditing}
+                        className={getFilledInputClass(dadosMotorista.emergencia_codigo_postal)}
+                      />
+                    </div>
+                    <div>
+                      <Label>Localidade</Label>
+                      <Input
+                        placeholder="Cidade"
+                        value={dadosMotorista.emergencia_localidade}
+                        onChange={(e) => setDadosMotorista(prev => ({ ...prev, emergencia_localidade: e.target.value }))}
+                        disabled={!isEditing}
+                        className={getFilledInputClass(dadosMotorista.emergencia_localidade)}
+                      />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </TabsContent>
 
