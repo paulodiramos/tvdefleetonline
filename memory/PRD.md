@@ -1,6 +1,33 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-12 - Session 9 - Bug Fixes Resumo Semanal e PDF)
+## Changelog (2026-01-12 - Session 9 - Novas Funcionalidades)
+
+### Novas Funcionalidades Implementadas
+
+#### 1. Sistema de Email por Parceiro (COMPLETO)
+- Página `/configuracoes-parceiro` com configuração SMTP
+- Campos: Servidor SMTP, Porta, Utilizador, Password, Nome Remetente, Email Remetente
+- Opção TLS, botão testar email
+- Endpoints: `GET/PUT /api/parceiros/{id}/config-email`, `POST /api/parceiros/{id}/config-email/testar`
+
+#### 2. Credenciais de Plataformas (COMPLETO)
+- Tab na página de configurações do parceiro
+- Campos para Uber (Email, Telemóvel, Password), Bolt (Email, Password), Via Verde (Utilizador, Password)
+- Passwords mascaradas com opção mostrar/esconder
+- Endpoints: `GET/PUT /api/parceiros/{id}/credenciais-plataformas`
+
+#### 3. Contacto de Emergência do Motorista (COMPLETO)
+- Secção na ficha do motorista com destaque laranja
+- Campos: Nome, Telefone, Parentesco, Email, Morada, Código Postal, Localidade
+- Dados guardados no modelo do motorista
+
+#### 4. Sistema RPA Admin (COMPLETO - Interface)
+- Página `/automacao-rpa` restrita a administradores
+- Lista de 5 automações: Uber, Bolt, Via Verde, Envio Relatórios, Alertas Documentos
+- Tabs: Visão Geral, Histórico, Configurações
+- **Nota:** Interface implementada, lógica de execução automática pendente (em desenvolvimento)
+
+---
 
 ### Bug Fix: Uber Portagens no Cálculo do Líquido (COMPLETO)
 
