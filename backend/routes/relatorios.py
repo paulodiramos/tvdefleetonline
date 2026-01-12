@@ -1062,7 +1062,8 @@ async def get_resumo_semanal_parceiro(
             logger.info(f"📝 Ajuste manual aplicado para {motorista.get('name')} - S{semana}/{ano}")
         
         # ============ CALCULAR TOTAIS ============
-        total_ganhos = ganhos_uber + ganhos_bolt
+        # Total Ganhos = Rendimentos Uber + Uber Portagens + Ganhos Bolt
+        total_ganhos = ganhos_uber + uber_portagens + ganhos_bolt
         
         # Se acumular_viaverde está activo, Via Verde vai para o acumulado (não desconta)
         via_verde_a_descontar = 0.0 if acumular_viaverde else via_verde_total
@@ -1077,7 +1078,7 @@ async def get_resumo_semanal_parceiro(
         # Total receitas do parceiro por este motorista
         receitas_parceiro = receita_aluguer + receita_extras
         
-        # Líquido do motorista = Ganhos - Despesas - Aluguer - Extras
+        # Líquido do motorista = (Rendimentos + Uber Portagens + Bolt) - Despesas - Aluguer - Extras
         valor_liquido_motorista = total_ganhos - total_despesas_operacionais - receita_aluguer - receita_extras
         
         motorista_resumo = {
