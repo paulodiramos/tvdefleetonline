@@ -1,6 +1,23 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-13 - Session 11 - P1 Features + Melhoria + P2 Progresso)
+## Changelog (2026-01-13 - Session 11 - Features + Melhorias Completas)
+
+### Sistema de Alertas de Custos - MELHORIA (COMPLETO)
+- **Nova página:** `/alertas-custos` (`/app/frontend/src/pages/AlertasCustos.js`)
+- **Funcionalidades:**
+  - Configuração de limites por categoria (11 categorias)
+  - Período de análise: semanal ou mensal
+  - Slider para percentual de aviso (50-95%)
+  - Notificações na app e/ou email
+  - Tab "Estado Atual" mostra alertas ativos
+  - Tab "Histórico" mostra alertas passados
+  - Alertas automáticos quando limites são ultrapassados
+- **Backend:** Novos endpoints em `/app/backend/routes/alertas.py`:
+  - `GET/POST /api/alertas/config-limites` - Configuração
+  - `GET /api/alertas/custos/verificar` - Verificar estado
+  - `GET /api/alertas/custos/historico` - Histórico
+- **Menu:** Financeiro → "🔔 Alertas de Custos"
+- **Testado:** 13/13 testes backend + UI validada
 
 ### Relatório de Custos por Fornecedor - MELHORIA (COMPLETO)
 - **Nova página:** `/relatorio-fornecedores` (`/app/frontend/src/pages/RelatorioFornecedores.js`)
