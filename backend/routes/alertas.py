@@ -373,13 +373,13 @@ async def _criar_notificacao_alerta_custo(parceiro_id: str, alerta: Dict, config
     if config.get("notificar_app", True):
         await criar_notificacao(
             db=db,
+            user_id=parceiro_id,
             tipo="alerta_custo",
             titulo=titulo,
             mensagem=mensagem,
-            destinatario_id=parceiro_id,
-            destinatario_tipo="parceiro",
             prioridade="alta" if alerta["severidade"] == "critico" else "media",
-            dados={
+            link="/alertas-custos",
+            metadata={
                 "categoria": alerta["categoria"],
                 "total_atual": alerta["total_atual"],
                 "limite": alerta["limite"],
