@@ -351,6 +351,21 @@ const Mensagens = ({ user, onLogout }) => {
                       <p className="text-sm text-slate-500">
                         {conversaSelecionada.participantes_info?.[0]?.role}
                       </p>
+                      {/* Mostrar dados de contacto */}
+                      <div className="flex items-center gap-3 mt-1 text-xs text-slate-500">
+                        {conversaSelecionada.participantes_info?.[0]?.email && (
+                          <a href={`mailto:${conversaSelecionada.participantes_info[0].email}`} className="flex items-center gap-1 hover:text-blue-600">
+                            <Mail className="w-3 h-3" />
+                            {conversaSelecionada.participantes_info[0].email}
+                          </a>
+                        )}
+                        {conversaSelecionada.participantes_info?.[0]?.phone && (
+                          <a href={`tel:${conversaSelecionada.participantes_info[0].phone}`} className="flex items-center gap-1 hover:text-blue-600">
+                            <Phone className="w-3 h-3" />
+                            {conversaSelecionada.participantes_info[0].phone}
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
                   <Button
