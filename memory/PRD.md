@@ -1,12 +1,35 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-13 - Session 11 - Terabox Bug Fix)
+## Changelog (2026-01-13 - Session 11 - P1 Features Complete)
+
+### UI de Admin para Fornecedores (COMPLETO)
+- **Nova página:** `/admin/fornecedores` (`/app/frontend/src/pages/AdminFornecedores.js`)
+- **Funcionalidades:**
+  - CRUD completo de fornecedores (criar, editar, eliminar)
+  - Filtro por 8 tipos: Combustível Fóssil, Elétrico, GPS, Seguros, Manutenção, Lavagem, Pneus, Outros
+  - Pesquisa por nome/descrição
+  - Cards de estatísticas por tipo com ícones coloridos
+  - Seed de fornecedores padrão (Galp, BP, Mobi.E, etc.)
+- **Permissões:** Apenas Admin
+
+### Página de Envio WhatsApp Business (COMPLETO)
+- **Nova página:** `/whatsapp-envio` (`/app/frontend/src/pages/WhatsAppEnvio.js`)
+- **Funcionalidades:**
+  - Selecionar múltiplos motoristas para envio
+  - Templates de mensagem pré-definidos (Relatório Semanal, Documento a Expirar, Boas-vindas)
+  - Compor mensagem personalizada
+  - Contador de caracteres
+  - Tab de Histórico de mensagens enviadas
+  - Indicador de modo de API (Cloud API vs Link wa.me)
+  - Link para configurações de WhatsApp
+- **Backend:** Novos endpoints adicionados:
+  - `GET /api/parceiros/{id}/whatsapp-historico` - Histórico de mensagens
+  - `POST /api/parceiros/{id}/whatsapp/enviar-motoristas` - Enviar mensagens
 
 ### Bug Fix: Erro de Compilação Frontend Terabox (CORRIGIDO)
-- **Problema:** A página Terabox.js não compilava devido a um ícone inexistente (`FilePdf`) importado de `lucide-react`
-- **Solução:** Substituído `FilePdf` por `FileText` na função `getFileIcon()` (linha 297)
+- **Problema:** A página Terabox.js não compilava devido a um ícone inexistente (`FilePdf`)
+- **Solução:** Substituído por `FileText` na função `getFileIcon()`
 - **Ficheiro:** `/app/frontend/src/pages/Terabox.js`
-- **Testado:** 19 testes backend passaram, UI testada com sucesso (criar pastas, upload, download, navegação, pesquisa, eliminação)
 
 ---
 
