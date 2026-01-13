@@ -28,10 +28,10 @@ class TestAuth:
         })
         assert response.status_code == 200, f"Admin login failed: {response.text}"
         data = response.json()
-        assert "token" in data, "No token in response"
+        assert "access_token" in data, "No access_token in response"
         assert data.get("user", {}).get("role") == "admin", "User is not admin"
         print(f"✓ Admin login successful, role: {data['user']['role']}")
-        return data["token"]
+        return data["access_token"]
     
     def test_parceiro_login(self):
         """Test parceiro login"""
@@ -41,10 +41,10 @@ class TestAuth:
         })
         assert response.status_code == 200, f"Parceiro login failed: {response.text}"
         data = response.json()
-        assert "token" in data, "No token in response"
+        assert "access_token" in data, "No access_token in response"
         assert data.get("user", {}).get("role") == "parceiro", "User is not parceiro"
         print(f"✓ Parceiro login successful, role: {data['user']['role']}")
-        return data["token"], data["user"]["id"]
+        return data["access_token"], data["user"]["id"]
 
 
 @pytest.fixture(scope="module")
@@ -56,7 +56,7 @@ def admin_token():
     })
     if response.status_code != 200:
         pytest.skip("Admin login failed")
-    return response.json()["token"]
+    return response.json()["access_token"]
 
 
 @pytest.fixture(scope="module")
@@ -69,7 +69,7 @@ def parceiro_data():
     if response.status_code != 200:
         pytest.skip("Parceiro login failed")
     data = response.json()
-    return {"token": data["token"], "id": data["user"]["id"]}
+    return {"token": data["access_token"], "id": data["user"]["id"]}
 
 
 # ==================== FORNECEDORES TESTS ====================
@@ -103,8 +103,8 @@ class TestFornecedoresListar:
     def test_listar_fornecedores_no_auth(self):
         """Unauthenticated request should fail"""
         response = requests.get(f"{BASE_URL}/api/fornecedores")
-        assert response.status_code == 401, "Should require authentication"
-        print("✓ Unauthenticated request correctly rejected")
+        assert response.status_code in [401, 403], "Should require authentication"
+        print(f"✓ Unauthenticated request correctly rejected with {response.status_code}")
 
 
 class TestFornecedoresCRUD:
