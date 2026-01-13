@@ -46,17 +46,19 @@
   - `GET /api/despesas/relatorio-fornecedores/comparativo` - Comparativo mensal
 - **Menu:** Adicionado em Relatórios → "💰 Custos Fornecedores"
 
-### P2 - Refatoração do Backend (PROGRESSO SIGNIFICATIVO)
-- **Estado atual:**
-  - **38 routers modulares** criados em `/app/backend/routes/`
-  - ~325 endpoints ainda no `server.py` (maioria são duplicados ignorados)
-  - **Novos routers nesta sessão (5 total):**
-    - `vistorias.py` (12 endpoints) - Inspeções de veículos
-    - `cartoes_frota.py` (9 endpoints) - Cartões combustível/Via Verde
-    - `templates_contratos.py` (8 endpoints) - Templates de contratos
-    - `ficheiros_importados.py` (9 endpoints) - Ficheiros importados Uber/Bolt
-    - `agenda.py` (11 endpoints) - Agenda/eventos de veículos
-  - **Total:** ~49 novos endpoints extraídos nesta sessão
+### P2 - Refatoração do Backend (CONCLUÍDO PARCIALMENTE)
+- **Estado final:**
+  - **38 routers modulares** criados
+  - **22.175 linhas** no server.py (reduzido de 22.490)
+  - **310 endpoints** no server.py (reduzido de 327)
+  - **~315 linhas** de código duplicado removidas
+  - **17 endpoints duplicados** removidos
+- **Novos routers criados nesta sessão:**
+  - `vistorias.py` (12 endpoints)
+  - `cartoes_frota.py` (9 endpoints)
+  - `templates_contratos.py` (8 endpoints)
+  - `ficheiros_importados.py` (9 endpoints)
+  - `agenda.py` (11 endpoints)
 - **Routers completos:** admin, agenda, alertas, auth, automacao, cartoes_frota, configuracoes, contratos, csv_config, dashboard, despesas, documentos, extras, ficheiros_importados, fornecedores, ganhos, gestores, ifthenpay, importacoes, manutencao, mensagens, modulos, motoristas, notificacoes, pagamentos, parceiros, planos, public, recibos, relatorios, reports, sincronizacao, storage, templates_contratos, terabox, users, vehicles, vistorias
 
 ### UI de Admin para Fornecedores (COMPLETO)
