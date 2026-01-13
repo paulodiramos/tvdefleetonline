@@ -1,44 +1,56 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-13 - Session 10 - Bug Fixes & WhatsApp)
+## Changelog (2026-01-13 - Session 10 - Bug Fixes, Notificações & Email SMTP)
 
-### Bugs Corrigidos (COMPLETO)
+### Melhorias no Sistema de Notificações (COMPLETO)
 
-#### 1. Bug: Admin não conseguia ver documentos pendentes (CORRIGIDO)
-- **Problema:** Endpoint GET `/api/documentos/pendentes` retornava "Not Found"
-- **Causa:** A linha `app.include_router(api_router)` estava na linha 19178, mas os endpoints do `api_router` eram definidos DEPOIS (linha 19290+)
-- **Solução:** Mover `app.include_router(api_router)` para o FINAL do ficheiro `server.py`
-- **Ficheiro:** `/app/backend/server.py`
+#### Dados de Contacto do Emissor
+- **Novo Campo:** `contacto_emissor` nas notificações com nome, email, telefone e role
+- **Novo Campo:** `emissor_id` para rastrear quem criou a notificação
+- **UI:** Modal de detalhes mostra contactos clicáveis (mailto, tel)
+- **Ficheiros:** 
+  - `/app/backend/models/notificacao.py`
+  - `/app/backend/utils/notificacoes.py`
+  - `/app/frontend/src/pages/Notificacoes.js`
 
-#### 2. Bug: Cartão combustível não sincronizava com motorista (VERIFICADO)
-- **Status:** Já estava implementado corretamente em `routes/vehicles.py` linhas 1537-1557
+#### Sistema de Notas nas Notificações
+- **Novo Campo:** `notas` editáveis em cada notificação
+- **Novo Campo:** `notas_updated_at` e `notas_updated_by` para auditoria
+- **Novo Endpoint:** `PUT /api/notificacoes/{id}` para actualizar notas
+- **Novo Endpoint:** `GET /api/notificacoes/{id}` para obter detalhes completos
+- **UI:** Secção de notas no modal com editor inline
 
-#### 3. Funcionalidade WhatsApp para Parceiros (COMPLETO)
-- **Backend Endpoints:** GET/PUT `/api/parceiros/{id}/config-whatsapp`, POST enviar-teste
-- **Frontend:** Tab "WhatsApp" na página `/configuracoes-parceiro`
+#### Dados de Contacto nas Mensagens
+- **Melhorado:** Cabeçalho de conversa mostra email e telefone do participante
+- **Ficheiros:**
+  - `/app/backend/routes/mensagens.py`
+  - `/app/frontend/src/pages/Mensagens.js`
 
-#### 4. Bug: Download documentos de motorista não funcionava (CORRIGIDO)
-- **Problema:** Endpoint procurava documentos em `documents` mas estavam a ser guardados em `documentos`
-- **Solução:** Modificado endpoint para procurar em ambos os campos
-- **Ficheiro:** `/app/backend/server.py` linha 3933
+### Sistema de Envio de Email SMTP (COMPLETO)
 
-#### 5. Bug: Parceiro não conseguia criar templates de contrato (CORRIGIDO)
-- **Problema:** Permissão restrita a admin/gestor
-- **Solução:** Adicionado `UserRole.PARCEIRO` à lista de roles autorizados
-- **Ficheiro:** `/app/backend/server.py` linha 14222
+#### Serviço de Email
+- **Novo ficheiro:** `/app/backend/utils/email_service.py`
+- Classe `EmailService` para envio via SMTP do parceiro
+- Templates HTML para relatórios semanais e alertas de documentos
+- Suporte a anexos, CC e BCC
 
-#### 6. Bug: Upload de fotos de veículos (VERIFICADO)
-- **Status:** Funciona corretamente - fotos são guardadas em `fotos` e `fotos_veiculo`
+#### Endpoint de Envio
+- **Novo Endpoint:** `POST /api/parceiros/{id}/enviar-email-motoristas`
+- Enviar emails a múltiplos motoristas
+- Usa configuração SMTP do parceiro
+- Log de emails enviados na colecção `email_log`
 
-#### 7. Bug: Criar eventos na agenda do veículo (VERIFICADO)
-- **Status:** Funciona corretamente - eventos são adicionados à agenda
+### Bugs Corrigidos Adicionais
 
-### Test Report
-- **Ficheiro:** `/app/test_reports/iteration_7.json`
-- **Testes Backend:** 12/12 passaram
-- **Testes Frontend:** 100% passaram
+#### 4. Download documentos de motorista (CORRIGIDO)
+- Endpoint procura agora em `documents` E `documentos`
+
+#### 5. Parceiro criar templates de contrato (CORRIGIDO)
+- `UserRole.PARCEIRO` adicionado às permissões
 
 ---
+
+### Bugs Corrigidos (Sessão Anterior)
 
 ## Changelog (2026-01-12 - Session 9 - Final)
 
