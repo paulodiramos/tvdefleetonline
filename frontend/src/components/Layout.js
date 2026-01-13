@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   Users, Car, Truck, FileText, TrendingUp, DollarSign, MessageSquare, 
   Building, ClipboardCheck, Package, Settings, LogOut, ChevronDown, 
-  Shield, Bell, Menu, X, Home, User
+  Shield, Bell, Menu, X, Home, User, HardDrive
 } from 'lucide-react';
 import { useState } from 'react';
 import Notificacoes from './Notificacoes';
