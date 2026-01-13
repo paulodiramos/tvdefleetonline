@@ -74,7 +74,8 @@ const Layout = ({ children, user, onLogout }) => {
           submenu: [
             { path: '/pagamentos-parceiro', label: 'Pagamentos' },
             { path: '/verificar-recibos', label: 'Verificar Recibos' },
-            { path: '/gestao-extras', label: '💰 Extras/Dívidas' }
+            { path: '/gestao-extras', label: '💰 Extras/Dívidas' },
+            { path: '/alertas-custos', label: '🔔 Alertas de Custos' }
           ]
         },
         { 
