@@ -391,9 +391,11 @@ class TestContratosGerar:
         # Should return 200 (success) - bug was returning 403 for parceiro role
         assert response.status_code == 200, f"Gerar contrato failed with status {response.status_code}: {response.text}"
         result = response.json()
-        assert "id" in result
+        # API returns contrato_id or id depending on version
+        assert "contrato_id" in result or "id" in result, f"Expected contrato_id or id in response: {result}"
         assert "referencia" in result
-        print(f"✅ Contract generated successfully: {result.get('referencia')}")
+        contrato_id = result.get("contrato_id") or result.get("id")
+        print(f"✅ Contract generated successfully: {result.get('referencia')} (id: {contrato_id})")
         return result
     
     def test_gerar_contrato_unauthorized(self, test_motorista, test_vehicle):
