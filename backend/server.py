@@ -19199,6 +19199,8 @@ app.include_router(terabox_router, prefix="/api")
 app.include_router(ganhos_router, prefix="/api")
 app.include_router(manutencao_router, prefix="/api")
 app.include_router(vistorias_router, prefix="/api")
+app.include_router(cartoes_frota_router, prefix="/api")
+app.include_router(templates_contratos_router, prefix="/api")
 
 # api_router will be included at the very end of the file, after all routes are defined
 # ==================== DOCUMENTO VALIDATION SYSTEM ====================
