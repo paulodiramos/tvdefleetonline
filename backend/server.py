@@ -95,6 +95,8 @@ from routes.manutencao import router as manutencao_router
 from routes.vistorias import router as vistorias_router
 from routes.cartoes_frota import router as cartoes_frota_router
 from routes.templates_contratos import router as templates_contratos_router
+from routes.ficheiros_importados import router as ficheiros_importados_router
+from routes.agenda import router as agenda_router
 
 # Import utilities from refactored modules
 from utils.file_handlers import (
