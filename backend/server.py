@@ -6658,86 +6658,9 @@ async def verificar_acesso_modulo(
     }
 
 
-# ==================== VEHICLE VISTORIAS (INSPECTIONS) ====================
+# Vehicle vistorias endpoints moved to routes/vehicles.py and routes/vistorias.py
 
-@api_router.post("/vehicles/{vehicle_id}/vistorias")
-async def create_vistoria(
-    vehicle_id: str,
-    vistoria_data: Dict[str, Any],
-    current_user: Dict = Depends(get_current_user)
-):
-    """Create a new vehicle vistoria/inspection"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    
-    # Verify vehicle exists
-    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
-    if not vehicle:
-        raise HTTPException(status_code=404, detail="Vehicle not found")
-    
-    # Create vistoria
-    vistoria_id = str(uuid.uuid4())
-    now = datetime.now(timezone.utc)
-    
-    vistoria = {
-        "id": vistoria_id,
-        "veiculo_id": vehicle_id,
-        "parceiro_id": vistoria_data.get("parceiro_id"),
-        "data_vistoria": vistoria_data.get("data_vistoria", now.isoformat()),
-        "tipo": vistoria_data.get("tipo", "periodica"),
-        "km_veiculo": vistoria_data.get("km_veiculo"),
-        "responsavel_nome": current_user.get("name"),
-        "responsavel_id": current_user.get("id"),
-        "observacoes": vistoria_data.get("observacoes"),
-        "estado_geral": vistoria_data.get("estado_geral", "bom"),
-        "status": vistoria_data.get("status", "fechada"),  # aberta | fechada
-        "fotos": vistoria_data.get("fotos", []),
-        "itens_verificados": vistoria_data.get("itens_verificados", {}),
-        "danos_encontrados": vistoria_data.get("danos_encontrados", []),
-        "pdf_relatorio": None,
-        "assinatura_responsavel": vistoria_data.get("assinatura_responsavel"),
-        "assinatura_motorista": vistoria_data.get("assinatura_motorista"),
-        "created_at": now,
-        "updated_at": now
-    }
-    
-    await db.vistorias.insert_one(vistoria)
-    
-    # Update vehicle with next vistoria date if provided
-    if vistoria_data.get("proxima_vistoria"):
-        await db.vehicles.update_one(
-            {"id": vehicle_id},
-            {"$set": {"proxima_vistoria": vistoria_data.get("proxima_vistoria")}}
-        )
-    
-    # If vistoria is closed (fechada), generate PDF and send email automatically
-    if vistoria.get("status") == "fechada":
-        try:
-            # Generate PDF
-            await gerar_pdf_vistoria(vehicle_id, vistoria_id, current_user)
-            # Send email (will be implemented when email service is configured)
-            # await enviar_email_vistoria(vehicle_id, vistoria_id, current_user)
-            logger.info(f"PDF generated for closed vistoria {vistoria_id}")
-        except Exception as e:
-            logger.error(f"Error generating PDF for vistoria {vistoria_id}: {e}")
-            # Don't fail the whole operation if PDF generation fails
-    
-    return {"message": "Vistoria created successfully", "vistoria_id": vistoria_id}
-
-
-@api_router.get("/vehicles/{vehicle_id}/vistorias")
-async def get_vehicle_vistorias(
-    vehicle_id: str,
-    current_user: Dict = Depends(get_current_user)
-):
-    """Get all vistorias for a vehicle"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.MOTORISTA]:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    
-    vistorias = await db.vistorias.find(
-        {"veiculo_id": vehicle_id},
-        {"_id": 0}
-    ).sort("data_vistoria", -1).to_list(100)
+# ==================== ADMIN SETTINGS ====================
     
     return vistorias
 
