@@ -116,6 +116,79 @@ async def delete_notificacao(
     return {"message": "Notification deleted"}
 
 
+@router.put("/notificacoes/{notificacao_id}")
+async def update_notificacao(
+    notificacao_id: str,
+    update_data: NotificacaoUpdate,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Update notification (add notes, mark as read)"""
+    notif = await db.notificacoes.find_one({"id": notificacao_id})
+    if not notif:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    
+    if notif["user_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    update_fields = {}
+    
+    if update_data.notas is not None:
+        update_fields["notas"] = update_data.notas
+        update_fields["notas_updated_at"] = datetime.now(timezone.utc).isoformat()
+        update_fields["notas_updated_by"] = current_user["id"]
+    
+    if update_data.lida is not None:
+        update_fields["lida"] = update_data.lida
+        if update_data.lida:
+            update_fields["lida_em"] = datetime.now(timezone.utc).isoformat()
+    
+    if update_fields:
+        await db.notificacoes.update_one(
+            {"id": notificacao_id},
+            {"$set": update_fields}
+        )
+    
+    return {"message": "Notification updated successfully"}
+
+
+@router.get("/notificacoes/{notificacao_id}")
+async def get_notificacao(
+    notificacao_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get single notification with full details"""
+    notif = await db.notificacoes.find_one({"id": notificacao_id}, {"_id": 0})
+    if not notif:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    
+    if notif["user_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Convert datetime strings
+    if isinstance(notif.get("criada_em"), str):
+        notif["criada_em"] = datetime.fromisoformat(notif["criada_em"])
+    if notif.get("lida_em") and isinstance(notif["lida_em"], str):
+        notif["lida_em"] = datetime.fromisoformat(notif["lida_em"])
+    if notif.get("notas_updated_at") and isinstance(notif["notas_updated_at"], str):
+        notif["notas_updated_at"] = datetime.fromisoformat(notif["notas_updated_at"])
+    
+    # Get emissor info if available
+    if notif.get("emissor_id") and not notif.get("contacto_emissor"):
+        emissor = await db.users.find_one(
+            {"id": notif["emissor_id"]}, 
+            {"_id": 0, "name": 1, "email": 1, "phone": 1, "role": 1}
+        )
+        if emissor:
+            notif["contacto_emissor"] = {
+                "nome": emissor.get("name"),
+                "email": emissor.get("email"),
+                "telefone": emissor.get("phone"),
+                "role": emissor.get("role")
+            }
+    
+    return notif
+
+
 @router.post("/notificacoes", response_model=Notificacao)
 async def create_notificacao(
     notificacao_data: NotificacaoCreate,
