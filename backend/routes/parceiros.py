@@ -757,6 +757,86 @@ async def testar_config_email(
         raise HTTPException(status_code=400, detail=f"Erro ao enviar email: {str(e)}")
 
 
+# ==================== ENVIAR EMAIL A MOTORISTAS ====================
+
+class EmailMotoristaRequest(BaseModel):
+    """Request para enviar email a motorista"""
+    motorista_ids: List[str]
+    assunto: str
+    mensagem_html: str
+    mensagem_texto: Optional[str] = None
+
+
+@router.post("/{parceiro_id}/enviar-email-motoristas")
+async def enviar_email_motoristas(
+    parceiro_id: str,
+    request: EmailMotoristaRequest,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Enviar email a um ou mais motoristas usando SMTP do parceiro"""
+    from utils.email_service import get_parceiro_email_service
+    
+    # Verificar permissões
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Obter serviço de email
+    email_service = await get_parceiro_email_service(db, parceiro_id)
+    if not email_service:
+        raise HTTPException(status_code=400, detail="Configuração SMTP não encontrada. Configure o email primeiro.")
+    
+    resultados = []
+    for motorista_id in request.motorista_ids:
+        # Obter dados do motorista
+        motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0, "email": 1, "name": 1})
+        if not motorista or not motorista.get("email"):
+            resultados.append({
+                "motorista_id": motorista_id,
+                "success": False,
+                "error": "Motorista não encontrado ou sem email"
+            })
+            continue
+        
+        # Enviar email
+        result = email_service.send_email(
+            to_email=motorista["email"],
+            subject=request.assunto,
+            body_html=request.mensagem_html,
+            body_text=request.mensagem_texto
+        )
+        
+        resultados.append({
+            "motorista_id": motorista_id,
+            "motorista_name": motorista.get("name"),
+            "email": motorista["email"],
+            **result
+        })
+        
+        # Log do email
+        if result["success"]:
+            from datetime import datetime, timezone
+            await db.email_log.insert_one({
+                "parceiro_id": parceiro_id,
+                "motorista_id": motorista_id,
+                "to_email": motorista["email"],
+                "subject": request.assunto,
+                "status": "sent",
+                "sent_at": datetime.now(timezone.utc).isoformat(),
+                "sent_by": current_user["id"]
+            })
+    
+    sucessos = sum(1 for r in resultados if r.get("success"))
+    falhas = len(resultados) - sucessos
+    
+    return {
+        "message": f"Emails enviados: {sucessos} sucesso(s), {falhas} falha(s)",
+        "resultados": resultados
+    }
+
+
 # ==================== CREDENCIAIS DE PLATAFORMAS ====================
 
 class CredenciaisPlataforma(BaseModel):
