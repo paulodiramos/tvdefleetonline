@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="14" failures="3" skipped="0" tests="17" time="1.286" timestamp="2026-01-13T01:30:12.860494+00:00" hostname="agent-env-8a39ed88-b097-4120-b839-71fd2b1989d7"><testcase classname="tests.test_fornecedores_whatsapp.TestAuth" name="test_admin_login" time="0.297"><failure message="AssertionError: No token in response&#10;assert 'token' in {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZTgxODc4YWMtNDhmOS00M2E5LWFjZmMtZTY3NmRlMGZhN2MyIiwiZW1haWwiOiJhZG1pbkB0dmRlZmxlZXQuY29tIiwicm9sZSI6ImFkbWluIiwiZXhwIjoxNzY4MzU0MjEzfQ.aTlhdVOXf_s_DwrGA0GSR7IAGH_HUtDgu4hNKsz3SUQ', 'token_type': 'bearer', 'user': {'approved': True, 'associated_gestor_id': None, 'associated_partner_id': None, 'campos_customizados': {}, ...}}">tests/test_fornecedores_whatsapp.py:31: in test_admin_login
+    assert "token" in data, "No token in response"
+E   AssertionError: No token in response
+E   assert 'token' in {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZTgxODc4YWMtNDhmOS00M2E5LWFjZmMtZTY3NmRlMGZhN2MyIiwiZW1haWwiOiJhZG1pbkB0dmRlZmxlZXQuY29tIiwicm9sZSI6ImFkbWluIiwiZXhwIjoxNzY4MzU0MjEzfQ.aTlhdVOXf_s_DwrGA0GSR7IAGH_HUtDgu4hNKsz3SUQ', 'token_type': 'bearer', 'user': {'approved': True, 'associated_gestor_id': None, 'associated_partner_id': None, 'campos_customizados': {}, ...}}</failure></testcase><testcase classname="tests.test_fornecedores_whatsapp.TestAuth" name="test_parceiro_login" time="0.260"><failure message="AssertionError: No token in response&#10;assert 'token' in {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWIyYTI1YWEtNGY3MC00YzdiLTgzNWQtOTIwNGIwY2QwZDdlIiwiZW1haWwiOiJwYXJjZWlyb0B0dmRlZmxlZXQuY29tIiwicm9sZSI6InBhcmNlaXJvIiwiZXhwIjoxNzY4MzU0MjEzfQ.N-634TG1Ao4b4ejEjotjHj36K2RehzRl_w6zycDAsqE', 'token_type': 'bearer', 'user': {'approved': True, 'associated_gestor_id': None, 'associated_partner_id': None, 'campos_customizados': {}, ...}}">tests/test_fornecedores_whatsapp.py:44: in test_parceiro_login
+    assert "token" in data, "No token in response"
+E   AssertionError: No token in response
+E   assert 'token' in {'access_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWIyYTI1YWEtNGY3MC00YzdiLTgzNWQtOTIwNGIwY2QwZDdlIiwiZW1haWwiOiJwYXJjZWlyb0B0dmRlZmxlZXQuY29tIiwicm9sZSI6InBhcmNlaXJvIiwiZXhwIjoxNzY4MzU0MjEzfQ.N-634TG1Ao4b4ejEjotjHj36K2RehzRl_w6zycDAsqE', 'token_type': 'bearer', 'user': {'approved': True, 'associated_gestor_id': None, 'associated_partner_id': None, 'campos_customizados': {}, ...}}</failure></testcase><testcase classname="tests.test_fornecedores_whatsapp.TestFornecedoresListar" name="test_listar_fornecedores_admin" time="0.261"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_fornecedores_whatsapp.py:59: in admin_token
+    return response.json()["token"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_fornecedores_whatsapp.TestFornecedoresListar" name="test_listar_fornecedores_parceiro" time="0.264"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_fornecedores_whatsapp.py:72: in parceiro_data
+    return {"token": data["token"], "id": data["user"]["id"]}
+                     ^^^^^^^^^^^^^
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_fornecedores_whatsapp.TestFornecedoresListar" name="test_listar_fornecedores_no_auth" time="0.041"><failure message="AssertionError: Should require authentication&#10;assert 403 == 401&#10; +  where 403 = &lt;Response [403]&gt;.status_code">tests/test_fornecedores_whatsapp.py:106: in test_listar_fornecedores_no_auth
+    assert response.status_code == 401, "Should require authentication"
+E   AssertionError: Should require authentication
+E   assert 403 == 401
+E    +  where 403 = &lt;Response [403]&gt;.status_code</failure></testcase><testcase classname="tests.test_fornecedores_whatsapp.TestFornecedoresCRUD" name="test_criar_fornecedor_admin" time="0.000"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_fornecedores_whatsapp.py:59: in admin_token
+    return response.json()["token"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_fornecedores_whatsapp.TestFornecedoresCRUD" name="test_criar_fornecedor_parceiro_forbidden" time="0.000"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_fornecedores_whatsapp.py:72: in parceiro_data
+    return {"token": data["token"], "id": data["user"]["id"]}
+                     ^^^^^^^^^^^^^
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_fornecedores_whatsapp.TestFornecedoresCRUD" name="test_atualizar_fornecedor_admin" time="0.000"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_fornecedores_whatsapp.py:59: in admin_token
+    return response.json()["token"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_fornecedores_whatsapp.TestFornecedoresCRUD" name="test_eliminar_fornecedor_admin" time="0.000"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_fornecedores_whatsapp.py:59: in admin_token
+    return response.json()["token"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_fornecedores_whatsapp.TestFornecedoresTipos" name="test_listar_tipos" time="0.000"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_fornecedores_whatsapp.py:59: in admin_token
+    return response.json()["token"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_fornecedores_whatsapp.TestFornecedoresSeed" name="test_seed_fornecedores_admin" time="0.000"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_fornecedores_whatsapp.py:59: in admin_token
+    return response.json()["token"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_fornecedores_whatsapp.TestWhatsAppConfig" name="test_get_whatsapp_config" time="0.000"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_fornecedores_whatsapp.py:72: in parceiro_data
+    return {"token": data["token"], "id": data["user"]["id"]}
+                     ^^^^^^^^^^^^^
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_fornecedores_whatsapp.TestWhatsAppHistorico" name="test_get_whatsapp_historico" time="0.000"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_fornecedores_whatsapp.py:72: in parceiro_data
+    return {"token": data["token"], "id": data["user"]["id"]}
+                     ^^^^^^^^^^^^^
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_fornecedores_whatsapp.TestWhatsAppEnvio" name="test_get_motoristas_with_phone" time="0.000"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_fornecedores_whatsapp.py:72: in parceiro_data
+    return {"token": data["token"], "id": data["user"]["id"]}
+                     ^^^^^^^^^^^^^
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_fornecedores_whatsapp.TestWhatsAppEnvio" name="test_enviar_whatsapp_motoristas" time="0.000"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_fornecedores_whatsapp.py:72: in parceiro_data
+    return {"token": data["token"], "id": data["user"]["id"]}
+                     ^^^^^^^^^^^^^
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_fornecedores_whatsapp.TestWhatsAppEnvio" name="test_enviar_whatsapp_no_motoristas" time="0.000"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_fornecedores_whatsapp.py:72: in parceiro_data
+    return {"token": data["token"], "id": data["user"]["id"]}
+                     ^^^^^^^^^^^^^
+E   KeyError: 'token'</error></testcase><testcase classname="tests.test_fornecedores_whatsapp.TestCleanup" name="test_cleanup_test_fornecedores" time="0.000"><error message="failed on setup with &quot;KeyError: 'token'&quot;">tests/test_fornecedores_whatsapp.py:59: in admin_token
+    return response.json()["token"]
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'token'</error></testcase></testsuite></testsuites>
