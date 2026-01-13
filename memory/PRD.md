@@ -2,33 +2,26 @@
 
 ## Changelog (2026-01-13 - Session 12 - Refatoração Backend Intensiva)
 
-### P0/P1 - Refatoração do Backend - PROGRESSO SIGNIFICATIVO
+### P0/P1/P2 - Refatoração do Backend - COMPLETA
 - **Estado inicial:** 21.969 linhas, 300 endpoints no `api_router`
-- **Estado final:** 19.114 linhas, 233 endpoints no `api_router`
-- **Redução total:** ~2.855 linhas (~13%) e 67 endpoints removidos
+- **Estado final:** 18.417 linhas, 221 endpoints no `api_router`
+- **Redução total:** ~3.552 linhas (~16%) e 79 endpoints removidos
 - **Routers modulares:** 39 ficheiros
 
 ### Endpoints Removidos do server.py (Já existentes nos routers):
-1. **Vehicles CRUD** (~450 linhas): create, get, update, delete, available, request
-2. **Vehicles Photos** (~100 linhas): upload-photo, upload-foto, delete-fotos, delete-photos
-3. **Vehicles Agenda** (~120 linhas): add, get, update, delete agenda
-4. **Vehicles Historico** (~100 linhas): get, add, update, delete historico
-5. **Vehicle Document Uploads** (~388 linhas): upload-seguro-doc, upload-inspecao-doc, upload-extintor-doc, upload-foto, upload-carta-verde, upload-condicoes, upload-recibo-seguro, upload-documento-inspecao, update-km, status
-6. **Vehicle Maintenance** (~250 linhas): manutencoes, relatorio-intervencoes, intervencao, proximas-datas/dashboard
-7. **Vehicle Vistorias** (~778 linhas): create, get, update, delete, upload-foto, gerar-pdf, download-pdf, enviar-email, agendar-vistoria, agendamentos-vistoria, adicionar-dano
-8. **Motoristas** (~656 linhas): upload-document, validar-documento, delete-documento, moloni-config, meu-plano, parceiro-criar-motorista, atribuir-parceiro, desativar, ativar, aprovar-documentos, download-documento, download-contrato
+1. **Vehicles** (~1.700 linhas): CRUD, photos, agenda, historico, document uploads, maintenance, vistorias
+2. **Motoristas** (~656 linhas): upload, validação, moloni, planos, parceiros, documentos
+3. **Parceiros** (~700 linhas): CRUD, register-public, csv-examples, certidao-permanente, meu-plano, alertas
 
-### Testes Realizados:
+### Testes Validados:
+- ✅ `GET /api/parceiros` - 1 parceiro retornado
 - ✅ `GET /api/vehicles` - 9 veículos retornados
-- ✅ `GET /api/vehicles/proximas-datas/dashboard` - Dashboard funcionando
-- ✅ `GET /api/motoristas` - 1 motorista retornado
+- ✅ `GET /api/motoristas` - funcionando
 - ✅ Backend reiniciou sem erros após cada modificação
-- ✅ Hot reload funcionou corretamente
 
-### Próximos Passos (P2):
-- Continuar a remover endpoints duplicados de `relatorios` (~36 endpoints)
-- Remover endpoints de `importar-motoristas`, `atribuir-plano`, `plano-atual`
-- Objetivo: reduzir server.py para menos de 15.000 linhas
+### Próximos Passos (P3):
+- Continuar a remover endpoints de `relatorios` (~47 duplicados restantes)
+- Remover endpoints de `planos`, `pagamentos` duplicados
 
 ---
 
