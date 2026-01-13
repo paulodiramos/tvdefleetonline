@@ -13,7 +13,9 @@ import {
   Search,
   Plus,
   Trash2,
-  User
+  User,
+  Mail,
+  Phone
 } from 'lucide-react';
 import {
   Dialog,
