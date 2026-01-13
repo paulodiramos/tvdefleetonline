@@ -3362,61 +3362,7 @@ async def get_parceiros_do_gestor(
     
     return parceiros
 
-# ==================== MOTORISTA ENDPOINTS ====================
-
-# NOTA: Endpoint /motoristas/register migrado para routes/motoristas.py
-
-@api_router.post("/motoristas/{motorista_id}/upload-document")
-async def upload_document(
-    motorista_id: str, 
-    file: UploadFile = File(...), 
-    doc_type: str = Form(...),
-    current_user: Dict = Depends(get_current_user)
-):
-    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
-    if not motorista:
-        raise HTTPException(status_code=404, detail="Motorista not found")
-    
-    # Process file: save and convert to PDF if image
-    file_id = f"{motorista_id}_{doc_type}_{uuid.uuid4()}"
-    file_info = await process_uploaded_file(file, MOTORISTAS_UPLOAD_DIR, file_id)
-    
-    # Store file path in database (prefer PDF version if available)
-    file_url = file_info["pdf_path"] if file_info["pdf_path"] else file_info["original_path"]
-    
-    update_field = f"documents.{doc_type}"
-    await db.motoristas.update_one(
-        {"id": motorista_id},
-        {"$set": {update_field: file_url}}
-    )
-    
-    return {
-        "message": "Document uploaded successfully",
-        "doc_type": doc_type,
-        "file_url": file_url,
-        "converted_to_pdf": file_info["pdf_path"] is not None
-    }
-
-@api_router.post("/motoristas/{motorista_id}/validar-documento")
-async def validar_documento(
-    motorista_id: str,
-    validacao_data: dict,
-    current_user: Dict = Depends(get_current_user)
-):
-    """Validar documento (Admin, Gestor, Operacional, Parceiro)"""
-    # Verificar permissões
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    
-    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
-    if not motorista:
-        raise HTTPException(status_code=404, detail="Motorista not found")
-    
-    doc_type = validacao_data.get("doc_type")
-    validar = validacao_data.get("validar", True)
-    
-    if not doc_type:
-        raise HTTPException(status_code=400, detail="doc_type is required")
+# ==================== MOTORISTA ENDPOINTS (MOVED TO routes/motoristas.py) ====================
     
     # Verificar se documento existe
     if not motorista.get("documents", {}).get(doc_type):
