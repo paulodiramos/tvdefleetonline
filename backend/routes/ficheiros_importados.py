@@ -29,7 +29,7 @@ class FicheiroImportado(BaseModel):
     id: str
     nome_ficheiro: str
     plataforma: str
-    tipo: str
+    tipo: Optional[str] = None
     status: str
     data_importacao: str
     importado_por: Optional[str] = None
@@ -38,6 +38,8 @@ class FicheiroImportado(BaseModel):
     periodo_fim: Optional[str] = None
     total_registos: Optional[int] = None
     total_valor: Optional[float] = None
+    registos_sucesso: Optional[int] = None
+    registos_erro: Optional[int] = None
     aprovado_por: Optional[str] = None
     aprovado_por_nome: Optional[str] = None
     data_aprovacao: Optional[str] = None
