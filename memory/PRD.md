@@ -84,9 +84,17 @@
 - **Novo ficheiro:** `/app/backend/routes/recibos.py`
 - Endpoints: CRUD recibos, verificação, pagamentos-recibos
 
+#### Novo Router: dashboard.py
+- **Novo ficheiro:** `/app/backend/routes/dashboard.py`
+- Endpoints: dashboard stats, parceiro estatísticas, próximas datas, alertas stats
+
+#### Novo Router: fornecedores.py
+- **Novo ficheiro:** `/app/backend/routes/fornecedores.py`
+- Endpoints: CRUD fornecedores, tipos, seed default (Galp, BP, Mobi.E, etc)
+
 #### Estado da Refatoração
-- **server.py:** ~22.400 linhas (ainda tem 325 endpoints - muitos duplicados)
-- **Routers criados:** 31 ficheiros em `/app/backend/routes/`
+- **server.py:** ~22.400 linhas (ainda tem endpoints duplicados)
+- **Routers criados:** 33 ficheiros em `/app/backend/routes/`
 - **Nota:** Os novos routers têm precedência sobre os endpoints do server.py
 
 ---
