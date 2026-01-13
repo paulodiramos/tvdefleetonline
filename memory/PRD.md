@@ -1,5 +1,39 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-13 - Session 12 - Bugs P0 Corrigidos)
+
+### Bugs P0 Corrigidos - TODOS VALIDADOS ✅
+1. **Motoristas - Upload documento** - Corrigido permissão para aceitar role como string "parceiro"
+2. **Veículos - Upload foto "não autorizado"** - Corrigido permissão + verificação de propriedade do veículo
+3. **Veículos - Erro adicionar evento agenda** - Corrigido permissão para parceiros
+4. **Veículos - Erro excluir evento agenda** - Corrigido permissão para parceiros
+5. **Contratos - Gerar contrato não funciona** - Corrigido para procurar em ambas collections
+6. **Registo Parceiro - Popup "not found"** - Corrigido upload opcional de documento
+7. **Parceiro - Ver documentos aprovação** - Corrigido endpoint e URL duplicada /api/api/
+8. **Notificações - Não deixa salvar** - Adicionado endpoint GET detalhe
+
+### Ficheiros Modificados:
+- `/app/backend/routes/vehicles.py` - upload-photo, upload-foto, agenda (add/delete)
+- `/app/backend/routes/motoristas.py` - documentos/upload
+- `/app/backend/routes/notificacoes.py` - GET notificacoes/{id}
+- `/app/backend/routes/documentos.py` - pendentes para parceiros (testing agent)
+- `/app/backend/server.py` - contratos/gerar, contratos/gerar-pdf, documentos/pendentes
+- `/app/frontend/src/pages/RegistoParceiro.js` - upload opcional
+- `/app/frontend/src/pages/Pendentes.js` - URLs corrigidas
+
+### Testes Validados (19/19 = 100%):
+- ✅ POST /api/motoristas/{id}/documentos/upload (parceiro)
+- ✅ POST /api/vehicles/{id}/upload-photo (parceiro)
+- ✅ POST /api/vehicles/{id}/upload-foto (parceiro)
+- ✅ POST /api/vehicles/{id}/agenda (parceiro)
+- ✅ DELETE /api/vehicles/{id}/agenda/{evento_id} (parceiro)
+- ✅ POST /api/contratos/gerar (parceiro)
+- ✅ GET /api/documentos/pendentes (parceiro + admin)
+- ✅ GET /api/notificacoes/{id}
+- ✅ PUT /api/notificacoes/{id}
+
+---
+
 ## Changelog (2026-01-13 - Session 12 - Refatoração Backend CONCLUÍDA)
 
 ### P0/P1/P2/P3 - Refatoração do Backend - SUCESSO
