@@ -3929,8 +3929,10 @@ async def download_motorista_documento(
     if not is_authorized:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Get document path
+    # Get document path - check both 'documents' and 'documentos' fields
     doc_url = motorista.get("documents", {}).get(doc_type)
+    if not doc_url:
+        doc_url = motorista.get("documentos", {}).get(doc_type)
     if not doc_url:
         raise HTTPException(status_code=404, detail="Document not found")
     
