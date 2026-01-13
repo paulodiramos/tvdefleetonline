@@ -112,6 +112,7 @@ import AdminPlanosMotorista from "@/pages/AdminPlanosMotorista";
 import Terabox from "@/pages/Terabox";
 import AdminFornecedores from "@/pages/AdminFornecedores";
 import WhatsAppEnvio from "@/pages/WhatsAppEnvio";
+import RelatorioFornecedores from "@/pages/RelatorioFornecedores";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
