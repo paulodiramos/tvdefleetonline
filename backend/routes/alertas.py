@@ -361,10 +361,10 @@ async def _criar_notificacao_alerta_custo(parceiro_id: str, alerta: Dict, config
     uma_hora_atras = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
     
     notificacao_existente = await db.notificacoes.find_one({
-        "destinatario_id": parceiro_id,
+        "user_id": parceiro_id,
         "tipo": "alerta_custo",
-        "dados.categoria": alerta["categoria"],
-        "created_at": {"$gte": uma_hora_atras}
+        "metadata.categoria": alerta["categoria"],
+        "criada_em": {"$gte": uma_hora_atras}
     })
     
     if notificacao_existente:
