@@ -813,6 +813,16 @@ function App() {
             }
           />
           <Route
+            path="/relatorio-fornecedores"
+            element={
+              user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
+                <RelatorioFornecedores user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/configuracoes-parceiro"
             element={
               user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
