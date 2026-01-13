@@ -48,11 +48,14 @@
 
 ### P2 - Refatoração do Backend (EM PROGRESSO)
 - **Estado atual:**
-  - 34 routers modulares criados em `/app/backend/routes/`
-  - ~325 endpoints ainda no `server.py` (22.482 linhas) - muitos são duplicados ignorados
-  - **Novo router nesta sessão:** `vistorias.py` (12 endpoints para inspeções de veículos)
-  - Routers existentes: admin, alertas, auth, automacao, configuracoes, contratos, csv_config, dashboard, despesas, documentos, extras, fornecedores, ganhos, gestores, ifthenpay, importacoes, manutencao, mensagens, modulos, motoristas, notificacoes, pagamentos, parceiros, planos, public, recibos, relatorios, reports, sincronizacao, storage, terabox, users, vehicles, **vistorias**
-- **Próximos passos:** Continuar a extrair endpoints de contratos e relatórios para routers dedicados
+  - **36 routers modulares** criados em `/app/backend/routes/`
+  - ~325 endpoints ainda no `server.py` (muitos são duplicados ignorados)
+  - **Novos routers nesta sessão:**
+    - `vistorias.py` (12 endpoints) - Inspeções de veículos
+    - `cartoes_frota.py` (9 endpoints) - Cartões de combustível/Via Verde
+    - `templates_contratos.py` (8 endpoints) - Templates de contratos
+  - Total: **29 novos endpoints** extraídos
+- **Próximos passos:** Continuar limpeza do server.py (endpoints duplicados são ignorados mas ocupam espaço)
 
 ### UI de Admin para Fornecedores (COMPLETO)
 - **Nova página:** `/admin/fornecedores` (`/app/frontend/src/pages/AdminFornecedores.js`)
