@@ -61,6 +61,7 @@ const Dashboard = ({ user, onLogout }) => {
     fetchAlertas();
     fetchProximasDatas();
     fetchPlanoAtivo();
+    fetchAlertasCustos();
   }, [filtroData, selectedParceiro]);
 
   const fetchPlanoAtivo = async () => {
