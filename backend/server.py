@@ -4201,70 +4201,7 @@ async def import_csv(file: UploadFile = File(...), import_type: str = Form(...),
     
     return {"message": f"CSV import for {import_type} will be processed", "filename": file.filename}
 
-# ==================== PARCEIROS ENDPOINTS ====================
-
-@api_router.post("/parceiros")
-async def create_parceiro(parceiro_data: ParceiroCreate, current_user: Dict = Depends(get_current_user)):
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    
-    parceiro_dict = parceiro_data.model_dump()
-    parceiro_dict["id"] = str(uuid.uuid4())
-    parceiro_dict["created_at"] = datetime.now(timezone.utc).isoformat()
-    parceiro_dict["total_vehicles"] = 0
-    
-    if current_user["role"] == UserRole.GESTAO:
-        parceiro_dict["gestor_associado_id"] = current_user["id"]
-    
-    # Assign base free plan for parceiro
-    plano_base = await db.planos_sistema.find_one({
-        "preco_mensal": 0, 
-        "ativo": True, 
-        "tipo_usuario": "parceiro"
-    }, {"_id": 0})
-    
-    if plano_base:
-        from datetime import timedelta
-        plano_valida_ate = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
-        parceiro_dict["plano_id"] = plano_base["id"]
-        parceiro_dict["plano_nome"] = plano_base["nome"]
-        parceiro_dict["plano_valida_ate"] = plano_valida_ate
-        parceiro_dict["plano_status"] = "ativo"
-        logger.info(f"Assigned base plan {plano_base['id']} to new parceiro")
-    
-    await db.parceiros.insert_one(parceiro_dict)
-    
-    # Create user account for parceiro
-    user_dict = {
-        "id": parceiro_dict["id"],
-        "email": parceiro_data.email,
-        "name": parceiro_data.nome_manager,  # Use nome_manager as the user name
-        "role": UserRole.PARCEIRO,
-        "password": hash_password("parceiro123"),  # Default password
-        "phone": parceiro_data.telefone,  # Use telefone as the phone
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "approved": True,
-        "associated_gestor_id": parceiro_dict.get("gestor_associado_id")
-    }
-    await db.users.insert_one(user_dict)
-    
-    if isinstance(parceiro_dict["created_at"], str):
-        parceiro_dict["created_at"] = datetime.fromisoformat(parceiro_dict["created_at"])
-    
-    return Parceiro(**parceiro_dict)
-
-@api_router.post("/parceiros/register-public")
-async def create_parceiro_public(parceiro_data: Dict[str, Any]):
-    """Create parceiro from public registration (no auth required)"""
-    parceiro_id = f"parceiro-{datetime.now().strftime('%Y%m%d%H%M%S')}"
-    
-    # Validate codigo_certidao_comercial format
-    codigo_certidao = parceiro_data.get("codigo_certidao_comercial", "")
-    if not codigo_certidao or not re.match(r'^\d{4}-\d{4}-\d{4}$', codigo_certidao):
-        raise HTTPException(
-            status_code=400, 
-            detail="Código de Certidão Comercial é obrigatório e deve estar no formato xxxx-xxxx-xxxx"
-        )
+# ==================== PARCEIROS ENDPOINTS (MOVED TO routes/parceiros.py) ====================
     
     new_parceiro = {
         "id": parceiro_id,
