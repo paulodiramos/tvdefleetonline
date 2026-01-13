@@ -125,23 +125,28 @@ const RegistoParceiro = () => {
 
       await axios.post(`${API}/parceiros/register-public`, parceiroData);
       
-      // Upload certidão comercial
-      const token = localStorage.getItem('token');
-      const uploadForm = new FormData();
-      uploadForm.append('file', certidaoComercial);
-      uploadForm.append('tipo_documento', 'certidao_comercial');
-      uploadForm.append('user_id', userId);
-      uploadForm.append('role', 'parceiro');
-      
-      await axios.post(`${API}/api/documentos/upload`, uploadForm, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: token ? `Bearer ${token}` : ''
+      // Upload certidão comercial (opcional - só se houver ficheiro)
+      if (certidaoComercial) {
+        try {
+          const uploadForm = new FormData();
+          uploadForm.append('file', certidaoComercial);
+          uploadForm.append('tipo_documento', 'certidao_comercial');
+          uploadForm.append('user_id', userId);
+          uploadForm.append('role', 'parceiro');
+          
+          await axios.post(`${API}/documentos/upload`, uploadForm, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          });
+        } catch (uploadError) {
+          console.warn('Upload de documento opcional falhou:', uploadError);
+          // Não bloquear o registo se o upload falhar
         }
-      });
+      }
       
       setSuccess(true);
-      toast.success('Registo e documentos enviados com sucesso!');
+      toast.success('Registo enviado com sucesso! Aguarde aprovação.');
     } catch (error) {
       console.error('Erro no registo:', error);
       toast.error(error.response?.data?.detail || 'Erro ao registar. Tente novamente.');
