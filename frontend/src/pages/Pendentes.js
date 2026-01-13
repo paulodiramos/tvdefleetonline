@@ -78,7 +78,7 @@ const Pendentes = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${API}/api/documentos/user/${selectedUser.user.id}/aprovar-todos`,
+        `${API}/documentos/user/${selectedUser.user.id}/aprovar-todos`,
         { aprovado: true, observacoes: null },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -101,7 +101,7 @@ const Pendentes = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${API}/api/documentos/user/${selectedUser.user.id}/aprovar-todos`,
+        `${API}/documentos/user/${selectedUser.user.id}/aprovar-todos`,
         { aprovado: false, observacoes },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -121,7 +121,7 @@ const Pendentes = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${API}/api/documentos/${documentoId}/aprovar`,
+        `${API}/documentos/${documentoId}/aprovar`,
         { aprovado: true, observacoes: null },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -149,7 +149,7 @@ const Pendentes = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${API}/api/documentos/${selectedDocumento.id}/aprovar`,
+        `${API}/documentos/${selectedDocumento.id}/aprovar`,
         { aprovado: false, observacoes },
         { headers: { Authorization: `Bearer ${token}` } }
       );
