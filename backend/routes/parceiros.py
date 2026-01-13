@@ -1138,3 +1138,66 @@ async def enviar_relatorio_whatsapp(
         "periodo": periodo_str,
         **result
     }
+
+
+@router.get("/{parceiro_id}/whatsapp-historico")
+async def get_whatsapp_historico(
+    parceiro_id: str,
+    limit: int = 50,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter histórico de mensagens WhatsApp enviadas pelo parceiro"""
+    # Verificar permissões
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    historico = await db.whatsapp_log.find(
+        {"parceiro_id": parceiro_id},
+        {"_id": 0}
+    ).sort("sent_at", -1).limit(limit).to_list(limit)
+    
+    return historico
+
+
+@router.post("/{parceiro_id}/whatsapp/enviar-motoristas")
+async def enviar_whatsapp_motoristas_v2(
+    parceiro_id: str,
+    request: WhatsAppMotoristaRequest,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Enviar WhatsApp a um ou mais motoristas (v2 com template_id)"""
+    from utils.whatsapp_service import send_whatsapp_to_motorista
+    
+    # Verificar permissões
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    resultados = []
+    for motorista_id in request.motorista_ids:
+        result = await send_whatsapp_to_motorista(
+            db, parceiro_id, motorista_id, request.mensagem
+        )
+        
+        # Obter nome do motorista
+        motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0, "name": 1, "whatsapp": 1, "phone": 1})
+        
+        resultados.append({
+            "motorista_id": motorista_id,
+            "motorista_name": motorista.get("name") if motorista else "N/A",
+            "phone": motorista.get("whatsapp") or motorista.get("phone") if motorista else "N/A",
+            **result
+        })
+    
+    sucessos = sum(1 for r in resultados if r.get("success"))
+    falhas = len(resultados) - sucessos
+    
+    return {
+        "message": f"WhatsApp: {sucessos} sucesso(s), {falhas} falha(s)",
+        "resultados": resultados
+    }
