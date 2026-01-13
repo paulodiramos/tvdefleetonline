@@ -19192,6 +19192,7 @@ app.include_router(modulos_router, prefix="/api")
 app.include_router(recibos_router, prefix="/api")
 app.include_router(dashboard_router, prefix="/api")
 app.include_router(fornecedores_router, prefix="/api")
+app.include_router(terabox_router, prefix="/api")
 app.include_router(ganhos_router, prefix="/api")
 app.include_router(manutencao_router, prefix="/api")
 
