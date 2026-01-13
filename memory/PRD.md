@@ -42,6 +42,45 @@
 #### 3. Parceiro criar templates de contrato (CORRIGIDO)
 - `UserRole.PARCEIRO` adicionado às permissões
 
+### Sistema Terabox - Armazenamento de Documentos (COMPLETO)
+
+#### Backend (`/app/backend/routes/terabox.py`)
+- **Gestão de Pastas:**
+  - `GET /api/terabox/pastas` - Listar pastas
+  - `POST /api/terabox/pastas` - Criar pasta
+  - `DELETE /api/terabox/pastas/{id}` - Eliminar pasta
+
+- **Gestão de Ficheiros:**
+  - `GET /api/terabox/ficheiros` - Listar ficheiros
+  - `POST /api/terabox/upload` - Upload de ficheiro
+  - `POST /api/terabox/upload-multiplo` - Upload múltiplo
+  - `GET /api/terabox/download/{id}` - Download de ficheiro
+  - `GET /api/terabox/preview/{id}` - Preview (imagens/PDFs)
+  - `PUT /api/terabox/ficheiros/{id}/mover` - Mover ficheiro
+  - `PUT /api/terabox/ficheiros/{id}/renomear` - Renomear
+  - `DELETE /api/terabox/ficheiros/{id}` - Eliminar
+
+- **Outros:**
+  - `GET /api/terabox/stats` - Estatísticas de armazenamento
+  - `GET /api/terabox/pesquisar` - Pesquisa de ficheiros
+  - `GET /api/terabox/categorias` - Categorias disponíveis
+
+#### Frontend (`/app/frontend/src/pages/Terabox.js`)
+- Interface estilo explorador de ficheiros
+- Navegação por breadcrumbs
+- Upload por drag & drop ou botão
+- Preview de imagens e PDFs
+- Pesquisa integrada
+- Estatísticas de armazenamento
+
+#### Armazenamento
+- Base: `/app/backend/uploads/terabox/{parceiro_id}/`
+- Cada parceiro tem o seu espaço isolado
+- Organização por pastas hierárquicas
+- Metadados em MongoDB (terabox_pastas, terabox_ficheiros)
+
+---
+
 ### Sistema de WhatsApp Business (COMPLETO)
 
 #### Serviço de WhatsApp
