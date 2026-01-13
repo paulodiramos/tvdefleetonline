@@ -130,6 +130,7 @@ const Layout = ({ children, user, onLogout }) => {
           { path: '/gestao-extras', label: '💰 Extras/Dívidas' }
         ]
       },
+      { path: '/terabox', icon: HardDrive, label: 'Terabox' },
       { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' }
     ];
 
