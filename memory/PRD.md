@@ -2,37 +2,41 @@
 
 ## Changelog (2026-01-13 - Session 10 - Bug Fixes & WhatsApp)
 
-### Bugs Corrigidos (COMPLETO - 12/12 testes passaram)
+### Bugs Corrigidos (COMPLETO)
 
 #### 1. Bug: Admin não conseguia ver documentos pendentes (CORRIGIDO)
 - **Problema:** Endpoint GET `/api/documentos/pendentes` retornava "Not Found"
 - **Causa:** A linha `app.include_router(api_router)` estava na linha 19178, mas os endpoints do `api_router` eram definidos DEPOIS (linha 19290+)
-- **Solução:** Mover `app.include_router(api_router)` para o FINAL do ficheiro `server.py` (linha 22453)
+- **Solução:** Mover `app.include_router(api_router)` para o FINAL do ficheiro `server.py`
 - **Ficheiro:** `/app/backend/server.py`
-- **Teste:** Admin consegue aceder ao endpoint, parceiros são bloqueados (403)
 
 #### 2. Bug: Cartão combustível não sincronizava com motorista (VERIFICADO)
-- **Problema:** Reportado que alterações no cartão de combustível do veículo não sincronizavam com o motorista
 - **Status:** Já estava implementado corretamente em `routes/vehicles.py` linhas 1537-1557
-- **Comportamento:** Quando PUT `/api/vehicles/{id}/dispositivos` é chamado, se o veículo tem `motorista_atribuido`, os campos `id_cartao_frota_combustivel` e `cartao_combustivel_id` do motorista são atualizados automaticamente
-- **Teste:** Verificado com veículo `591f3be8-8395-4338-9768-c7511db8f951`
 
 #### 3. Funcionalidade WhatsApp para Parceiros (COMPLETO)
-- **Backend Endpoints:**
-  - `GET /api/parceiros/{id}/config-whatsapp` - Ler configuração
-  - `PUT /api/parceiros/{id}/config-whatsapp` - Guardar configuração
-  - `POST /api/parceiros/{id}/whatsapp/enviar-teste` - Gerar link de teste
+- **Backend Endpoints:** GET/PUT `/api/parceiros/{id}/config-whatsapp`, POST enviar-teste
 - **Frontend:** Tab "WhatsApp" na página `/configuracoes-parceiro`
-- **Campos:** Telefone, Nome Exibição, Mensagem Boas-Vindas, Template Relatório, Switches para notificações automáticas
-- **Ficheiros:** 
-  - `/app/backend/routes/parceiros.py` (linhas 851-960)
-  - `/app/frontend/src/pages/ConfiguracoesParceiro.js`
+
+#### 4. Bug: Download documentos de motorista não funcionava (CORRIGIDO)
+- **Problema:** Endpoint procurava documentos em `documents` mas estavam a ser guardados em `documentos`
+- **Solução:** Modificado endpoint para procurar em ambos os campos
+- **Ficheiro:** `/app/backend/server.py` linha 3933
+
+#### 5. Bug: Parceiro não conseguia criar templates de contrato (CORRIGIDO)
+- **Problema:** Permissão restrita a admin/gestor
+- **Solução:** Adicionado `UserRole.PARCEIRO` à lista de roles autorizados
+- **Ficheiro:** `/app/backend/server.py` linha 14222
+
+#### 6. Bug: Upload de fotos de veículos (VERIFICADO)
+- **Status:** Funciona corretamente - fotos são guardadas em `fotos` e `fotos_veiculo`
+
+#### 7. Bug: Criar eventos na agenda do veículo (VERIFICADO)
+- **Status:** Funciona corretamente - eventos são adicionados à agenda
 
 ### Test Report
 - **Ficheiro:** `/app/test_reports/iteration_7.json`
 - **Testes Backend:** 12/12 passaram
 - **Testes Frontend:** 100% passaram
-- **Cobertura:** Documentos pendentes, WhatsApp config, Vehicle dispositivos sync
 
 ---
 
