@@ -1037,3 +1037,104 @@ async def enviar_whatsapp_teste(
         "whatsapp_link": whatsapp_link,
         "telefone": config["telefone"]
     }
+
+
+# ==================== ENVIAR WHATSAPP A MOTORISTAS ====================
+
+class WhatsAppMotoristaRequest(BaseModel):
+    """Request para enviar WhatsApp a motorista"""
+    motorista_ids: List[str]
+    mensagem: str
+
+
+@router.post("/{parceiro_id}/enviar-whatsapp-motoristas")
+async def enviar_whatsapp_motoristas(
+    parceiro_id: str,
+    request: WhatsAppMotoristaRequest,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Enviar WhatsApp a um ou mais motoristas"""
+    from utils.whatsapp_service import send_whatsapp_to_motorista
+    
+    # Verificar permissões
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    resultados = []
+    for motorista_id in request.motorista_ids:
+        result = await send_whatsapp_to_motorista(
+            db, parceiro_id, motorista_id, request.mensagem
+        )
+        
+        # Obter nome do motorista
+        motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0, "name": 1, "whatsapp": 1})
+        
+        resultados.append({
+            "motorista_id": motorista_id,
+            "motorista_name": motorista.get("name") if motorista else "N/A",
+            "phone": motorista.get("whatsapp") if motorista else "N/A",
+            **result
+        })
+    
+    sucessos = sum(1 for r in resultados if r.get("success"))
+    falhas = len(resultados) - sucessos
+    
+    return {
+        "message": f"WhatsApp: {sucessos} sucesso(s), {falhas} falha(s)",
+        "resultados": resultados
+    }
+
+
+@router.post("/{parceiro_id}/enviar-relatorio-whatsapp/{motorista_id}")
+async def enviar_relatorio_whatsapp(
+    parceiro_id: str,
+    motorista_id: str,
+    periodo: str = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Enviar relatório semanal por WhatsApp a um motorista"""
+    from utils.whatsapp_service import send_whatsapp_to_motorista, get_whatsapp_template_relatorio_semanal
+    
+    # Verificar permissões
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Obter dados do motorista
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Obter último relatório do motorista
+    relatorio = await db.relatorios_ganhos.find_one(
+        {"motorista_id": motorista_id},
+        {"_id": 0},
+        sort=[("data_fim", -1)]
+    )
+    
+    if not relatorio:
+        raise HTTPException(status_code=404, detail="Nenhum relatório encontrado para este motorista")
+    
+    # Gerar mensagem
+    periodo_str = periodo or f"{relatorio.get('data_inicio', 'N/A')} a {relatorio.get('data_fim', 'N/A')}"
+    mensagem = get_whatsapp_template_relatorio_semanal(
+        motorista_name=motorista.get("name", "Motorista"),
+        periodo=periodo_str,
+        total_ganhos=relatorio.get("total_ganhos", 0),
+        total_despesas=relatorio.get("total_despesas", 0),
+        liquido=relatorio.get("valor_liquido", 0)
+    )
+    
+    # Enviar WhatsApp
+    result = await send_whatsapp_to_motorista(db, parceiro_id, motorista_id, mensagem)
+    
+    return {
+        "motorista": motorista.get("name"),
+        "periodo": periodo_str,
+        **result
+    }
