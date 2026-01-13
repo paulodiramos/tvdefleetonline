@@ -78,6 +78,7 @@ from routes.gestores import router as gestores_router
 from routes.configuracoes import router as configuracoes_router
 from routes.importacoes import router as importacoes_router
 from routes.admin import router as admin_router
+from routes.documentos import router as documentos_router
 from routes.alertas import router as alertas_router
 from routes.contratos import router as contratos_router
 from routes.sincronizacao import router as sincronizacao_router
