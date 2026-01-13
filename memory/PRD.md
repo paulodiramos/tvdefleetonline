@@ -54,9 +54,20 @@
   - `PUT /api/documentos/user/{user_id}/aprovar-todos`
   - `GET /api/users/{user_id}/complete-details`
 
+#### Novo Router: users.py
+- **Novo ficheiro:** `/app/backend/routes/users.py`
+- Endpoints migrados:
+  - `GET /api/users/pending`
+  - `GET /api/users/all`
+  - `PUT /api/users/{user_id}/approve`
+  - `PUT /api/users/{user_id}/set-role`
+  - `PUT /api/users/{user_id}/status`
+  - `DELETE /api/users/{user_id}`
+  - `PUT /api/users/{user_id}/reset-password`
+
 #### Estado da Refatoração
 - **server.py:** ~22.400 linhas (ainda tem 325 endpoints)
-- **Routers criados:** 27 ficheiros em `/app/backend/routes/`
+- **Routers criados:** 29 ficheiros em `/app/backend/routes/`
 - **Próximos passos:** Continuar a extrair endpoints de vehicles, motoristas, parceiros
 
 ---
