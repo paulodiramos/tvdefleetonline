@@ -358,12 +358,19 @@ async def upload_vehicle_photo(
     current_user: Dict = Depends(get_current_user)
 ):
     """Upload vehicle photo (max 3 photos)"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+    user_role = current_user["role"]
+    allowed_roles = [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]
+    if user_role not in allowed_roles:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Verificar se parceiro tem acesso ao veículo
+    if user_role in [UserRole.PARCEIRO, "parceiro"]:
+        if vehicle.get("parceiro_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized - vehicle belongs to another partner")
     
     current_photos = vehicle.get("fotos", [])
     if len(current_photos) >= 3:
