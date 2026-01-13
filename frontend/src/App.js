@@ -792,6 +792,26 @@ function App() {
             }
           />
           <Route
+            path="/admin/fornecedores"
+            element={
+              user && user.role === 'admin' ? (
+                <AdminFornecedores user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/whatsapp-envio"
+            element={
+              user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
+                <WhatsAppEnvio user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/configuracoes-parceiro"
             element={
               user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
