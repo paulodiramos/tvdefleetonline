@@ -19178,6 +19178,7 @@ app.include_router(alertas_router, prefix="/api")
 app.include_router(contratos_router, prefix="/api")
 app.include_router(sincronizacao_router, prefix="/api")
 app.include_router(public_router, prefix="/api")
+app.include_router(documentos_router, prefix="/api")
 app.include_router(ganhos_router, prefix="/api")
 app.include_router(manutencao_router, prefix="/api")
 
