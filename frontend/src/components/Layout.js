@@ -85,6 +85,7 @@ const Layout = ({ children, user, onLogout }) => {
             { path: '/configuracao-relatorios', label: '⚙️ Configurações' }
           ]
         },
+        { path: '/terabox', icon: HardDrive, label: 'Terabox' },
         { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' }
       ];
     }
