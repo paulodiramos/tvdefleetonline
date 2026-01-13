@@ -131,6 +131,7 @@ const Layout = ({ children, user, onLogout }) => {
         ]
       },
       { path: '/terabox', icon: HardDrive, label: 'Terabox' },
+      { path: '/whatsapp-envio', icon: MessageCircle, label: 'WhatsApp' },
       { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' }
     ];
 
@@ -140,6 +141,7 @@ const Layout = ({ children, user, onLogout }) => {
         label: 'Configurações', 
         icon: Settings,
         submenu: [
+          { path: '/admin/fornecedores', label: '🏢 Fornecedores' },
           { path: '/admin/planos-motorista', label: '📦 Planos Motorista' },
           { path: '/automacao-rpa', label: '🤖 Automação RPA' },
           { path: '/configuracao-mapeamento', label: '🗺️ Mapeamento Importação' },
