@@ -824,6 +824,16 @@ function App() {
             }
           />
           <Route
+            path="/alertas-custos"
+            element={
+              user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
+                <AlertasCustos user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/configuracoes-parceiro"
             element={
               user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
