@@ -193,41 +193,37 @@ async def check_documentos_expirando(db):
             if not validade_str:
                 continue
             
-            try:
-                validade = datetime.strptime(validade_str, "%Y-%m-%d")
-                validade = validade.replace(tzinfo=timezone.utc)
-                
-                if hoje <= validade <= limite_alerta:
-                    existing = await db.notificacoes.find_one({
-                        "user_id": parceiro_id,
-                        "tipo": "documento_veiculo_expirando",
-                        "metadata.veiculo_id": vehicle["id"],
-                        "metadata.documento": doc_name,
-                        "criada_em": {"$gte": (hoje - timedelta(days=1)).isoformat()}
-                    })
-                    
-                    if not existing:
-                        dias_restantes = (validade - hoje).days
-                        await criar_notificacao(
-                            db,
-                            user_id=parceiro_id,
-                            tipo="documento_veiculo_expirando",
-                            titulo=f"⚠️ {doc_name} do veículo {vehicle.get('matricula', 'N/A')}",
-                            mensagem=f"O {doc_name} do veículo {vehicle.get('matricula')} expira em {dias_restantes} dias.",
-                            prioridade="alta" if dias_restantes <= 3 else "normal",
-                            link=f"/veiculos/{vehicle['id']}",
-                            metadata={
-                                "veiculo_id": vehicle["id"],
-                                "matricula": vehicle.get("matricula"),
-                                "documento": doc_name,
-                                "validade": validade_str
-                            },
-                            enviar_email=True
-                        )
-            
-            except (ValueError, TypeError) as e:
-                logger.error(f"Error parsing vehicle date {validade_str}: {e}")
+            validade = parse_date(validade_str)
+            if not validade:
                 continue
+            
+            if hoje <= validade <= limite_alerta:
+                existing = await db.notificacoes.find_one({
+                    "user_id": parceiro_id,
+                    "tipo": "documento_veiculo_expirando",
+                    "metadata.veiculo_id": vehicle["id"],
+                    "metadata.documento": doc_name,
+                    "criada_em": {"$gte": (hoje - timedelta(days=1)).isoformat()}
+                })
+                
+                if not existing:
+                    dias_restantes = (validade - hoje).days
+                    await criar_notificacao(
+                        db,
+                        user_id=parceiro_id,
+                        tipo="documento_veiculo_expirando",
+                        titulo=f"⚠️ {doc_name} do veículo {vehicle.get('matricula', 'N/A')}",
+                        mensagem=f"O {doc_name} do veículo {vehicle.get('matricula')} expira em {dias_restantes} dias.",
+                        prioridade="alta" if dias_restantes <= 3 else "normal",
+                        link=f"/veiculos/{vehicle['id']}",
+                        metadata={
+                            "veiculo_id": vehicle["id"],
+                            "matricula": vehicle.get("matricula"),
+                            "documento": doc_name,
+                            "validade": validade_str
+                        },
+                        enviar_email=True
+                    )
     
     logger.info("✓ Finished checking expiring documents")
 
