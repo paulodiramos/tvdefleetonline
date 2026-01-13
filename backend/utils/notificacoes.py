@@ -103,6 +103,27 @@ async def check_documentos_expirando(db):
     hoje = datetime.now(timezone.utc)
     limite_alerta = hoje + timedelta(days=7)  # Alert 7 days before expiration
     
+    def parse_date(date_str):
+        """Parse date string supporting multiple formats"""
+        if not date_str:
+            return None
+        
+        formats = [
+            "%Y-%m-%d",      # 2025-12-31
+            "%d/%m/%Y",      # 31/12/2025
+            "%d-%m-%Y",      # 31-12-2025
+            "%Y/%m/%d",      # 2025/12/31
+        ]
+        
+        for fmt in formats:
+            try:
+                return datetime.strptime(date_str, fmt).replace(tzinfo=timezone.utc)
+            except ValueError:
+                continue
+        
+        logger.error(f"Error parsing date {date_str}: no valid format found")
+        return None
+    
     # Check motoristas documents
     motoristas = await db.motoristas.find({}, {"_id": 0}).to_list(None)
     
@@ -121,33 +142,33 @@ async def check_documentos_expirando(db):
             if not validade_str:
                 continue
             
-            try:
-                validade = datetime.strptime(validade_str, "%Y-%m-%d")
-                validade = validade.replace(tzinfo=timezone.utc)
+            validade = parse_date(validade_str)
+            if not validade:
+                continue
+            
+            if hoje <= validade <= limite_alerta:
+                # Check if notification already exists
+                existing = await db.notificacoes.find_one({
+                    "user_id": user_id,
+                    "tipo": "documento_expirando",
+                    "metadata.documento": doc_name,
+                    "criada_em": {"$gte": (hoje - timedelta(days=1)).isoformat()}
+                })
                 
-                if hoje <= validade <= limite_alerta:
-                    # Check if notification already exists
-                    existing = await db.notificacoes.find_one({
-                        "user_id": user_id,
-                        "tipo": "documento_expirando",
-                        "metadata.documento": doc_name,
-                        "criada_em": {"$gte": (hoje - timedelta(days=1)).isoformat()}
-                    })
-                    
-                    if not existing:
-                        dias_restantes = (validade - hoje).days
-                        await criar_notificacao(
-                            db,
-                            user_id=user_id,
-                            tipo="documento_expirando",
-                            titulo=f"⚠️ {doc_name} a expirar",
-                            mensagem=f"O seu {doc_name} expira em {dias_restantes} dias ({validade_str}). Por favor, renove o documento.",
-                            prioridade="alta" if dias_restantes <= 3 else "normal",
-                            link="/perfil",
-                            metadata={"documento": doc_name, "validade": validade_str, "dias_restantes": dias_restantes},
-                            enviar_email=True
-                        )
-                        logger.info(f"✓ Created expiring doc notification for {motorista['name']}: {doc_name}")
+                if not existing:
+                    dias_restantes = (validade - hoje).days
+                    await criar_notificacao(
+                        db,
+                        user_id=user_id,
+                        tipo="documento_expirando",
+                        titulo=f"⚠️ {doc_name} a expirar",
+                        mensagem=f"O seu {doc_name} expira em {dias_restantes} dias ({validade_str}). Por favor, renove o documento.",
+                        prioridade="alta" if dias_restantes <= 3 else "normal",
+                        link="/perfil",
+                        metadata={"documento": doc_name, "validade": validade_str, "dias_restantes": dias_restantes},
+                        enviar_email=True
+                    )
+                    logger.info(f"✓ Created expiring doc notification for {motorista['name']}: {doc_name}")
             
             except (ValueError, TypeError) as e:
                 logger.error(f"Error parsing date {validade_str}: {e}")
