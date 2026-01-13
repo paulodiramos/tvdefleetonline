@@ -169,10 +169,6 @@ async def check_documentos_expirando(db):
                         enviar_email=True
                     )
                     logger.info(f"✓ Created expiring doc notification for {motorista['name']}: {doc_name}")
-            
-            except (ValueError, TypeError) as e:
-                logger.error(f"Error parsing date {validade_str}: {e}")
-                continue
     
     # Check vehicle documents
     vehicles = await db.vehicles.find({}, {"_id": 0}).to_list(None)
