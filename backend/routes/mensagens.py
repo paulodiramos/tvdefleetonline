@@ -27,7 +27,10 @@ async def get_conversas(current_user: Dict = Depends(get_current_user)):
         participantes_info = []
         for participante_id in conversa["participantes"]:
             if participante_id != current_user["id"]:
-                user = await db.users.find_one({"id": participante_id}, {"_id": 0, "id": 1, "name": 1, "role": 1})
+                user = await db.users.find_one(
+                    {"id": participante_id}, 
+                    {"_id": 0, "id": 1, "name": 1, "role": 1, "email": 1, "phone": 1}
+                )
                 if user:
                     participantes_info.append(user)
         
