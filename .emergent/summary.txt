@@ -1,170 +1,153 @@
 <analysis>**original_problem_statement:**
-O utilizador reportou múltiplos problemas e solicitou novas funcionalidades em várias fases:
-1.  **Bugs Iniciais:** O resumo semanal e o relatório PDF tinham cálculos incorretos para Extras, Aluguer e Uber Portagens. A coluna Uber Portagens não era editável.
-2.  **Bugs de Lógica:** Após a correção inicial, foi reportado que a lógica de cálculo das Uber Portagens estava incorreta. O valor deveria ser somado aos ganhos, não subtraído.
-3.  **Novas Funcionalidades (Lote 1):**
-    *   Configuração de email SMTP por parceiro.
-    *   Ativação de campos de contacto de emergência na ficha do motorista.
-    *   Sistema de automação RPA (disponível apenas para admin).
-    *   Gestão de credenciais de login (Uber, Bolt) no perfil do parceiro.
-4.  **Novas Funcionalidades e Bugs (Lote 2):**
-    *   Adicionar a página de configurações ao menu.
-    *   **Bug:** Discrepância de ganhos Bolt entre o resumo semanal e o PDF.
-    *   Funcionalidade de Nova Automação e Editar na página RPA.
-    *   Decisão de não usar SendGrid/WhatsApp genérico, mas sim configurações por parceiro.
-    *   Refatoração do backend.
-5.  **Novas Funcionalidades (Lote 3):**
-    *   Ativar sistema de planos no admin para criar 3 categorias de planos para motoristas (Básico, Standard, Premium com funcionalidades específicas).
-6.  **Novas Funcionalidades e Bugs (Lote 4):**
-    *   **Bug:** Admin não consegue ver/aprovar documentos enviados pelos utilizadores.
-    *   **Bug:** Parceiro não autorizado a carregar fotos de veículos.
-    *   **Bug:** Parceiro recebe erro ao adicionar eventos na agenda do veículo.
-    *   **Bug:** Cartão de combustível do veículo não sincroniza com o motorista atribuído.
-    *   Implementar sistema de WhatsApp para o parceiro (fase de configuração).
+O utilizador solicitou a continuação do desenvolvimento da aplicação de gestão de frotas, com foco nos seguintes pontos:
+1.  **Concluir e Testar Funcionalidade de WhatsApp (P0):** Implementar a fase inicial do sistema de WhatsApp para parceiros, permitindo-lhes configurar as suas credenciais.
+2.  **Corrigir Bugs Pendentes (P1):**
+    *   Admin não consegue ver/aprovar documentos enviados pelos utilizadores.
+    *   Cartão de combustível do veículo não sincroniza com o motorista atribuído.
+3.  **Novas Solicitações do Utilizador (durante a sessão):**
+    *   Corrigir 4 novos bugs: falha no download de documentos, erro ao criar templates, não gravar imagens de veículos e não permitir criar eventos.
+    *   Melhorar o sistema de mensagens/notificações para incluir dados do emissor (email, telefone) e permitir a adição de notas.
+    *   Implementar o envio de emails usando a configuração SMTP de cada parceiro.
+    *   Implementar um sistema de armazenamento de ficheiros Terabox para os parceiros, com pastas e capacidade de upload/download.
+4.  **Refatoração do Backend (P2 - recorrente):** Continuar a extrair endpoints do ficheiro monolítico  para routers dedicados.
+5.  **Implementar Funcionalidades P1:** Avançar com a implementação do envio de mensagens via WhatsApp Business API.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação é uma ferramenta de gestão de frotas com um backend em FastAPI e frontend em React. As funcionalidades principais incluem: gestão de motoristas e veículos, importação de dados de múltiplas fontes (Uber, Bolt, etc.), e geração de relatórios financeiros semanais (UI e PDF).
-Recentemente, foram adicionadas várias funcionalidades:
--   **Configurações do Parceiro:** Uma nova página () permite que os parceiros configurem as suas próprias credenciais de SMTP, credenciais de plataformas (Uber, Bolt) e, mais recentemente, configurações de WhatsApp.
--   **Planos de Motorista:** Uma nova página de administração () foi criada para gerir três planos específicos para motoristas (Básico, Standard, Premium), com funcionalidades distintas.
--   **Automação RPA:** Uma página de administração () foi implementada para gerir automações, com funcionalidades para criar, editar e visualizar automações do sistema.
--   **Ficha do Motorista:** A secção de Contacto de Emergência foi ativada na UI.
--   Foram corrigidos múltiplos bugs de cálculo e permissões.
+A aplicação de gestão de frotas (FastAPI + React) está funcional. Durante esta sessão, foram concluídas várias tarefas e correções críticas:
+-   **Configuração de WhatsApp:** A UI e o backend para os parceiros guardarem as suas configurações de WhatsApp estão implementados e testados.
+-   **Bugs Críticos Corrigidos:** Foram resolvidos múltiplos bugs, incluindo o que impedia a aprovação de documentos pelo admin, a falha no download de documentos de motoristas e o erro de permissão que impedia parceiros de criarem templates de contrato.
+-   **Sistema de Notificações Melhorado:** As notificações e mensagens agora mostram o email e telefone do emissor. As notificações também suportam a adição de notas editáveis através de um novo endpoint e modal na UI.
+-   **Envio de Email SMTP:** O backend agora possui um serviço () e endpoints para enviar emails (ex: relatórios semanais) utilizando as credenciais SMTP configuradas por cada parceiro.
+-   **Refatoração do Backend:** O processo de refatoração do  avançou significativamente com a criação de **10 novos routers** para , , , , , , , ,  e , elevando o total para 33 routers modulares.
+-   **Sistema de Ficheiros Terabox:** Foi criada a base para um novo sistema de armazenamento de ficheiros. O backend (endpoints para navegar, criar pastas, carregar e descarregar ficheiros) está completo e testado via . A página de frontend () foi criada e adicionada ao menu, mas contém um erro de compilação que impede a sua renderização.
 
 **Last working item**:
--   **Last item agent was working:** Implementar a fase inicial do sistema de WhatsApp para parceiros. O agente adicionou os campos de configuração () ao modelo Pydantic do parceiro, criou os endpoints GET/PUT no backend (), e adicionou uma nova tab WhatsApp com os campos de input na página de configurações do parceiro ().
+-   **Last item agent was working:** Corrigir um erro de compilação no frontend na nova página . O agente tentou usar um ícone () que não existe na biblioteca , o que fez com que o frontend não compilasse. O próximo passo é substituir o ícone inválido por um válido, como .
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** both
-    -   **Backend:** Utilizar  para testar os novos endpoints  e  em  para garantir que os dados são guardados e lidos corretamente.
-    -   **Frontend:** Utilizar a  para visitar a página , navegar para a tab WhatsApp e verificar se os campos de configuração são apresentados corretamente.
+-   **Which testing method agent to use?** frontend testing agent (após corrigir o erro de compilação, para validar toda a funcionalidade da página Terabox).
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Bug de Aprovação de Documentos (P1)**
-    -   **Description:** O utilizador reportou que o admin não consegue ver os documentos pendentes para aprovação. O agente investigou o endpoint , mas um teste com  falhou com um , e a investigação não foi concluída.
+-   **Issue 1: Erro de Compilação no Frontend Terabox (P0)**
+    -   **Description:** A aplicação frontend não compila devido a um erro na página . O ícone  importado de  não foi encontrado.
     -   **Next debug checklist:**
-        1.  Re-examinar o endpoint  em .
-        2.  Corrigir o  que ocorreu durante o teste.
-        3.  Verificar a lógica que agrega documentos de  com  e documentos da coleção  com .
-        4.  Testar o endpoint com  para garantir que retorna uma lista válida de utilizadores/documentos pendentes.
-        5.  Verificar a página  para garantir que consome a API corretamente.
-    -   **Why fix this issue and what will be achieved with the fix?** Esta é uma funcionalidade de compliance crítica para o admin poder aprovar novos motoristas ou documentos.
+        1.  Editar o ficheiro .
+        2.  Substituir a importação e uso do ícone  por um ícone existente, como  ou .
+        3.  Verificar se o serviço de frontend reinicia sem erros.
+        4.  Testar a página Terabox para garantir que a UI carrega e funciona como esperado.
+    -   **Why fix this issue and what will be achieved with the fix?** Este é um bug bloqueador que impede o teste e a utilização da nova funcionalidade Terabox. A sua correção permitirá validar a funcionalidade completa.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** both
-
--   **Issue 2: Bug de Sincronização do Cartão de Combustível (P1)**
-    -   **Description:** Quando um cartão de combustível é alterado nos Dispositivos de um veículo, a alteração não é refletida no motorista que já está atribuído a esse veículo.
-    -   **Attempted fixes:** O agente corrigiu um problema de permissão no endpoint , mas não abordou o fluxo lógico de sincronização pós-atribuição.
-    -   **Next debug checklist:**
-        1.  Modificar o endpoint  em .
-        2.  Dentro deste endpoint, após atualizar o cartão de combustível do veículo, verificar se há um motorista atribuído ().
-        3.  Se houver, atualizar também o campo correspondente () no documento do motorista.
-    -   **Why fix this issue and what will be achieved with the fix?** Garante a consistência dos dados entre veículos e motoristas, que é essencial para relatórios precisos.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** backend
-
--   **Issue 3: Refatoração do Backend (P2)**
-    -   **Description:** O ficheiro  é um monólito que contém centenas de linhas de código, incluindo definições de rotas, lógica de negócio e queries, o que o torna extremamente difícil de manter.
-    -   **Next debug checklist:** Propor e executar um plano para extrair gradualmente os endpoints de  para ficheiros de rotas dedicados em  (ex: , , etc.).
-    -   **Why fix this issue and what will be achieved with the fix?** Melhorar drasticamente a manutenibilidade, escalabilidade e legibilidade do código do backend.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** frontend
 
 **In progress Task List**:
--   **Task 1: Concluir e Testar Funcionalidade de WhatsApp (P0)**
-    -   **Where to resume:** A UI e o backend básicos foram criados. O próximo passo é testar.
-    -   **What will be achieved with this?** Permitirá que os parceiros guardem as suas credenciais de WhatsApp na plataforma.
+-   **Task 1: Concluir e Testar Funcionalidade Terabox (P0)**
+    -   **Where to resume:** Após corrigir o erro de compilação (Issue 1), a tarefa consiste em testar exaustivamente a interface do Terabox: criar pastas, carregar ficheiros de diferentes tipos, navegar entre pastas, descarregar ficheiros e apagar itens.
+    -   **What will be achieved with this?** Uma funcionalidade completa e robusta de gestão de documentos para os parceiros.
     -   **Status:** IN PROGRESS
     -   **Should Test frontend/backend/both after fix?** both
+    -   **Blocked on something:** Issue 1
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1) Implementar Envio de Email via SMTP do Parceiro:** A UI para configurar o SMTP existe, mas o backend para *enviar* emails usando essas credenciais ainda não foi implementado.
-    -   **(P1) Implementar Envio de Mensagens WhatsApp:** A UI de configuração existe, mas a lógica de backend para se conectar à API do WhatsApp e enviar mensagens precisa ser criada.
+    -   **(P1) Implementar Envio de Mensagens WhatsApp:** O backend para gerar links  está pronto. O próximo passo é integrar com a API Cloud do WhatsApp para envio direto, usando as credenciais da página de configurações, e adicionar um botão na UI para acionar o envio.
+    -   **(P1) UI de Admin para Fornecedores:** Criar uma área na administração para que o utilizador possa gerir (criar, editar, apagar) a lista de fornecedores de combustível e GPS, em vez de estarem fixos ou serem criados via seeding.
 -   **Future Tasks:**
-    -   **(P2) UI de Admin para Fornecedores:** Criar uma área de administração para que o utilizador possa configurar a lista de fornecedores de combustível e GPS, em vez de estarem fixos no código.
-    -   **(P3) Lógica de Sincronização Automática (RPA):** A UI existe, mas a lógica de backend para executar as automações (ex: com ) precisa ser implementada.
+    -   **(P2) Continuar Refatoração do Backend:** Embora tenha havido um grande progresso, o  ainda contém muitos endpoints. A refatoração deve continuar até que o ficheiro contenha apenas a configuração principal da aplicação.
+    -   **(P3) Lógica de Sincronização Automática (RPA):** A UI para configurar automações existe, mas a lógica de backend para executar as tarefas com  precisa ser implementada.
 
 **Completed work in this session**
--   **Bugs Financeiros Corrigidos:** Resolvidos múltiplos bugs nos cálculos do resumo semanal e relatório PDF, incluindo a lógica correta para as Uber Portagens (somadas aos ganhos).
--   **Página de Configurações do Parceiro:** Criada a página  com tabs para configurar Email SMTP, Credenciais de Plataformas e WhatsApp.
--   **Página de Gestão de Planos de Motorista:** Criada a página  para o admin gerir os 3 planos de motorista. Resolvido um problema complexo de depuração relacionado com bases de dados concorrentes.
--   **Página de Automação RPA:** Implementada a UI em , incluindo um modal para criar/editar automações.
--   **Ficha do Motorista:** Ativada e populada a secção Contacto de Emergência.
--   **Bugs de Permissão Corrigidos:** Resolvido o problema que impedia parceiros de carregarem fotos de veículos e adicionarem eventos à agenda.
--   **Menu de Navegação:** Adicionados os links para as novas páginas no menu principal ().
+-   **Funcionalidade de Configuração de WhatsApp:** Testada e concluída.
+-   **Correção de Bug de Aprovação de Documentos:** Resolvido o erro 404 no endpoint  ao corrigir a ordem de registo do router.
+-   **Verificação de Bug de Sincronização de Cartão:** Confirmado que a funcionalidade já estava implementada e a funcionar corretamente.
+-   **Correção de 4 Bugs Adicionais:** Resolvidos problemas no download de documentos, permissões de criação de templates, gravação de fotos de veículos e criação de eventos na agenda.
+-   **Melhorias no Sistema de Notificações:** Adicionados dados de contacto do emissor e um campo de notas editável.
+-   **Implementação do Serviço de Email SMTP:** Backend agora pode enviar emails através das configurações do parceiro.
+-   **Correção de Bug de Parsing de Datas:** Resolvido um erro nos logs relacionado com formatos de data inconsistentes no sistema de notificações.
+-   **Backend Refactoring:** Criados 10 novos ficheiros de rotas (, , , , , , , , , ), reduzindo a complexidade do .
+-   **Implementação do Sistema Terabox:** Backend completo e maior parte do frontend (pendente correção de bug).
+-   **Implementação do Serviço de WhatsApp:** Backend criado com fallback para  links.
+
+**Earlier issues found/mentioned but not fixed**
+-   Nenhum. Todos os problemas mencionados pelo utilizador ou encontrados pelo agente foram abordados.
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork:** Refatoração do Backend ( é monolítico).
--   **Recurrence count:** 3
--   **Status:** NOT STARTED
+-   **Issue recurrence in previous fork:** Refatoração do Backend ( monolítico).
+-   **Recurrence count:** 4
+-   **Status:** IN PROGRESS (progresso significativo foi feito nesta sessão, mas a tarefa não está concluída).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Consistência do Ambiente de Desenvolvimento:** Uma longa sessão de depuração foi causada por uma discrepância entre a base de dados usada pela aplicação () e a base de dados usada pelos scripts de verificação do agente (que usava o valor padrão).
--   **Precedência de Roteadores FastAPI:** A depuração também envolveu a compreensão de como o FastAPI regista rotas e como rotas duplicadas em diferentes ficheiros ( vs. ) podem entrar em conflito.
--   **Padrão de Correção de Permissões:** Vários bugs foram causados pela falta do role  na lista de utilizadores autorizados nos decorators dos endpoints.
+-   **Ordem de Registo de Routers no FastAPI:** A causa principal do bug de Documentos Pendentes (404 Not Found) foi que  era chamado antes da definição de todos os endpoints nesse router. A solução foi mover a inclusão para o final do ficheiro .
+-   **Refatoração Progressiva de Monólito:** A estratégia utilizada foi identificar grupos lógicos de endpoints (ex: , ), criar um novo ficheiro de rota em , mover o código relevante para lá, e registar o novo router no .
+-   **Parsing de Datas Flexível:** Foi criada uma função  que tenta múltiplos formatos (, ) para evitar que o sistema de notificações falhe devido a formatos de data inconsistentes na base de dados.
+-   **Implementação de Armazenamento de Ficheiros:** A funcionalidade Terabox utiliza o sistema de ficheiros local () para armazenar os ficheiros e uma coleção MongoDB () para guardar os metadados (nomes, caminhos, pastas, etc.).
 
 **key DB schema**
--   **parceiros:** Adicionados os objetos  e .
--   **planos_sistema:** Nova coleção para armazenar os planos de motorista definidos pelo admin.
+-   **notificacoes:** Adicionado o campo  (editável) e  (com , , ).
+-   **terabox_storage:** Nova coleção para gerir ficheiros e pastas do Terabox, com campos como uid=0(root) gid=0(root) groups=0(root), ,  ('pasta' ou 'ficheiro'), , , , .
 
 **All files of reference**
--   : Continua a ser o ficheiro mais crítico e necessitado de refatoração. Contém lógica de negócio e endpoints para múltiplas funcionalidades.
--   : Contém toda a lógica de relatórios, que foi modificada para corrigir cálculos.
--   : Contém a lógica de veículos, modificada para corrigir bugs de permissão.
--   : Contém a lógica para as novas páginas de configuração.
--   : Nova página central para configurações do parceiro.
--   : Nova página de admin para gestão de planos.
--   : Nova página de admin para gestão de RPA.
+-   : O ficheiro principal que ainda está a ser refatorado.
+-   : A nova página de frontend para o sistema de ficheiros, que atualmente tem um erro de compilação.
+-   : O novo router com toda a lógica de backend para o Terabox.
+-   : A página de notificações, que foi reescrita para incluir as novas funcionalidades.
+-   : O utilitário de notificações, modificado para incluir dados do emissor e corrigir o parsing de datas.
+-   : Novo serviço para encapsular a lógica de envio de email.
+-   : Novo serviço para encapsular a lógica de envio de WhatsApp.
 
 **Areas that need refactoring**:
--   ** (CRÍTICO):** A prioridade máxima de refatoração. A sua complexidade causou problemas de depuração e continua a ser um risco para a manutenção.
+-   ** (MÉDIO):** A prioridade de refatoração diminuiu de CRÍTICO para MÉDIO devido ao excelente progresso, mas a tarefa ainda não está completa e deve continuar.
 
 **key api endpoints**
--   : Atualiza a configuração SMTP do parceiro.
--   : Atualiza a configuração WhatsApp do parceiro.
--   : Busca os planos de motorista para a página de admin.
--   : Carrega fotos de veículos (permissão corrigida).
--   : Adiciona eventos à agenda (permissão corrigida).
+-   : Carrega um ficheiro para o Terabox de um parceiro.
+-   : Lista ficheiros e pastas num determinado caminho.
+-   : Descarrega um ficheiro específico.
+-   : Atualiza o campo de notas de uma notificação.
+-   : Envia um email genérico usando a configuração SMTP do parceiro.
+-   : Envia uma mensagem WhatsApp para um ou mais motoristas.
 
 **Critical Info for New Agent**
--   **VERIFIQUE O NOME DA BASE DE DADOS:** Ao executar scripts  para interagir com o MongoDB, certifique-se de que se conecta à base de dados correta especificada pela variável de ambiente . Não assuma o valor padrão. Falhar em fazer isso levou a uma sessão de depuração de mais de 100 mensagens.
--   **PADRÃO DE BUGS DE PERMISSÃO:** O utilizador parceiro () tem sido frequentemente esquecido nas listas de autorização dos endpoints. Ao criar ou modificar endpoints, verifique sempre se o parceiro tem as permissões necessárias.
--   **PRIORIZE AS CORREÇÕES DE BUGS:** O utilizador frequentemente fornece uma lista mista de bugs e novas funcionalidades. Priorize a correção dos bugs reportados antes de iniciar novas implementações.
--   **O  é um campo minado:** Tenha muito cuidado ao modificar . Existem rotas duplicadas e uma enorme quantidade de código legado. A refatoração é necessária.
+-   **Refatoração do Backend:** A refatoração do  está em andamento. Ao adicionar novas funcionalidades, avalie se elas podem ser criadas diretamente num novo ficheiro de rota ou se pertencem a um já existente, evitando adicionar mais código ao . Lembre-se de registar os novos routers no  e garantir que  permanece no final.
+-   **Erro de Compilação do Frontend:** A primeira tarefa deve ser corrigir o erro de importação do ícone em  para desbloquear o frontend.
+-   **Fallback de Serviços Externos:** As implementações de Email e WhatsApp são robustas e incluem validações (verificar se a configuração SMTP/WhatsApp existe) e fallbacks (gerar links  se a API não estiver configurada). Mantenha este padrão.
+-   **Consistência de Dados:** O bug de download de documentos foi causado por dados sendo guardados num campo () mas lidos de outro (). Ao modificar endpoints, verifique sempre os fluxos de dados de ponta a ponta para garantir consistência.
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  : Pedido para implementar o sistema de planos de motorista com 3 categorias. **Status: COMPLETED**
-2.  : Reportou bug nos ganhos Bolt, pediu para adicionar link ao menu e ativar botões na página RPA. **Status: COMPLETED**
-3.  : Confirmação para prosseguir com a implementação das funcionalidades. **Status: COMPLETED**
-4.  : Esclareceu a lógica de negócio correta para o cálculo das Uber Portagens. **Status: COMPLETED**
-5.  : Pedido para implementar múltiplas funcionalidades (SMTP por parceiro, contacto de emergência, RPA, credenciais). **Status: COMPLETED**
-6.  : Reportou que a correção inicial do bug das portagens estava logicamente incorreta. **Status: COMPLETED**
-7.  : Reportou um novo lote de bugs (aprovação de docs, upload de fotos, agenda do veículo, sync do cartão de combustível) e pediu para avançar com o sistema de WhatsApp. **Status: IN PROGRESS**
+1.  : Solicitação para criar o sistema de armazenamento de ficheiros Terabox. **Status: IN PROGRESS**
+2.  : Confirmação para continuar com a refatoração do backend. **Status: COMPLETED**
+3.  : Confirmação para priorizar a refatoração do . **Status: COMPLETED**
+4.  : Confirmação para avançar com as tarefas de prioridade P1 (WhatsApp). **Status: COMPLETED**
+5.  : Confirmação para avançar com o plano de implementação de notificações e email SMTP. **Status: COMPLETED**
+6.  : Solicitação para melhorar o sistema de notificações. **Status: COMPLETED**
+7.  : Reportou um novo lote de 4 bugs. **Status: COMPLETED**
+8.  : Confirmação para iniciar o plano proposto. **Status: COMPLETED**
+9.  : Confirmação para prosseguir com a implementação das funcionalidades. **Status: COMPLETED**
+10. : Esclarecimento de uma lógica de negócio. **Status: COMPLETED**
 
 **Project Health Check:**
 -   **Broken:**
-    -   Fluxo de aprovação de documentos pelo admin.
--   **Needs Refactoring (High Priority):**
-    -   
+    -   A página  tem um erro de compilação que impede o carregamento da funcionalidade no frontend.
+-   **Needs Refactoring (Medium Priority):**
+    -    ainda precisa de mais refatoração, embora muito progresso tenha sido feito.
 
 **3rd Party Integrations**
--   Pillow, ReportLab, openpyxl, Playwright.
+-   Pillow, ReportLab, openpyxl, Playwright,  (adicionado nesta sessão).
 
 **Testing status**
--   **Testing agent used after significant changes:** YES (usado no início da sessão para os bugs financeiros).
+-   **Testing agent used after significant changes:** YES (foi usado para validar um lote de correções).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** N/A
--   **Known regressions:** Nenhuma conhecida, mas a sincronização do cartão de combustível pode ter um bug de lógica latente.
+-   **Known regressions:** Nenhum.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
--   **Parceiro:**  / </analysis>
+-   **Parceiro:**  / 
+
+**What agent forgot to execute**
+-   O agente não se esqueceu de nada. Foi interrompido por um erro de compilação enquanto finalizava a implementação da funcionalidade Terabox. A última ação pendente era corrigir o erro de importação do ícone no ficheiro .</analysis>
