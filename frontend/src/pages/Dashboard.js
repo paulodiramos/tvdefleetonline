@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { TrendingUp, TrendingDown, AlertCircle, Calendar, Car, Users, DollarSign, Wrench, AlertTriangle, CheckCircle, XCircle, Eye, EyeOff, X, Shield, ClipboardCheck, FileText, Settings, Upload, Key, Clock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { TrendingUp, TrendingDown, AlertCircle, Calendar, Car, Users, DollarSign, Wrench, AlertTriangle, CheckCircle, XCircle, Eye, EyeOff, X, Shield, ClipboardCheck, FileText, Settings, Upload, Key, Clock, Bell, Euro, Fuel, Zap, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import ResumoSemanalCard from '@/components/ResumoSemanalCard';
 
