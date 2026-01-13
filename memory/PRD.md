@@ -2,6 +2,18 @@
 
 ## Changelog (2026-01-13 - Session 11 - Features + Melhorias Completas)
 
+### Widget de Alertas no Dashboard (COMPLETO)
+- **Localização:** Dashboard principal, após o card "Resumo Semanal"
+- **Funcionalidades:**
+  - Mostra até 3 alertas de custos ativos
+  - Card com gradiente vermelho/laranja quando há alertas
+  - Ícone específico por categoria (Fuel, Zap, MapPin, Shield, Wrench)
+  - Badge com percentual de utilização
+  - Valores atuais vs limites configurados
+  - Botão "Ver Todos →" para ir à página /alertas-custos
+  - Só aparece quando há alertas ativos
+- **Ficheiro:** `/app/frontend/src/pages/Dashboard.js`
+
 ### Sistema de Alertas de Custos - MELHORIA (COMPLETO)
 - **Nova página:** `/alertas-custos` (`/app/frontend/src/pages/AlertasCustos.js`)
 - **Funcionalidades:**
