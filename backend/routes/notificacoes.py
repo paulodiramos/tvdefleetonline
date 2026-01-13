@@ -116,6 +116,30 @@ async def delete_notificacao(
     return {"message": "Notification deleted"}
 
 
+@router.get("/notificacoes/{notificacao_id}")
+async def get_notificacao_detalhe(
+    notificacao_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get single notification detail"""
+    notif = await db.notificacoes.find_one({"id": notificacao_id}, {"_id": 0})
+    if not notif:
+        raise HTTPException(status_code=404, detail="Notification not found")
+    
+    if notif["user_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Convert datetime strings to datetime objects
+    if isinstance(notif.get("criada_em"), str):
+        notif["criada_em"] = datetime.fromisoformat(notif["criada_em"])
+    if notif.get("lida_em") and isinstance(notif["lida_em"], str):
+        notif["lida_em"] = datetime.fromisoformat(notif["lida_em"])
+    if notif.get("notas_updated_at") and isinstance(notif["notas_updated_at"], str):
+        notif["notas_updated_at"] = datetime.fromisoformat(notif["notas_updated_at"])
+    
+    return Notificacao(**notif)
+
+
 @router.put("/notificacoes/{notificacao_id}")
 async def update_notificacao(
     notificacao_id: str,
