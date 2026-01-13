@@ -21,14 +21,27 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.get("/documentos/pendentes")
 async def get_documentos_pendentes(current_user: Dict = Depends(get_current_user)):
-    """Listar todos os utilizadores não aprovados (com ou sem documentos pendentes) (Admin only)"""
-    if current_user["role"] != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Admin only")
+    """Listar todos os utilizadores não aprovados (com ou sem documentos pendentes) (Admin/Gestao/Parceiro)"""
+    user_role = current_user["role"]
+    allowed_roles = [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]
+    if user_role not in allowed_roles:
+        raise HTTPException(status_code=403, detail="Not authorized")
     
     try:
+        # Filtro base
+        base_query = {"approved": False}
+        
+        # Se for parceiro, só mostra motoristas do próprio parceiro
+        if user_role in [UserRole.PARCEIRO, "parceiro"]:
+            base_query["$or"] = [
+                {"parceiro_id": current_user["id"]},
+                {"parceiro_associado": current_user["id"]},
+                {"parceiro_atribuido": current_user["id"]}
+            ]
+        
         # Buscar todos os utilizadores não aprovados
         users_nao_aprovados = await db.users.find(
-            {"approved": False},
+            base_query,
             {"_id": 0, "password": 0}
         ).to_list(length=None)
         
