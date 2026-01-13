@@ -39,7 +39,7 @@ const Pendentes = ({ user, onLogout }) => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/api/documentos/pendentes`, {
+      const response = await axios.get(`${API}/documentos/pendentes`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPendentes(response.data);
@@ -54,7 +54,7 @@ const Pendentes = ({ user, onLogout }) => {
   const handleDownload = async (documentoId, tipoDocumento) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/api/documentos/${documentoId}/download`, {
+      const response = await axios.get(`${API}/documentos/${documentoId}/download`, {
         headers: { Authorization: `Bearer ${token}` },
         responseType: 'blob'
       });
