@@ -28,7 +28,7 @@ class TestTeraboxAuth:
         })
         assert response.status_code == 200, f"Login failed: {response.text}"
         data = response.json()
-        assert "token" in data, "No token in response"
+        assert "access_token" in data, "No access_token in response"
         assert data.get("user", {}).get("role") == "parceiro", "User is not parceiro"
         print(f"✓ Parceiro login successful, role: {data['user']['role']}")
     
@@ -40,7 +40,7 @@ class TestTeraboxAuth:
         })
         assert response.status_code == 200, f"Login failed: {response.text}"
         data = response.json()
-        assert "token" in data, "No token in response"
+        assert "access_token" in data, "No access_token in response"
         print(f"✓ Admin login successful, role: {data['user']['role']}")
 
 
