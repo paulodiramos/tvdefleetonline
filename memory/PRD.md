@@ -1,6 +1,21 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-13 - Session 11 - P1 Features Complete)
+## Changelog (2026-01-13 - Session 11 - P1 Features + Melhoria Relatório)
+
+### Relatório de Custos por Fornecedor - MELHORIA (COMPLETO)
+- **Nova página:** `/relatorio-fornecedores` (`/app/frontend/src/pages/RelatorioFornecedores.js`)
+- **Funcionalidades:**
+  - Dashboard de análise de custos por categoria (Combustível, Via Verde, GPS, Seguros, etc.)
+  - Gráfico de distribuição com percentagens
+  - Top fornecedores com maior volume de despesas
+  - Evolução mensal com variações mês-a-mês
+  - Top veículos e motoristas com mais despesas
+  - Distribuição por responsabilidade (Motorista vs Parceiro)
+  - Filtro por ano
+- **Backend:** Novos endpoints em `/app/backend/routes/despesas.py`:
+  - `GET /api/despesas/relatorio-fornecedores` - Relatório completo
+  - `GET /api/despesas/relatorio-fornecedores/comparativo` - Comparativo mensal
+- **Menu:** Adicionado em Relatórios → "💰 Custos Fornecedores"
 
 ### UI de Admin para Fornecedores (COMPLETO)
 - **Nova página:** `/admin/fornecedores` (`/app/frontend/src/pages/AdminFornecedores.js`)
