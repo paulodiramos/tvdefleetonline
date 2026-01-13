@@ -1,6 +1,6 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-13 - Session 10 - Bug Fixes, Notificações & Email SMTP)
+## Changelog (2026-01-13 - Session 10 - Bug Fixes, Notificações, Email & Refatoração)
 
 ### Melhorias no Sistema de Notificações (COMPLETO)
 
@@ -8,23 +8,15 @@
 - **Novo Campo:** `contacto_emissor` nas notificações com nome, email, telefone e role
 - **Novo Campo:** `emissor_id` para rastrear quem criou a notificação
 - **UI:** Modal de detalhes mostra contactos clicáveis (mailto, tel)
-- **Ficheiros:** 
-  - `/app/backend/models/notificacao.py`
-  - `/app/backend/utils/notificacoes.py`
-  - `/app/frontend/src/pages/Notificacoes.js`
 
 #### Sistema de Notas nas Notificações
 - **Novo Campo:** `notas` editáveis em cada notificação
-- **Novo Campo:** `notas_updated_at` e `notas_updated_by` para auditoria
 - **Novo Endpoint:** `PUT /api/notificacoes/{id}` para actualizar notas
 - **Novo Endpoint:** `GET /api/notificacoes/{id}` para obter detalhes completos
 - **UI:** Secção de notas no modal com editor inline
 
 #### Dados de Contacto nas Mensagens
 - **Melhorado:** Cabeçalho de conversa mostra email e telefone do participante
-- **Ficheiros:**
-  - `/app/backend/routes/mensagens.py`
-  - `/app/frontend/src/pages/Mensagens.js`
 
 ### Sistema de Envio de Email SMTP (COMPLETO)
 
@@ -36,21 +28,38 @@
 
 #### Endpoint de Envio
 - **Novo Endpoint:** `POST /api/parceiros/{id}/enviar-email-motoristas`
-- Enviar emails a múltiplos motoristas
-- Usa configuração SMTP do parceiro
-- Log de emails enviados na colecção `email_log`
 
-### Bugs Corrigidos Adicionais
+### Bug Fixes
 
-#### 4. Download documentos de motorista (CORRIGIDO)
+#### 1. Parsing de Datas Multi-formato (CORRIGIDO)
+- **Problema:** Datas no formato `dd/mm/yyyy` causavam erros de parsing
+- **Solução:** Função `parse_date()` que suporta múltiplos formatos
+- **Ficheiro:** `/app/backend/utils/notificacoes.py`
+
+#### 2. Download documentos de motorista (CORRIGIDO)
 - Endpoint procura agora em `documents` E `documentos`
 
-#### 5. Parceiro criar templates de contrato (CORRIGIDO)
+#### 3. Parceiro criar templates de contrato (CORRIGIDO)
 - `UserRole.PARCEIRO` adicionado às permissões
 
----
+### Refatoração do Backend (EM PROGRESSO)
 
-### Bugs Corrigidos (Sessão Anterior)
+#### Novo Router: documentos.py
+- **Novo ficheiro:** `/app/backend/routes/documentos.py`
+- Endpoints migrados:
+  - `GET /api/documentos/pendentes`
+  - `GET /api/documentos/user/{user_id}`
+  - `PUT /api/documentos/{documento_id}/aprovar`
+  - `PUT /api/documentos/{documento_id}/rejeitar`
+  - `PUT /api/documentos/user/{user_id}/aprovar-todos`
+  - `GET /api/users/{user_id}/complete-details`
+
+#### Estado da Refatoração
+- **server.py:** ~22.400 linhas (ainda tem 325 endpoints)
+- **Routers criados:** 27 ficheiros em `/app/backend/routes/`
+- **Próximos passos:** Continuar a extrair endpoints de vehicles, motoristas, parceiros
+
+---
 
 ## Changelog (2026-01-12 - Session 9 - Final)
 
