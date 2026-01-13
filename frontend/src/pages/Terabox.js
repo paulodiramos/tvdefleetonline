@@ -30,7 +30,6 @@ import {
   File,
   FileText,
   FileImage,
-  FilePdf,
   MoreVertical,
   ChevronRight,
   Home,
