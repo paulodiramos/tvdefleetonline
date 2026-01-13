@@ -946,7 +946,9 @@ async def upload_documento_motorista(
     from PIL import Image
     from io import BytesIO
     
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+    user_role = current_user["role"]
+    allowed_roles = [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, UserRole.MOTORISTA, "admin", "gestao", "parceiro", "motorista"]
+    if user_role not in allowed_roles:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
@@ -954,8 +956,14 @@ async def upload_documento_motorista(
         raise HTTPException(status_code=404, detail="Motorista não encontrado")
     
     # Verificar permissão do parceiro
-    if current_user["role"] == UserRole.PARCEIRO:
-        if motorista.get("parceiro_atribuido") != current_user["id"]:
+    if user_role in [UserRole.PARCEIRO, "parceiro"]:
+        parceiro_id = motorista.get("parceiro_atribuido") or motorista.get("parceiro_associado")
+        if parceiro_id != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Motorista só pode fazer upload para si mesmo
+    if user_role in [UserRole.MOTORISTA, "motorista"]:
+        if motorista_id != current_user["id"]:
             raise HTTPException(status_code=403, detail="Not authorized")
     
     # Criar diretório para documentos do motorista
