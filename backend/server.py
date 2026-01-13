@@ -83,6 +83,8 @@ from routes.users import router as users_router
 from routes.storage import router as storage_router
 from routes.modulos import router as modulos_router
 from routes.recibos import router as recibos_router
+from routes.dashboard import router as dashboard_router
+from routes.fornecedores import router as fornecedores_router
 from routes.alertas import router as alertas_router
 from routes.contratos import router as contratos_router
 from routes.sincronizacao import router as sincronizacao_router
