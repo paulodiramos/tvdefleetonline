@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import List, Dict, Optional
 from datetime import datetime, timezone
 
-from models.notificacao import Notificacao, NotificacaoCreate, NotificacaoStats
+from models.notificacao import Notificacao, NotificacaoCreate, NotificacaoStats, NotificacaoUpdate
 from models.user import UserRole
 from utils.auth import get_current_user
 from utils.database import get_database
