@@ -6271,48 +6271,7 @@ async def send_document_whatsapp(
         "document": document_type
     }
 
-# ==================== VEHICLE MAINTENANCE DETAILED ====================
-
-@api_router.post("/vehicles/{vehicle_id}/manutencoes")
-async def add_vehicle_maintenance(
-    vehicle_id: str,
-    manutencao: VehicleMaintenance,
-    current_user: Dict = Depends(get_current_user)
-):
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
-        raise HTTPException(status_code=403, detail="Not authorized")
-    
-    vehicle = await db.vehicles.find_one({"id": vehicle_id})
-    if not vehicle:
-        raise HTTPException(status_code=404, detail="Vehicle not found")
-    
-    manutencao_dict = manutencao.model_dump()
-    
-    await db.vehicles.update_one(
-        {"id": vehicle_id},
-        {
-            "$push": {"manutencoes": manutencao_dict},
-            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}
-        }
-    )
-    
-    return {"message": "Maintenance added", "manutencao_id": manutencao.id}
-
-@api_router.get("/vehicles/{vehicle_id}/manutencoes/{manutencao_id}")
-async def get_maintenance_detail(
-    vehicle_id: str,
-    manutencao_id: str,
-    current_user: Dict = Depends(get_current_user)
-):
-    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
-    if not vehicle:
-        raise HTTPException(status_code=404, detail="Vehicle not found")
-    
-    for manutencao in vehicle.get("manutencoes", []):
-        if manutencao.get("id") == manutencao_id:
-            return manutencao
-    
-    raise HTTPException(status_code=404, detail="Maintenance not found")
+# Vehicle maintenance endpoints moved to routes/vehicles.py
 
 @api_router.get("/vehicles/{vehicle_id}/relatorio-intervencoes")
 async def get_vehicle_interventions_report(
