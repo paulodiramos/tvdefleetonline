@@ -80,6 +80,8 @@ from routes.importacoes import router as importacoes_router
 from routes.admin import router as admin_router
 from routes.documentos import router as documentos_router
 from routes.users import router as users_router
+from routes.storage import router as storage_router
+from routes.modulos import router as modulos_router
 from routes.alertas import router as alertas_router
 from routes.contratos import router as contratos_router
 from routes.sincronizacao import router as sincronizacao_router
