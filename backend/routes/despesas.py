@@ -674,3 +674,263 @@ async def eliminar_importacao(
         "message": "Importação e despesas eliminadas",
         "despesas_eliminadas": result.deleted_count
     }
+
+
+
+# ==================== RELATÓRIO DE CUSTOS POR FORNECEDOR ====================
+
+@router.get("/relatorio-fornecedores")
+async def relatorio_custos_fornecedores(
+    data_inicio: Optional[str] = None,
+    data_fim: Optional[str] = None,
+    ano: Optional[int] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Comprehensive report of costs by supplier/category
+    Used for the dedicated /relatorio-fornecedores page
+    """
+    from datetime import datetime, timedelta
+    
+    query = {}
+    
+    # Parceiro filter
+    if current_user and current_user.get("role") == UserRole.PARCEIRO:
+        query["parceiro_id"] = current_user.get("id")
+    
+    # Date filters
+    if data_inicio:
+        query.setdefault("data_entrada", {})["$gte"] = data_inicio
+    if data_fim:
+        query.setdefault("data_entrada", {})["$lte"] = data_fim
+    
+    # If year specified, filter by that year
+    if ano and not data_inicio and not data_fim:
+        query["data_entrada"] = {
+            "$gte": f"{ano}-01-01",
+            "$lte": f"{ano}-12-31"
+        }
+    
+    # 1. Total por categoria de fornecedor
+    pipeline_categoria = [
+        {"$match": query},
+        {"$group": {
+            "_id": "$tipo_fornecedor",
+            "total": {"$sum": "$valor_liquido"},
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"total": -1}}
+    ]
+    por_categoria = await db.despesas_fornecedor.aggregate(pipeline_categoria).to_list(20)
+    
+    # 2. Total por fornecedor específico (nome do fornecedor)
+    pipeline_fornecedor = [
+        {"$match": query},
+        {"$group": {
+            "_id": {"nome": "$fornecedor_nome", "tipo": "$tipo_fornecedor"},
+            "total": {"$sum": "$valor_liquido"},
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"total": -1}},
+        {"$limit": 20}
+    ]
+    por_fornecedor = await db.despesas_fornecedor.aggregate(pipeline_fornecedor).to_list(20)
+    
+    # 3. Evolução mensal (últimos 12 meses)
+    pipeline_mensal = [
+        {"$match": query},
+        {"$addFields": {
+            "mes_ano": {"$substr": ["$data_entrada", 0, 7]}
+        }},
+        {"$group": {
+            "_id": "$mes_ano",
+            "total": {"$sum": "$valor_liquido"},
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"_id": 1}},
+        {"$limit": 12}
+    ]
+    evolucao_mensal = await db.despesas_fornecedor.aggregate(pipeline_mensal).to_list(12)
+    
+    # 4. Por responsável (motorista vs parceiro)
+    pipeline_responsavel = [
+        {"$match": query},
+        {"$group": {
+            "_id": "$tipo_responsavel",
+            "total": {"$sum": "$valor_liquido"},
+            "count": {"$sum": 1}
+        }}
+    ]
+    por_responsavel = await db.despesas_fornecedor.aggregate(pipeline_responsavel).to_list(10)
+    
+    # 5. Top veículos com mais despesas
+    pipeline_veiculos = [
+        {"$match": {**query, "veiculo_id": {"$ne": None}}},
+        {"$group": {
+            "_id": "$veiculo_id",
+            "total": {"$sum": "$valor_liquido"},
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"total": -1}},
+        {"$limit": 10}
+    ]
+    top_veiculos = await db.despesas_fornecedor.aggregate(pipeline_veiculos).to_list(10)
+    
+    # Enrich with vehicle info
+    for v in top_veiculos:
+        if v["_id"]:
+            veiculo = await db.vehicles.find_one(
+                {"id": v["_id"]},
+                {"_id": 0, "matricula": 1, "marca": 1, "modelo": 1}
+            )
+            v["veiculo"] = veiculo
+    
+    # 6. Top motoristas com mais despesas
+    pipeline_motoristas = [
+        {"$match": {**query, "motorista_id": {"$ne": None}}},
+        {"$group": {
+            "_id": "$motorista_id",
+            "total": {"$sum": "$valor_liquido"},
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"total": -1}},
+        {"$limit": 10}
+    ]
+    top_motoristas = await db.despesas_fornecedor.aggregate(pipeline_motoristas).to_list(10)
+    
+    # Enrich with driver info
+    for m in top_motoristas:
+        if m["_id"]:
+            motorista = await db.motoristas.find_one(
+                {"id": m["_id"]},
+                {"_id": 0, "name": 1, "email": 1}
+            )
+            m["motorista"] = motorista
+    
+    # Calculate totals
+    total_geral = sum(c["total"] for c in por_categoria)
+    total_registos = sum(c["count"] for c in por_categoria)
+    
+    # Calculate category percentages
+    categorias_com_percentagem = []
+    for cat in por_categoria:
+        categorias_com_percentagem.append({
+            "categoria": cat["_id"] or "Não especificado",
+            "total": round(cat["total"], 2),
+            "count": cat["count"],
+            "percentagem": round((cat["total"] / total_geral * 100) if total_geral > 0 else 0, 1)
+        })
+    
+    # Format fornecedores
+    fornecedores_formatados = []
+    for f in por_fornecedor:
+        fornecedores_formatados.append({
+            "nome": f["_id"]["nome"] or "Não especificado",
+            "tipo": f["_id"]["tipo"] or "outros",
+            "total": round(f["total"], 2),
+            "count": f["count"]
+        })
+    
+    return {
+        "resumo": {
+            "total_geral": round(total_geral, 2),
+            "total_registos": total_registos,
+            "media_por_registo": round(total_geral / total_registos, 2) if total_registos > 0 else 0
+        },
+        "por_categoria": categorias_com_percentagem,
+        "por_fornecedor": fornecedores_formatados,
+        "evolucao_mensal": [
+            {"mes": e["_id"], "total": round(e["total"], 2), "count": e["count"]}
+            for e in evolucao_mensal
+        ],
+        "por_responsavel": {
+            r["_id"] or "nao_especificado": {"total": round(r["total"], 2), "count": r["count"]}
+            for r in por_responsavel
+        },
+        "top_veiculos": [
+            {
+                "veiculo_id": v["_id"],
+                "veiculo": v.get("veiculo"),
+                "total": round(v["total"], 2),
+                "count": v["count"]
+            }
+            for v in top_veiculos
+        ],
+        "top_motoristas": [
+            {
+                "motorista_id": m["_id"],
+                "motorista": m.get("motorista"),
+                "total": round(m["total"], 2),
+                "count": m["count"]
+            }
+            for m in top_motoristas
+        ]
+    }
+
+
+@router.get("/relatorio-fornecedores/comparativo")
+async def comparativo_mensal_fornecedores(
+    meses: int = 6,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Compare costs by category across last N months
+    """
+    from datetime import datetime, timedelta
+    
+    query = {}
+    if current_user and current_user.get("role") == UserRole.PARCEIRO:
+        query["parceiro_id"] = current_user.get("id")
+    
+    # Get data for last N months
+    hoje = datetime.now()
+    data_inicio = (hoje - timedelta(days=meses * 30)).strftime("%Y-%m-01")
+    query["data_entrada"] = {"$gte": data_inicio}
+    
+    pipeline = [
+        {"$match": query},
+        {"$addFields": {
+            "mes_ano": {"$substr": ["$data_entrada", 0, 7]}
+        }},
+        {"$group": {
+            "_id": {"mes": "$mes_ano", "categoria": "$tipo_fornecedor"},
+            "total": {"$sum": "$valor_liquido"},
+            "count": {"$sum": 1}
+        }},
+        {"$sort": {"_id.mes": 1}}
+    ]
+    
+    resultados = await db.despesas_fornecedor.aggregate(pipeline).to_list(200)
+    
+    # Organize by month
+    meses_data = {}
+    categorias = set()
+    
+    for r in resultados:
+        mes = r["_id"]["mes"]
+        categoria = r["_id"]["categoria"] or "outros"
+        categorias.add(categoria)
+        
+        if mes not in meses_data:
+            meses_data[mes] = {"mes": mes, "categorias": {}, "total": 0}
+        
+        meses_data[mes]["categorias"][categoria] = round(r["total"], 2)
+        meses_data[mes]["total"] += r["total"]
+    
+    # Calculate month-over-month changes
+    meses_ordenados = sorted(meses_data.values(), key=lambda x: x["mes"])
+    for i, mes in enumerate(meses_ordenados):
+        mes["total"] = round(mes["total"], 2)
+        if i > 0:
+            mes_anterior = meses_ordenados[i-1]
+            variacao = mes["total"] - mes_anterior["total"]
+            mes["variacao"] = round(variacao, 2)
+            mes["variacao_percentual"] = round((variacao / mes_anterior["total"] * 100) if mes_anterior["total"] > 0 else 0, 1)
+        else:
+            mes["variacao"] = 0
+            mes["variacao_percentual"] = 0
+    
+    return {
+        "meses": meses_ordenados,
+        "categorias": list(categorias)
+    }
