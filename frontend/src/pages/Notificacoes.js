@@ -5,6 +5,7 @@ import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { 
   Bell, 
@@ -16,14 +17,30 @@ import {
   FileText,
   DollarSign,
   FileCheck,
-  Mail
+  Mail,
+  Phone,
+  User,
+  Edit3,
+  Save,
+  X,
+  MessageSquare
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Notificacoes = ({ user, onLogout }) => {
   const [notificacoes, setNotificacoes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('todas'); // todas, nao_lidas, lidas
+  const [selectedNotif, setSelectedNotif] = useState(null);
+  const [editingNotes, setEditingNotes] = useState(false);
+  const [notesText, setNotesText] = useState('');
+  const [savingNotes, setSavingNotes] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,6 +64,19 @@ const Notificacoes = ({ user, onLogout }) => {
       toast.error('Erro ao carregar notificações');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchNotificacaoDetalhe = async (notifId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/notificacoes/${notifId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setSelectedNotif(response.data);
+      setNotesText(response.data.notas || '');
+    } catch (error) {
+      console.error('Error fetching notification detail:', error);
     }
   };
 
@@ -85,9 +115,35 @@ const Notificacoes = ({ user, onLogout }) => {
       });
       toast.success('Notificação eliminada');
       fetchNotificacoes();
+      if (selectedNotif?.id === notificacaoId) {
+        setSelectedNotif(null);
+      }
     } catch (error) {
       console.error('Error deleting notification:', error);
       toast.error('Erro ao eliminar notificação');
+    }
+  };
+
+  const guardarNotas = async () => {
+    if (!selectedNotif) return;
+    
+    try {
+      setSavingNotes(true);
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/notificacoes/${selectedNotif.id}`,
+        { notas: notesText },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Notas guardadas');
+      setEditingNotes(false);
+      fetchNotificacaoDetalhe(selectedNotif.id);
+      fetchNotificacoes();
+    } catch (error) {
+      console.error('Error saving notes:', error);
+      toast.error('Erro ao guardar notas');
+    } finally {
+      setSavingNotes(false);
     }
   };
 
@@ -95,8 +151,13 @@ const Notificacoes = ({ user, onLogout }) => {
     if (!notificacao.lida) {
       marcarComoLida(notificacao.id);
     }
-    if (notificacao.link) {
-      navigate(notificacao.link);
+    fetchNotificacaoDetalhe(notificacao.id);
+  };
+
+  const handleNavigateToLink = () => {
+    if (selectedNotif?.link) {
+      setSelectedNotif(null);
+      navigate(selectedNotif.link);
     }
   };
 
@@ -113,6 +174,8 @@ const Notificacoes = ({ user, onLogout }) => {
         return <FileText className="w-5 h-5 text-purple-500" />;
       case 'pagamento_processado':
         return <DollarSign className="w-5 h-5 text-green-500" />;
+      case 'nova_mensagem':
+        return <MessageSquare className="w-5 h-5 text-blue-500" />;
       default:
         return <Bell className="w-5 h-5 text-slate-500" />;
     }
@@ -134,6 +197,7 @@ const Notificacoes = ({ user, onLogout }) => {
   };
 
   const formatarData = (dataStr) => {
+    if (!dataStr) return '';
     const data = new Date(dataStr);
     const hoje = new Date();
     const diff = hoje - data;
@@ -151,6 +215,16 @@ const Notificacoes = ({ user, onLogout }) => {
     if (dias < 7) return `${dias} dias atrás`;
     
     return data.toLocaleDateString('pt-PT');
+  };
+
+  const getRoleLabel = (role) => {
+    const labels = {
+      admin: 'Administrador',
+      gestao: 'Gestor',
+      parceiro: 'Parceiro',
+      motorista: 'Motorista'
+    };
+    return labels[role] || role;
   };
 
   return (
@@ -236,6 +310,35 @@ const Notificacoes = ({ user, onLogout }) => {
                           <p className="text-sm text-slate-600 mt-1">
                             {notif.mensagem}
                           </p>
+                          
+                          {/* Mostrar dados de contacto do emissor se existirem */}
+                          {notif.contacto_emissor && (
+                            <div className="flex items-center gap-3 mt-2 text-xs text-slate-500 bg-slate-50 p-2 rounded">
+                              <User className="w-3 h-3" />
+                              <span>{notif.contacto_emissor.nome}</span>
+                              {notif.contacto_emissor.email && (
+                                <>
+                                  <Mail className="w-3 h-3 ml-2" />
+                                  <span>{notif.contacto_emissor.email}</span>
+                                </>
+                              )}
+                              {notif.contacto_emissor.telefone && (
+                                <>
+                                  <Phone className="w-3 h-3 ml-2" />
+                                  <span>{notif.contacto_emissor.telefone}</span>
+                                </>
+                              )}
+                            </div>
+                          )}
+                          
+                          {/* Indicador de notas */}
+                          {notif.notas && (
+                            <div className="flex items-center gap-1 mt-2 text-xs text-amber-600">
+                              <Edit3 className="w-3 h-3" />
+                              <span>Tem notas</span>
+                            </div>
+                          )}
+                          
                           <div className="flex items-center space-x-2 mt-2">
                             <span className="text-xs text-slate-400">
                               {formatarData(notif.criada_em)}
@@ -284,6 +387,153 @@ const Notificacoes = ({ user, onLogout }) => {
           )}
         </div>
       </div>
+
+      {/* Modal de Detalhes da Notificação */}
+      <Dialog open={!!selectedNotif} onOpenChange={(open) => !open && setSelectedNotif(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {selectedNotif && getIconForType(selectedNotif.tipo)}
+              {selectedNotif?.titulo}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedNotif && (
+            <div className="space-y-4">
+              {/* Mensagem */}
+              <div>
+                <p className="text-slate-700">{selectedNotif.mensagem}</p>
+                <p className="text-xs text-slate-400 mt-2">
+                  {formatarData(selectedNotif.criada_em)}
+                </p>
+              </div>
+              
+              {/* Dados do Emissor/Interessado */}
+              {selectedNotif.contacto_emissor && (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h4 className="font-semibold text-blue-800 mb-2 flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Contacto do Emissor
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-blue-700">Nome:</span>
+                      <span>{selectedNotif.contacto_emissor.nome || 'N/A'}</span>
+                    </div>
+                    {selectedNotif.contacto_emissor.email && (
+                      <div className="flex items-center gap-2">
+                        <Mail className="w-4 h-4 text-blue-600" />
+                        <a href={`mailto:${selectedNotif.contacto_emissor.email}`} className="text-blue-600 hover:underline">
+                          {selectedNotif.contacto_emissor.email}
+                        </a>
+                      </div>
+                    )}
+                    {selectedNotif.contacto_emissor.telefone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-4 h-4 text-blue-600" />
+                        <a href={`tel:${selectedNotif.contacto_emissor.telefone}`} className="text-blue-600 hover:underline">
+                          {selectedNotif.contacto_emissor.telefone}
+                        </a>
+                      </div>
+                    )}
+                    {selectedNotif.contacto_emissor.role && (
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {getRoleLabel(selectedNotif.contacto_emissor.role)}
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Secção de Notas */}
+              <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-semibold text-amber-800 flex items-center gap-2">
+                    <Edit3 className="w-4 h-4" />
+                    Notas / Observações
+                  </h4>
+                  {!editingNotes && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditingNotes(true)}
+                    >
+                      <Edit3 className="w-4 h-4 mr-1" />
+                      Editar
+                    </Button>
+                  )}
+                </div>
+                
+                {editingNotes ? (
+                  <div className="space-y-2">
+                    <Textarea
+                      value={notesText}
+                      onChange={(e) => setNotesText(e.target.value)}
+                      placeholder="Adicione notas ou observações sobre esta notificação..."
+                      rows={4}
+                      className="bg-white"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingNotes(false);
+                          setNotesText(selectedNotif.notas || '');
+                        }}
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Cancelar
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={guardarNotas}
+                        disabled={savingNotes}
+                      >
+                        <Save className="w-4 h-4 mr-1" />
+                        {savingNotes ? 'A guardar...' : 'Guardar'}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-amber-700">
+                    {selectedNotif.notas || 'Sem notas. Clique em "Editar" para adicionar.'}
+                  </p>
+                )}
+                
+                {selectedNotif.notas_updated_at && (
+                  <p className="text-xs text-amber-500 mt-2">
+                    Última atualização: {formatarData(selectedNotif.notas_updated_at)}
+                  </p>
+                )}
+              </div>
+              
+              {/* Botões de Ação */}
+              <div className="flex justify-between pt-4 border-t">
+                {selectedNotif.link && (
+                  <Button onClick={handleNavigateToLink}>
+                    Ver Detalhes
+                  </Button>
+                )}
+                <div className="flex gap-2 ml-auto">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      deletarNotificacao(selectedNotif.id);
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4 mr-1" />
+                    Eliminar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
