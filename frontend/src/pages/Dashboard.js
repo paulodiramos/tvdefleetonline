@@ -248,6 +248,92 @@ const Dashboard = ({ user, onLogout }) => {
           <ResumoSemanalCard parceiroId={user.id} />
         )}
 
+        {/* Widget de Alertas de Custos */}
+        {(user.role === 'parceiro' || user.role === 'gestao') && alertasCustos && alertasCustos.alertas?.length > 0 && (
+          <Card className="border-red-200 bg-gradient-to-r from-red-50 to-orange-50" data-testid="alertas-custos-widget">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-red-800">
+                  <Bell className="w-5 h-5" />
+                  Alertas de Custos
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => window.location.href = '/alertas-custos'}>
+                  Ver Todos →
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {alertasCustos.alertas.slice(0, 3).map((alerta, idx) => {
+                  const isCritico = alerta.severidade === 'critico';
+                  const categoriaIcons = {
+                    'combustivel_fossil': Fuel,
+                    'combustivel_eletrico': Zap,
+                    'via_verde': MapPin,
+                    'portagem': MapPin,
+                    'gps': MapPin,
+                    'seguros': Shield,
+                    'manutencao': Wrench,
+                  };
+                  const Icon = categoriaIcons[alerta.categoria] || Euro;
+                  const categoriaNomes = {
+                    'combustivel_fossil': 'Combustível',
+                    'combustivel_eletrico': 'Elétrico',
+                    'via_verde': 'Via Verde',
+                    'portagem': 'Portagens',
+                    'gps': 'GPS',
+                    'seguros': 'Seguros',
+                    'manutencao': 'Manutenção',
+                    'lavagem': 'Lavagem',
+                    'pneus': 'Pneus',
+                    'estacionamento': 'Estacionamento',
+                    'outros': 'Outros'
+                  };
+                  return (
+                    <div 
+                      key={idx}
+                      className={`flex items-center gap-3 p-3 rounded-lg ${
+                        isCritico ? 'bg-red-100 border border-red-200' : 'bg-yellow-100 border border-yellow-200'
+                      }`}
+                    >
+                      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                        isCritico ? 'bg-red-500' : 'bg-yellow-500'
+                      }`}>
+                        <Icon className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">
+                            {categoriaNomes[alerta.categoria] || alerta.categoria}
+                          </span>
+                          <Badge variant={isCritico ? 'destructive' : 'secondary'} className="text-xs">
+                            {alerta.percentual}%
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-slate-600">
+                          {isCritico 
+                            ? `Limite ultrapassado em €${alerta.excesso?.toFixed(2)}`
+                            : `Restam €${alerta.restante?.toFixed(2)} do limite`
+                          }
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-lg">€{alerta.total_atual?.toFixed(0)}</p>
+                        <p className="text-xs text-slate-500">de €{alerta.limite}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+                {alertasCustos.alertas.length > 3 && (
+                  <p className="text-center text-sm text-slate-500">
+                    + {alertasCustos.alertas.length - 3} alerta(s) adicional(is)
+                  </p>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <StatCard
