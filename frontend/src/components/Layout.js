@@ -116,6 +116,7 @@ const Layout = ({ children, user, onLogout }) => {
         submenu: [
           { path: '/criar-relatorio-semanal', label: 'Criar Relatório' },
           { path: '/resumo-semanal', label: '📈 Resumo Semanal' },
+          { path: '/relatorio-fornecedores', label: '💰 Custos Fornecedores' },
           { path: '/lista-importacoes', label: '📋 Lista Importações' },
           { path: '/gestao-pagamentos-recibos', label: 'Pagamentos & Recibos' },
           { path: '/importar-ficheiros', label: '📤 Importar Ficheiros' },
