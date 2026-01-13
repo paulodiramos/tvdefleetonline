@@ -37,6 +37,7 @@ const StatCard = ({ title, value, icon: Icon, trend, trendValue, color }) => (
 const Dashboard = ({ user, onLogout }) => {
   const [stats, setStats] = useState(null);
   const [alertas, setAlertas] = useState([]);
+  const [alertasCustos, setAlertasCustos] = useState(null);
   const [proximasDatas, setProximasDatas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [planoAtivo, setPlanoAtivo] = useState(null);
