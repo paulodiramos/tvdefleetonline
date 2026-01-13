@@ -1,0 +1,101 @@
+{
+  "summary": "Completed backend testing of P0 bugs fixed. All 19 tests passed (100%). Fixed one additional bug in /app/backend/routes/documentos.py where parceiro role was not allowed to access /api/documentos/pendentes endpoint.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "bugs_fixed_during_testing": [
+    {
+      "file": "/app/backend/routes/documentos.py",
+      "issue": "GET /api/documentos/pendentes returned 403 'Admin only' for parceiro role",
+      "fix": "Updated allowed_roles to include PARCEIRO, GESTAO and added filtering for parceiro to only see their own motoristas",
+      "lines_changed": "22-35"
+    }
+  ],
+  "test_report_links": [
+    "/app/tests/test_p0_bugs_fixed.py",
+    "/app/test_reports/pytest/pytest_p0_bugs.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "All P0 bugs verified as fixed:",
+    "1. POST /api/motoristas/{id}/documentos/upload - Works for parceiro role ✅",
+    "2. POST /api/vehicles/{id}/upload-photo - Works for parceiro role ✅",
+    "3. POST /api/vehicles/{id}/agenda - Works for parceiro role ✅",
+    "4. DELETE /api/vehicles/{id}/agenda/{evento_id} - Works for parceiro role ✅",
+    "5. POST /api/contratos/gerar - Works for parceiro role ✅",
+    "6. GET /api/documentos/pendentes - Now works for parceiro role (fixed during testing) ✅",
+    "7. GET /api/notificacoes/{id} - Works correctly ✅",
+    "8. PUT /api/notificacoes/{id} - Works correctly for updating notes ✅"
+  ],
+  "updated_files": [
+    "/app/tests/test_p0_bugs_fixed.py",
+    "/app/backend/routes/documentos.py"
+  ],
+  "success_rate": {
+    "backend": "100% (19/19 tests passed)",
+    "frontend": "N/A - backend only testing requested"
+  },
+  "test_credentials": {
+    "admin": {"email": "admin@tvdefleet.com", "password": "123456", "role": "admin"},
+    "parceiro": {"email": "parceiro@tvdefleet.com", "password": "123456", "role": "parceiro"}
+  },
+  "seed_data_creation": "No seed data created. Used existing motoristas and vehicles for testing.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All P0 bugs have been verified as fixed. The permission system now correctly allows parceiro role to: upload motorista documents, upload vehicle photos, manage vehicle agenda events, generate contracts, and view pending documents. The routes/documentos.py file was updated during testing to fix the documentos/pendentes endpoint permission issue.",
+  "features_tested": {
+    "motoristas_documento_upload": {
+      "POST /api/motoristas/{id}/documentos/upload as parceiro": "PASS - Returns 200 with document URL",
+      "POST /api/motoristas/{id}/documentos/upload unauthorized": "PASS - Returns 401/403"
+    },
+    "vehicles_photo_upload": {
+      "POST /api/vehicles/{id}/upload-photo as parceiro": "PASS - Returns 200 or 400 (max photos)",
+      "POST /api/vehicles/{id}/upload-foto as parceiro": "PASS - Alternative endpoint works"
+    },
+    "vehicles_agenda": {
+      "POST /api/vehicles/{id}/agenda as parceiro": "PASS - Returns 200 with evento_id",
+      "GET /api/vehicles/{id}/agenda": "PASS - Returns list of events",
+      "DELETE /api/vehicles/{id}/agenda/{evento_id} as parceiro": "PASS - Returns 200"
+    },
+    "documentos_pendentes": {
+      "GET /api/documentos/pendentes as parceiro": "PASS - Returns 200 with list (fixed during testing)",
+      "GET /api/documentos/pendentes as admin": "PASS - Returns 200 with list",
+      "GET /api/documentos/pendentes unauthorized": "PASS - Returns 401/403"
+    },
+    "contratos_gerar": {
+      "POST /api/contratos/gerar as parceiro": "PASS - Returns 200 with contrato_id and referencia",
+      "POST /api/contratos/gerar unauthorized": "PASS - Returns 401/403"
+    },
+    "notificacoes": {
+      "GET /api/notificacoes": "PASS - Returns list of notifications",
+      "GET /api/notificacoes/{id}": "PASS - Returns notification detail",
+      "PUT /api/notificacoes/{id}": "PASS - Updates notification with notes",
+      "GET /api/notificacoes/stats": "PASS - Returns notification statistics"
+    }
+  },
+  "backend_tests": {
+    "total_tests": 19,
+    "passed": 19,
+    "failed": 0,
+    "test_classes": [
+      "TestAuth (2 tests) - admin and parceiro login",
+      "TestMotoristasDocumentoUpload (2 tests) - upload as parceiro, unauthorized",
+      "TestVehiclePhotoUpload (2 tests) - upload-photo and upload-foto endpoints",
+      "TestVehicleAgenda (3 tests) - add, get, delete agenda events",
+      "TestDocumentosPendentes (3 tests) - parceiro, admin, unauthorized access",
+      "TestContratosGerar (2 tests) - generate contract, unauthorized",
+      "TestNotificacoes (3 tests) - list, detail, update notifications",
+      "TestNotificacoesStats (1 test) - notification statistics",
+      "TestCleanup (1 test) - cleanup test data"
+    ]
+  },
+  "mocked_integrations": {
+    "none": "All integrations are real - no mocked APIs"
+  }
+}
