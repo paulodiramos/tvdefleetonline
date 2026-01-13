@@ -1,0 +1,91 @@
+{
+  "summary": "Completed comprehensive testing of TVDEFleet bug fixes. All 12 backend tests passed. Frontend WhatsApp configuration tab is fully functional with save/test capabilities. Admin can access /api/documentos/pendentes endpoint. Vehicle dispositivos sync with motorista works correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [
+    "/app/tests/test_tvdefleet_bugs.py",
+    "/app/test_reports/pytest/pytest_tvdefleet_bugs.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Bug #1 FIXED: GET /api/documentos/pendentes now works - app.include_router(api_router) moved to end of server.py (line 22453)",
+    "Bug #2 FIXED: PUT /api/vehicles/{vehicle_id}/dispositivos correctly syncs cartão combustível with motorista atribuído (lines 1492-1567 in vehicles.py)",
+    "Bug #3 VERIFIED: WhatsApp configuration endpoints fully functional - GET/PUT /api/parceiros/{id}/config-whatsapp (lines 865-960 in parceiros.py)",
+    "Frontend ConfiguracoesParceiro.js WhatsApp tab works correctly with all form fields, toggles, and save/test buttons"
+  ],
+  "updated_files": [
+    "/app/tests/test_tvdefleet_bugs.py"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100%"
+  },
+  "test_credentials": {
+    "admin": {"email": "admin@tvdefleet.com", "password": "123456"},
+    "parceiro": {"email": "parceiro@tvdefleet.com", "password": "123456", "id": "ab2a25aa-4f70-4c7b-835d-9204b0cd0d7e"}
+  },
+  "seed_data_creation": "WhatsApp config test data created during testing (telefone: +351912345678, nome_exibicao: Test Fleet WhatsApp)",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 3 reported bugs have been fixed and verified. Test file /app/tests/test_tvdefleet_bugs.py covers: 1) GET /api/documentos/pendentes (admin only), 2) WhatsApp config GET/PUT/test endpoints, 3) Vehicle dispositivos PUT with motorista sync. Test vehicle ID: 591f3be8-8395-4338-9768-c7511db8f951",
+  "verified_bugs": {
+    "bug_1_documentos_pendentes": {
+      "status": "FIXED",
+      "endpoint": "GET /api/documentos/pendentes",
+      "fix_description": "app.include_router(api_router) moved to end of server.py to ensure all @api_router decorated endpoints are registered",
+      "backend_test": "PASS - Admin gets 200, non-admin gets 403, unauthenticated gets 401/403",
+      "frontend_test": "PASS - Dashboard shows Pendentes count"
+    },
+    "bug_2_cartao_combustivel_sync": {
+      "status": "FIXED",
+      "endpoint": "PUT /api/vehicles/{vehicle_id}/dispositivos",
+      "fix_description": "Endpoint already implemented correctly - syncs cartão combustível, elétrico, and via verde with motorista atribuído",
+      "backend_test": "PASS - Dispositivos update and persist, motorista fields updated automatically",
+      "frontend_test": "N/A - Tested via API"
+    },
+    "bug_3_whatsapp_config": {
+      "status": "WORKING",
+      "endpoints": [
+        "GET /api/parceiros/{id}/config-whatsapp",
+        "PUT /api/parceiros/{id}/config-whatsapp",
+        "POST /api/parceiros/{id}/whatsapp/enviar-teste"
+      ],
+      "backend_test": "PASS - All 4 WhatsApp tests passed (get, put, persistence, test endpoint)",
+      "frontend_test": "PASS - WhatsApp tab functional with all fields, toggles, save button shows success toast"
+    }
+  },
+  "backend_tests": {
+    "total_tests": 12,
+    "passed": 12,
+    "failed": 0,
+    "test_classes": [
+      "TestDocumentosPendentes (3 tests) - admin access, non-admin denied, no auth denied",
+      "TestWhatsAppConfig (4 tests) - get config, put config, persistence, test endpoint",
+      "TestVehicleDispositivos (2 tests) - get dispositivos, put dispositivos with sync",
+      "TestVehicleDetails (1 test) - get vehicle",
+      "TestAdminAccess (1 test) - admin login",
+      "TestParceiroAccess (1 test) - parceiro login"
+    ]
+  },
+  "frontend_tests": {
+    "whatsapp_tab": {
+      "navigation": "PASS - Tab visible and clickable",
+      "form_fields": "PASS - Telefone, Nome Exibição, Mensagem Boas-Vindas, Template Relatório",
+      "toggles": "PASS - WhatsApp Ativo, Relatórios semanais, Alertas documentos, Alertas veículos",
+      "save_button": "PASS - Guardar button saves config, shows success toast",
+      "test_button": "PASS - Testar WhatsApp button present"
+    },
+    "admin_dashboard": {
+      "login": "PASS - Admin login successful",
+      "pendentes_card": "PASS - Pendentes count visible on dashboard",
+      "motoristas_page": "PASS - Shows all motoristas with status badges"
+    }
+  }
+}
