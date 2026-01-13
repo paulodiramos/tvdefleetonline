@@ -38,7 +38,7 @@ class CartaoFrota(BaseModel):
     id: str
     numero_cartao: str
     tipo: str
-    fornecedor: str
+    fornecedor: Optional[str] = None
     status: str
     motorista_atribuido: Optional[str] = None
     motorista_nome: Optional[str] = None
