@@ -17,9 +17,11 @@ async def criar_notificacao(
     prioridade: str = "normal",
     link: str = None,
     metadata: Dict[str, Any] = None,
-    enviar_email: bool = False
+    enviar_email: bool = False,
+    emissor_id: str = None,
+    contacto_emissor: Dict[str, Any] = None
 ):
-    """Create a notification"""
+    """Create a notification with optional sender contact info"""
     notificacao = {
         "id": str(uuid.uuid4()),
         "user_id": user_id,
@@ -33,8 +35,27 @@ async def criar_notificacao(
         "criada_em": datetime.now(timezone.utc).isoformat(),
         "lida_em": None,
         "enviada_email": False,
-        "enviada_whatsapp": False
+        "enviada_whatsapp": False,
+        "emissor_id": emissor_id,
+        "contacto_emissor": contacto_emissor,
+        "notas": None,
+        "notas_updated_at": None,
+        "notas_updated_by": None
     }
+    
+    # If emissor_id provided but no contacto_emissor, fetch from DB
+    if emissor_id and not contacto_emissor:
+        emissor = await db.users.find_one(
+            {"id": emissor_id}, 
+            {"_id": 0, "name": 1, "email": 1, "phone": 1, "role": 1}
+        )
+        if emissor:
+            notificacao["contacto_emissor"] = {
+                "nome": emissor.get("name"),
+                "email": emissor.get("email"),
+                "telefone": emissor.get("phone"),
+                "role": emissor.get("role")
+            }
     
     await db.notificacoes.insert_one(notificacao)
     logger.info(f"✓ Notification created: {tipo} for user {user_id}")
