@@ -800,6 +800,16 @@ function App() {
             }
           />
           <Route
+            path="/terabox"
+            element={
+              user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
+                <Terabox user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/gestao-credenciais"
             element={
               user ? (
