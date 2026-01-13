@@ -42,6 +42,20 @@
 #### 3. Parceiro criar templates de contrato (CORRIGIDO)
 - `UserRole.PARCEIRO` adicionado às permissões
 
+### Sistema de WhatsApp Business (COMPLETO)
+
+#### Serviço de WhatsApp
+- **Novo ficheiro:** `/app/backend/utils/whatsapp_service.py`
+- Suporta dois modos:
+  - **Cloud API:** WhatsApp Business API oficial da Meta (requer credenciais)
+  - **Web Link:** Gera links wa.me para envio manual (fallback)
+- Templates para relatórios semanais, alertas de documentos, boas-vindas
+
+#### Endpoints de Envio
+- **Novo Endpoint:** `POST /api/parceiros/{id}/enviar-whatsapp-motoristas`
+- **Novo Endpoint:** `POST /api/parceiros/{id}/enviar-relatorio-whatsapp/{motorista_id}`
+- Log de mensagens enviadas na colecção `whatsapp_log`
+
 ### Refatoração do Backend (EM PROGRESSO)
 
 #### Novo Router: documentos.py
