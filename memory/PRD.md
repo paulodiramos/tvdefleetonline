@@ -70,19 +70,24 @@
 
 #### Novo Router: users.py
 - **Novo ficheiro:** `/app/backend/routes/users.py`
-- Endpoints migrados:
-  - `GET /api/users/pending`
-  - `GET /api/users/all`
-  - `PUT /api/users/{user_id}/approve`
-  - `PUT /api/users/{user_id}/set-role`
-  - `PUT /api/users/{user_id}/status`
-  - `DELETE /api/users/{user_id}`
-  - `PUT /api/users/{user_id}/reset-password`
+- Endpoints: pending, all, approve, set-role, status, delete, reset-password
+
+#### Novo Router: storage.py
+- **Novo ficheiro:** `/app/backend/routes/storage.py`
+- Endpoints: Google Drive connect, callback, status, upload, files, configure
+
+#### Novo Router: modulos.py
+- **Novo ficheiro:** `/app/backend/routes/modulos.py`
+- Endpoints: listar módulos, atribuir/adicionar/remover módulos de utilizador
+
+#### Novo Router: recibos.py
+- **Novo ficheiro:** `/app/backend/routes/recibos.py`
+- Endpoints: CRUD recibos, verificação, pagamentos-recibos
 
 #### Estado da Refatoração
-- **server.py:** ~22.400 linhas (ainda tem 325 endpoints)
-- **Routers criados:** 29 ficheiros em `/app/backend/routes/`
-- **Próximos passos:** Continuar a extrair endpoints de vehicles, motoristas, parceiros
+- **server.py:** ~22.400 linhas (ainda tem 325 endpoints - muitos duplicados)
+- **Routers criados:** 31 ficheiros em `/app/backend/routes/`
+- **Nota:** Os novos routers têm precedência sobre os endpoints do server.py
 
 ---
 
