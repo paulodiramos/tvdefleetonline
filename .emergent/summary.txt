@@ -9,138 +9,133 @@ O utilizador solicitou a continuação do desenvolvimento da aplicação de gest
     *   Melhorar o sistema de mensagens/notificações para incluir dados do emissor (email, telefone) e permitir a adição de notas.
     *   Implementar o envio de emails usando a configuração SMTP de cada parceiro.
     *   Implementar um sistema de armazenamento de ficheiros Terabox para os parceiros, com pastas e capacidade de upload/download.
-4.  **Refatoração do Backend (P2 - recorrente):** Continuar a extrair endpoints do ficheiro monolítico  para routers dedicados.
-5.  **Implementar Funcionalidades P1:** Avançar com a implementação do envio de mensagens via WhatsApp Business API.
+    *   Criar uma UI de Admin para gestão de Fornecedores.
+    *   Criar uma página de relatório de custos por fornecedor.
+    *   Implementar um sistema de alertas de custos configurável.
+    *   Adicionar um widget de alertas de custos ao Dashboard.
+4.  **Refatoração do Backend (P2 - recorrente):** Continuar a extrair endpoints do ficheiro monolítico  para routers dedicados e limpar o código duplicado.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação de gestão de frotas (FastAPI + React) está funcional. Durante esta sessão, foram concluídas várias tarefas e correções críticas:
--   **Configuração de WhatsApp:** A UI e o backend para os parceiros guardarem as suas configurações de WhatsApp estão implementados e testados.
--   **Bugs Críticos Corrigidos:** Foram resolvidos múltiplos bugs, incluindo o que impedia a aprovação de documentos pelo admin, a falha no download de documentos de motoristas e o erro de permissão que impedia parceiros de criarem templates de contrato.
--   **Sistema de Notificações Melhorado:** As notificações e mensagens agora mostram o email e telefone do emissor. As notificações também suportam a adição de notas editáveis através de um novo endpoint e modal na UI.
--   **Envio de Email SMTP:** O backend agora possui um serviço () e endpoints para enviar emails (ex: relatórios semanais) utilizando as credenciais SMTP configuradas por cada parceiro.
--   **Refatoração do Backend:** O processo de refatoração do  avançou significativamente com a criação de **10 novos routers** para , , , , , , , ,  e , elevando o total para 33 routers modulares.
--   **Sistema de Ficheiros Terabox:** Foi criada a base para um novo sistema de armazenamento de ficheiros. O backend (endpoints para navegar, criar pastas, carregar e descarregar ficheiros) está completo e testado via . A página de frontend () foi criada e adicionada ao menu, mas contém um erro de compilação que impede a sua renderização.
+A aplicação de gestão de frotas está funcional. O erro de compilação na página Terabox foi corrigido, e a funcionalidade foi totalmente testada e validada. As tarefas de prioridade P1 (UI de admin para fornecedores e UI para envio de WhatsApp) foram implementadas e testadas. Além disso, foram adicionadas novas funcionalidades solicitadas pelo utilizador: uma página de relatório de custos de fornecedores, um sistema completo de alertas de custos (backend e frontend) e um widget de resumo desses alertas no dashboard principal. O trabalho de refatoração do backend (P2) continuou, com a criação de mais 5 routers modulares e a remoção de mais de 300 linhas de código duplicado do .
 
 **Last working item**:
--   **Last item agent was working:** Corrigir um erro de compilação no frontend na nova página . O agente tentou usar um ícone () que não existe na biblioteca , o que fez com que o frontend não compilasse. O próximo passo é substituir o ícone inválido por um válido, como .
+-   **Last item agent was working:** Continuação da tarefa de refatoração do backend (P2). O agente estava a limpar o ficheiro , removendo endpoints que já haviam sido migrados para routers dedicados. Os últimos grupos de endpoints removidos foram os de ,  e .
 -   **Status:** IN PROGRESS
--   **Agent Testing Done:** N
--   **Which testing method agent to use?** frontend testing agent (após corrigir o erro de compilação, para validar toda a funcionalidade da página Terabox).
+-   **Agent Testing Done:** Y
+-   **Which testing method agent to use?** backend testing agent (usar  para verificar se os endpoints continuam a funcionar através dos routers após a limpeza do ).
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Erro de Compilação no Frontend Terabox (P0)**
-    -   **Description:** A aplicação frontend não compila devido a um erro na página . O ícone  importado de  não foi encontrado.
-    -   **Next debug checklist:**
-        1.  Editar o ficheiro .
-        2.  Substituir a importação e uso do ícone  por um ícone existente, como  ou .
-        3.  Verificar se o serviço de frontend reinicia sem erros.
-        4.  Testar a página Terabox para garantir que a UI carrega e funciona como esperado.
-    -   **Why fix this issue and what will be achieved with the fix?** Este é um bug bloqueador que impede o teste e a utilização da nova funcionalidade Terabox. A sua correção permitirá validar a funcionalidade completa.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** frontend
+Nenhum bug está pendente. A única tarefa em andamento é a refatoração do backend.
 
 **In progress Task List**:
--   **Task 1: Concluir e Testar Funcionalidade Terabox (P0)**
-    -   **Where to resume:** Após corrigir o erro de compilação (Issue 1), a tarefa consiste em testar exaustivamente a interface do Terabox: criar pastas, carregar ficheiros de diferentes tipos, navegar entre pastas, descarregar ficheiros e apagar itens.
-    -   **What will be achieved with this?** Uma funcionalidade completa e robusta de gestão de documentos para os parceiros.
+-   **Task 1: Continuar Refatoração do Backend (P0)**
+    -   **Where to resume:** O ficheiro  ainda contém aproximadamente 300 endpoints. O próximo passo é identificar outro grupo lógico de endpoints (ex: , , ), verificar se os seus routers dedicados já existem, e remover o código duplicado do . O utilizador confirmou várias vezes que esta é a prioridade.
+    -   **What will be achieved with this?** Reduzir ainda mais o tamanho e a complexidade do , melhorando a manutenibilidade e escalabilidade do backend.
     -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on something:** Issue 1
+    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Blocked on something:** Nada.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1) Implementar Envio de Mensagens WhatsApp:** O backend para gerar links  está pronto. O próximo passo é integrar com a API Cloud do WhatsApp para envio direto, usando as credenciais da página de configurações, e adicionar um botão na UI para acionar o envio.
-    -   **(P1) UI de Admin para Fornecedores:** Criar uma área na administração para que o utilizador possa gerir (criar, editar, apagar) a lista de fornecedores de combustível e GPS, em vez de estarem fixos ou serem criados via seeding.
+    -   **(P1) Continuar Limpeza do :** Remover os restantes ~300 endpoints duplicados, focando nos maiores grupos como  (51),  (36) e  (30).
 -   **Future Tasks:**
-    -   **(P2) Continuar Refatoração do Backend:** Embora tenha havido um grande progresso, o  ainda contém muitos endpoints. A refatoração deve continuar até que o ficheiro contenha apenas a configuração principal da aplicação.
-    -   **(P3) Lógica de Sincronização Automática (RPA):** A UI para configurar automações existe, mas a lógica de backend para executar as tarefas com  precisa ser implementada.
+    -   **(P2) Implementar Lógica de Sincronização Automática (RPA):** A UI para configurar automações existe, mas a lógica de backend para executar as tarefas com  precisa ser implementada.
+    -   **(P3) Funcionalidade de Exportação de Dados:** Permitir que o parceiro possa exportar toda a sua informação (veículos, motoristas, despesas, etc.) em formato JSON/CSV.
+    -   **(P3) Notificações Push/Email para Alertas de Custos:** Integrar um serviço de email ou push para que os parceiros recebam alertas de custos mesmo fora da aplicação.
 
 **Completed work in this session**
--   **Funcionalidade de Configuração de WhatsApp:** Testada e concluída.
--   **Correção de Bug de Aprovação de Documentos:** Resolvido o erro 404 no endpoint  ao corrigir a ordem de registo do router.
--   **Verificação de Bug de Sincronização de Cartão:** Confirmado que a funcionalidade já estava implementada e a funcionar corretamente.
--   **Correção de 4 Bugs Adicionais:** Resolvidos problemas no download de documentos, permissões de criação de templates, gravação de fotos de veículos e criação de eventos na agenda.
--   **Melhorias no Sistema de Notificações:** Adicionados dados de contacto do emissor e um campo de notas editável.
--   **Implementação do Serviço de Email SMTP:** Backend agora pode enviar emails através das configurações do parceiro.
--   **Correção de Bug de Parsing de Datas:** Resolvido um erro nos logs relacionado com formatos de data inconsistentes no sistema de notificações.
--   **Backend Refactoring:** Criados 10 novos ficheiros de rotas (, , , , , , , , , ), reduzindo a complexidade do .
--   **Implementação do Sistema Terabox:** Backend completo e maior parte do frontend (pendente correção de bug).
--   **Implementação do Serviço de WhatsApp:** Backend criado com fallback para  links.
+-   **Correção de Bug do Terabox:** Corrigido erro de compilação no frontend ( inexistente) e validada toda a funcionalidade de armazenamento de ficheiros.
+-   **Implementação de Funcionalidades P1:**
+    -   Criada e testada a página de Admin para gestão de Fornecedores ().
+    -   Criada e testada a página para envio de mensagens via WhatsApp ().
+-   **Melhoria: Relatório de Custos:**
+    -   Criados endpoints no backend ().
+    -   Criada a página de frontend  com dashboard de análise de custos.
+-   **Melhoria: Alertas de Custos:**
+    -   Criados endpoints no backend () para configurar e verificar limites.
+    -   Criada a página de frontend  para o parceiro definir limites por categoria de despesa.
+-   **Melhoria: Widget de Alertas no Dashboard:**
+    -   Adicionado um novo card dinâmico no dashboard principal que exibe alertas críticos de custos.
+-   **Progresso na Refatoração do Backend (P2):**
+    -   Criados **5 novos routers**: , , , , .
+    -   O número total de routers modulares subiu para **38**.
+    -   Foram removidas **~315 linhas** de código duplicado do .
 
 **Earlier issues found/mentioned but not fixed**
--   Nenhum. Todos os problemas mencionados pelo utilizador ou encontrados pelo agente foram abordados.
+-   Nenhum.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Refatoração do Backend ( monolítico).
--   **Recurrence count:** 4
--   **Status:** IN PROGRESS (progresso significativo foi feito nesta sessão, mas a tarefa não está concluída).
+-   **Recurrence count:** 5
+-   **Status:** IN PROGRESS (progresso significativo foi feito, com a criação de 5 novos routers e a limpeza de código duplicado, mas a tarefa continua).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Ordem de Registo de Routers no FastAPI:** A causa principal do bug de Documentos Pendentes (404 Not Found) foi que  era chamado antes da definição de todos os endpoints nesse router. A solução foi mover a inclusão para o final do ficheiro .
--   **Refatoração Progressiva de Monólito:** A estratégia utilizada foi identificar grupos lógicos de endpoints (ex: , ), criar um novo ficheiro de rota em , mover o código relevante para lá, e registar o novo router no .
--   **Parsing de Datas Flexível:** Foi criada uma função  que tenta múltiplos formatos (, ) para evitar que o sistema de notificações falhe devido a formatos de data inconsistentes na base de dados.
--   **Implementação de Armazenamento de Ficheiros:** A funcionalidade Terabox utiliza o sistema de ficheiros local () para armazenar os ficheiros e uma coleção MongoDB () para guardar os metadados (nomes, caminhos, pastas, etc.).
+-   **Refatoração Segura de Monólito:** A estratégia consiste em criar routers dedicados, registá-los no  **antes** do router principal () para garantir prioridade, e só depois remover o código morto (duplicado) do .
+-   **Validação de Modelos Pydantic:** Vários erros  ocorreram porque os dados no MongoDB não correspondiam aos modelos Pydantic (ex: um campo obrigatório era ). A solução foi ajustar os modelos, tornando os campos relevantes .
+-   **Desenvolvimento Iterativo:** O agente implementou funcionalidades completas (backend, frontend, testes) em ciclos, obtendo a aprovação do utilizador a cada etapa (Terabox, P1, Relatório, Alertas, Refatoração).
 
 **key DB schema**
--   **notificacoes:** Adicionado o campo  (editável) e  (com , , ).
--   **terabox_storage:** Nova coleção para gerir ficheiros e pastas do Terabox, com campos como uid=0(root) gid=0(root) groups=0(root), ,  ('pasta' ou 'ficheiro'), , , , .
+-   **parceiro_configuracoes:** Adicionado um novo campo  (Dict) para armazenar as configurações de limites de custos por categoria, período e estado de ativação.
 
 **All files of reference**
--   : O ficheiro principal que ainda está a ser refatorado.
--   : A nova página de frontend para o sistema de ficheiros, que atualmente tem um erro de compilação.
--   : O novo router com toda a lógica de backend para o Terabox.
--   : A página de notificações, que foi reescrita para incluir as novas funcionalidades.
--   : O utilitário de notificações, modificado para incluir dados do emissor e corrigir o parsing de datas.
--   : Novo serviço para encapsular a lógica de envio de email.
--   : Novo serviço para encapsular a lógica de envio de WhatsApp.
+-   : Ficheiro principal do backend, ainda em processo de refatoração intensiva.
+-   : Pasta contendo os 38 routers modulares, incluindo os 5 novos criados.
+-   : Página principal do dashboard, modificada para incluir o widget de alertas de custos.
+-   : Nova página para configuração dos alertas de custos.
+-   : Nova página para análise de custos por fornecedor.
+-   : Nova página para gestão de fornecedores pelo admin.
+-   : Nova página para envio de mensagens WhatsApp.
 
 **Areas that need refactoring**:
--   ** (MÉDIO):** A prioridade de refatoração diminuiu de CRÍTICO para MÉDIO devido ao excelente progresso, mas a tarefa ainda não está completa e deve continuar.
+-   ** (ALTA):** Apesar do progresso, o ficheiro ainda tem ~22.000 linhas e ~300 endpoints. A refatoração continua a ser a tarefa técnica mais importante para garantir a saúde do projeto.
 
 **key api endpoints**
--   : Carrega um ficheiro para o Terabox de um parceiro.
--   : Lista ficheiros e pastas num determinado caminho.
--   : Descarrega um ficheiro específico.
--   : Atualiza o campo de notas de uma notificação.
--   : Envia um email genérico usando a configuração SMTP do parceiro.
--   : Envia uma mensagem WhatsApp para um ou mais motoristas.
+-   : Retorna dados agregados para o dashboard de custos.
+-   : Obtém a configuração de alertas de custos do parceiro.
+-   : Guarda a configuração de alertas de custos.
+-   : Verifica o estado atual dos custos em relação aos limites definidos e retorna os alertas.
+-   : Endpoint movido para o novo router .
+-   : Endpoint movido para o novo router .
 
 **Critical Info for New Agent**
--   **Refatoração do Backend:** A refatoração do  está em andamento. Ao adicionar novas funcionalidades, avalie se elas podem ser criadas diretamente num novo ficheiro de rota ou se pertencem a um já existente, evitando adicionar mais código ao . Lembre-se de registar os novos routers no  e garantir que  permanece no final.
--   **Erro de Compilação do Frontend:** A primeira tarefa deve ser corrigir o erro de importação do ícone em  para desbloquear o frontend.
--   **Fallback de Serviços Externos:** As implementações de Email e WhatsApp são robustas e incluem validações (verificar se a configuração SMTP/WhatsApp existe) e fallbacks (gerar links  se a API não estiver configurada). Mantenha este padrão.
--   **Consistência de Dados:** O bug de download de documentos foi causado por dados sendo guardados num campo () mas lidos de outro (). Ao modificar endpoints, verifique sempre os fluxos de dados de ponta a ponta para garantir consistência.
+-   **Prioridade Máxima na Refatoração:** O utilizador instruiu repetidamente para continuar com a refatoração e limpeza (, , ). Esta deve ser a próxima ação.
+-   **Estratégia de Refatoração:** A estratégia de criar routers, registá-los com prioridade e depois remover o código duplicado do  é segura e deve ser continuada. Todos os 38 routers são registados antes do  principal, tornando os duplicados no  inativos.
+-   **Erros de Validação Pydantic:** Ao criar ou mover endpoints, esteja atento a possíveis . Se ocorrerem, verifique os modelos Pydantic e os dados no MongoDB, tornando os campos  se necessário para lidar com dados legados.
+
+**documents and test reports created in this job**
+-   
+-   
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  : Solicitação para criar o sistema de armazenamento de ficheiros Terabox. **Status: IN PROGRESS**
-2.  : Confirmação para continuar com a refatoração do backend. **Status: COMPLETED**
-3.  : Confirmação para priorizar a refatoração do . **Status: COMPLETED**
-4.  : Confirmação para avançar com as tarefas de prioridade P1 (WhatsApp). **Status: COMPLETED**
-5.  : Confirmação para avançar com o plano de implementação de notificações e email SMTP. **Status: COMPLETED**
-6.  : Solicitação para melhorar o sistema de notificações. **Status: COMPLETED**
-7.  : Reportou um novo lote de 4 bugs. **Status: COMPLETED**
-8.  : Confirmação para iniciar o plano proposto. **Status: COMPLETED**
-9.  : Confirmação para prosseguir com a implementação das funcionalidades. **Status: COMPLETED**
-10. : Esclarecimento de uma lógica de negócio. **Status: COMPLETED**
+1.  : Pedido para continuar a remover endpoints do . **Status: IN PROGRESS**
+2.  : Pedido para continuar a refatoração do . **Status: COMPLETED (for the step)**
+3.  : Pedido para continuar a refatoração do . **Status: COMPLETED (for the step)**
+4.  : Pedido para limpar o  de código duplicado. **Status: COMPLETED (for the step)**
+5.  : Pedido para avançar com a refatoração do backend. **Status: COMPLETED (for the step)**
+6.  : Pedido para adicionar o widget de alertas ao dashboard. **Status: COMPLETED**
+7.  : Pedido para implementar a funcionalidade de alertas de custos. **Status: COMPLETED**
+8.  : Aprovação da sugestão de alertas de custos e pedido para avançar com refatoração. **Status: COMPLETED**
+9.  : Pedido para criar a página de relatório de custos. **Status: COMPLETED**
+10. : Aprovação da sugestão de relatório de custos e pedido para avançar com refatoração. **Status: COMPLETED**
 
 **Project Health Check:**
--   **Broken:**
-    -   A página  tem um erro de compilação que impede o carregamento da funcionalidade no frontend.
--   **Needs Refactoring (Medium Priority):**
-    -    ainda precisa de mais refatoração, embora muito progresso tenha sido feito.
+-   **Broken:** Nenhum.
+-   **Needs Refactoring (High Priority):**
+    -    continua a ser um monólito com ~300 endpoints e ~22.000 linhas, necessitando de refatoração contínua.
 
 **3rd Party Integrations**
--   Pillow, ReportLab, openpyxl, Playwright,  (adicionado nesta sessão).
+-   Pillow, ReportLab, openpyxl, Playwright, httpx.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES (foi usado para validar um lote de correções).
+-   **Testing agent used after significant changes:** YES (usado 3 vezes para validar Terabox, P1 e Alertas de Custos).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** N/A
 -   **Known regressions:** Nenhum.
@@ -150,4 +145,4 @@ A aplicação de gestão de frotas (FastAPI + React) está funcional. Durante es
 -   **Parceiro:**  / 
 
 **What agent forgot to execute**
--   O agente não se esqueceu de nada. Foi interrompido por um erro de compilação enquanto finalizava a implementação da funcionalidade Terabox. A última ação pendente era corrigir o erro de importação do ícone no ficheiro .</analysis>
+-   Nada. O agente seguiu as instruções do utilizador de forma sistemática, focando-se na refatoração como tarefa principal no final da sessão. A limpeza do  é uma tarefa de longa duração que está corretamente marcada como IN PROGRESS.</analysis>
