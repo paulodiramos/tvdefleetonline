@@ -294,7 +294,7 @@ const Terabox = ({ user, onLogout }) => {
       return <FileImage className="w-8 h-8 text-green-500" />;
     }
     if (mimeType === 'application/pdf') {
-      return <FilePdf className="w-8 h-8 text-red-500" />;
+      return <FileText className="w-8 h-8 text-red-500" />;
     }
     if (mimeType.includes('document') || mimeType.includes('text')) {
       return <FileText className="w-8 h-8 text-blue-500" />;
