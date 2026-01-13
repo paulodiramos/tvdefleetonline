@@ -10539,8 +10539,10 @@ async def gerar_pdf_contrato(
     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
     from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
     
-    # Get contract
+    # Get contract - try both collections
     contrato = await db.contratos_motorista.find_one({"id": contrato_id}, {"_id": 0})
+    if not contrato:
+        contrato = await db.contratos.find_one({"id": contrato_id}, {"_id": 0})
     if not contrato:
         raise HTTPException(status_code=404, detail="Contrato não encontrado")
     
