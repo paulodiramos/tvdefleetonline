@@ -1,6 +1,6 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-13 - Session 11 - P1 Features + Melhoria Relatório)
+## Changelog (2026-01-13 - Session 11 - P1 Features + Melhoria + P2 Progresso)
 
 ### Relatório de Custos por Fornecedor - MELHORIA (COMPLETO)
 - **Nova página:** `/relatorio-fornecedores` (`/app/frontend/src/pages/RelatorioFornecedores.js`)
@@ -16,6 +16,13 @@
   - `GET /api/despesas/relatorio-fornecedores` - Relatório completo
   - `GET /api/despesas/relatorio-fornecedores/comparativo` - Comparativo mensal
 - **Menu:** Adicionado em Relatórios → "💰 Custos Fornecedores"
+
+### P2 - Refatoração do Backend (EM PROGRESSO)
+- **Estado atual:**
+  - 33 routers modulares criados em `/app/backend/routes/`
+  - ~325 endpoints ainda no `server.py` (22.480 linhas)
+  - Routers existentes: admin, alertas, auth, automacao, configuracoes, contratos, csv_config, dashboard, despesas, documentos, extras, fornecedores, ganhos, gestores, ifthenpay, importacoes, manutencao, mensagens, modulos, motoristas, notificacoes, pagamentos, parceiros, planos, public, recibos, relatorios, reports, sincronizacao, storage, terabox, users, vehicles
+- **Próximos passos:** Continuar a extrair endpoints de veículos, motoristas e contratos para routers dedicados
 
 ### UI de Admin para Fornecedores (COMPLETO)
 - **Nova página:** `/admin/fornecedores` (`/app/frontend/src/pages/AdminFornecedores.js`)
