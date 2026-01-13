@@ -1,5 +1,35 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-13 - Session 12 - Refatoração Backend Intensiva)
+
+### P0 - Refatoração do Backend - PROGRESSO SIGNIFICATIVO (EM ANDAMENTO)
+- **Estado inicial:** 21.969 linhas, 300 endpoints no `api_router`
+- **Estado final:** 19.883 linhas, 249 endpoints no `api_router`
+- **Redução total:** ~2.086 linhas (~10%) e 51 endpoints removidos
+- **Routers modulares:** 39 ficheiros
+
+### Endpoints Removidos do server.py (Já existentes nos routers):
+1. **Vehicles CRUD** (~450 linhas): create, get, update, delete, available, request
+2. **Vehicles Photos** (~100 linhas): upload-photo, upload-foto, delete-fotos, delete-photos
+3. **Vehicles Agenda** (~120 linhas): add, get, update, delete agenda
+4. **Vehicles Historico** (~100 linhas): get, add, update, delete historico
+5. **Vehicle Document Uploads** (~388 linhas): upload-seguro-doc, upload-inspecao-doc, upload-extintor-doc, upload-foto, upload-carta-verde, upload-condicoes, upload-recibo-seguro, upload-documento-inspecao, update-km, status
+6. **Vehicle Maintenance** (~250 linhas): manutencoes, relatorio-intervencoes, intervencao, proximas-datas/dashboard
+7. **Vehicle Vistorias** (~778 linhas): create, get, update, delete, upload-foto, gerar-pdf, download-pdf, enviar-email, agendar-vistoria, agendamentos-vistoria, adicionar-dano
+
+### Testes Realizados:
+- ✅ `GET /api/vehicles` - 9 veículos retornados
+- ✅ `GET /api/vehicles/proximas-datas/dashboard` - Dashboard funcionando
+- ✅ Backend reiniciou sem erros após cada modificação
+- ✅ Hot reload funcionou corretamente
+
+### Próximos Passos (P1):
+- Continuar a remover endpoints duplicados de `motoristas` (~20 endpoints)
+- Remover endpoints duplicados de `relatorios` (~36 endpoints)
+- Objetivo: reduzir server.py para menos de 15.000 linhas
+
+---
+
 ## Changelog (2026-01-13 - Session 11 - Features + Melhorias Completas)
 
 ### Widget de Alertas no Dashboard (COMPLETO)
