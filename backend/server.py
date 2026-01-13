@@ -14220,9 +14220,13 @@ async def create_template_contrato(
     current_user: Dict = Depends(get_current_user)
 ):
     """Create a new contract template for a parceiro"""
-    # Check permissions - apenas admin e gestor podem criar templates
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+    # Check permissions - admin, gestor e parceiro podem criar templates
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
         raise HTTPException(status_code=403, detail="Sem permissão para criar templates")
+    
+    # Parceiro só pode criar templates para si próprio
+    if current_user["role"] == UserRole.PARCEIRO and current_user["id"] != parceiro_id:
+        raise HTTPException(status_code=403, detail="Só pode criar templates para a sua conta")
     
     # Validações
     if template_data.tipo_contrato == "comissao":
