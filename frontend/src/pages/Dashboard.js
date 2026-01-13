@@ -129,6 +129,20 @@ const Dashboard = ({ user, onLogout }) => {
     }
   };
 
+  const fetchAlertasCustos = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (user.role === 'parceiro' || user.role === 'gestao' || user.role === 'admin') {
+        const response = await axios.get(`${API}/alertas/custos/verificar`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setAlertasCustos(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching alertas custos', error);
+    }
+  };
+
   const handleResolverAlerta = async (alertaId) => {
     try {
       const token = localStorage.getItem('token');
