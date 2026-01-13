@@ -110,6 +110,8 @@ import ConfiguracoesParceiro from "@/pages/ConfiguracoesParceiro";
 import AutomacaoRPA from "@/pages/AutomacaoRPA";
 import AdminPlanosMotorista from "@/pages/AdminPlanosMotorista";
 import Terabox from "@/pages/Terabox";
+import AdminFornecedores from "@/pages/AdminFornecedores";
+import WhatsAppEnvio from "@/pages/WhatsAppEnvio";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
