@@ -52,7 +52,7 @@ def parceiro_token():
         "password": PARCEIRO_PASSWORD
     })
     if response.status_code == 200:
-        return response.json().get("token")
+        return response.json().get("access_token")
     pytest.skip("Parceiro authentication failed")
 
 
@@ -64,7 +64,7 @@ def admin_token():
         "password": ADMIN_PASSWORD
     })
     if response.status_code == 200:
-        return response.json().get("token")
+        return response.json().get("access_token")
     pytest.skip("Admin authentication failed")
 
 
