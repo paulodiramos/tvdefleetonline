@@ -2,10 +2,10 @@
 
 ## Changelog (2026-01-13 - Session 12 - Refatoração Backend Intensiva)
 
-### P0 - Refatoração do Backend - PROGRESSO SIGNIFICATIVO (EM ANDAMENTO)
+### P0/P1 - Refatoração do Backend - PROGRESSO SIGNIFICATIVO
 - **Estado inicial:** 21.969 linhas, 300 endpoints no `api_router`
-- **Estado final:** 19.883 linhas, 249 endpoints no `api_router`
-- **Redução total:** ~2.086 linhas (~10%) e 51 endpoints removidos
+- **Estado final:** 19.114 linhas, 233 endpoints no `api_router`
+- **Redução total:** ~2.855 linhas (~13%) e 67 endpoints removidos
 - **Routers modulares:** 39 ficheiros
 
 ### Endpoints Removidos do server.py (Já existentes nos routers):
@@ -16,16 +16,18 @@
 5. **Vehicle Document Uploads** (~388 linhas): upload-seguro-doc, upload-inspecao-doc, upload-extintor-doc, upload-foto, upload-carta-verde, upload-condicoes, upload-recibo-seguro, upload-documento-inspecao, update-km, status
 6. **Vehicle Maintenance** (~250 linhas): manutencoes, relatorio-intervencoes, intervencao, proximas-datas/dashboard
 7. **Vehicle Vistorias** (~778 linhas): create, get, update, delete, upload-foto, gerar-pdf, download-pdf, enviar-email, agendar-vistoria, agendamentos-vistoria, adicionar-dano
+8. **Motoristas** (~656 linhas): upload-document, validar-documento, delete-documento, moloni-config, meu-plano, parceiro-criar-motorista, atribuir-parceiro, desativar, ativar, aprovar-documentos, download-documento, download-contrato
 
 ### Testes Realizados:
 - ✅ `GET /api/vehicles` - 9 veículos retornados
 - ✅ `GET /api/vehicles/proximas-datas/dashboard` - Dashboard funcionando
+- ✅ `GET /api/motoristas` - 1 motorista retornado
 - ✅ Backend reiniciou sem erros após cada modificação
 - ✅ Hot reload funcionou corretamente
 
-### Próximos Passos (P1):
-- Continuar a remover endpoints duplicados de `motoristas` (~20 endpoints)
-- Remover endpoints duplicados de `relatorios` (~36 endpoints)
+### Próximos Passos (P2):
+- Continuar a remover endpoints duplicados de `relatorios` (~36 endpoints)
+- Remover endpoints de `importar-motoristas`, `atribuir-plano`, `plano-atual`
 - Objetivo: reduzir server.py para menos de 15.000 linhas
 
 ---
