@@ -13379,7 +13379,9 @@ async def get_public_parceiros():
 @api_router.post("/contratos/gerar")
 async def gerar_contrato(contrato_data: ContratoCreate, current_user: Dict = Depends(get_current_user)):
     """Generate a new contract between parceiro, motorista and vehicle"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "operacional"]:
+    user_role = current_user["role"]
+    allowed_roles = [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro", "operacional"]
+    if user_role not in allowed_roles:
         raise HTTPException(status_code=403, detail="Not authorized")
     
     try:
