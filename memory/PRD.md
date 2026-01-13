@@ -1,5 +1,15 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-13 - Session 11 - Terabox Bug Fix)
+
+### Bug Fix: Erro de Compilação Frontend Terabox (CORRIGIDO)
+- **Problema:** A página Terabox.js não compilava devido a um ícone inexistente (`FilePdf`) importado de `lucide-react`
+- **Solução:** Substituído `FilePdf` por `FileText` na função `getFileIcon()` (linha 297)
+- **Ficheiro:** `/app/frontend/src/pages/Terabox.js`
+- **Testado:** 19 testes backend passaram, UI testada com sucesso (criar pastas, upload, download, navegação, pesquisa, eliminação)
+
+---
+
 ## Changelog (2026-01-13 - Session 10 - Bug Fixes, Notificações, Email & Refatoração)
 
 ### Melhorias no Sistema de Notificações (COMPLETO)
