@@ -3677,67 +3677,7 @@ async def responder_solicitacao(
     
     return {"message": f"Solicitação {status} com sucesso"}
 
-@api_router.post("/motoristas/{motorista_id}/upload-documento")
-async def upload_motorista_documento(
-    motorista_id: str,
-    tipo_documento: str = Form(...),  # comprovativo_morada, cc_frente_verso, carta_frente_verso, licenca_tvde, registo_criminal, iban
-    file: UploadFile = File(...),
-    file2: Optional[UploadFile] = File(None),  # Para frente e verso
-    current_user: Dict = Depends(get_current_user)
-):
-    """Upload document for motorista (converts images to PDF)"""
-    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
-    if not motorista:
-        raise HTTPException(status_code=404, detail="Motorista not found")
-    
-    motoristas_docs_dir = UPLOAD_DIR / "motoristas" / motorista_id
-    motoristas_docs_dir.mkdir(parents=True, exist_ok=True)
-    
-    try:
-        if tipo_documento in ['cc_frente_verso', 'carta_frente_verso'] and file2:
-            # Process frente e verso together
-            # Save first image
-            file_id1 = str(uuid.uuid4())
-            file_ext1 = Path(file.filename).suffix.lower()
-            temp_path1 = motoristas_docs_dir / f"{file_id1}_temp{file_ext1}"
-            with open(temp_path1, "wb") as buffer:
-                shutil.copyfileobj(file.file, buffer)
-            
-            # Save second image
-            file_id2 = str(uuid.uuid4())
-            file_ext2 = Path(file2.filename).suffix.lower()
-            temp_path2 = motoristas_docs_dir / f"{file_id2}_temp{file_ext2}"
-            with open(temp_path2, "wb") as buffer:
-                shutil.copyfileobj(file2.file, buffer)
-            
-            # Merge to PDF A4
-            pdf_filename = f"{tipo_documento}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-            pdf_path = motoristas_docs_dir / pdf_filename
-            
-            await merge_images_to_pdf_a4(temp_path1, temp_path2, pdf_path)
-            
-            # Clean up temp files
-            temp_path1.unlink()
-            temp_path2.unlink()
-            
-            doc_url = str(pdf_path.relative_to(ROOT_DIR))
-        else:
-            # Single file (convert to PDF if image)
-            file_id = f"{tipo_documento}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-            result = await process_uploaded_file(file, motoristas_docs_dir, file_id)
-            doc_url = result.get("pdf_path") or result.get("original_path")
-        
-        # Update motorista documents
-        field_name = f"documents.{tipo_documento}_pdf"
-        await db.motoristas.update_one(
-            {"id": motorista_id},
-            {"$set": {field_name: doc_url}}
-        )
-        
-        return {"message": "Document uploaded successfully", "document_url": doc_url}
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error uploading document: {str(e)}")
+# Motorista upload-documento moved to routes/motoristas.py
 
 # ==================== VEHICLE ENDPOINTS (MOVED TO routes/vehicles.py) ====================
 
