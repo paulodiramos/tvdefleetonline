@@ -4656,10 +4656,11 @@ const FichaVeiculo = ({ user, onLogout }) => {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle>Histórico de Manutenções</CardTitle>
-                  {canEdit && editMode && (
+                  {canEdit && (
                     <Button 
                       size="sm"
                       onClick={() => setShowAddManutencao(true)}
+                      data-testid="btn-registar-manutencao"
                     >
                       <Plus className="w-4 h-4 mr-1" />
                       Registar Manutenção
