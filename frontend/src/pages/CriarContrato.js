@@ -543,7 +543,17 @@ const CriarContrato = ({ user, onLogout }) => {
                     {parceiroSelecionado && templates.length === 0 && (
                       <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
                         <FileText className="w-3 h-3" />
-                        Este parceiro não tem templates de contrato. Crie templates em "Parceiros" → Selecionar Parceiro → "Criar Template de Contrato"
+                        Este parceiro não tem templates de contrato.{' '}
+                        <a 
+                          href="/templates-contratos" 
+                          className="underline hover:text-amber-700 font-medium"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            window.location.href = '/templates-contratos';
+                          }}
+                        >
+                          Criar Template de Contrato
+                        </a>
                       </p>
                     )}
                   </div>
