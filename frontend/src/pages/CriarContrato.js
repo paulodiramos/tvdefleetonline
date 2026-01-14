@@ -217,21 +217,28 @@ const CriarContrato = ({ user, onLogout }) => {
   };
 
   const fetchTemplates = async (parceiroId) => {
+    console.log('🔍 fetchTemplates called with parceiroId:', parceiroId);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/parceiros/${parceiroId}/templates-contrato`, {
+      const url = `${API}/parceiros/${parceiroId}/templates-contrato`;
+      console.log('🔍 Fetching templates from:', url);
+      
+      const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      console.log('🔍 Templates response:', response.data);
       
       // Ensure response.data is an array
       if (Array.isArray(response.data)) {
         setTemplates(response.data);
+        console.log('🔍 Templates set successfully, count:', response.data.length);
       } else {
         console.warn('Expected array but got:', typeof response.data);
         setTemplates([]);
       }
     } catch (error) {
-      console.log('No templates found for this parceiro');
+      console.error('❌ Error fetching templates:', error.response?.data || error.message);
       setTemplates([]);
     }
   };
