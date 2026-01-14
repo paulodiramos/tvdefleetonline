@@ -1,0 +1,123 @@
+{
+  "summary": "Completed backend testing of parceiro bugs. All 15 tests passed (100%). All reported bugs have been verified as FIXED.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {
+        "endpoint": "DELETE /api/templates-contrato/{template_id}",
+        "issue": "Only allows admin/gestao roles, not parceiro - parceiro cannot delete their own templates via this endpoint",
+        "priority": "LOW",
+        "note": "Not in original bug list - discovered during testing"
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "bugs_verified_fixed": [
+    {
+      "bug": "GET /api/vehicles/{id} - erro ao carregar dados como parceiro",
+      "status": "FIXED",
+      "test_result": "Returns 200 with vehicle data including matricula"
+    },
+    {
+      "bug": "POST /api/vehicles/{id}/historico - adicionar entrada histórico como parceiro",
+      "status": "FIXED",
+      "test_result": "Returns 200 with entry_id"
+    },
+    {
+      "bug": "DELETE /api/vehicles/{id}/historico/{entry_id} - apagar entrada histórico como parceiro",
+      "status": "FIXED",
+      "test_result": "Returns 200 - entry deleted successfully"
+    },
+    {
+      "bug": "DELETE /api/vehicles/{id}/fotos/{index} - apagar foto do veículo como parceiro",
+      "status": "FIXED",
+      "test_result": "Returns 200 - photo deleted successfully"
+    },
+    {
+      "bug": "GET /api/parceiros/{id}/templates-contrato - mensagem 'parceiro não tem templates' mesmo com templates criados",
+      "status": "FIXED",
+      "test_result": "Returns 200 with 3 templates found for parceiro"
+    },
+    {
+      "bug": "GET /api/motoristas/{id}/documento/{doc_type}/download - download documento como parceiro",
+      "status": "FIXED",
+      "test_result": "Endpoint accessible (returns 404 for missing documents, not 403 permission error)"
+    }
+  ],
+  "test_report_links": [
+    "/app/tests/test_parceiro_bugs_iteration12.py",
+    "/app/test_reports/pytest/pytest_parceiro_bugs_iter12.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "All 6 reported bugs verified as FIXED:",
+    "1. GET /api/vehicles/{id} - Works for parceiro role ✅",
+    "2. POST /api/vehicles/{id}/historico - Works for parceiro role ✅",
+    "3. DELETE /api/vehicles/{id}/historico/{entry_id} - Works for parceiro role ✅",
+    "4. DELETE /api/vehicles/{id}/fotos/{index} - Works for parceiro role ✅",
+    "5. GET /api/parceiros/{id}/templates-contrato - Returns templates correctly ✅",
+    "6. GET /api/motoristas/{id}/documento/{doc_type}/download - Works for parceiro role ✅",
+    "",
+    "Permission fixes applied correctly:",
+    "- vehicles.py: allowed_roles includes both UserRole.PARCEIRO and string 'parceiro'",
+    "- motoristas.py: download endpoint checks parceiro_atribuido OR parceiro_associado",
+    "- server.py: templates-contrato endpoint allows parceiro to access own templates"
+  ],
+  "updated_files": [
+    "/app/tests/test_parceiro_bugs_iteration12.py"
+  ],
+  "success_rate": {
+    "backend": "100% (15/15 tests passed)",
+    "frontend": "N/A - backend only testing requested"
+  },
+  "test_credentials": {
+    "admin": {"email": "admin@tvdefleet.com", "password": "123456", "role": "admin"},
+    "parceiro": {"email": "parceiro@tvdefleet.com", "password": "123456", "role": "parceiro", "id": "ab2a25aa-4f70-4c7b-835d-9204b0cd0d7e"}
+  },
+  "seed_data_creation": "Created test template during testing (cleaned up). Used existing vehicle c89c2b6b-2804-4044-b479-f51a91530466 and motorista 0eea6d82-625f-453d-ba26-e6681563b2b8.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "All 6 parceiro bugs have been verified as fixed. The permission system now correctly allows parceiro role to: get vehicle data, add/delete historico entries, delete vehicle photos, get templates-contrato, and download motorista documents. The routes use both UserRole.PARCEIRO enum and string 'parceiro' for role checking to handle both cases.",
+  "features_tested": {
+    "vehicles_get": {
+      "GET /api/vehicles/{id} as parceiro": "PASS - Returns 200 with vehicle data"
+    },
+    "vehicles_historico": {
+      "POST /api/vehicles/{id}/historico as parceiro": "PASS - Returns 200 with entry_id",
+      "GET /api/vehicles/{id}/historico as parceiro": "PASS - Returns 200 with entries list",
+      "DELETE /api/vehicles/{id}/historico/{entry_id} as parceiro": "PASS - Returns 200"
+    },
+    "vehicles_fotos": {
+      "DELETE /api/vehicles/{id}/fotos/{index} as parceiro": "PASS - Returns 200"
+    },
+    "templates_contrato": {
+      "GET /api/parceiros/{id}/templates-contrato as parceiro": "PASS - Returns 200 with 3 templates",
+      "POST /api/parceiros/{id}/templates-contrato as parceiro": "PASS - Returns 200 with template id",
+      "GET /api/templates-contratos as parceiro": "PASS - Returns 200 (alternative endpoint)"
+    },
+    "motoristas_documento_download": {
+      "GET /api/motoristas/{id}/documento/{doc_type}/download as parceiro": "PASS - Endpoint accessible (404 for missing docs, not 403)"
+    }
+  },
+  "backend_tests": {
+    "total_tests": 15,
+    "passed": 15,
+    "failed": 0,
+    "test_classes": [
+      "TestAuth (2 tests) - admin and parceiro login",
+      "TestVehicleGetAsParceiro (2 tests) - get vehicle data",
+      "TestVehicleHistoricoAsParceiro (3 tests) - add, get, delete historico",
+      "TestVehicleFotosAsParceiro (1 test) - delete foto",
+      "TestTemplatesContratoAsParceiro (4 tests) - get, create, verify templates",
+      "TestMotoristaDocumentoDownload (2 tests) - list motoristas, download documento",
+      "TestCleanup (1 test) - cleanup test data"
+    ]
+  },
+  "mocked_integrations": {
+    "none": "All integrations are real - no mocked APIs"
+  }
+}
