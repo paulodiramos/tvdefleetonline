@@ -1139,6 +1139,8 @@ async def get_resumo_semanal_parceiro(
         totais["total_aluguer"] = totais.get("total_aluguer", 0) + receita_aluguer
         totais["total_extras"] = totais.get("total_extras", 0) + receita_extras
         totais["total_receitas_parceiro"] = totais.get("total_receitas_parceiro", 0) + receitas_parceiro
+        # NOVO: Total líquido de todos os motoristas (soma de valor_liquido_motorista)
+        totais["total_liquido_motoristas"] = totais.get("total_liquido_motoristas", 0) + valor_liquido_motorista
     
     # ============ VENDAS DE VEÍCULOS NA SEMANA ============
     vendas_query = {
