@@ -1,22 +1,24 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-14 - Session 13 - Bugs P0 Terceira Ronda CORRIGIDOS)
+## Changelog (2026-01-14 - Session 13 - Bugs P0 e Correções Adicionais)
 
-### Bugs P0 Corrigidos - TODOS VALIDADOS ✅ (10/10 testes = 100%)
-1. **Templates de contrato não aparecem para parceiro** - Corrigido fetchParceiros para usar user.id diretamente, adicionada dependência de user no useEffect
-2. **Upload documento motorista** - Corrigido URL em FichaMotorista.js de `${API}/motoristas/...` para `${API}/api/motoristas/...`
-3. **Lista de veículos** - Verificado funcionar corretamente (não era bug)
-4. **Return duplicado no backend** - Removido `return templates` duplicado em server.py linha 10036
+### Bugs P0 Corrigidos - TODOS VALIDADOS ✅
+1. **Templates de contrato não aparecem para parceiro em CriarContrato** - Corrigido fetchParceiros para usar user.id diretamente
+2. **Upload documento motorista** - Corrigido URL de `${API}/motoristas/...` para `${API}/api/motoristas/...`
+3. **Lista de veículos** - Verificado funcionar corretamente
+
+### Correções Adicionais (após feedback do utilizador)
+4. **Link para Templates de Contratos** - Adicionado link clicável na mensagem "Este parceiro não tem templates"
+5. **Endpoint `/api/templates-contratos` não retornava templates** - Corrigido nome da collection de `templates_contratos` para `templates_contrato`
+6. **Verificação de role** - Corrigida para aceitar "parceiro" como string e Enum em `templates_contratos.py`
+7. **Erro `substring` em TemplatesContratos.js** - Adicionado fallback para `clausulas_texto` quando `texto_template` é null
 
 ### Ficheiros Modificados:
-- `/app/frontend/src/pages/CriarContrato.js` - fetchParceiros, fetchTemplates, useEffect
+- `/app/frontend/src/pages/CriarContrato.js` - fetchParceiros, link para templates
 - `/app/frontend/src/pages/FichaMotorista.js` - URL de upload corrigido
+- `/app/frontend/src/pages/TemplatesContratos.js` - fallback para texto do template
+- `/app/backend/routes/templates_contratos.py` - verificação de role, nome da collection
 - `/app/backend/server.py` - return duplicado removido
-
-### Testes Validados (/app/test_reports/iteration_13.json):
-- ✅ Templates de contrato: Backend retorna 4 templates, frontend dropdown funciona
-- ✅ Upload documento: Backend aceita upload (200), frontend mostra 9 campos
-- ✅ Lista veículos: Backend retorna 9 veículos, frontend mostra todos
 
 ---
 
