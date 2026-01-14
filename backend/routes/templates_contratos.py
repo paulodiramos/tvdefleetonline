@@ -41,7 +41,8 @@ async def create_template_contrato(
     current_user: Dict = Depends(get_current_user)
 ):
     """Create a new contract template"""
-    if current_user["role"] != "parceiro":
+    user_role = current_user["role"]
+    if user_role != "parceiro" and str(user_role) != "UserRole.PARCEIRO":
         raise HTTPException(status_code=403, detail="Apenas parceiros podem criar templates")
     
     template = {
@@ -65,7 +66,8 @@ async def get_template_contrato(
     current_user: Dict = Depends(get_current_user)
 ):
     """Get a specific contract template"""
-    if current_user["role"] != "parceiro":
+    user_role = current_user["role"]
+    if user_role != "parceiro" and str(user_role) != "UserRole.PARCEIRO":
         raise HTTPException(status_code=403, detail="Apenas parceiros podem acessar templates")
     
     template = await db.templates_contratos.find_one(
@@ -86,7 +88,8 @@ async def update_template_contrato(
     current_user: Dict = Depends(get_current_user)
 ):
     """Update a contract template"""
-    if current_user["role"] != "parceiro":
+    user_role = current_user["role"]
+    if user_role != "parceiro" and str(user_role) != "UserRole.PARCEIRO":
         raise HTTPException(status_code=403, detail="Apenas parceiros podem editar templates")
     
     # Check if template exists and belongs to user
