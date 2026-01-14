@@ -4238,3 +4238,51 @@ async def upload_comprovativo_pagamento(
         "message": "Comprovativo de pagamento enviado com sucesso",
         "filename": filename
     }
+
+
+# ==================== ENDPOINTS PARA DOWNLOAD DE FICHEIROS ====================
+
+@router.get("/files/recibos/{filename}")
+async def download_recibo_file(
+    filename: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Download de ficheiro de recibo.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    file_path = Path("/app/uploads/recibos") / filename
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Ficheiro não encontrado")
+    
+    return FileResponse(
+        path=str(file_path),
+        filename=filename,
+        media_type="application/octet-stream"
+    )
+
+
+@router.get("/files/comprovativos/{filename}")
+async def download_comprovativo_file(
+    filename: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Download de ficheiro de comprovativo de pagamento.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    file_path = Path("/app/uploads/comprovativos") / filename
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Ficheiro não encontrado")
+    
+    return FileResponse(
+        path=str(file_path),
+        filename=filename,
+        media_type="application/octet-stream"
+    )
