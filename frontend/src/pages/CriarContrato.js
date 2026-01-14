@@ -73,8 +73,10 @@ const CriarContrato = ({ user, onLogout }) => {
   });
 
   useEffect(() => {
-    fetchParceiros();
-  }, []);
+    if (user && user.id) {
+      fetchParceiros();
+    }
+  }, [user]);
 
   useEffect(() => {
     if (parceiroSelecionado) {
