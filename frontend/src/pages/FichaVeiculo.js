@@ -1137,6 +1137,23 @@ const FichaVeiculo = ({ user, onLogout }) => {
     }
   };
 
+  const handleDeleteManutencao = async (manutencaoId) => {
+    if (!window.confirm('Tem certeza que deseja eliminar esta manutenção?')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/vehicles/${vehicleId}/manutencoes/${manutencaoId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Manutenção eliminada com sucesso!');
+      fetchVehicleData();
+    } catch (error) {
+      console.error('Error deleting manutencao:', error);
+      toast.error('Erro ao eliminar manutenção');
+    }
+  };
+
   // Document upload handlers
   const handleUploadDocument = async (file, documentType) => {
     if (!file) return;
