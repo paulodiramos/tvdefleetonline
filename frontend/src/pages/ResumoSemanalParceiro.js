@@ -664,6 +664,20 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                       )}
                       <td className={`p-2 text-right font-bold ${liquido >= 0 ? 'text-green-700' : 'text-red-700'}`}>{formatCurrency(liquido)}</td>
                       <td className="p-2 text-center">
+                        <select
+                          value={statusAprovacao[m.motorista_id]?.status_aprovacao || 'pendente'}
+                          onChange={(e) => handleStatusChange(m.motorista_id, e.target.value)}
+                          className={`text-[10px] px-1 py-0.5 rounded border ${STATUS_LABELS[statusAprovacao[m.motorista_id]?.status_aprovacao || 'pendente']?.color || 'bg-slate-100'}`}
+                          data-testid={`status-select-${m.motorista_id}`}
+                        >
+                          <option value="pendente">Pendente</option>
+                          <option value="aprovado">Aprovado</option>
+                          <option value="aguardar_recibo">Aguardar Recibo</option>
+                          <option value="a_pagamento">A Pagamento</option>
+                          <option value="liquidado">Liquidado</option>
+                        </select>
+                      </td>
+                      <td className="p-2 text-center">
                         {isEditing ? (
                           <div className="flex gap-1 justify-center">
                             <Button size="sm" variant="default" onClick={() => handleSaveEdit(m.motorista_id)} className="h-5 w-5 p-0"><Save className="w-3 h-3" /></Button>
