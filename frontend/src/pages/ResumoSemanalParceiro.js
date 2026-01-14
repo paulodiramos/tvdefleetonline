@@ -60,6 +60,16 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   const [showPdfOptions, setShowPdfOptions] = useState(null); // motorista_id ou null
   const [showAbaterViaVerde, setShowAbaterViaVerde] = useState(null); // motorista data ou null
   const [valorAbater, setValorAbater] = useState(0);
+  const [statusAprovacao, setStatusAprovacao] = useState({}); // status de aprovação por motorista_id
+  const [showUploadRecibo, setShowUploadRecibo] = useState(null); // motorista_id para upload de recibo
+
+  const STATUS_LABELS = {
+    pendente: { label: 'Pendente', color: 'bg-slate-100 text-slate-700' },
+    aprovado: { label: 'Aprovado', color: 'bg-blue-100 text-blue-700' },
+    aguardar_recibo: { label: 'Aguardar Recibo', color: 'bg-amber-100 text-amber-700' },
+    a_pagamento: { label: 'A Pagamento', color: 'bg-purple-100 text-purple-700' },
+    liquidado: { label: 'Liquidado', color: 'bg-green-100 text-green-700' }
+  };
 
   useEffect(() => {
     const now = new Date();
