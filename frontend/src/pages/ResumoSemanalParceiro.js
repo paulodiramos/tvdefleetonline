@@ -983,6 +983,42 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de Alteração de Status em Lote */}
+      <Dialog open={showBulkStatusModal} onOpenChange={setShowBulkStatusModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Alterar Status em Lote</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-slate-600 mb-4">
+              Alterar o status de <strong>{selectedMotoristas.length}</strong> motorista(s) selecionado(s).
+            </p>
+            <Label>Novo Status</Label>
+            <select
+              value={bulkStatus}
+              onChange={(e) => setBulkStatus(e.target.value)}
+              className="w-full mt-2 p-2 border rounded"
+              data-testid="bulk-status-select"
+            >
+              <option value="">Selecione o status</option>
+              <option value="pendente">Pendente</option>
+              <option value="aprovado">Aprovado</option>
+              <option value="aguardar_recibo">Aguardar Recibo</option>
+              <option value="a_pagamento">A Pagamento</option>
+              <option value="liquidado">Liquidado</option>
+            </select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBulkStatusModal(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleBulkStatusChange} data-testid="btn-confirmar-status-lote">
+              Confirmar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       </div>
     </Layout>
   );
