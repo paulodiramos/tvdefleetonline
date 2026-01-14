@@ -10034,7 +10034,6 @@ async def get_templates_contrato(
     
     templates = await db.templates_contrato.find({"parceiro_id": parceiro_id}, {"_id": 0}).to_list(length=None)
     return templates
-    return templates
 
 @api_router.post("/parceiros/{parceiro_id}/templates-contrato")
 async def create_template_contrato(
