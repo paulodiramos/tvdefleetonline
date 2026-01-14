@@ -1,5 +1,25 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-14 - Session 13 - Bugs P0 Terceira Ronda CORRIGIDOS)
+
+### Bugs P0 Corrigidos - TODOS VALIDADOS ✅ (10/10 testes = 100%)
+1. **Templates de contrato não aparecem para parceiro** - Corrigido fetchParceiros para usar user.id diretamente, adicionada dependência de user no useEffect
+2. **Upload documento motorista** - Corrigido URL em FichaMotorista.js de `${API}/motoristas/...` para `${API}/api/motoristas/...`
+3. **Lista de veículos** - Verificado funcionar corretamente (não era bug)
+4. **Return duplicado no backend** - Removido `return templates` duplicado em server.py linha 10036
+
+### Ficheiros Modificados:
+- `/app/frontend/src/pages/CriarContrato.js` - fetchParceiros, fetchTemplates, useEffect
+- `/app/frontend/src/pages/FichaMotorista.js` - URL de upload corrigido
+- `/app/backend/server.py` - return duplicado removido
+
+### Testes Validados (/app/test_reports/iteration_13.json):
+- ✅ Templates de contrato: Backend retorna 4 templates, frontend dropdown funciona
+- ✅ Upload documento: Backend aceita upload (200), frontend mostra 9 campos
+- ✅ Lista veículos: Backend retorna 9 veículos, frontend mostra todos
+
+---
+
 ## Changelog (2026-01-14 - Session 12 - Bugs P0 Segunda Ronda CORRIGIDOS)
 
 ### Bugs Adicionais Corrigidos - TODOS VALIDADOS ✅ (15/15 testes = 100%)
