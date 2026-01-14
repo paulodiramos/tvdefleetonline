@@ -35,7 +35,8 @@ const TIPOS_EXTRA = [
   { value: 'outro', label: 'Outro', color: 'bg-slate-100 text-slate-700' }
 ];
 
-const GestaoExtrasMotorista = () => {
+const GestaoExtrasMotorista = ({ user, onLogout }) => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [extras, setExtras] = useState([]);
   const [motoristas, setMotoristas] = useState([]);
