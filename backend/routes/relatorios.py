@@ -1697,8 +1697,11 @@ async def generate_motorista_pdf(
             
             posto = (r.get("posto", r.get("station_name", "-")))[:20]
             litros = float(r.get("litros", r.get("quantity", 0)) or 0)
-            valor = float(r.get("valor_liquido") or r.get("total") or 0)
-            comb_table_data.append([data_str, hora_str, posto, f"{litros:.2f}L", f"€{valor:.2f}"])
+            # CORRIGIDO: Usar valor COM IVA (valor_liquido + iva)
+            valor_sem_iva = float(r.get("valor_liquido") or r.get("total") or 0)
+            iva_valor = float(r.get("iva") or 0)
+            valor_com_iva = valor_sem_iva + iva_valor
+            comb_table_data.append([data_str, hora_str, posto, f"{litros:.2f}L", f"€{valor_com_iva:.2f}"])
         
         comb_table_data.append(["", "", "", "TOTAL", f"€{combustivel:.2f}"])
         
