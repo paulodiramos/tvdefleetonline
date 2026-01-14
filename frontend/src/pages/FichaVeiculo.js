@@ -4651,9 +4651,24 @@ const FichaVeiculo = ({ user, onLogout }) => {
                                 )}
                               </div>
                             </div>
-                            <div className="text-right">
-                              <p className="text-lg font-bold text-emerald-600">€{(man.valor || 0).toFixed(2)}</p>
-                              <p className="text-xs text-slate-400">custo</p>
+                            <div className="text-right flex flex-col items-end gap-2">
+                              <div>
+                                <p className="text-lg font-bold text-emerald-600">€{(man.valor || 0).toFixed(2)}</p>
+                                <p className="text-xs text-slate-400">custo</p>
+                              </div>
+                              {man.id && (
+                                <div className="flex gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-7 w-7 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    onClick={() => handleDeleteManutencao(man.id)}
+                                    data-testid={`delete-manutencao-${index}`}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           </div>
                         </div>
