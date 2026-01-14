@@ -13,7 +13,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://autofleet-7.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://bugbuster-75.preview.emergentagent.com')
 
 # Test credentials
 PARCEIRO_EMAIL = "parceiro@tvdefleet.com"
