@@ -4179,3 +4179,62 @@ async def get_relatorios_status(
     status_dict = {s["motorista_id"]: s for s in status_list}
     
     return status_dict
+
+
+@router.post("/parceiro/resumo-semanal/motorista/{motorista_id}/upload-comprovativo")
+async def upload_comprovativo_pagamento(
+    motorista_id: str,
+    semana: int,
+    ano: int,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Upload de comprovativo de pagamento para um relatório semanal.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verificar se o motorista pertence ao parceiro
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
+        if motorista.get("parceiro_id") != current_user["id"] and motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Salvar arquivo
+    upload_dir = Path("/app/uploads/comprovativos")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    file_ext = file.filename.split('.')[-1] if '.' in file.filename else 'pdf'
+    file_id = str(uuid.uuid4())
+    filename = f"comprovativo_{motorista_id}_S{semana}_{ano}_{file_id}.{file_ext}"
+    file_path = upload_dir / filename
+    
+    with open(file_path, "wb") as buffer:
+        content = await file.read()
+        buffer.write(content)
+    
+    # Atualizar status com comprovativo
+    status_update = {
+        "comprovativo_path": str(file_path),
+        "comprovativo_filename": file.filename,
+        "data_comprovativo_uploaded": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_by": current_user["id"]
+    }
+    
+    await db.status_relatorios.update_one(
+        {"motorista_id": motorista_id, "semana": int(semana), "ano": int(ano)},
+        {"$set": status_update},
+        upsert=True
+    )
+    
+    logger.info(f"Comprovativo uploaded para {motorista.get('name')} S{semana}/{ano}")
+    
+    return {
+        "message": "Comprovativo de pagamento enviado com sucesso",
+        "filename": filename
+    }
