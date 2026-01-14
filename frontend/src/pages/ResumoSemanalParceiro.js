@@ -649,10 +649,43 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
+          {/* Barra de ações em lote */}
+          {selectedMotoristas.length > 0 && (
+            <div className="bg-blue-50 p-2 flex items-center justify-between border-b">
+              <span className="text-sm text-blue-700">
+                {selectedMotoristas.length} motorista(s) selecionado(s)
+              </span>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => setSelectedMotoristas([])}
+                >
+                  Limpar Seleção
+                </Button>
+                <Button 
+                  size="sm"
+                  onClick={() => setShowBulkStatusModal(true)}
+                  data-testid="btn-alterar-status-lote"
+                >
+                  Alterar Status em Lote
+                </Button>
+              </div>
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b bg-slate-50">
+                  <th className="text-center p-2 w-8">
+                    <input 
+                      type="checkbox"
+                      checked={selectedMotoristas.length === motoristas.length && motoristas.length > 0}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                      className="w-4 h-4"
+                      data-testid="checkbox-select-all"
+                    />
+                  </th>
                   <th className="text-left p-2">Motorista</th>
                   <th className="text-right p-2">Uber</th>
                   <th className="text-right p-2 text-[10px]">Uber Port.</th>
@@ -670,6 +703,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
               <tbody>
                 {motoristas.map((m) => {
                   const isEditing = editingMotorista === m.motorista_id;
+                  const isSelected = selectedMotoristas.includes(m.motorista_id);
                   // Se estiver em modo de edição, usar valores do formulário para cálculo em tempo real
                   // Líquido = (Rendimentos Uber + Uber Portagens) + Bolt - Via Verde - Combustível - Elétrico - Aluguer - Extras
                   const liquido = isEditing 
@@ -677,7 +711,16 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                     : (m.ganhos_uber || 0) + (m.uber_portagens || 0) + (m.ganhos_bolt || 0) - (m.via_verde || 0) - (m.combustivel || 0) - (m.carregamento_eletrico || 0) - (m.aluguer_veiculo || 0) - (m.extras || 0);
                   
                   return (
-                    <tr key={m.motorista_id} className="border-b hover:bg-slate-50">
+                    <tr key={m.motorista_id} className={`border-b hover:bg-slate-50 ${isSelected ? 'bg-blue-50' : ''}`}>
+                      <td className="text-center p-2">
+                        <input 
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => handleSelectMotorista(m.motorista_id, e.target.checked)}
+                          className="w-4 h-4"
+                          data-testid={`checkbox-motorista-${m.motorista_id}`}
+                        />
+                      </td>
                       <td className="p-2 font-medium">{m.motorista_nome}</td>
                       {isEditing ? (
                         <>
