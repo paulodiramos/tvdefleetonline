@@ -10021,12 +10021,19 @@ async def get_templates_contrato(
     current_user: Dict = Depends(get_current_user)
 ):
     """Get all contract templates for a parceiro"""
-    # Check permissions
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+    user_role = current_user["role"]
+    
+    # Check permissions - admin, gestao can see all, parceiro can see own
+    if user_role in [UserRole.ADMIN, UserRole.GESTAO, "admin", "gestao"]:
+        pass  # Allowed
+    elif user_role in [UserRole.PARCEIRO, "parceiro"]:
         if current_user["id"] != parceiro_id:
             raise HTTPException(status_code=403, detail="Sem permissão")
+    else:
+        raise HTTPException(status_code=403, detail="Sem permissão")
     
     templates = await db.templates_contrato.find({"parceiro_id": parceiro_id}, {"_id": 0}).to_list(length=None)
+    return templates
     return templates
 
 @api_router.post("/parceiros/{parceiro_id}/templates-contrato")
