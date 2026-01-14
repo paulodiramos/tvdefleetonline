@@ -1,5 +1,42 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-14 - Session 14 - Fluxo de Aprovação Financeira COMPLETO)
+
+### P0 - Sistema de Fluxo de Aprovação Financeira - IMPLEMENTADO ✅
+
+**Fluxo de Estados:** Pendente → Aprovado → Aguardar Recibo → A Pagamento → Liquidado
+
+**Páginas Implementadas/Adaptadas:**
+1. **Verificar Recibos** (`/verificar-recibos`) - Lista motoristas com status "aguardar_recibo", permite upload de recibo verde/autofaturação
+2. **Pagamentos a Parceiro** (`/pagamentos-parceiro`) - Lista motoristas com status "a_pagamento", permite upload de comprovativo e marcar como liquidado
+3. **Arquivo de Recibos** (`/arquivo-recibos`) - Lista todos os relatórios com filtro por status, permite download de relatório, recibo e comprovativo
+
+**Funcionalidades:**
+- Upload de recibos (muda status automaticamente para "a_pagamento")
+- Upload de comprovativos de pagamento
+- Download de ficheiros (relatório PDF, recibo, comprovativo)
+- Filtros por semana, ano e status
+- Cards de resumo com totais
+- Diagrama visual do fluxo de aprovação
+
+**Endpoints de Backend:**
+- `PUT /api/relatorios/parceiro/resumo-semanal/motorista/{id}/status` - Alterar status
+- `POST /api/relatorios/parceiro/resumo-semanal/motorista/{id}/upload-recibo` - Upload recibo
+- `POST /api/relatorios/parceiro/resumo-semanal/motorista/{id}/upload-comprovativo` - Upload comprovativo
+- `GET /api/relatorios/parceiro/resumo-semanal/status` - Obter status de todos os motoristas
+- `GET /api/relatorios/files/recibos/{filename}` - Download de ficheiros de recibo
+- `GET /api/relatorios/files/comprovativos/{filename}` - Download de ficheiros de comprovativo
+
+**Ficheiros Modificados/Criados:**
+- `/app/frontend/src/pages/VerificarRecibos.js` - **RECRIADO** para novo fluxo
+- `/app/frontend/src/pages/PagamentosParceiro.js` - **RECRIADO** para novo fluxo
+- `/app/frontend/src/pages/ArquivoRecibos.js` - **MELHORADO** com mais funcionalidades
+- `/app/backend/routes/relatorios.py` - Endpoints de download de ficheiros adicionados
+
+**Testes:** 18/18 backend tests passaram (100%) - `/app/tests/test_fluxo_aprovacao_financeiro.py`
+
+---
+
 ## Changelog (2026-01-14 - Session 13 - Bugs P0 e Correções Adicionais)
 
 ### Bugs P0 Corrigidos - TODOS VALIDADOS ✅
