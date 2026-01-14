@@ -716,6 +716,16 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                 </Button>
                 <Button 
                   size="sm"
+                  variant="outline"
+                  onClick={() => setShowBulkEmailModal(true)}
+                  className="bg-white"
+                  data-testid="btn-enviar-email-lote"
+                >
+                  <Mail className="w-4 h-4 mr-1" />
+                  Enviar Relatórios por Email
+                </Button>
+                <Button 
+                  size="sm"
                   onClick={() => setShowBulkStatusModal(true)}
                   data-testid="btn-alterar-status-lote"
                 >
