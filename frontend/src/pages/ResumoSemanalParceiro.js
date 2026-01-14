@@ -62,6 +62,9 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   const [valorAbater, setValorAbater] = useState(0);
   const [statusAprovacao, setStatusAprovacao] = useState({}); // status de aprovação por motorista_id
   const [showUploadRecibo, setShowUploadRecibo] = useState(null); // motorista_id para upload de recibo
+  const [selectedMotoristas, setSelectedMotoristas] = useState([]); // IDs dos motoristas selecionados
+  const [showBulkStatusModal, setShowBulkStatusModal] = useState(false);
+  const [bulkStatus, setBulkStatus] = useState('');
 
   const STATUS_LABELS = {
     pendente: { label: 'Pendente', color: 'bg-slate-100 text-slate-700' },
