@@ -187,8 +187,12 @@ const CriarContrato = ({ user, onLogout }) => {
       });
       setParceiros(response.data);
       
-      // Se for parceiro, pré-selecionar automaticamente
-      if (user.role === 'parceiro' && response.data.length > 0) {
+      // Se for parceiro, pré-selecionar automaticamente usando user.id (mais confiável)
+      if (user.role === 'parceiro') {
+        // O user.id do parceiro é o mesmo que parceiro_id
+        setParceiroSelecionado(user.id);
+      } else if (response.data.length > 0) {
+        // Para admin/gestao, selecionar o primeiro
         setParceiroSelecionado(response.data[0].id);
       }
     } catch (error) {

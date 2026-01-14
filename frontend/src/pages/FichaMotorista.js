@@ -550,7 +550,7 @@ const FichaMotorista = ({ user }) => {
       formData.append('converter_pdf', 'true'); // Sempre converter para PDF
       
       const response = await axios.post(
-        `${API}/motoristas/${motoristaId}/documentos/upload`,
+        `${API}/api/motoristas/${motoristaId}/documentos/upload`,
         formData,
         {
           headers: {
