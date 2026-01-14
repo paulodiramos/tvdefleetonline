@@ -577,7 +577,7 @@ const Vistorias = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       
       // Usar o endpoint genérico que não precisa de veículo específico
-      const response = await fetch(`${API}/vehicles/vistoria-template-pdf`, {
+      const response = await fetch(`${API}/vistorias/ficha-template-pdf`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
