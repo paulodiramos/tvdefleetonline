@@ -384,15 +384,27 @@ const PagamentosParceiro = ({ user, onLogout }) => {
                             )}
                             
                             {!hasComprovativo ? (
-                              <Button
-                                size="sm"
-                                onClick={() => setShowUploadModal(pagamento)}
-                                className="bg-purple-600 hover:bg-purple-700"
-                                data-testid={`upload-comprovativo-${pagamento.motorista_id}`}
-                              >
-                                <Upload className="w-4 h-4 mr-1" />
-                                Enviar Comprovativo
-                              </Button>
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => setShowUploadModal(pagamento)}
+                                  className="bg-purple-600 hover:bg-purple-700"
+                                  data-testid={`upload-comprovativo-${pagamento.motorista_id}`}
+                                >
+                                  <Upload className="w-4 h-4 mr-1" />
+                                  Enviar Comprovativo
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setShowConfirmLiquidar(pagamento)}
+                                  className="border-green-500 text-green-700 hover:bg-green-50"
+                                  data-testid={`confirmar-pagamento-${pagamento.motorista_id}`}
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-1" />
+                                  Confirmar Pagamento
+                                </Button>
+                              </>
                             ) : (
                               <Button
                                 size="sm"
