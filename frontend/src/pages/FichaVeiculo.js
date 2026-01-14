@@ -1220,7 +1220,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       
       // Usar endpoint dedicado para download com content-type correcto
-      const downloadUrl = `${API}/vehicles/download/${encodeURIComponent(documentPath)}`;
+      // Não codificar os / no path, apenas os caracteres especiais em cada segmento
+      const cleanPath = documentPath.split('/').map(segment => encodeURIComponent(segment)).join('/');
+      const downloadUrl = `${API}/vehicles/download/${cleanPath}`;
       
       // Fazer fetch com autenticação
       const response = await fetch(downloadUrl, {
