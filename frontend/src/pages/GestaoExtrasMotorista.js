@@ -618,6 +618,7 @@ const GestaoExtrasMotorista = ({ user, onLogout }) => {
         </DialogContent>
       </Dialog>
     </div>
+    </Layout>
   );
 };
 
