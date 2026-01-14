@@ -174,6 +174,59 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     }
   };
 
+  const handleSelectMotorista = (motoristaId, isSelected) => {
+    if (isSelected) {
+      setSelectedMotoristas(prev => [...prev, motoristaId]);
+    } else {
+      setSelectedMotoristas(prev => prev.filter(id => id !== motoristaId));
+    }
+  };
+
+  const handleSelectAll = (isSelected) => {
+    if (isSelected) {
+      setSelectedMotoristas(motoristas.map(m => m.motorista_id));
+    } else {
+      setSelectedMotoristas([]);
+    }
+  };
+
+  const handleBulkStatusChange = async () => {
+    if (!bulkStatus || selectedMotoristas.length === 0) {
+      toast.error('Selecione motoristas e um status');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Atualizar status de todos os motoristas selecionados
+      const promises = selectedMotoristas.map(motoristaId =>
+        axios.put(
+          `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}/status`,
+          { status: bulkStatus, semana, ano },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      );
+      
+      await Promise.all(promises);
+      
+      // Atualizar estado local
+      const newStatusAprovacao = { ...statusAprovacao };
+      selectedMotoristas.forEach(id => {
+        newStatusAprovacao[id] = { ...newStatusAprovacao[id], status_aprovacao: bulkStatus };
+      });
+      setStatusAprovacao(newStatusAprovacao);
+      
+      setSelectedMotoristas([]);
+      setShowBulkStatusModal(false);
+      setBulkStatus('');
+      toast.success(`Status de ${selectedMotoristas.length} motorista(s) atualizado para ${STATUS_LABELS[bulkStatus]?.label}`);
+    } catch (error) {
+      console.error('Erro ao atualizar status em lote:', error);
+      toast.error('Erro ao atualizar status');
+    }
+  };
+
   const fetchHistorico = async () => {
     try {
       const token = localStorage.getItem('token');
