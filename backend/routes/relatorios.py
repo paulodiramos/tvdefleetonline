@@ -980,7 +980,10 @@ async def get_resumo_semanal_parceiro(
         
         comb_records = await db.abastecimentos_combustivel.find(comb_query, {"_id": 0}).to_list(100)
         for r in comb_records:
-            combustivel_total += float(r.get("valor_total") or r.get("valor") or r.get("valor_liquido") or r.get("total") or 0)
+            # CORRIGIDO: Incluir IVA no total de combustível
+            valor_sem_iva = float(r.get("valor_liquido") or r.get("valor") or r.get("total") or 0)
+            iva_valor = float(r.get("iva") or 0)
+            combustivel_total += valor_sem_iva + iva_valor
         
         if comb_records:
             logger.info(f"  {motorista.get('name')}: Combustível query returned {len(comb_records)} records, total €{combustivel_total:.2f}")
