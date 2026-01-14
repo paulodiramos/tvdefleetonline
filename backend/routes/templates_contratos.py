@@ -24,7 +24,8 @@ logger = logging.getLogger(__name__)
 @router.get("")
 async def get_templates_contratos(current_user: Dict = Depends(get_current_user)):
     """Get contract templates for the current user (parceiro only)"""
-    if current_user["role"] != "parceiro":
+    user_role = current_user["role"]
+    if user_role != "parceiro" and str(user_role) != "UserRole.PARCEIRO":
         raise HTTPException(status_code=403, detail="Apenas parceiros podem acessar templates")
     
     templates = await db.templates_contratos.find(
