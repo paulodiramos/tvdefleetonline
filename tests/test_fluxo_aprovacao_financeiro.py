@@ -46,7 +46,7 @@ class TestFluxoAprovacaoFinanceiro:
         })
         assert response.status_code == 200, f"Login failed: {response.text}"
         data = response.json()
-        self.token = data.get("token")
+        self.token = data.get("access_token") or data.get("token")
         self.session.headers.update({"Authorization": f"Bearer {self.token}"})
         return data
     
@@ -58,7 +58,7 @@ class TestFluxoAprovacaoFinanceiro:
         })
         assert response.status_code == 200, f"Admin login failed: {response.text}"
         data = response.json()
-        self.token = data.get("token")
+        self.token = data.get("access_token") or data.get("token")
         self.session.headers.update({"Authorization": f"Bearer {self.token}"})
         return data
     
