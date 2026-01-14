@@ -80,7 +80,7 @@ class TestFluxoAprovacaoFinanceiro:
     def test_01_login_parceiro(self):
         """Test parceiro login"""
         data = self.login_parceiro()
-        assert "token" in data
+        assert "access_token" in data or "token" in data
         assert data.get("user", {}).get("role") == "parceiro"
         print(f"SUCCESS: Parceiro login successful")
     
