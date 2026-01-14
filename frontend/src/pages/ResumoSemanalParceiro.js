@@ -1080,6 +1080,59 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal Envio de Email em Massa */}
+      <Dialog open={showBulkEmailModal} onOpenChange={setShowBulkEmailModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mail className="w-5 h-5" />
+              Enviar Relatórios por Email
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <p className="text-slate-600">
+              Enviar relatório da semana <strong>{semana}/{ano}</strong> para <strong>{selectedMotoristas.length}</strong> motorista(s) selecionado(s)?
+            </p>
+            <div className="bg-blue-50 p-3 rounded border border-blue-200">
+              <p className="text-sm text-blue-800">
+                📧 Cada motorista receberá um email com o seu relatório semanal em PDF anexado.
+              </p>
+            </div>
+            <div className="text-xs text-slate-500">
+              <p>Motoristas que receberão o email:</p>
+              <ul className="list-disc list-inside mt-1 max-h-32 overflow-y-auto">
+                {selectedMotoristas.map(id => {
+                  const motorista = motoristas.find(m => m.motorista_id === id);
+                  return <li key={id}>{motorista?.motorista_nome || id}</li>;
+                })}
+              </ul>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBulkEmailModal(false)} disabled={sendingEmails}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleBulkEmailSend} 
+              disabled={sendingEmails}
+              data-testid="btn-confirmar-enviar-email-lote"
+            >
+              {sendingEmails ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  A enviar...
+                </>
+              ) : (
+                <>
+                  <Mail className="w-4 h-4 mr-2" />
+                  Enviar Emails
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       </div>
     </Layout>
   );
