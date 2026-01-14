@@ -10,7 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { 
   FileText, Download, Eye, Calendar, User, Euro, 
-  Filter, ChevronLeft, ChevronRight, Upload, CheckCircle
+  Filter, ChevronLeft, ChevronRight, Upload, CheckCircle,
+  Archive, FileCheck, Receipt, CreditCard, Loader2
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -23,6 +24,8 @@ const ArquivoRecibos = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(false);
   const [selectedRecibo, setSelectedRecibo] = useState(null);
   const [showUploadComprovativo, setShowUploadComprovativo] = useState(null);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
 
   useEffect(() => {
     // Calcular semana atual
@@ -114,9 +117,9 @@ const ArquivoRecibos = ({ user, onLogout }) => {
     
     try {
       const token = localStorage.getItem('token');
-      const path = recibo.status_info.recibo_path.split('/').map(s => encodeURIComponent(s)).join('/');
+      const filename = recibo.status_info.recibo_path.split('/').pop();
       const response = await fetch(
-        `${API}/api/vehicles/download/${path}`,
+        `${API}/api/files/recibos/${filename}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
@@ -139,12 +142,50 @@ const ArquivoRecibos = ({ user, onLogout }) => {
     }
   };
 
-  const handleUploadComprovativo = async (motoristaId, file) => {
+  const handleDownloadComprovativo = async (recibo) => {
+    if (!recibo.status_info?.comprovativo_path) {
+      toast.error('Comprovativo não disponível');
+      return;
+    }
+    
+    try {
+      const token = localStorage.getItem('token');
+      const filename = recibo.status_info.comprovativo_path.split('/').pop();
+      const response = await fetch(
+        `${API}/api/files/comprovativos/${filename}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (!response.ok) throw new Error('Failed to download');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', recibo.status_info.comprovativo_filename || `comprovativo_${recibo.motorista_nome}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Comprovativo descarregado!');
+    } catch (error) {
+      console.error('Erro ao descarregar comprovativo:', error);
+      toast.error('Erro ao descarregar comprovativo');
+    }
+  };
+
+  const handleUploadComprovativo = async (motoristaId) => {
+    if (!selectedFile) {
+      toast.error('Selecione um ficheiro');
+      return;
+    }
+
+    setUploadingFile(true);
     try {
       const token = localStorage.getItem('token');
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('tipo', 'comprovativo_pagamento');
+      formData.append('file', selectedFile);
       
       await axios.post(
         `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}/upload-comprovativo?semana=${semana}&ano=${ano}`,
@@ -153,11 +194,14 @@ const ArquivoRecibos = ({ user, onLogout }) => {
       );
       
       setShowUploadComprovativo(null);
+      setSelectedFile(null);
       fetchRecibos();
       toast.success('Comprovativo de pagamento enviado!');
     } catch (error) {
       console.error('Erro ao enviar comprovativo:', error);
       toast.error('Erro ao enviar comprovativo');
+    } finally {
+      setUploadingFile(false);
     }
   };
 
@@ -191,13 +235,31 @@ const ArquivoRecibos = ({ user, onLogout }) => {
     return `${startDate.toLocaleDateString('pt-PT')} - ${endDate.toLocaleDateString('pt-PT')}`;
   };
 
+  // Estatísticas
+  const stats = {
+    liquidados: recibos.filter(r => r.status_info.status_aprovacao === 'liquidado').length,
+    total: recibos.length
+  };
+
+  const totalLiquidado = recibos
+    .filter(r => r.status_info.status_aprovacao === 'liquidado')
+    .reduce((sum, r) => {
+      const liquido = (r.ganhos_uber || 0) + (r.uber_portagens || 0) + (r.ganhos_bolt || 0) 
+        - (r.via_verde || 0) - (r.combustivel || 0) - (r.carregamento_eletrico || 0) 
+        - (r.aluguer_veiculo || 0) - (r.extras || 0);
+      return sum + liquido;
+    }, 0);
+
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Arquivo de Recibos</h1>
+            <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+              <Archive className="w-7 h-7" />
+              Arquivo de Recibos
+            </h1>
             <p className="text-slate-600">Consulte relatórios e recibos arquivados</p>
           </div>
         </div>
@@ -247,6 +309,7 @@ const ArquivoRecibos = ({ user, onLogout }) => {
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                   className="w-40 p-2 border rounded"
+                  data-testid="status-filter"
                 >
                   <option value="todos">Todos</option>
                   <option value="pendente">Pendente</option>
@@ -264,113 +327,189 @@ const ArquivoRecibos = ({ user, onLogout }) => {
           </CardContent>
         </Card>
 
+        {/* Estatísticas */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card className="border-l-4 border-l-green-500">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <span className="text-sm text-slate-600">Liquidados</span>
+              </div>
+              <p className="text-2xl font-bold text-green-700">{stats.liquidados}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-blue-500">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 mb-2">
+                <Euro className="w-5 h-5 text-blue-600" />
+                <span className="text-sm text-slate-600">Total Liquidado</span>
+              </div>
+              <p className="text-2xl font-bold text-blue-700">{formatCurrency(totalLiquidado)}</p>
+            </CardContent>
+          </Card>
+          <Card className="border-l-4 border-l-slate-500">
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-2 mb-2">
+                <FileText className="w-5 h-5 text-slate-600" />
+                <span className="text-sm text-slate-600">Total Registos</span>
+              </div>
+              <p className="text-2xl font-bold text-slate-700">{stats.total}</p>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Lista de Recibos */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
+              <FileCheck className="w-5 h-5" />
               Relatórios e Recibos - Semana {semana}/{ano}
             </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="text-center py-8 text-slate-500">A carregar...</div>
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 animate-spin text-slate-500" />
+              </div>
             ) : recibos.length === 0 ? (
               <div className="text-center py-8 text-slate-500">
                 Nenhum registo encontrado para os filtros selecionados.
               </div>
             ) : (
               <div className="space-y-3">
-                {recibos.map((recibo) => (
-                  <div 
-                    key={recibo.motorista_id}
-                    className="border rounded-lg p-4 hover:bg-slate-50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center">
-                          <User className="w-5 h-5 text-slate-600" />
+                {recibos.map((recibo) => {
+                  const liquido = (recibo.ganhos_uber || 0) + (recibo.uber_portagens || 0) + (recibo.ganhos_bolt || 0) 
+                    - (recibo.via_verde || 0) - (recibo.combustivel || 0) - (recibo.carregamento_eletrico || 0) 
+                    - (recibo.aluguer_veiculo || 0) - (recibo.extras || 0);
+                  const hasRecibo = !!recibo.status_info?.recibo_path;
+                  const hasComprovativo = !!recibo.status_info?.comprovativo_path;
+                  
+                  return (
+                    <div 
+                      key={recibo.motorista_id}
+                      className="border rounded-lg p-4 hover:bg-slate-50 transition-colors"
+                      data-testid={`arquivo-${recibo.motorista_id}`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                            recibo.status_info.status_aprovacao === 'liquidado' 
+                              ? 'bg-green-100' 
+                              : 'bg-slate-200'
+                          }`}>
+                            <User className={`w-5 h-5 ${
+                              recibo.status_info.status_aprovacao === 'liquidado' 
+                                ? 'text-green-600' 
+                                : 'text-slate-600'
+                            }`} />
+                          </div>
+                          <div>
+                            <h3 className="font-medium">{recibo.motorista_nome}</h3>
+                            <div className="flex items-center gap-3 text-sm text-slate-600">
+                              <span className="flex items-center gap-1">
+                                <Euro className="w-3 h-3" />
+                                <strong className={liquido >= 0 ? 'text-green-600' : 'text-red-600'}>
+                                  {formatCurrency(liquido)}
+                                </strong>
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                S{semana}/{ano}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-medium">{recibo.motorista_nome}</h3>
-                          <div className="flex items-center gap-3 text-sm text-slate-600">
-                            <span className="flex items-center gap-1">
-                              <Euro className="w-3 h-3" />
-                              {formatCurrency(recibo.valor_liquido_motorista || 0)}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-3 h-3" />
-                              S{semana}/{ano}
-                            </span>
+                        
+                        <div className="flex items-center gap-3">
+                          {getStatusBadge(recibo.status_info.status_aprovacao)}
+                          
+                          <div className="flex gap-2">
+                            {/* Download Relatório */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadRelatorio(recibo.motorista_id, recibo.motorista_nome)}
+                              title="Download Relatório PDF"
+                              data-testid={`download-relatorio-${recibo.motorista_id}`}
+                            >
+                              <FileText className="w-4 h-4 mr-1" />
+                              Relatório
+                            </Button>
+                            
+                            {/* Download Recibo (se existir) */}
+                            {hasRecibo && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDownloadRecibo(recibo)}
+                                title="Download Recibo"
+                                data-testid={`download-recibo-${recibo.motorista_id}`}
+                              >
+                                <Receipt className="w-4 h-4 mr-1" />
+                                Recibo
+                              </Button>
+                            )}
+                            
+                            {/* Download Comprovativo (se existir) */}
+                            {hasComprovativo && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-green-600 hover:text-green-700"
+                                onClick={() => handleDownloadComprovativo(recibo)}
+                                title="Download Comprovativo de Pagamento"
+                                data-testid={`download-comprovativo-${recibo.motorista_id}`}
+                              >
+                                <CreditCard className="w-4 h-4 mr-1" />
+                                Comprovativo
+                              </Button>
+                            )}
+                            
+                            {/* Upload Comprovativo (se liquidado e não tiver) */}
+                            {recibo.status_info.status_aprovacao === 'liquidado' && !hasComprovativo && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setShowUploadComprovativo(recibo)}
+                                title="Enviar Comprovativo de Pagamento"
+                              >
+                                <Upload className="w-4 h-4 mr-1" />
+                                Comprovativo
+                              </Button>
+                            )}
                           </div>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-3">
-                        {getStatusBadge(recibo.status_info.status_aprovacao)}
-                        
-                        <div className="flex gap-2">
-                          {/* Download Relatório */}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDownloadRelatorio(recibo.motorista_id, recibo.motorista_nome)}
-                            title="Download Relatório PDF"
-                          >
-                            <FileText className="w-4 h-4 mr-1" />
-                            Relatório
-                          </Button>
-                          
-                          {/* Download Recibo (se existir) */}
-                          {recibo.status_info.recibo_path && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDownloadRecibo(recibo)}
-                              title="Download Recibo"
-                            >
-                              <Download className="w-4 h-4 mr-1" />
-                              Recibo
-                            </Button>
-                          )}
-                          
-                          {/* Download Comprovativo (se existir) */}
-                          {recibo.status_info.comprovativo_path && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="text-green-600"
-                              title="Download Comprovativo de Pagamento"
-                            >
-                              <CheckCircle className="w-4 h-4 mr-1" />
-                              Comprovativo
-                            </Button>
-                          )}
-                          
-                          {/* Upload Comprovativo (se liquidado e não tiver) */}
-                          {recibo.status_info.status_aprovacao === 'liquidado' && !recibo.status_info.comprovativo_path && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setShowUploadComprovativo(recibo.motorista_id)}
-                              title="Enviar Comprovativo de Pagamento"
-                            >
-                              <Upload className="w-4 h-4 mr-1" />
-                              Comprovativo
-                            </Button>
-                          )}
-                        </div>
+                      {/* Info adicional */}
+                      <div className="mt-2 pt-2 border-t flex flex-wrap gap-4 text-xs text-slate-500">
+                        {recibo.status_info.data_aprovacao && (
+                          <span>Aprovado: {new Date(recibo.status_info.data_aprovacao).toLocaleDateString('pt-PT')}</span>
+                        )}
+                        {recibo.status_info.data_recibo_uploaded && (
+                          <span>Recibo: {new Date(recibo.status_info.data_recibo_uploaded).toLocaleDateString('pt-PT')}</span>
+                        )}
+                        {recibo.status_info.data_liquidacao && (
+                          <span className="text-green-600 font-medium">
+                            Liquidado: {new Date(recibo.status_info.data_liquidacao).toLocaleDateString('pt-PT')}
+                          </span>
+                        )}
+                      </div>
+                      
+                      {/* Indicadores de documentos */}
+                      <div className="mt-2 flex items-center gap-3 text-xs">
+                        <span className={`flex items-center gap-1 ${hasRecibo ? 'text-green-600' : 'text-slate-400'}`}>
+                          <Receipt className="w-3 h-3" />
+                          Recibo {hasRecibo ? '✓' : '✗'}
+                        </span>
+                        <span className={`flex items-center gap-1 ${hasComprovativo ? 'text-green-600' : 'text-slate-400'}`}>
+                          <CreditCard className="w-3 h-3" />
+                          Comprovativo {hasComprovativo ? '✓' : '✗'}
+                        </span>
                       </div>
                     </div>
-                    
-                    {/* Info adicional */}
-                    {recibo.status_info.data_liquidacao && (
-                      <div className="mt-2 pt-2 border-t text-xs text-slate-500">
-                        Liquidado em: {new Date(recibo.status_info.data_liquidacao).toLocaleString('pt-PT')}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </CardContent>
@@ -378,30 +517,55 @@ const ArquivoRecibos = ({ user, onLogout }) => {
       </div>
 
       {/* Dialog Upload Comprovativo */}
-      <Dialog open={showUploadComprovativo !== null} onOpenChange={() => setShowUploadComprovativo(null)}>
+      <Dialog open={showUploadComprovativo !== null} onOpenChange={() => { setShowUploadComprovativo(null); setSelectedFile(null); }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Enviar Comprovativo de Pagamento</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Upload className="w-5 h-5" />
+              Enviar Comprovativo de Pagamento
+            </DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <p className="text-sm text-slate-600 mb-4">
-              Envie o comprovativo de pagamento (transferência bancária, recibo, etc.)
-            </p>
-            <Input
-              type="file"
-              accept=".pdf,.jpg,.jpeg,.png"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file && showUploadComprovativo) {
-                  handleUploadComprovativo(showUploadComprovativo, file);
-                }
-              }}
-            />
-            <p className="text-xs text-slate-500 mt-2">Formatos aceites: PDF, JPG, PNG</p>
+          <div className="py-4 space-y-4">
+            <div className="bg-slate-50 p-4 rounded-lg">
+              <p className="text-sm text-slate-600">Motorista:</p>
+              <p className="font-semibold">{showUploadComprovativo?.motorista_nome}</p>
+            </div>
+            <div>
+              <Label>Selecionar Ficheiro *</Label>
+              <Input
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png"
+                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                className="mt-1"
+              />
+              {selectedFile && (
+                <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                  <CheckCircle className="w-3 h-3" />
+                  {selectedFile.name}
+                </p>
+              )}
+              <p className="text-xs text-slate-500 mt-2">Formatos aceites: PDF, JPG, PNG</p>
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowUploadComprovativo(null)}>
+            <Button variant="outline" onClick={() => { setShowUploadComprovativo(null); setSelectedFile(null); }}>
               Cancelar
+            </Button>
+            <Button 
+              onClick={() => handleUploadComprovativo(showUploadComprovativo?.motorista_id)}
+              disabled={uploadingFile || !selectedFile}
+            >
+              {uploadingFile ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  A enviar...
+                </>
+              ) : (
+                <>
+                  <Upload className="w-4 h-4 mr-2" />
+                  Enviar Comprovativo
+                </>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
