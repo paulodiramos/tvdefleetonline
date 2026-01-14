@@ -84,6 +84,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     if (semana && ano) {
       fetchResumo();
       fetchHistorico();
+      fetchStatusAprovacao();
     }
   }, [semana, ano]);
 
@@ -101,6 +102,72 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
       toast.error('Erro ao carregar resumo semanal');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStatusAprovacao = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(
+        `${API}/api/relatorios/parceiro/resumo-semanal/status?semana=${semana}&ano=${ano}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setStatusAprovacao(response.data);
+    } catch (error) {
+      console.error('Erro ao carregar status de aprovação:', error);
+    }
+  };
+
+  const handleStatusChange = async (motoristaId, novoStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}/status`,
+        { status: novoStatus, semana, ano },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Atualizar estado local
+      setStatusAprovacao(prev => ({
+        ...prev,
+        [motoristaId]: { ...prev[motoristaId], status_aprovacao: novoStatus }
+      }));
+      
+      toast.success(`Status atualizado para ${STATUS_LABELS[novoStatus]?.label || novoStatus}`);
+      
+      // Se mudou para aguardar_recibo, abrir dialog de upload
+      if (novoStatus === 'aguardar_recibo') {
+        setShowUploadRecibo(motoristaId);
+      }
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      toast.error('Erro ao atualizar status');
+    }
+  };
+
+  const handleUploadRecibo = async (motoristaId, file) => {
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      await axios.post(
+        `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}/upload-recibo?semana=${semana}&ano=${ano}`,
+        formData,
+        { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } }
+      );
+      
+      // Atualizar estado local
+      setStatusAprovacao(prev => ({
+        ...prev,
+        [motoristaId]: { ...prev[motoristaId], status_aprovacao: 'a_pagamento' }
+      }));
+      
+      setShowUploadRecibo(null);
+      toast.success('Recibo enviado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao enviar recibo:', error);
+      toast.error('Erro ao enviar recibo');
     }
   };
 
