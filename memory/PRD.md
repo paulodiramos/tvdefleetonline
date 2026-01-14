@@ -1,5 +1,22 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-14 - Session 12 - Bugs P0 Segunda Ronda CORRIGIDOS)
+
+### Bugs Adicionais Corrigidos - TODOS VALIDADOS ✅ (15/15 testes = 100%)
+1. **GET /api/vehicles/{id}** - Removida validação Pydantic estrita, agora retorna dados sem erro
+2. **POST /api/vehicles/{id}/historico** - Permissão para parceiros adicionar entradas
+3. **DELETE /api/vehicles/{id}/historico/{entry_id}** - Permissão para parceiros apagar entradas
+4. **DELETE /api/vehicles/{id}/fotos/{index}** - Permissão para parceiros apagar fotos + verifica propriedade
+5. **GET /api/parceiros/{id}/templates-contrato** - Corrigida verificação de role para strings
+6. **GET /api/motoristas/{id}/documento/download** - Corrigida verificação de parceiro_atribuido/parceiro_associado
+
+### Ficheiros Modificados:
+- `/app/backend/routes/vehicles.py` - get_vehicle (sem Pydantic), historico CRUD, fotos delete
+- `/app/backend/routes/motoristas.py` - documento download com verificação dual de parceiro
+- `/app/backend/server.py` - templates-contrato endpoint com roles em string
+
+---
+
 ## Changelog (2026-01-13 - Session 12 - Bugs P0 Corrigidos)
 
 ### Bugs P0 Corrigidos - TODOS VALIDADOS ✅
