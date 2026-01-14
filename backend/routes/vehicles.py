@@ -2051,6 +2051,97 @@ async def get_maintenance_detail(
     raise HTTPException(status_code=404, detail="Maintenance not found")
 
 
+@router.put("/{vehicle_id}/manutencoes/{manutencao_id}")
+async def update_vehicle_maintenance(
+    vehicle_id: str,
+    manutencao_id: str,
+    manutencao_update: Dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Update maintenance record"""
+    user_role = current_user["role"]
+    allowed_roles = [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]
+    if user_role not in allowed_roles:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Verificar se parceiro tem acesso ao veículo
+    if user_role in [UserRole.PARCEIRO, "parceiro"]:
+        if vehicle.get("parceiro_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized - vehicle belongs to another partner")
+    
+    # Encontrar e atualizar a manutenção
+    manutencoes = vehicle.get("manutencoes", [])
+    found = False
+    for i, man in enumerate(manutencoes):
+        if man.get("id") == manutencao_id:
+            # Preservar o ID e atualizar os outros campos
+            manutencao_update["id"] = manutencao_id
+            manutencoes[i] = {**man, **manutencao_update}
+            found = True
+            break
+    
+    if not found:
+        raise HTTPException(status_code=404, detail="Maintenance not found")
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {
+            "$set": {
+                "manutencoes": manutencoes,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {"message": "Maintenance updated"}
+
+
+@router.delete("/{vehicle_id}/manutencoes/{manutencao_id}")
+async def delete_vehicle_maintenance(
+    vehicle_id: str,
+    manutencao_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Delete maintenance record"""
+    user_role = current_user["role"]
+    allowed_roles = [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]
+    if user_role not in allowed_roles:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Verificar se parceiro tem acesso ao veículo
+    if user_role in [UserRole.PARCEIRO, "parceiro"]:
+        if vehicle.get("parceiro_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized - vehicle belongs to another partner")
+    
+    # Verificar se a manutenção existe
+    manutencoes = vehicle.get("manutencoes", [])
+    original_count = len(manutencoes)
+    manutencoes = [m for m in manutencoes if m.get("id") != manutencao_id]
+    
+    if len(manutencoes) == original_count:
+        raise HTTPException(status_code=404, detail="Maintenance not found")
+    
+    await db.vehicles.update_one(
+        {"id": vehicle_id},
+        {
+            "$set": {
+                "manutencoes": manutencoes,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    return {"message": "Maintenance deleted"}
+
+
 @router.get("/{vehicle_id}/relatorio-intervencoes")
 async def get_vehicle_interventions_report(
     vehicle_id: str,
