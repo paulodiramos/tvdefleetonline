@@ -572,6 +572,53 @@ const Vistorias = ({ user, onLogout }) => {
     return <Badge className={styles[estado] || styles.bom}>{estado.toUpperCase()}</Badge>;
   };
 
+  const handleDownloadFichaVistoriaTemplate = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Se tiver um veículo selecionado, usar esse, senão usar o primeiro disponível
+      let vehicleId = selectedVehicle;
+      if (!vehicleId && vehicles.length > 0) {
+        vehicleId = vehicles[0].id;
+      }
+      
+      if (!vehicleId) {
+        toast.error('Nenhum veículo disponível para gerar a ficha');
+        return;
+      }
+      
+      const response = await fetch(`${API}/vehicles/${vehicleId}/vistoria-template-pdf`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to download');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      
+      // Encontrar a matrícula do veículo
+      const vehicle = vehicles.find(v => v.id === vehicleId);
+      const matricula = vehicle?.matricula || 'veiculo';
+      
+      link.setAttribute('download', `ficha_vistoria_${matricula}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Ficha de vistoria descarregada!');
+    } catch (error) {
+      console.error('Error downloading vistoria template:', error);
+      toast.error('Erro ao descarregar ficha de vistoria');
+    }
+  };
+
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="container mx-auto px-4 py-8">
