@@ -320,7 +320,8 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   const totalVendas = totais.total_vendas || 0;
   const totalReceitas = totais.total_receitas_parceiro || (totalAluguer + totalExtras + totalVendas);
   const totalDespesas = totais.total_despesas_operacionais || 0;
-  const liquidoParceiro = totais.total_liquido_parceiro || (totalReceitas - totalDespesas);
+  // CORRIGIDO: Usar a soma dos líquidos dos motoristas em vez do cálculo do parceiro
+  const liquidoParceiro = totais.total_liquido_motoristas || totais.total_liquido_parceiro || (totalReceitas - totalDespesas);
   const isPositive = liquidoParceiro >= 0;
   const maxValue = Math.max(...historico.map(h => Math.max(h.ganhos || 0, h.despesas || 0, Math.abs(h.liquido || 0))), 1);
 
