@@ -455,7 +455,7 @@ async def delete_vehicle_photo(
     if user_role not in allowed_roles:
         raise HTTPException(status_code=403, detail="Not authorized")
     
-    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    vehicle = await db.vehicles.find_one({"id": vehicle_id})
     if not vehicle:
         raise HTTPException(status_code=404, detail="Vehicle not found")
     
@@ -464,19 +464,25 @@ async def delete_vehicle_photo(
         if vehicle.get("parceiro_id") != current_user["id"]:
             raise HTTPException(status_code=403, detail="Not authorized - vehicle belongs to another partner")
     
-    # Try both foto fields
-    fotos = vehicle.get("fotos_veiculo", []) or vehicle.get("fotos", [])
-    if foto_index < 0 or foto_index >= len(fotos):
+    # Determinar qual campo de fotos usar
+    fotos_veiculo = list(vehicle.get("fotos_veiculo", []) or [])
+    fotos = list(vehicle.get("fotos", []) or [])
+    
+    # Usar fotos_veiculo se tiver fotos, senão usar fotos
+    if fotos_veiculo and foto_index < len(fotos_veiculo):
+        fotos_veiculo.pop(foto_index)
+        await db.vehicles.update_one(
+            {"id": vehicle_id},
+            {"$set": {"fotos_veiculo": fotos_veiculo}}
+        )
+    elif fotos and foto_index < len(fotos):
+        fotos.pop(foto_index)
+        await db.vehicles.update_one(
+            {"id": vehicle_id},
+            {"$set": {"fotos": fotos}}
+        )
+    else:
         raise HTTPException(status_code=400, detail="Invalid photo index")
-    
-    fotos.pop(foto_index)
-    
-    # Update the correct field
-    update_field = "fotos_veiculo" if vehicle.get("fotos_veiculo") else "fotos"
-    await db.vehicles.update_one(
-        {"id": vehicle_id},
-        {"$set": {update_field: fotos}}
-    )
     
     return {"message": "Photo deleted successfully"}
 
