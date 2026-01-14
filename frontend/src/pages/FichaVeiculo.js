@@ -1262,6 +1262,36 @@ const FichaVeiculo = ({ user, onLogout }) => {
     }
   };
 
+  const handleDownloadVistoriaTemplate = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API}/vehicles/${vehicleId}/vistoria-template-pdf`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to download');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `vistoria_${vehicle.matricula || vehicleId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      toast.success('Ficha de vistoria descarregada!');
+    } catch (error) {
+      console.error('Error downloading vistoria template:', error);
+      toast.error('Erro ao descarregar ficha de vistoria');
+    }
+  };
+
   // Vehicle photos handlers
   const handleUploadPhoto = async (file) => {
     if (!file) return;
