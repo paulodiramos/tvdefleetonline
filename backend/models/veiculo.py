@@ -110,13 +110,31 @@ class VehicleInsurance(BaseModel):
 
 class VehicleMaintenance(BaseModel):
     """Vehicle maintenance record"""
-    tipo: str
-    descricao: str
-    data: str
-    km: int
-    valor: float
+    # Campos principais - aceitar variantes
+    tipo: Optional[str] = None
+    tipo_manutencao: Optional[str] = None  # Alternativa para 'tipo'
+    descricao: str = ""
+    data: Optional[str] = None
+    km: Optional[int] = None
+    km_realizada: Optional[int] = None  # Alternativa para 'km'
+    km_intervencao: Optional[int] = None  # Outra alternativa para 'km'
+    valor: Optional[float] = None
     oficina: Optional[str] = None
     notas: Optional[str] = None
+    fornecedor: Optional[str] = None
+    responsavel: Optional[str] = None
+    atribuir_motorista: Optional[bool] = None
+    motorista_id: Optional[str] = None
+    motorista_nome: Optional[str] = None
+    created_at: Optional[str] = None
+    
+    @property
+    def tipo_normalizado(self) -> str:
+        return self.tipo or self.tipo_manutencao or ""
+    
+    @property
+    def km_normalizado(self) -> int:
+        return self.km or self.km_realizada or self.km_intervencao or 0
 
 
 class VehicleExtinguisher(BaseModel):
