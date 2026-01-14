@@ -1,7 +1,7 @@
 """Vehicle routes for FleeTrack application - Refactored from server.py"""
 
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
