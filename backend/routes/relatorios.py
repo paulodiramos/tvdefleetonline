@@ -4014,3 +4014,168 @@ async def enviar_relatorios_em_massa(
             })
     
     return results
+
+
+
+# ==================== FLUXO DE APROVAÇÃO DE RELATÓRIOS ====================
+# Estados: pendente -> aprovado -> aguardar_recibo -> a_pagamento -> liquidado
+
+@router.put("/parceiro/resumo-semanal/motorista/{motorista_id}/status")
+async def update_motorista_relatorio_status(
+    motorista_id: str,
+    status_data: Dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Atualizar o status do relatório semanal de um motorista.
+    Estados: pendente -> aprovado -> aguardar_recibo -> a_pagamento -> liquidado
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    novo_status = status_data.get("status")
+    semana = status_data.get("semana")
+    ano = status_data.get("ano")
+    
+    if not novo_status or not semana or not ano:
+        raise HTTPException(status_code=400, detail="status, semana e ano são obrigatórios")
+    
+    valid_statuses = ["pendente", "aprovado", "aguardar_recibo", "a_pagamento", "liquidado"]
+    if novo_status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Status inválido. Valores válidos: {valid_statuses}")
+    
+    # Verificar se o motorista pertence ao parceiro
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
+        if motorista.get("parceiro_id") != current_user["id"] and motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Atualizar ou criar registro de status
+    status_update = {
+        "motorista_id": motorista_id,
+        "semana": int(semana),
+        "ano": int(ano),
+        "status_aprovacao": novo_status,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_by": current_user["id"]
+    }
+    
+    # Adicionar campos específicos por status
+    if novo_status == "aprovado":
+        status_update["data_aprovacao"] = datetime.now(timezone.utc).isoformat()
+    elif novo_status == "aguardar_recibo":
+        status_update["data_envio_relatorio"] = datetime.now(timezone.utc).isoformat()
+    elif novo_status == "a_pagamento":
+        status_update["data_recibo_uploaded"] = status_data.get("data_recibo") or datetime.now(timezone.utc).isoformat()
+    elif novo_status == "liquidado":
+        status_update["data_liquidacao"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.status_relatorios.update_one(
+        {"motorista_id": motorista_id, "semana": int(semana), "ano": int(ano)},
+        {"$set": status_update},
+        upsert=True
+    )
+    
+    logger.info(f"Status relatório {motorista.get('name')} S{semana}/{ano} -> {novo_status}")
+    
+    return {"message": f"Status atualizado para {novo_status}", "status": novo_status}
+
+
+@router.post("/parceiro/resumo-semanal/motorista/{motorista_id}/upload-recibo")
+async def upload_recibo_motorista(
+    motorista_id: str,
+    semana: int,
+    ano: int,
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Upload de recibo verde ou autofaturação para um relatório semanal.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Verificar se o motorista pertence ao parceiro
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
+        if motorista.get("parceiro_id") != current_user["id"] and motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Salvar arquivo
+    upload_dir = Path("/app/uploads/recibos")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+    
+    file_ext = file.filename.split('.')[-1] if '.' in file.filename else 'pdf'
+    file_id = str(uuid4())
+    filename = f"recibo_{motorista_id}_S{semana}_{ano}_{file_id}.{file_ext}"
+    file_path = upload_dir / filename
+    
+    with open(file_path, "wb") as buffer:
+        content = await file.read()
+        buffer.write(content)
+    
+    # Atualizar status para a_pagamento
+    status_update = {
+        "motorista_id": motorista_id,
+        "semana": int(semana),
+        "ano": int(ano),
+        "status_aprovacao": "a_pagamento",
+        "recibo_path": str(file_path),
+        "recibo_filename": file.filename,
+        "data_recibo_uploaded": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "updated_by": current_user["id"]
+    }
+    
+    await db.status_relatorios.update_one(
+        {"motorista_id": motorista_id, "semana": int(semana), "ano": int(ano)},
+        {"$set": status_update},
+        upsert=True
+    )
+    
+    logger.info(f"Recibo uploaded para {motorista.get('name')} S{semana}/{ano}")
+    
+    return {
+        "message": "Recibo uploaded com sucesso",
+        "filename": filename,
+        "status": "a_pagamento"
+    }
+
+
+@router.get("/parceiro/resumo-semanal/status")
+async def get_relatorios_status(
+    semana: int,
+    ano: int,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Obter status de aprovação de todos os relatórios de uma semana.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    query = {"semana": int(semana), "ano": int(ano)}
+    
+    if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
+        # Buscar motoristas do parceiro
+        motoristas = await db.motoristas.find({
+            "$or": [
+                {"parceiro_id": current_user["id"]},
+                {"parceiro_atribuido": current_user["id"]}
+            ]
+        }, {"_id": 0, "id": 1}).to_list(1000)
+        motorista_ids = [m["id"] for m in motoristas]
+        query["motorista_id"] = {"$in": motorista_ids}
+    
+    status_list = await db.status_relatorios.find(query, {"_id": 0}).to_list(1000)
+    
+    # Converter para dicionário por motorista_id
+    status_dict = {s["motorista_id"]: s for s in status_list}
+    
+    return status_dict
