@@ -576,18 +576,8 @@ const Vistorias = ({ user, onLogout }) => {
     try {
       const token = localStorage.getItem('token');
       
-      // Se tiver um veículo selecionado, usar esse, senão usar o primeiro disponível
-      let vehicleId = selectedVehicle;
-      if (!vehicleId && vehicles.length > 0) {
-        vehicleId = vehicles[0].id;
-      }
-      
-      if (!vehicleId) {
-        toast.error('Nenhum veículo disponível para gerar a ficha');
-        return;
-      }
-      
-      const response = await fetch(`${API}/vehicles/${vehicleId}/vistoria-template-pdf`, {
+      // Usar o endpoint genérico que não precisa de veículo específico
+      const response = await fetch(`${API}/vehicles/vistoria-template-pdf`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -601,12 +591,7 @@ const Vistorias = ({ user, onLogout }) => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      
-      // Encontrar a matrícula do veículo
-      const vehicle = vehicles.find(v => v.id === vehicleId);
-      const matricula = vehicle?.matricula || 'veiculo';
-      
-      link.setAttribute('download', `ficha_vistoria_${matricula}.pdf`);
+      link.setAttribute('download', `ficha_vistoria_${new Date().toISOString().split('T')[0]}.pdf`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
