@@ -230,6 +230,54 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     }
   };
 
+  const handleBulkEmailSend = async () => {
+    if (selectedMotoristas.length === 0) {
+      toast.error('Selecione pelo menos um motorista');
+      return;
+    }
+
+    setSendingEmails(true);
+    try {
+      const token = localStorage.getItem('token');
+      let successCount = 0;
+      let errorCount = 0;
+
+      // Enviar email para cada motorista selecionado
+      for (const motoristaId of selectedMotoristas) {
+        try {
+          const response = await axios.post(
+            `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}/email`,
+            { semana, ano },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          if (response.data.success) {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+        } catch (error) {
+          errorCount++;
+        }
+      }
+
+      setShowBulkEmailModal(false);
+      setSelectedMotoristas([]);
+      
+      if (successCount > 0 && errorCount === 0) {
+        toast.success(`${successCount} relatório(s) enviado(s) por email com sucesso!`);
+      } else if (successCount > 0 && errorCount > 0) {
+        toast.warning(`${successCount} enviado(s), ${errorCount} falharam`);
+      } else {
+        toast.error('Erro ao enviar emails');
+      }
+    } catch (error) {
+      console.error('Erro ao enviar emails em massa:', error);
+      toast.error('Erro ao enviar emails');
+    } finally {
+      setSendingEmails(false);
+    }
+  };
+
   const fetchHistorico = async () => {
     try {
       const token = localStorage.getItem('token');
