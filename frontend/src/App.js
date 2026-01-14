@@ -558,7 +558,7 @@ function App() {
           <Route
             path="/gestao-extras"
             element={
-              user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? <GestaoExtrasMotorista user={user} /> : <Navigate to="/dashboard" />
+              user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? <GestaoExtrasMotorista user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
             }
           />
           <Route
