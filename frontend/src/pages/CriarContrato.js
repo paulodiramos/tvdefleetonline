@@ -134,10 +134,10 @@ const CriarContrato = ({ user, onLogout }) => {
         let templateMatch = null;
         if (tipoVeiculo === 'comissao') {
           templateMatch = templates.find(t => t.tipo_contrato === 'comissao');
-        } else if (tipoVeiculo === 'aluguer' || tipoVeiculo.includes('aluguer')) {
+        } else if (tipoVeiculo === 'aluguer' || (typeof tipoVeiculo === 'string' && tipoVeiculo.includes('aluguer'))) {
           // Tentar encontrar template de aluguer mais apropriado
           templateMatch = templates.find(t => 
-            t.tipo_contrato.includes('aluguer') || 
+            (typeof t.tipo_contrato === 'string' && t.tipo_contrato.includes('aluguer')) || 
             t.tipo_contrato === 'aluguer_sem_caucao'
           );
         }
@@ -149,7 +149,7 @@ const CriarContrato = ({ user, onLogout }) => {
         }
         
         // Pre-fill com dados do veículo
-        if (tipoVeiculo === 'aluguer' || tipoVeiculo.includes('aluguer')) {
+        if (tipoVeiculo === 'aluguer' || (typeof tipoVeiculo === 'string' && tipoVeiculo.includes('aluguer'))) {
           setFormData(prev => ({
             ...prev,
             valor_aplicado: veiculo.tipo_contrato.valor_aluguer || prev.valor_aplicado
