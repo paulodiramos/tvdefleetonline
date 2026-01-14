@@ -407,8 +407,8 @@ const TemplatesContratos = ({ user, onLogout, showLayout = true }) => {
                 <CardContent>
                   <div className="bg-slate-50 p-4 rounded-lg">
                     <p className="text-sm text-slate-700 whitespace-pre-wrap font-mono">
-                      {template.texto_template.substring(0, 300)}
-                      {template.texto_template.length > 300 && '...'}
+                      {(template.texto_template || template.clausulas_texto || 'Sem texto definido').substring(0, 300)}
+                      {((template.texto_template || template.clausulas_texto || '').length > 300) && '...'}
                     </p>
                   </div>
                   <div className="mt-3 text-xs text-slate-500">
