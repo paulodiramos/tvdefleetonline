@@ -876,6 +876,12 @@ function App() {
               user ? <VerificarRecibos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
             }
           />
+          <Route
+            path="/arquivo-recibos"
+            element={
+              user ? <ArquivoRecibos user={user} onLogout={handleLogout} /> : <Navigate to="/login" />
+            }
+          />
         </Routes>
       </BrowserRouter>
       <Toaster position="top-right" />
