@@ -588,6 +588,15 @@ const Vistorias = ({ user, onLogout }) => {
           </div>
           
           <div className="flex space-x-3">
+            <Button 
+              onClick={handleDownloadFichaVistoriaTemplate} 
+              variant="outline"
+              className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+              data-testid="download-ficha-vistoria-btn"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Ficha de Vistoria (PDF)
+            </Button>
             <Button onClick={() => setShowAgendarDialog(true)} variant="outline">
               <Calendar className="w-4 h-4 mr-2" />
               Agendar Vistoria
