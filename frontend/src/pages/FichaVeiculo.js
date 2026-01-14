@@ -4213,6 +4213,26 @@ const FichaVeiculo = ({ user, onLogout }) => {
                     )}
                     <p className="text-xs text-slate-500 mt-1">Formatos: PDF, JPG, PNG (imagens serão convertidas para PDF A4)</p>
                   </div>
+                  
+                  {/* Template de Vistoria para Apontamentos Manuais */}
+                  <div className="border rounded-lg p-4 bg-blue-50 mt-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-base font-medium">Ficha de Vistoria (Apontamento Manual)</Label>
+                        <p className="text-xs text-slate-500 mt-1">Descarregue uma ficha em PDF para fazer apontamentos manuais da vistoria</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleDownloadVistoriaTemplate}
+                        className="bg-white"
+                        data-testid="download-vistoria-template-btn"
+                      >
+                        <Download className="w-4 h-4 mr-1" />
+                        Download PDF
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
