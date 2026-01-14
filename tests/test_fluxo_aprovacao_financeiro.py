@@ -394,7 +394,8 @@ class TestVerificarRecibosPage:
         })
         assert response.status_code == 200
         data = response.json()
-        self.session.headers.update({"Authorization": f"Bearer {data.get('token')}"})
+        token = data.get("access_token") or data.get("token")
+        self.session.headers.update({"Authorization": f"Bearer {token}"})
         return data
     
     def test_filter_aguardar_recibo_status(self):
@@ -445,7 +446,8 @@ class TestPagamentosParceiroPage:
         })
         assert response.status_code == 200
         data = response.json()
-        self.session.headers.update({"Authorization": f"Bearer {data.get('token')}"})
+        token = data.get("access_token") or data.get("token")
+        self.session.headers.update({"Authorization": f"Bearer {token}"})
         return data
     
     def test_filter_a_pagamento_status(self):
@@ -496,7 +498,8 @@ class TestArquivoRecibosPage:
         })
         assert response.status_code == 200
         data = response.json()
-        self.session.headers.update({"Authorization": f"Bearer {data.get('token')}"})
+        token = data.get("access_token") or data.get("token")
+        self.session.headers.update({"Authorization": f"Bearer {token}"})
         return data
     
     def test_filter_liquidado_status(self):
