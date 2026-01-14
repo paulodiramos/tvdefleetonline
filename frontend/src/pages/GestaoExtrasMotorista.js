@@ -232,18 +232,30 @@ const GestaoExtrasMotorista = ({ user, onLogout }) => {
   const totalPendentes = totalExtras - totalPagos;
 
   return (
-    <div className="p-6 space-y-6" data-testid="gestao-extras-page">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Gestão de Extras</h1>
-          <p className="text-slate-500">Dívidas, Cauções, Danos e outros valores a cobrar</p>
+    <Layout user={user} onLogout={onLogout}>
+      <div className="space-y-6" data-testid="gestao-extras-page">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate(-1)}
+              data-testid="btn-voltar"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Voltar
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-800">Gestão de Extras</h1>
+              <p className="text-slate-500">Dívidas, Cauções, Danos e outros valores a cobrar</p>
+            </div>
+          </div>
+          <Button onClick={() => openModal()} data-testid="btn-novo-extra">
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Extra
+          </Button>
         </div>
-        <Button onClick={() => openModal()} data-testid="btn-novo-extra">
-          <Plus className="w-4 h-4 mr-2" />
-          Novo Extra
-        </Button>
-      </div>
 
       {/* Resumo Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
