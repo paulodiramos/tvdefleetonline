@@ -1,197 +1,147 @@
 <analysis>**original_problem_statement:**
-O utilizador solicitou a continuação do desenvolvimento da aplicação de gestão de frotas. O foco inicial era concluir a refatoração massiva do backend para extrair endpoints do ficheiro monolítico  para routers modulares. Após um progresso significativo na refatoração, o utilizador apresentou uma lista extensa de bugs críticos que afetam a funcionalidade principal da aplicação para os papéis de parceiro e motorista.
+O utilizador solicitou a continuação do desenvolvimento da aplicação de gestão de frotas. O trabalho focou-se na resolução de uma série de bugs de alta prioridade (P0) reportados pelo utilizador, seguida pela implementação de novas funcionalidades e correções de bugs de prioridade P1.
 
-**PRODUCT REQUIREMENTS (Bugs reportados pelo utilizador):**
--   **P0 - Upload/Download de Documentos:**
-    -   Motoristas: Erro ao carregar e fazer download de documentos de identificação.
-    -   Veículos: Falha no download de documentos (DUA, fotos). Não permite carregar mais de 1 foto.
--   **P0 - Gestão de Contratos:**
-    -   Ao gerar contrato para um motorista, a UI fica presa em a carregar porque os templates, apesar de existirem, não são listados para o parceiro.
--   **P0 - Registos e Autenticação:**
-    -   Registo de novo parceiro mostra um pop-up de not found apesar de o registo ser bem-sucedido no backend.
-    -   Parceiro não consegue ver documentos pendentes para aprovação.
-    -   Upload de foto de veículo dá erro de não autorizado.
--   **P1 - Gestão de Veículos:**
-    -   Erro ao excluir evento da agenda do veículo.
-    -   Erro Erro ao carregar dados do veículo ao gravar um histórico de manutenção. Não deixa apagar o histórico.
-    -   A foto do veículo não aparece na página de anúncio.
--   **P1 - Relatórios e Finanças:**
-    -   Totais líquidos no resumo semanal estão incorretos.
-    -   Lista de importações não registou uma importação da Bolt.
-    -   Valores na lista de importações incluem IVA quando não deveriam.
-    -   Necessidade de um fluxo de aprovação para relatórios (Aguardar Recibo -> A Pagamento -> Finalizado) com notificações.
--   **P2 - UI/UX:**
-    -   Lista de próximos eventos deve mostrar apenas 3 eventos de forma resumida.
-    -   Notificações: Não é possível salvar alterações. A notificação de interesse do website deve incluir todos os dados do formulário (email, telefone).
+**PRODUCT REQUIREMENTS (Tarefas recentes e em progresso):**
+-   **P0 - Fluxo de Aprovação Financeira:**
+    -   Criar um sistema de status para os resumos semanais:  ->  ->  ->  -> .
+    -   Na página Resumo Semanal, permitir a alteração de status para múltiplos motoristas de uma só vez.
+    -   Após aprovação, a informação deve passar para um novo menu financeiro.
+    -   Criar uma página para **Verificar Recibos**, onde se pode fazer o upload de recibos (PDF).
+    -   Após verificação do recibo, alterar o estado para **A Pagamento**.
+    -   Criar uma página para **Pagamentos a Parceiro**, que lista os pagamentos a serem feitos.
+    -   Após o pagamento, alterar o estado para **Liquidado** e disponibilizar o relatório, recibo e comprovativo de pagamento numa nova página de **Arquivo de Recibos**.
+    -   Todas as novas páginas devem ter filtros por data (ano, semana) e status.
+-   **P1 - Bugs e Melhorias Adicionais:**
+    -   **Histórico de Manutenções:** Permitir registar uma nova manutenção sem necessidade de ativar o modo editar ficha.
+    -   **Fotos do Veículo:** Corrigir o bug onde apagar uma foto não a remove da interface.
+    -   **Download de Ficheiros:** Corrigir o bug que resulta numa página em branco ao tentar fazer download de ficheiros já carregados.
+    -   **Vistorias:** Adicionar a funcionalidade de download de uma ficha de vistoria em branco (template PDF) na página principal de vistorias ().
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação passou por uma refatoração massiva do backend, onde aproximadamente 4,500 linhas de código e 108 endpoints foram removidos do  e migrados para routers dedicados (, , , , etc.). Isso reduziu o  para ~17,500 linhas. Múltiplas rondas de correção de bugs foram realizadas, focando em problemas de permissão (roles de utilizador como Enum vs. string), lógica de negócio e inconsistências entre frontend e backend. As correções foram validadas através de testes automatizados com o .
+A aplicação é uma plataforma full-stack (React + FastAPI + MongoDB). Recentemente, foram corrigidos vários bugs críticos (P0), incluindo problemas no upload de documentos, listagem de veículos e seleção de templates de contrato.
+
+Foram também implementadas novas funcionalidades e correções (P1):
+-   Corrigidos cálculos de totais e IVA no resumo semanal e nos relatórios PDF.
+-   Adicionados endpoints / e botões na UI para gerir o histórico de manutenções dos veículos.
+-   Corrigidos bugs na eliminação de fotos de veículos e no download de documentos.
+-   Adicionada a funcionalidade de download de um template de vistoria em PDF.
+-   Iniciou-se a implementação de um novo e complexo **fluxo de aprovação financeira**. A página Resumo Semanal foi atualizada com checkboxes para seleção múltipla e ações em lote para alterar o status dos relatórios. Foi criada uma nova página, Arquivo de Recibos, para consultar relatórios finalizados.
 
 **Last working item**:
--   **Last item agent was working:** Investigar um novo conjunto de 3 bugs reportados pelo utilizador:
-    1.  Erro ao carregar documentos para um motorista.
-    2.  Erro ao carregar a lista de veículos.
-    3.  Templates de contrato criados por um parceiro não aparecem na dropdown para seleção.
-    O agente validou que os veículos estavam a carregar e o upload de documentos funcionava no backend. Identificou que os templates eram guardados com o campo , mas o problema parecia ser de timing ou lógica no frontend  para carregar os templates do parceiro correto.
+-   **Last item agent was working:** Implementação do sistema de fluxo de aprovação financeira. O agente criou a base para o novo sistema, incluindo a modificação da página Resumo Semanal para permitir seleção e alteração de status em lote, e a criação da nova página Arquivo de Recibos.
 -   **Status:** IN PROGRESS
--   **Agent Testing Done:** N (para os bugs mais recentes)
--   **Which testing method agent to use?** both. O agente deve primeiro usar  para validar o comportamento dos endpoints de backend () e, em seguida, usar a  para verificar o comportamento do frontend em .
+-   **Agent Testing Done:** Y (O agente realizou testes manuais com screenshots para validar as novas interfaces e correções de bugs, mas o fluxo completo de aprovação não foi testado de ponta a ponta).
+-   **Which testing method agent to use?** both. O agente deve usar  para testar os endpoints de backend e o  para validar o fluxo de ponta a ponta, que envolve múltiplas páginas (, , ) e mudanças de estado.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Templates de contrato não aparecem para o parceiro (P0)**
-    -   **Description:** Na página , a dropdown de templates não é preenchida com os templates que o parceiro criou, mostrando a mensagem Este parceiro não tem templates....
-    -   **Attempted fixes:** O agente confirmou que o endpoint  agora retorna os templates corretamente para o parceiro logado. O problema reside provavelmente no frontend (), na lógica que faz o fetch dos templates (timing do  ou  incorreto no momento da chamada).
-    -   **Next debug checklist:**
-        -   Analisar  para entender a sequência de  e .
-        -   Verificar se o  correto está a ser passado para  quando o utilizador é um parceiro.
-        -   Considerar usar o  do contexto de autenticação diretamente em vez de depender de um estado () que pode não estar atualizado.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** both
-
--   **Issue 2: Erro ao carregar documento do motorista (P0)**
-    -   **Description:** O utilizador reporta Erro ao carregar documento após selecionar o ficheiro na ficha do motorista.
-    -   **Attempted fixes:** O agente testou o endpoint de upload () diretamente com  e confirmou que está a funcionar. O problema é provavelmente no frontend.
-    -   **Next debug checklist:**
-        -   Analisar .
-        -   Verificar a função  e a construção do .
-        -   Verificar a consola do browser no frontend por erros de CORS, rede ou JavaScript no momento do upload.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** frontend
-
--   **Issue 3: Erro ao carregar veículos (P1)**
-    -   **Description:** O utilizador reporta erro a carregar veiculos.
-    -   **Attempted fixes:** O agente testou o endpoint  e confirmou que está a retornar a lista de veículos corretamente. A causa raiz pode ser outra.
-    -   **Next debug checklist:**
-        -   Verificar se o erro é intermitente ou acontece numa página específica.
-        -   Analisar os logs do frontend e do backend por  que possam ocorrer se algum veículo na base de dados tiver um formato inesperado. A remoção da validação Pydantic no  pode ter mascarado um problema de dados.
-    -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** both
+Nenhum bug pendente. O trabalho atual é a continuação de uma implementação de funcionalidade.
 
 **In progress Task List**:
--   **Task 1: Corrigir Bugs Reportados (P0)**
-    -   **Where to resume:** Continuar a depuração dos 3 bugs mencionados na secção All Pending/In progress Issue list. A prioridade é resolver o problema dos templates de contrato.
-    -   **What will be achieved with this?** Restaurar funcionalidades críticas para o fluxo de trabalho do parceiro.
+-   **Task 1: Concluir o Fluxo de Aprovação Financeira (P0)**
+    -   **Where to resume:** O utilizador confirmou a criação de novas páginas. O agente deve continuar a desenvolver o fluxo:
+        1.  **Criar/Adaptar a página Verificar Recibos:** Esta página deve listar os resumos com status Aguardar Recibo, permitir o upload de um recibo em PDF e alterar o status para A Pagamento.
+        2.  **Criar/Adaptar a página Pagamentos a Parceiro ():** Esta página deve listar todos os resumos com status A Pagamento, permitir o upload de um comprovativo de pagamento e alterar o status para Liquidado.
+        3.  **Finalizar a página Arquivo de Recibos ():** Garantir que, após o status ser Liquidado, o relatório, o recibo e o comprovativo de pagamento fiquem disponíveis para consulta e download nesta página.
+    -   **What will be achieved with this?** Um sistema completo e funcional para gerir o ciclo de vida dos pagamentos semanais aos motoristas, desde a aprovação até ao arquivamento, com rastreabilidade total.
     -   **Status:** IN PROGRESS
     -   **Should Test frontend/backend/both after fix?** both
     -   **Blocked on something:** Nada.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1) Corrigir restantes bugs da lista original:** Abordar os bugs de P1 da lista do utilizador (resumo semanal, importações, fluxo de aprovação de relatórios).
-    -   **(P1) Continuar Limpeza do :** Focar no grupo de endpoints de  (~47 endpoints) que foi adiado devido à sua complexidade.
+    -   **(P1) Continuar Refatoração do :** Migrar o grupo de endpoints de  (~47 endpoints) para o seu próprio ficheiro de router.
+    -   **(P1) Implementar Notificações:** Adicionar notificações por email ou na app para as mudanças de status no fluxo financeiro (ex: relatório aprovado, pagamento efetuado).
 -   **Future Tasks:**
     -   **(P2) Implementar Lógica de Sincronização Automática (RPA):** Implementar a lógica de backend com  para as automações.
+    -   **(P2) UI/UX:** Limitar a lista de próximos eventos no dashboard a 3 itens.
     -   **(P3) Funcionalidade de Exportação de Dados:** Permitir a exportação de dados em JSON/CSV.
-    -   **(P3) Notificações Push/Email para Alertas de Custos:** Integrar um serviço de email ou push.
 
 **Completed work in this session**
--   **Refatoração Massiva do Backend:**
-    -    reduzido de ~22.000 para ~17.500 linhas (~4.500 linhas removidas).
-    -   ~108 endpoints duplicados removidos dos grupos , , , e .
--   **Correção de Bugs (Múltiplas Rondas):**
-    -   Corrigidas permissões em dezenas de endpoints para aceitar roles de utilizador como string (ex: parceiro) e como Enum (), resolvendo muitos erros de Não autorizado.
-    -   Corrigido bug de deleção de fotos de veículos para parceiros ().
-    -   Corrigido bug de gestão de histórico de manutenção de veículos (CRUD) para parceiros.
-    -   Corrigido bug que impedia o carregamento da ficha do veículo ao remover a validação estrita do modelo Pydantic no retorno.
-    -   Corrigido o endpoint  para parceiros, incluindo a correção de um URL duplicado no frontend ().
-    -   Adicionado endpoint  em falta.
-    -   Corrigido endpoint de geração de contrato () para procurar na collection correta ( em vez de ).
--   **Validação com Testes:**
-    -   Duas execuções bem-sucedidas do  (, ) validaram as correções de bugs P0.
+-   **Bugs P0 Corrigidos:**
+    -   Corrigido erro que impedia os templates de contrato de aparecerem para o parceiro.
+    -   Corrigido erro no upload de documentos de motorista.
+    -   Corrigido  que causava erro ao carregar veículos.
+-   **Funcionalidades e Bugs P1 Implementados/Corrigidos:**
+    -   Corrigido cálculo do total líquido no resumo semanal.
+    -   Corrigido cálculo de IVA nos abastecimentos no relatório PDF.
+    -   Implementados endpoints / e UI para gestão do histórico de manutenções.
+    -   Permitido o registo de manutenções sem necessidade de modo de edição.
+    -   Corrigido bug que impedia a eliminação de fotos de veículos.
+    -   Corrigido bug de download de ficheiros que mostrava uma página em branco.
+    -   Adicionado download de template de vistoria em PDF na página .
+-   **Início da Implementação do Fluxo Financeiro (P0):**
+    -   Atualizada a página  com seleção múltipla e ações em lote para alterar status.
+    -   Criada a nova página  para consulta de relatórios finalizados.
+    -   Adicionados endpoints de backend para suportar o novo fluxo.
 
 **Earlier issues found/mentioned but not fixed**
--   **Relatórios e Finanças (P1):**
-    -   Totais líquidos no resumo semanal incorretos.
-    -   Importações da Bolt não registadas; valores incluem IVA.
-    -   Fluxo de aprovação de relatórios (Aguardar Recibo -> A Pagamento -> Finalizado) ainda não implementado.
--   **UI/UX (P2):**
-    -   Widget de próximos eventos no dashboard não está limitado a 3 itens.
+-   **UI/UX (P2):** O widget de Próximos Eventos no dashboard ainda não está limitado a 3 itens, conforme solicitado numa sessão anterior.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Refatoração do Backend ( monolítico).
--   **Recurrence count:** 6
--   **Status:** IN PROGRESS (Progresso muito significativo, mas a tarefa de refatorar  continua pendente).
+-   **Recurrence count:** 7
+-   **Status:** IN PROGRESS (A refatoração dos endpoints de  continua pendente).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Refatoração Segura:** A estratégia de migrar endpoints para routers dedicados, registá-los com prioridade no  e só depois remover o código legado provou ser eficaz e segura.
--   **Flexibilidade nas Permissões:** Uma causa raiz comum de bugs foi a verificação de roles estrita (ex: ). As correções envolveram adicionar  para aumentar a robustez.
--   **Validação Pydantic em GET:** Para evitar que a aplicação falhasse ao carregar dados antigos ou incompletos do MongoDB, a validação Pydantic no endpoint  foi removida, retornando o dicionário diretamente do DB. Esta é uma estratégia importante para lidar com dados legados.
-
-**key DB schema**
--   Nenhuma alteração de esquema nesta sessão.
+-   **Fluxo de Estado Multi-etapa:** Implementação de um fluxo de negócio complexo que envolve múltiplos estados (, , , etc.), várias páginas de UI e endpoints de backend para gerir as transições de estado e uploads de documentos.
+-   **Ações em Lote (Bulk Actions):** A UI do Resumo Semanal foi melhorada para permitir que o utilizador selecione múltiplos itens e aplique uma ação (mudança de status) a todos de uma vez, melhorando a eficiência.
+-   **Geração Dinâmica de PDF:** Utilização da biblioteca  no backend para gerar documentos PDF on-the-fly, tanto para relatórios de dados específicos (vistoria de um veículo) como para templates genéricos (ficha de vistoria em branco).
+-   **Flexibilidade de Modelos Pydantic:** Para resolver um , o modelo  foi atualizado para aceitar tanto os campos de dados legados () quanto os novos (), garantindo retrocompatibilidade e robustez.
 
 **All files of reference**
--   : Ficheiro principal do backend, significativamente mais limpo, mas ainda com ~17.5k linhas.
--   : Contém a lógica de veículos, onde muitas correções de permissão foram aplicadas.
--   : Contém a lógica de parceiros, também alvo de correções de permissão.
--   : Contém a lógica de motoristas.
--   : Local do bug pendente dos templates de contrato.
--   : Local do bug pendente do upload de documentos.
--   : Local de múltiplos bugs corrigidos (histórico, fotos).
--   : Atualizado com o progresso da refatoração e a lista de bugs.
-
-**Areas that need refactoring**:
--   ** (MÉDIA):** A refatoração progrediu muito, mas os endpoints de  (~47) e outros menores ainda precisam ser migrados para routers dedicados.
--   ** (BAIXA):** Vários ficheiros de página (ex: ) têm lógica complexa de  que leva a bugs de timing. Poderiam ser refatorados para usar hooks customizados ou uma gestão de estado mais robusta para simplificar a lógica de fetching de dados.
-
-**key api endpoints**
--   : Endpoint corrigido para retornar templates para o parceiro.
--   : Endpoint validado, mas com bug no frontend.
--   : Endpoint corrigido para permitir que parceiros apaguem fotos.
--   : Endpoints corrigidos para permitir que parceiros façam a gestão do histórico.
--   : Endpoint corrigido para permitir que parceiros vejam documentos pendentes dos seus motoristas.
+-   : Página central do novo fluxo financeiro, modificada para incluir seleção múltipla e ações em lote.
+-   : Nova página para visualizar relatórios arquivados.
+-   : Página existente que precisa ser integrada ou adaptada ao novo fluxo.
+-   : Ficheiro de backend onde a lógica para o novo fluxo financeiro (mudança de status, upload de documentos) está a ser adicionada.
+-   : Onde foram feitas correções no histórico de manutenções e download de documentos.
+-   : Onde foram adicionados os endpoints para CRUD de manutenções e download de PDF de vistoria.
 
 **Critical Info for New Agent**
--   **Foco no Frontend:** Muitos bugs reportados persistem apesar de o backend parecer correto quando testado isoladamente (). A causa raiz está frequentemente na interação frontend-backend (timing de chamadas, manipulação de estado, URLs incorretas). A depuração deve começar pela análise do código frontend e da consola do browser.
--   **Inconsistência de Roles:** Esteja atento à verificação de roles. A solução recorrente foi suportar tanto o Enum () como a string (). Aplique este padrão a novas correções de permissão.
--   **Dados Legados:** O erro Erro ao carregar dados do veículo foi corrigido removendo a validação Pydantic () e retornando o dicionário do MongoDB diretamente. Se surgirem erros de validação semelhantes ( em GETs), esta é uma solução válida a considerar.
+-   O foco principal é concluir o **fluxo de aprovação financeira**. O utilizador já confirmou a necessidade de várias páginas (, , ). O agente deve priorizar a construção das páginas e lógicas em falta para completar este fluxo.
+-   O fluxo de status é: **Pendente** -> **Aprovado** (no Resumo Semanal) -> **Aguardar Recibo** (passa para a pág. Verificar Recibos) -> **A Pagamento** (passa para a pág. Pagamentos a Parceiro) -> **Liquidado** (passa para o Arquivo de Recibos).
+-   A refatoração do , especificamente dos endpoints de , continua a ser uma dívida técnica importante a ser abordada após a conclusão da funcionalidade atual.
 
 **documents and test reports created in this job**
 -   
 -   
--   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  : O utilizador reporta 3 novos bugs (upload doc motorista, erro ao carregar veículos, templates não aparecem). **Status: IN PROGRESS**
-2.  : O utilizador reporta um conjunto de bugs recorrentes ou novos (docs, apagar foto, histórico, templates). **Status: IN PROGRESS**
-3.  : Utilizador aprova o plano de correção de bugs. **Status: COMPLETED**
-4.  : Utilizador pede para focar nos bugs P0. **Status: COMPLETED**
-5.  : Utilizador pede para continuar com a refatoração P3 (planos). **Status: COMPLETED**
-6.  : Utilizador pede para continuar com a refatoração P2 (relatórios). **Status: COMPLETED (adiado, focou-se em parceiros)**
-7.  : Utilizador pede para continuar com a refatoração P1 (motoristas). **Status: COMPLETED**
-8.  : Utilizador pede para continuar com a refatoração P0 (vehicles). **Status: COMPLETED**
-9.  : (Mensagem anterior) Utilizador pediu para avançar com P3. **Status: COMPLETED**
-10. : (Mensagem anterior) Utilizador pediu para avançar com P2. **Status: COMPLETED**
+1.  : Utilizador aprova o plano para continuar a desenvolver o fluxo financeiro. **Status: IN PROGRESS**
+2.  : Utilizador confirma os nomes e a necessidade das novas páginas para o fluxo financeiro. **Status: COMPLETED**
+3.  : O utilizador descreve em detalhe o novo fluxo de aprovação financeira que deseja. **Status: IN PROGRESS**
+4.  : O utilizador reporta 3 novos problemas: registar manutenção, apagar foto e download de ficheiros. **Status: RESOLVED**
+5.  : O utilizador reporta 3 problemas: gestão de manutenções, download de PDF de vistoria e edição de manutenções. **Status: RESOLVED**
+6.  : O utilizador reporta que o erro de carregamento de veículos persiste. **Status: RESOLVED**
+7.  : O utilizador reporta novamente o erro de carregar veículos e um problema com a mensagem de templates. **Status: RESOLVED**
+8.  : O utilizador reporta um problema de usabilidade na página de criação de contrato e o erro ao carregar veículos. **Status: RESOLVED**
+9.  : Utilizador pede para avançar com os bugs P1. **Status: COMPLETED**
+10. : O utilizador detalha 3 problemas nos relatórios: total líquido, IVA em abastecimentos e o fluxo de aprovação. **Status: IN PROGRESS**
 
 **Project Health Check:**
--   **Broken:**
-    -   Upload de documentos de motorista para parceiros.
-    -   Seleção de templates de contrato para parceiros.
--   **Needs Refactoring (Medium Priority):**
-    -    ainda contém ~200 endpoints, nomeadamente o grupo de , que precisa de ser migrado para um router dedicado.
+-   **In Progress:**
+    -   O novo fluxo de aprovação financeira está a meio da implementação. As páginas principais e a lógica de base foram criadas, mas as etapas intermédias (verificação de recibos, página de pagamentos) e o upload de documentos precisam ser concluídos.
+-   **Needs Refactoring:**
+    -    ainda contém o grande grupo de endpoints de , que deve ser migrado para o seu próprio router.
 
 **3rd Party Integrations**
 -   Pillow, ReportLab, openpyxl, Playwright, httpx.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES (Duas vezes, para validar as correções de bugs P0. Relatórios em  e ).
+-   **Testing agent used after significant changes:** YES (Usado para validar correções de bugs P0 no início da sessão).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** O  criou testes em .
--   **Known regressions:** Vários bugs reportados parecem ser regressões ou correções incompletas, especialmente em torno das permissões de parceiros.
+-   **Test files created:** 
+-   **Known regressions:** Nenhuma conhecida nesta sessão.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
 -   **Parceiro:**  / 
 
 **What agent forgot to execute**
--   O agente adiou a refatoração dos endpoints de  devido à sua complexidade, focando-se em grupos mais simples. Esta continua a ser a principal dívida técnica de refatoração.
--   O agente não abordou todos os bugs da longa lista do utilizador (msg 318), como os problemas nos relatórios e a UI dos eventos, priorizando os bugs P0.</analysis>
+-   O agente começou a implementação do fluxo financeiro, mas ainda não criou as páginas intermédias solicitadas pelo utilizador: a página para Verificar Recibos e a adaptação da página Pagamentos a Parceiro para o novo fluxo.
+-   A pequena melhoria de UI para limitar o widget de Próximos Eventos a 3 itens, mencionada no handoff inicial, ainda não foi abordada.</analysis>
