@@ -852,6 +852,38 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog de Upload de Recibo */}
+      <Dialog open={showUploadRecibo !== null} onOpenChange={() => setShowUploadRecibo(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload de Recibo Verde / Autofaturação</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-slate-600 mb-4">
+              Envie o recibo verde ou documento de autofaturação para o motorista{' '}
+              {motoristas.find(m => m.motorista_id === showUploadRecibo)?.motorista_nome}.
+            </p>
+            <Input
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file && showUploadRecibo) {
+                  handleUploadRecibo(showUploadRecibo, file);
+                }
+              }}
+              data-testid="upload-recibo-input"
+            />
+            <p className="text-xs text-slate-500 mt-2">Formatos aceites: PDF, JPG, PNG</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowUploadRecibo(null)}>
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       </div>
     </Layout>
   );
