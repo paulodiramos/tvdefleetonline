@@ -4,7 +4,7 @@ Handles vehicle inspections, damage reports, and PDF generation
 """
 
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 import uuid
@@ -24,6 +24,106 @@ class UserRole:
     GESTAO = "gestao"
     PARCEIRO = "parceiro"
     MOTORISTA = "motorista"
+
+
+# ==================== FICHA DE VISTORIA PDF ====================
+
+@router.get("/vistoria-template-pdf")
+async def download_vistoria_template_generic(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Generate generic PDF template for manual inspection notes (without specific vehicle)"""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.units import cm
+    import io
+    
+    user_role = current_user["role"]
+    allowed_roles = [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]
+    if user_role not in allowed_roles:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Create PDF in memory
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    
+    # Header
+    c.setFont("Helvetica-Bold", 18)
+    c.drawString(2*cm, height - 2*cm, "FICHA DE VISTORIA - APONTAMENTOS")
+    
+    # Vehicle info (blank for manual fill)
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2*cm, height - 3.5*cm, "Dados do Veículo:")
+    c.setFont("Helvetica", 11)
+    c.drawString(2*cm, height - 4.2*cm, "Matrícula: _______________________")
+    c.drawString(10*cm, height - 4.2*cm, "Marca: _______________________")
+    c.drawString(2*cm, height - 4.9*cm, "Modelo: _______________________")
+    c.drawString(10*cm, height - 4.9*cm, "Ano: __________")
+    c.drawString(2*cm, height - 5.6*cm, "Km Atual: _______________________")
+    
+    # Date and inspector
+    c.drawString(2*cm, height - 6.5*cm, "Data da Vistoria: ____/____/________")
+    c.drawString(10*cm, height - 6.5*cm, "Inspetor: _______________________")
+    
+    # Inspection checklist
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2*cm, height - 8*cm, "Lista de Verificação:")
+    
+    checklist_items = [
+        "Pneus (pressão, desgaste, danos)",
+        "Luzes (faróis, mínimos, piscas, travagem)",
+        "Travões (estado, eficácia)",
+        "Nível de óleo motor",
+        "Nível líquido refrigeração",
+        "Nível líquido travões",
+        "Nível líquido limpa-vidros",
+        "Bateria (estado, terminais)",
+        "Escovas limpa-vidros",
+        "Documentos (seguro, inspeção)",
+        "Extintor (validade, estado)",
+        "Triângulo de emergência",
+        "Colete refletor",
+        "Kit primeiros socorros",
+        "Interior (limpeza, estado)",
+        "Exterior (danos, pintura)",
+    ]
+    
+    c.setFont("Helvetica", 10)
+    y_pos = height - 9*cm
+    for item in checklist_items:
+        c.drawString(2*cm, y_pos, f"☐ {item}")
+        c.drawString(12*cm, y_pos, "OK / NOK / N/A")
+        y_pos -= 0.6*cm
+    
+    # Observations section
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2*cm, y_pos - 1*cm, "Observações / Anomalias Detetadas:")
+    
+    c.setFont("Helvetica", 10)
+    for i in range(8):
+        c.drawString(2*cm, y_pos - 1.8*cm - (i * 0.6*cm), "_" * 80)
+    
+    # Signature section
+    y_pos = y_pos - 7*cm
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(2*cm, y_pos, "Assinatura do Inspetor: _________________________")
+    c.drawString(11*cm, y_pos, "Data: ____/____/________")
+    
+    # Footer
+    c.setFont("Helvetica", 8)
+    c.drawString(2*cm, 1.5*cm, f"Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M')} | TVDEFleet")
+    
+    c.save()
+    buffer.seek(0)
+    
+    filename = f"ficha_vistoria_{datetime.now().strftime('%Y%m%d')}.pdf"
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 
 # ==================== VISTORIAS CRUD ====================
