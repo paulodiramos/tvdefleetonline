@@ -32,6 +32,7 @@ import ImportarPlataformas from "@/pages/ImportarPlataformas";
 import ImportarMotoristasVeiculos from "@/pages/ImportarMotoristasVeiculos";
 import GestaoCredenciais from "@/pages/GestaoCredenciais";
 import PagamentosParceiro from "@/pages/PagamentosParceiro";
+import ArquivoRecibos from "@/pages/ArquivoRecibos";
 import ParceiroReports from "@/pages/ParceiroReports";
 import PerfilParceiro from "@/pages/PerfilParceiro";
 import PerfilParceiroCompleto from "@/pages/PerfilParceiroCompleto";
