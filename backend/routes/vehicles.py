@@ -1731,6 +1731,115 @@ async def upload_seguro_document(
     return {"message": "Document uploaded successfully", "url": file_info["saved_path"]}
 
 
+@router.get("/{vehicle_id}/vistoria-template-pdf")
+async def download_vistoria_template_pdf(
+    vehicle_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Generate PDF template for manual inspection notes"""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+    from reportlab.lib import colors
+    from reportlab.lib.units import cm
+    import io
+    
+    user_role = current_user["role"]
+    allowed_roles = [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]
+    if user_role not in allowed_roles:
+        raise HTTPException(status_code=403, detail="Not authorized")
+    
+    vehicle = await db.vehicles.find_one({"id": vehicle_id}, {"_id": 0})
+    if not vehicle:
+        raise HTTPException(status_code=404, detail="Vehicle not found")
+    
+    # Verificar se parceiro tem acesso ao veículo
+    if user_role in [UserRole.PARCEIRO, "parceiro"]:
+        if vehicle.get("parceiro_id") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Not authorized")
+    
+    # Create PDF in memory
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    
+    # Header
+    c.setFont("Helvetica-Bold", 18)
+    c.drawString(2*cm, height - 2*cm, "FICHA DE VISTORIA - APONTAMENTOS")
+    
+    # Vehicle info
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2*cm, height - 3.5*cm, "Dados do Veículo:")
+    c.setFont("Helvetica", 11)
+    c.drawString(2*cm, height - 4.2*cm, f"Matrícula: {vehicle.get('matricula', 'N/A')}")
+    c.drawString(10*cm, height - 4.2*cm, f"Marca: {vehicle.get('marca', 'N/A')}")
+    c.drawString(2*cm, height - 4.9*cm, f"Modelo: {vehicle.get('modelo', 'N/A')}")
+    c.drawString(10*cm, height - 4.9*cm, f"Ano: {vehicle.get('ano', 'N/A')}")
+    c.drawString(2*cm, height - 5.6*cm, f"Km Atual: {vehicle.get('km_atual', 'N/A')}")
+    
+    # Date and inspector
+    c.drawString(2*cm, height - 6.5*cm, f"Data da Vistoria: ____/____/________")
+    c.drawString(10*cm, height - 6.5*cm, f"Inspetor: _______________________")
+    
+    # Inspection checklist
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2*cm, height - 8*cm, "Lista de Verificação:")
+    
+    checklist_items = [
+        "Pneus (pressão, desgaste, danos)",
+        "Luzes (faróis, mínimos, piscas, travagem)",
+        "Travões (estado, eficácia)",
+        "Nível de óleo motor",
+        "Nível líquido refrigeração",
+        "Nível líquido travões",
+        "Nível líquido limpa-vidros",
+        "Bateria (estado, terminais)",
+        "Escovas limpa-vidros",
+        "Documentos (seguro, inspeção)",
+        "Extintor (validade, estado)",
+        "Triângulo de emergência",
+        "Colete refletor",
+        "Kit primeiros socorros",
+        "Interior (limpeza, estado)",
+        "Exterior (danos, pintura)",
+    ]
+    
+    c.setFont("Helvetica", 10)
+    y_pos = height - 9*cm
+    for item in checklist_items:
+        c.drawString(2*cm, y_pos, f"☐ {item}")
+        c.drawString(12*cm, y_pos, "OK / NOK / N/A")
+        y_pos -= 0.6*cm
+    
+    # Observations section
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(2*cm, y_pos - 1*cm, "Observações / Anomalias Detetadas:")
+    
+    c.setFont("Helvetica", 10)
+    for i in range(8):
+        c.drawString(2*cm, y_pos - 1.8*cm - (i * 0.6*cm), "_" * 80)
+    
+    # Signature section
+    y_pos = y_pos - 7*cm
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(2*cm, y_pos, "Assinatura do Inspetor: _________________________")
+    c.drawString(11*cm, y_pos, "Data: ____/____/________")
+    
+    # Footer
+    c.setFont("Helvetica", 8)
+    c.drawString(2*cm, 1.5*cm, f"Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M')} | TVDEFleet")
+    
+    c.save()
+    buffer.seek(0)
+    
+    filename = f"vistoria_{vehicle.get('matricula', vehicle_id)}_{datetime.now().strftime('%Y%m%d')}.pdf"
+    
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
 @router.post("/{vehicle_id}/upload-inspecao-doc")
 async def upload_inspecao_document(
     vehicle_id: str,
