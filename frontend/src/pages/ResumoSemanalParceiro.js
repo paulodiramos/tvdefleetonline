@@ -66,6 +66,8 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   const [selectedMotoristas, setSelectedMotoristas] = useState([]); // IDs dos motoristas selecionados
   const [showBulkStatusModal, setShowBulkStatusModal] = useState(false);
   const [bulkStatus, setBulkStatus] = useState('');
+  const [showBulkEmailModal, setShowBulkEmailModal] = useState(false);
+  const [sendingEmails, setSendingEmails] = useState(false);
 
   const STATUS_LABELS = {
     pendente: { label: 'Pendente', color: 'bg-slate-100 text-slate-700' },
