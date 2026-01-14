@@ -4112,7 +4112,7 @@ async def upload_recibo_motorista(
     upload_dir.mkdir(parents=True, exist_ok=True)
     
     file_ext = file.filename.split('.')[-1] if '.' in file.filename else 'pdf'
-    file_id = str(uuid4())
+    file_id = str(uuid.uuid4())
     filename = f"recibo_{motorista_id}_S{semana}_{ano}_{file_id}.{file_ext}"
     file_path = upload_dir / filename
     
