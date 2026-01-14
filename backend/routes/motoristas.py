@@ -426,18 +426,25 @@ async def download_motorista_document(
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista not found")
     
+    user_role = current_user["role"]
+    
     # Check permissions
-    if current_user["role"] == UserRole.MOTORISTA:
+    if user_role in [UserRole.MOTORISTA, "motorista"]:
         if motorista["id"] != current_user["id"]:
             raise HTTPException(status_code=403, detail="Not authorized")
-    elif current_user["role"] == UserRole.PARCEIRO:
-        if motorista.get("parceiro_atribuido") != current_user["id"]:
+    elif user_role in [UserRole.PARCEIRO, "parceiro"]:
+        parceiro_id = motorista.get("parceiro_atribuido") or motorista.get("parceiro_associado")
+        if parceiro_id != current_user["id"]:
             raise HTTPException(status_code=403, detail="Not authorized")
+    elif user_role not in [UserRole.ADMIN, UserRole.GESTAO, "admin", "gestao"]:
+        raise HTTPException(status_code=403, detail="Not authorized")
     
-    # Get document path - check both 'documentos' and 'documents' fields
+    # Get document path - check all possible field names
     doc_url = (
         motorista.get("documentos", {}).get(doc_type) or 
+        motorista.get("documentos", {}).get(f"{doc_type}_pdf") or
         motorista.get("documents", {}).get(doc_type) or 
+        motorista.get("documents", {}).get(f"{doc_type}_pdf") or
         motorista.get(doc_type)
     )
     
