@@ -28,7 +28,7 @@ async def get_templates_contratos(current_user: Dict = Depends(get_current_user)
     if user_role != "parceiro" and str(user_role) != "UserRole.PARCEIRO":
         raise HTTPException(status_code=403, detail="Apenas parceiros podem acessar templates")
     
-    templates = await db.templates_contratos.find(
+    templates = await db.templates_contrato.find(
         {"parceiro_id": current_user["id"]},
         {"_id": 0}
     ).to_list(length=None)
@@ -55,7 +55,7 @@ async def create_template_contrato(
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.templates_contratos.insert_one(template)
+    await db.templates_contrato.insert_one(template)
     logger.info(f"Template criado: {template['nome']} para parceiro {current_user['id']}")
     return {"message": "Template criado com sucesso", "id": template["id"]}
 
@@ -70,7 +70,7 @@ async def get_template_contrato(
     if user_role != "parceiro" and str(user_role) != "UserRole.PARCEIRO":
         raise HTTPException(status_code=403, detail="Apenas parceiros podem acessar templates")
     
-    template = await db.templates_contratos.find_one(
+    template = await db.templates_contrato.find_one(
         {"id": template_id, "parceiro_id": current_user["id"]},
         {"_id": 0}
     )
@@ -93,7 +93,7 @@ async def update_template_contrato(
         raise HTTPException(status_code=403, detail="Apenas parceiros podem editar templates")
     
     # Check if template exists and belongs to user
-    template = await db.templates_contratos.find_one({"id": template_id})
+    template = await db.templates_contrato.find_one({"id": template_id})
     if not template:
         raise HTTPException(status_code=404, detail="Template não encontrado")
     
@@ -107,7 +107,7 @@ async def update_template_contrato(
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.templates_contratos.update_one(
+    await db.templates_contrato.update_one(
         {"id": template_id},
         {"$set": update_data}
     )
@@ -127,14 +127,14 @@ async def delete_template_contrato(
         raise HTTPException(status_code=403, detail="Apenas parceiros podem excluir templates")
     
     # Check if template exists and belongs to user
-    template = await db.templates_contratos.find_one({"id": template_id})
+    template = await db.templates_contrato.find_one({"id": template_id})
     if not template:
         raise HTTPException(status_code=404, detail="Template não encontrado")
     
     if template["parceiro_id"] != current_user["id"]:
         raise HTTPException(status_code=403, detail="Sem permissão para excluir este template")
     
-    await db.templates_contratos.delete_one({"id": template_id})
+    await db.templates_contrato.delete_one({"id": template_id})
     logger.info(f"Template {template_id} excluído")
     return {"message": "Template excluído com sucesso"}
 
@@ -150,7 +150,7 @@ async def download_template_pdf(
     if current_user["role"] != "parceiro":
         raise HTTPException(status_code=403, detail="Apenas parceiros podem baixar templates")
     
-    template = await db.templates_contratos.find_one(
+    template = await db.templates_contrato.find_one(
         {"id": template_id, "parceiro_id": current_user["id"]},
         {"_id": 0}
     )
@@ -217,7 +217,7 @@ async def preview_template(
     if current_user["role"] != "parceiro":
         raise HTTPException(status_code=403, detail="Apenas parceiros podem visualizar templates")
     
-    template = await db.templates_contratos.find_one(
+    template = await db.templates_contrato.find_one(
         {"id": template_id, "parceiro_id": current_user["id"]},
         {"_id": 0}
     )
@@ -249,7 +249,7 @@ async def duplicar_template(
     if current_user["role"] != "parceiro":
         raise HTTPException(status_code=403, detail="Apenas parceiros podem duplicar templates")
     
-    template = await db.templates_contratos.find_one(
+    template = await db.templates_contrato.find_one(
         {"id": template_id, "parceiro_id": current_user["id"]},
         {"_id": 0}
     )
@@ -267,7 +267,7 @@ async def duplicar_template(
         "updated_at": datetime.now(timezone.utc).isoformat()
     }
     
-    await db.templates_contratos.insert_one(novo_template)
+    await db.templates_contrato.insert_one(novo_template)
     logger.info(f"Template {template_id} duplicado como {novo_template['id']}")
     
     return {"message": "Template duplicado com sucesso", "id": novo_template["id"]}
