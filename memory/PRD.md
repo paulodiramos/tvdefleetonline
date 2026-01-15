@@ -1,5 +1,26 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-15 - Session 15 - Bugs e Melhorias UI)
+
+### Bugs Corrigidos ✅
+1. **Download de documentos de motorista (CC, residência)** - URL corrigido de `${API}/${path}` para `${API}/api/motoristas/{id}/documento/{tipo}/download`
+2. **Criar Contrato página em branco ao selecionar veículo** - Adicionada verificação `typeof` antes de `.includes()` para evitar erro quando `tipo_contrato` não é string
+3. **Gestão de Extras sem menu top e botão voltar** - Adicionado Layout wrapper e botão "Voltar" com navigate(-1)
+
+### Melhorias UI ✅
+4. **Pagamentos a Parceiro - Botão "Confirmar Pagamento"** - Adicionado botão para marcar pagamento como liquidado mesmo sem comprovativo
+5. **Envio de Relatórios em Massa por Email** - Adicionada funcionalidade no Resumo Semanal para enviar relatórios a múltiplos motoristas selecionados
+
+**Ficheiros Modificados:**
+- `/app/frontend/src/pages/FichaMotorista.js` - URL de download corrigido (linha 727)
+- `/app/frontend/src/pages/CriarContrato.js` - Verificação typeof adicionada (linhas 137, 140, 152)
+- `/app/frontend/src/pages/GestaoExtrasMotorista.js` - Layout, useNavigate e botão Voltar adicionados
+- `/app/frontend/src/pages/PagamentosParceiro.js` - Botão "Confirmar Pagamento" adicionado
+- `/app/frontend/src/pages/ResumoSemanalParceiro.js` - Modal e função de envio de emails em massa adicionados
+- `/app/frontend/src/App.js` - onLogout prop passado para GestaoExtrasMotorista
+
+---
+
 ## Changelog (2026-01-14 - Session 14 - Fluxo de Aprovação Financeira COMPLETO)
 
 ### P0 - Sistema de Fluxo de Aprovação Financeira - IMPLEMENTADO ✅
