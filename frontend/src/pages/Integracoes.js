@@ -283,7 +283,7 @@ const Integracoes = ({ user, onLogout }) => {
               <ol className="text-sm text-blue-700 space-y-1 list-decimal ml-4">
                 <li>Aceda a <a href="https://business.facebook.com" target="_blank" rel="noopener noreferrer" className="underline">business.facebook.com</a></li>
                 <li>Crie uma conta Meta Business e adicione WhatsApp Business</li>
-                <li>Em "Configuração da API", copie o Phone Number ID</li>
+                <li>Em Configuração da API, copie o Phone Number ID</li>
                 <li>Gere um token de acesso permanente</li>
               </ol>
             </div>
