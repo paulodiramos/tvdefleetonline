@@ -1129,20 +1129,27 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Mail className="w-5 h-5" />
-              Enviar Relatórios por Email
+              Enviar Relatórios
             </DialogTitle>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <p className="text-slate-600">
               Enviar relatório da semana <strong>{semana}/{ano}</strong> para <strong>{selectedMotoristas.length}</strong> motorista(s) selecionado(s)?
             </p>
-            <div className="bg-blue-50 p-3 rounded border border-blue-200">
-              <p className="text-sm text-blue-800">
-                📧 Cada motorista receberá um email com o seu relatório semanal em PDF anexado.
-              </p>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-blue-50 p-3 rounded border border-blue-200">
+                <p className="text-sm text-blue-800 font-semibold mb-1">📧 Email</p>
+                <p className="text-xs text-blue-700">PDF do relatório anexado</p>
+              </div>
+              <div className="bg-green-50 p-3 rounded border border-green-200">
+                <p className="text-sm text-green-800 font-semibold mb-1">📱 WhatsApp</p>
+                <p className="text-xs text-green-700">Resumo + valores principais</p>
+              </div>
             </div>
+            
             <div className="text-xs text-slate-500">
-              <p>Motoristas que receberão o email:</p>
+              <p>Motoristas que receberão:</p>
               <ul className="list-disc list-inside mt-1 max-h-32 overflow-y-auto">
                 {selectedMotoristas.map(id => {
                   const motorista = motoristas.find(m => m.motorista_id === id);
@@ -1151,9 +1158,27 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
               </ul>
             </div>
           </div>
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setShowBulkEmailModal(false)} disabled={sendingEmails}>
               Cancelar
+            </Button>
+            <Button 
+              onClick={handleBulkWhatsAppSend} 
+              disabled={sendingEmails}
+              className="bg-green-600 hover:bg-green-700"
+              data-testid="btn-confirmar-enviar-whatsapp-lote"
+            >
+              {sendingEmails ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  A enviar...
+                </>
+              ) : (
+                <>
+                  <Smartphone className="w-4 h-4 mr-2" />
+                  WhatsApp
+                </>
+              )}
             </Button>
             <Button 
               onClick={handleBulkEmailSend} 
@@ -1168,7 +1193,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
               ) : (
                 <>
                   <Mail className="w-4 h-4 mr-2" />
-                  Enviar Emails
+                  Email
                 </>
               )}
             </Button>
