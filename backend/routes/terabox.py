@@ -616,3 +616,212 @@ async def listar_categorias(current_user: Dict = Depends(get_current_user)):
     ]
     
     return categorias
+
+
+# ==================== AUTO-SYNC FUNCTIONS ====================
+
+@router.post("/terabox/sync/documento")
+async def sync_documento_to_terabox(
+    documento_tipo: str = Form(...),
+    documento_nome: str = Form(...),
+    entidade_tipo: str = Form(...),  # motorista, veiculo, contrato, relatorio
+    entidade_id: str = Form(...),
+    entidade_nome: str = Form(...),
+    file: UploadFile = File(...),
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Sincronização automática de documentos para Terabox.
+    Organiza automaticamente em pastas por categoria.
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Determinar parceiro_id
+    if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
+        parceiro_id = current_user["id"]
+    else:
+        # Admin/Gestão - precisa especificar parceiro
+        parceiro_id = current_user.get("parceiro_id_selected") or current_user["id"]
+    
+    # Mapear tipo de entidade para categoria de pasta
+    categoria_map = {
+        "motorista": "Motoristas",
+        "veiculo": "Veículos",
+        "contrato": "Contratos",
+        "relatorio": "Relatórios",
+        "recibo": "Recibos",
+        "comprovativo": "Comprovativos",
+        "vistoria": "Vistorias"
+    }
+    
+    categoria = categoria_map.get(entidade_tipo, "Outros")
+    
+    # Criar estrutura de pastas se não existir
+    # Estrutura: /Categoria/Entidade_Nome/
+    categoria_pasta = await _get_or_create_pasta(parceiro_id, categoria, None)
+    entidade_pasta = await _get_or_create_pasta(parceiro_id, entidade_nome, categoria_pasta["id"])
+    
+    # Gerar nome único para o ficheiro
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    ext = os.path.splitext(file.filename)[1] if file.filename else ".pdf"
+    nome_ficheiro = f"{documento_tipo}_{timestamp}{ext}"
+    
+    # Salvar ficheiro
+    pasta_path = entidade_pasta["caminho_completo"]
+    os.makedirs(pasta_path, exist_ok=True)
+    file_path = os.path.join(pasta_path, nome_ficheiro)
+    
+    with open(file_path, "wb") as f:
+        content = await file.read()
+        f.write(content)
+    
+    # Criar registo na base de dados
+    ficheiro_doc = {
+        "id": str(uuid.uuid4()),
+        "nome": documento_nome,
+        "nome_original": file.filename,
+        "tipo": get_mime_type(nome_ficheiro),
+        "tamanho": os.path.getsize(file_path),
+        "pasta_id": entidade_pasta["id"],
+        "parceiro_id": parceiro_id,
+        "caminho_completo": file_path,
+        "categoria": entidade_tipo,
+        "entidade_id": entidade_id,
+        "entidade_nome": entidade_nome,
+        "sincronizado_automaticamente": True,
+        "data_criacao": datetime.now(timezone.utc),
+        "data_modificacao": datetime.now(timezone.utc)
+    }
+    
+    await db.terabox_ficheiros.insert_one(ficheiro_doc)
+    
+    logger.info(f"Documento sincronizado para Terabox: {documento_nome} -> {file_path}")
+    
+    return {
+        "success": True,
+        "message": "Documento sincronizado com sucesso",
+        "ficheiro_id": ficheiro_doc["id"],
+        "caminho": f"{categoria}/{entidade_nome}/{nome_ficheiro}"
+    }
+
+
+async def _get_or_create_pasta(parceiro_id: str, nome: str, pasta_pai_id: str = None) -> Dict:
+    """Helper para obter ou criar pasta"""
+    query = {
+        "parceiro_id": parceiro_id,
+        "nome": nome,
+        "pasta_pai_id": pasta_pai_id
+    }
+    
+    pasta = await db.terabox_pastas.find_one(query, {"_id": 0})
+    
+    if pasta:
+        return pasta
+    
+    # Criar pasta
+    pasta_base = get_parceiro_path(parceiro_id)
+    
+    if pasta_pai_id:
+        pasta_pai = await db.terabox_pastas.find_one({"id": pasta_pai_id}, {"_id": 0})
+        if pasta_pai:
+            pasta_base = pasta_pai.get("caminho_completo", pasta_base)
+    
+    caminho_completo = os.path.join(pasta_base, nome)
+    os.makedirs(caminho_completo, exist_ok=True)
+    
+    pasta_doc = {
+        "id": str(uuid.uuid4()),
+        "nome": nome,
+        "parceiro_id": parceiro_id,
+        "pasta_pai_id": pasta_pai_id,
+        "caminho_completo": caminho_completo,
+        "data_criacao": datetime.now(timezone.utc)
+    }
+    
+    await db.terabox_pastas.insert_one(pasta_doc)
+    return pasta_doc
+
+
+@router.get("/terabox/sync/status")
+async def get_sync_status(current_user: Dict = Depends(get_current_user)):
+    """Obter status de sincronização do parceiro"""
+    if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
+        parceiro_id = current_user["id"]
+    else:
+        parceiro_id = None
+    
+    query = {"sincronizado_automaticamente": True}
+    if parceiro_id:
+        query["parceiro_id"] = parceiro_id
+    
+    total_sincronizados = await db.terabox_ficheiros.count_documents(query)
+    
+    # Últimas sincronizações
+    ultimas = await db.terabox_ficheiros.find(
+        query,
+        {"_id": 0, "id": 1, "nome": 1, "categoria": 1, "data_criacao": 1}
+    ).sort("data_criacao", -1).limit(10).to_list(10)
+    
+    return {
+        "total_sincronizados": total_sincronizados,
+        "ultimas_sincronizacoes": ultimas
+    }
+
+
+@router.get("/terabox/parceiros")
+async def listar_parceiros_terabox(current_user: Dict = Depends(get_current_user)):
+    """Lista parceiros com acesso a Terabox (apenas para Admin/Gestão)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "admin", "gestao"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Buscar parceiros com ficheiros no Terabox
+    parceiros_ids = await db.terabox_ficheiros.distinct("parceiro_id")
+    
+    parceiros = []
+    for pid in parceiros_ids:
+        parceiro = await db.users.find_one({"id": pid}, {"_id": 0, "id": 1, "name": 1, "email": 1})
+        if parceiro:
+            # Contar ficheiros
+            count = await db.terabox_ficheiros.count_documents({"parceiro_id": pid})
+            parceiro["total_ficheiros"] = count
+            parceiros.append(parceiro)
+    
+    return parceiros
+
+
+@router.get("/terabox/parceiro/{parceiro_id}/stats")
+async def get_parceiro_terabox_stats(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter estatísticas de Terabox de um parceiro específico"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "admin", "gestao"]:
+        if current_user["role"] in [UserRole.PARCEIRO, "parceiro"] and current_user["id"] != parceiro_id:
+            raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    total_ficheiros = await db.terabox_ficheiros.count_documents({"parceiro_id": parceiro_id})
+    total_pastas = await db.terabox_pastas.count_documents({"parceiro_id": parceiro_id})
+    
+    # Tamanho total
+    pipeline = [
+        {"$match": {"parceiro_id": parceiro_id}},
+        {"$group": {"_id": None, "total": {"$sum": "$tamanho"}}}
+    ]
+    size_result = await db.terabox_ficheiros.aggregate(pipeline).to_list(1)
+    total_size = size_result[0]["total"] if size_result else 0
+    
+    # Por categoria
+    por_categoria = await db.terabox_ficheiros.aggregate([
+        {"$match": {"parceiro_id": parceiro_id}},
+        {"$group": {"_id": "$categoria", "count": {"$sum": 1}}}
+    ]).to_list(20)
+    
+    return {
+        "parceiro_id": parceiro_id,
+        "total_ficheiros": total_ficheiros,
+        "total_pastas": total_pastas,
+        "tamanho_total": total_size,
+        "tamanho_formatado": get_file_size_formatted(total_size),
+        "por_categoria": {item["_id"] or "outros": item["count"] for item in por_categoria}
+    }
