@@ -278,6 +278,47 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     }
   };
 
+  const handleBulkWhatsAppSend = async () => {
+    if (selectedMotoristas.length === 0) {
+      toast.error('Selecione pelo menos um motorista');
+      return;
+    }
+
+    setSendingEmails(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.post(
+        `${API}/api/whatsapp/send-bulk`,
+        { 
+          motorista_ids: selectedMotoristas, 
+          message_type: 'relatorio',
+          semana,
+          ano
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        setShowBulkEmailModal(false);
+        setSelectedMotoristas([]);
+        toast.success(`Envio de ${selectedMotoristas.length} mensagens WhatsApp iniciado!`);
+      } else {
+        toast.error(response.data.message || 'Erro ao enviar');
+      }
+    } catch (error) {
+      console.error('Erro ao enviar WhatsApp em massa:', error);
+      const errorMsg = error.response?.data?.detail || 'Erro ao enviar WhatsApp';
+      if (errorMsg.includes('não configurado')) {
+        toast.error('WhatsApp Business não configurado. Aceda a Configurações → Integrações.');
+      } else {
+        toast.error(errorMsg);
+      }
+    } finally {
+      setSendingEmails(false);
+    }
+  };
+
   const fetchHistorico = async () => {
     try {
       const token = localStorage.getItem('token');
