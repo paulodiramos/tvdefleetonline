@@ -187,6 +187,154 @@ const Integracoes = ({ user, onLogout }) => {
           </CardContent>
         </Card>
 
+        {/* WhatsApp Business API Integration */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                  <MessageSquare className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <CardTitle>WhatsApp Business API</CardTitle>
+                  <CardDescription>Enviar relatórios e notificações via WhatsApp</CardDescription>
+                </div>
+              </div>
+              <Badge variant={configuracoes.whatsapp?.ativo ? "default" : "secondary"}>
+                {configuracoes.whatsapp?.ativo ? <><Check className="w-3 h-3 mr-1" /> Ativo</> : <><X className="w-3 h-3 mr-1" /> Inativo</>}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                <p className="font-semibold mb-2">Funcionalidades disponíveis:</p>
+                <ul className="text-sm space-y-1 ml-4 list-disc">
+                  <li>Envio de relatórios semanais para motoristas</li>
+                  <li>Notificações de alteração de status</li>
+                  <li>Comunicação de vistorias agendadas</li>
+                  <li>Envio em massa para múltiplos motoristas</li>
+                </ul>
+              </AlertDescription>
+            </Alert>
+
+            <div className="flex items-center justify-between">
+              <Label htmlFor="whatsapp-active" className="flex flex-col space-y-1">
+                <span>Ativar WhatsApp Business</span>
+                <span className="text-xs text-slate-500 font-normal">Enviar mensagens via WhatsApp</span>
+              </Label>
+              <Switch
+                id="whatsapp-active"
+                checked={configuracoes.whatsapp?.ativo || false}
+                onCheckedChange={(checked) => 
+                  setConfiguracoes({
+                    ...configuracoes,
+                    whatsapp: { ...configuracoes.whatsapp, ativo: checked }
+                  })
+                }
+              />
+            </div>
+
+            <Separator />
+
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="whatsapp-phone-id">Phone Number ID *</Label>
+                <Input
+                  id="whatsapp-phone-id"
+                  type="text"
+                  value={configuracoes.whatsapp?.phone_number_id || ''}
+                  onChange={(e) => 
+                    setConfiguracoes({
+                      ...configuracoes,
+                      whatsapp: { ...configuracoes.whatsapp, phone_number_id: e.target.value }
+                    })
+                  }
+                  placeholder="Ex: 123456789012345"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Encontre em: Meta Business → WhatsApp → Configuração da API
+                </p>
+              </div>
+
+              <div>
+                <Label htmlFor="whatsapp-token">Access Token *</Label>
+                <Input
+                  id="whatsapp-token"
+                  type="password"
+                  value={configuracoes.whatsapp?.access_token || ''}
+                  onChange={(e) => 
+                    setConfiguracoes({
+                      ...configuracoes,
+                      whatsapp: { ...configuracoes.whatsapp, access_token: e.target.value }
+                    })
+                  }
+                  placeholder="Token de acesso permanente"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Token permanente gerado no Meta Business Suite
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="font-semibold text-blue-800 mb-2">📘 Como configurar:</h4>
+              <ol className="text-sm text-blue-700 space-y-1 list-decimal ml-4">
+                <li>Aceda a <a href="https://business.facebook.com" target="_blank" rel="noopener noreferrer" className="underline">business.facebook.com</a></li>
+                <li>Crie uma conta Meta Business e adicione WhatsApp Business</li>
+                <li>Em "Configuração da API", copie o Phone Number ID</li>
+                <li>Gere um token de acesso permanente</li>
+              </ol>
+            </div>
+
+            <div className="flex items-center space-x-3 pt-4">
+              <Button 
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    const token = localStorage.getItem('token');
+                    await axios.post(`${API}/whatsapp/config`, configuracoes.whatsapp, {
+                      headers: { Authorization: `Bearer ${token}` }
+                    });
+                    toast.success('Configurações WhatsApp salvas com sucesso!');
+                    fetchConfiguracoes();
+                  } catch (error) {
+                    console.error('Error saving WhatsApp:', error);
+                    toast.error(error.response?.data?.detail || 'Erro ao salvar configurações');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                disabled={loading}
+              >
+                Salvar Configurações
+              </Button>
+              <Button 
+                onClick={async () => {
+                  try {
+                    setLoading(true);
+                    const token = localStorage.getItem('token');
+                    const response = await axios.get(`${API}/whatsapp/stats`, {
+                      headers: { Authorization: `Bearer ${token}` }
+                    });
+                    toast.success(`WhatsApp OK! ${response.data.total_enviados} mensagens enviadas.`);
+                  } catch (error) {
+                    console.error('Error testing WhatsApp:', error);
+                    toast.error(error.response?.data?.detail || 'Erro ao testar conexão');
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                variant="outline" 
+                disabled={loading || !configuracoes.whatsapp?.ativo}
+              >
+                Ver Estatísticas
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Outras Integrações */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card>
@@ -198,20 +346,20 @@ const Integracoes = ({ user, onLogout }) => {
               <CardDescription>Configure servidor SMTP</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-500">Em breve</p>
+              <p className="text-sm text-slate-500">Configurado via variáveis de ambiente</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-2">
-                <MessageSquare className="w-6 h-6 text-green-600" />
+              <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center mb-2">
+                <CreditCard className="w-6 h-6 text-purple-600" />
               </div>
-              <CardTitle>WhatsApp</CardTitle>
-              <CardDescription>API do WhatsApp</CardDescription>
+              <CardTitle>Moloni</CardTitle>
+              <CardDescription>Faturação automática</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-slate-500">Em breve</p>
+              <p className="text-sm text-slate-500">Em desenvolvimento</p>
             </CardContent>
           </Card>
 
