@@ -27,7 +27,8 @@ import {
   Upload,
   Settings,
   Wallet,
-  MinusCircle
+  MinusCircle,
+  Smartphone
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
