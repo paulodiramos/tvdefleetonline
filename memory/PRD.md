@@ -1,5 +1,54 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-16 - Session 16 - Terabox Sync + WhatsApp Business)
+
+### 1. Terabox - Sincronização Automática ✅
+**Funcionalidades implementadas:**
+- Sincronização automática de documentos para Terabox
+- Estrutura organizada por pastas (Motoristas, Veículos, Contratos, Relatórios, etc.)
+- Cada parceiro tem a sua própria área isolada
+- Gestor/Admin pode visualizar todos os parceiros
+- Estatísticas por parceiro (total ficheiros, tamanho)
+
+**Endpoints adicionados:**
+- `POST /api/terabox/sync/documento` - Sincronizar documento automaticamente
+- `GET /api/terabox/sync/status` - Status de sincronização
+- `GET /api/terabox/parceiros` - Listar parceiros com Terabox (admin)
+- `GET /api/terabox/parceiro/{id}/stats` - Estatísticas de um parceiro
+
+### 2. WhatsApp Business API ✅
+**Funcionalidades implementadas:**
+- Envio de relatórios semanais via WhatsApp
+- Notificações de alteração de status
+- Comunicação de vistorias agendadas
+- Envio em massa para múltiplos motoristas
+- Página de configuração em Integrações
+
+**Endpoints adicionados:**
+- `GET/POST /api/whatsapp/config` - Configuração da API
+- `POST /api/whatsapp/send` - Enviar mensagem individual
+- `POST /api/whatsapp/send-relatorio/{motorista_id}` - Enviar relatório
+- `POST /api/whatsapp/send-bulk` - Envio em massa
+- `POST /api/whatsapp/notify-status-change` - Notificar mudança de status
+- `GET /api/whatsapp/logs` - Histórico de envios
+- `GET /api/whatsapp/stats` - Estatísticas
+
+**Ficheiros criados/modificados:**
+- `/app/backend/routes/whatsapp.py` - **NOVO** - Router completo WhatsApp
+- `/app/backend/routes/terabox.py` - Endpoints de sincronização adicionados
+- `/app/backend/server.py` - Router WhatsApp registado
+- `/app/frontend/src/pages/Integracoes.js` - Configuração WhatsApp
+- `/app/frontend/src/pages/ResumoSemanalParceiro.js` - Botão WhatsApp no envio em massa
+
+**Configuração necessária:**
+Para usar WhatsApp Business API:
+1. Criar conta Meta Business em business.facebook.com
+2. Adicionar WhatsApp Business
+3. Obter Phone Number ID e Access Token
+4. Configurar em TVDEFleet → Configurações → Integrações
+
+---
+
 ## Changelog (2026-01-15 - Session 15 - Bugs e Melhorias UI)
 
 ### Bugs Corrigidos ✅
