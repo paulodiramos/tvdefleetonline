@@ -285,30 +285,32 @@ async def gerar_relatorio_semanal(
     total_eletrico = 0.0
     eletrico_records = []
     if config.get("incluir_eletrico", True):
-        elet_query = {
-            "$or": [
-                {"vehicle_id": veiculo_id} if veiculo_id else {"vehicle_id": None},
-                {"motorista_id": motorista_id}
-            ],
-            "data": {"$gte": data_inicio, "$lte": data_fim}
-        }
-        if not veiculo_id:
+        # Construir query com OR para incluir vehicle_id E motorista_id
+        or_conditions_elet = []
+        if veiculo_id:
+            or_conditions_elet.append({"vehicle_id": veiculo_id})
+        if motorista_id:
+            or_conditions_elet.append({"motorista_id": motorista_id})
+        
+        if or_conditions_elet:
             elet_query = {
-                "motorista_id": motorista_id,
+                "$or": or_conditions_elet,
                 "data": {"$gte": data_inicio, "$lte": data_fim}
             }
-        elet_records = await db.abastecimentos_eletrico.find(elet_query, {"_id": 0}).to_list(1000)
-        for r in elet_records:
-            valor = r.get("valor_total_com_taxas", 0) or r.get("custo_base", 0) or 0
-            total_eletrico += valor
-            eletrico_records.append({
-                "data": r.get("data"),
-                "valor": valor,
-                "estacao": r.get("estacao_id", ""),
-                "energia_kwh": r.get("energia_kwh", 0),
-                "duracao": r.get("duracao_minutos", 0),
-                "tipo": "carregamento_eletrico"
-            })
+            elet_records = await db.abastecimentos_eletrico.find(elet_query, {"_id": 0}).to_list(1000)
+            for r in elet_records:
+                valor = r.get("valor_total_com_taxas", 0) or r.get("custo_base", 0) or 0
+                total_eletrico += valor
+                eletrico_records.append({
+                    "data": r.get("data"),
+                    "valor": valor,
+                    "estacao": r.get("estacao_id", ""),
+                    "energia_kwh": r.get("energia_kwh", 0),
+                    "duracao": r.get("duracao_minutos", 0),
+                    "tipo": "carregamento_eletrico",
+                    "veiculo_id": r.get("vehicle_id"),
+                    "motorista_id": r.get("motorista_id")
+                })
     
     # Get GPS/KM data
     total_km = 0.0
