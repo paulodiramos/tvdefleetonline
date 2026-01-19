@@ -2346,9 +2346,10 @@ async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio
                 "periodo_fim": periodo_fim,
                 "semana": semana,  # Adicionar semana para queries
                 "ano": ano,        # Adicionar ano para queries
-                "rendimentos": round(dados["rendimentos"], 2),  # Novo campo - rendimentos líquidos
-                "uber_portagens": round(dados["portagens"], 2),  # Novo campo - portagens Uber
-                "total_pago": round(dados["rendimentos"], 2),  # Manter compatibilidade
+                "rendimentos": round(dados["rendimentos"], 2),  # Campo principal - valor de "Pago a si"
+                "pago_total": round(dados["rendimentos"], 2),   # Compatibilidade com registos antigos
+                "total_pago": round(dados["rendimentos"], 2),   # Compatibilidade adicional
+                "uber_portagens": round(dados["portagens"], 2), # Portagens Uber
                 "csv_original": f"uploads/csv/uber/{csv_filename}",
                 "created_at": datetime.now(timezone.utc).isoformat()
             }
