@@ -28,6 +28,40 @@ class DocumentoValidacao(BaseModel):
     observacoes: Optional[str] = None
 
 
+class MotoristaCreateSimple(BaseModel):
+    """Simplified model for creating a new motorista (minimum fields)"""
+    email: EmailStr
+    name: str
+    phone: str
+    morada_completa: Optional[str] = ""
+    codigo_postal: Optional[str] = ""
+    data_nascimento: Optional[str] = ""
+    nacionalidade: Optional[str] = "Portuguesa"
+    tipo_documento: Optional[str] = "CC"
+    numero_documento: Optional[str] = ""
+    validade_documento: Optional[str] = ""
+    nif: Optional[str] = ""
+    carta_conducao_numero: Optional[str] = ""
+    carta_conducao_validade: Optional[str] = ""
+    licenca_tvde_numero: Optional[str] = ""
+    licenca_tvde_validade: Optional[str] = ""
+    codigo_registo_criminal: Optional[str] = None
+    parceiro_atribuido: Optional[str] = None
+    veiculo_atribuido: Optional[str] = None
+    tipo_motorista: Optional[str] = "independente"
+    regime: Optional[str] = "full_time"
+    iban: Optional[str] = None
+    email_uber: Optional[str] = None
+    telefone_uber: Optional[str] = None
+    uuid_motorista_uber: Optional[str] = None
+    email_bolt: Optional[str] = None
+    telefone_bolt: Optional[str] = None
+    identificador_motorista_bolt: Optional[str] = None
+    whatsapp: Optional[str] = ""
+    tipo_pagamento: Optional[str] = "transferencia"
+    senha_provisoria: bool = False
+
+
 class MotoristaCreate(BaseModel):
     """Model for creating a new motorista"""
     email: EmailStr
