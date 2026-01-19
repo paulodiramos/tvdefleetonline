@@ -25,6 +25,98 @@ MOTORISTAS_UPLOAD_DIR = UPLOAD_DIR / "motoristas"
 MOTORISTAS_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
+@router.post("/parceiros/{parceiro_id}/motoristas")
+async def create_motorista_for_parceiro(
+    parceiro_id: str,
+    motorista_data: MotoristaCreate,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Create a new motorista for a specific parceiro"""
+    # Verificar permissões
+    if current_user["role"] == UserRole.PARCEIRO:
+        if current_user["id"] != parceiro_id:
+            raise HTTPException(status_code=403, detail="Não pode criar motoristas para outro parceiro")
+    elif current_user["role"] == UserRole.GESTAO:
+        parceiros_atribuidos = current_user.get("parceiros_atribuidos", [])
+        if parceiro_id not in parceiros_atribuidos:
+            raise HTTPException(status_code=403, detail="Parceiro não atribuído a este gestor")
+    elif current_user["role"] not in [UserRole.ADMIN, "admin"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Verificar se email já existe
+    existing = await db.users.find_one({"email": motorista_data.email})
+    if existing:
+        raise HTTPException(status_code=400, detail="Email já registado")
+    
+    # Gerar senha provisória (últimos 9 dígitos do telefone)
+    phone_clean = (motorista_data.phone or "").replace(" ", "").replace("-", "")
+    provisional_pass = phone_clean[-9:] if len(phone_clean) >= 9 else phone_clean or "123456789"
+    
+    # Criar user
+    user_dict = {
+        "id": str(uuid.uuid4()),
+        "email": motorista_data.email,
+        "name": motorista_data.name,
+        "role": UserRole.MOTORISTA,
+        "password": hash_password(provisional_pass),
+        "phone": motorista_data.phone,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "approved": False
+    }
+    await db.users.insert_one(user_dict)
+    
+    # Criar motorista
+    motorista_dict = motorista_data.model_dump()
+    motorista_dict.pop("password", None)
+    motorista_dict["id"] = user_dict["id"]
+    motorista_dict["parceiro_atribuido"] = parceiro_id
+    motorista_dict["id_cartao_frota_combustivel"] = f"FROTA-{str(uuid.uuid4())[:8].upper()}"
+    motorista_dict["documents"] = {
+        "license_photo": None, 
+        "cv_file": None, 
+        "profile_photo": None,
+        "documento_identificacao": None,
+        "licenca_tvde": None,
+        "registo_criminal": None,
+        "contrato": None,
+        "additional_docs": []
+    }
+    motorista_dict["approved"] = False
+    motorista_dict["senha_provisoria"] = True
+    motorista_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.motoristas.insert_one(motorista_dict)
+    
+    logger.info(f"Motorista {motorista_data.name} criado pelo parceiro {parceiro_id}")
+    
+    return {
+        "id": motorista_dict["id"],
+        "name": motorista_dict["name"],
+        "email": motorista_dict["email"],
+        "phone": motorista_dict.get("phone"),
+        "senha_provisoria": provisional_pass,
+        "message": "Motorista criado com sucesso"
+    }
+
+
+@router.get("/parceiros/csv-examples/motoristas")
+async def get_csv_example_motoristas(current_user: Dict = Depends(get_current_user)):
+    """Get CSV example for importing motoristas"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    csv_content = """email,name,phone,morada_completa,codigo_postal,data_nascimento,nacionalidade,tipo_documento,numero_documento,validade_documento,nif
+motorista1@email.com,João Silva,912345678,Rua Exemplo 123,1000-001,1990-01-15,Portuguesa,CC,12345678,2025-12-31,123456789
+motorista2@email.com,Maria Santos,923456789,Av. Principal 456,1100-002,1985-06-20,Portuguesa,CC,87654321,2024-06-30,987654321"""
+    
+    from fastapi.responses import Response
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=exemplo_motoristas.csv"}
+    )
+
+
 @router.post("/motoristas/register", response_model=Motorista)
 async def register_motorista(motorista_data: MotoristaCreate):
     """Register a new motorista"""
