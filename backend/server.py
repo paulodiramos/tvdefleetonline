@@ -2265,10 +2265,11 @@ async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio
             portagens = 0.0
             imposto_tarifa = 0.0
             
-            # Rendimentos - coluna principal (NÃO usar 'Pago a si' que é o total)
-            for col_name in ['Pago a si:Os seus rendimentos', 'Os seus rendimentos', 'Rendimentos']:
+            # Rendimentos - usar coluna 'Pago a si' que é o valor líquido pago ao motorista
+            for col_name in ['Pago a si', 'Pago a si:Os seus rendimentos', 'Os seus rendimentos', 'Rendimentos', 'Total pago']:
                 if col_name in row and row[col_name]:
                     rendimentos = parse_float(row[col_name])
+                    logger.debug(f"Usando coluna '{col_name}' para rendimentos: {rendimentos}")
                     break
             
             # Portagens reembolsadas
