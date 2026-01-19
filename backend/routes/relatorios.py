@@ -254,30 +254,32 @@ async def gerar_relatorio_semanal(
             total_combustivel += sum(r.get("valor_com_iva", 0) or r.get("valor", 0) or 0 for r in legacy_records)
         
         # 2. New imported combustivel collection (by vehicle or motorista)
-        comb_query_new = {
-            "$or": [
-                {"vehicle_id": veiculo_id} if veiculo_id else {"vehicle_id": None},
-                {"motorista_id": motorista_id}
-            ],
-            "data": {"$gte": data_inicio, "$lte": data_fim}
-        }
-        if not veiculo_id:
+        # Construir query com OR para incluir vehicle_id E motorista_id
+        or_conditions = []
+        if veiculo_id:
+            or_conditions.append({"vehicle_id": veiculo_id})
+        if motorista_id:
+            or_conditions.append({"motorista_id": motorista_id})
+        
+        if or_conditions:
             comb_query_new = {
-                "motorista_id": motorista_id,
+                "$or": or_conditions,
                 "data": {"$gte": data_inicio, "$lte": data_fim}
             }
-        new_records = await db.abastecimentos_combustivel.find(comb_query_new, {"_id": 0}).to_list(1000)
-        for r in new_records:
-            valor = r.get("valor_total", 0) or r.get("valor", 0) or r.get("valor_liquido", 0) or 0
-            total_combustivel += valor
-            combustivel_records.append({
-                "data": r.get("data"),
-                "valor": valor,
-                "posto": r.get("posto", ""),
-                "combustivel": r.get("combustivel", ""),
-                "litros": r.get("litros", 0),
-                "tipo": "importado"
-            })
+            new_records = await db.abastecimentos_combustivel.find(comb_query_new, {"_id": 0}).to_list(1000)
+            for r in new_records:
+                valor = r.get("valor_total", 0) or r.get("valor", 0) or r.get("valor_liquido", 0) or 0
+                total_combustivel += valor
+                combustivel_records.append({
+                    "data": r.get("data"),
+                    "valor": valor,
+                    "posto": r.get("posto", ""),
+                    "combustivel": r.get("combustivel", ""),
+                    "litros": r.get("litros", 0),
+                    "tipo": "importado",
+                    "veiculo_id": r.get("vehicle_id"),
+                    "motorista_id": r.get("motorista_id")
+                })
     
     # Get carregamentos elétricos data
     total_eletrico = 0.0
