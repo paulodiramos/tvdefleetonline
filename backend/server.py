@@ -2208,7 +2208,7 @@ async def process_uber_csv(file_content: bytes, parceiro_id: str, periodo_inicio
     """Process Uber CSV file and extract earnings data (for parceiro/operacional)
     
     Colunas importantes do CSV Uber:
-    - 'Pago a si:Os seus rendimentos' - Rendimentos líquidos do motorista
+    - 'Pago a si' - Valor líquido pago ao motorista (USAR ESTA PARA GANHOS)
     - 'Pago a si:Saldo da viagem:Reembolsos:Portagem' - Portagens reembolsadas
     - 'Pago a si:Saldo da viagem:Impostos:Imposto sobre a tarifa' - Imposto sobre tarifa
     - 'UUID do motorista' - ID único do motorista na Uber
