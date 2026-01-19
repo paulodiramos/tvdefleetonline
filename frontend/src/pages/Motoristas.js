@@ -735,6 +735,16 @@ const Motoristas = ({ user, onLogout }) => {
               </Button>
             )}
             {(user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') && (
+              <Button 
+                variant="outline" 
+                onClick={() => navigate('/motoristas/arquivo')}
+                data-testid="btn-arquivo-motoristas"
+              >
+                <Archive className="w-4 h-4 mr-2" />
+                Arquivo Ex-Motoristas
+              </Button>
+            )}
+            {(user.role === 'admin' || user.role === 'gestao' || user.role === 'parceiro') && (
               <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
                 <DialogTrigger asChild>
                   <Button className="bg-blue-600 hover:bg-blue-700" data-testid="add-motorista-button">
