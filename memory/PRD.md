@@ -1,5 +1,40 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-19 - Session 17 - Arquivo Ex-Motoristas + Bug Combustíveis)
+
+### 1. Arquivo de Ex-Motoristas ✅
+**Nova página criada:** `/motoristas/arquivo`
+
+**Funcionalidades:**
+- Lista de motoristas inativos/arquivados
+- Histórico de ganhos (Uber, Bolt, Total)
+- Veículos utilizados durante o período de atividade
+- Despesas/extras pendentes
+- Opção de reativar motorista
+- Pesquisa por nome, email ou telefone
+
+**Endpoints criados:**
+- `GET /api/motoristas/arquivo/ex-motoristas` - Listar ex-motoristas
+- `GET /api/motoristas/{id}/historico-veiculos` - Histórico de veículos
+- `GET /api/motoristas/{id}/despesas-extras` - Despesas pendentes
+
+**Ficheiros:**
+- `/app/frontend/src/pages/ArquivoExMotoristas.js` - **NOVO**
+- `/app/backend/routes/motoristas.py` - Endpoints adicionados
+- `/app/frontend/src/App.js` - Rota adicionada
+- `/app/frontend/src/pages/Motoristas.js` - Botão "Arquivo Ex-Motoristas"
+
+### 2. Bug Combustíveis/Elétricos no Relatório Semanal ✅
+**Problema:** Registos de combustível com `vehicle_id` mas sem `motorista_id` não apareciam nos relatórios.
+
+**Solução:** Corrigida query para buscar por `vehicle_id` OU `motorista_id` (usando $or):
+- Query agora inclui registos do veículo atribuído ao motorista
+- Campos `veiculo_id` e `motorista_id` incluídos nos registos para rastreabilidade
+
+**Ficheiro modificado:** `/app/backend/routes/relatorios.py` (linhas 241-320)
+
+---
+
 ## Changelog (2026-01-16 - Session 16 - Terabox Sync + WhatsApp Business)
 
 ### 1. Terabox - Sincronização Automática ✅
