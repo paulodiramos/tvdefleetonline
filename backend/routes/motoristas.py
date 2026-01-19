@@ -136,6 +136,111 @@ CC-22-CC,Tesla,Model 3,2022,Cinzento,Elétrico,5,Automática,2022-06-10,275cv,0,
     )
 
 
+@router.get("/motoristas/arquivo/ex-motoristas")
+async def list_ex_motoristas(current_user: Dict = Depends(get_current_user)):
+    """List archived/inactive motoristas with their history"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Construir query base
+    query = {
+        "$or": [
+            {"status": "inativo"},
+            {"status_motorista": "desativo"},
+            {"deleted": True},
+            {"ativo": False}
+        ]
+    }
+    
+    # Filtrar por parceiro se for parceiro
+    if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
+        query["parceiro_atribuido"] = current_user["id"]
+    elif current_user["role"] in [UserRole.GESTAO, "gestao"]:
+        parceiros = current_user.get("parceiros_atribuidos", [])
+        if parceiros:
+            query["parceiro_atribuido"] = {"$in": parceiros}
+    
+    motoristas = await db.motoristas.find(query, {"_id": 0}).to_list(500)
+    
+    # Enriquecer com dados adicionais
+    result = []
+    for m in motoristas:
+        # Buscar último veículo
+        ultimo_veiculo = None
+        if m.get("veiculo_atribuido"):
+            veiculo = await db.vehicles.find_one({"id": m["veiculo_atribuido"]}, {"_id": 0, "matricula": 1})
+            if veiculo:
+                ultimo_veiculo = veiculo.get("matricula")
+        
+        # Calcular total despesas pendentes
+        extras = await db.extras_motorista.find({
+            "motorista_id": m.get("id"),
+            "pago": {"$ne": True}
+        }, {"_id": 0, "valor": 1}).to_list(100)
+        total_despesas = sum(e.get("valor", 0) for e in extras)
+        
+        result.append({
+            **m,
+            "ultimo_veiculo": ultimo_veiculo,
+            "total_despesas": total_despesas
+        })
+    
+    return result
+
+
+@router.get("/motoristas/{motorista_id}/historico-veiculos")
+async def get_motorista_historico_veiculos(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get vehicle history for a motorista"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    veiculos = []
+    
+    # Veículo atual/último atribuído
+    if motorista.get("veiculo_atribuido"):
+        veiculo = await db.vehicles.find_one({"id": motorista["veiculo_atribuido"]}, {"_id": 0})
+        if veiculo:
+            veiculos.append(veiculo)
+    
+    # Buscar histórico de atribuições
+    historico = await db.atribuicoes_veiculos.find(
+        {"motorista_id": motorista_id},
+        {"_id": 0}
+    ).sort("data", -1).to_list(20)
+    
+    for h in historico:
+        if h.get("veiculo_id"):
+            v = await db.vehicles.find_one({"id": h["veiculo_id"]}, {"_id": 0})
+            if v and v not in veiculos:
+                veiculos.append(v)
+    
+    return veiculos
+
+
+@router.get("/motoristas/{motorista_id}/despesas-extras")
+async def get_motorista_despesas_extras(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Get pending expenses/extras for a motorista"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    despesas = await db.extras_motorista.find(
+        {"motorista_id": motorista_id},
+        {"_id": 0}
+    ).sort("data", -1).to_list(100)
+    
+    return despesas
+
+
 @router.post("/motoristas/register", response_model=Motorista)
 async def register_motorista(motorista_data: MotoristaCreate):
     """Register a new motorista"""
