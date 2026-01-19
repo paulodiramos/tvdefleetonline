@@ -9,6 +9,7 @@ import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Vehicles from "@/pages/Vehicles";
 import Motoristas from "@/pages/Motoristas";
+import ArquivoExMotoristas from "@/pages/ArquivoExMotoristas";
 import Financials from "@/pages/Financials";
 import PublicSite from "@/pages/PublicSite";
 import MotoristaRegister from "@/pages/MotoristaRegister";
