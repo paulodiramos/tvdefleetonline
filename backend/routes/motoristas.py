@@ -9,7 +9,7 @@ import uuid
 import logging
 import mimetypes
 
-from models.motorista import Motorista, MotoristaCreate
+from models.motorista import Motorista, MotoristaCreate, MotoristaCreateSimple
 from models.user import UserRole
 from utils.auth import hash_password, get_current_user
 from utils.database import get_database
