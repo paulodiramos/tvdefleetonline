@@ -117,6 +117,25 @@ motorista2@email.com,Maria Santos,923456789,Av. Principal 456,1100-002,1985-06-2
     )
 
 
+@router.get("/parceiros/csv-examples/veiculos")
+async def get_csv_example_veiculos(current_user: Dict = Depends(get_current_user)):
+    """Get CSV example for importing vehicles"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    csv_content = """matricula,marca,modelo,ano,cor,tipo_combustivel,numero_lugares,tipo_caixa,data_matricula,potencia,cilindrada,numero_chassis,categoria,proprietario_nome,proprietario_nif,tipo_uso,validade_iuc,seguro_companhia,seguro_apolice,seguro_validade
+AA-00-AA,Toyota,Corolla,2020,Preto,Híbrido,5,Automática,2020-01-15,122cv,1800,JTDKN3DU5A0000001,Ligeiro,João Silva,123456789,TVDE,2025-12-31,Fidelidade,POL123456,2025-06-30
+BB-11-BB,Volkswagen,Golf,2021,Branco,Gasolina,5,Manual,2021-03-20,130cv,1500,WVWZZZ1KZAW000002,Ligeiro,Maria Santos,987654321,TVDE,2025-11-30,Allianz,POL789012,2025-08-15
+CC-22-CC,Tesla,Model 3,2022,Cinzento,Elétrico,5,Automática,2022-06-10,275cv,0,5YJ3E1EA1NF000003,Ligeiro,Carlos Pereira,456789123,TVDE,2025-10-15,Tranquilidade,POL345678,2025-12-31"""
+    
+    from fastapi.responses import Response
+    return Response(
+        content=csv_content,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=exemplo_veiculos.csv"}
+    )
+
+
 @router.post("/motoristas/register", response_model=Motorista)
 async def register_motorista(motorista_data: MotoristaCreate):
     """Register a new motorista"""
