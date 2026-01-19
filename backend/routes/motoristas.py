@@ -28,7 +28,7 @@ MOTORISTAS_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 @router.post("/parceiros/{parceiro_id}/motoristas")
 async def create_motorista_for_parceiro(
     parceiro_id: str,
-    motorista_data: MotoristaCreate,
+    motorista_data: MotoristaCreateSimple,
     current_user: Dict = Depends(get_current_user)
 ):
     """Create a new motorista for a specific parceiro"""
