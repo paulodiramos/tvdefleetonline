@@ -1116,6 +1116,59 @@ async def sync_documents_to_terabox(
     }
 
 
+async def _criar_estrutura_pastas(parceiro_id: str):
+    """Cria estrutura base de pastas para o parceiro"""
+    
+    # Pastas principais
+    pastas_principais = ["Contratos", "Recibos", "Vistorias", "Relatórios", "Motoristas"]
+    
+    for pasta_nome in pastas_principais:
+        await _get_or_create_pasta(parceiro_id, pasta_nome, None)
+    
+    # Criar pastas para cada motorista
+    motoristas = await db.motoristas.find({
+        "$or": [
+            {"parceiro_id": parceiro_id},
+            {"parceiro_atribuido": parceiro_id}
+        ]
+    }, {"_id": 0, "name": 1, "id": 1}).to_list(500)
+    
+    motoristas_pasta = await _get_or_create_pasta(parceiro_id, "Motoristas", None)
+    
+    for motorista in motoristas:
+        nome = motorista.get("name", "Motorista")
+        nome_safe = nome.replace("/", "-").replace("\\", "-").strip()
+        if nome_safe:
+            motorista_pasta = await _get_or_create_pasta(parceiro_id, nome_safe, motoristas_pasta["id"])
+            await _get_or_create_pasta(parceiro_id, "Documentos", motorista_pasta["id"])
+    
+    # Criar pastas para cada veículo
+    veiculos = await db.vehicles.find({
+        "parceiro_id": parceiro_id
+    }, {"_id": 0, "matricula": 1, "id": 1}).to_list(500)
+    
+    vistorias_pasta = await _get_or_create_pasta(parceiro_id, "Vistorias", None)
+    
+    for veiculo in veiculos:
+        matricula = veiculo.get("matricula", "SEM_MATRICULA")
+        matricula_safe = matricula.replace("/", "-").replace("\\", "-").strip()
+        if matricula_safe:
+            await _get_or_create_pasta(parceiro_id, matricula_safe, vistorias_pasta["id"])
+    
+    # Criar pastas de Relatórios e Recibos por ano
+    from datetime import datetime
+    ano_atual = datetime.now().year
+    
+    relatorios_pasta = await _get_or_create_pasta(parceiro_id, "Relatórios", None)
+    recibos_pasta = await _get_or_create_pasta(parceiro_id, "Recibos", None)
+    
+    for ano in [ano_atual - 1, ano_atual, ano_atual + 1]:
+        await _get_or_create_pasta(parceiro_id, str(ano), relatorios_pasta["id"])
+        await _get_or_create_pasta(parceiro_id, str(ano), recibos_pasta["id"])
+    
+    logger.info(f"Estrutura de pastas criada para parceiro {parceiro_id}")
+
+
 async def _sync_contratos(parceiro_id: str) -> int:
     """Sincroniza contratos do parceiro para Terabox"""
     count = 0
