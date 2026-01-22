@@ -1,5 +1,5 @@
 """WhatsApp Web Integration for TVDEFleet
-Uses whatsapp-web.js service for sending messages via WhatsApp Web
+Multi-session support - Each partner has their own WhatsApp connection
 """
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
@@ -37,21 +37,34 @@ class WhatsAppBulkMessage(BaseModel):
     ano: Optional[int] = None
 
 
+def get_parceiro_id(current_user: Dict) -> str:
+    """Get parceiro_id from current user"""
+    if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
+        return current_user["id"]
+    elif current_user["role"] in [UserRole.GESTAO, "gestao"]:
+        return current_user.get("parceiro_id") or current_user["id"]
+    else:  # Admin
+        return current_user.get("parceiro_id") or "admin"
+
+
 # ==================== STATUS & QR CODE ====================
 
 @router.get("/whatsapp/status")
 async def get_whatsapp_status(current_user: Dict = Depends(get_current_user)):
-    """Obter estado da conexão WhatsApp Web"""
+    """Obter estado da conexão WhatsApp do parceiro"""
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
+    parceiro_id = get_parceiro_id(current_user)
+    
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"{WHATSAPP_SERVICE_URL}/status", timeout=10.0)
+            response = await client.get(f"{WHATSAPP_SERVICE_URL}/status/{parceiro_id}", timeout=10.0)
             
             if response.status_code == 200:
                 data = response.json()
                 return {
+                    "parceiro_id": parceiro_id,
                     "conectado": data.get("connected", False),
                     "pronto": data.get("ready", False),
                     "temQrCode": data.get("hasQrCode", False),
@@ -61,6 +74,7 @@ async def get_whatsapp_status(current_user: Dict = Depends(get_current_user)):
                 }
             else:
                 return {
+                    "parceiro_id": parceiro_id,
                     "conectado": False,
                     "pronto": False,
                     "servico_ativo": False,
@@ -69,6 +83,7 @@ async def get_whatsapp_status(current_user: Dict = Depends(get_current_user)):
     except Exception as e:
         logger.error(f"Erro ao verificar status WhatsApp: {e}")
         return {
+            "parceiro_id": parceiro_id,
             "conectado": False,
             "pronto": False,
             "servico_ativo": False,
@@ -82,12 +97,16 @@ async def get_qr_code(current_user: Dict = Depends(get_current_user)):
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
+    parceiro_id = get_parceiro_id(current_user)
+    
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"{WHATSAPP_SERVICE_URL}/qr", timeout=10.0)
+            response = await client.get(f"{WHATSAPP_SERVICE_URL}/qr/{parceiro_id}", timeout=15.0)
             
             if response.status_code == 200:
-                return response.json()
+                data = response.json()
+                data["parceiro_id"] = parceiro_id
+                return data
             else:
                 raise HTTPException(status_code=500, detail="Erro ao obter QR Code")
                 
@@ -105,9 +124,11 @@ async def logout_whatsapp(current_user: Dict = Depends(get_current_user)):
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
+    parceiro_id = get_parceiro_id(current_user)
+    
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(f"{WHATSAPP_SERVICE_URL}/logout", timeout=30.0)
+            response = await client.post(f"{WHATSAPP_SERVICE_URL}/logout/{parceiro_id}", timeout=30.0)
             return response.json()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -119,9 +140,11 @@ async def restart_whatsapp(current_user: Dict = Depends(get_current_user)):
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
+    parceiro_id = get_parceiro_id(current_user)
+    
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(f"{WHATSAPP_SERVICE_URL}/restart", timeout=30.0)
+            response = await client.post(f"{WHATSAPP_SERVICE_URL}/restart/{parceiro_id}", timeout=30.0)
             return response.json()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -129,12 +152,12 @@ async def restart_whatsapp(current_user: Dict = Depends(get_current_user)):
 
 # ==================== SEND MESSAGES ====================
 
-async def send_whatsapp_message(phone_number: str, message: str) -> Dict:
-    """Enviar mensagem via WhatsApp Web Service"""
+async def send_whatsapp_message(phone_number: str, message: str, parceiro_id: str) -> Dict:
+    """Enviar mensagem via WhatsApp Web Service usando sessão do parceiro"""
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                f"{WHATSAPP_SERVICE_URL}/send",
+                f"{WHATSAPP_SERVICE_URL}/send/{parceiro_id}",
                 json={"phone": phone_number, "message": message},
                 timeout=30.0
             )
@@ -145,6 +168,7 @@ async def send_whatsapp_message(phone_number: str, message: str) -> Dict:
                 # Registar envio
                 await db.whatsapp_logs.insert_one({
                     "tipo": "envio",
+                    "parceiro_id": parceiro_id,
                     "telefone": phone_number,
                     "mensagem": message[:500],
                     "status": "enviado",
@@ -158,6 +182,7 @@ async def send_whatsapp_message(phone_number: str, message: str) -> Dict:
                 
                 await db.whatsapp_logs.insert_one({
                     "tipo": "envio",
+                    "parceiro_id": parceiro_id,
                     "telefone": phone_number,
                     "mensagem": message[:500],
                     "status": "erro",
@@ -180,11 +205,12 @@ async def send_single_message(
     message: WhatsAppMessage,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Enviar mensagem WhatsApp individual"""
+    """Enviar mensagem WhatsApp individual usando sessão do parceiro"""
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
-    result = await send_whatsapp_message(message.phone_number, message.message)
+    parceiro_id = get_parceiro_id(current_user)
+    result = await send_whatsapp_message(message.phone_number, message.message, parceiro_id)
     
     if not result["success"]:
         raise HTTPException(status_code=400, detail=result.get("error", "Erro ao enviar"))
@@ -199,9 +225,11 @@ async def send_relatorio_whatsapp(
     ano: int,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Enviar relatório semanal via WhatsApp"""
+    """Enviar relatório semanal via WhatsApp usando sessão do parceiro"""
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = get_parceiro_id(current_user)
     
     # Buscar motorista
     motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
@@ -256,12 +284,13 @@ O seu relatório semanal está disponível para consulta na app TVDEFleet.
 
 _Mensagem automática - TVDEFleet_"""
     
-    result = await send_whatsapp_message(telefone, mensagem)
+    result = await send_whatsapp_message(telefone, mensagem, parceiro_id)
     
     return {
         "success": result["success"],
         "motorista": nome,
         "telefone": telefone[:6] + "***",
+        "parceiro_id": parceiro_id,
         "message": "Relatório enviado via WhatsApp" if result["success"] else result.get("error")
     }
 
@@ -272,12 +301,14 @@ async def send_bulk_whatsapp(
     background_tasks: BackgroundTasks,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Enviar mensagens em massa via WhatsApp"""
+    """Enviar mensagens em massa via WhatsApp usando sessão do parceiro"""
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
     if not data.motorista_ids:
         raise HTTPException(status_code=400, detail="Nenhum motorista selecionado")
+    
+    parceiro_id = get_parceiro_id(current_user)
     
     # Processar em background para não bloquear
     background_tasks.add_task(
@@ -287,11 +318,13 @@ async def send_bulk_whatsapp(
         data.custom_message,
         data.semana,
         data.ano,
-        current_user["id"]
+        current_user["id"],
+        parceiro_id
     )
     
     return {
         "success": True,
+        "parceiro_id": parceiro_id,
         "message": f"Envio de {len(data.motorista_ids)} mensagens iniciado em background"
     }
 
@@ -302,9 +335,10 @@ async def process_bulk_whatsapp(
     custom_message: str,
     semana: int,
     ano: int,
-    user_id: str
+    user_id: str,
+    parceiro_id: str
 ):
-    """Processar envio em massa em background"""
+    """Processar envio em massa em background usando sessão do parceiro"""
     success_count = 0
     error_count = 0
     
@@ -359,7 +393,7 @@ _TVDEFleet_"""
             else:
                 mensagem = f"📱 Olá {nome}! Tem uma nova notificação na app TVDEFleet."
             
-            result = await send_whatsapp_message(telefone, mensagem)
+            result = await send_whatsapp_message(telefone, mensagem, parceiro_id)
             
             if result["success"]:
                 success_count += 1
@@ -373,6 +407,7 @@ _TVDEFleet_"""
     # Registar resultado do envio em massa
     await db.whatsapp_logs.insert_one({
         "tipo": "envio_massa",
+        "parceiro_id": parceiro_id,
         "message_type": message_type,
         "total": len(motorista_ids),
         "sucesso": success_count,
@@ -381,7 +416,7 @@ _TVDEFleet_"""
         "data": datetime.now(timezone.utc)
     })
     
-    logger.info(f"Envio em massa concluído: {success_count} sucesso, {error_count} erros")
+    logger.info(f"[{parceiro_id}] Envio em massa concluído: {success_count} sucesso, {error_count} erros")
 
 
 @router.post("/whatsapp/notify-status-change")
@@ -392,9 +427,11 @@ async def notify_status_change(
     ano: int,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Notificar motorista sobre mudança de status via WhatsApp"""
+    """Notificar motorista sobre mudança de status via WhatsApp do parceiro"""
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = get_parceiro_id(current_user)
     
     motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
     if not motorista:
@@ -416,10 +453,11 @@ async def notify_status_change(
     mensagem = status_messages.get(novo_status, f"📋 Olá {nome}! O status do relatório S{semana}/{ano} foi atualizado para: {novo_status}")
     mensagem += "\n\n_TVDEFleet_"
     
-    result = await send_whatsapp_message(telefone, mensagem)
+    result = await send_whatsapp_message(telefone, mensagem, parceiro_id)
     
     return {
         "success": result["success"],
+        "parceiro_id": parceiro_id,
         "message": "Notificação enviada" if result["success"] else result.get("error")
     }
 
@@ -431,12 +469,19 @@ async def get_whatsapp_logs(
     limit: int = 50,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Obter histórico de envios WhatsApp"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "admin", "gestao"]:
+    """Obter histórico de envios WhatsApp do parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
+    parceiro_id = get_parceiro_id(current_user)
+    
+    # Admin vê todos, parceiro/gestor vê apenas os seus
+    query = {}
+    if current_user["role"] not in [UserRole.ADMIN, "admin"]:
+        query["parceiro_id"] = parceiro_id
+    
     logs = await db.whatsapp_logs.find(
-        {},
+        query,
         {"_id": 0}
     ).sort("data", -1).limit(limit).to_list(limit)
     
@@ -446,31 +491,39 @@ async def get_whatsapp_logs(
 @router.get("/whatsapp/stats")
 async def get_whatsapp_stats(current_user: Dict = Depends(get_current_user)):
     """Obter estatísticas de envio WhatsApp"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "admin", "gestao"]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = get_parceiro_id(current_user)
     
     # Verificar status da conexão
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"{WHATSAPP_SERVICE_URL}/status", timeout=5.0)
+            response = await client.get(f"{WHATSAPP_SERVICE_URL}/status/{parceiro_id}", timeout=5.0)
             status_data = response.json() if response.status_code == 200 else {}
     except:
         status_data = {}
     
-    total_enviados = await db.whatsapp_logs.count_documents({"tipo": "envio", "status": "enviado"})
-    total_erros = await db.whatsapp_logs.count_documents({"tipo": "envio", "status": "erro"})
+    # Admin vê todos, parceiro/gestor vê apenas os seus
+    query = {"tipo": "envio"}
+    if current_user["role"] not in [UserRole.ADMIN, "admin"]:
+        query["parceiro_id"] = parceiro_id
+    
+    total_enviados = await db.whatsapp_logs.count_documents({**query, "status": "enviado"})
+    total_erros = await db.whatsapp_logs.count_documents({**query, "status": "erro"})
     
     # Últimas 24 horas
     from datetime import timedelta
     ontem = datetime.now(timezone.utc) - timedelta(days=1)
     
     enviados_24h = await db.whatsapp_logs.count_documents({
-        "tipo": "envio",
+        **query,
         "status": "enviado",
         "data": {"$gte": ontem}
     })
     
     return {
+        "parceiro_id": parceiro_id,
         "conectado": status_data.get("connected", False),
         "pronto": status_data.get("ready", False),
         "info": status_data.get("clientInfo"),
@@ -481,18 +534,32 @@ async def get_whatsapp_stats(current_user: Dict = Depends(get_current_user)):
     }
 
 
+@router.get("/whatsapp/sessions")
+async def get_all_sessions(current_user: Dict = Depends(get_current_user)):
+    """Obter todas as sessões WhatsApp ativas (apenas admin)"""
+    if current_user["role"] not in [UserRole.ADMIN, "admin"]:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{WHATSAPP_SERVICE_URL}/sessions", timeout=10.0)
+            return response.json()
+    except Exception as e:
+        return {"total": 0, "sessions": [], "error": str(e)}
+
+
 # ==================== LEGACY CONFIG ENDPOINTS ====================
-# Mantidos para compatibilidade com frontend existente
 
 @router.get("/whatsapp/config")
 async def get_whatsapp_config(current_user: Dict = Depends(get_current_user)):
-    """Obter configuração - agora retorna status da conexão"""
+    """Obter configuração - agora retorna status da conexão do parceiro"""
     status = await get_whatsapp_status(current_user)
     
     return {
         "configurado": status.get("pronto", False),
         "ativo": status.get("conectado", False),
-        "modo": "whatsapp_web",
+        "modo": "whatsapp_web_multisession",
+        "parceiro_id": status.get("parceiro_id"),
         "mensagem": "Conectado ao WhatsApp Web" if status.get("pronto") else "Escaneie o QR Code para conectar"
     }
 
@@ -500,7 +567,9 @@ async def get_whatsapp_config(current_user: Dict = Depends(get_current_user)):
 @router.post("/whatsapp/config")
 async def save_whatsapp_config(current_user: Dict = Depends(get_current_user)):
     """Endpoint mantido para compatibilidade - redireciona para QR"""
+    parceiro_id = get_parceiro_id(current_user)
     return {
         "success": True, 
+        "parceiro_id": parceiro_id,
         "message": "Use o endpoint /whatsapp/qr para escanear o QR Code e conectar"
     }
