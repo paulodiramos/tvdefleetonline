@@ -250,94 +250,120 @@ class TeraboxCloudService:
                 precreate_data = {
                     "path": remote_path,
                     "size": file_size,
-                    "isdir": 0,
-                    "autoinit": 1,
-                    "block_list": f'["{file_md5}"]'
+                    "path": remote_path,
+                    "size": str(file_size),
+                    "isdir": "0",
+                    "autoinit": "1",
+                    "block_list": json.dumps([file_md5])
                 }
                 
                 precreate_response = await client.post(
                     precreate_url,
-                    params=precreate_params,
                     data=precreate_data,
-                    headers=self.headers,
-                    timeout=30.0
+                    headers=self.headers
                 )
+                
+                logger.info(f"Terabox precreate response: {precreate_response.status_code}")
                 
                 if precreate_response.status_code != 200:
                     return {"success": False, "error": f"Precreate failed: HTTP {precreate_response.status_code}"}
                 
                 precreate_result = precreate_response.json()
+                logger.info(f"Terabox precreate result: {precreate_result}")
                 
                 if precreate_result.get("errno") != 0:
-                    return {"success": False, "error": f"Precreate error: {precreate_result.get('errmsg')}"}
+                    if precreate_result.get("errno") == -6:
+                        return {"success": False, "error": "Sessão expirada"}
+                    return {"success": False, "error": f"Precreate error: {precreate_result.get('errmsg', precreate_result.get('errno'))}"}
                 
                 upload_id = precreate_result.get("uploadid")
                 
+                if not upload_id:
+                    # Ficheiro pode já existir ou foi aceite diretamente
+                    if precreate_result.get("return_type") == 2:
+                        return {
+                            "success": True,
+                            "path": remote_path,
+                            "message": "Ficheiro já existe",
+                            "exists": True
+                        }
+                    return {"success": False, "error": "Upload ID não recebido"}
+                
                 # Passo 2: Upload do ficheiro
-                upload_url = f"{TERABOX_PAN_API}/pcs/superfile2"
+                upload_url = f"https://c-jp.terabox.com/rest/2.0/pcs/superfile2"
                 upload_params = {
                     "method": "upload",
                     "type": "tmpfile",
                     "path": remote_path,
                     "uploadid": upload_id,
-                    "partseq": 0
+                    "partseq": "0"
                 }
                 
-                if self.access_token:
-                    upload_params["access_token"] = self.access_token
+                # Para upload de ficheiro, precisamos enviar sem Content-Type no header
+                upload_headers = {**self.headers}
+                upload_headers.pop("Accept", None)
                 
                 with open(local_path, "rb") as f:
-                    files = {"file": (os.path.basename(local_path), f)}
+                    files = {"file": (file_name, f, "application/octet-stream")}
                     upload_response = await client.post(
                         upload_url,
                         params=upload_params,
                         files=files,
-                        headers=self.headers,
-                        timeout=300.0  # 5 minutos para ficheiros grandes
+                        headers=upload_headers,
+                        timeout=300.0
                     )
+                
+                logger.info(f"Terabox upload response: {upload_response.status_code}")
                 
                 if upload_response.status_code != 200:
                     return {"success": False, "error": f"Upload failed: HTTP {upload_response.status_code}"}
                 
                 upload_result = upload_response.json()
+                logger.info(f"Terabox upload result: {upload_result}")
                 
                 if upload_result.get("errno") and upload_result.get("errno") != 0:
                     return {"success": False, "error": f"Upload error: {upload_result.get('errmsg')}"}
                 
                 # Passo 3: Create (finalizar upload)
-                create_url = f"{TERABOX_PAN_API}/xpan/file"
-                create_params = {"method": "create"}
-                
-                if self.access_token:
-                    create_params["access_token"] = self.access_token
+                create_url = f"{TERABOX_WEB_API}/api/create"
+                params = {"a": "commit"}
                 
                 create_data = {
                     "path": remote_path,
-                    "size": file_size,
-                    "isdir": 0,
+                    "size": str(file_size),
+                    "isdir": "0",
                     "uploadid": upload_id,
-                    "block_list": f'["{upload_result.get("md5", file_md5)}"]'
+                    "block_list": json.dumps([upload_result.get("md5", file_md5)])
                 }
                 
                 create_response = await client.post(
                     create_url,
-                    params=create_params,
+                    params=params,
                     data=create_data,
-                    headers=self.headers,
-                    timeout=30.0
+                    headers=self.headers
                 )
+                
+                logger.info(f"Terabox create response: {create_response.status_code}")
                 
                 if create_response.status_code != 200:
                     return {"success": False, "error": f"Create failed: HTTP {create_response.status_code}"}
                 
                 create_result = create_response.json()
+                logger.info(f"Terabox create result: {create_result}")
                 
                 if create_result.get("errno") == 0:
                     return {
                         "success": True,
-                        "path": create_result.get("path"),
+                        "path": create_result.get("path") or remote_path,
                         "fs_id": create_result.get("fs_id"),
                         "size": file_size
+                    }
+                elif create_result.get("errno") == -8:
+                    return {
+                        "success": True,
+                        "path": remote_path,
+                        "message": "Ficheiro já existe",
+                        "exists": True
                     }
                 else:
                     return {
@@ -345,6 +371,8 @@ class TeraboxCloudService:
                         "error": create_result.get("errmsg", f"Errno: {create_result.get('errno')}")
                     }
                     
+        except httpx.TimeoutException:
+            return {"success": False, "error": "Timeout durante upload"}
         except Exception as e:
             logger.error(f"Erro ao fazer upload: {e}")
             return {"success": False, "error": str(e)}
