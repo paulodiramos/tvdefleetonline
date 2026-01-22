@@ -11,24 +11,31 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
-import { FileText, Check, X, AlertCircle, Mail, MessageSquare, CreditCard, Cloud, RefreshCw, QrCode, LogOut, Smartphone } from 'lucide-react';
+import { FileText, Check, X, AlertCircle, Mail, MessageSquare, CreditCard, Cloud, RefreshCw, QrCode, LogOut, Smartphone, Eye, EyeOff, FolderSync } from 'lucide-react';
 
 const Integracoes = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(false);
   const [whatsappStatus, setWhatsappStatus] = useState(null);
   const [qrCode, setQrCode] = useState(null);
   const [loadingQr, setLoadingQr] = useState(false);
-  const [configuracoes, setConfiguracoes] = useState({
-    terabox: {
-      ativo: false,
-      api_key: '',
-      folder: '/TVDEFleet'
-    }
+  const [showPassword, setShowPassword] = useState(false);
+  
+  const [teraboxCredentials, setTeraboxCredentials] = useState({
+    email: '',
+    password: '',
+    api_key: '',
+    folder_path: '/TVDEFleet',
+    sync_enabled: true,
+    sync_contratos: true,
+    sync_recibos: true,
+    sync_vistorias: true,
+    sync_relatorios: true,
+    sync_documentos: true
   });
 
   useEffect(() => {
-    fetchConfiguracoes();
     fetchWhatsAppStatus();
+    fetchTeraboxCredentials();
     
     // Poll WhatsApp status every 5 seconds while not connected
     const interval = setInterval(() => {
@@ -40,17 +47,45 @@ const Integracoes = ({ user, onLogout }) => {
     return () => clearInterval(interval);
   }, []);
 
-  const fetchConfiguracoes = async () => {
+  const fetchTeraboxCredentials = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API}/integracoes/configuracoes`, {
+      const response = await axios.get(`${API}/terabox/credentials`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (response.data.terabox) {
-        setConfiguracoes(prev => ({ ...prev, terabox: response.data.terabox }));
+      if (response.data) {
+        setTeraboxCredentials(prev => ({
+          ...prev,
+          ...response.data,
+          password: '' // Não mostrar password
+        }));
       }
     } catch (error) {
-      console.error('Error fetching configuracoes:', error);
+      console.error('Error fetching Terabox credentials:', error);
+    }
+  };
+
+  const saveTeraboxCredentials = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      // Só enviar password se foi alterada
+      const dataToSend = { ...teraboxCredentials };
+      if (!dataToSend.password) {
+        delete dataToSend.password;
+      }
+      
+      await axios.post(`${API}/terabox/credentials`, dataToSend, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Credenciais Terabox guardadas com sucesso!');
+      fetchTeraboxCredentials();
+    } catch (error) {
+      console.error('Error saving Terabox credentials:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao guardar credenciais');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -135,6 +170,23 @@ const Integracoes = ({ user, onLogout }) => {
     }
   };
 
+  const handleSyncDocuments = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/terabox/sync-documents`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const detalhes = response.data.detalhes;
+      toast.success(`Sincronização concluída! ${detalhes.total_sincronizados} documentos sincronizados.`);
+    } catch (error) {
+      console.error('Error syncing Terabox:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao sincronizar documentos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Layout user={user} onLogout={onLogout}>
       <div className="space-y-6">
@@ -203,7 +255,7 @@ const Integracoes = ({ user, onLogout }) => {
                   </div>
                 )}
 
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 flex-wrap gap-2">
                   <Button 
                     onClick={fetchQrCode}
                     disabled={loadingQr}
@@ -245,13 +297,14 @@ const Integracoes = ({ user, onLogout }) => {
                   </AlertDescription>
                 </Alert>
 
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 flex-wrap gap-2">
                   <Button 
-                    onClick={() => window.location.href = '/whatsapp-envio'}
-                    className="bg-green-600 hover:bg-green-700"
+                    onClick={handleWhatsAppRestart}
+                    variant="outline"
+                    disabled={loading}
                   >
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Enviar Mensagens
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Reiniciar Serviço
                   </Button>
                   
                   <Button 
@@ -290,8 +343,12 @@ const Integracoes = ({ user, onLogout }) => {
                   <CardDescription>Guardar documentos e fotos organizados por parceiro</CardDescription>
                 </div>
               </div>
-              <Badge variant="default" className="bg-green-500">
-                <Check className="w-3 h-3 mr-1" /> Ativo
+              <Badge variant="default" className={teraboxCredentials.configurado ? "bg-green-500" : "bg-yellow-500"}>
+                {teraboxCredentials.configurado ? (
+                  <><Check className="w-3 h-3 mr-1" /> Configurado</>
+                ) : (
+                  <><AlertCircle className="w-3 h-3 mr-1" /> Não Configurado</>
+                )}
               </Badge>
             </div>
           </CardHeader>
@@ -299,60 +356,146 @@ const Integracoes = ({ user, onLogout }) => {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                <p className="font-semibold mb-2">Como funciona:</p>
+                <p className="font-semibold mb-2">Estrutura de pastas:</p>
                 <ul className="text-sm space-y-1 ml-4 list-disc">
-                  <li>Todos os documentos são guardados automaticamente no Terabox local</li>
-                  <li>Estrutura organizada: Contratos, Recibos, Vistorias, Relatórios, Documentos de Motoristas</li>
-                  <li>Cada parceiro tem a sua própria área isolada</li>
-                  <li>Sincronização automática de novos documentos</li>
+                  <li><strong>Contratos</strong> - Contratos dos motoristas</li>
+                  <li><strong>Recibos</strong> - Recibos verdes organizados por semana</li>
+                  <li><strong>Vistorias</strong> - Documentos de inspeção dos veículos</li>
+                  <li><strong>Relatórios</strong> - PDFs de relatórios semanais</li>
+                  <li><strong>Motoristas</strong> - Documentos pessoais (CC, Carta, etc.)</li>
                 </ul>
               </AlertDescription>
             </Alert>
 
             <Separator />
 
+            {/* Credenciais Terabox */}
             <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Credenciais da sua conta Terabox</h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="terabox-email">Email Terabox</Label>
+                  <Input
+                    id="terabox-email"
+                    type="email"
+                    value={teraboxCredentials.email || ''}
+                    onChange={(e) => setTeraboxCredentials({...teraboxCredentials, email: e.target.value})}
+                    placeholder="seu@email.com"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="terabox-password">Password</Label>
+                  <div className="relative">
+                    <Input
+                      id="terabox-password"
+                      type={showPassword ? "text" : "password"}
+                      value={teraboxCredentials.password || ''}
+                      onChange={(e) => setTeraboxCredentials({...teraboxCredentials, password: e.target.value})}
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">Deixe em branco para manter a atual</p>
+                </div>
+              </div>
+              
               <div>
                 <Label htmlFor="terabox-folder">Pasta de Destino</Label>
                 <Input
                   id="terabox-folder"
                   type="text"
-                  value={configuracoes.terabox?.folder || '/TVDEFleet'}
-                  onChange={(e) => 
-                    setConfiguracoes({
-                      ...configuracoes,
-                      terabox: { ...configuracoes.terabox, folder: e.target.value }
-                    })
-                  }
+                  value={teraboxCredentials.folder_path || '/TVDEFleet'}
+                  onChange={(e) => setTeraboxCredentials({...teraboxCredentials, folder_path: e.target.value})}
                   placeholder="/TVDEFleet"
-                  disabled
                 />
-                <p className="text-xs text-slate-500 mt-1">Pasta raiz onde os documentos são guardados</p>
+                <p className="text-xs text-slate-500 mt-1">Pasta raiz no Terabox onde os documentos serão guardados</p>
               </div>
+
+              <Separator />
+
+              {/* Opções de Sincronização */}
+              <h4 className="font-medium">Sincronização Automática</h4>
+              
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Sincronização Ativa</Label>
+                  <p className="text-sm text-slate-500">Ativar sincronização automática de documentos</p>
+                </div>
+                <Switch
+                  checked={teraboxCredentials.sync_enabled}
+                  onCheckedChange={(checked) => setTeraboxCredentials({...teraboxCredentials, sync_enabled: checked})}
+                />
+              </div>
+
+              {teraboxCredentials.sync_enabled && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pl-4 border-l-2">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="sync-contratos"
+                      checked={teraboxCredentials.sync_contratos}
+                      onCheckedChange={(checked) => setTeraboxCredentials({...teraboxCredentials, sync_contratos: checked})}
+                    />
+                    <Label htmlFor="sync-contratos">Contratos</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="sync-recibos"
+                      checked={teraboxCredentials.sync_recibos}
+                      onCheckedChange={(checked) => setTeraboxCredentials({...teraboxCredentials, sync_recibos: checked})}
+                    />
+                    <Label htmlFor="sync-recibos">Recibos</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="sync-vistorias"
+                      checked={teraboxCredentials.sync_vistorias}
+                      onCheckedChange={(checked) => setTeraboxCredentials({...teraboxCredentials, sync_vistorias: checked})}
+                    />
+                    <Label htmlFor="sync-vistorias">Vistorias</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="sync-relatorios"
+                      checked={teraboxCredentials.sync_relatorios}
+                      onCheckedChange={(checked) => setTeraboxCredentials({...teraboxCredentials, sync_relatorios: checked})}
+                    />
+                    <Label htmlFor="sync-relatorios">Relatórios</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="sync-documentos"
+                      checked={teraboxCredentials.sync_documentos}
+                      onCheckedChange={(checked) => setTeraboxCredentials({...teraboxCredentials, sync_documentos: checked})}
+                    />
+                    <Label htmlFor="sync-documentos">Documentos</Label>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center space-x-3 pt-4 flex-wrap gap-2">
               <Button 
-                onClick={async () => {
-                  try {
-                    setLoading(true);
-                    const token = localStorage.getItem('token');
-                    const response = await axios.post(`${API}/terabox/sync-documents`, {}, {
-                      headers: { Authorization: `Bearer ${token}` }
-                    });
-                    const detalhes = response.data.detalhes;
-                    toast.success(`Sincronização concluída! ${detalhes.total_sincronizados} documentos sincronizados.`);
-                  } catch (error) {
-                    console.error('Error syncing Terabox:', error);
-                    toast.error(error.response?.data?.detail || 'Erro ao sincronizar documentos');
-                  } finally {
-                    setLoading(false);
-                  }
-                }}
+                onClick={saveTeraboxCredentials}
                 disabled={loading}
               >
-                <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                Sincronizar Documentos
+                Guardar Credenciais
+              </Button>
+              
+              <Button 
+                onClick={handleSyncDocuments}
+                variant="outline"
+                disabled={loading}
+              >
+                <FolderSync className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Sincronizar Agora
               </Button>
               
               <Button 
