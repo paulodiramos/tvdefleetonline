@@ -56,18 +56,7 @@ const Layout = ({ children, user, onLogout }) => {
             { path: '/vistorias', label: 'Vistorias' }
           ]
         },
-        { 
-          label: 'Relatórios', 
-          icon: TrendingUp,
-          submenu: [
-            { path: '/relatorios', label: '📊 Gerir Relatórios' },
-            { path: '/resumo-semanal', label: '📈 Resumo Semanal' },
-            { path: '/relatorio-fornecedores', label: '💰 Custos Fornecedores' },
-            { path: '/lista-importacoes', label: '📋 Lista Importações' },
-            { path: '/importar-ficheiros', label: '📤 Importar Ficheiros' },
-            { path: '/historico-relatorios', label: '📜 Histórico' }
-          ]
-        },
+        { path: '/resumo-semanal', icon: TrendingUp, label: 'Resumo Semanal' },
         { 
           label: 'Financeiro', 
           icon: DollarSign,
