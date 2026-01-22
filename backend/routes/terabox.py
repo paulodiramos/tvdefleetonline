@@ -47,6 +47,8 @@ class TeraboxCredentials(BaseModel):
     email: Optional[str] = None
     password: Optional[str] = None
     api_key: Optional[str] = None
+    access_token: Optional[str] = None  # Token de acesso da API Terabox
+    session_cookie: Optional[str] = None  # Cookie de sessão (alternativa)
     folder_path: Optional[str] = "/TVDEFleet"
     sync_enabled: bool = True
     sync_contratos: bool = True
