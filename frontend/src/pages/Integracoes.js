@@ -513,7 +513,7 @@ const Integracoes = ({ user, onLogout }) => {
                   <AlertDescription>
                     <p className="font-semibold mb-2">Como conectar:</p>
                     <ol className="text-sm space-y-1 ml-4 list-decimal">
-                      <li>Clique em "Mostrar QR Code"</li>
+                      <li>Clique em &quot;Mostrar QR Code&quot;</li>
                       <li>Abra o WhatsApp no seu telemóvel</li>
                       <li>Vá a Configurações → Dispositivos conectados → Conectar dispositivo</li>
                       <li>Escaneie o QR Code com a câmara do telemóvel</li>
@@ -661,7 +661,7 @@ const Integracoes = ({ user, onLogout }) => {
                   className="font-mono text-sm"
                 />
                 <p className="text-xs text-slate-500 mt-1">
-                  Não sabe como obter? Clique em "Como obter o cookie?" acima
+                  Não sabe como obter? Clique em &quot;Como obter o cookie?&quot; acima
                 </p>
               </div>
               
