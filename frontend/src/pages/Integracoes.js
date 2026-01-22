@@ -10,8 +10,233 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { FileText, Check, X, AlertCircle, Mail, MessageSquare, CreditCard, Cloud, RefreshCw, QrCode, LogOut, Smartphone, Eye, EyeOff, FolderSync } from 'lucide-react';
+import { FileText, Check, X, AlertCircle, Mail, MessageSquare, CreditCard, Cloud, RefreshCw, QrCode, LogOut, Smartphone, Eye, EyeOff, FolderSync, HelpCircle, ExternalLink, Copy, Monitor, Cookie, MousePointer, CheckCircle2 } from 'lucide-react';
+
+// Componente do Guia Visual do Terabox
+const TeraboxGuideModal = ({ onCookieObtained }) => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [open, setOpen] = useState(false);
+  
+  const steps = [
+    {
+      number: 1,
+      title: "Abrir o Terabox",
+      description: "Clique no botão abaixo para abrir o Terabox numa nova janela e faça login na sua conta.",
+      icon: <ExternalLink className="w-8 h-8" />,
+      action: (
+        <Button 
+          onClick={() => window.open('https://www.terabox.com', '_blank')}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          <ExternalLink className="w-4 h-4 mr-2" />
+          Abrir Terabox
+        </Button>
+      )
+    },
+    {
+      number: 2,
+      title: "Abrir Ferramentas de Desenvolvedor",
+      description: "Depois de fazer login, pressione F12 no teclado (ou clique com botão direito → 'Inspecionar').",
+      icon: <Monitor className="w-8 h-8" />,
+      tip: "Em Mac: Cmd + Option + I"
+    },
+    {
+      number: 3,
+      title: "Ir para Application → Cookies",
+      description: "Na janela que abriu, clique no separador 'Application' (ou 'Aplicação'). Depois, no menu lateral esquerdo, expanda 'Cookies' e clique em 'www.terabox.com'.",
+      icon: <Cookie className="w-8 h-8" />,
+      tip: "Se não vir 'Application', clique nas setas >> para ver mais opções"
+    },
+    {
+      number: 4,
+      title: "Encontrar o cookie 'ndus'",
+      description: "Na lista de cookies, procure a linha com o nome 'ndus'. O valor está na coluna ao lado (começa com letras e números).",
+      icon: <MousePointer className="w-8 h-8" />,
+      tip: "Use Ctrl+F para pesquisar 'ndus' se a lista for grande"
+    },
+    {
+      number: 5,
+      title: "Copiar o valor",
+      description: "Faça duplo-clique no valor do cookie 'ndus' para selecionar, depois Ctrl+C para copiar. Cole no campo 'Cookie de Sessão' na página de Integrações.",
+      icon: <Copy className="w-8 h-8" />,
+      action: (
+        <Button 
+          onClick={() => {
+            setOpen(false);
+            toast.success('Agora cole o cookie no campo abaixo!');
+          }}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          <CheckCircle2 className="w-4 h-4 mr-2" />
+          Já copiei, fechar guia
+        </Button>
+      )
+    }
+  ];
+
+  const currentStepData = steps[currentStep - 1];
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="text-blue-600 border-blue-200 hover:bg-blue-50">
+          <HelpCircle className="w-4 h-4 mr-2" />
+          Como obter o cookie?
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <Cloud className="w-6 h-6 text-blue-600" />
+            Guia: Obter Cookie do Terabox
+          </DialogTitle>
+          <DialogDescription>
+            Siga os passos abaixo para obter o cookie de autenticação
+          </DialogDescription>
+        </DialogHeader>
+        
+        {/* Progress Steps */}
+        <div className="flex items-center justify-between mb-6 px-4">
+          {steps.map((step, index) => (
+            <div key={step.number} className="flex items-center">
+              <div 
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                  currentStep === step.number 
+                    ? 'bg-blue-600 text-white scale-110' 
+                    : currentStep > step.number 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-gray-200 text-gray-500'
+                }`}
+              >
+                {currentStep > step.number ? <Check className="w-5 h-5" /> : step.number}
+              </div>
+              {index < steps.length - 1 && (
+                <div className={`w-8 h-1 mx-1 ${currentStep > step.number ? 'bg-green-500' : 'bg-gray-200'}`} />
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Current Step Content */}
+        <div className="bg-slate-50 rounded-xl p-6 min-h-[250px]">
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+              {currentStepData.icon}
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold mb-2">
+                Passo {currentStepData.number}: {currentStepData.title}
+              </h3>
+              <p className="text-slate-600 mb-4 leading-relaxed">
+                {currentStepData.description}
+              </p>
+              
+              {currentStepData.tip && (
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                  <p className="text-amber-800 text-sm flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4" />
+                    <strong>Dica:</strong> {currentStepData.tip}
+                  </p>
+                </div>
+              )}
+              
+              {currentStepData.action && (
+                <div className="mt-4">
+                  {currentStepData.action}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Visual Aid - Browser Screenshot Placeholder */}
+        {currentStep >= 2 && currentStep <= 4 && (
+          <div className="bg-gray-900 rounded-lg p-4 mt-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-3 h-3 rounded-full bg-red-500" />
+              <div className="w-3 h-3 rounded-full bg-yellow-500" />
+              <div className="w-3 h-3 rounded-full bg-green-500" />
+              <span className="text-gray-400 text-xs ml-2">DevTools - www.terabox.com</span>
+            </div>
+            <div className="bg-gray-800 rounded p-3 font-mono text-sm">
+              {currentStep === 2 && (
+                <div className="text-gray-300">
+                  <span className="text-blue-400">Pressione</span> <kbd className="bg-gray-700 px-2 py-1 rounded text-white">F12</kbd> <span className="text-blue-400">para abrir</span>
+                </div>
+              )}
+              {currentStep === 3 && (
+                <div className="text-gray-300">
+                  <div className="flex gap-4 border-b border-gray-700 pb-2 mb-2">
+                    <span className="text-gray-500">Elements</span>
+                    <span className="text-gray-500">Console</span>
+                    <span className="text-gray-500">Sources</span>
+                    <span className="text-white bg-blue-600 px-2 rounded">Application</span>
+                    <span className="text-gray-500">Network</span>
+                  </div>
+                  <div className="flex gap-4">
+                    <div className="text-gray-500 border-r border-gray-700 pr-4">
+                      <div>▼ Storage</div>
+                      <div className="ml-2">▼ Cookies</div>
+                      <div className="ml-4 text-blue-400">→ www.terabox.com</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {currentStep === 4 && (
+                <div className="text-gray-300">
+                  <div className="grid grid-cols-3 gap-2 text-xs border-b border-gray-700 pb-1 mb-2">
+                    <span className="text-gray-500">Name</span>
+                    <span className="text-gray-500">Value</span>
+                    <span className="text-gray-500">Domain</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    <span className="text-gray-400">lang</span>
+                    <span className="text-gray-400">en</span>
+                    <span className="text-gray-500">.terabox.com</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs bg-blue-900/50 rounded p-1 mt-1">
+                    <span className="text-yellow-400 font-bold">ndus</span>
+                    <span className="text-green-400">Y2xvdWRf...</span>
+                    <span className="text-gray-500">.terabox.com</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-xs mt-1">
+                    <span className="text-gray-400">csrfToken</span>
+                    <span className="text-gray-400">abc123...</span>
+                    <span className="text-gray-500">.terabox.com</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-between mt-6">
+          <Button 
+            variant="outline" 
+            onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+            disabled={currentStep === 1}
+          >
+            ← Anterior
+          </Button>
+          
+          <div className="flex gap-2">
+            {currentStep < steps.length && (
+              <Button 
+                onClick={() => setCurrentStep(Math.min(steps.length, currentStep + 1))}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                Próximo →
+              </Button>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const Integracoes = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(false);
