@@ -1,4 +1,4 @@
-"""WhatsApp Business API Integration for TVDEFleet"""
+"""WhatsApp Web Integration for TVDEFleet"""
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from typing import Dict, List, Optional
@@ -16,10 +16,8 @@ router = APIRouter()
 db = get_database()
 logger = logging.getLogger(__name__)
 
-# WhatsApp Business API Configuration
-WHATSAPP_API_URL = "https://graph.facebook.com/v18.0"
-WHATSAPP_PHONE_NUMBER_ID = os.environ.get("WHATSAPP_PHONE_NUMBER_ID", "")
-WHATSAPP_ACCESS_TOKEN = os.environ.get("WHATSAPP_ACCESS_TOKEN", "")
+# WhatsApp Web Service Configuration (Node.js service)
+WHATSAPP_SERVICE_URL = os.environ.get("WHATSAPP_SERVICE_URL", "http://localhost:3001")
 
 
 class WhatsAppMessage(BaseModel):
