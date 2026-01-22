@@ -306,6 +306,12 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>Meu Plano</span>
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/terabox" className="flex items-center space-x-2 cursor-pointer">
+                          <HardDrive className="w-4 h-4" />
+                          <span>Terabox</span>
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <div className="px-2 py-1.5">
                         <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
@@ -313,6 +319,26 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>Configurações</span>
                         </div>
                       </div>
+                      <DropdownMenuItem asChild>
+                        <Link to="/configuracoes-parceiro" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>📧 Email & Credenciais</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/credenciais-plataformas" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>🔐 Credenciais Plataformas</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/configuracao-relatorios" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>⚙️ Configurações</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/integracoes" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>🔗 Integrações</span>
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to="/automacao" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>🤖 Automação RPA</span>
