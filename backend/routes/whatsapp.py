@@ -1,4 +1,6 @@
-"""WhatsApp Web Integration for TVDEFleet"""
+"""WhatsApp Web Integration for TVDEFleet
+Uses whatsapp-web.js service for sending messages via WhatsApp Web
+"""
 
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from typing import Dict, List, Optional
@@ -24,7 +26,6 @@ class WhatsAppMessage(BaseModel):
     """Model for sending WhatsApp message"""
     phone_number: str
     message: str
-    template_name: Optional[str] = None
 
 
 class WhatsAppBulkMessage(BaseModel):
@@ -36,197 +37,143 @@ class WhatsAppBulkMessage(BaseModel):
     ano: Optional[int] = None
 
 
-class WhatsAppConfig(BaseModel):
-    """Model for WhatsApp configuration"""
-    phone_number_id: str
-    access_token: str
-    ativo: bool = True
+# ==================== STATUS & QR CODE ====================
+
+@router.get("/whatsapp/status")
+async def get_whatsapp_status(current_user: Dict = Depends(get_current_user)):
+    """Obter estado da conexão WhatsApp Web"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{WHATSAPP_SERVICE_URL}/status", timeout=10.0)
+            
+            if response.status_code == 200:
+                data = response.json()
+                return {
+                    "conectado": data.get("connected", False),
+                    "pronto": data.get("ready", False),
+                    "temQrCode": data.get("hasQrCode", False),
+                    "erro": data.get("error"),
+                    "info": data.get("clientInfo"),
+                    "servico_ativo": True
+                }
+            else:
+                return {
+                    "conectado": False,
+                    "pronto": False,
+                    "servico_ativo": False,
+                    "erro": "Serviço WhatsApp não respondeu"
+                }
+    except Exception as e:
+        logger.error(f"Erro ao verificar status WhatsApp: {e}")
+        return {
+            "conectado": False,
+            "pronto": False,
+            "servico_ativo": False,
+            "erro": f"Serviço WhatsApp indisponível: {str(e)}"
+        }
 
 
-# ==================== CONFIGURATION ====================
-
-@router.get("/whatsapp/config")
-async def get_whatsapp_config(current_user: Dict = Depends(get_current_user)):
-    """Obter configuração atual do WhatsApp"""
+@router.get("/whatsapp/qr")
+async def get_qr_code(current_user: Dict = Depends(get_current_user)):
+    """Obter QR Code para escanear com WhatsApp"""
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "admin", "gestao"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
-    config = await db.configuracoes.find_one({"tipo": "whatsapp"}, {"_id": 0})
-    
-    if not config:
-        return {
-            "configurado": False,
-            "ativo": False,
-            "phone_number_id": "",
-            "mensagem": "WhatsApp Business API não configurado"
-        }
-    
-    return {
-        "configurado": True,
-        "ativo": config.get("ativo", False),
-        "phone_number_id": config.get("phone_number_id", "")[:10] + "***" if config.get("phone_number_id") else "",
-        "mensagem": "WhatsApp Business API configurado"
-    }
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{WHATSAPP_SERVICE_URL}/qr", timeout=10.0)
+            
+            if response.status_code == 200:
+                return response.json()
+            else:
+                raise HTTPException(status_code=500, detail="Erro ao obter QR Code")
+                
+    except httpx.RequestError as e:
+        logger.error(f"Erro ao obter QR Code: {e}")
+        raise HTTPException(
+            status_code=503, 
+            detail="Serviço WhatsApp indisponível. Verifique se está a correr."
+        )
 
 
-@router.post("/whatsapp/config")
-async def save_whatsapp_config(
-    config: WhatsAppConfig,
-    current_user: Dict = Depends(get_current_user)
-):
-    """Salvar configuração do WhatsApp Business API"""
+@router.post("/whatsapp/logout")
+async def logout_whatsapp(current_user: Dict = Depends(get_current_user)):
+    """Desconectar do WhatsApp"""
     if current_user["role"] not in [UserRole.ADMIN, "admin"]:
-        raise HTTPException(status_code=403, detail="Apenas administradores podem configurar")
+        raise HTTPException(status_code=403, detail="Apenas administradores podem desconectar")
     
-    config_doc = {
-        "tipo": "whatsapp",
-        "phone_number_id": config.phone_number_id,
-        "access_token": config.access_token,
-        "ativo": config.ativo,
-        "atualizado_em": datetime.now(timezone.utc),
-        "atualizado_por": current_user["id"]
-    }
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(f"{WHATSAPP_SERVICE_URL}/logout", timeout=30.0)
+            return response.json()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/whatsapp/restart")
+async def restart_whatsapp(current_user: Dict = Depends(get_current_user)):
+    """Reiniciar serviço WhatsApp"""
+    if current_user["role"] not in [UserRole.ADMIN, "admin"]:
+        raise HTTPException(status_code=403, detail="Apenas administradores podem reiniciar")
     
-    await db.configuracoes.update_one(
-        {"tipo": "whatsapp"},
-        {"$set": config_doc},
-        upsert=True
-    )
-    
-    return {"success": True, "message": "Configuração salva com sucesso"}
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(f"{WHATSAPP_SERVICE_URL}/restart", timeout=30.0)
+            return response.json()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ==================== SEND MESSAGES ====================
 
-async def get_whatsapp_credentials():
-    """Obter credenciais do WhatsApp da base de dados ou env"""
-    config = await db.configuracoes.find_one({"tipo": "whatsapp"})
-    
-    if config and config.get("ativo"):
-        return {
-            "phone_number_id": config.get("phone_number_id"),
-            "access_token": config.get("access_token")
-        }
-    
-    # Fallback para variáveis de ambiente
-    if WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_ACCESS_TOKEN:
-        return {
-            "phone_number_id": WHATSAPP_PHONE_NUMBER_ID,
-            "access_token": WHATSAPP_ACCESS_TOKEN
-        }
-    
-    return None
-
-
 async def send_whatsapp_message(phone_number: str, message: str) -> Dict:
-    """Enviar mensagem de texto via WhatsApp Business API"""
-    credentials = await get_whatsapp_credentials()
-    
-    if not credentials:
-        logger.warning("WhatsApp não configurado")
-        return {"success": False, "error": "WhatsApp não configurado"}
-    
-    # Formatar número (remover espaços, adicionar código país se necessário)
-    phone = phone_number.replace(" ", "").replace("-", "")
-    if not phone.startswith("+"):
-        if phone.startswith("00"):
-            phone = "+" + phone[2:]
-        elif phone.startswith("9") and len(phone) == 9:
-            phone = "+351" + phone  # Portugal
-        else:
-            phone = "+351" + phone
-    
-    phone = phone.replace("+", "")  # API usa sem o +
-    
-    url = f"{WHATSAPP_API_URL}/{credentials['phone_number_id']}/messages"
-    
-    headers = {
-        "Authorization": f"Bearer {credentials['access_token']}",
-        "Content-Type": "application/json"
-    }
-    
-    payload = {
-        "messaging_product": "whatsapp",
-        "recipient_type": "individual",
-        "to": phone,
-        "type": "text",
-        "text": {"body": message}
-    }
-    
+    """Enviar mensagem via WhatsApp Web Service"""
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(url, json=payload, headers=headers, timeout=30.0)
+            response = await client.post(
+                f"{WHATSAPP_SERVICE_URL}/send",
+                json={"phone": phone_number, "message": message},
+                timeout=30.0
+            )
             
-            if response.status_code == 200:
-                data = response.json()
-                logger.info(f"WhatsApp enviado para {phone}")
-                
+            data = response.json()
+            
+            if response.status_code == 200 and data.get("success"):
                 # Registar envio
                 await db.whatsapp_logs.insert_one({
                     "tipo": "envio",
-                    "telefone": phone,
+                    "telefone": phone_number,
                     "mensagem": message[:500],
                     "status": "enviado",
-                    "message_id": data.get("messages", [{}])[0].get("id"),
+                    "message_id": data.get("messageId"),
                     "data": datetime.now(timezone.utc)
                 })
                 
-                return {"success": True, "message_id": data.get("messages", [{}])[0].get("id")}
+                return {"success": True, "message_id": data.get("messageId")}
             else:
-                error_data = response.json()
-                logger.error(f"Erro WhatsApp: {error_data}")
-                return {"success": False, "error": error_data.get("error", {}).get("message", "Erro desconhecido")}
+                error_msg = data.get("error", "Erro desconhecido")
                 
+                await db.whatsapp_logs.insert_one({
+                    "tipo": "envio",
+                    "telefone": phone_number,
+                    "mensagem": message[:500],
+                    "status": "erro",
+                    "erro": error_msg,
+                    "data": datetime.now(timezone.utc)
+                })
+                
+                return {"success": False, "error": error_msg}
+                
+    except httpx.RequestError as e:
+        logger.error(f"Erro ao enviar WhatsApp: {e}")
+        return {"success": False, "error": f"Serviço indisponível: {str(e)}"}
     except Exception as e:
-        logger.error(f"Erro ao enviar WhatsApp: {str(e)}")
+        logger.error(f"Erro inesperado WhatsApp: {e}")
         return {"success": False, "error": str(e)}
 
-
-async def send_whatsapp_document(phone_number: str, document_url: str, caption: str) -> Dict:
-    """Enviar documento via WhatsApp Business API"""
-    credentials = await get_whatsapp_credentials()
-    
-    if not credentials:
-        return {"success": False, "error": "WhatsApp não configurado"}
-    
-    phone = phone_number.replace(" ", "").replace("-", "").replace("+", "")
-    if len(phone) == 9:
-        phone = "351" + phone
-    
-    url = f"{WHATSAPP_API_URL}/{credentials['phone_number_id']}/messages"
-    
-    headers = {
-        "Authorization": f"Bearer {credentials['access_token']}",
-        "Content-Type": "application/json"
-    }
-    
-    payload = {
-        "messaging_product": "whatsapp",
-        "recipient_type": "individual",
-        "to": phone,
-        "type": "document",
-        "document": {
-            "link": document_url,
-            "caption": caption
-        }
-    }
-    
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.post(url, json=payload, headers=headers, timeout=30.0)
-            
-            if response.status_code == 200:
-                data = response.json()
-                return {"success": True, "message_id": data.get("messages", [{}])[0].get("id")}
-            else:
-                error_data = response.json()
-                return {"success": False, "error": error_data.get("error", {}).get("message", "Erro")}
-                
-    except Exception as e:
-        return {"success": False, "error": str(e)}
-
-
-# ==================== API ENDPOINTS ====================
 
 @router.post("/whatsapp/send")
 async def send_single_message(
@@ -250,7 +197,6 @@ async def send_relatorio_whatsapp(
     motorista_id: str,
     semana: int,
     ano: int,
-    background_tasks: BackgroundTasks,
     current_user: Dict = Depends(get_current_user)
 ):
     """Enviar relatório semanal via WhatsApp"""
@@ -262,7 +208,7 @@ async def send_relatorio_whatsapp(
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista não encontrado")
     
-    telefone = motorista.get("telefone") or motorista.get("phone")
+    telefone = motorista.get("telefone") or motorista.get("phone") or motorista.get("whatsapp")
     if not telefone:
         raise HTTPException(status_code=400, detail="Motorista não tem telefone registado")
     
@@ -369,7 +315,7 @@ async def process_bulk_whatsapp(
                 error_count += 1
                 continue
             
-            telefone = motorista.get("telefone") or motorista.get("phone")
+            telefone = motorista.get("telefone") or motorista.get("phone") or motorista.get("whatsapp")
             if not telefone:
                 error_count += 1
                 continue
@@ -454,7 +400,7 @@ async def notify_status_change(
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista não encontrado")
     
-    telefone = motorista.get("telefone") or motorista.get("phone")
+    telefone = motorista.get("telefone") or motorista.get("phone") or motorista.get("whatsapp")
     if not telefone:
         return {"success": False, "message": "Motorista sem telefone"}
     
@@ -503,8 +449,16 @@ async def get_whatsapp_stats(current_user: Dict = Depends(get_current_user)):
     if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "admin", "gestao"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
+    # Verificar status da conexão
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(f"{WHATSAPP_SERVICE_URL}/status", timeout=5.0)
+            status_data = response.json() if response.status_code == 200 else {}
+    except:
+        status_data = {}
+    
     total_enviados = await db.whatsapp_logs.count_documents({"tipo": "envio", "status": "enviado"})
-    total_erros = await db.whatsapp_logs.count_documents({"tipo": "envio", "status": {"$ne": "enviado"}})
+    total_erros = await db.whatsapp_logs.count_documents({"tipo": "envio", "status": "erro"})
     
     # Últimas 24 horas
     from datetime import timedelta
@@ -517,8 +471,36 @@ async def get_whatsapp_stats(current_user: Dict = Depends(get_current_user)):
     })
     
     return {
+        "conectado": status_data.get("connected", False),
+        "pronto": status_data.get("ready", False),
+        "info": status_data.get("clientInfo"),
         "total_enviados": total_enviados,
         "total_erros": total_erros,
         "enviados_24h": enviados_24h,
         "taxa_sucesso": round(total_enviados / (total_enviados + total_erros) * 100, 1) if (total_enviados + total_erros) > 0 else 0
+    }
+
+
+# ==================== LEGACY CONFIG ENDPOINTS ====================
+# Mantidos para compatibilidade com frontend existente
+
+@router.get("/whatsapp/config")
+async def get_whatsapp_config(current_user: Dict = Depends(get_current_user)):
+    """Obter configuração - agora retorna status da conexão"""
+    status = await get_whatsapp_status(current_user)
+    
+    return {
+        "configurado": status.get("pronto", False),
+        "ativo": status.get("conectado", False),
+        "modo": "whatsapp_web",
+        "mensagem": "Conectado ao WhatsApp Web" if status.get("pronto") else "Escaneie o QR Code para conectar"
+    }
+
+
+@router.post("/whatsapp/config")
+async def save_whatsapp_config(current_user: Dict = Depends(get_current_user)):
+    """Endpoint mantido para compatibilidade - redireciona para QR"""
+    return {
+        "success": True, 
+        "message": "Use o endpoint /whatsapp/qr para escanear o QR Code e conectar"
     }
