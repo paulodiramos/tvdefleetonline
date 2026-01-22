@@ -179,14 +179,16 @@ async def get_parceiro_email_service(db, parceiro_id: str) -> Optional[EmailServ
         return None
     
     # Mapear campos para o formato esperado pelo EmailService
+    # A configuração em config_email usa: smtp_host, smtp_port, smtp_usuario, smtp_password, email_remetente, nome_remetente, usar_tls
+    # O EmailService espera: smtp_host, smtp_port, smtp_usuario, smtp_password, smtp_from_email, smtp_from_name, smtp_use_tls
     email_config = {
         "smtp_host": smtp_config.get("smtp_host"),
         "smtp_port": smtp_config.get("smtp_port", 587),
-        "smtp_username": smtp_config.get("smtp_usuario") or smtp_config.get("smtp_username"),
+        "smtp_usuario": smtp_config.get("smtp_usuario"),
         "smtp_password": smtp_config.get("smtp_password"),
-        "from_email": smtp_config.get("email_remetente") or smtp_config.get("smtp_usuario") or smtp_config.get("from_email"),
-        "from_name": smtp_config.get("nome_remetente") or smtp_config.get("from_name", "TVDEFleet"),
-        "use_tls": smtp_config.get("usar_tls", True)
+        "smtp_from_email": smtp_config.get("email_remetente") or smtp_config.get("smtp_usuario"),
+        "smtp_from_name": smtp_config.get("nome_remetente", "TVDEFleet"),
+        "smtp_use_tls": smtp_config.get("usar_tls", True)
     }
     
     return EmailService(email_config)
