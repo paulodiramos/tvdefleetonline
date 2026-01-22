@@ -28,6 +28,7 @@ const client = new Client({
     }),
     puppeteer: {
         headless: true,
+        executablePath: '/usr/bin/chromium',
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -35,6 +36,7 @@ const client = new Client({
             '--disable-accelerated-2d-canvas',
             '--no-first-run',
             '--no-zygote',
+            '--single-process',
             '--disable-gpu'
         ]
     }
