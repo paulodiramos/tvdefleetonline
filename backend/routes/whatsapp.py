@@ -236,7 +236,8 @@ async def send_relatorio_whatsapp(
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista não encontrado")
     
-    telefone = motorista.get("telefone") or motorista.get("phone") or motorista.get("whatsapp")
+    # Buscar telefone - ordem de prioridade: whatsapp > phone > telefone
+    telefone = motorista.get("whatsapp") or motorista.get("phone") or motorista.get("telefone")
     if not telefone:
         raise HTTPException(status_code=400, detail="Motorista não tem telefone registado")
     
