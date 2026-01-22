@@ -311,17 +311,19 @@ app.post('/send/:parceiro_id', async (req, res) => {
             });
         }
         
-        // Send message directly without triggering sendSeen
-        // Use evaluate to send message directly via WhatsApp Web internal API
+        // Send message using WWebJS internal function to avoid sendSeen bug
         const result = await client.pupPage.evaluate(async (chatId, msg) => {
             const chat = await window.Store.Chat.get(chatId);
             if (!chat) {
                 throw new Error('Chat não encontrado');
             }
-            const message = await chat.sendMessage(msg);
+            
+            // Create message
+            const msgResult = await window.WWebJS.sendMessage(chat, msg, {}, {});
+            
             return {
-                id: message.id._serialized || message.id,
-                timestamp: message.t || Date.now()
+                id: msgResult.id ? msgResult.id._serialized : 'sent',
+                timestamp: msgResult.t || Math.floor(Date.now() / 1000)
             };
         }, chatId, message);
         

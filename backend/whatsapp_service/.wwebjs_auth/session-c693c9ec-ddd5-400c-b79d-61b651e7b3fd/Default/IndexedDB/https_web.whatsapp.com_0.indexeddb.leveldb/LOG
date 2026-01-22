@@ -68,3 +68,13 @@
 2026/01/22-21:00:33.255 1efb compacted to: files[ 0 1 29 0 0 0 0 ]
 2026/01/22-21:00:33.255 1efb Delete type=2 #618
 2026/01/22-21:00:33.255 1efb Delete type=2 #613
+2026/01/22-21:00:56.684 1efd Compacting 1@1 + 4@2 files
+2026/01/22-21:00:56.726 1efd Generated table #631@1: 56403 keys, 2228558 bytes
+2026/01/22-21:00:56.746 1efd Generated table #632@1: 4330 keys, 2138026 bytes
+2026/01/22-21:00:56.746 1efd Compacted 1@1 + 4@2 files => 4366584 bytes
+2026/01/22-21:00:56.748 1efd compacted to: files[ 0 0 27 0 0 0 0 ]
+2026/01/22-21:00:56.749 1efd Delete type=2 #602
+2026/01/22-21:00:56.749 1efd Delete type=2 #616
+2026/01/22-21:00:56.749 1efd Delete type=2 #608
+2026/01/22-21:00:56.749 1efd Delete type=2 #574
+2026/01/22-21:00:56.749 1efd Delete type=2 #609
