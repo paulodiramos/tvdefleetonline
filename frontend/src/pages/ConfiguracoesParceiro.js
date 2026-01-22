@@ -9,14 +9,212 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { toast } from 'sonner';
 import { 
   ArrowLeft, Mail, Lock, Server, Send, Eye, EyeOff, 
   Car, Shield, Save, Loader2, TestTube, CheckCircle, AlertCircle,
-  MessageCircle, Phone, ExternalLink
+  MessageCircle, Phone, ExternalLink, HelpCircle, Key, Copy, Check, ShieldCheck
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
+
+// Componente de Guia para Gmail 2FA App Password
+const GmailAppPasswordGuide = () => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [open, setOpen] = useState(false);
+  
+  const steps = [
+    {
+      number: 1,
+      title: "Aceder às Configurações Google",
+      description: "Clique no botão abaixo para aceder diretamente à página de Senhas de Aplicação da sua conta Google.",
+      icon: <ExternalLink className="w-8 h-8" />,
+      action: (
+        <Button 
+          onClick={() => window.open('https://myaccount.google.com/apppasswords', '_blank')}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
+          <ExternalLink className="w-4 h-4 mr-2" />
+          Abrir Configurações Google
+        </Button>
+      ),
+      note: "Pode ser necessário fazer login na sua conta Google"
+    },
+    {
+      number: 2,
+      title: "Selecionar Aplicação",
+      description: "Na página que abriu, em 'Selecionar aplicação', escolha 'Correio' ou 'Mail'.",
+      icon: <Mail className="w-8 h-8" />,
+      tip: "Se não aparecer esta opção, verifique se tem a verificação em 2 passos ativada"
+    },
+    {
+      number: 3,
+      title: "Selecionar Dispositivo",
+      description: "Em 'Selecionar dispositivo', escolha 'Outro (nome personalizado)' e escreva 'TVDEFleet'.",
+      icon: <Server className="w-8 h-8" />,
+      tip: "Pode usar qualquer nome que o ajude a identificar esta aplicação"
+    },
+    {
+      number: 4,
+      title: "Gerar Senha",
+      description: "Clique no botão 'Gerar'. O Google vai criar uma senha de 16 caracteres (exemplo: abcd efgh ijkl mnop).",
+      icon: <Key className="w-8 h-8" />,
+      important: "IMPORTANTE: Esta senha só aparece uma vez! Copie-a antes de fechar."
+    },
+    {
+      number: 5,
+      title: "Usar a Senha",
+      description: "Copie a senha gerada (sem espaços) e cole no campo 'Password' da configuração SMTP. NÃO use a sua password normal do Gmail.",
+      icon: <Copy className="w-8 h-8" />,
+      action: (
+        <Button 
+          onClick={() => {
+            setOpen(false);
+            toast.success('Agora cole a senha de aplicação no campo Password!');
+          }}
+          className="bg-green-600 hover:bg-green-700"
+        >
+          <Check className="w-4 h-4 mr-2" />
+          Já copiei, fechar guia
+        </Button>
+      )
+    }
+  ];
+
+  const currentStepData = steps[currentStep - 1];
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm" className="text-amber-600 border-amber-200 hover:bg-amber-50">
+          <HelpCircle className="w-4 h-4 mr-2" />
+          Como criar Senha de Aplicação?
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <ShieldCheck className="w-6 h-6 text-amber-600" />
+            Gmail: Criar Senha de Aplicação (2FA)
+          </DialogTitle>
+          <DialogDescription>
+            Quando tem autenticação de 2 fatores, o Gmail exige uma senha especial
+          </DialogDescription>
+        </DialogHeader>
+        
+        {/* Progress Steps */}
+        <div className="flex items-center justify-between mb-6 px-2">
+          {steps.map((step, index) => (
+            <div key={step.number} className="flex items-center">
+              <div 
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all ${
+                  currentStep === step.number 
+                    ? 'bg-amber-500 text-white scale-110' 
+                    : currentStep > step.number 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-gray-200 text-gray-500'
+                }`}
+              >
+                {currentStep > step.number ? <Check className="w-5 h-5" /> : step.number}
+              </div>
+              {index < steps.length - 1 && (
+                <div className={`w-6 h-1 mx-1 ${currentStep > step.number ? 'bg-green-500' : 'bg-gray-200'}`} />
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Current Step Content */}
+        <div className="bg-slate-50 rounded-xl p-6 min-h-[220px]">
+          <div className="flex items-start gap-4">
+            <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 flex-shrink-0">
+              {currentStepData.icon}
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold mb-2">
+                Passo {currentStepData.number}: {currentStepData.title}
+              </h3>
+              <p className="text-slate-600 mb-4 leading-relaxed">
+                {currentStepData.description}
+              </p>
+              
+              {currentStepData.tip && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                  <p className="text-blue-800 text-sm flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span><strong>Dica:</strong> {currentStepData.tip}</span>
+                  </p>
+                </div>
+              )}
+              
+              {currentStepData.note && (
+                <p className="text-slate-500 text-sm mb-4">
+                  ℹ️ {currentStepData.note}
+                </p>
+              )}
+              
+              {currentStepData.important && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                  <p className="text-red-800 text-sm flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span>{currentStepData.important}</span>
+                  </p>
+                </div>
+              )}
+              
+              {currentStepData.action && (
+                <div className="mt-4">
+                  {currentStepData.action}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Visual Aid for Step 4 */}
+        {currentStep === 4 && (
+          <div className="bg-white border-2 border-dashed border-amber-300 rounded-lg p-4 mt-4 text-center">
+            <p className="text-slate-500 mb-2">A senha gerada terá este formato:</p>
+            <div className="font-mono text-2xl tracking-widest bg-amber-50 p-3 rounded">
+              <span className="text-amber-600">abcd</span>
+              <span className="text-slate-400 mx-1"> </span>
+              <span className="text-amber-600">efgh</span>
+              <span className="text-slate-400 mx-1"> </span>
+              <span className="text-amber-600">ijkl</span>
+              <span className="text-slate-400 mx-1"> </span>
+              <span className="text-amber-600">mnop</span>
+            </div>
+            <p className="text-xs text-slate-500 mt-2">Copie sem os espaços: abcdefghijklmnop</p>
+          </div>
+        )}
+
+        {/* Navigation Buttons */}
+        <div className="flex justify-between mt-6">
+          <Button 
+            variant="outline" 
+            onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+            disabled={currentStep === 1}
+          >
+            ← Anterior
+          </Button>
+          
+          <div className="flex gap-2">
+            {currentStep < steps.length && (
+              <Button 
+                onClick={() => setCurrentStep(Math.min(steps.length, currentStep + 1))}
+                className="bg-amber-500 hover:bg-amber-600"
+              >
+                Próximo →
+              </Button>
+            )}
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const ConfiguracoesParceiro = ({ user, onLogout }) => {
   const navigate = useNavigate();
