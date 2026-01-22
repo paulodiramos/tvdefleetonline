@@ -479,8 +479,17 @@ app.post('/send-bulk/:parceiro_id', async (req, res) => {
             }
             
             // Use getChatById to avoid sendSeen bug
-            const chat = await client.getChatById(chatId);
-            await chat.sendMessage(personalizedMessage);
+            const chatResult = await client.pupPage.evaluate(async (chatId, msg) => {
+                const chat = await window.Store.Chat.get(chatId);
+                if (!chat) {
+                    throw new Error('Chat não encontrado');
+                }
+                const msgResult = await window.WWebJS.sendMessage(chat, msg, {}, {});
+                return {
+                    id: msgResult.id ? msgResult.id._serialized : 'sent',
+                    timestamp: msgResult.t || Math.floor(Date.now() / 1000)
+                };
+            }, chatId, personalizedMessage);
             
             results.push({
                 phone: recipient.phone,
