@@ -223,3 +223,40 @@
 2026/01/22-21:20:10.420 2a8c compacted to: files[ 0 0 38 0 0 0 0 ]
 2026/01/22-21:20:10.421 2a8c Delete type=2 #1215
 2026/01/22-21:20:10.421 2a8c Delete type=2 #1219
+2026/01/22-21:20:27.841 2a8c Level-0 table #1240: started
+2026/01/22-21:20:27.859 2a8c Level-0 table #1240: 1092078 bytes OK
+2026/01/22-21:20:27.862 2a8c Delete type=0 #1217
+2026/01/22-21:20:28.859 2a8c Compacting 1@0 + 0@1 files
+2026/01/22-21:20:28.871 2a8c Generated table #1241@0: 20761 keys, 182177 bytes
+2026/01/22-21:20:28.874 2a8c Generated table #1242@0: 1716 keys, 17886 bytes
+2026/01/22-21:20:28.885 2a8c Generated table #1243@0: 14538 keys, 432290 bytes
+2026/01/22-21:20:28.888 2a8c Generated table #1244@0: 1583 keys, 34819 bytes
+2026/01/22-21:20:28.888 2a8c Compacted 1@0 + 0@1 files => 667172 bytes
+2026/01/22-21:20:28.890 2a8c compacted to: files[ 0 4 38 0 0 0 0 ]
+2026/01/22-21:20:28.891 2a8c Delete type=2 #1240
+2026/01/22-21:20:29.880 2a8c Compacting 1@1 + 11@2 files
+2026/01/22-21:20:29.911 2a8c Generated table #1245@1: 13659 keys, 2182320 bytes
+2026/01/22-21:20:29.934 2a8c Generated table #1246@1: 8160 keys, 2130846 bytes
+2026/01/22-21:20:29.957 2a8c Generated table #1247@1: 8139 keys, 2130660 bytes
+2026/01/22-21:20:29.997 2a8c Generated table #1248@1: 79069 keys, 2221853 bytes
+2026/01/22-21:20:30.044 2a8c Generated table #1249@1: 99463 keys, 2249056 bytes
+2026/01/22-21:20:30.090 2a8c Generated table #1250@1: 98057 keys, 2246922 bytes
+2026/01/22-21:20:30.136 2a8c Generated table #1251@1: 98023 keys, 2248231 bytes
+2026/01/22-21:20:30.186 2a8c Generated table #1252@1: 98000 keys, 2247883 bytes
+2026/01/22-21:20:30.233 2a8c Generated table #1253@1: 98253 keys, 2248783 bytes
+2026/01/22-21:20:30.278 2a8c Generated table #1254@1: 98815 keys, 2247925 bytes
+2026/01/22-21:20:30.290 2a8c Generated table #1255@1: 18447 keys, 428839 bytes
+2026/01/22-21:20:30.290 2a8c Compacted 1@1 + 11@2 files => 22583318 bytes
+2026/01/22-21:20:30.293 2a8c compacted to: files[ 0 3 38 0 0 0 0 ]
+2026/01/22-21:20:30.294 2a8c Delete type=2 #1223
+2026/01/22-21:20:30.294 2a8c Delete type=2 #1226
+2026/01/22-21:20:30.294 2a8c Delete type=2 #1243
+2026/01/22-21:20:30.294 2a8c Delete type=2 #1201
+2026/01/22-21:20:30.294 2a8c Delete type=2 #1237
+2026/01/22-21:20:30.294 2a8c Delete type=2 #1164
+2026/01/22-21:20:30.294 2a8c Delete type=2 #1224
+2026/01/22-21:20:30.294 2a8c Delete type=2 #1225
+2026/01/22-21:20:30.294 2a8c Delete type=2 #1222
+2026/01/22-21:20:30.294 2a8c Delete type=2 #1227
+2026/01/22-21:20:30.294 2a8c Delete type=2 #1228
+2026/01/22-21:20:30.294 2a8c Delete type=2 #1163
