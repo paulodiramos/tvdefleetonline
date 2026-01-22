@@ -1263,3 +1263,11 @@
 2026/01/22-20:56:15.432 16ba Delete type=2 #497
 2026/01/22-20:56:15.432 16ba Delete type=2 #495
 2026/01/22-20:56:15.432 16ba Delete type=2 #498
+2026/01/22-20:56:23.508 16bc Compacting 1@1 + 2@2 files
+2026/01/22-20:56:23.550 16bc Generated table #518@1: 49912 keys, 2219659 bytes
+2026/01/22-20:56:23.569 16bc Generated table #519@1: 3222 keys, 2119646 bytes
+2026/01/22-20:56:23.569 16bc Compacted 1@1 + 2@2 files => 4339305 bytes
+2026/01/22-20:56:23.572 16bc compacted to: files[ 0 0 23 0 0 0 0 ]
+2026/01/22-20:56:23.572 16bc Delete type=2 #480
+2026/01/22-20:56:23.572 16bc Delete type=2 #506
+2026/01/22-20:56:23.572 16bc Delete type=2 #481
