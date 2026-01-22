@@ -195,12 +195,20 @@ const ImportarFicheirosParceiro = ({ user, onLogout }) => {
     setResultados(prev => ({ ...prev, [plataforma]: null }));
   };
 
-  const handleUpload = async (plataforma) => {
+  // Upload com confirmação
+  const handleUpload = (plataforma) => {
     const file = ficheiros[plataforma];
     if (!file) {
       toast.error('Selecione um ficheiro primeiro');
       return;
     }
+    openConfirmImport(plataforma);
+  };
+
+  // Upload efetivo após confirmação
+  const handleUploadConfirmed = async (plataforma) => {
+    const file = ficheiros[plataforma];
+    if (!file) return;
 
     setUploading(prev => ({ ...prev, [plataforma]: true }));
 
@@ -208,8 +216,16 @@ const ImportarFicheirosParceiro = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('semana', semana);
-      formData.append('ano', ano);
+      formData.append('semana', confirmSemana);
+      formData.append('ano', confirmAno);
+      
+      // Adicionar datas se definidas
+      if (confirmDataInicio) {
+        formData.append('data_inicio', confirmDataInicio);
+      }
+      if (confirmDataFim) {
+        formData.append('data_fim', confirmDataFim);
+      }
       
       // Adicionar mapeamento de campos se configurado
       if (fieldMappings[plataforma]) {
