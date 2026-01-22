@@ -1,3 +1,95 @@
 2026/01/22-20:58:26.372 1ca6 Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
 2026/01/22-20:58:26.373 1ca6 Recovering log #520
 2026/01/22-20:58:26.464 1ca6 Reusing old log /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000520.log 
+2026/01/22-20:58:29.481 1ca7 Level-0 table #545: started
+2026/01/22-20:58:29.500 1ca7 Level-0 table #545: 1124620 bytes OK
+2026/01/22-20:58:29.529 1ca7 Delete type=0 #520
+2026/01/22-20:58:29.540 1ca7 Compacting 1@0 + 0@1 files
+2026/01/22-20:58:29.559 1ca7 Generated table #546@0: 20979 keys, 197168 bytes
+2026/01/22-20:58:29.570 1ca7 Generated table #547@0: 17388 keys, 500379 bytes
+2026/01/22-20:58:29.570 1ca7 Compacted 1@0 + 0@1 files => 697547 bytes
+2026/01/22-20:58:29.572 1ca7 compacted to: files[ 0 2 23 0 0 0 0 ]
+2026/01/22-20:58:29.572 1ca7 Delete type=2 #545
+2026/01/22-20:58:29.695 1ca9 Compacting 1@1 + 7@2 files
+2026/01/22-20:58:29.747 1ca9 Generated table #548@1: 36330 keys, 2241614 bytes
+2026/01/22-20:58:29.793 1ca9 Generated table #549@1: 27698 keys, 2269265 bytes
+2026/01/22-20:58:29.867 1ca9 Generated table #550@1: 26904 keys, 2266418 bytes
+2026/01/22-20:58:29.947 1ca9 Generated table #551@1: 28377 keys, 2261609 bytes
+2026/01/22-20:58:29.994 1ca9 Generated table #552@1: 74035 keys, 2274865 bytes
+2026/01/22-20:58:30.069 1ca9 Generated table #553@1: 17537 keys, 2242309 bytes
+2026/01/22-20:58:30.135 1ca9 Generated table #554@1: 91689 keys, 2240322 bytes
+2026/01/22-20:58:30.140 1ca9 Generated table #555@1: 2501 keys, 137541 bytes
+2026/01/22-20:58:30.140 1ca9 Compacted 1@1 + 7@2 files => 15933943 bytes
+2026/01/22-20:58:30.144 1ca9 compacted to: files[ 0 1 24 0 0 0 0 ]
+2026/01/22-20:58:30.421 1ca7 Compacting 1@1 + 9@2 files
+2026/01/22-20:58:30.461 1ca7 Generated table #556@1: 50035 keys, 2220161 bytes
+2026/01/22-20:58:30.480 1ca7 Generated table #557@1: 4048 keys, 2150693 bytes
+2026/01/22-20:58:30.498 1ca7 Generated table #558@1: 1958 keys, 2150348 bytes
+2026/01/22-20:58:30.510 1ca7 Generated table #559@1: 583 keys, 2122982 bytes
+2026/01/22-20:58:30.533 1ca7 Generated table #560@1: 938 keys, 2132853 bytes
+2026/01/22-20:58:30.546 1ca7 Generated table #561@1: 1114 keys, 2137376 bytes
+2026/01/22-20:58:30.563 1ca7 Generated table #562@1: 1725 keys, 2141312 bytes
+2026/01/22-20:58:30.583 1ca7 Generated table #563@1: 2384 keys, 2152115 bytes
+2026/01/22-20:58:30.603 1ca7 Generated table #564@1: 3089 keys, 2155485 bytes
+2026/01/22-20:58:30.605 1ca7 Generated table #565@1: 4 keys, 2991 bytes
+2026/01/22-20:58:30.605 1ca7 Compacted 1@1 + 9@2 files => 19366316 bytes
+2026/01/22-20:58:30.608 1ca7 compacted to: files[ 0 0 25 0 0 0 0 ]
+2026/01/22-20:58:47.732 1ca7 Level-0 table #567: started
+2026/01/22-20:58:47.748 1ca7 Level-0 table #567: 1148052 bytes OK
+2026/01/22-20:58:47.751 1ca7 Delete type=2 #529
+2026/01/22-20:58:47.751 1ca7 Delete type=2 #531
+2026/01/22-20:58:47.751 1ca7 Delete type=2 #533
+2026/01/22-20:58:47.751 1ca7 Delete type=2 #532
+2026/01/22-20:58:47.752 1ca7 Delete type=2 #534
+2026/01/22-20:58:47.752 1ca7 Delete type=2 #542
+2026/01/22-20:58:47.752 1ca7 Delete type=2 #535
+2026/01/22-20:58:47.752 1ca7 Delete type=2 #536
+2026/01/22-20:58:47.752 1ca7 Delete type=2 #539
+2026/01/22-20:58:47.752 1ca7 Delete type=2 #537
+2026/01/22-20:58:47.752 1ca7 Delete type=2 #527
+2026/01/22-20:58:47.752 1ca7 Delete type=2 #538
+2026/01/22-20:58:47.752 1ca7 Delete type=2 #528
+2026/01/22-20:58:47.752 1ca7 Delete type=2 #530
+2026/01/22-20:58:47.752 1ca7 Delete type=2 #540
+2026/01/22-20:58:47.752 1ca7 Delete type=2 #547
+2026/01/22-20:58:47.752 1ca7 Delete type=2 #546
+2026/01/22-20:58:47.752 1ca7 Delete type=0 #544
+2026/01/22-20:58:47.752 1ca7 Delete type=2 #541
+2026/01/22-20:58:48.749 1ca9 Compacting 1@0 + 0@1 files
+2026/01/22-20:58:48.765 1ca9 Generated table #568@0: 25360 keys, 409789 bytes
+2026/01/22-20:58:48.767 1ca9 Generated table #569@0: 193 keys, 18230 bytes
+2026/01/22-20:58:48.773 1ca9 Generated table #570@0: 5972 keys, 179896 bytes
+2026/01/22-20:58:48.773 1ca9 Compacted 1@0 + 0@1 files => 607915 bytes
+2026/01/22-20:58:48.775 1ca9 compacted to: files[ 0 3 25 0 0 0 0 ]
+2026/01/22-20:58:48.775 1ca9 Delete type=2 #567
+2026/01/22-20:58:48.784 1ca7 Compacting 1@1 + 2@2 files
+2026/01/22-20:58:48.846 1ca7 Generated table #571@1: 91625 keys, 2239913 bytes
+2026/01/22-20:58:48.855 1ca7 Generated table #572@1: 8435 keys, 303630 bytes
+2026/01/22-20:58:48.855 1ca7 Compacted 1@1 + 2@2 files => 2543543 bytes
+2026/01/22-20:58:48.857 1ca7 compacted to: files[ 0 2 25 0 0 0 0 ]
+2026/01/22-20:58:48.858 1ca7 Delete type=2 #555
+2026/01/22-20:58:48.858 1ca7 Delete type=2 #570
+2026/01/22-20:58:48.858 1ca7 Delete type=2 #554
+2026/01/22-20:58:58.551 1ca7 Compacting 1@1 + 9@2 files
+2026/01/22-20:58:58.592 1ca7 Generated table #573@1: 53239 keys, 2223016 bytes
+2026/01/22-20:58:58.612 1ca7 Generated table #574@1: 4387 keys, 2151579 bytes
+2026/01/22-20:58:58.630 1ca7 Generated table #575@1: 1928 keys, 2152941 bytes
+2026/01/22-20:58:58.642 1ca7 Generated table #576@1: 691 keys, 2124506 bytes
+2026/01/22-20:58:58.655 1ca7 Generated table #577@1: 900 keys, 2134578 bytes
+2026/01/22-20:58:58.668 1ca7 Generated table #578@1: 1131 keys, 2138756 bytes
+2026/01/22-20:58:58.684 1ca7 Generated table #579@1: 1682 keys, 2140057 bytes
+2026/01/22-20:58:58.702 1ca7 Generated table #580@1: 2347 keys, 2151650 bytes
+2026/01/22-20:58:58.722 1ca7 Generated table #581@1: 3098 keys, 2156855 bytes
+2026/01/22-20:58:58.725 1ca7 Generated table #582@1: 114 keys, 95577 bytes
+2026/01/22-20:58:58.725 1ca7 Compacted 1@1 + 9@2 files => 19469515 bytes
+2026/01/22-20:58:58.728 1ca7 compacted to: files[ 0 1 26 0 0 0 0 ]
+2026/01/22-20:58:58.728 1ca7 Delete type=2 #558
+2026/01/22-20:58:58.729 1ca7 Delete type=2 #561
+2026/01/22-20:58:58.729 1ca7 Delete type=2 #560
+2026/01/22-20:58:58.729 1ca7 Delete type=2 #559
+2026/01/22-20:58:58.729 1ca7 Delete type=2 #563
+2026/01/22-20:58:58.729 1ca7 Delete type=2 #557
+2026/01/22-20:58:58.729 1ca7 Delete type=2 #562
+2026/01/22-20:58:58.729 1ca7 Delete type=2 #556
+2026/01/22-20:58:58.729 1ca7 Delete type=2 #564
+2026/01/22-20:58:58.729 1ca7 Delete type=2 #568
