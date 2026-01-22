@@ -2121,8 +2121,15 @@ async def send_motorista_email(
     
     # Obter parceiro_id para usar SMTP do parceiro
     parceiro_id = motorista.get("parceiro_id") or motorista.get("parceiro_atribuido")
-    if not parceiro_id and current_user["role"] == UserRole.PARCEIRO:
-        parceiro_id = current_user["id"]
+    
+    # Se motorista não tem parceiro definido, usar o current_user se for parceiro
+    if not parceiro_id:
+        if current_user.get("role") == UserRole.PARCEIRO or current_user.get("role") == "parceiro":
+            parceiro_id = current_user.get("id")
+        elif current_user.get("parceiro_id"):
+            parceiro_id = current_user.get("parceiro_id")
+    
+    logger.info(f"Enviando email para motorista {motorista_id}, parceiro_id={parceiro_id}, user_role={current_user.get('role')}")
     
     # Tentar enviar email via SMTP do parceiro primeiro
     try:
@@ -2132,16 +2139,20 @@ async def send_motorista_email(
         if parceiro_id:
             from utils.email_service import get_parceiro_email_service
             email_service = await get_parceiro_email_service(db, parceiro_id)
+            logger.info(f"Email service obtido: {email_service is not None}")
             if email_service:
                 email_result = email_service.send_email(
                     to_email=email_destino,
                     subject=f"Relatório Semanal - Semana {semana}/{ano}",
                     body_html=html_content
                 )
-                logger.info(f"Email enviado via SMTP do parceiro para {email_destino}")
+                logger.info(f"Email enviado via SMTP do parceiro para {email_destino}: {email_result}")
+        else:
+            logger.warning(f"Parceiro ID não encontrado para motorista {motorista_id}")
         
         # Fallback para SendGrid se SMTP não disponível
         if email_result is None:
+            logger.info("Usando fallback SendGrid")
             email_result = send_email_sendgrid(
                 to_email=email_destino,
                 subject=f"Relatório Semanal - Semana {semana}/{ano}",
