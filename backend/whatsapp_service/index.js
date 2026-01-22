@@ -311,8 +311,9 @@ app.post('/send/:parceiro_id', async (req, res) => {
             });
         }
         
-        // Send message
-        const result = await client.sendMessage(chatId, message);
+        // Send message with sendSeen disabled to avoid the markedUnread bug
+        const chat = await client.getChatById(chatId);
+        const result = await chat.sendMessage(message);
         
         // Update last activity
         const currentStatus = clientStatus.get(parceiro_id);
