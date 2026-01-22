@@ -14,3 +14,51 @@
 2026/01/22-21:00:10.294 1efb compacted to: files[ 0 1 29 0 0 0 0 ]
 2026/01/22-21:00:10.294 1efb Delete type=2 #601
 2026/01/22-21:00:10.294 1efb Delete type=2 #606
+2026/01/22-21:00:11.469 1efb Compacting 1@1 + 5@2 files
+2026/01/22-21:00:11.572 1efb Generated table #610@1: 71999 keys, 2275311 bytes
+2026/01/22-21:00:11.668 1efb Generated table #611@1: 17393 keys, 2239543 bytes
+2026/01/22-21:00:11.768 1efb Generated table #612@1: 83051 keys, 2229707 bytes
+2026/01/22-21:00:11.794 1efb Generated table #613@1: 51160 keys, 1302510 bytes
+2026/01/22-21:00:11.794 1efb Compacted 1@1 + 5@2 files => 8047071 bytes
+2026/01/22-21:00:11.797 1efb compacted to: files[ 0 0 28 0 0 0 0 ]
+2026/01/22-21:00:30.183 1efb Level-0 table #615: started
+2026/01/22-21:00:30.199 1efb Level-0 table #615: 1201108 bytes OK
+2026/01/22-21:00:30.201 1efb Delete type=2 #598
+2026/01/22-21:00:30.201 1efb Delete type=2 #599
+2026/01/22-21:00:30.201 1efb Delete type=2 #607
+2026/01/22-21:00:30.202 1efb Delete type=2 #588
+2026/01/22-21:00:30.202 1efb Delete type=2 #589
+2026/01/22-21:00:30.202 1efb Delete type=2 #600
+2026/01/22-21:00:30.202 1efb Delete type=0 #603
+2026/01/22-21:00:31.194 1efd Compacting 1@0 + 0@1 files
+2026/01/22-21:00:31.208 1efd Generated table #616@0: 24459 keys, 343469 bytes
+2026/01/22-21:00:31.214 1efd Generated table #617@0: 5828 keys, 189799 bytes
+2026/01/22-21:00:31.218 1efd Generated table #618@0: 3243 keys, 77339 bytes
+2026/01/22-21:00:31.218 1efd Compacted 1@0 + 0@1 files => 610607 bytes
+2026/01/22-21:00:31.220 1efd compacted to: files[ 0 3 28 0 0 0 0 ]
+2026/01/22-21:00:31.220 1efd Delete type=2 #615
+2026/01/22-21:00:32.211 1efb Compacting 1@1 + 10@2 files
+2026/01/22-21:00:32.233 1efb Generated table #619@1: 3098 keys, 2156854 bytes
+2026/01/22-21:00:32.251 1efb Generated table #620@1: 2579 keys, 2149172 bytes
+2026/01/22-21:00:32.274 1efb Generated table #621@1: 8183 keys, 2162934 bytes
+2026/01/22-21:00:32.315 1efb Generated table #622@1: 36352 keys, 2242118 bytes
+2026/01/22-21:00:32.359 1efb Generated table #623@1: 27699 keys, 2269634 bytes
+2026/01/22-21:00:32.402 1efb Generated table #624@1: 26908 keys, 2266693 bytes
+2026/01/22-21:00:32.445 1efb Generated table #625@1: 28375 keys, 2261411 bytes
+2026/01/22-21:00:32.491 1efb Generated table #626@1: 71931 keys, 2274924 bytes
+2026/01/22-21:00:32.525 1efb Generated table #627@1: 17373 keys, 2237336 bytes
+2026/01/22-21:00:32.563 1efb Generated table #628@1: 80841 keys, 2225971 bytes
+2026/01/22-21:00:32.569 1efb Generated table #629@1: 7904 keys, 183327 bytes
+2026/01/22-21:00:32.569 1efb Compacted 1@1 + 10@2 files => 22430374 bytes
+2026/01/22-21:00:32.572 1efb compacted to: files[ 0 2 29 0 0 0 0 ]
+2026/01/22-21:00:32.573 1efb Delete type=2 #612
+2026/01/22-21:00:32.573 1efb Delete type=2 #592
+2026/01/22-21:00:32.573 1efb Delete type=2 #597
+2026/01/22-21:00:32.573 1efb Delete type=2 #617
+2026/01/22-21:00:32.573 1efb Delete type=2 #594
+2026/01/22-21:00:32.573 1efb Delete type=2 #610
+2026/01/22-21:00:32.573 1efb Delete type=2 #595
+2026/01/22-21:00:32.573 1efb Delete type=2 #611
+2026/01/22-21:00:32.573 1efb Delete type=2 #593
+2026/01/22-21:00:32.573 1efb Delete type=2 #596
+2026/01/22-21:00:32.573 1efb Delete type=2 #591
