@@ -2121,7 +2121,7 @@ async def send_motorista_email(
     
     # Tentar enviar email via SendGrid
     try:
-        result = await send_email_sendgrid(
+        result = send_email_sendgrid(
             to_email=email_destino,
             subject=f"Relatório Semanal - Semana {semana}/{ano}",
             html_content=html_content
