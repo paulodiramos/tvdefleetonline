@@ -85,21 +85,21 @@ const Layout = ({ children, user, onLogout }) => {
 
     // Admin/Gestao menu
     const items = [
-      { path: '/motoristas', icon: Users, label: 'Motoristas' },
+      { 
+        label: 'Motoristas', 
+        icon: Users,
+        submenu: [
+          { path: '/motoristas', label: 'Lista de Motoristas' },
+          { path: '/contratos', label: '📄 Gestão de Contratos' },
+          { path: '/criar-contrato', label: '➕ Criar Contrato' }
+        ]
+      },
       { 
         label: 'Veículos', 
         icon: Car,
         submenu: [
           { path: '/vehicles', label: 'Lista de Veículos' },
           { path: '/vistorias', label: 'Vistorias' }
-        ]
-      },
-      { 
-        label: 'Contratos', 
-        icon: FileText,
-        submenu: [
-          { path: '/contratos', label: 'Gestão de Contratos' },
-          { path: '/criar-contrato', label: 'Criar Contrato' }
         ]
       },
       { 
