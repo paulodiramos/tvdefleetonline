@@ -744,9 +744,21 @@ async def testar_config_email(
         """
         msg.attach(MIMEText(body, 'html'))
         
-        server = smtplib.SMTP(config['smtp_host'], config.get('smtp_port', 587))
-        if config.get('usar_tls', True):
-            server.starttls()
+        smtp_port = config.get('smtp_port', 587)
+        
+        # Port 465 = SSL direct, Port 587 = STARTTLS
+        import ssl
+        context = ssl.create_default_context()
+        
+        if smtp_port == 465:
+            server = smtplib.SMTP_SSL(config['smtp_host'], smtp_port, context=context)
+        else:
+            server = smtplib.SMTP(config['smtp_host'], smtp_port, timeout=30)
+            server.ehlo()
+            if config.get('usar_tls', True):
+                server.starttls(context=context)
+            server.ehlo()
+        
         server.login(config['smtp_usuario'], config['smtp_password'])
         server.send_message(msg)
         server.quit()
