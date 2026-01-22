@@ -156,14 +156,14 @@ const Layout = ({ children, user, onLogout }) => {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center space-x-1">
+            <nav className="hidden md:flex items-center space-x-0">
               {navItems.map((item, index) => (
                 item.submenu ? (
                   <DropdownMenu key={index}>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="flex items-center space-x-1">
+                      <Button variant="ghost" size="sm" className="flex items-center space-x-1 px-2 h-8">
                         <item.icon className="w-4 h-4" />
-                        <span>{item.label}</span>
+                        <span className="text-sm">{item.label}</span>
                         <ChevronDown className="w-3 h-3" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -190,7 +190,7 @@ const Layout = ({ children, user, onLogout }) => {
                   <Link
                     key={index}
                     to={item.path}
-                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex items-center space-x-1 px-2 py-1.5 rounded-md text-sm font-medium transition-colors ${
                       location.pathname === item.path
                         ? 'bg-blue-50 text-blue-700'
                         : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
