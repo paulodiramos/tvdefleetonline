@@ -3903,9 +3903,12 @@ async def enviar_relatorio_para_motorista(
     }
     
     # Obter parceiro_id para envio de email via SMTP do parceiro
-    parceiro_id_para_email = motorista.get("parceiro_id") or motorista.get("parceiro_atribuido")
-    if not parceiro_id_para_email and current_user["role"] == UserRole.PARCEIRO:
-        parceiro_id_para_email = current_user["id"]
+    # Prioridade: current_user (se parceiro) > motorista.parceiro_id
+    parceiro_id_para_email = None
+    if current_user.get("role") == UserRole.PARCEIRO or current_user.get("role") == "parceiro":
+        parceiro_id_para_email = current_user.get("id")
+    if not parceiro_id_para_email:
+        parceiro_id_para_email = motorista.get("parceiro_id") or motorista.get("parceiro_atribuido")
     
     # Enviar relatório
     result = await enviar_relatorio_motorista(
