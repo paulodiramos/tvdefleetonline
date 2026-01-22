@@ -14877,7 +14877,7 @@ async def test_email_config(
             raise HTTPException(status_code=400, detail="Recipient email is required")
         
         # Send test email
-        result = email_service.send_email(
+        result = await email_service.send_email(
             to_email=recipient,
             subject="🔔 Teste de Configuração - TVDEFleet",
             html_content="""
