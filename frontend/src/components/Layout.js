@@ -124,27 +124,8 @@ const Layout = ({ children, user, onLogout }) => {
           { path: '/gestao-extras', label: '💰 Extras/Dívidas' }
         ]
       },
-      { path: '/terabox', icon: HardDrive, label: 'Terabox' },
-      { path: '/whatsapp-envio', icon: MessageCircle, label: 'WhatsApp' },
       { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' }
     ];
-
-    // Add Configurações (Automação RPA, CSV Config) for admin
-    if (user.role === 'admin') {
-      items.push({ 
-        label: 'Configurações', 
-        icon: Settings,
-        submenu: [
-          { path: '/admin/fornecedores', label: '🏢 Fornecedores' },
-          { path: '/admin/planos-motorista', label: '📦 Planos Motorista' },
-          { path: '/automacao-rpa', label: '🤖 Automação RPA' },
-          { path: '/configuracao-mapeamento', label: '🗺️ Mapeamento Importação' },
-          { path: '/automacao', label: '⚡ Sincronização Auto' },
-          { path: '/configuracao-csv', label: '📊 Configuração CSV' },
-          { path: '/importar-despesas', label: '📥 Importar Despesas' }
-        ]
-      });
-    }
 
     // Add Parceiros for admin and gestao
     if (user.role === 'admin' || user.role === 'gestao') {
