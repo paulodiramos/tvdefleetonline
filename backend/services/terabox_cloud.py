@@ -7,12 +7,15 @@ import os
 import hashlib
 import httpx
 import logging
+import json
 from typing import Dict, Optional, List
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+# URLs da API do Terabox
 TERABOX_API_BASE = "https://www.terabox.com/api"
+TERABOX_WEB_API = "https://www.terabox.com"
 TERABOX_PAN_API = "https://pan.terabox.com/rest/2.0"
 
 
@@ -28,47 +31,79 @@ class TeraboxCloudService:
             cookie: Cookie de sessão do Terabox (alternativa ao token)
         """
         self.access_token = access_token
-        self.cookie = cookie
+        self.cookie = self._format_cookie(cookie) if cookie else None
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Accept": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Origin": "https://www.terabox.com",
+            "Referer": "https://www.terabox.com/",
         }
         
-        if cookie:
-            self.headers["Cookie"] = cookie
+        if self.cookie:
+            self.headers["Cookie"] = self.cookie
+    
+    def _format_cookie(self, cookie: str) -> str:
+        """Formata o cookie para o formato correto"""
+        if not cookie:
+            return ""
+        
+        cookie = cookie.strip()
+        
+        # Se o cookie já está no formato completo
+        if "ndus=" in cookie or "BDUSS=" in cookie:
+            return cookie
+        
+        # Se é só o valor do ndus
+        if not "=" in cookie:
+            return f"ndus={cookie}"
+        
+        return cookie
     
     async def test_connection(self) -> Dict:
         """Testa a conexão com o Terabox"""
         try:
-            async with httpx.AsyncClient() as client:
-                # Tentar obter informação do utilizador
-                url = f"{TERABOX_PAN_API}/xpan/nas"
-                params = {"method": "uinfo"}
-                
-                if self.access_token:
-                    params["access_token"] = self.access_token
+            async with httpx.AsyncClient(follow_redirects=True) as client:
+                # Método 1: Tentar endpoint de quota (mais simples)
+                url = f"{TERABOX_WEB_API}/api/quota"
+                params = {"checkfree": 1, "checkexpire": 1}
                 
                 response = await client.get(url, params=params, headers=self.headers, timeout=30.0)
                 
+                logger.info(f"Terabox test_connection response: {response.status_code}")
+                
                 if response.status_code == 200:
                     data = response.json()
+                    logger.info(f"Terabox quota response: {data}")
+                    
                     if data.get("errno") == 0:
                         return {
                             "success": True,
-                            "message": "Conexão estabelecida",
-                            "user_info": data.get("user_info", {})
+                            "message": "Conexão estabelecida com sucesso!",
+                            "quota": {
+                                "total": data.get("total", 0),
+                                "used": data.get("used", 0),
+                                "free": data.get("total", 0) - data.get("used", 0)
+                            }
+                        }
+                    elif data.get("errno") == -6:
+                        return {
+                            "success": False,
+                            "error": "Sessão expirada. Por favor, obtenha um novo cookie de sessão."
                         }
                     else:
                         return {
                             "success": False,
-                            "error": f"Erro Terabox: {data.get('errmsg', 'Desconhecido')}"
+                            "error": f"Erro Terabox (código {data.get('errno')}): {data.get('errmsg', 'Desconhecido')}"
                         }
                 else:
                     return {
                         "success": False,
-                        "error": f"HTTP {response.status_code}"
+                        "error": f"Erro HTTP {response.status_code}"
                     }
                     
+        except httpx.TimeoutException:
+            return {"success": False, "error": "Timeout ao conectar ao Terabox. Tente novamente."}
         except Exception as e:
             logger.error(f"Erro ao testar conexão Terabox: {e}")
             return {"success": False, "error": str(e)}
