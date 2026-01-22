@@ -1271,3 +1271,36 @@
 2026/01/22-20:56:23.572 16bc Delete type=2 #480
 2026/01/22-20:56:23.572 16bc Delete type=2 #506
 2026/01/22-20:56:23.572 16bc Delete type=2 #481
+2026/01/22-20:56:45.728 16b9 Level-0 table #521: started
+2026/01/22-20:56:45.745 16b9 Level-0 table #521: 1109098 bytes OK
+2026/01/22-20:56:45.748 16b9 Delete type=0 #504
+2026/01/22-20:56:46.738 16ba Compacting 1@0 + 0@1 files
+2026/01/22-20:56:46.750 16ba Generated table #522@0: 21123 keys, 213066 bytes
+2026/01/22-20:56:46.761 16ba Generated table #523@0: 16362 keys, 434108 bytes
+2026/01/22-20:56:46.762 16ba Compacted 1@0 + 0@1 files => 647174 bytes
+2026/01/22-20:56:46.763 16ba compacted to: files[ 0 2 23 0 0 0 0 ]
+2026/01/22-20:56:46.764 16ba Delete type=2 #521
+2026/01/22-20:56:47.761 16bc Compacting 1@1 + 10@2 files
+2026/01/22-20:56:47.784 16bc Generated table #524@1: 3103 keys, 2157373 bytes
+2026/01/22-20:56:47.802 16bc Generated table #525@1: 2575 keys, 2148316 bytes
+2026/01/22-20:56:47.825 16bc Generated table #526@1: 8208 keys, 2161816 bytes
+2026/01/22-20:56:47.867 16bc Generated table #527@1: 36330 keys, 2241614 bytes
+2026/01/22-20:56:47.911 16bc Generated table #528@1: 27698 keys, 2269223 bytes
+2026/01/22-20:56:47.955 16bc Generated table #529@1: 26904 keys, 2266416 bytes
+2026/01/22-20:56:47.997 16bc Generated table #530@1: 28377 keys, 2261609 bytes
+2026/01/22-20:56:48.044 16bc Generated table #531@1: 74059 keys, 2275771 bytes
+2026/01/22-20:56:48.080 16bc Generated table #532@1: 21039 keys, 2241889 bytes
+2026/01/22-20:56:48.115 16bc Generated table #533@1: 73312 keys, 1842005 bytes
+2026/01/22-20:56:48.116 16bc Compacted 1@1 + 10@2 files => 21866032 bytes
+2026/01/22-20:56:48.119 16bc compacted to: files[ 0 1 23 0 0 0 0 ]
+2026/01/22-20:56:48.119 16bc Delete type=2 #523
+2026/01/22-20:56:48.119 16bc Delete type=2 #517
+2026/01/22-20:56:48.119 16bc Delete type=2 #513
+2026/01/22-20:56:48.119 16bc Delete type=2 #508
+2026/01/22-20:56:48.119 16bc Delete type=2 #515
+2026/01/22-20:56:48.119 16bc Delete type=2 #514
+2026/01/22-20:56:48.119 16bc Delete type=2 #509
+2026/01/22-20:56:48.119 16bc Delete type=2 #516
+2026/01/22-20:56:48.119 16bc Delete type=2 #511
+2026/01/22-20:56:48.119 16bc Delete type=2 #512
+2026/01/22-20:56:48.120 16bc Delete type=2 #510
