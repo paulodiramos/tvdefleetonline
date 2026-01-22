@@ -546,12 +546,31 @@ const Integracoes = ({ user, onLogout }) => {
               </Button>
               
               <Button 
+                onClick={testTeraboxConnection}
+                variant="outline"
+                disabled={loading || !teraboxCredentials.session_cookie}
+              >
+                <Cloud className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Testar Conexão Cloud
+              </Button>
+              
+              <Button 
+                onClick={syncToTeraboxCloud}
+                variant="outline"
+                disabled={syncingCloud || !teraboxCredentials.session_cookie}
+                className="bg-blue-50 hover:bg-blue-100 border-blue-200"
+              >
+                <FolderSync className={`w-4 h-4 mr-2 ${syncingCloud ? 'animate-spin' : ''}`} />
+                {syncingCloud ? 'A sincronizar...' : 'Sincronizar Cloud'}
+              </Button>
+              
+              <Button 
                 onClick={handleSyncDocuments}
                 variant="outline"
                 disabled={loading}
               >
                 <FolderSync className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                Sincronizar Agora
+                Sincronizar Local
               </Button>
               
               <Button 
