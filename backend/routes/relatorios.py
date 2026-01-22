@@ -2119,18 +2119,40 @@ async def send_motorista_email(
     </html>
     """
     
-    # Tentar enviar email via SendGrid
+    # Obter parceiro_id para usar SMTP do parceiro
+    parceiro_id = motorista.get("parceiro_id") or motorista.get("parceiro_atribuido")
+    if not parceiro_id and current_user["role"] == UserRole.PARCEIRO:
+        parceiro_id = current_user["id"]
+    
+    # Tentar enviar email via SMTP do parceiro primeiro
     try:
-        result = send_email_sendgrid(
-            to_email=email_destino,
-            subject=f"Relatório Semanal - Semana {semana}/{ano}",
-            html_content=html_content
-        )
+        email_result = None
         
-        if result.get("success"):
+        # Usar SMTP do parceiro se disponível
+        if parceiro_id:
+            from utils.email_service import get_parceiro_email_service
+            email_service = await get_parceiro_email_service(db, parceiro_id)
+            if email_service:
+                email_result = email_service.send_email(
+                    to_email=email_destino,
+                    subject=f"Relatório Semanal - Semana {semana}/{ano}",
+                    body_html=html_content
+                )
+                logger.info(f"Email enviado via SMTP do parceiro para {email_destino}")
+        
+        # Fallback para SendGrid se SMTP não disponível
+        if email_result is None:
+            email_result = send_email_sendgrid(
+                to_email=email_destino,
+                subject=f"Relatório Semanal - Semana {semana}/{ano}",
+                html_content=html_content
+            )
+        
+        if email_result.get("success"):
             return {"message": f"Email enviado para {email_destino}", "success": True}
         else:
-            return {"message": "Email não enviado - SendGrid não configurado", "success": False, "error": result.get("error")}
+            error_msg = email_result.get("error") or email_result.get("message", "Configuração de email não encontrada")
+            return {"message": f"Email não enviado - {error_msg}", "success": False, "error": error_msg}
     except Exception as e:
         logger.error(f"Erro ao enviar email: {e}")
         return {"message": f"Erro ao enviar email: {str(e)}", "success": False}
