@@ -214,16 +214,6 @@ class TeraboxCloudService:
                             "success": False,
                             "error": result.get("errmsg", f"Errno: {result.get('errno')}")
                         }
-                            "fs_id": result.get("fs_id")
-                        }
-                    elif result.get("errno") == -8:
-                        # Pasta já existe
-                        return {"success": True, "path": path, "exists": True}
-                    else:
-                        return {
-                            "success": False,
-                            "error": result.get("errmsg", f"Errno: {result.get('errno')}")
-                        }
                 
                 return {"success": False, "error": f"HTTP {response.status_code}"}
                 
@@ -244,18 +234,18 @@ class TeraboxCloudService:
                 return {"success": False, "error": "Ficheiro local não encontrado"}
             
             file_size = os.path.getsize(local_path)
+            file_name = os.path.basename(local_path)
             
             # Calcular MD5 do ficheiro
             with open(local_path, "rb") as f:
-                file_md5 = hashlib.md5(f.read()).hexdigest()
+                file_content = f.read()
+                file_md5 = hashlib.md5(file_content).hexdigest()
             
-            async with httpx.AsyncClient() as client:
-                # Passo 1: Pre-create
-                precreate_url = f"{TERABOX_PAN_API}/xpan/file"
-                precreate_params = {"method": "precreate"}
-                
-                if self.access_token:
-                    precreate_params["access_token"] = self.access_token
+            logger.info(f"Terabox upload: {file_name}, size={file_size}, md5={file_md5}")
+            
+            async with httpx.AsyncClient(follow_redirects=True, timeout=300.0) as client:
+                # Passo 1: Pre-create (registar intenção de upload)
+                precreate_url = f"{TERABOX_WEB_API}/api/precreate"
                 
                 precreate_data = {
                     "path": remote_path,
