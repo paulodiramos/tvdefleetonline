@@ -3865,8 +3865,21 @@ async def enviar_relatorio_para_motorista(
         "valor_liquido_motorista": valor_liquido
     }
     
+    # Obter parceiro_id para envio de email via SMTP do parceiro
+    parceiro_id_para_email = motorista.get("parceiro_id") or motorista.get("parceiro_atribuido")
+    if not parceiro_id_para_email and current_user["role"] == UserRole.PARCEIRO:
+        parceiro_id_para_email = current_user["id"]
+    
     # Enviar relatório
-    result = await enviar_relatorio_motorista(motorista_data, semana, ano, enviar_email, enviar_whatsapp)
+    result = await enviar_relatorio_motorista(
+        motorista_data, 
+        semana, 
+        ano, 
+        enviar_email, 
+        enviar_whatsapp,
+        db=db,
+        parceiro_id=parceiro_id_para_email
+    )
     
     return result
 
