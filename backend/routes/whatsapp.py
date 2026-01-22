@@ -439,7 +439,8 @@ async def notify_status_change(
     if not motorista:
         raise HTTPException(status_code=404, detail="Motorista não encontrado")
     
-    telefone = motorista.get("telefone") or motorista.get("phone") or motorista.get("whatsapp")
+    # Buscar telefone - ordem de prioridade: whatsapp > phone > telefone
+    telefone = motorista.get("whatsapp") or motorista.get("phone") or motorista.get("telefone")
     if not telefone:
         return {"success": False, "message": "Motorista sem telefone"}
     
