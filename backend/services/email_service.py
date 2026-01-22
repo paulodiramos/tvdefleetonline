@@ -161,11 +161,18 @@ class EmailService:
             msg.attach(part2)
             
             # Send email
-            if use_tls:
-                server = smtplib.SMTP(smtp_host, smtp_port)
-                server.starttls()
+            # Port 465 = SSL/TLS direct (SMTP_SSL)
+            # Port 587 = STARTTLS (SMTP + starttls())
+            import ssl
+            context = ssl.create_default_context()
+            
+            if smtp_port == 465:
+                server = smtplib.SMTP_SSL(smtp_host, smtp_port, context=context)
             else:
-                server = smtplib.SMTP_SSL(smtp_host, smtp_port)
+                server = smtplib.SMTP(smtp_host, smtp_port, timeout=30)
+                server.ehlo()
+                server.starttls(context=context)
+                server.ehlo()
             
             server.login(smtp_user, smtp_password)
             server.sendmail(sender_email, to_email, msg.as_string())
