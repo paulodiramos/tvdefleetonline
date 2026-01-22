@@ -1,2 +1,3 @@
-2026/01/22-19:36:33.859 e4e Creating DB /app/backend/whatsapp_service/.wwebjs_auth/session/Default/Local Storage/leveldb since it was missing.
-2026/01/22-19:36:33.869 e4e Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001
+2026/01/22-20:25:26.296 a73 Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001
+2026/01/22-20:25:26.300 a73 Recovering log #3
+2026/01/22-20:25:26.301 a73 Reusing old log /app/backend/whatsapp_service/.wwebjs_auth/session/Default/Local Storage/leveldb/000003.log 
