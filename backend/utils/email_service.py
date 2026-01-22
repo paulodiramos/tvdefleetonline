@@ -130,9 +130,21 @@ class EmailService:
         except smtplib.SMTPAuthenticationError:
             logger.error("SMTP Authentication failed")
             return {"success": False, "error": "Falha na autenticação SMTP. Verifique as credenciais."}
-        except smtplib.SMTPConnectError:
-            logger.error("SMTP Connection failed")
+        except smtplib.SMTPConnectError as e:
+            logger.error(f"SMTP Connection failed: {e}")
             return {"success": False, "error": "Não foi possível conectar ao servidor SMTP."}
+        except smtplib.SMTPServerDisconnected as e:
+            logger.error(f"SMTP Server disconnected: {e}")
+            return {"success": False, "error": "Servidor SMTP desconectou. Verifique a porta e configurações SSL/TLS."}
+        except ssl.SSLError as e:
+            logger.error(f"SSL Error: {e}")
+            return {"success": False, "error": "Erro SSL. Verifique se a porta está correta (465 para SSL, 587 para TLS)."}
+        except ConnectionRefusedError as e:
+            logger.error(f"Connection refused: {e}")
+            return {"success": False, "error": "Conexão recusada. Verifique o host e porta SMTP."}
+        except TimeoutError as e:
+            logger.error(f"Connection timeout: {e}")
+            return {"success": False, "error": "Timeout na conexão. O servidor SMTP pode estar inacessível."}
         except Exception as e:
             logger.error(f"Error sending email: {str(e)}")
             return {"success": False, "error": f"Erro ao enviar email: {str(e)}"}
