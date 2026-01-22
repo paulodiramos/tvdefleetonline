@@ -106,12 +106,19 @@ class EmailService:
                 all_recipients.extend(bcc)
             
             # Connect and send
-            if self.use_tls:
-                context = ssl.create_default_context()
-                server = smtplib.SMTP(self.host, self.port)
-                server.starttls(context=context)
+            # Port 465 = SSL/TLS (SMTP_SSL)
+            # Port 587 = STARTTLS (SMTP + starttls())
+            context = ssl.create_default_context()
+            
+            if self.port == 465:
+                # SSL connection
+                server = smtplib.SMTP_SSL(self.host, self.port, context=context)
             else:
-                server = smtplib.SMTP_SSL(self.host, self.port)
+                # TLS connection (STARTTLS)
+                server = smtplib.SMTP(self.host, self.port, timeout=30)
+                server.ehlo()
+                server.starttls(context=context)
+                server.ehlo()
             
             server.login(self.username, self.password)
             server.sendmail(self.from_email, all_recipients, msg.as_string())
