@@ -1364,9 +1364,10 @@ async def _sync_documentos_motorista(parceiro_id: str) -> int:
             motorista_pasta = await _get_or_create_pasta(parceiro_id, motorista_nome_safe, motoristas_pasta["id"])
             docs_pasta = await _get_or_create_pasta(parceiro_id, "Documentos", motorista_pasta["id"])
             
-            # Lista de documentos a sincronizar
+            # Lista de documentos a sincronizar - campos reais da base de dados
             documents = motorista.get("documents", {})
             doc_fields = [
+                # Campos PDF diretos
                 ("cc_frente_verso_pdf", "CC_Frente_Verso.pdf"),
                 ("carta_frente_verso_pdf", "Carta_Conducao.pdf"),
                 ("licenca_tvde_pdf", "Licenca_TVDE.pdf"),
@@ -1374,6 +1375,18 @@ async def _sync_documentos_motorista(parceiro_id: str) -> int:
                 ("registo_criminal_pdf", "Registo_Criminal.pdf"),
                 ("iban_comprovativo_pdf", "IBAN_Comprovativo.pdf"),
                 ("contrato", "Contrato_Assinado.pdf"),
+                # Campos individuais (frente/verso)
+                ("cc_frente", "CC_Frente.pdf"),
+                ("cc_verso", "CC_Verso.pdf"),
+                ("carta_conducao_frente", "Carta_Frente.pdf"),
+                ("carta_conducao_verso", "Carta_Verso.pdf"),
+                ("licenca_tvde_frente", "Licenca_TVDE_Frente.pdf"),
+                ("licenca_tvde_verso", "Licenca_TVDE_Verso.pdf"),
+                ("registo_criminal", "Registo_Criminal.pdf"),
+                ("contrato_assinado", "Contrato_Assinado.pdf"),
+                ("iban_documento", "IBAN_Documento.pdf"),
+                ("nif_documento", "NIF_Documento.pdf"),
+                ("seguro_acidentes", "Seguro_Acidentes.pdf"),
             ]
             
             for field, nome_ficheiro in doc_fields:
