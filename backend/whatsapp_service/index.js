@@ -464,7 +464,9 @@ app.post('/send-bulk/:parceiro_id', async (req, res) => {
                 continue;
             }
             
-            await client.sendMessage(chatId, personalizedMessage);
+            // Use getChatById to avoid sendSeen bug
+            const chat = await client.getChatById(chatId);
+            await chat.sendMessage(personalizedMessage);
             
             results.push({
                 phone: recipient.phone,
