@@ -140,7 +140,7 @@ const Integracoes = ({ user, onLogout }) => {
               </div>
             </div>
 
-            <div className="flex items-center space-x-3 pt-4">
+            <div className="flex items-center space-x-3 pt-4 flex-wrap gap-2">
               <Button 
                 onClick={async () => {
                   try {
@@ -167,21 +167,22 @@ const Integracoes = ({ user, onLogout }) => {
                   try {
                     setLoading(true);
                     const token = localStorage.getItem('token');
-                    const response = await axios.post(`${API}/integracoes/terabox/test`, {}, {
+                    const response = await axios.post(`${API}/terabox/sync-documents`, {}, {
                       headers: { Authorization: `Bearer ${token}` }
                     });
-                    toast.success(response.data.message || 'Conexão Terabox testada com sucesso!');
+                    const detalhes = response.data.detalhes;
+                    toast.success(`Sincronização concluída! ${detalhes.total_sincronizados} documentos sincronizados.`);
                   } catch (error) {
-                    console.error('Error testing Terabox:', error);
-                    toast.error(error.response?.data?.detail || 'Erro ao testar conexão');
+                    console.error('Error syncing Terabox:', error);
+                    toast.error(error.response?.data?.detail || 'Erro ao sincronizar documentos');
                   } finally {
                     setLoading(false);
                   }
                 }}
                 variant="outline" 
-                disabled={loading || !configuracoes.terabox?.ativo}
+                disabled={loading}
               >
-                Testar Conexão
+                🔄 Sincronizar Documentos
               </Button>
             </div>
           </CardContent>
