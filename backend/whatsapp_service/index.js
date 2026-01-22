@@ -311,9 +311,19 @@ app.post('/send/:parceiro_id', async (req, res) => {
             });
         }
         
-        // Send message with sendSeen disabled to avoid the markedUnread bug
-        const chat = await client.getChatById(chatId);
-        const result = await chat.sendMessage(message);
+        // Send message directly without triggering sendSeen
+        // Use evaluate to send message directly via WhatsApp Web internal API
+        const result = await client.pupPage.evaluate(async (chatId, msg) => {
+            const chat = await window.Store.Chat.get(chatId);
+            if (!chat) {
+                throw new Error('Chat não encontrado');
+            }
+            const message = await chat.sendMessage(msg);
+            return {
+                id: message.id._serialized || message.id,
+                timestamp: message.t || Date.now()
+            };
+        }, chatId, message);
         
         // Update last activity
         const currentStatus = clientStatus.get(parceiro_id);

@@ -137,3 +137,10 @@
 2026/01/22-20:59:24.138 1ca7 Delete type=2 #551
 2026/01/22-20:59:24.138 1ca7 Delete type=2 #549
 2026/01/22-20:59:24.139 1ca7 Delete type=2 #525
+2026/01/22-20:59:34.073 1cae Compacting 1@1 + 1@2 files
+2026/01/22-20:59:34.112 1cae Generated table #601@1: 53283 keys, 2223827 bytes
+2026/01/22-20:59:34.114 1cae Generated table #602@1: 16 keys, 2996 bytes
+2026/01/22-20:59:34.114 1cae Compacted 1@1 + 1@2 files => 2226823 bytes
+2026/01/22-20:59:34.116 1cae compacted to: files[ 0 0 28 0 0 0 0 ]
+2026/01/22-20:59:34.116 1cae Delete type=2 #573
+2026/01/22-20:59:34.116 1cae Delete type=2 #585
