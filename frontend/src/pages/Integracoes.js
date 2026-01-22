@@ -422,38 +422,31 @@ const Integracoes = ({ user, onLogout }) => {
             <div className="space-y-4">
               <h3 className="font-semibold text-lg">Credenciais da sua conta Terabox</h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="terabox-email">Email Terabox</Label>
-                  <Input
-                    id="terabox-email"
-                    type="email"
-                    value={teraboxCredentials.email || ''}
-                    onChange={(e) => setTeraboxCredentials({...teraboxCredentials, email: e.target.value})}
-                    placeholder="seu@email.com"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="terabox-password">Password</Label>
-                  <div className="relative">
-                    <Input
-                      id="terabox-password"
-                      type={showPassword ? "text" : "password"}
-                      value={teraboxCredentials.password || ''}
-                      onChange={(e) => setTeraboxCredentials({...teraboxCredentials, password: e.target.value})}
-                      placeholder="••••••••"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-slate-500 mt-1">Deixe em branco para manter a atual</p>
-                </div>
+              <Alert className="bg-blue-50 border-blue-200">
+                <AlertCircle className="h-4 w-4 text-blue-600" />
+                <AlertDescription className="text-blue-800">
+                  <p className="font-semibold mb-2">Como obter o Cookie de Sessão:</p>
+                  <ol className="text-sm space-y-1 ml-4 list-decimal">
+                    <li>Aceda a <a href="https://www.terabox.com" target="_blank" rel="noopener noreferrer" className="underline">terabox.com</a> e faça login</li>
+                    <li>Pressione F12 para abrir as Ferramentas de Desenvolvedor</li>
+                    <li>Vá ao separador "Application" → "Cookies" → "www.terabox.com"</li>
+                    <li>Copie o valor do cookie "ndus" ou todos os cookies</li>
+                    <li>Cole no campo "Cookie de Sessão" abaixo</li>
+                  </ol>
+                </AlertDescription>
+              </Alert>
+              
+              <div>
+                <Label htmlFor="terabox-cookie">Cookie de Sessão (ndus)</Label>
+                <Input
+                  id="terabox-cookie"
+                  type="text"
+                  value={teraboxCredentials.session_cookie || ''}
+                  onChange={(e) => setTeraboxCredentials({...teraboxCredentials, session_cookie: e.target.value})}
+                  placeholder="ndus=Y2xxxxxxxxxxxxxxxxxxx..."
+                  className="font-mono text-sm"
+                />
+                <p className="text-xs text-slate-500 mt-1">Copie o cookie "ndus" do Terabox</p>
               </div>
               
               <div>
@@ -467,6 +460,20 @@ const Integracoes = ({ user, onLogout }) => {
                 />
                 <p className="text-xs text-slate-500 mt-1">Pasta raiz no Terabox onde os documentos serão guardados</p>
               </div>
+
+              {/* Status da Conexão */}
+              {teraboxConnectionStatus && (
+                <Alert className={teraboxConnectionStatus.success ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}>
+                  <AlertCircle className={`h-4 w-4 ${teraboxConnectionStatus.success ? 'text-green-600' : 'text-red-600'}`} />
+                  <AlertDescription className={teraboxConnectionStatus.success ? 'text-green-800' : 'text-red-800'}>
+                    {teraboxConnectionStatus.success ? (
+                      <>Conexão estabelecida com sucesso!</>
+                    ) : (
+                      <>{teraboxConnectionStatus.error}</>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )}
 
               <Separator />
 
