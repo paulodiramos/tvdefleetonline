@@ -1,3 +1,6 @@
-2026/01/22-21:03:22.759 23fb Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Local Storage/leveldb/MANIFEST-000001
-2026/01/22-21:03:22.765 23fb Recovering log #3
-2026/01/22-21:03:22.767 23fb Reusing old log /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Local Storage/leveldb/000003.log 
+2026/01/22-21:18:36.591 2ab5 Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Local Storage/leveldb/MANIFEST-000001
+2026/01/22-21:18:36.594 2ab5 Recovering log #3
+2026/01/22-21:18:36.595 2ab5 Reusing old log /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Local Storage/leveldb/000003.log 
+2026/01/22-21:19:36.596 2ab7 Level-0 table #5: started
+2026/01/22-21:19:36.599 2ab7 Level-0 table #5: 17623 bytes OK
+2026/01/22-21:19:36.601 2ab7 Delete type=0 #3
