@@ -1,5 +1,51 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-22 - Session 19 - Terabox Cloud API + WhatsApp Session Restore)
+
+### 1. Integração com API Oficial do Terabox Cloud ✅
+**Serviço implementado:** `/app/backend/services/terabox_cloud.py`
+
+**Funcionalidades:**
+- Autenticação via Cookie de Sessão (ndus) do Terabox
+- Teste de conexão com a API oficial do Terabox
+- Criação de pastas na cloud
+- Upload de ficheiros para o Terabox Cloud
+- Listagem de ficheiros na cloud
+- Sincronização de documentos organizados por categoria
+
+**Endpoints:**
+- `POST /api/terabox/cloud/test-connection` - Testar conexão com Terabox
+- `POST /api/terabox/cloud/sync` - Sincronizar documentos para a cloud
+- `GET /api/terabox/cloud/files` - Listar ficheiros na cloud
+
+**Como configurar:**
+1. Aceder a terabox.com e fazer login
+2. Abrir DevTools (F12) → Application → Cookies
+3. Copiar o valor do cookie "ndus"
+4. Colar em Integrações → Terabox → Cookie de Sessão
+
+**Ficheiros criados/modificados:**
+- `/app/backend/services/terabox_cloud.py` - Lógica completa da API Terabox
+- `/app/backend/routes/terabox.py` - Bug fix para guardar session_cookie
+- `/app/frontend/src/pages/Integracoes.js` - Novos botões (Testar Conexão Cloud, Sincronizar Cloud)
+
+### 2. Restauro Automático de Sessões WhatsApp ✅
+**Melhoria no serviço Node.js:** `/app/backend/whatsapp_service/index.js`
+
+**Funcionalidades:**
+- Detecção automática de sessões existentes no arranque
+- Restauro automático de sessões guardadas
+- Reconexão sem necessidade de escanear QR code (se sessão válida)
+- Logs detalhados do processo de restauro
+
+**Comportamento:**
+- No arranque, o serviço procura sessões em `.wwebjs_auth/session-{parceiro_id}`
+- Tenta restaurar cada sessão automaticamente
+- Se a sessão ainda for válida, reconecta sem interação
+- Se a sessão expirou, utilizador precisa escanear novo QR code
+
+---
+
 ## Changelog (2026-01-22 - Session 18 - Terabox Sync + WhatsApp Web)
 
 ### 1. Sincronização Automática do Terabox ✅
