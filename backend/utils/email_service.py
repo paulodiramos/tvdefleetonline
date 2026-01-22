@@ -229,6 +229,69 @@ async def send_email_to_motorista(
     return result
 
 
+async def enviar_email_com_anexo(
+    db,
+    parceiro_id: str,
+    destinatario: str,
+    assunto: str,
+    corpo: str,
+    anexo_path: str = None
+) -> Dict[str, Any]:
+    """
+    Send email with optional attachment using partner SMTP settings
+    
+    Args:
+        db: Database instance
+        parceiro_id: Partner ID
+        destinatario: Recipient email
+        assunto: Email subject
+        corpo: Email body (HTML supported)
+        anexo_path: Path to attachment file (optional)
+    
+    Returns:
+        Dict with success status
+    """
+    import os
+    
+    # Get email service
+    email_service = await get_parceiro_email_service(db, parceiro_id)
+    if not email_service:
+        return {"success": False, "error": "SMTP não configurado para este parceiro"}
+    
+    # Prepare attachment if exists
+    attachments = None
+    if anexo_path and os.path.exists(anexo_path):
+        with open(anexo_path, 'rb') as f:
+            attachment_content = f.read()
+        attachments = [{
+            "filename": os.path.basename(anexo_path),
+            "content": attachment_content,
+            "mimetype": "application/pdf"
+        }]
+    
+    # Send email
+    result = email_service.send_email(
+        to_email=destinatario,
+        subject=assunto,
+        body_html=f"<html><body>{corpo}</body></html>",
+        body_text=corpo,
+        attachments=attachments
+    )
+    
+    # Log the email
+    if result.get("success"):
+        await db.email_log.insert_one({
+            "parceiro_id": parceiro_id,
+            "to_email": destinatario,
+            "subject": assunto,
+            "has_attachment": anexo_path is not None,
+            "status": "sent",
+            "sent_at": __import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat()
+        })
+    
+    return result
+
+
 # Email templates
 def get_email_template_relatorio_semanal(motorista_name: str, periodo: str, total_ganhos: float, total_despesas: float, liquido: float) -> str:
     """Generate HTML template for weekly report email"""
