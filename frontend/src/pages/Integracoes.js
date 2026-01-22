@@ -92,6 +92,52 @@ const Integracoes = ({ user, onLogout }) => {
     }
   };
 
+  const testTeraboxConnection = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/terabox/cloud/test-connection`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setTeraboxConnectionStatus(response.data);
+      
+      if (response.data.success) {
+        toast.success('Conexão com Terabox estabelecida!');
+      } else {
+        toast.error(response.data.error || 'Falha na conexão');
+      }
+    } catch (error) {
+      console.error('Error testing Terabox connection:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao testar conexão');
+      setTeraboxConnectionStatus({ success: false, error: error.response?.data?.detail });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const syncToTeraboxCloud = async () => {
+    try {
+      setSyncingCloud(true);
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/terabox/cloud/sync`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.data.success) {
+        const detalhes = response.data.detalhes;
+        toast.success(`Sincronização concluída! ${detalhes.pastas_criadas} pastas, ${detalhes.ficheiros_enviados} ficheiros`);
+      } else {
+        toast.error('Erro na sincronização');
+      }
+    } catch (error) {
+      console.error('Error syncing to Terabox Cloud:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao sincronizar com Terabox Cloud');
+    } finally {
+      setSyncingCloud(false);
+    }
+  };
+
   const fetchWhatsAppStatus = async () => {
     try {
       const token = localStorage.getItem('token');
