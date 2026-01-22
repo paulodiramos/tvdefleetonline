@@ -661,7 +661,58 @@ app.get('/sessions', (req, res) => {
     });
 });
 
+// Function to restore existing sessions on startup
+async function restoreExistingSessions() {
+    const fs = require('fs');
+    const path = require('path');
+    const authPath = '/app/backend/whatsapp_service/.wwebjs_auth';
+    
+    if (!fs.existsSync(authPath)) {
+        console.log('No existing sessions to restore');
+        return;
+    }
+    
+    try {
+        const entries = fs.readdirSync(authPath);
+        const sessionFolders = entries.filter(entry => {
+            const fullPath = path.join(authPath, entry);
+            return fs.statSync(fullPath).isDirectory() && entry.startsWith('session-');
+        });
+        
+        console.log(`Found ${sessionFolders.length} existing session(s) to restore`);
+        
+        for (const folder of sessionFolders) {
+            // Extract parceiro_id from folder name (session-{parceiro_id})
+            const parceiro_id = folder.replace('session-', '');
+            console.log(`Attempting to restore session for partner: ${parceiro_id}`);
+            
+            try {
+                await getOrCreateClient(parceiro_id);
+                console.log(`Session restoration initiated for ${parceiro_id}`);
+            } catch (error) {
+                console.error(`Failed to restore session for ${parceiro_id}:`, error.message);
+            }
+            
+            // Small delay between session restorations to avoid resource issues
+            await new Promise(resolve => setTimeout(resolve, 3000));
+        }
+        
+        console.log('Session restoration complete');
+    } catch (error) {
+        console.error('Error during session restoration:', error);
+    }
+}
+
 // Start server
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.0', async () => {
     console.log(`WhatsApp Web Service (Multi-Session) running on port ${PORT}`);
+    
+    // Wait a bit before restoring sessions
+    console.log('Waiting 5 seconds before restoring existing sessions...');
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    
+    // Restore existing sessions in background
+    restoreExistingSessions().catch(err => {
+        console.error('Error in session restoration:', err);
+    });
 });
