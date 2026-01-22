@@ -645,21 +645,10 @@ const Integracoes = ({ user, onLogout }) => {
 
             {/* Credenciais Terabox */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-lg">Credenciais da sua conta Terabox</h3>
-              
-              <Alert className="bg-blue-50 border-blue-200">
-                <AlertCircle className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-blue-800">
-                  <p className="font-semibold mb-2">Como obter o Cookie de Sessão:</p>
-                  <ol className="text-sm space-y-1 ml-4 list-decimal">
-                    <li>Aceda a <a href="https://www.terabox.com" target="_blank" rel="noopener noreferrer" className="underline">terabox.com</a> e faça login</li>
-                    <li>Pressione F12 para abrir as Ferramentas de Desenvolvedor</li>
-                    <li>Vá ao separador "Application" → "Cookies" → "www.terabox.com"</li>
-                    <li>Copie o valor do cookie "ndus" ou todos os cookies</li>
-                    <li>Cole no campo "Cookie de Sessão" abaixo</li>
-                  </ol>
-                </AlertDescription>
-              </Alert>
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-lg">Credenciais da sua conta Terabox</h3>
+                <TeraboxGuideModal />
+              </div>
               
               <div>
                 <Label htmlFor="terabox-cookie">Cookie de Sessão (ndus)</Label>
@@ -668,10 +657,12 @@ const Integracoes = ({ user, onLogout }) => {
                   type="text"
                   value={teraboxCredentials.session_cookie || ''}
                   onChange={(e) => setTeraboxCredentials({...teraboxCredentials, session_cookie: e.target.value})}
-                  placeholder="ndus=Y2xxxxxxxxxxxxxxxxxxx..."
+                  placeholder="Cole aqui o cookie 'ndus' do Terabox..."
                   className="font-mono text-sm"
                 />
-                <p className="text-xs text-slate-500 mt-1">Copie o cookie "ndus" do Terabox</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Não sabe como obter? Clique em "Como obter o cookie?" acima
+                </p>
               </div>
               
               <div>
