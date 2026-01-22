@@ -168,11 +168,28 @@ async def get_parceiro_email_service(db, parceiro_id: str) -> Optional[EmailServ
     if not parceiro:
         return None
     
-    smtp_config = parceiro.get("config_smtp", {})
+    # Verificar config_email (nome correto usado pela aplicação)
+    smtp_config = parceiro.get("config_email", {})
+    
+    # Fallback para config_smtp se existir
+    if not smtp_config:
+        smtp_config = parceiro.get("config_smtp", {})
+    
     if not smtp_config.get("smtp_host") or not smtp_config.get("smtp_password"):
         return None
     
-    return EmailService(smtp_config)
+    # Mapear campos para o formato esperado pelo EmailService
+    email_config = {
+        "smtp_host": smtp_config.get("smtp_host"),
+        "smtp_port": smtp_config.get("smtp_port", 587),
+        "smtp_username": smtp_config.get("smtp_usuario") or smtp_config.get("smtp_username"),
+        "smtp_password": smtp_config.get("smtp_password"),
+        "from_email": smtp_config.get("email_remetente") or smtp_config.get("smtp_usuario") or smtp_config.get("from_email"),
+        "from_name": smtp_config.get("nome_remetente") or smtp_config.get("from_name", "TVDEFleet"),
+        "use_tls": smtp_config.get("usar_tls", True)
+    }
+    
+    return EmailService(email_config)
 
 
 async def send_email_to_motorista(
