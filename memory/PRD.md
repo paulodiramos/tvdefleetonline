@@ -1,6 +1,6 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-22 - Session 18 - Sincronização Terabox)
+## Changelog (2026-01-22 - Session 18 - Terabox Sync + WhatsApp Web)
 
 ### 1. Sincronização Automática do Terabox ✅
 **Endpoint implementado:** `POST /api/terabox/sync-documents`
@@ -13,23 +13,41 @@
 - Logs de sincronização em `terabox_sync_logs`
 - Endpoint para sincronização manual por parceiro: `POST /api/terabox/sync-trigger/{parceiro_id}`
 
-**Estrutura criada:**
-```
-/parceiro_id/
-├── Contratos/{motorista_nome}/Contrato_2026-01-22.pdf
-├── Recibos/{ano}/Semana_01/Recibo_Motorista.pdf
-├── Vistorias/{matricula}/Vistoria_atual.pdf
-├── Relatórios/{ano}/Semana_01/Relatorio_Motorista.pdf
-└── Motoristas/{motorista_nome}/Documentos/CC_Frente_Verso.pdf
-```
-
-**Frontend:**
-- Botão "🔄 Sincronizar Documentos" adicionado na página de Integrações
-- Toast de sucesso com contagem de documentos sincronizados
-
 **Ficheiros modificados:**
-- `/app/backend/routes/terabox.py` - Novos endpoints de sincronização (~300 linhas adicionadas)
+- `/app/backend/routes/terabox.py` - ~300 linhas de lógica de sincronização
 - `/app/frontend/src/pages/Integracoes.js` - Botão de sincronização manual
+
+### 2. WhatsApp Web Integration ✅ (Substituiu WhatsApp Business API)
+**Serviço Node.js:** `/app/backend/whatsapp_service/` na porta 3001
+
+**Funcionalidades:**
+- Conexão via QR Code (escanear com telemóvel)
+- Envio automático de mensagens após conexão
+- Envio de relatórios semanais para motoristas
+- Envio em massa para múltiplos motoristas
+- Notificações de alteração de status
+- Histórico de mensagens enviadas
+
+**Endpoints:**
+- `GET /api/whatsapp/status` - Estado da conexão
+- `GET /api/whatsapp/qr` - Obter QR Code para escanear
+- `POST /api/whatsapp/send` - Enviar mensagem individual
+- `POST /api/whatsapp/send-bulk` - Envio em massa
+- `POST /api/whatsapp/send-relatorio/{motorista_id}` - Enviar relatório
+- `POST /api/whatsapp/logout` - Desconectar
+- `POST /api/whatsapp/restart` - Reiniciar serviço
+
+**Como usar:**
+1. Aceder a Configurações → Integrações
+2. Na secção WhatsApp Web, clicar "Mostrar QR Code"
+3. No telemóvel: WhatsApp → Configurações → Dispositivos conectados → Conectar dispositivo
+4. Escanear o QR Code
+5. Após conectar, pode enviar mensagens automaticamente
+
+**Ficheiros criados/modificados:**
+- `/app/backend/whatsapp_service/` - **NOVO** - Serviço Node.js completo
+- `/app/backend/routes/whatsapp.py` - Reescrito para usar WhatsApp Web
+- `/app/frontend/src/pages/Integracoes.js` - UI para QR Code e conexão
 
 ---
 
