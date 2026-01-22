@@ -825,3 +825,482 @@ async def get_parceiro_terabox_stats(
         "tamanho_formatado": get_file_size_formatted(total_size),
         "por_categoria": {item["_id"] or "outros": item["count"] for item in por_categoria}
     }
+
+
+# ==================== SYNC DOCUMENTS TO TERABOX ====================
+
+class SyncRequest(BaseModel):
+    """Model for sync request"""
+    parceiro_id: Optional[str] = None
+    categorias: Optional[List[str]] = None  # contratos, recibos, vistorias, relatorios, documentos_motorista
+
+
+@router.post("/terabox/sync-documents")
+async def sync_documents_to_terabox(
+    request: SyncRequest = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """
+    Sincroniza automaticamente documentos para o Terabox de cada parceiro.
+    
+    Estrutura criada:
+    - /parceiro_id/Contratos/{motorista_nome}/
+    - /parceiro_id/Recibos/{ano}/{semana}/
+    - /parceiro_id/Vistorias/{veiculo_matricula}/
+    - /parceiro_id/Relatórios/{ano}/{semana}/
+    - /parceiro_id/Motoristas/{motorista_nome}/Documentos/
+    """
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Determinar parceiro(s) a sincronizar
+    if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
+        parceiro_ids = [current_user["id"]]
+    elif request and request.parceiro_id:
+        parceiro_ids = [request.parceiro_id]
+    else:
+        # Admin/Gestão pode sincronizar todos
+        parceiros = await db.users.find(
+            {"role": {"$in": ["parceiro", UserRole.PARCEIRO]}},
+            {"id": 1, "_id": 0}
+        ).to_list(500)
+        parceiro_ids = [p["id"] for p in parceiros]
+    
+    # Definir categorias a sincronizar
+    categorias = request.categorias if request and request.categorias else [
+        "contratos", "recibos", "vistorias", "relatorios", "documentos_motorista"
+    ]
+    
+    sync_results = {
+        "total_sincronizados": 0,
+        "por_categoria": {},
+        "erros": [],
+        "parceiros_processados": len(parceiro_ids)
+    }
+    
+    for parceiro_id in parceiro_ids:
+        try:
+            # 1. Sincronizar Contratos
+            if "contratos" in categorias:
+                count = await _sync_contratos(parceiro_id)
+                sync_results["por_categoria"]["contratos"] = sync_results["por_categoria"].get("contratos", 0) + count
+                sync_results["total_sincronizados"] += count
+            
+            # 2. Sincronizar Recibos
+            if "recibos" in categorias:
+                count = await _sync_recibos(parceiro_id)
+                sync_results["por_categoria"]["recibos"] = sync_results["por_categoria"].get("recibos", 0) + count
+                sync_results["total_sincronizados"] += count
+            
+            # 3. Sincronizar Vistorias
+            if "vistorias" in categorias:
+                count = await _sync_vistorias(parceiro_id)
+                sync_results["por_categoria"]["vistorias"] = sync_results["por_categoria"].get("vistorias", 0) + count
+                sync_results["total_sincronizados"] += count
+            
+            # 4. Sincronizar Relatórios Semanais (PDFs)
+            if "relatorios" in categorias:
+                count = await _sync_relatorios(parceiro_id)
+                sync_results["por_categoria"]["relatorios"] = sync_results["por_categoria"].get("relatorios", 0) + count
+                sync_results["total_sincronizados"] += count
+            
+            # 5. Sincronizar Documentos de Motoristas
+            if "documentos_motorista" in categorias:
+                count = await _sync_documentos_motorista(parceiro_id)
+                sync_results["por_categoria"]["documentos_motorista"] = sync_results["por_categoria"].get("documentos_motorista", 0) + count
+                sync_results["total_sincronizados"] += count
+                
+        except Exception as e:
+            logger.error(f"Erro ao sincronizar parceiro {parceiro_id}: {e}")
+            sync_results["erros"].append(f"Parceiro {parceiro_id}: {str(e)}")
+    
+    # Registar sincronização
+    await db.terabox_sync_logs.insert_one({
+        "id": str(uuid.uuid4()),
+        "data": datetime.now(timezone.utc),
+        "executado_por": current_user["id"],
+        "parceiros": parceiro_ids,
+        "categorias": categorias,
+        "resultados": sync_results
+    })
+    
+    logger.info(f"Sincronização Terabox concluída: {sync_results['total_sincronizados']} ficheiros")
+    
+    return {
+        "success": True,
+        "message": f"Sincronização concluída: {sync_results['total_sincronizados']} documentos",
+        "detalhes": sync_results
+    }
+
+
+async def _sync_contratos(parceiro_id: str) -> int:
+    """Sincroniza contratos do parceiro para Terabox"""
+    count = 0
+    
+    # Buscar contratos que têm PDF e ainda não foram sincronizados
+    contratos = await db.contratos_motorista.find({
+        "parceiro_id": parceiro_id,
+        "pdf_url": {"$exists": True, "$ne": None},
+        "terabox_synced": {"$ne": True}
+    }, {"_id": 0}).to_list(500)
+    
+    for contrato in contratos:
+        try:
+            pdf_url = contrato.get("pdf_url")
+            if not pdf_url:
+                continue
+                
+            # Verificar se ficheiro existe
+            if pdf_url.startswith("/"):
+                pdf_path = f"/app/backend{pdf_url}"
+            else:
+                pdf_path = pdf_url
+                
+            if not os.path.exists(pdf_path):
+                continue
+            
+            # Obter nome do motorista
+            motorista = await db.motoristas.find_one(
+                {"id": contrato.get("motorista_id")}, 
+                {"_id": 0, "name": 1}
+            )
+            motorista_nome = motorista.get("name", "Desconhecido") if motorista else "Desconhecido"
+            motorista_nome_safe = motorista_nome.replace("/", "-").replace("\\", "-")
+            
+            # Criar estrutura de pastas
+            contratos_pasta = await _get_or_create_pasta(parceiro_id, "Contratos", None)
+            motorista_pasta = await _get_or_create_pasta(parceiro_id, motorista_nome_safe, contratos_pasta["id"])
+            
+            # Copiar ficheiro para Terabox
+            data_contrato = contrato.get("data_inicio", "")[:10] if contrato.get("data_inicio") else datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            nome_ficheiro = f"Contrato_{data_contrato}.pdf"
+            destino = os.path.join(motorista_pasta["caminho_completo"], nome_ficheiro)
+            
+            # Verificar se já existe
+            if not os.path.exists(destino):
+                shutil.copy2(pdf_path, destino)
+                
+                # Registar na base de dados
+                await db.terabox_ficheiros.insert_one({
+                    "id": str(uuid.uuid4()),
+                    "nome": nome_ficheiro,
+                    "nome_ficheiro": nome_ficheiro,
+                    "caminho_completo": destino,
+                    "tamanho": os.path.getsize(destino),
+                    "mime_type": "application/pdf",
+                    "pasta_id": motorista_pasta["id"],
+                    "parceiro_id": parceiro_id,
+                    "categoria": "contrato",
+                    "entidade_id": contrato.get("id"),
+                    "entidade_tipo": "contrato",
+                    "sincronizado_automaticamente": True,
+                    "data_criacao": datetime.now(timezone.utc)
+                })
+                
+                count += 1
+            
+            # Marcar como sincronizado
+            await db.contratos_motorista.update_one(
+                {"id": contrato.get("id")},
+                {"$set": {"terabox_synced": True, "terabox_sync_date": datetime.now(timezone.utc)}}
+            )
+            
+        except Exception as e:
+            logger.error(f"Erro ao sincronizar contrato {contrato.get('id')}: {e}")
+    
+    return count
+
+
+async def _sync_recibos(parceiro_id: str) -> int:
+    """Sincroniza recibos/comprovativos do parceiro para Terabox"""
+    count = 0
+    
+    # Buscar relatórios semanais com recibos/comprovativos
+    relatorios = await db.ajustes_semanais.find({
+        "parceiro_id": parceiro_id,
+        "$or": [
+            {"recibo_url": {"$exists": True, "$ne": None}},
+            {"comprovativo_url": {"$exists": True, "$ne": None}}
+        ],
+        "terabox_synced": {"$ne": True}
+    }, {"_id": 0}).to_list(500)
+    
+    for relatorio in relatorios:
+        try:
+            ano = relatorio.get("ano", datetime.now(timezone.utc).year)
+            semana = relatorio.get("semana", 1)
+            
+            # Criar estrutura de pastas
+            recibos_pasta = await _get_or_create_pasta(parceiro_id, "Recibos", None)
+            ano_pasta = await _get_or_create_pasta(parceiro_id, str(ano), recibos_pasta["id"])
+            semana_pasta = await _get_or_create_pasta(parceiro_id, f"Semana_{semana:02d}", ano_pasta["id"])
+            
+            # Sincronizar recibo
+            recibo_url = relatorio.get("recibo_url")
+            if recibo_url:
+                synced = await _copy_file_to_terabox(
+                    recibo_url, semana_pasta, parceiro_id,
+                    f"Recibo_{relatorio.get('motorista_nome', 'Unknown')}.pdf",
+                    "recibo", relatorio.get("motorista_id")
+                )
+                if synced:
+                    count += 1
+            
+            # Sincronizar comprovativo
+            comprovativo_url = relatorio.get("comprovativo_url")
+            if comprovativo_url:
+                synced = await _copy_file_to_terabox(
+                    comprovativo_url, semana_pasta, parceiro_id,
+                    f"Comprovativo_{relatorio.get('motorista_nome', 'Unknown')}.pdf",
+                    "comprovativo", relatorio.get("motorista_id")
+                )
+                if synced:
+                    count += 1
+            
+            # Marcar como sincronizado
+            await db.ajustes_semanais.update_one(
+                {"motorista_id": relatorio.get("motorista_id"), "semana": semana, "ano": ano},
+                {"$set": {"terabox_synced": True}}
+            )
+            
+        except Exception as e:
+            logger.error(f"Erro ao sincronizar recibo: {e}")
+    
+    return count
+
+
+async def _sync_vistorias(parceiro_id: str) -> int:
+    """Sincroniza vistorias dos veículos para Terabox"""
+    count = 0
+    
+    # Buscar veículos do parceiro com documentos de vistoria
+    vehicles = await db.vehicles.find({
+        "parceiro_id": parceiro_id,
+        "$or": [
+            {"inspection.ficha_inspecao_url": {"$exists": True, "$ne": None}},
+            {"documento_inspecao": {"$exists": True, "$ne": None}}
+        ]
+    }, {"_id": 0}).to_list(500)
+    
+    for vehicle in vehicles:
+        try:
+            matricula = vehicle.get("matricula", "SEM_MATRICULA")
+            matricula_safe = matricula.replace("/", "-").replace("\\", "-")
+            
+            # Criar estrutura de pastas
+            vistorias_pasta = await _get_or_create_pasta(parceiro_id, "Vistorias", None)
+            veiculo_pasta = await _get_or_create_pasta(parceiro_id, matricula_safe, vistorias_pasta["id"])
+            
+            # Sincronizar documento de inspeção
+            doc_url = vehicle.get("documento_inspecao") or vehicle.get("inspection", {}).get("ficha_inspecao_url")
+            
+            if doc_url:
+                # Verificar se já foi sincronizado
+                existing = await db.terabox_ficheiros.find_one({
+                    "parceiro_id": parceiro_id,
+                    "categoria": "vistoria",
+                    "entidade_id": vehicle.get("id")
+                })
+                
+                if not existing:
+                    data_insp = vehicle.get("inspection", {}).get("data_inspecao", "")[:10] if vehicle.get("inspection") else ""
+                    nome_ficheiro = f"Vistoria_{data_insp or 'atual'}.pdf"
+                    
+                    synced = await _copy_file_to_terabox(
+                        doc_url, veiculo_pasta, parceiro_id,
+                        nome_ficheiro, "vistoria", vehicle.get("id")
+                    )
+                    if synced:
+                        count += 1
+                        
+        except Exception as e:
+            logger.error(f"Erro ao sincronizar vistoria veículo {vehicle.get('matricula')}: {e}")
+    
+    return count
+
+
+async def _sync_relatorios(parceiro_id: str) -> int:
+    """Sincroniza PDFs de relatórios semanais para Terabox"""
+    count = 0
+    
+    # Buscar relatórios com PDF gerado
+    relatorios = await db.relatorios_semanais.find({
+        "parceiro_id": parceiro_id,
+        "pdf_url": {"$exists": True, "$ne": None},
+        "terabox_synced": {"$ne": True}
+    }, {"_id": 0}).to_list(500)
+    
+    for relatorio in relatorios:
+        try:
+            ano = relatorio.get("ano", datetime.now(timezone.utc).year)
+            semana = relatorio.get("semana", 1)
+            
+            # Criar estrutura de pastas
+            relatorios_pasta = await _get_or_create_pasta(parceiro_id, "Relatórios", None)
+            ano_pasta = await _get_or_create_pasta(parceiro_id, str(ano), relatorios_pasta["id"])
+            semana_pasta = await _get_or_create_pasta(parceiro_id, f"Semana_{semana:02d}", ano_pasta["id"])
+            
+            motorista_nome = relatorio.get("motorista_nome", "Motorista")
+            motorista_nome_safe = motorista_nome.replace("/", "-").replace("\\", "-")
+            nome_ficheiro = f"Relatorio_{motorista_nome_safe}_S{semana}_{ano}.pdf"
+            
+            synced = await _copy_file_to_terabox(
+                relatorio.get("pdf_url"), semana_pasta, parceiro_id,
+                nome_ficheiro, "relatorio", relatorio.get("id")
+            )
+            
+            if synced:
+                count += 1
+                await db.relatorios_semanais.update_one(
+                    {"id": relatorio.get("id")},
+                    {"$set": {"terabox_synced": True}}
+                )
+                
+        except Exception as e:
+            logger.error(f"Erro ao sincronizar relatório: {e}")
+    
+    return count
+
+
+async def _sync_documentos_motorista(parceiro_id: str) -> int:
+    """Sincroniza documentos de motoristas para Terabox"""
+    count = 0
+    
+    # Buscar motoristas do parceiro
+    motoristas = await db.motoristas.find({
+        "$or": [
+            {"parceiro_id": parceiro_id},
+            {"parceiro_atribuido": parceiro_id}
+        ]
+    }, {"_id": 0}).to_list(500)
+    
+    for motorista in motoristas:
+        try:
+            motorista_nome = motorista.get("name", "Motorista")
+            motorista_nome_safe = motorista_nome.replace("/", "-").replace("\\", "-")
+            
+            # Criar estrutura de pastas
+            motoristas_pasta = await _get_or_create_pasta(parceiro_id, "Motoristas", None)
+            motorista_pasta = await _get_or_create_pasta(parceiro_id, motorista_nome_safe, motoristas_pasta["id"])
+            docs_pasta = await _get_or_create_pasta(parceiro_id, "Documentos", motorista_pasta["id"])
+            
+            # Lista de documentos a sincronizar
+            documents = motorista.get("documents", {})
+            doc_fields = [
+                ("cc_frente_verso_pdf", "CC_Frente_Verso.pdf"),
+                ("carta_frente_verso_pdf", "Carta_Conducao.pdf"),
+                ("licenca_tvde_pdf", "Licenca_TVDE.pdf"),
+                ("comprovativo_morada_pdf", "Comprovativo_Morada.pdf"),
+                ("registo_criminal_pdf", "Registo_Criminal.pdf"),
+                ("iban_comprovativo_pdf", "IBAN_Comprovativo.pdf"),
+                ("contrato", "Contrato_Assinado.pdf"),
+            ]
+            
+            for field, nome_ficheiro in doc_fields:
+                doc_url = documents.get(field)
+                if doc_url:
+                    # Verificar se já existe
+                    existing = await db.terabox_ficheiros.find_one({
+                        "parceiro_id": parceiro_id,
+                        "categoria": "documento_motorista",
+                        "entidade_id": motorista.get("id"),
+                        "nome": nome_ficheiro
+                    })
+                    
+                    if not existing:
+                        synced = await _copy_file_to_terabox(
+                            doc_url, docs_pasta, parceiro_id,
+                            nome_ficheiro, "documento_motorista", motorista.get("id")
+                        )
+                        if synced:
+                            count += 1
+                            
+        except Exception as e:
+            logger.error(f"Erro ao sincronizar docs motorista {motorista.get('name')}: {e}")
+    
+    return count
+
+
+async def _copy_file_to_terabox(
+    source_url: str,
+    dest_pasta: Dict,
+    parceiro_id: str,
+    nome_ficheiro: str,
+    categoria: str,
+    entidade_id: str
+) -> bool:
+    """Helper para copiar ficheiro para pasta Terabox"""
+    try:
+        # Resolver caminho do ficheiro fonte
+        if source_url.startswith("/uploads"):
+            source_path = f"/app/backend{source_url}"
+        elif source_url.startswith("/"):
+            source_path = f"/app/backend{source_url}"
+        else:
+            source_path = source_url
+        
+        if not os.path.exists(source_path):
+            logger.warning(f"Ficheiro não encontrado: {source_path}")
+            return False
+        
+        # Copiar para destino
+        dest_path = os.path.join(dest_pasta["caminho_completo"], nome_ficheiro)
+        
+        if os.path.exists(dest_path):
+            return False  # Já existe
+        
+        shutil.copy2(source_path, dest_path)
+        
+        # Registar na base de dados
+        await db.terabox_ficheiros.insert_one({
+            "id": str(uuid.uuid4()),
+            "nome": nome_ficheiro,
+            "nome_ficheiro": nome_ficheiro,
+            "caminho_completo": dest_path,
+            "tamanho": os.path.getsize(dest_path),
+            "mime_type": get_mime_type(nome_ficheiro),
+            "pasta_id": dest_pasta["id"],
+            "parceiro_id": parceiro_id,
+            "categoria": categoria,
+            "entidade_id": entidade_id,
+            "sincronizado_automaticamente": True,
+            "data_criacao": datetime.now(timezone.utc)
+        })
+        
+        return True
+        
+    except Exception as e:
+        logger.error(f"Erro ao copiar ficheiro {source_url}: {e}")
+        return False
+
+
+@router.get("/terabox/sync-logs")
+async def get_sync_logs(
+    limit: int = 20,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter histórico de sincronizações"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "admin", "gestao"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    logs = await db.terabox_sync_logs.find(
+        {},
+        {"_id": 0}
+    ).sort("data", -1).limit(limit).to_list(limit)
+    
+    return logs
+
+
+@router.post("/terabox/sync-trigger/{parceiro_id}")
+async def trigger_parceiro_sync(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Disparar sincronização manual para um parceiro específico"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "admin", "gestao"]:
+        if current_user["role"] in [UserRole.PARCEIRO, "parceiro"] and current_user["id"] != parceiro_id:
+            raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Usar o endpoint principal com parceiro específico
+    request = SyncRequest(parceiro_id=parceiro_id)
+    return await sync_documents_to_terabox(request, current_user)
