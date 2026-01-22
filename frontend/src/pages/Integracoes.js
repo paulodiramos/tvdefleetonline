@@ -24,6 +24,7 @@ const Integracoes = ({ user, onLogout }) => {
     email: '',
     password: '',
     api_key: '',
+    session_cookie: '',  // Cookie de sessão do Terabox
     folder_path: '/TVDEFleet',
     sync_enabled: true,
     sync_contratos: true,
@@ -32,6 +33,8 @@ const Integracoes = ({ user, onLogout }) => {
     sync_relatorios: true,
     sync_documentos: true
   });
+  const [teraboxConnectionStatus, setTeraboxConnectionStatus] = useState(null);
+  const [syncingCloud, setSyncingCloud] = useState(false);
 
   useEffect(() => {
     fetchWhatsAppStatus();
