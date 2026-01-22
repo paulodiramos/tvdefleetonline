@@ -273,7 +273,8 @@ const ImportarFicheirosParceiro = ({ user, onLogout }) => {
     }
   };
 
-  const handleUploadAll = async () => {
+  // Upload All com confirmação
+  const handleUploadAll = () => {
     const plataformasComFicheiro = Object.entries(ficheiros)
       .filter(([_, file]) => file !== null)
       .map(([plataforma]) => plataforma);
@@ -283,8 +284,17 @@ const ImportarFicheirosParceiro = ({ user, onLogout }) => {
       return;
     }
 
+    openConfirmImport('all');
+  };
+
+  // Upload All efetivo após confirmação
+  const handleUploadAllConfirmed = async () => {
+    const plataformasComFicheiro = Object.entries(ficheiros)
+      .filter(([_, file]) => file !== null)
+      .map(([plataforma]) => plataforma);
+
     for (const plataforma of plataformasComFicheiro) {
-      await handleUpload(plataforma);
+      await handleUploadConfirmed(plataforma);
     }
   };
 
