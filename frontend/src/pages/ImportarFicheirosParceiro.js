@@ -104,6 +104,58 @@ const ImportarFicheirosParceiro = ({ user, onLogout }) => {
     fields: {}
   });
 
+  // Dialog de confirmação de importação
+  const [showConfirmImport, setShowConfirmImport] = useState(false);
+  const [pendingImport, setPendingImport] = useState(null); // plataforma ou 'all'
+  const [confirmSemana, setConfirmSemana] = useState(semana);
+  const [confirmAno, setConfirmAno] = useState(ano);
+  const [confirmDataInicio, setConfirmDataInicio] = useState('');
+  const [confirmDataFim, setConfirmDataFim] = useState('');
+
+  // Calcular datas da semana
+  const calcularDatasSemana = (sem, year) => {
+    const firstDayOfYear = new Date(year, 0, 1);
+    const daysOffset = (sem - 1) * 7;
+    const firstDayOfWeek = new Date(firstDayOfYear.setDate(firstDayOfYear.getDate() + daysOffset - firstDayOfYear.getDay() + 1));
+    const lastDayOfWeek = new Date(firstDayOfWeek);
+    lastDayOfWeek.setDate(firstDayOfWeek.getDate() + 6);
+    
+    return {
+      inicio: firstDayOfWeek.toISOString().split('T')[0],
+      fim: lastDayOfWeek.toISOString().split('T')[0]
+    };
+  };
+
+  // Abrir dialog de confirmação
+  const openConfirmImport = (plataforma) => {
+    const datas = calcularDatasSemana(semana, ano);
+    setConfirmSemana(semana);
+    setConfirmAno(ano);
+    setConfirmDataInicio(datas.inicio);
+    setConfirmDataFim(datas.fim);
+    setPendingImport(plataforma);
+    setShowConfirmImport(true);
+  };
+
+  // Confirmar e executar importação
+  const confirmarImportacao = async () => {
+    // Atualizar semana/ano com os valores confirmados
+    setSemana(confirmSemana);
+    setAno(confirmAno);
+    setShowConfirmImport(false);
+    
+    // Pequeno delay para garantir que o state atualizou
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    if (pendingImport === 'all') {
+      await handleUploadAllConfirmed();
+    } else {
+      await handleUploadConfirmed(pendingImport);
+    }
+    
+    setPendingImport(null);
+  };
+
   function getCurrentWeek() {
     const now = new Date();
     const onejan = new Date(now.getFullYear(), 0, 1);
