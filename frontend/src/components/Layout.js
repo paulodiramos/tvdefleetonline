@@ -79,16 +79,6 @@ const Layout = ({ children, user, onLogout }) => {
             { path: '/alertas-custos', label: '🔔 Alertas de Custos' }
           ]
         },
-        { 
-          label: 'Configurações', 
-          icon: Settings,
-          submenu: [
-            { path: '/configuracoes-parceiro', label: '📧 Email & Credenciais' },
-            { path: '/credenciais-plataformas', label: '🔐 Credenciais Plataformas' },
-            { path: '/configuracao-relatorios', label: '⚙️ Configurações' }
-          ]
-        },
-        { path: '/terabox', icon: HardDrive, label: 'Terabox' },
         { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' }
       ];
     }
