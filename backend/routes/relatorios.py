@@ -2120,16 +2120,20 @@ async def send_motorista_email(
     """
     
     # Obter parceiro_id para usar SMTP do parceiro
-    parceiro_id = motorista.get("parceiro_id") or motorista.get("parceiro_atribuido")
+    # Prioridade: current_user (se parceiro) > motorista.parceiro_id > motorista.parceiro_atribuido
+    parceiro_id = None
     
-    # Se motorista não tem parceiro definido, usar o current_user se for parceiro
+    # Se o utilizador atual é parceiro, usar o seu ID primeiro
+    if current_user.get("role") == UserRole.PARCEIRO or current_user.get("role") == "parceiro":
+        parceiro_id = current_user.get("id")
+    elif current_user.get("parceiro_id"):
+        parceiro_id = current_user.get("parceiro_id")
+    
+    # Fallback para o parceiro do motorista
     if not parceiro_id:
-        if current_user.get("role") == UserRole.PARCEIRO or current_user.get("role") == "parceiro":
-            parceiro_id = current_user.get("id")
-        elif current_user.get("parceiro_id"):
-            parceiro_id = current_user.get("parceiro_id")
+        parceiro_id = motorista.get("parceiro_id") or motorista.get("parceiro_atribuido")
     
-    logger.info(f"Enviando email para motorista {motorista_id}, parceiro_id={parceiro_id}, user_role={current_user.get('role')}")
+    logger.info(f"Enviando email para motorista {motorista_id}, parceiro_id={parceiro_id}, user_id={current_user.get('id')}, user_role={current_user.get('role')}")
     
     # Tentar enviar email via SMTP do parceiro primeiro
     try:
