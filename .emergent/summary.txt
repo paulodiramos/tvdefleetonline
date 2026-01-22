@@ -1,147 +1,146 @@
 <analysis>**original_problem_statement:**
-O utilizador solicitou a continuação do desenvolvimento da aplicação de gestão de frotas. O trabalho focou-se na resolução de uma série de bugs de alta prioridade (P0) reportados pelo utilizador, seguida pela implementação de novas funcionalidades e correções de bugs de prioridade P1.
+O utilizador solicitou a continuação do desenvolvimento da aplicação de gestão de frotas. Inicialmente, o trabalho focou-se na conclusão de um fluxo de aprovação financeira. Subsequentemente, o utilizador reportou uma série de bugs, solicitou melhorias na interface e pediu a implementação de duas novas integrações principais: Terabox para armazenamento de ficheiros e a API do WhatsApp Business para notificações.
 
 **PRODUCT REQUIREMENTS (Tarefas recentes e em progresso):**
--   **P0 - Fluxo de Aprovação Financeira:**
-    -   Criar um sistema de status para os resumos semanais:  ->  ->  ->  -> .
-    -   Na página Resumo Semanal, permitir a alteração de status para múltiplos motoristas de uma só vez.
-    -   Após aprovação, a informação deve passar para um novo menu financeiro.
-    -   Criar uma página para **Verificar Recibos**, onde se pode fazer o upload de recibos (PDF).
-    -   Após verificação do recibo, alterar o estado para **A Pagamento**.
-    -   Criar uma página para **Pagamentos a Parceiro**, que lista os pagamentos a serem feitos.
-    -   Após o pagamento, alterar o estado para **Liquidado** e disponibilizar o relatório, recibo e comprovativo de pagamento numa nova página de **Arquivo de Recibos**.
-    -   Todas as novas páginas devem ter filtros por data (ano, semana) e status.
--   **P1 - Bugs e Melhorias Adicionais:**
-    -   **Histórico de Manutenções:** Permitir registar uma nova manutenção sem necessidade de ativar o modo editar ficha.
-    -   **Fotos do Veículo:** Corrigir o bug onde apagar uma foto não a remove da interface.
-    -   **Download de Ficheiros:** Corrigir o bug que resulta numa página em branco ao tentar fazer download de ficheiros já carregados.
-    -   **Vistorias:** Adicionar a funcionalidade de download de uma ficha de vistoria em branco (template PDF) na página principal de vistorias ().
+- **Fluxo de Aprovação Financeira (P0 - Concluído):** Implementar e validar o ciclo de vida completo dos pagamentos semanais (Pendente -> Aprovado -> Aguardar Recibo -> A Pagamento -> Liquidado).
+- **Correções de Bugs e Melhorias (P1 - Concluído):**
+    - Corrigir o download de documentos de motoristas.
+    - Corrigir uma página em branco ao criar contratos.
+    - Melhorar a UI da página Gestão de Extras.
+    - Adicionar envio em massa de relatórios por email.
+    - Corrigir erro ao adicionar novos motoristas.
+    - Corrigir erro no download de templates CSV.
+    - Corrigir cálculo de gastos com combustível/eletricidade nos relatórios.
+    - Corrigir a importação de ganhos de ficheiros Uber.
+- **Arquivo de Ex-Motoristas (P1 - Concluído):** Criar uma página dedicada para motoristas inativos com o seu histórico.
+- **Reestruturação da UI (P1 - Concluído):** Reorganizar o menu de navegação principal, movendo itens para submenus e para o menu de perfil do utilizador, e reduzir o espaçamento.
+- **Integrações (P0 - Em Progresso):**
+    - **Terabox:** Implementar um sistema onde cada parceiro tem a sua própria área no Terabox, com sincronização automática de documentos (contratos, recibos, vistorias).
+    - **WhatsApp Business API:** Integrar a API para enviar notificações de relatórios, alterações de status e informações de vistorias.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação é uma plataforma full-stack (React + FastAPI + MongoDB). Recentemente, foram corrigidos vários bugs críticos (P0), incluindo problemas no upload de documentos, listagem de veículos e seleção de templates de contrato.
-
-Foram também implementadas novas funcionalidades e correções (P1):
--   Corrigidos cálculos de totais e IVA no resumo semanal e nos relatórios PDF.
--   Adicionados endpoints / e botões na UI para gerir o histórico de manutenções dos veículos.
--   Corrigidos bugs na eliminação de fotos de veículos e no download de documentos.
--   Adicionada a funcionalidade de download de um template de vistoria em PDF.
--   Iniciou-se a implementação de um novo e complexo **fluxo de aprovação financeira**. A página Resumo Semanal foi atualizada com checkboxes para seleção múltipla e ações em lote para alterar o status dos relatórios. Foi criada uma nova página, Arquivo de Recibos, para consultar relatórios finalizados.
+A aplicação é uma plataforma full-stack (React + FastAPI + MongoDB). O trabalho recente concluiu um complexo fluxo de aprovação financeira e corrigiu múltiplos bugs críticos e de usabilidade. Foi implementada uma funcionalidade de arquivo para ex-motoristas e o menu principal foi significativamente reorganizado conforme solicitado pelo utilizador. A infraestrutura base (endpoints de backend e componentes de UI) para as integrações com Terabox e WhatsApp Business API foi criada, incluindo uma página de configuração para o WhatsApp no frontend.
 
 **Last working item**:
--   **Last item agent was working:** Implementação do sistema de fluxo de aprovação financeira. O agente criou a base para o novo sistema, incluindo a modificação da página Resumo Semanal para permitir seleção e alteração de status em lote, e a criação da nova página Arquivo de Recibos.
--   **Status:** IN PROGRESS
--   **Agent Testing Done:** Y (O agente realizou testes manuais com screenshots para validar as novas interfaces e correções de bugs, mas o fluxo completo de aprovação não foi testado de ponta a ponta).
--   **Which testing method agent to use?** both. O agente deve usar  para testar os endpoints de backend e o  para validar o fluxo de ponta a ponta, que envolve múltiplas páginas (, , ) e mudanças de estado.
+-   **Last item agent was working:** Reestruturação do menu de navegação principal. O agente moveu o menu Contratos para um submenu dentro de Motoristas e reduziu o espaçamento entre os itens do menu principal, conforme solicitado pelo utilizador.
+-   **Status:** COMPLETED
+-   **Agent Testing Done:** Y (Verificação visual por screenshot foi tentada, mas interrompida por timeouts de sessão. O agente verificou as alterações diretamente no código para confirmar a implementação.)
+-   **Which testing method agent to use?** frontend testing agent (Para verificar visualmente o novo layout do menu e os dropdowns de forma fiável, contornando os problemas de sessão.)
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
-Nenhum bug pendente. O trabalho atual é a continuação de uma implementação de funcionalidade.
+-   **Issue 1: Configuração da API do WhatsApp Business (P0)**
+    -   **Description:** O utilizador solicitou ajuda para configurar a API do WhatsApp, pois recebe a mensagem WhatsApp Business API não configurado. A funcionalidade está bloqueada até que o utilizador forneça as credenciais necessárias.
+    -   **Status:** BLOCKED
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** both
+    -   **Blocked on other issue:** Aguardando que o utilizador forneça o  e o  na página de Integrações.
 
 **In progress Task List**:
--   **Task 1: Concluir o Fluxo de Aprovação Financeira (P0)**
-    -   **Where to resume:** O utilizador confirmou a criação de novas páginas. O agente deve continuar a desenvolver o fluxo:
-        1.  **Criar/Adaptar a página Verificar Recibos:** Esta página deve listar os resumos com status Aguardar Recibo, permitir o upload de um recibo em PDF e alterar o status para A Pagamento.
-        2.  **Criar/Adaptar a página Pagamentos a Parceiro ():** Esta página deve listar todos os resumos com status A Pagamento, permitir o upload de um comprovativo de pagamento e alterar o status para Liquidado.
-        3.  **Finalizar a página Arquivo de Recibos ():** Garantir que, após o status ser Liquidado, o relatório, o recibo e o comprovativo de pagamento fiquem disponíveis para consulta e download nesta página.
-    -   **What will be achieved with this?** Um sistema completo e funcional para gerir o ciclo de vida dos pagamentos semanais aos motoristas, desde a aprovação até ao arquivamento, com rastreabilidade total.
+-   **Task 1: Concluir a Lógica de Sincronização do Terabox (P1)**
+    -   **Where to resume:** Os endpoints de backend () foram criados em , mas a lógica de implementação está vazia. É necessário desenvolver o código que procura por novos documentos (contratos, recibos, vistorias, etc.) nas suas respetivas coleções e os copia para a estrutura de pastas do Terabox de cada parceiro.
+    -   **What will be achieved with this?** Armazenamento e organização automática de todos os documentos dos parceiros no Terabox, garantindo um backup centralizado e acessível.
     -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** both
+    -   **Should Test frontend/backend/both after fix?** backend
     -   **Blocked on something:** Nada.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1) Continuar Refatoração do :** Migrar o grupo de endpoints de  (~47 endpoints) para o seu próprio ficheiro de router.
-    -   **(P1) Implementar Notificações:** Adicionar notificações por email ou na app para as mudanças de status no fluxo financeiro (ex: relatório aprovado, pagamento efetuado).
+    -   **(P1) Refatoração do Backend:** Continuar a migração dos endpoints do ficheiro monolítico , focando-se no grupo de rotas de .
+    -   **(P2) Melhoria do Dashboard:** Limitar a lista de Próximos Eventos a 3 itens na página principal.
 -   **Future Tasks:**
-    -   **(P2) Implementar Lógica de Sincronização Automática (RPA):** Implementar a lógica de backend com  para as automações.
-    -   **(P2) UI/UX:** Limitar a lista de próximos eventos no dashboard a 3 itens.
-    -   **(P3) Funcionalidade de Exportação de Dados:** Permitir a exportação de dados em JSON/CSV.
+    -   **(P2) Implementar Lógica de RPA:** Desenvolver a automação com Playwright no backend.
+    -   **(P3) Funcionalidade de Exportação de Dados:** Permitir a exportação de várias listas de dados (motoristas, veículos) em formato JSON/CSV.
 
 **Completed work in this session**
--   **Bugs P0 Corrigidos:**
-    -   Corrigido erro que impedia os templates de contrato de aparecerem para o parceiro.
-    -   Corrigido erro no upload de documentos de motorista.
-    -   Corrigido  que causava erro ao carregar veículos.
--   **Funcionalidades e Bugs P1 Implementados/Corrigidos:**
-    -   Corrigido cálculo do total líquido no resumo semanal.
-    -   Corrigido cálculo de IVA nos abastecimentos no relatório PDF.
-    -   Implementados endpoints / e UI para gestão do histórico de manutenções.
-    -   Permitido o registo de manutenções sem necessidade de modo de edição.
-    -   Corrigido bug que impedia a eliminação de fotos de veículos.
-    -   Corrigido bug de download de ficheiros que mostrava uma página em branco.
-    -   Adicionado download de template de vistoria em PDF na página .
--   **Início da Implementação do Fluxo Financeiro (P0):**
-    -   Atualizada a página  com seleção múltipla e ações em lote para alterar status.
-    -   Criada a nova página  para consulta de relatórios finalizados.
-    -   Adicionados endpoints de backend para suportar o novo fluxo.
+-   **Fluxo de Aprovação Financeira (P0):** Implementação e teste do fluxo completo, incluindo as páginas ,  e .
+-   **Bugs Críticos Corrigidos (P0/P1):**
+    -   Corrigido erro no download de documentos do motorista em .
+    -   Corrigido erro que causava página em branco ao criar contrato em .
+    -   Corrigido erro 404 ao adicionar motoristas, criando um novo endpoint em  e um modelo Pydantic simplificado.
+    -   Corrigido erro 404 no download do template CSV de veículos.
+    -   Corrigido cálculo de custos de combustível/elétrico nos relatórios semanais em .
+    -   Corrigido o mapeamento de ganhos na importação de ficheiros Uber em .
+-   **Novas Funcionalidades e Melhorias de UI (P1):**
+    -   Adicionada funcionalidade de envio em massa de relatórios por email em .
+    -   Criada a página  e o endpoint de backend correspondente para motoristas inativos.
+    -   Reestruturado o menu de navegação em  para ser mais compacto e mover itens para submenus e para o menu do perfil do utilizador.
+-   **Infraestrutura de Integrações (P0):**
+    -   Criados os ficheiros e rotas base para as integrações com Terabox () e WhatsApp ().
+    -   Adicionada secção de configuração do WhatsApp na página .
 
 **Earlier issues found/mentioned but not fixed**
--   **UI/UX (P2):** O widget de Próximos Eventos no dashboard ainda não está limitado a 3 itens, conforme solicitado numa sessão anterior.
+-   **UI/UX (P2):** O widget Próximos Eventos no dashboard ainda não está limitado a 3 itens. Esta é uma tarefa de baixa prioridade que foi adiada.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Refatoração do Backend ( monolítico).
--   **Recurrence count:** 7
--   **Status:** IN PROGRESS (A refatoração dos endpoints de  continua pendente).
+-   **Recurrence count:** 8
+-   **Status:** IN PROGRESS (A refatoração dos endpoints de  continua a ser a próxima etapa planeada para abater esta dívida técnica.)
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Fluxo de Estado Multi-etapa:** Implementação de um fluxo de negócio complexo que envolve múltiplos estados (, , , etc.), várias páginas de UI e endpoints de backend para gerir as transições de estado e uploads de documentos.
--   **Ações em Lote (Bulk Actions):** A UI do Resumo Semanal foi melhorada para permitir que o utilizador selecione múltiplos itens e aplique uma ação (mudança de status) a todos de uma vez, melhorando a eficiência.
--   **Geração Dinâmica de PDF:** Utilização da biblioteca  no backend para gerar documentos PDF on-the-fly, tanto para relatórios de dados específicos (vistoria de um veículo) como para templates genéricos (ficha de vistoria em branco).
--   **Flexibilidade de Modelos Pydantic:** Para resolver um , o modelo  foi atualizado para aceitar tanto os campos de dados legados () quanto os novos (), garantindo retrocompatibilidade e robustez.
+-   **Integração de API de Terceiros:** Foi criada a infraestrutura para integrar a API do WhatsApp Business (usando a Cloud API da Meta em vez de Baileys, para se adequar ao stack Python) e para expandir a funcionalidade existente do Terabox com sincronização automática.
+-   **Refatoração da UI (Componente Layout):** Modificação extensiva do componente  para reorganizar dinamicamente a navegação com base no perfil do utilizador (admin vs. parceiro), utilizando dropdowns para agrupar funcionalidades e reduzir a desordem visual.
+-   **Criação de Endpoints Flexíveis:** Para resolver um erro 404 ao adicionar motoristas, foi criado um novo endpoint () e um modelo Pydantic mais simples () para permitir a criação de registos com um conjunto mínimo de dados.
+-   **Correção de Lógica de Negócio no Backend:** A lógica para calcular os custos de combustível nos relatórios () foi corrigida para associar corretamente os abastecimentos ao veículo atualmente atribuído ao motorista, mesmo que o registo de combustível não contenha o .
 
 **All files of reference**
--   : Página central do novo fluxo financeiro, modificada para incluir seleção múltipla e ações em lote.
--   : Nova página para visualizar relatórios arquivados.
--   : Página existente que precisa ser integrada ou adaptada ao novo fluxo.
--   : Ficheiro de backend onde a lógica para o novo fluxo financeiro (mudança de status, upload de documentos) está a ser adicionada.
--   : Onde foram feitas correções no histórico de manutenções e download de documentos.
--   : Onde foram adicionados os endpoints para CRUD de manutenções e download de PDF de vistoria.
+-   : Ficheiro central para a recente reestruturação da UI do menu de navegação.
+-   : Novo ficheiro de backend para a lógica da API do WhatsApp.
+-   : Ficheiro de backend a ser modificado para implementar a lógica de sincronização.
+-   : Página onde o utilizador irá configurar a API do WhatsApp.
+-   : Modificado para corrigir erros ao adicionar motoristas e ao descarregar templates CSV.
+-   : Modificado para corrigir a lógica de associação de custos de combustível.
+-   : Modificado para incluir o novo router do WhatsApp e para corrigir a lógica de importação de CSV da Uber.
+-   : Nova página para listar motoristas inativos.
 
 **Critical Info for New Agent**
--   O foco principal é concluir o **fluxo de aprovação financeira**. O utilizador já confirmou a necessidade de várias páginas (, , ). O agente deve priorizar a construção das páginas e lógicas em falta para completar este fluxo.
--   O fluxo de status é: **Pendente** -> **Aprovado** (no Resumo Semanal) -> **Aguardar Recibo** (passa para a pág. Verificar Recibos) -> **A Pagamento** (passa para a pág. Pagamentos a Parceiro) -> **Liquidado** (passa para o Arquivo de Recibos).
--   A refatoração do , especificamente dos endpoints de , continua a ser uma dívida técnica importante a ser abordada após a conclusão da funcionalidade atual.
+-   A principal prioridade é desbloquear o utilizador na configuração do **WhatsApp Business API**. O agente deve iniciar a conversa perguntando proativamente ao utilizador pelas credenciais ( e ) necessárias na página .
+-   Após desbloquear o WhatsApp, a prioridade seguinte é implementar a lógica de sincronização de ficheiros no endpoint .
+-   O utilizador é muito ativo e tende a reportar múltiplos problemas e pedidos de uma só vez. É crucial analisar as suas mensagens cuidadosamente, fazer um plano claro e obter a sua aprovação antes de prosseguir.
 
 **documents and test reports created in this job**
 -   
--   
+-    (atualizado)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  : Utilizador aprova o plano para continuar a desenvolver o fluxo financeiro. **Status: IN PROGRESS**
-2.  : Utilizador confirma os nomes e a necessidade das novas páginas para o fluxo financeiro. **Status: COMPLETED**
-3.  : O utilizador descreve em detalhe o novo fluxo de aprovação financeira que deseja. **Status: IN PROGRESS**
-4.  : O utilizador reporta 3 novos problemas: registar manutenção, apagar foto e download de ficheiros. **Status: RESOLVED**
-5.  : O utilizador reporta 3 problemas: gestão de manutenções, download de PDF de vistoria e edição de manutenções. **Status: RESOLVED**
-6.  : O utilizador reporta que o erro de carregamento de veículos persiste. **Status: RESOLVED**
-7.  : O utilizador reporta novamente o erro de carregar veículos e um problema com a mensagem de templates. **Status: RESOLVED**
-8.  : O utilizador reporta um problema de usabilidade na página de criação de contrato e o erro ao carregar veículos. **Status: RESOLVED**
-9.  : Utilizador pede para avançar com os bugs P1. **Status: COMPLETED**
-10. : O utilizador detalha 3 problemas nos relatórios: total líquido, IVA em abastecimentos e o fluxo de aprovação. **Status: IN PROGRESS**
+1.  ****: Pedido para reestruturar o menu principal. **Status: COMPLETED**
+2.  ****: Pedido para mover itens do menu para o dropdown do perfil do utilizador. **Status: COMPLETED**
+3.  ****: Report de bug na importação de ganhos da Uber. **Status: RESOLVED**
+4.  ****: Pedido de funcionalidade de arquivo de ex-motoristas e report de bug nos relatórios de custos. **Status: RESOLVED**
+5.  ****: Report de bug no download do template CSV de veículos. **Status: RESOLVED**
+6.  ****: Report de bug ao adicionar um novo motorista. **Status: RESOLVED**
+7.  ****: Pedido de ajuda para configurar a API do WhatsApp. **Status: BLOCKED**
+8.  ****: Confirmação para avançar com as integrações Terabox e WhatsApp. **Status: IN PROGRESS**
+9.  ****: Detalhes dos requisitos para as integrações Terabox e WhatsApp. **Status: IN PROGRESS**
+10. ****: Confirmação do utilizador para avançar com o plano do agente. **Status: COMPLETED**
 
 **Project Health Check:**
 -   **In Progress:**
-    -   O novo fluxo de aprovação financeira está a meio da implementação. As páginas principais e a lógica de base foram criadas, mas as etapas intermédias (verificação de recibos, página de pagamentos) e o upload de documentos precisam ser concluídos.
+    -   A integração com a API do WhatsApp está estruturalmente pronta, mas bloqueada pela configuração.
+    -   A funcionalidade de sincronização do Terabox tem os endpoints criados, mas a lógica principal precisa ser implementada.
 -   **Needs Refactoring:**
-    -    ainda contém o grande grupo de endpoints de , que deve ser migrado para o seu próprio router.
+    -    ainda é um ficheiro monolítico. A migração das rotas de  é a próxima grande tarefa de refatoração pendente.
 
 **3rd Party Integrations**
--   Pillow, ReportLab, openpyxl, Playwright, httpx.
+-   **ReportLab, Pillow, openpyxl, httpx:** Já em uso.
+-   **Playwright:** Planeado para automações futuras.
+-   **WhatsApp Business Cloud API:** Infraestrutura de backend criada (), aguardando configuração.
+-   **Terabox:** Funcionalidade existente, com novos endpoints de sincronização () a serem implementados.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES (Usado para validar correções de bugs P0 no início da sessão).
+-   **Testing agent used after significant changes:** YES (Utilizado para validar o fluxo financeiro completo na ).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** 
--   **Known regressions:** Nenhuma conhecida nesta sessão.
+-   **Test files created:** Nenhum novo ficheiro de teste criado nesta sessão.
+-   **Known regressions:** Nenhuma.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
 -   **Parceiro:**  / 
 
 **What agent forgot to execute**
--   O agente começou a implementação do fluxo financeiro, mas ainda não criou as páginas intermédias solicitadas pelo utilizador: a página para Verificar Recibos e a adaptação da página Pagamentos a Parceiro para o novo fluxo.
--   A pequena melhoria de UI para limitar o widget de Próximos Eventos a 3 itens, mencionada no handoff inicial, ainda não foi abordada.</analysis>
+-   A pequena melhoria de UI para limitar o widget Próximos Eventos no dashboard a 3 itens, solicitada em sessões anteriores, continua pendente.</analysis>
