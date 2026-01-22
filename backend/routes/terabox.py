@@ -1060,6 +1060,9 @@ async def sync_documents_to_terabox(
     
     for parceiro_id in parceiro_ids:
         try:
+            # 0. Criar estrutura base de pastas para o parceiro
+            await _criar_estrutura_pastas(parceiro_id)
+            
             # 1. Sincronizar Contratos
             if "contratos" in categorias:
                 count = await _sync_contratos(parceiro_id)
