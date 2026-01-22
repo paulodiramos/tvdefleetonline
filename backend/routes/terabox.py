@@ -203,6 +203,10 @@ async def save_parceiro_terabox_credentials(
         update_data["password"] = credentials.password
     if credentials.api_key:
         update_data["api_key"] = credentials.api_key
+    if credentials.access_token:
+        update_data["access_token"] = credentials.access_token
+    if credentials.session_cookie:
+        update_data["session_cookie"] = credentials.session_cookie
     
     await db.terabox_credentials.update_one(
         {"parceiro_id": parceiro_id},
