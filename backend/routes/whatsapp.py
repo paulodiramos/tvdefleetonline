@@ -79,7 +79,7 @@ async def get_whatsapp_status(current_user: Dict = Depends(get_current_user)):
 @router.get("/whatsapp/qr")
 async def get_qr_code(current_user: Dict = Depends(get_current_user)):
     """Obter QR Code para escanear com WhatsApp"""
-    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "admin", "gestao"]:
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
     try:
