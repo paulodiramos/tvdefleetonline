@@ -252,6 +252,12 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>Utilizadores</span>
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/terabox" className="flex items-center space-x-2 cursor-pointer">
+                          <HardDrive className="w-4 h-4" />
+                          <span>Terabox</span>
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <div className="px-2 py-1.5">
                         <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
@@ -259,6 +265,26 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>Configurações</span>
                         </div>
                       </div>
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin/fornecedores" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>🏢 Fornecedores</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin/planos-motorista" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>📦 Planos Motorista</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/automacao-rpa" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>🤖 Automação RPA</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/configuracao-mapeamento" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>🗺️ Mapeamento Importação</span>
+                        </Link>
+                      </DropdownMenuItem>
                       <DropdownMenuItem asChild>
                         <Link to="/configuracao-integracao" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>Integrações</span>
