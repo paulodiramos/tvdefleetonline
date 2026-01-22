@@ -764,6 +764,108 @@ const ImportarFicheirosParceiro = ({ user, onLogout }) => {
             </Card>
           </div>
         )}
+
+        {/* Dialog de Confirmação de Importação */}
+        <Dialog open={showConfirmImport} onOpenChange={setShowConfirmImport}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-blue-600" />
+                Confirmar Período de Importação
+              </DialogTitle>
+              <DialogDescription>
+                Verifique e ajuste os dados do período antes de importar
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Semana</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    max="53"
+                    value={confirmSemana}
+                    onChange={(e) => {
+                      const newSemana = parseInt(e.target.value) || 1;
+                      setConfirmSemana(newSemana);
+                      const datas = calcularDatasSemana(newSemana, confirmAno);
+                      setConfirmDataInicio(datas.inicio);
+                      setConfirmDataFim(datas.fim);
+                    }}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Ano</Label>
+                  <Input
+                    type="number"
+                    min="2020"
+                    max="2030"
+                    value={confirmAno}
+                    onChange={(e) => {
+                      const newAno = parseInt(e.target.value) || 2024;
+                      setConfirmAno(newAno);
+                      const datas = calcularDatasSemana(confirmSemana, newAno);
+                      setConfirmDataInicio(datas.inicio);
+                      setConfirmDataFim(datas.fim);
+                    }}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-sm font-medium">Data Início</Label>
+                  <Input
+                    type="date"
+                    value={confirmDataInicio}
+                    onChange={(e) => setConfirmDataInicio(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium">Data Fim</Label>
+                  <Input
+                    type="date"
+                    value={confirmDataFim}
+                    onChange={(e) => setConfirmDataFim(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800">
+                  <strong>Ficheiros a importar:</strong>
+                </p>
+                <ul className="text-sm text-blue-700 mt-1 list-disc list-inside">
+                  {pendingImport === 'all' ? (
+                    Object.entries(ficheiros)
+                      .filter(([_, file]) => file !== null)
+                      .map(([plataforma, file]) => (
+                        <li key={plataforma}>{plataforma}: {file.name}</li>
+                      ))
+                  ) : (
+                    ficheiros[pendingImport] && (
+                      <li>{pendingImport}: {ficheiros[pendingImport].name}</li>
+                    )
+                  )}
+                </ul>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowConfirmImport(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={confirmarImportacao}>
+                <Upload className="w-4 h-4 mr-2" />
+                Confirmar e Importar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
