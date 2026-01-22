@@ -55,7 +55,7 @@ class TeraboxCloudService:
             return cookie
         
         # Se é só o valor do ndus
-        if not "=" in cookie:
+        if "=" not in cookie:
             return f"ndus={cookie}"
         
         return cookie
@@ -249,8 +249,6 @@ class TeraboxCloudService:
                 
                 precreate_data = {
                     "path": remote_path,
-                    "size": file_size,
-                    "path": remote_path,
                     "size": str(file_size),
                     "isdir": "0",
                     "autoinit": "1",
@@ -290,7 +288,7 @@ class TeraboxCloudService:
                     return {"success": False, "error": "Upload ID não recebido"}
                 
                 # Passo 2: Upload do ficheiro
-                upload_url = f"https://c-jp.terabox.com/rest/2.0/pcs/superfile2"
+                upload_url = "https://c-jp.terabox.com/rest/2.0/pcs/superfile2"
                 upload_params = {
                     "method": "upload",
                     "type": "tmpfile",
