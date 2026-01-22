@@ -12,9 +12,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { 
   Upload, FileSpreadsheet, AlertCircle, CheckCircle, Car, Fuel, Zap,
   CreditCard, ChevronLeft, ChevronRight, RefreshCw, History, Settings,
-  FileUp, Check, X, Loader2, ArrowLeft, MapPin, Plus, Trash2, Save
+  FileUp, Check, X, Loader2, ArrowLeft, MapPin, Plus, Trash2, Save, Calendar
 } from 'lucide-react';
 import { toast } from 'sonner';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 
