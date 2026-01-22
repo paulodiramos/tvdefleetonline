@@ -497,13 +497,26 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   const handleWhatsApp = async (motoristaId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}/whatsapp?semana=${semana}&ano=${ano}`,
+      
+      // Enviar via sistema WhatsApp Web interno
+      const response = await axios.post(
+        `${API}/api/whatsapp/send-relatorio/${motoristaId}?semana=${semana}&ano=${ano}`,
+        {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      window.open(response.data.whatsapp_link, '_blank');
+      
+      if (response.data.success) {
+        toast.success(`Relatório enviado via WhatsApp para ${response.data.motorista}!`);
+      } else {
+        toast.error(response.data.message || 'Erro ao enviar WhatsApp');
+      }
     } catch (error) {
-      toast.error('Erro ao gerar link WhatsApp');
+      const errorMsg = error.response?.data?.detail || 'Erro ao enviar WhatsApp';
+      if (errorMsg.includes('não está conectado')) {
+        toast.error('WhatsApp não conectado. Aceda a Configurações → Integrações e escaneie o QR Code.');
+      } else {
+        toast.error(errorMsg);
+      }
     }
   };
 
