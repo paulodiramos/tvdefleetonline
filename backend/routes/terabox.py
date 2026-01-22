@@ -42,7 +42,187 @@ class FicheiroRename(BaseModel):
     novo_nome: str
 
 
-# ==================== UTILITY FUNCTIONS ====================
+class TeraboxCredentials(BaseModel):
+    """Model for Terabox credentials per partner"""
+    email: Optional[str] = None
+    password: Optional[str] = None
+    api_key: Optional[str] = None
+    folder_path: Optional[str] = "/TVDEFleet"
+    sync_enabled: bool = True
+    sync_contratos: bool = True
+    sync_recibos: bool = True
+    sync_vistorias: bool = True
+    sync_relatorios: bool = True
+    sync_documentos: bool = True
+
+
+# ==================== TERABOX CREDENTIALS PER PARTNER ====================
+
+@router.get("/terabox/credentials")
+async def get_terabox_credentials(current_user: Dict = Depends(get_current_user)):
+    """Obter credenciais Terabox do parceiro atual"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Determinar parceiro_id
+    if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
+        parceiro_id = current_user["id"]
+    else:
+        parceiro_id = current_user.get("parceiro_id") or current_user["id"]
+    
+    credentials = await db.terabox_credentials.find_one(
+        {"parceiro_id": parceiro_id},
+        {"_id": 0, "password": 0}  # Não retornar password
+    )
+    
+    if not credentials:
+        return {
+            "parceiro_id": parceiro_id,
+            "configurado": False,
+            "email": None,
+            "folder_path": "/TVDEFleet",
+            "sync_enabled": True,
+            "sync_contratos": True,
+            "sync_recibos": True,
+            "sync_vistorias": True,
+            "sync_relatorios": True,
+            "sync_documentos": True
+        }
+    
+    return {
+        **credentials,
+        "configurado": bool(credentials.get("email") or credentials.get("api_key"))
+    }
+
+
+@router.post("/terabox/credentials")
+async def save_terabox_credentials(
+    credentials: TeraboxCredentials,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Guardar credenciais Terabox do parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Determinar parceiro_id
+    if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
+        parceiro_id = current_user["id"]
+    else:
+        parceiro_id = current_user.get("parceiro_id") or current_user["id"]
+    
+    # Preparar dados para guardar
+    update_data = {
+        "parceiro_id": parceiro_id,
+        "folder_path": credentials.folder_path or "/TVDEFleet",
+        "sync_enabled": credentials.sync_enabled,
+        "sync_contratos": credentials.sync_contratos,
+        "sync_recibos": credentials.sync_recibos,
+        "sync_vistorias": credentials.sync_vistorias,
+        "sync_relatorios": credentials.sync_relatorios,
+        "sync_documentos": credentials.sync_documentos,
+        "atualizado_em": datetime.now(timezone.utc),
+        "atualizado_por": current_user["id"]
+    }
+    
+    # Só atualizar email/password/api_key se fornecidos
+    if credentials.email:
+        update_data["email"] = credentials.email
+    if credentials.password:
+        update_data["password"] = credentials.password  # TODO: Encriptar
+    if credentials.api_key:
+        update_data["api_key"] = credentials.api_key
+    
+    await db.terabox_credentials.update_one(
+        {"parceiro_id": parceiro_id},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    logger.info(f"Credenciais Terabox atualizadas para parceiro {parceiro_id}")
+    
+    return {
+        "success": True,
+        "message": "Credenciais guardadas com sucesso"
+    }
+
+
+@router.get("/terabox/credentials/{parceiro_id}")
+async def get_parceiro_terabox_credentials(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter credenciais Terabox de um parceiro específico (Admin/Gestão)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "admin", "gestao"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    credentials = await db.terabox_credentials.find_one(
+        {"parceiro_id": parceiro_id},
+        {"_id": 0, "password": 0}
+    )
+    
+    if not credentials:
+        return {
+            "parceiro_id": parceiro_id,
+            "configurado": False
+        }
+    
+    return {
+        **credentials,
+        "configurado": bool(credentials.get("email") or credentials.get("api_key"))
+    }
+
+
+@router.post("/terabox/credentials/{parceiro_id}")
+async def save_parceiro_terabox_credentials(
+    parceiro_id: str,
+    credentials: TeraboxCredentials,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Guardar credenciais Terabox de um parceiro específico (Admin/Gestão)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, "admin", "gestao"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    update_data = {
+        "parceiro_id": parceiro_id,
+        "folder_path": credentials.folder_path or "/TVDEFleet",
+        "sync_enabled": credentials.sync_enabled,
+        "sync_contratos": credentials.sync_contratos,
+        "sync_recibos": credentials.sync_recibos,
+        "sync_vistorias": credentials.sync_vistorias,
+        "sync_relatorios": credentials.sync_relatorios,
+        "sync_documentos": credentials.sync_documentos,
+        "atualizado_em": datetime.now(timezone.utc),
+        "atualizado_por": current_user["id"]
+    }
+    
+    if credentials.email:
+        update_data["email"] = credentials.email
+    if credentials.password:
+        update_data["password"] = credentials.password
+    if credentials.api_key:
+        update_data["api_key"] = credentials.api_key
+    
+    await db.terabox_credentials.update_one(
+        {"parceiro_id": parceiro_id},
+        {"$set": update_data},
+        upsert=True
+    )
+    
+    return {"success": True, "message": "Credenciais guardadas"}
+
+
+@router.delete("/terabox/credentials/{parceiro_id}")
+async def delete_parceiro_terabox_credentials(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Remover credenciais Terabox de um parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, "admin"]:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    await db.terabox_credentials.delete_one({"parceiro_id": parceiro_id})
+    
+    return {"success": True, "message": "Credenciais removidas"}
 
 def get_parceiro_path(parceiro_id: str) -> str:
     """Get the storage path for a parceiro"""
