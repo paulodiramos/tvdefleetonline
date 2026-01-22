@@ -382,7 +382,9 @@ app.post('/send', async (req, res) => {
                 });
             }
             
-            const result = await client.sendMessage(chatId, message);
+            // Use getChatById to avoid sendSeen bug
+            const chat = await client.getChatById(chatId);
+            const result = await chat.sendMessage(message);
             
             return res.json({
                 success: true,
