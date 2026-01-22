@@ -16104,7 +16104,7 @@ async def get_drive_config(current_user: Dict = Depends(get_current_user)):
         if not to_email or not notification_type:
             raise HTTPException(status_code=400, detail="to_email and type are required")
         
-        result = await email_service.send_notification(
+        result = email_service.send_notification(
             to_email=to_email,
             notification_type=notification_type,
             data=data
