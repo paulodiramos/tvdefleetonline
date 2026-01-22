@@ -1,52 +1,45 @@
 # TVDEFleet - Product Requirements Document
 
-## Changelog (2026-01-22 - Session 19 - Terabox Cloud API + WhatsApp Session Restore)
+## Changelog (2026-01-22 - Session 19)
 
-### 1. Integração com API Oficial do Terabox Cloud ✅
-**Serviço implementado:** `/app/backend/services/terabox_cloud.py`
-
-**Funcionalidades:**
-- Autenticação via Cookie de Sessão (ndus) do Terabox
-- Teste de conexão com a API oficial do Terabox
-- Criação de pastas na cloud
-- Upload de ficheiros para o Terabox Cloud
-- Listagem de ficheiros na cloud
-- Sincronização de documentos organizados por categoria
-
-**Endpoints:**
-- `POST /api/terabox/cloud/test-connection` - Testar conexão com Terabox
-- `POST /api/terabox/cloud/sync` - Sincronizar documentos para a cloud
-- `GET /api/terabox/cloud/files` - Listar ficheiros na cloud
-
-**Como configurar:**
-1. Aceder a terabox.com e fazer login
-2. Abrir DevTools (F12) → Application → Cookies
-3. Copiar o valor do cookie "ndus"
-4. Colar em Integrações → Terabox → Cookie de Sessão
-
-**Ficheiros criados/modificados:**
-- `/app/backend/services/terabox_cloud.py` - Lógica completa da API Terabox
-- `/app/backend/routes/terabox.py` - Bug fix para guardar session_cookie
-- `/app/frontend/src/pages/Integracoes.js` - Novos botões (Testar Conexão Cloud, Sincronizar Cloud)
-
-### 2. Restauro Automático de Sessões WhatsApp ✅
-**Melhoria no serviço Node.js:** `/app/backend/whatsapp_service/index.js`
+### 1. Guia Visual Gmail 2FA (App Password) ✅ NEW
+**Componente:** `GmailAppPasswordGuide` em `ConfiguracoesParceiro.js`
 
 **Funcionalidades:**
-- Detecção automática de sessões existentes no arranque
-- Restauro automático de sessões guardadas
-- Reconexão sem necessidade de escanear QR code (se sessão válida)
-- Logs detalhados do processo de restauro
+- Detecção automática de Gmail (quando servidor SMTP ou email contém "gmail")
+- Alerta informativo sobre autenticação de 2 fatores
+- Modal com guia passo-a-passo de 5 etapas
+- Botão direto para página de App Passwords do Google
+- Visualização do formato da senha gerada
+- Avisos importantes sobre copiar a senha
 
 **Comportamento:**
-- No arranque, o serviço procura sessões em `.wwebjs_auth/session-{parceiro_id}`
-- Tenta restaurar cada sessão automaticamente
-- Se a sessão ainda for válida, reconecta sem interação
-- Se a sessão expirou, utilizador precisa escanear novo QR code
+- Quando utilizador escreve "gmail" no servidor ou email → aparece:
+  - Botão "Como criar Senha de Aplicação?" ao lado do campo Password
+  - Alerta amarelo explicando a necessidade de App Password
+  - Placeholder muda para "Cole a Senha de Aplicação aqui"
+
+### 2. Guia Visual Terabox Cookie ✅
+**Componente:** `TeraboxGuideModal` em `Integracoes.js`
+
+**Funcionalidades:**
+- Modal interativo com 5 passos visuais
+- Simulação do DevTools do browser
+- Botão direto para abrir terabox.com
+- Instruções claras para encontrar cookie "ndus"
+
+### 3. Integração API Terabox Cloud ✅
+**Serviço:** `/app/backend/services/terabox_cloud.py`
+
+- Autenticação via Cookie de Sessão
+- Teste de conexão, criação de pastas, upload de ficheiros
+
+### 4. Restauro Automático Sessões WhatsApp ✅
+- Serviço Node.js detecta e restaura sessões no arranque
 
 ---
 
-## Changelog (2026-01-22 - Session 18 - Terabox Sync + WhatsApp Web)
+## Changelog (2026-01-22 - Session 18)
 
 ### 1. Sincronização Automática do Terabox ✅
 **Endpoint implementado:** `POST /api/terabox/sync-documents`
