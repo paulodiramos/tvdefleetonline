@@ -498,11 +498,17 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Password</Label>
+                    <div className="flex items-center justify-between">
+                      <Label>Password</Label>
+                      {(configEmail.smtp_host?.toLowerCase().includes('gmail') || 
+                        configEmail.smtp_usuario?.toLowerCase().includes('gmail')) && (
+                        <GmailAppPasswordGuide />
+                      )}
+                    </div>
                     <div className="relative">
                       <Input
                         type={showPasswords.smtp ? 'text' : 'password'}
-                        placeholder="••••••••"
+                        placeholder={configEmail.smtp_host?.toLowerCase().includes('gmail') ? "Cole a Senha de Aplicação aqui" : "••••••••"}
                         value={configEmail.smtp_password}
                         onChange={(e) => setConfigEmail(prev => ({ ...prev, smtp_password: e.target.value }))}
                       />
