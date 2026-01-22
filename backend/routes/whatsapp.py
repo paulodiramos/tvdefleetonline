@@ -350,7 +350,8 @@ async def process_bulk_whatsapp(
                 error_count += 1
                 continue
             
-            telefone = motorista.get("telefone") or motorista.get("phone") or motorista.get("whatsapp")
+            # Buscar telefone - ordem de prioridade: whatsapp > phone > telefone
+            telefone = motorista.get("whatsapp") or motorista.get("phone") or motorista.get("telefone")
             if not telefone:
                 error_count += 1
                 continue
