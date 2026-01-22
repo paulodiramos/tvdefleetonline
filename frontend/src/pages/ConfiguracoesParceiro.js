@@ -541,6 +541,24 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
                   </div>
                 </div>
 
+                {/* Alerta Gmail 2FA */}
+                {(configEmail.smtp_host?.toLowerCase().includes('gmail') || 
+                  configEmail.smtp_usuario?.toLowerCase().includes('gmail')) && (
+                  <Alert className="bg-amber-50 border-amber-200">
+                    <ShieldCheck className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="text-amber-800">
+                      <strong>Gmail com Verificação em 2 Passos?</strong>
+                      <p className="text-sm mt-1">
+                        Se a sua conta Gmail tem autenticação de 2 fatores ativada, precisa usar uma 
+                        <strong> Senha de Aplicação</strong> em vez da sua password normal.
+                      </p>
+                      <div className="mt-2">
+                        <GmailAppPasswordGuide />
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
+
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={configEmail.usar_tls}
