@@ -394,14 +394,23 @@ app.post('/send', async (req, res) => {
                 });
             }
             
-            // Use getChatById to avoid sendSeen bug
-            const chat = await client.getChatById(chatId);
-            const result = await chat.sendMessage(message);
+            // Use internal WWebJS to avoid sendSeen bug
+            const chatResult = await client.pupPage.evaluate(async (chatId, msg) => {
+                const chat = await window.Store.Chat.get(chatId);
+                if (!chat) {
+                    throw new Error('Chat não encontrado');
+                }
+                const msgResult = await window.WWebJS.sendMessage(chat, msg, {}, {});
+                return {
+                    id: msgResult.id ? msgResult.id._serialized : 'sent',
+                    timestamp: msgResult.t || Math.floor(Date.now() / 1000)
+                };
+            }, chatId, message);
             
             return res.json({
                 success: true,
-                messageId: result.id._serialized,
-                timestamp: result.timestamp,
+                messageId: chatResult.id,
+                timestamp: chatResult.timestamp,
                 to: formattedPhone
             });
         } catch (error) {
