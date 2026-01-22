@@ -239,10 +239,13 @@ async def enviar_relatorio_motorista(
     semana: int,
     ano: int,
     enviar_email: bool = True,
-    enviar_whatsapp: bool = True
+    enviar_whatsapp: bool = True,
+    db = None,
+    parceiro_id: str = None
 ) -> Dict:
     """
     Envia relatório semanal para o motorista.
+    Usa SMTP do parceiro se disponível, caso contrário tenta SendGrid.
     Retorna resultado do envio.
     """
     results = {
@@ -260,10 +263,30 @@ async def enviar_relatorio_motorista(
         html_content = generate_relatorio_motorista_html(motorista_data, semana, ano)
         subject = f"Relatório Semanal - Semana {semana}/{ano}"
         
-        email_result = send_email_sendgrid(email, subject, html_content)
+        email_result = None
+        
+        # Tentar usar SMTP do parceiro primeiro
+        if db is not None and parceiro_id:
+            try:
+                from utils.email_service import get_parceiro_email_service
+                email_service = await get_parceiro_email_service(db, parceiro_id)
+                if email_service:
+                    email_result = email_service.send_email(
+                        to_email=email,
+                        subject=subject,
+                        body_html=html_content
+                    )
+                    logger.info(f"Email enviado via SMTP do parceiro para {email}")
+            except Exception as e:
+                logger.error(f"Erro ao usar SMTP do parceiro: {e}")
+        
+        # Fallback para SendGrid se SMTP não disponível
+        if email_result is None:
+            email_result = send_email_sendgrid(email, subject, html_content)
+        
         results["email"] = {
-            "enviado": email_result["success"],
-            "mensagem": email_result["message"]
+            "enviado": email_result.get("success", False),
+            "mensagem": email_result.get("message") or email_result.get("error", "")
         }
     elif enviar_email:
         results["email"]["mensagem"] = "Email não disponível"
