@@ -111,12 +111,9 @@ class TeraboxCloudService:
     async def get_quota(self) -> Dict:
         """Obter informação de quota/espaço"""
         try:
-            async with httpx.AsyncClient() as client:
-                url = f"{TERABOX_PAN_API}/xpan/nas"
-                params = {"method": "uinfo"}
-                
-                if self.access_token:
-                    params["access_token"] = self.access_token
+            async with httpx.AsyncClient(follow_redirects=True) as client:
+                url = f"{TERABOX_WEB_API}/api/quota"
+                params = {"checkfree": 1, "checkexpire": 1}
                 
                 response = await client.get(url, params=params, headers=self.headers, timeout=30.0)
                 
@@ -139,20 +136,19 @@ class TeraboxCloudService:
     async def list_files(self, path: str = "/") -> Dict:
         """Listar ficheiros numa pasta"""
         try:
-            async with httpx.AsyncClient() as client:
-                url = f"{TERABOX_PAN_API}/xpan/file"
+            async with httpx.AsyncClient(follow_redirects=True) as client:
+                url = f"{TERABOX_WEB_API}/api/list"
                 params = {
-                    "method": "list",
                     "dir": path,
                     "order": "name",
-                    "start": 0,
-                    "limit": 100
+                    "desc": 0,
+                    "num": 100,
+                    "page": 1
                 }
                 
-                if self.access_token:
-                    params["access_token"] = self.access_token
-                
                 response = await client.get(url, params=params, headers=self.headers, timeout=30.0)
+                
+                logger.info(f"Terabox list_files response: {response.status_code}")
                 
                 if response.status_code == 200:
                     data = response.json()
@@ -161,10 +157,15 @@ class TeraboxCloudService:
                             "success": True,
                             "files": data.get("list", [])
                         }
+                    elif data.get("errno") == -6:
+                        return {
+                            "success": False,
+                            "error": "Sessão expirada"
+                        }
                     else:
                         return {
                             "success": False,
-                            "error": data.get("errmsg", "Erro desconhecido")
+                            "error": data.get("errmsg", f"Erro código {data.get('errno')}")
                         }
                 
                 return {"success": False, "error": f"HTTP {response.status_code}"}
@@ -176,28 +177,43 @@ class TeraboxCloudService:
     async def create_folder(self, path: str) -> Dict:
         """Criar pasta no Terabox"""
         try:
-            async with httpx.AsyncClient() as client:
-                url = f"{TERABOX_PAN_API}/xpan/file"
-                params = {"method": "create"}
-                
-                if self.access_token:
-                    params["access_token"] = self.access_token
+            async with httpx.AsyncClient(follow_redirects=True) as client:
+                url = f"{TERABOX_WEB_API}/api/create"
+                params = {"a": "commit"}
                 
                 data = {
                     "path": path,
-                    "isdir": 1,
-                    "size": 0,
+                    "isdir": "1",
                     "block_list": "[]"
                 }
                 
                 response = await client.post(url, params=params, data=data, headers=self.headers, timeout=30.0)
                 
+                logger.info(f"Terabox create_folder response: {response.status_code}")
+                
                 if response.status_code == 200:
                     result = response.json()
+                    logger.info(f"Terabox create_folder result: {result}")
+                    
                     if result.get("errno") == 0:
                         return {
                             "success": True,
-                            "path": result.get("path"),
+                            "path": result.get("path") or path,
+                            "fs_id": result.get("fs_id")
+                        }
+                    elif result.get("errno") == -8:
+                        # Pasta já existe - não é erro
+                        return {"success": True, "path": path, "exists": True}
+                    elif result.get("errno") == -6:
+                        return {
+                            "success": False,
+                            "error": "Sessão expirada"
+                        }
+                    else:
+                        return {
+                            "success": False,
+                            "error": result.get("errmsg", f"Errno: {result.get('errno')}")
+                        }
                             "fs_id": result.get("fs_id")
                         }
                     elif result.get("errno") == -8:
