@@ -230,6 +230,199 @@ async def delete_parceiro_terabox_credentials(
     
     return {"success": True, "message": "Credenciais removidas"}
 
+
+# ==================== TERABOX CLOUD INTEGRATION ====================
+
+@router.post("/terabox/cloud/test-connection")
+async def test_terabox_cloud_connection(current_user: Dict = Depends(get_current_user)):
+    """Testar conexão com o Terabox Cloud"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Determinar parceiro_id
+    if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
+        parceiro_id = current_user["id"]
+    else:
+        parceiro_id = current_user.get("parceiro_id") or current_user["id"]
+    
+    from services.terabox_cloud import get_terabox_service
+    
+    service = await get_terabox_service(db, parceiro_id)
+    
+    if not service:
+        return {
+            "success": False,
+            "error": "Credenciais Terabox não configuradas. Configure o Cookie de Sessão nas Integrações."
+        }
+    
+    result = await service.test_connection()
+    return result
+
+
+@router.post("/terabox/cloud/sync")
+async def sync_to_terabox_cloud(current_user: Dict = Depends(get_current_user)):
+    """Sincronizar documentos para o Terabox Cloud oficial"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Determinar parceiro_id
+    if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
+        parceiro_id = current_user["id"]
+    else:
+        parceiro_id = current_user.get("parceiro_id") or current_user["id"]
+    
+    from services.terabox_cloud import get_terabox_service
+    
+    service = await get_terabox_service(db, parceiro_id)
+    
+    if not service:
+        raise HTTPException(
+            status_code=400,
+            detail="Credenciais Terabox não configuradas. Configure o Cookie de Sessão nas Integrações."
+        )
+    
+    # Obter credenciais para pasta base
+    credentials = await db.terabox_credentials.find_one(
+        {"parceiro_id": parceiro_id},
+        {"_id": 0}
+    )
+    
+    base_path = credentials.get("folder_path", "/TVDEFleet") if credentials else "/TVDEFleet"
+    
+    sync_results = {
+        "pastas_criadas": 0,
+        "ficheiros_enviados": 0,
+        "erros": []
+    }
+    
+    try:
+        # 1. Criar estrutura de pastas no Terabox Cloud
+        pastas_principais = ["Contratos", "Recibos", "Vistorias", "Relatórios", "Motoristas"]
+        
+        for pasta in pastas_principais:
+            result = await service.create_folder(f"{base_path}/{pasta}")
+            if result.get("success"):
+                sync_results["pastas_criadas"] += 1
+            else:
+                sync_results["erros"].append(f"Pasta {pasta}: {result.get('error')}")
+        
+        # 2. Criar pastas para motoristas
+        motoristas = await db.motoristas.find({
+            "$or": [
+                {"parceiro_id": parceiro_id},
+                {"parceiro_atribuido": parceiro_id}
+            ]
+        }, {"_id": 0, "name": 1}).to_list(100)
+        
+        for motorista in motoristas:
+            nome = motorista.get("name", "").replace("/", "-").replace("\\", "-").strip()
+            if nome:
+                result = await service.create_folder(f"{base_path}/Motoristas/{nome}")
+                if result.get("success"):
+                    sync_results["pastas_criadas"] += 1
+                    
+                result = await service.create_folder(f"{base_path}/Motoristas/{nome}/Documentos")
+                if result.get("success"):
+                    sync_results["pastas_criadas"] += 1
+        
+        # 3. Criar pastas para veículos
+        veiculos = await db.vehicles.find({
+            "parceiro_id": parceiro_id
+        }, {"_id": 0, "matricula": 1}).to_list(100)
+        
+        for veiculo in veiculos:
+            matricula = veiculo.get("matricula", "").replace("/", "-").strip()
+            if matricula:
+                result = await service.create_folder(f"{base_path}/Vistorias/{matricula}")
+                if result.get("success"):
+                    sync_results["pastas_criadas"] += 1
+        
+        # 4. Criar pastas por ano
+        from datetime import datetime
+        ano_atual = datetime.now().year
+        
+        for ano in [ano_atual - 1, ano_atual, ano_atual + 1]:
+            await service.create_folder(f"{base_path}/Relatórios/{ano}")
+            await service.create_folder(f"{base_path}/Recibos/{ano}")
+            sync_results["pastas_criadas"] += 2
+        
+        # 5. Sincronizar ficheiros locais que existem
+        ficheiros_locais = await db.terabox_ficheiros.find({
+            "parceiro_id": parceiro_id,
+            "cloud_synced": {"$ne": True}
+        }, {"_id": 0}).to_list(100)
+        
+        for ficheiro in ficheiros_locais:
+            local_path = ficheiro.get("caminho_completo")
+            if local_path and os.path.exists(local_path):
+                # Determinar caminho remoto
+                categoria = ficheiro.get("categoria", "outros")
+                nome = ficheiro.get("nome", os.path.basename(local_path))
+                
+                remote_path = f"{base_path}/{categoria.capitalize()}/{nome}"
+                
+                result = await service.upload_file(local_path, remote_path)
+                
+                if result.get("success"):
+                    sync_results["ficheiros_enviados"] += 1
+                    
+                    # Marcar como sincronizado
+                    await db.terabox_ficheiros.update_one(
+                        {"id": ficheiro.get("id")},
+                        {"$set": {
+                            "cloud_synced": True,
+                            "cloud_path": remote_path,
+                            "cloud_fs_id": result.get("fs_id"),
+                            "cloud_sync_date": datetime.now(timezone.utc)
+                        }}
+                    )
+                else:
+                    sync_results["erros"].append(f"Ficheiro {nome}: {result.get('error')}")
+        
+        # Registar sincronização
+        await db.terabox_cloud_sync_logs.insert_one({
+            "id": str(uuid.uuid4()),
+            "parceiro_id": parceiro_id,
+            "data": datetime.now(timezone.utc),
+            "resultados": sync_results
+        })
+        
+        return {
+            "success": True,
+            "message": f"Sincronização concluída: {sync_results['pastas_criadas']} pastas, {sync_results['ficheiros_enviados']} ficheiros",
+            "detalhes": sync_results
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro na sincronização Terabox Cloud: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/terabox/cloud/files")
+async def list_terabox_cloud_files(
+    path: str = "/TVDEFleet",
+    current_user: Dict = Depends(get_current_user)
+):
+    """Listar ficheiros no Terabox Cloud"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    if current_user["role"] in [UserRole.PARCEIRO, "parceiro"]:
+        parceiro_id = current_user["id"]
+    else:
+        parceiro_id = current_user.get("parceiro_id") or current_user["id"]
+    
+    from services.terabox_cloud import get_terabox_service
+    
+    service = await get_terabox_service(db, parceiro_id)
+    
+    if not service:
+        raise HTTPException(status_code=400, detail="Credenciais Terabox não configuradas")
+    
+    result = await service.list_files(path)
+    return result
+
+
 def get_parceiro_path(parceiro_id: str) -> str:
     """Get the storage path for a parceiro"""
     path = os.path.join(TERABOX_BASE, parceiro_id)
