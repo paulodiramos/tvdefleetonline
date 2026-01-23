@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { 
   FileText, Download, Upload, Calendar, User, Euro, 
   Filter, ChevronLeft, ChevronRight, CheckCircle, Clock, AlertCircle,
-  FileCheck, Eye, Loader2
+  FileCheck, Eye, Loader2, CheckSquare, XCircle
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
@@ -25,6 +26,13 @@ const VerificarRecibos = ({ user, onLogout }) => {
   const [uploadingFile, setUploadingFile] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [showPreview, setShowPreview] = useState(null);
+  
+  // Novos estados para seleção múltipla e ações em lote
+  const [selectedMotoristas, setSelectedMotoristas] = useState([]);
+  const [showApproveConfirm, setShowApproveConfirm] = useState(null); // Para aprovar sem recibo individual
+  const [showBulkStatusModal, setShowBulkStatusModal] = useState(false);
+  const [bulkStatusLoading, setBulkStatusLoading] = useState(false);
+  const [selectedBulkStatus, setSelectedBulkStatus] = useState('a_pagamento');
 
   useEffect(() => {
     const now = new Date();
