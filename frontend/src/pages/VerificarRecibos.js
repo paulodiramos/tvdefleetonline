@@ -455,6 +455,16 @@ const VerificarRecibos = ({ user, onLogout }) => {
                               <Upload className="w-4 h-4 mr-1" />
                               Enviar Recibo
                             </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setShowApproveConfirm(relatorio)}
+                              className="border-green-300 text-green-700 hover:bg-green-50"
+                              data-testid={`approve-no-recibo-${relatorio.motorista_id}`}
+                            >
+                              <CheckCircle className="w-4 h-4 mr-1" />
+                              Aprovar s/ Recibo
+                            </Button>
                           </div>
                         </div>
                       </div>
