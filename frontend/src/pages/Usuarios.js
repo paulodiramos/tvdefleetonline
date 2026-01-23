@@ -40,7 +40,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { UserCheck, UserX, Users, UserPlus, Clock, Shield, Eye, EyeOff, Mail, Phone, Calendar, Building, Lock, Unlock, Trash2, Key, RefreshCw, Package, UserCircle } from 'lucide-react';
+import { UserCheck, UserX, Users, UserPlus, Clock, Shield, Eye, EyeOff, Mail, Phone, Calendar, Building, Lock, Unlock, Trash2, Key, RefreshCw, Package, UserCircle, FileText, CheckCircle, XCircle, ExternalLink } from 'lucide-react';
 
 const Usuarios = ({ user, onLogout }) => {
   const navigate = useNavigate();
@@ -60,6 +60,10 @@ const Usuarios = ({ user, onLogout }) => {
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [generatedPassword, setGeneratedPassword] = useState('');
+  // Estados para validação de documentos
+  const [showDocsDialog, setShowDocsDialog] = useState(false);
+  const [userDocs, setUserDocs] = useState([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
   // DEPRECATED: Estados removidos - agora usa /gestao-planos para atribuição
   const [duracaoDias, setDuracaoDias] = useState(30);
   const [showMotoristaDialog, setShowMotoristaDialog] = useState(false);
