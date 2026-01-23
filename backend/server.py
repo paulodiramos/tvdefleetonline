@@ -16925,6 +16925,8 @@ async def sincronizar_credencial(
             "success": False,
             "message": f"Erro: {str(e)}"
         }
+'''
+# FIM DOS ENDPOINTS DE CREDENCIAIS COMENTADOS
 
 # ==================================================
 # CSV IMPORT - Upload Manual de Ficheiros
