@@ -326,13 +326,57 @@ const VerificarRecibos = ({ user, onLogout }) => {
 
         {/* Lista de Relatórios */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileCheck className="w-5 h-5" />
-              Relatórios Aguardando Recibo - Semana {semana}/{ano}
-            </CardTitle>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <FileCheck className="w-5 h-5" />
+                Relatórios Aguardando Recibo - Semana {semana}/{ano}
+              </CardTitle>
+              
+              {/* Checkbox Selecionar Todos */}
+              {relatorios.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="select-all"
+                    checked={selectedMotoristas.length === relatorios.length && relatorios.length > 0}
+                    onCheckedChange={handleSelectAll}
+                  />
+                  <Label htmlFor="select-all" className="text-sm cursor-pointer">
+                    Selecionar Todos
+                  </Label>
+                </div>
+              )}
+            </div>
           </CardHeader>
-          <CardContent>
+          
+          {/* Barra de Ações em Lote */}
+          {selectedMotoristas.length > 0 && (
+            <div className="bg-blue-50 px-6 py-3 border-b flex items-center justify-between">
+              <span className="text-sm text-blue-700 font-medium">
+                <CheckSquare className="w-4 h-4 inline mr-1" />
+                {selectedMotoristas.length} motorista(s) selecionado(s)
+              </span>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline"
+                  onClick={() => setSelectedMotoristas([])}
+                >
+                  Limpar Seleção
+                </Button>
+                <Button 
+                  size="sm"
+                  onClick={() => setShowBulkStatusModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  data-testid="btn-alterar-status-lote"
+                >
+                  Alterar Status em Lote
+                </Button>
+              </div>
+            </div>
+          )}
+          
+          <CardContent className="pt-4">
             {loading ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="w-6 h-6 animate-spin text-slate-500" />
