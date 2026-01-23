@@ -79,9 +79,8 @@ const Usuarios = ({ user, onLogout }) => {
   const [parceiros, setParceiros] = useState([]);
   const [selectedParceiros, setSelectedParceiros] = useState([]);
   
-  // Search and filter states
+  // Search state (unified with advanced filters)
   const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('todos');
 
   useEffect(() => {
     fetchUsers();
