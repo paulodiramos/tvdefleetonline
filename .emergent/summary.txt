@@ -1,190 +1,161 @@
 <analysis>**original_problem_statement:**
-O utilizador solicitou a continuação do desenvolvimento da aplicação de gestão de frotas. O foco inicial era a integração com a API do WhatsApp Business e a sincronização de ficheiros com o Terabox. No entanto, o projeto evoluiu significativamente com base no feedback do utilizador:
-
-1.  **Integração WhatsApp:** O requisito mudou da API do WhatsApp Business para uma integração com o WhatsApp Web (via QR code), pois o utilizador preferiu não usar a solução empresarial. Posteriormente, foi solicitado que esta integração suportasse múltiplas sessões, permitindo que cada parceiro conectasse a sua própria conta de WhatsApp.
-2.  **Sincronização Terabox:** A implementação inicial simulava a sincronização criando ficheiros e pastas localmente. O utilizador clarificou que a funcionalidade deve integrar-se com a **API oficial do Terabox na nuvem**, tornando a implementação local obsoleta.
-
-Adicionalmente, o utilizador reportou e solicitou a correção de múltiplos bugs relacionados com o envio de emails, a funcionalidade de envio de mensagens WhatsApp a partir da plataforma e a remoção de itens de menu.
+O utilizador solicitou a continuação do desenvolvimento de uma aplicação de gestão de frotas. O projeto focou-se na migração de integrações simuladas para implementações funcionais e na correção de múltiplos bugs reportados.
 
 **PRODUCT REQUIREMENTS (Tarefas recentes e em progresso):**
--   **(P0) Implementar Integração com API Oficial do Terabox:** Substituir a simulação local por uma integração real com a cloud do Terabox para upload de ficheiros.
--   **(P0) Corrigir Bug de Envio de Mensagens WhatsApp:** Resolver um erro () que impedia o envio de mensagens, exigindo a atualização da biblioteca  e a refatoração do código de envio.
--   **(P1) Corrigir Bugs de Envio de Email:** Solucionar erros de conexão () e de programação () que impediam o teste e o envio de emails através de SMTP configurado pelo parceiro.
--   **(P1) Melhorias de UI e Fluxo:**
-    -   Remover o submenu Relatórios da navegação.
-    -   Adicionar um popup de confirmação na página de importação de ficheiros.
-    -   Corrigir o botão de envio de WhatsApp na página Resumo Semanal para usar a API interna em vez de abrir uma nova aba.
-    -   Adicionar um campo para credenciais de parceiro no Terabox.
-    -   Permitir que parceiros e gestores reiniciem o serviço WhatsApp.
+-   **(P0) Concluir a Integração com a API do Terabox:** Implementar a lógica de upload para a API não oficial do Terabox usando um cookie de sessão, substituindo a simulação local.
+-   **(P0) Corrigir Bugs de Envio de Email:** Resolver múltiplos erros, incluindo  e um bug onde o sistema usava a API do SendGrid em vez das configurações SMTP do parceiro.
+-   **(P0) Melhorias na Gestão de Utilizadores (Admin):**
+    -   Permitir que o administrador visualize e valide os documentos enviados pelos utilizadores.
+    -   Adicionar filtros à lista de utilizadores (por perfil, por parceiro, por data).
+    -   Implementar ações de administrador: revogar acesso, bloquear utilizador e alterar password.
+-   **(P1) Melhorias de UI e Fluxo de Trabalho:**
+    -   Alinhar a linha de totais na tabela do Resumo Semanal.
+    -   Na página Verificar Recibos, adicionar seleção em massa e um popup de confirmação para aprovar recibos sem enviar email.
+    -   Reorganizar o menu Financeiro e remover o link duplicado do Resumo Semanal do menu principal.
+    -   Melhorar as notificações de interesse em veículos para incluir todos os dados do formulário.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação é uma plataforma full-stack (React + FastAPI + MongoDB) com um microserviço adicional em Node.js para a integração com o WhatsApp.
-
--   **Backend:** O backend FastAPI foi modificado para suportar as novas integrações. A rota  agora comunica com o serviço Node.js. Foram adicionados endpoints em  para gerir credenciais e preparar a integração com a API oficial do Terabox. Múltiplos bugs de email e lógica de negócio foram corrigidos.
--   **Frontend:** A página  foi completamente refeita várias vezes. Atualmente, exibe um QR Code para conexão com o WhatsApp (por parceiro) e campos de configuração para o Terabox (incluindo o novo campo para o cookie de sessão da API). Outras páginas como  e  foram atualizadas para corrigir bugs e adicionar funcionalidades.
--   **Serviço WhatsApp:** Um serviço Node.js () foi criado para gerir a conexão com o WhatsApp Web usando a biblioteca . Ele suporta múltiplas sessões (uma por parceiro) e expõe uma API REST simples para o backend Python.
+A aplicação é uma plataforma full-stack (React + FastAPI + MongoDB) com um microserviço Node.js para integração com o WhatsApp.
+-   **Backend:** A lógica de integração com a API não oficial do Terabox foi implementada, e múltiplos bugs críticos de envio de email foram corrigidos. Foram adicionados novos endpoints e corrigidos os existentes para melhorar a gestão de utilizadores e notificações.
+-   **Frontend:** A UI foi significativamente melhorada.  e  agora incluem guias visuais interativos para ajudar os utilizadores com configurações complexas (cookie do Terabox e App Passwords do Gmail). A página  foi reescrita para suportar ações em massa. A página  foi corrigida e expandida com novas funcionalidades de gestão para o administrador.
+-   **Serviço WhatsApp:** O serviço Node.js foi melhorado para tentar restaurar automaticamente as sessões existentes no arranque, aumentando a sua estabilidade.
 
 **Last working item**:
--   **Last item agent was working:** Implementação da integração com a **API oficial do Terabox (cloud)**. O agente respondeu ao pedido do utilizador para substituir a simulação de sincronização local por uma integração real. Foram criados os stubs no backend (), adicionados novos endpoints para testar a conexão e sincronizar, e atualizada a UI em  para incluir um campo para o  e botões de ação.
+-   **Last item agent was working:** Adicionar funcionalidades avançadas de gestão de utilizadores na página  para o perfil de administrador. O agente estava a implementar os filtros por parceiro e data, e as ações para revogar/bloquear utilizadores e alterar passwords.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** backend testing agent. O agente precisará implementar a lógica de chamada à API do Terabox e depois testar os novos endpoints (, ) usando  com as credenciais fornecidas pelo utilizador.
+-   **Which testing method agent to use?** frontend testing agent. O agente deve testar a página , verificando se os novos filtros (perfil, parceiro, data) funcionam corretamente e se as ações de administrador (validar documentos, bloquear, alterar senha) estão funcionais.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Concluir Integração com API Oficial do Terabox (P0)**
-    -   **Description:** A infraestrutura (endpoints, UI) está pronta, mas a lógica principal para interagir com a API do Terabox (autenticação, listagem de pastas, upload de ficheiros) precisa ser implementada no ficheiro . A implementação local anterior é agora obsoleta.
-    -   **Attempted fixes:** N/A (nova implementação).
+-   **Issue 1: Concluir as funcionalidades avançadas de gestão de utilizadores (P0)**
+    -   **Description:** O utilizador solicitou a capacidade de filtrar utilizadores por parceiro e data, e de executar ações como revogar/bloquear e alterar a password de um utilizador.
+    -   **Attempted fixes:** O agente adicionou os componentes de UI para os filtros (dropdown de parceiros, seletor de data) e o estado React necessário. A funcionalidade de Validar Documentos foi totalmente implementada (frontend e backend). As outras ações (bloquear, alterar senha) ainda não foram ligadas no frontend nem totalmente implementadas no backend.
     -   **Next debug checklist:**
-        1.  Implementar a lógica em  para autenticar e fazer upload de ficheiros usando o  do parceiro.
-        2.  Ligar esta lógica aos endpoints  e  em .
-        3.  Testar os endpoints com , utilizando um token de parceiro válido e o cookie de sessão.
-    -   **Why fix this issue and what will be achieved with the fix?** Para cumprir o requisito principal do utilizador de ter um backup automático e organizado dos documentos da plataforma na nuvem do Terabox.
+        1.  Finalizar a lógica de filtragem no frontend em  para aplicar os filtros de parceiro e data à lista de utilizadores.
+        2.  Implementar os handlers de clique para os botões Bloquear e Alterar Senha no modal de detalhes do utilizador.
+        3.  Criar ou expor os endpoints de backend necessários para bloquear um utilizador (ex: ) e ligá-los às ações do frontend. O endpoint para alterar a senha já existe, só precisa ser ligado à UI do admin.
+    -   **Why fix this issue and what will be achieved with the fix?** Dar ao administrador as ferramentas necessárias para gerir eficazmente a base de utilizadores da plataforma.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Should Test frontend/backend/both after fix?** both
     -   **Blocked on other issue:** N/A.
 
 -   **Issue 2: Persistência da Sessão WhatsApp (P1)**
-    -   **Description:** Durante a depuração, foi observado que as sessões de WhatsApp () não estavam a ser restauradas de forma fiável após o reinício do serviço Node.js, exigindo uma re-inicialização manual. Isso pode levar a uma má experiência para o utilizador, que teria que escanear o QR code repetidamente.
-    -   **Attempted fixes:** O agente conseguiu restaurar a sessão manualmente durante o teste, mas não abordou a causa raiz da falha de restauro automático.
-    -   **Next debug checklist:**
-        1.  Rever a implementação do  em .
-        2.  Garantir que os dados da sessão () são escritos e lidos corretamente e que os clientes são inicializados na ordem correta no arranque do serviço.
-        3.  Testar o ciclo de  e  do serviço  para garantir que as sessões conectadas são restauradas automaticamente.
-    -   **Why fix this issue and what will be achieved with the fix?** Para garantir que a integração do WhatsApp seja estável e que os parceiros não percam a conexão a cada reinício do servidor.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** Y (ocorreu várias vezes durante a sessão)
+    -   **Description:** Sessões do WhatsApp não eram restauradas de forma fiável após o reinício do serviço. O agente implementou uma rotina de inicialização em  que carrega as pastas de sessão existentes no arranque para tentar restaurá-las.
+    -   **Attempted fixes:** A lógica de restauro automático foi adicionada.
+    -   **Next debug checklist:** A funcionalidade está tecnicamente implementada, mas a estabilidade a longo prazo precisa ser validada pelo utilizador. O agente explicou que as sessões podem expirar naturalmente, o que é um comportamento esperado.
+    -   **Why fix this issue and what will be achieved with the fix?** Garante uma integração com o WhatsApp estável, evitando que os parceiros tenham de escanear o QR code repetidamente.
+    -   **Status:** USER VERIFICATION PENDING
+    -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** backend
     -   **Blocked on other issue:** N/A.
 
 **In progress Task List**:
-Nenhum para além do .
+-   **Task 1: Concluir a implementação dos filtros e ações de gestão na página de utilizadores.**
+    -   **Where to resume:**  e, se necessário, nos ficheiros de rotas do backend.
+    -   **What will be achieved with this?** Completar os requisitos do utilizador para a gestão de utilizadores.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** both
+    -   **Blocked on something:** N/A
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1) Refatoração do Backend:** Continuar a migração dos endpoints do ficheiro monolítico , focando-se no grupo de rotas de .
+    -   **(P2) UI: Limitar Próximos Eventos no Dashboard:** Limitar a lista a 3 itens na página principal.
+    -   **(P1) Refatoração do Backend:** Continuar a migração de endpoints do ficheiro monolítico .
 -   **Future Tasks:**
-    -   **(P2) Melhoria do Dashboard:** Limitar a lista de Próximos Eventos a 3 itens na página principal.
     -   **(P2) Implementar Lógica de RPA:** Desenvolver a automação com Playwright no backend.
-    -   **(P3) Funcionalidade de Exportação de Dados:** Permitir a exportação de várias listas de dados (motoristas, veículos) em formato JSON/CSV.
+    -   **(P3) Funcionalidade de Exportação de Dados:** Permitir a exportação de listas de dados (motoristas, veículos) em formato JSON/CSV.
 
 **Completed work in this session**
--   **Integração WhatsApp Web (P0):**
-    -   Substituída a integração da API do WhatsApp Business por uma solução baseada em  com QR Code.
-    -   Criado um microserviço Node.js para gerir as conexões.
-    -   Implementado suporte multi-sessão, permitindo que cada parceiro conecte a sua própria conta de WhatsApp.
-    -   Corrigido um bug crítico () atualizando a dependência e o código de envio de mensagens.
-    -   Corrigida a lógica para usar o número de telefone correto da ficha do motorista.
--   **Funcionalidade Terabox (P1):**
-    -   Implementada uma sincronização local que cria a estrutura de pastas para motoristas, veículos e relatórios (agora obsoleta mas funcional como fallback/organizador local).
--   **Correções de Bugs e Melhorias de UI (P1):**
-    -   **Email:** Corrigido o erro  e  ao usar SMTP com SSL (porta 465).
-    -   **UI:** Removido o submenu Relatórios da navegação. Adicionado um popup de confirmação com campos editáveis antes do upload de ficheiros de importação.
-    -   **Fluxo de Trabalho:** Corrigido o botão Enviar por WhatsApp na página de resumo semanal para usar a API da plataforma em vez de abrir um link externo.
-    -   **Configuração:** Adicionados campos e botões na página de Integrações para reiniciar o serviço WhatsApp e configurar as credenciais do Terabox (incluindo para a API da nuvem).
+-   **Integração com API do Terabox (Cloud):** A lógica de serviço em  foi implementada para usar a API não oficial, e a UI em  foi atualizada com botões de teste e um guia visual para obter o cookie.
+-   **Correções de Bugs de Email:** Resolvidos os erros  em dicionários e o bug que usava SendGrid em vez do SMTP configurado pelo parceiro (, ).
+-   **Melhorias de UI/UX:**
+    -   **Guias Visuais:** Criados guias interativos para obter o cookie do Terabox () e para configurar App Passwords do Gmail ().
+    -   **Verificar Recibos:** Página  foi reescrita para permitir seleção e alteração de status em massa.
+    -   **Resumo Semanal:** Corrigido o alinhamento da linha de totais em .
+    -   **Menu:** Reorganizado o menu Financeiro e removido o link duplicado em .
+-   **Gestão de Utilizadores:**
+    -   Corrigida a página  que não exibia utilizadores.
+    -   Implementada a funcionalidade para o administrador visualizar e validar documentos de utilizadores, incluindo o endpoint de backend .
+-   **Notificações:** Melhorada a notificação de interesse em veículo para incluir todos os dados do formulário ().
+-   **Serviço WhatsApp:** Adicionada a funcionalidade de restauro de sessão no arranque em .
 
 **Earlier issues found/mentioned but not fixed**
 -   **UI/UX (P2):** O widget Próximos Eventos no dashboard ainda não está limitado a 3 itens.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Refatoração do Backend ( monolítico).
--   **Recurrence count:** 9
--   **Status:** IN PROGRESS (A refatoração continua a ser uma tarefa pendente de alta importância para a saúde do projeto).
+-   **Recurrence count:** 10
+-   **Status:** NOT STARTED (nesta sessão).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Arquitetura de Microserviços:** Foi introduzido um serviço Node.js () para lidar com uma tarefa específica (conexão com WhatsApp Web), comunicando com o backend principal (FastAPI) via REST API.
--   **Integração com :** Utilização da biblioteca para criar uma ponte com o WhatsApp Web, gerando QR codes para autenticação e enviando mensagens programaticamente.
--   **Autenticação Multi-Sessão:** Implementação de um sistema onde cada  corresponde a uma sessão de cliente WhatsApp separada e persistente, permitindo que vários utilizadores usem a funcionalidade simultaneamente com as suas próprias contas.
--   **Pivot de Requisitos:** O agente demonstrou capacidade de mudar drasticamente a abordagem técnica (de WhatsApp Business API para WhatsApp Web; de simulação local do Terabox para API na nuvem) com base no feedback direto do utilizador.
--   **Depuração Cross-System:** Depuração de problemas que abrangem o frontend (React), o backend (FastAPI) e o novo microserviço (Node.js), como o fluxo de envio de mensagens.
+-   **Integração com API não oficial:** O agente implementou com sucesso a interação com a API do Terabox usando um cookie de sessão, uma solução prática quando uma API oficial não está disponível.
+-   **Guias de UI interativos:** Foram criados guias visuais passo a passo dentro de modais para orientar os utilizadores em processos técnicos, melhorando significativamente a experiência do utilizador.
+-   **Ações em Massa no Frontend:** A página  foi refatorada para suportar operações em massa, usando um estado para gerir itens selecionados e uma barra de ações dedicada.
+-   **Depuração orientada a dados:** O agente resolveu bugs complexos (especialmente de email) ao analisar logs, IDs de utilizador e o estado da base de dados, identificando inconsistências de dados como a causa raiz.
 
 **key DB schema**
--   **parceiros:** Armazena as configurações de cada parceiro, incluindo as credenciais para integrações. Foi adicionado um campo para .
--   **motoristas:** Contém os dados dos motoristas, incluindo os campos  e , que são usados como número de destino para as notificações.
+-   **users / parceiros:** Armazenam o objeto  com as definições SMTP. Foi corrigida uma inconsistência onde o código procurava .
+-   **documentos:** O schema suporta a validação, e um novo endpoint permite que um administrador altere o  de um documento para validado.
 
 **All files of reference**
--   : **Novo ficheiro** onde a lógica da API do Terabox deve ser implementada.
--   : Ficheiro modificado para adicionar endpoints de teste e sincronização com a nuvem.
--   : Ficheiro central da UI, extensivamente modificado para suportar os novos fluxos de WhatsApp e Terabox Cloud.
--   : **Novo ficheiro**, coração da integração com o WhatsApp.
--   : Ficheiro reescrito para atuar como um proxy para o serviço Node.js.
--   : Ficheiro modificado para corrigir um bug no endpoint de teste de email.
--   : Modificado para corrigir a ação de envio de WhatsApp.
--   : Modificado para adicionar um diálogo de confirmação.
--   : Modificado para corrigir a lógica de SMTP sobre SSL.
+-    (Ficheiro principal da última tarefa)
+-   
+-   
+-   
+-   
+-   
+-   
+-   
+-   
+-   
+-   
 
 **Critical Info for New Agent**
--   **O foco principal é a integração com a API oficial do Terabox.** A implementação anterior de simulação local está obsoleta e deve ser ignorada, exceto para referência. A nova lógica deve ser construída em .
--   **A integração do WhatsApp é complexa.** Envolve um microserviço separado em Node.js. Qualquer depuração relacionada ao WhatsApp deve considerar os logs do 3c9ec-ddd5-400c-b79d-61b651e7b3fd] Sending message to 351965100749@c.us
-WhatsApp Web Service (Multi-Session) running on port 3001
-Creating new WhatsApp client for partner: c693c9ec-ddd5-400c-b79d-61b651e7b3fd
-WhatsApp authenticated for partner c693c9ec-ddd5-400c-b79d-61b651e7b3fd
-WhatsApp ready for partner c693c9ec-ddd5-400c-b79d-61b651e7b3fd
-[c693c9ec-ddd5-400c-b79d-61b651e7b3fd] Sending message to 351965100749@c.us
-WhatsApp Web Service (Multi-Session) running on port 3001
-Creating new WhatsApp client for partner: c693c9ec-ddd5-400c-b79d-61b651e7b3fd
-WhatsApp authenticated for partner c693c9ec-ddd5-400c-b79d-61b651e7b3fd
-WhatsApp ready for partner c693c9ec-ddd5-400c-b79d-61b651e7b3fd
-[c693c9ec-ddd5-400c-b79d-61b651e7b3fd] Sending message to 351965100749@c.us
-[c693c9ec-ddd5-400c-b79d-61b651e7b3fd] Message sent to 351965100749
-WhatsApp Web Service (Multi-Session) running on port 3001
-Creating new WhatsApp client for partner: c693c9ec-ddd5-400c-b79d-61b651e7b3fd
-WhatsApp authenticated for partner c693c9ec-ddd5-400c-b79d-61b651e7b3fd
-WhatsApp ready for partner c693c9ec-ddd5-400c-b79d-61b651e7b3fd
-Restarting WhatsApp for partner c693c9ec-ddd5-400c-b79d-61b651e7b3fd...
-Creating new WhatsApp client for partner: c693c9ec-ddd5-400c-b79d-61b651e7b3fd
-WhatsApp authenticated for partner c693c9ec-ddd5-400c-b79d-61b651e7b3fd
-WhatsApp ready for partner c693c9ec-ddd5-400c-b79d-61b651e7b3fd
-[c693c9ec-ddd5-400c-b79d-61b651e7b3fd] Sending message to 351915498051@c.us
-[c693c9ec-ddd5-400c-b79d-61b651e7b3fd] Message sent to 351915498051
-WhatsApp Web Service (Multi-Session) running on port 3001 e a comunicação entre o backend Python e o serviço Node.js.
--   **A persistência da sessão do WhatsApp é um risco.** O novo agente deve priorizar a verificação e correção do restauro automático das sessões para garantir a estabilidade.
--   **Dados de teste inconsistentes:** Existe uma discrepância entre os dados associados às contas de teste (, ) e a conta real do utilizador (). Ao testar, certifique-se de que está a usar uma conta de utilizador que tenha dados associados a ela para evitar falsos negativos (como 0 documentos sincronizados).
+-   **Inconsistência de Dados é uma fonte de bugs:** Vários bugs foram causados por IDs de utilizador ou parceiro que estavam desatualizados no frontend ou não existiam na base de dados. Antes de assumir que uma funcionalidade está quebrada, verifique sempre se os IDs usados nos requests  ou vistos nos logs correspondem aos IDs atuais na base de dados ().
+-   **Integração Terabox é Não-Oficial:** A funcionalidade depende de um cookie de sessão () e pode quebrar se o Terabox alterar a sua API web interna. A implementação está funcional, mas é frágil por natureza.
+-   **Duplicidade de Serviços de Email:** Existem duas implementações de serviço de email ( para SMTP síncrono e  para SendGrid assíncrono). A maioria das chamadas foi corrigida para usar o SMTP do parceiro, mas esta dualidade pode causar confusão ou bugs futuros.
 
 **documents and test reports created in this job**
--    (atualizado múltiplas vezes ao longo da sessão)
+-    (atualizado)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  : Reportou 4 bugs/pedidos. **Status: COMPLETED**
-2.  : Reportou bug no envio de WhatsApp. **Status: COMPLETED**
-3.  : Pedido para usar o número de telefone da ficha do motorista. **Status: COMPLETED**
-4.  : Reportou bug no envio de email. **Status: COMPLETED**
-5.  : Confirmação do requisito de multi-tenancy para integrações. **Status: COMPLETED** (Verificado)
-6.  : Reportou que a sincronização do Terabox não estava a funcionar como esperado. **Status: IN PROGRESS** (Levou à descoberta que era uma simulação local e que a estrutura de pastas precisava ser criada).
-7.  : Pedido para tentar a sincronização novamente. **Status: COMPLETED** (A sincronização local foi melhorada para criar pastas).
-8.  : **Pedido crítico** que mudou o rumo da implementação do Terabox para a API oficial da nuvem. **Status: IN PROGRESS**
-9.  : Pedido para mudar a abordagem da integração do WhatsApp. **Status: COMPLETED**
-10. : Pedidos de melhoria após a primeira implementação do WhatsApp Web. **Status: COMPLETED**
+1.  : Pedido para adicionar funcionalidades avançadas de gestão de utilizadores. **Status: IN PROGRESS**.
+2.  : Pedido para o admin validar documentos. **Status: COMPLETED**.
+3.  : Reportou que a página de utilizadores estava vazia. **Status: COMPLETED**.
+4.  : Pedido para remover um item de menu duplicado. **Status: COMPLETED**.
+5.  : Pedido para melhorar notificações e reordenar um menu. **Status: COMPLETED**.
+6.  : Confirmou que o email funcionava e pediu 3 novas funcionalidades de UI. **Status: COMPLETED**.
+7.  : Reportou que o bug de email persistia, levando a uma investigação mais profunda. **Status: COMPLETED**.
+8.  : Pedido de ajuda com o bug de email. **Status: COMPLETED**.
+9.  : Primeiro relato do bug de SendGrid vs. SMTP. **Status: COMPLETED**.
+10. : Reportou o erro . **Status: COMPLETED**.
 
 **Project Health Check:**
--   **In Progress:**
-    -   A integração com a API oficial do Terabox está em fase inicial de implementação. A UI e os endpoints de backend existem, mas a lógica de serviço está vazia.
--   **Needs Refactoring:**
-    -    continua a ser um ficheiro monolítico e uma fonte de dívida técnica.
-    -   A persistência da sessão do serviço WhatsApp () precisa ser reforçada para garantir estabilidade.
+-   **Broken:** A integridade dos dados entre o frontend e a base de dados é um ponto fraco. IDs desatualizados causam erros de difícil depuração.
+-   **Mocked:** N/A.
 
 **3rd Party Integrations**
--   **:** Usado no microserviço Node.js para conectar ao WhatsApp Web.
--   **Terabox Official API:** Planeada, mas ainda não implementada. Requer um  para autenticação.
--   **ReportLab, Pillow, openpyxl, httpx:** Em uso no backend Python.
+-   **:** Para integração com o WhatsApp Web (via microserviço Node.js).
+-   **Terabox Unofficial API:** Para sincronização de ficheiros na nuvem (requer ).
+-   **ReportLab, Pillow, openpyxl, httpx:** Dependências do backend Python.
 -   **Playwright:** Planeado para automações futuras.
 
 **Testing status**
--   **Testing agent used after significant changes:** NO (Não foi usado nesta sessão).
+-   **Testing agent used after significant changes:** NO
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** Nenhum.
--   **Known regressions:** A persistência da sessão do WhatsApp parece ter regredido ou nunca foi totalmente estável.
+-   **Test files created:** None
+-   **Known regressions:** A estabilidade da sessão do WhatsApp, embora melhorada, continua a ser um risco potencial.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
--   **Parceiro (com dados):**  /  (ID: )
--   **Parceiro (conta do utilizador):**  /  (ID: )
+-   **Parceiro (conta principal do utilizador):**  /  (ID na BD: )
 
 **What agent forgot to execute**
--   A pequena melhoria de UI para limitar o widget Próximos Eventos no dashboard a 3 itens, solicitada em sessões anteriores, continua pendente.</analysis>
+-   A tarefa de UI para limitar o widget Próximos Eventos no dashboard a 3 itens continua pendente.</analysis>
