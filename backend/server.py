@@ -12659,6 +12659,10 @@ async def sincronizar_plataforma_manual(
         logger.error(f"Erro ao sincronizar {plataforma}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ==================================================
+# LOGS SINCRONIZAÇÃO - MOVIDO PARA routes/sincronizacao.py
+# ==================================================
+'''
 @app.get("/api/logs-sincronizacao")
 async def listar_logs_sincronizacao(
     parceiro_id: Optional[str] = None,
@@ -12680,6 +12684,7 @@ async def listar_logs_sincronizacao(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+'''
 
 async def agendar_sincronizacao(credencial_id: str, horario: str, frequencia_dias: int):
     """Agenda sincronização automática"""
