@@ -110,6 +110,7 @@ import Automacao from "@/pages/Automacao";
 import FichaMotorista from "@/pages/FichaMotorista";
 import ConfiguracoesParceiro from "@/pages/ConfiguracoesParceiro";
 import AutomacaoRPA from "@/pages/AutomacaoRPA";
+import RPASimplificado from "@/pages/RPASimplificado";
 import AdminPlanosMotorista from "@/pages/AdminPlanosMotorista";
 import Terabox from "@/pages/Terabox";
 import AdminFornecedores from "@/pages/AdminFornecedores";
