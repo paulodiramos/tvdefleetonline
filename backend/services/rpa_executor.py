@@ -350,10 +350,372 @@ class ViaVerdeRPA(RPAExecutor):
     
     URLS = {
         "home": "https://www.viaverde.pt/empresas",
-        "area_reservada": "https://www.viaverde.pt/area-reservada",
-        "extratos": "https://www.viaverde.pt/area-reservada/extratos-e-movimentos",
-        "movimentos": "https://www.viaverde.pt/area-reservada/consultar-extratos-e-movimentos"
+        "extratos": "https://www.viaverde.pt/empresas/minha-via-verde/extratos-e-movimentos"
     }
+    
+    async def login(self, username: str, password: str) -> bool:
+        """Fazer login na Via Verde Empresas via popup"""
+        try:
+            self.log("A aceder à página Via Verde Empresas...")
+            await self.page.goto(self.URLS["home"], wait_until="networkidle")
+            await self.page.wait_for_timeout(2000)
+            await self.screenshot("viaverde_home")
+            
+            # Fechar banner de cookies se existir
+            try:
+                cookie_btn = await self.page.query_selector("button:has-text('Aceitar'), #onetrust-accept-btn-handler, [id*='cookie'] button")
+                if cookie_btn:
+                    await cookie_btn.click()
+                    self.log("Banner de cookies fechado")
+                    await self.page.wait_for_timeout(500)
+            except:
+                pass
+            
+            # Clicar no botão "Login" no header (canto superior direito)
+            self.log("A clicar no botão Login do header...")
+            try:
+                # O botão Login está no header, texto branco em fundo escuro
+                login_btn = await self.page.wait_for_selector("header button:has-text('Login'), nav button:has-text('Login'), button:has-text('Login')", timeout=5000)
+                await login_btn.click()
+                self.log("Botão Login clicado - a abrir popup")
+                await self.page.wait_for_timeout(2000)
+            except Exception as e:
+                self.log(f"Erro ao clicar no Login: {e}", "error")
+                await self.screenshot("viaverde_no_login_btn")
+                return False
+            
+            await self.screenshot("viaverde_popup_open")
+            
+            # Aguardar pelo popup "A Minha Via Verde"
+            self.log("A aguardar popup 'A Minha Via Verde'...")
+            
+            # O popup tem: Email field, Password field (com ícone de olho), botão Login verde
+            # Preencher Email
+            self.log("A preencher email...")
+            try:
+                # Encontrar campo de email no popup
+                email_input = await self.page.wait_for_selector("input[type='email'], input[name='email'], input[placeholder*='Email']", timeout=5000)
+                await email_input.click()
+                await email_input.fill(username)
+                self.log(f"Email preenchido: {username[:3]}***")
+            except Exception as e:
+                self.log(f"Erro ao preencher email: {e}", "error")
+                await self.screenshot("viaverde_no_email")
+                return False
+            
+            await self.page.wait_for_timeout(300)
+            
+            # Preencher Password (campo com ícone de olho à direita)
+            self.log("A preencher password...")
+            try:
+                password_input = await self.page.wait_for_selector("input[type='password']", timeout=5000)
+                await password_input.click()
+                await password_input.fill(password)
+                self.log("Password preenchida")
+            except Exception as e:
+                self.log(f"Erro ao preencher password: {e}", "error")
+                await self.screenshot("viaverde_no_password")
+                return False
+            
+            await self.page.wait_for_timeout(300)
+            await self.screenshot("viaverde_credentials_filled")
+            
+            # Clicar no botão Login verde dentro do popup
+            self.log("A clicar no botão Login do popup...")
+            try:
+                # Botão verde com texto "Login" dentro do modal
+                # Usar seletor mais específico para o botão dentro do popup (não o do header)
+                submit_buttons = await self.page.query_selector_all("button:has-text('Login')")
+                
+                # Encontrar o botão verde (segundo botão Login na página, dentro do modal)
+                for btn in submit_buttons:
+                    is_visible = await btn.is_visible()
+                    if is_visible:
+                        # Verificar se é o botão do popup (geralmente tem classe btn ou é verde)
+                        btn_class = await btn.get_attribute("class") or ""
+                        btn_text = await btn.inner_text()
+                        
+                        # Ignorar o botão do header (geralmente menor ou tem classe diferente)
+                        if "Login" in btn_text:
+                            await btn.click()
+                            self.log("Botão Login do popup clicado")
+                            break
+                
+            except Exception as e:
+                self.log(f"Erro ao clicar submit, a tentar Enter: {e}", "warning")
+                await self.page.keyboard.press("Enter")
+            
+            # Aguardar redirecionamento após login
+            self.log("A aguardar login...")
+            await self.page.wait_for_timeout(5000)
+            await self.screenshot("viaverde_after_login")
+            
+            # Verificar se login foi bem sucedido
+            # Após login, URL deve conter "minha-via-verde"
+            current_url = self.page.url
+            page_content = await self.page.content()
+            
+            login_success = (
+                "minha-via-verde" in current_url or
+                "extratos" in current_url or
+                "Sair" in page_content or
+                "Os meus dados" in page_content or
+                "Extratos e Movimentos" in page_content
+            )
+            
+            if login_success:
+                self.log("✅ Login Via Verde bem sucedido!")
+                return True
+            else:
+                # Verificar mensagens de erro
+                try:
+                    error_el = await self.page.query_selector(".error, .alert-danger, [class*='error']")
+                    if error_el:
+                        error_text = await error_el.inner_text()
+                        self.log(f"Erro de login: {error_text}", "error")
+                except:
+                    pass
+                
+                self.log(f"Login pode ter falhado. URL: {current_url}", "warning")
+                return False
+                
+        except Exception as e:
+            self.log(f"Erro no login Via Verde: {str(e)}", "error")
+            await self.screenshot("viaverde_login_error")
+            return False
+    
+    async def extrair_portagens(self, data_inicio: str = None, data_fim: str = None) -> List[Dict]:
+        """Extrair movimentos de portagens com data, hora, local e valor"""
+        try:
+            # Navegar para Extratos e Movimentos
+            self.log("A navegar para Extratos e Movimentos...")
+            
+            # Tentar clicar no menu "Extratos e Movimentos" ou ir direto ao URL
+            try:
+                menu_link = await self.page.query_selector("a:has-text('Extratos e Movimentos'), [href*='extratos']")
+                if menu_link:
+                    await menu_link.click()
+                    self.log("Menu 'Extratos e Movimentos' clicado")
+                    await self.page.wait_for_timeout(3000)
+                else:
+                    await self.page.goto(self.URLS["extratos"], wait_until="networkidle")
+            except:
+                await self.page.goto(self.URLS["extratos"], wait_until="networkidle")
+            
+            await self.page.wait_for_timeout(2000)
+            await self.screenshot("viaverde_extratos_page")
+            
+            # Clicar na tab "Movimentos" (a segunda tab)
+            self.log("A clicar na tab Movimentos...")
+            try:
+                movimentos_tab = await self.page.query_selector("button:has-text('Movimentos'), a:has-text('Movimentos'), [role='tab']:has-text('Movimentos')")
+                if movimentos_tab:
+                    await movimentos_tab.click()
+                    self.log("Tab Movimentos clicada")
+                    await self.page.wait_for_timeout(2000)
+            except Exception as e:
+                self.log(f"Tab Movimentos não encontrada: {e}", "warning")
+            
+            await self.screenshot("viaverde_movimentos_tab")
+            
+            # Aplicar filtros de data se fornecidos
+            if data_inicio or data_fim:
+                self.log("A aplicar filtros de data...")
+                
+                # Campo "De" (data início)
+                if data_inicio:
+                    try:
+                        # Clicar no ícone de calendário do campo "De"
+                        de_calendar = await self.page.query_selector("input[placeholder*='De'], input[name*='dataInicio'], input[id*='from']")
+                        if de_calendar:
+                            await de_calendar.click()
+                            await de_calendar.fill(data_inicio)
+                            self.log(f"Data início definida: {data_inicio}")
+                    except Exception as e:
+                        self.log(f"Erro ao definir data início: {e}", "warning")
+                
+                # Campo "Até" (data fim)
+                if data_fim:
+                    try:
+                        ate_calendar = await self.page.query_selector("input[placeholder*='Até'], input[name*='dataFim'], input[id*='to']")
+                        if ate_calendar:
+                            await ate_calendar.click()
+                            await ate_calendar.fill(data_fim)
+                            self.log(f"Data fim definida: {data_fim}")
+                    except Exception as e:
+                        self.log(f"Erro ao definir data fim: {e}", "warning")
+                
+                # Clicar no botão "Filtrar" (verde)
+                try:
+                    filtrar_btn = await self.page.query_selector("button:has-text('Filtrar')")
+                    if filtrar_btn:
+                        await filtrar_btn.click()
+                        self.log("Botão Filtrar clicado")
+                        await self.page.wait_for_timeout(3000)
+                except Exception as e:
+                    self.log(f"Botão Filtrar não encontrado: {e}", "warning")
+            
+            await self.screenshot("viaverde_filtered")
+            
+            # Extrair dados da tabela de movimentos
+            portagens = []
+            self.log("A extrair movimentos da tabela...")
+            
+            # Procurar tabela de movimentos
+            try:
+                rows = await self.page.query_selector_all("table tbody tr, .movimento-item, [class*='transaction-row']")
+                self.log(f"Encontradas {len(rows)} linhas de movimentos")
+                
+                for idx, row in enumerate(rows):
+                    try:
+                        row_text = await row.inner_text()
+                        
+                        # Ignorar linhas vazias ou de cabeçalho
+                        if not row_text.strip() or len(row_text) < 10:
+                            continue
+                        
+                        cells = await row.query_selector_all("td")
+                        
+                        if len(cells) >= 3:
+                            # Extrair data e hora
+                            date_text = ""
+                            time_text = ""
+                            
+                            cell_0_text = await cells[0].inner_text() if len(cells) > 0 else ""
+                            
+                            # Procurar padrão de data DD/MM/YYYY
+                            date_match = re.search(r'(\d{2}/\d{2}/\d{4})', cell_0_text)
+                            if date_match:
+                                date_text = date_match.group(1)
+                            
+                            # Procurar padrão de hora HH:MM
+                            time_match = re.search(r'(\d{2}:\d{2})', cell_0_text)
+                            if time_match:
+                                time_text = time_match.group(1)
+                            
+                            # Extrair descrição/local
+                            desc_text = ""
+                            for i in range(1, min(3, len(cells))):
+                                cell_text = await cells[i].inner_text()
+                                if cell_text and not re.match(r'^[\d,.\s€-]+$', cell_text.strip()):
+                                    desc_text = cell_text.strip()
+                                    break
+                            
+                            # Extrair matrícula
+                            matricula = ""
+                            for cell in cells:
+                                cell_text = await cell.inner_text()
+                                mat_match = re.search(r'([A-Z]{2}-\d{2}-[A-Z]{2}|\d{2}-[A-Z]{2}-\d{2})', cell_text)
+                                if mat_match:
+                                    matricula = mat_match.group(1)
+                                    break
+                            
+                            # Extrair valor (última célula geralmente)
+                            valor = 0
+                            for cell in reversed(cells):
+                                cell_text = await cell.inner_text()
+                                valor_match = re.search(r'([\d.,]+)\s*€|€\s*([\d.,]+)|([\d]+[,.][\d]{2})', cell_text)
+                                if valor_match:
+                                    valor_str = valor_match.group(1) or valor_match.group(2) or valor_match.group(3)
+                                    valor_str = valor_str.replace('.', '').replace(',', '.')
+                                    try:
+                                        valor = float(valor_str)
+                                        break
+                                    except:
+                                        pass
+                            
+                            if date_text or valor > 0:
+                                portagem = {
+                                    "plataforma": "viaverde",
+                                    "tipo": "portagem",
+                                    "data": date_text,
+                                    "hora": time_text,
+                                    "data_hora": f"{date_text} {time_text}".strip(),
+                                    "descricao": desc_text,
+                                    "local": desc_text,
+                                    "matricula": matricula,
+                                    "valor": valor,
+                                    "moeda": "EUR",
+                                    "extraido_em": datetime.now(timezone.utc).isoformat()
+                                }
+                                portagens.append(portagem)
+                                
+                                if idx < 5:  # Log apenas primeiros 5
+                                    self.log(f"  → {date_text} {time_text} | {matricula} | {desc_text[:25]}... | {valor}€")
+                                    
+                    except Exception as e:
+                        self.log(f"Erro ao processar linha {idx}: {e}", "warning")
+                        
+            except Exception as e:
+                self.log(f"Erro ao extrair tabela: {e}", "error")
+            
+            # Tentar exportar CSV se disponível
+            await self._tentar_exportar_csv()
+            
+            self.dados_extraidos.extend(portagens)
+            self.log(f"✅ Total de {len(portagens)} portagens extraídas")
+            await self.screenshot("viaverde_extraction_complete")
+            
+            return portagens
+            
+        except Exception as e:
+            self.log(f"Erro ao extrair portagens: {str(e)}", "error")
+            await self.screenshot("viaverde_error")
+            return []
+    
+    async def _tentar_exportar_csv(self):
+        """Tentar exportar dados para CSV/Excel"""
+        try:
+            self.log("A tentar exportar CSV...")
+            
+            # Procurar botão "Exportar"
+            exportar_btn = await self.page.query_selector("button:has-text('Exportar'), a:has-text('Exportar')")
+            if exportar_btn:
+                await exportar_btn.click()
+                self.log("Botão Exportar clicado")
+                await self.page.wait_for_timeout(1000)
+                
+                # Clicar em "Excel" no dropdown
+                excel_option = await self.page.query_selector("button:has-text('Excel'), a:has-text('Excel'), li:has-text('Excel')")
+                if excel_option:
+                    await excel_option.click()
+                    self.log("Exportação Excel iniciada")
+                    await self.page.wait_for_timeout(3000)
+                    await self.screenshot("viaverde_export_done")
+        except Exception as e:
+            self.log(f"Exportação CSV não disponível: {e}", "warning")
+    
+    async def extrair_consumos_por_matricula(self) -> List[Dict]:
+        """Extrair consumos agrupados por matrícula/veículo"""
+        try:
+            self.log("A extrair consumos por matrícula...")
+            
+            # Primeiro extrair todas as portagens
+            portagens = await self.extrair_portagens()
+            
+            # Agrupar por matrícula
+            consumos_por_matricula = {}
+            for p in portagens:
+                mat = p.get("matricula", "SEM_MATRICULA")
+                if mat not in consumos_por_matricula:
+                    consumos_por_matricula[mat] = {
+                        "matricula": mat,
+                        "total_valor": 0,
+                        "total_movimentos": 0,
+                        "movimentos": []
+                    }
+                consumos_por_matricula[mat]["total_valor"] += p.get("valor", 0)
+                consumos_por_matricula[mat]["total_movimentos"] += 1
+                consumos_por_matricula[mat]["movimentos"].append(p)
+            
+            resultado = list(consumos_por_matricula.values())
+            self.log(f"✅ Consumos agrupados por {len(resultado)} matrículas")
+            
+            return resultado
+            
+        except Exception as e:
+            self.log(f"Erro ao extrair consumos por matrícula: {str(e)}", "error")
+            return []
     
     async def login(self, username: str, password: str) -> bool:
         """Fazer login na Via Verde Empresas via popup"""
