@@ -287,3 +287,46 @@ async def validate_user_document(
     
     return {"message": "Documento atualizado com sucesso", "validado": validado}
 
+
+@router.put("/users/{user_id}/revoke")
+async def revoke_user(
+    user_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Revogar utilizador - desativar completamente o acesso"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas Admin")
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilizador não encontrado")
+    
+    # Set status to revoked and approved to False
+    result = await db.users.update_one(
+        {"id": user_id},
+        {
+            "$set": {
+                "status": "revoked",
+                "approved": False,
+                "revoked_by": current_user["id"],
+                "revoked_at": datetime.now(timezone.utc).isoformat()
+            }
+        }
+    )
+    
+    # Also update in related collections
+    if user.get("role") == "motorista":
+        await db.motoristas.update_one(
+            {"$or": [{"id": user_id}, {"email": user.get("email")}]},
+            {"$set": {"status": "revoked", "ativo": False}}
+        )
+    elif user.get("role") == "parceiro":
+        await db.parceiros.update_one(
+            {"$or": [{"id": user_id}, {"email": user.get("email")}]},
+            {"$set": {"status": "revoked", "ativo": False}}
+        )
+    
+    logger.info(f"User {user_id} revoked by {current_user['id']}")
+    return {"message": "Utilizador revogado com sucesso"}
+
+
