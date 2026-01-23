@@ -317,7 +317,7 @@ class TestRPAUpload:
         files = {"file": ("test_cartrack.csv", csv_content, "text/csv")}
         
         response = requests.post(
-            f"{BASE_URL}/api/rpa/upload/gps_cartrack",
+            f"{BASE_URL}/api/rpa/upload/gps_cartrack?parceiro_id={TEST_PARCEIRO_ID}",
             headers=headers,
             files=files
         )
