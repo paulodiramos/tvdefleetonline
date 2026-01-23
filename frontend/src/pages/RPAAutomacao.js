@@ -454,15 +454,20 @@ const RPAAutomacao = ({ user, onLogout }) => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
                           <div 
-                            className="w-12 h-12 rounded-lg flex items-center justify-center text-white"
+                            className="w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl"
                             style={{ backgroundColor: plat.cor }}
                           >
-                            {getPlataformaIcon(plat.id)}
+                            {plat.is_custom ? plat.icone : getPlataformaIcon(plat.id)}
                           </div>
                           <div>
                             <CardTitle className="text-lg flex items-center gap-2">
                               {plat.nome}
                               {configurada && <CheckCircle className="w-4 h-4 text-green-500" />}
+                              {plat.is_custom && (
+                                <Badge variant="outline" className="text-xs text-purple-600 border-purple-300">
+                                  Custom
+                                </Badge>
+                              )}
                             </CardTitle>
                             <CardDescription>{plat.descricao}</CardDescription>
                           </div>
