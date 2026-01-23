@@ -183,16 +183,34 @@ _Este contacto foi recebido através da página pública de veículos._
                 }
                 await db.mensagens.insert_one(mensagem)
                 
-                # Criar notificação
+                # Criar notificação com todos os dados de contacto
+                telefone = contacto_data.get('telefone', 'Não fornecido')
+                email_contacto = contacto_data.get('email', 'Não fornecido')
+                nome_contacto = contacto_data.get('nome', 'Desconhecido')
+                
                 notificacao = {
                     "id": str(uuid.uuid4()),
                     "user_id": destinatario_id,
                     "tipo": "interesse_veiculo",
-                    "titulo": f"Novo interesse: {vehicle.get('marca')} {vehicle.get('modelo')}",
-                    "mensagem": f"{contacto_data.get('nome')} demonstrou interesse no veículo {vehicle.get('matricula')}",
+                    "titulo": f"🚗 Novo interesse: {vehicle.get('marca')} {vehicle.get('modelo')}",
+                    "mensagem": f"""📋 {nome_contacto} demonstrou interesse no veículo {vehicle.get('matricula')}
+
+📞 Telefone: {telefone}
+📧 Email: {email_contacto}
+
+💬 Mensagem: {contacto_data.get('mensagem', 'Sem mensagem adicional.')[:200]}""",
                     "link": f"/mensagens?conversa={conversa_id}",
                     "lida": False,
-                    "criada_em": datetime.now(timezone.utc).isoformat()
+                    "criada_em": datetime.now(timezone.utc).isoformat(),
+                    "dados_contacto": {
+                        "nome": nome_contacto,
+                        "telefone": telefone,
+                        "email": email_contacto,
+                        "mensagem": contacto_data.get('mensagem'),
+                        "veiculo_matricula": vehicle.get('matricula'),
+                        "veiculo_marca": vehicle.get('marca'),
+                        "veiculo_modelo": vehicle.get('modelo')
+                    }
                 }
                 await db.notificacoes.insert_one(notificacao)
             
