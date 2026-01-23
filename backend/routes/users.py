@@ -162,19 +162,24 @@ async def update_user_status(
     status_data: UserStatusUpdate,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Ativar/desativar um utilizador"""
+    """Bloquear/desbloquear um utilizador"""
     if current_user["role"] != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Apenas Admin")
     
+    # Validate status
+    if status_data.status not in ['active', 'blocked']:
+        raise HTTPException(status_code=400, detail="Status inválido. Use 'active' ou 'blocked'")
+    
     result = await db.users.update_one(
         {"id": user_id},
-        {"$set": {"ativo": status_data.ativo}}
+        {"$set": {"status": status_data.status}}
     )
     
     if result.modified_count == 0:
         raise HTTPException(status_code=404, detail="Utilizador não encontrado")
     
-    status_str = "ativado" if status_data.ativo else "desativado"
+    status_str = "bloqueado" if status_data.status == 'blocked' else "ativado"
+    logger.info(f"User {user_id} status changed to {status_data.status} by {current_user['id']}")
     return {"message": f"Utilizador {status_str}"}
 
 
