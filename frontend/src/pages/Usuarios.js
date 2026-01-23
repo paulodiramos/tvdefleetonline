@@ -606,6 +606,106 @@ const Usuarios = ({ user, onLogout }) => {
           </Card>
         </div>
 
+        {/* Filtros Avançados */}
+        <Card className="mb-8">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <Shield className="w-4 h-4" />
+              Filtros de Pesquisa
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              {/* Pesquisa por texto */}
+              <div>
+                <Label className="text-xs text-slate-500">Pesquisar</Label>
+                <Input
+                  placeholder="Nome, email ou telefone..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              
+              {/* Filtro por Perfil/Role */}
+              <div>
+                <Label className="text-xs text-slate-500">Perfil</Label>
+                <select
+                  value={filterRole}
+                  onChange={(e) => setFilterRole(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
+                >
+                  <option value="">Todos os perfis</option>
+                  <option value="admin">Admin</option>
+                  <option value="gestao">Gestor</option>
+                  <option value="parceiro">Parceiro</option>
+                  <option value="motorista">Motorista</option>
+                </select>
+              </div>
+              
+              {/* Filtro por Parceiro */}
+              <div>
+                <Label className="text-xs text-slate-500">Parceiro</Label>
+                <select
+                  value={filterParceiro}
+                  onChange={(e) => setFilterParceiro(e.target.value)}
+                  className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
+                >
+                  <option value="">Todos os parceiros</option>
+                  {allParceiros.map(p => (
+                    <option key={p.id} value={p.id}>{p.name || p.email}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Filtro por Data De */}
+              <div>
+                <Label className="text-xs text-slate-500">Data de</Label>
+                <Input
+                  type="date"
+                  value={filterDateFrom}
+                  onChange={(e) => setFilterDateFrom(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              
+              {/* Filtro por Data Até */}
+              <div>
+                <Label className="text-xs text-slate-500">Data até</Label>
+                <Input
+                  type="date"
+                  value={filterDateTo}
+                  onChange={(e) => setFilterDateTo(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            
+            {/* Botão Limpar Filtros */}
+            {(search || filterRole || filterParceiro || filterDateFrom || filterDateTo) && (
+              <div className="mt-3 pt-3 border-t">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setSearch('');
+                    setFilterRole('');
+                    setFilterParceiro('');
+                    setFilterDateFrom('');
+                    setFilterDateTo('');
+                  }}
+                >
+                  <RefreshCw className="w-3 h-3 mr-1" />
+                  Limpar Filtros
+                </Button>
+                <span className="ml-3 text-sm text-slate-500">
+                  {getFilteredUsers(registeredUsers).length} resultado(s)
+                </span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Pending Users Table */}
         {pendingUsers.length > 0 && (
           <Card className="mb-8">
