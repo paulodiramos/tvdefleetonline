@@ -130,8 +130,17 @@ async def logout_whatsapp(current_user: Dict = Depends(get_current_user)):
         async with httpx.AsyncClient() as client:
             response = await client.post(f"{WHATSAPP_SERVICE_URL}/logout/{parceiro_id}", timeout=30.0)
             return response.json()
+    except httpx.ConnectError:
+        return {
+            "success": False,
+            "error": "Serviço WhatsApp não está disponível neste ambiente"
+        }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Erro ao desconectar WhatsApp: {e}")
+        return {
+            "success": False,
+            "error": str(e)
+        }
 
 
 @router.post("/whatsapp/restart")
