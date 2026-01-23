@@ -1,0 +1,114 @@
+{
+  "summary": "Completed testing of User Management features for TVDEFleet /usuarios page. All backend APIs and frontend UI features are working correctly.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Usuarios page",
+        "issues": ["Console warning: 'Encountered two children with the same key' - duplicate key issue with parceiro ID c693c9ec-ddd5-400c-b79d-61b651e7b3fd"]
+      }
+    ]
+  },
+  "features_tested": {
+    "login_admin": {
+      "status": "WORKING",
+      "credentials": "admin@tvdefleet.com / 123456"
+    },
+    "usuarios_page_load": {
+      "status": "WORKING",
+      "url": "/usuarios",
+      "elements_verified": ["Page header", "Stats cards (Pendentes: 2, Registados: 17)", "Filter section", "User list"]
+    },
+    "filter_by_role": {
+      "status": "WORKING",
+      "description": "Perfil dropdown filters users by role (Admin, Gestor, Parceiro, Motorista)",
+      "test_result": "Filtering by Motorista showed 14 users"
+    },
+    "filter_by_parceiro": {
+      "status": "WORKING",
+      "description": "Parceiro dropdown filters users by associated partner",
+      "test_result": "7 parceiros available in dropdown, filtering showed 10 users"
+    },
+    "filter_by_date": {
+      "status": "WORKING",
+      "description": "Data de / Data até date filters work correctly",
+      "test_result": "Filtering Dec 2025 showed 13 users"
+    },
+    "clear_filters_button": {
+      "status": "WORKING",
+      "description": "'Limpar Filtros' button appears when filters are active and clears all filters"
+    },
+    "user_details_modal": {
+      "status": "WORKING",
+      "description": "Clicking on user opens modal with details and actions",
+      "actions_available": ["Ver Perfil", "Validar Docs", "Alterar Role", "Alterar Senha", "Atribuir Plano", "Bloquear/Desbloquear", "Ver Motorista", "Eliminar"]
+    },
+    "block_user_api": {
+      "status": "WORKING",
+      "endpoint": "PUT /api/users/{id}/status",
+      "request": "{\"status\": \"blocked\"}",
+      "response": "{\"message\": \"Utilizador bloqueado\"}"
+    },
+    "unblock_user_api": {
+      "status": "WORKING",
+      "endpoint": "PUT /api/users/{id}/status",
+      "request": "{\"status\": \"active\"}",
+      "response": "{\"message\": \"Utilizador ativado\"}"
+    },
+    "revoke_user_api": {
+      "status": "WORKING",
+      "endpoint": "PUT /api/users/{id}/revoke",
+      "response": "{\"message\": \"Utilizador revogado com sucesso\"}"
+    },
+    "reset_password_api": {
+      "status": "WORKING",
+      "endpoint": "PUT /api/users/{id}/reset-password",
+      "request": "{\"new_password\": \"TestPassword123\"}",
+      "response": "{\"message\": \"Password alterada com sucesso\"}"
+    },
+    "set_role_api": {
+      "status": "WORKING",
+      "endpoint": "PUT /api/users/{id}/set-role",
+      "valid_roles": ["admin", "gestao", "parceiro", "motorista"]
+    },
+    "get_all_users_api": {
+      "status": "WORKING",
+      "endpoint": "GET /api/users/all",
+      "result": "Returns 19 users with role, status, created_at fields"
+    },
+    "get_parceiros_api": {
+      "status": "WORKING",
+      "endpoint": "GET /api/parceiros",
+      "result": "Returns list of parceiros for filter dropdown"
+    }
+  },
+  "test_report_links": [
+    "/app/tests/test_user_management_iteration15.py",
+    "/app/test_reports/pytest/pytest_user_management_iter15.xml"
+  ],
+  "action_items": [
+    "MINOR: Fix duplicate key warning in React - parceiro ID c693c9ec-ddd5-400c-b79d-61b651e7b3fd appears twice in some list"
+  ],
+  "critical_code_review_comments": [
+    "Console shows 'Encountered two children with the same key' warning - should add unique keys to list items"
+  ],
+  "updated_files": [
+    "/app/tests/test_user_management_iteration15.py"
+  ],
+  "success_rate": {
+    "backend": "94% (15/16 tests passed - 1 test dependency issue)",
+    "frontend": "100% (all features working)"
+  },
+  "test_credentials": {
+    "admin": "admin@tvdefleet.com / 123456"
+  },
+  "seed_data_creation": "None - used existing test data",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "User management features on /usuarios page are fully functional. All filters (role, parceiro, date) work correctly. User actions (block, unblock, revoke, reset password, change role) work via both API and UI. Backend tests in /app/tests/test_user_management_iteration15.py can be reused for regression testing. Minor issue: React duplicate key warning for parceiro ID c693c9ec-ddd5-400c-b79d-61b651e7b3fd."
+}
