@@ -340,7 +340,7 @@ ValorA;ValorB;ValorC"""
         files = {"file": ("test_outro.csv", csv_content, "text/csv")}
         
         response = requests.post(
-            f"{BASE_URL}/api/rpa/upload/outro",
+            f"{BASE_URL}/api/rpa/upload/outro?parceiro_id={TEST_PARCEIRO_ID}",
             headers=headers,
             files=files
         )
