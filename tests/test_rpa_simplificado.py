@@ -294,7 +294,7 @@ class TestRPAUpload:
         files = {"file": ("test_verizon.csv", csv_content, "text/csv")}
         
         response = requests.post(
-            f"{BASE_URL}/api/rpa/upload/gps_verizon",
+            f"{BASE_URL}/api/rpa/upload/gps_verizon?parceiro_id={TEST_PARCEIRO_ID}",
             headers=headers,
             files=files
         )
