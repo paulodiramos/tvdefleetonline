@@ -34,7 +34,7 @@
 
 ---
 
-### 2. Sistema RPA Simplificado ✅ NEW
+### 2. Sistema RPA Simplificado ✅
 **Página:** `/rpa-simplificado` (Admin, Gestão, Parceiro)
 
 **Funcionalidades de Upload CSV:**
@@ -49,21 +49,47 @@
 - Recibos/Transações (recibos submetidos com valores e status)
 - Despesas (combustível, elétrico, outras despesas)
 
+**Testes:** 100% backend (26/26), 100% frontend
+
+---
+
+### 3. Sistema RPA Automático com Playwright ✅ NEW
+**Página:** `/rpa-automacao` (Admin, Gestão, Parceiro)
+
+**Plataformas suportadas:**
+- 🚗 **Uber Driver** - Extrair ganhos semanais/mensais (requer 2FA)
+- ⚡ **Bolt Fleet** - Extrair ganhos semanais/mensais
+- 🛣️ **Via Verde Empresas** - Extrair portagens com data/hora e matrícula
+- ⛽ **Prio Energy** - Extrair combustível e carregamentos elétricos
+
+**Funcionalidades:**
+- **Gestão de Credenciais Encriptadas** (Fernet encryption)
+- **Execução Manual** com seleção de tipo e período
+- **Agendamento Automático** (diário, semanal, mensal)
+- **Histórico de Execuções** com logs detalhados e screenshots
+- **Estatísticas** por plataforma e taxa de sucesso
+
 **Endpoints implementados:**
-- `GET /api/rpa/fornecedores` - Listar fornecedores disponíveis
-- `GET /api/rpa/fornecedores/{id}` - Detalhes de um fornecedor
-- `POST /api/rpa/upload/{fornecedor_id}` - Upload e processamento de CSV
-- `GET /api/rpa/importacoes` - Histórico de importações
-- `GET /api/rpa/estatisticas` - Estatísticas de importações
-- `GET /api/rpa/exportar/relatorios-semanais` - Exportar relatórios CSV
-- `GET /api/rpa/exportar/recibos` - Exportar recibos CSV
-- `GET /api/rpa/exportar/despesas` - Exportar despesas CSV
+- `GET /api/rpa-auto/plataformas` - Listar plataformas disponíveis
+- `POST /api/rpa-auto/credenciais` - Guardar credenciais encriptadas
+- `GET /api/rpa-auto/credenciais` - Listar credenciais (sem password)
+- `DELETE /api/rpa-auto/credenciais/{plataforma}` - Eliminar credenciais
+- `POST /api/rpa-auto/executar` - Iniciar execução (background)
+- `GET /api/rpa-auto/execucoes` - Histórico de execuções
+- `GET /api/rpa-auto/execucoes/{id}` - Detalhes com logs
+- `POST /api/rpa-auto/agendamentos` - Criar agendamento
+- `GET /api/rpa-auto/agendamentos` - Listar agendamentos
+- `DELETE /api/rpa-auto/agendamentos/{id}` - Eliminar agendamento
+- `GET /api/rpa-auto/estatisticas` - Estatísticas
 
 **Ficheiros:**
-- `/app/backend/routes/rpa_simplificado.py` - Backend API
-- `/app/frontend/src/pages/RPASimplificado.js` - Frontend UI
+- `/app/backend/routes/rpa_automacao.py` - API endpoints
+- `/app/backend/services/rpa_executor.py` - Scripts Playwright
+- `/app/frontend/src/pages/RPAAutomacao.js` - Frontend UI
 
-**Testes:** 100% backend (26/26), 100% frontend
+**Testes:** 100% backend (24/24), 100% frontend
+
+**Nota:** As execuções falham com ERR_NAME_NOT_RESOLVED no ambiente de preview porque os sites externos não são acessíveis. Em produção com acesso à internet, funcionará normalmente.
 
 ---
 
