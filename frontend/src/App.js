@@ -112,6 +112,7 @@ import ConfiguracoesParceiro from "@/pages/ConfiguracoesParceiro";
 import AutomacaoRPA from "@/pages/AutomacaoRPA";
 import RPASimplificado from "@/pages/RPASimplificado";
 import RPAAutomacao from "@/pages/RPAAutomacao";
+import RPADesigner from "@/pages/RPADesigner";
 import AdminPlanosMotorista from "@/pages/AdminPlanosMotorista";
 import Terabox from "@/pages/Terabox";
 import AdminFornecedores from "@/pages/AdminFornecedores";
@@ -808,6 +809,16 @@ function App() {
             element={
               user && ['admin', 'gestao', 'parceiro'].includes(user.role) ? (
                 <RPAAutomacao user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/rpa-designer"
+            element={
+              user && user.role === 'admin' ? (
+                <RPADesigner user={user} onLogout={handleLogout} />
               ) : (
                 <Navigate to="/login" />
               )

@@ -100,6 +100,7 @@ from routes.agenda import router as agenda_router
 from routes.whatsapp import router as whatsapp_router
 from routes.rpa_simplificado import router as rpa_simplificado_router
 from routes.rpa_automacao import router as rpa_automacao_router
+from routes.rpa_designer import router as rpa_designer_router
 
 # Import utilities from refactored modules
 from utils.file_handlers import (
@@ -14238,6 +14239,7 @@ app.include_router(agenda_router, prefix="/api")
 app.include_router(whatsapp_router, prefix="/api")
 app.include_router(rpa_simplificado_router, prefix="/api")
 app.include_router(rpa_automacao_router, prefix="/api")
+app.include_router(rpa_designer_router, prefix="/api")
 
 # api_router will be included at the very end of the file, after all routes are defined
 # ==================== DOCUMENTO VALIDATION SYSTEM ====================
