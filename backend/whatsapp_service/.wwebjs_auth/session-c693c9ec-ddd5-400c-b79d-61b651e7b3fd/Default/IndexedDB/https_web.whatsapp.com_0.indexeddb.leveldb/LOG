@@ -1303,3 +1303,10 @@
 2026/01/23-22:05:22.798 f31 Delete type=2 #515
 2026/01/23-22:05:22.798 f31 Delete type=2 #514
 2026/01/23-22:05:22.798 f31 Delete type=2 #516
+2026/01/23-22:05:47.147 f2e Compacting 1@1 + 1@2 files
+2026/01/23-22:05:47.189 f2e Generated table #526@1: 49716 keys, 2224760 bytes
+2026/01/23-22:05:47.195 f2e Generated table #527@1: 22 keys, 14346 bytes
+2026/01/23-22:05:47.195 f2e Compacted 1@1 + 1@2 files => 2239106 bytes
+2026/01/23-22:05:47.202 f2e compacted to: files[ 0 0 25 0 0 0 0 ]
+2026/01/23-22:05:47.203 f2e Delete type=2 #517
+2026/01/23-22:05:47.203 f2e Delete type=2 #521
