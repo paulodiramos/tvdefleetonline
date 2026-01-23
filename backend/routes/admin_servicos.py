@@ -62,6 +62,26 @@ async def obter_status_servicos(
         raise HTTPException(status_code=403, detail="Apenas administradores podem ver o status dos serviços")
     
     try:
+        # Verificar se supervisor está disponível
+        check_result = run_command(["which", "supervisorctl"])
+        
+        if not check_result["success"]:
+            # Ambiente de produção sem supervisor
+            return {
+                "servicos": [
+                    {
+                        "nome": "backend",
+                        "status": "RUNNING",
+                        "pid": None,
+                        "uptime": None,
+                        "running": True
+                    }
+                ],
+                "ambiente": "producao",
+                "mensagem": "Supervisor não disponível. Em produção, os serviços são geridos pelo Kubernetes.",
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            }
+        
         # Obter status do supervisor
         result = run_command(["supervisorctl", "status"])
         
