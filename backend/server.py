@@ -13163,6 +13163,8 @@ async def listar_ganhos_uber(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+'''
+# FIM DOS ENDPOINTS DE GANHOS COMENTADOS
 
 @app.get("/api/public/veiculos")
 async def get_public_veiculos():
