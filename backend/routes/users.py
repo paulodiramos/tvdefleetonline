@@ -229,3 +229,56 @@ async def reset_user_password(
     
     logger.info(f"Password reset for user {user_id} by {current_user['id']}")
     return {"message": "Password alterada com sucesso"}
+
+
+class ValidateDocumentRequest(BaseModel):
+    campo: str
+    validado: bool
+
+
+@router.put("/users/{user_id}/validate-document")
+async def validate_user_document(
+    user_id: str,
+    request: ValidateDocumentRequest,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Validar ou invalidar documento de um utilizador"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    campo = request.campo
+    validado = request.validado
+    
+    # Atualizar em motoristas
+    motorista_update = await db.motoristas.update_one(
+        {"id": user_id},
+        {"$set": {f"documentos_validados.{campo}": validado}}
+    )
+    
+    # Atualizar em parceiros
+    parceiro_update = await db.parceiros.update_one(
+        {"id": user_id},
+        {"$set": {f"documentos_validados.{campo}": validado}}
+    )
+    
+    # Atualizar em users
+    user_update = await db.users.update_one(
+        {"id": user_id},
+        {"$set": {f"documentos_validados.{campo}": validado}}
+    )
+    
+    # Atualizar documento específico na collection documentos
+    doc_update = await db.documentos.update_one(
+        {"id": campo},
+        {"$set": {"validado": validado, "validado_por": current_user["id"], "validado_em": datetime.now(timezone.utc).isoformat()}}
+    )
+    
+    total_updates = motorista_update.modified_count + parceiro_update.modified_count + user_update.modified_count + doc_update.modified_count
+    
+    if total_updates == 0:
+        logger.warning(f"No documents updated for user {user_id}, campo {campo}")
+    
+    logger.info(f"Document {campo} {'validated' if validado else 'invalidated'} for user {user_id} by {current_user['id']}")
+    
+    return {"message": "Documento atualizado com sucesso", "validado": validado}
+
