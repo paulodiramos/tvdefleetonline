@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TVDEFleet - Portfolio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-text {
+            background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        .feature-card {
+            transition: all 0.3s ease;
+        }
+        .feature-card:hover {
+            border-color: #3B82F6;
+        }
+    </style>
+</head>
+<body class="bg-slate-50">
+    <!-- Hero Section -->
+    <section class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white py-20">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="text-center">
+                <div class="inline-flex items-center gap-2 bg-blue-500/20 border border-blue-500/30 rounded-full px-4 py-2 mb-6">
+                    <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                    <span class="text-sm text-blue-300">Sistema Completo de Gestão</span>
+                </div>
+                <h1 class="text-5xl md:text-6xl font-bold mb-6">
+                    <span class="gradient-text">TVDEFleet</span>
+                </h1>
+                <p class="text-xl text-slate-300 max-w-2xl mx-auto mb-8">
+                    Plataforma completa de gestão de frotas TVDE com automação RPA, 
+                    gestão de motoristas, veículos e finanças.
+                </p>
+                <div class="flex flex-wrap justify-center gap-4">
+                    <div class="bg-slate-800 rounded-lg px-4 py-2 flex items-center gap-2">
+                        <i class="fab fa-react text-cyan-400"></i>
+                        <span>React 18</span>
+                    </div>
+                    <div class="bg-slate-800 rounded-lg px-4 py-2 flex items-center gap-2">
+                        <i class="fab fa-python text-yellow-400"></i>
+                        <span>FastAPI</span>
+                    </div>
+                    <div class="bg-slate-800 rounded-lg px-4 py-2 flex items-center gap-2">
+                        <i class="fas fa-database text-green-400"></i>
+                        <span>MongoDB</span>
+                    </div>
+                    <div class="bg-slate-800 rounded-lg px-4 py-2 flex items-center gap-2">
+                        <i class="fas fa-robot text-purple-400"></i>
+                        <span>Playwright RPA</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-12 -mt-10">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center card-hover transition-all">
+                    <div class="text-3xl font-bold text-blue-600">3</div>
+                    <div class="text-slate-600 text-sm">Perfis de Utilizador</div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center card-hover transition-all">
+                    <div class="text-3xl font-bold text-purple-600">50+</div>
+                    <div class="text-slate-600 text-sm">Páginas/Funcionalidades</div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center card-hover transition-all">
+                    <div class="text-3xl font-bold text-green-600">100+</div>
+                    <div class="text-slate-600 text-sm">API Endpoints</div>
+                </div>
+                <div class="bg-white rounded-xl shadow-lg p-6 text-center card-hover transition-all">
+                    <div class="text-3xl font-bold text-orange-600">5+</div>
+                    <div class="text-slate-600 text-sm">Integrações</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- User Profiles Section -->
+    <section class="py-16">
+        <div class="max-w-6xl mx-auto px-6">
+            <h2 class="text-3xl font-bold text-center mb-4">Perfis de Utilizador</h2>
+            <p class="text-slate-600 text-center mb-12 max-w-2xl mx-auto">
+                Cada perfil tem acesso personalizado às funcionalidades relevantes para o seu papel.
+            </p>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <!-- Admin -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden feature-card border-2 border-transparent">
+                    <div class="bg-gradient-to-r from-red-500 to-red-600 p-6 text-white">
+                        <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                            <i class="fas fa-shield-alt text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">Administrador</h3>
+                        <p class="text-red-100 text-sm mt-1">Controlo total da plataforma</p>
+                    </div>
+                    <div class="p-6">
+                        <ul class="space-y-3">
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>Gestão de Parceiros</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>Gestão de Utilizadores</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>Planos & Módulos</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>RPA Designer (criar automações)</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>Configurações Globais</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>Integrações (WhatsApp, Terabox)</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Parceiro -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden feature-card border-2 border-transparent">
+                    <div class="bg-gradient-to-r from-amber-500 to-amber-600 p-6 text-white">
+                        <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                            <i class="fas fa-building text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">Parceiro / Gestor</h3>
+                        <p class="text-amber-100 text-sm mt-1">Gestão da frota própria</p>
+                    </div>
+                    <div class="p-6">
+                        <ul class="space-y-3">
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>Gestão de Motoristas</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>Gestão de Veículos</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>Contratos & Documentos</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>Financeiro (Pagamentos, Recibos)</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>Relatórios Semanais</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>RPA Automático (executar)</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Motorista -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden feature-card border-2 border-transparent">
+                    <div class="bg-gradient-to-r from-green-500 to-green-600 p-6 text-white">
+                        <div class="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                            <i class="fas fa-car text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">Motorista</h3>
+                        <p class="text-green-100 text-sm mt-1">Portal do motorista</p>
+                    </div>
+                    <div class="p-6">
+                        <ul class="space-y-3">
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>Perfil & Dados Pessoais</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>Upload de Documentos</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>Visualizar Ganhos</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>Submeter Recibos</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>Mensagens & Tickets</span>
+                            </li>
+                            <li class="flex items-center gap-3 text-sm">
+                                <i class="fas fa-check text-green-500"></i>
+                                <span>Oportunidades</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="py-16 bg-white">
+        <div class="max-w-6xl mx-auto px-6">
+            <h2 class="text-3xl font-bold text-center mb-4">Funcionalidades Principais</h2>
+            <p class="text-slate-600 text-center mb-12 max-w-2xl mx-auto">
+                Um conjunto completo de ferramentas para gerir todos os aspectos da operação TVDE.
+            </p>
+
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Motoristas -->
+                <div class="bg-slate-50 rounded-xl p-6 hover:shadow-lg transition-all">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-users text-blue-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-lg mb-2">Gestão de Motoristas</h3>
+                    <p class="text-slate-600 text-sm mb-4">Registo, documentos, contratos e histórico completo de cada motorista.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">Perfil</span>
+                        <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">Documentos</span>
+                        <span class="bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded">Validação</span>
+                    </div>
+                </div>
+
+                <!-- Veículos -->
+                <div class="bg-slate-50 rounded-xl p-6 hover:shadow-lg transition-all">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-car text-green-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-lg mb-2">Gestão de Veículos</h3>
+                    <p class="text-slate-600 text-sm mb-4">Ficha técnica, manutenções, vistorias e alertas de vencimentos.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Vistorias</span>
+                        <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Seguros</span>
+                        <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded">Alertas</span>
+                    </div>
+                </div>
+
+                <!-- Financeiro -->
+                <div class="bg-slate-50 rounded-xl p-6 hover:shadow-lg transition-all">
+                    <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-euro-sign text-amber-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-lg mb-2">Módulo Financeiro</h3>
+                    <p class="text-slate-600 text-sm mb-4">Ganhos, despesas, pagamentos, recibos e relatórios semanais.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded">Pagamentos</span>
+                        <span class="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded">Recibos</span>
+                        <span class="bg-amber-100 text-amber-700 text-xs px-2 py-1 rounded">Relatórios</span>
+                    </div>
+                </div>
+
+                <!-- Contratos -->
+                <div class="bg-slate-50 rounded-xl p-6 hover:shadow-lg transition-all">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-file-contract text-purple-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-lg mb-2">Gestão de Contratos</h3>
+                    <p class="text-slate-600 text-sm mb-4">Criação, templates, assinaturas digitais e arquivo de contratos.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded">Templates</span>
+                        <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded">Assinaturas</span>
+                        <span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded">PDF</span>
+                    </div>
+                </div>
+
+                <!-- RPA -->
+                <div class="bg-slate-50 rounded-xl p-6 hover:shadow-lg transition-all">
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fas fa-robot text-red-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-lg mb-2">Automação RPA</h3>
+                    <p class="text-slate-600 text-sm mb-4">Extração automática de dados de Uber, Bolt, Via Verde e mais.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">Playwright</span>
+                        <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">Designer</span>
+                        <span class="bg-red-100 text-red-700 text-xs px-2 py-1 rounded">Agendamento</span>
+                    </div>
+                </div>
+
+                <!-- Comunicação -->
+                <div class="bg-slate-50 rounded-xl p-6 hover:shadow-lg transition-all">
+                    <div class="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center mb-4">
+                        <i class="fab fa-whatsapp text-cyan-600 text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-lg mb-2">Comunicações</h3>
+                    <p class="text-slate-600 text-sm mb-4">Chat interno, WhatsApp, notificações e sistema de tickets.</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded">WhatsApp</span>
+                        <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded">Chat</span>
+                        <span class="bg-cyan-100 text-cyan-700 text-xs px-2 py-1 rounded">Tickets</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- RPA Section -->
+    <section class="py-16 bg-gradient-to-br from-slate-900 to-slate-800 text-white">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <div class="inline-flex items-center gap-2 bg-purple-500/20 border border-purple-500/30 rounded-full px-4 py-2 mb-6">
+                        <i class="fas fa-magic text-purple-400"></i>
+                        <span class="text-sm text-purple-300">Funcionalidade Exclusiva</span>
+                    </div>
+                    <h2 class="text-3xl font-bold mb-6">Sistema RPA Avançado</h2>
+                    <p class="text-slate-300 mb-6">
+                        O TVDEFleet inclui um sistema de automação RPA (Robotic Process Automation) 
+                        que permite extrair dados automaticamente de plataformas que não disponibilizam APIs.
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="flex items-start gap-3">
+                            <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-check text-white text-xs"></i>
+                            </div>
+                            <div>
+                                <strong class="text-white">RPA Designer (Admin)</strong>
+                                <p class="text-slate-400 text-sm">Grave scripts no seu computador e faça upload para a plataforma</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-check text-white text-xs"></i>
+                            </div>
+                            <div>
+                                <strong class="text-white">Execução Automática</strong>
+                                <p class="text-slate-400 text-sm">Parceiros executam com as suas credenciais, sem ver o código</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <div class="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                <i class="fas fa-check text-white text-xs"></i>
+                            </div>
+                            <div>
+                                <strong class="text-white">Plataformas Suportadas</strong>
+                                <p class="text-slate-400 text-sm">Uber, Bolt, Via Verde, Prio, + qualquer outra via Designer</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                        <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                        <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span class="text-slate-500 text-sm ml-2">rpa_script.py</span>
+                    </div>
+                    <pre class="text-sm text-green-400 overflow-x-auto"><code>async def executar(page, credenciais):
+    email = credenciais.get("email")
+    password = credenciais.get("password")
+    
+    # Navegar para o site
+    await page.goto("https://viaverde.pt")
+    
+    # Fazer login
+    await page.fill("#email", email)
+    await page.fill("#password", password)
+    await page.click("button[type='submit']")
+    
+    # Extrair dados
+    dados = await extrair_movimentos(page)
+    
+    return {"sucesso": True, "dados": dados}</code></pre>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Integrations Section -->
+    <section class="py-16">
+        <div class="max-w-6xl mx-auto px-6">
+            <h2 class="text-3xl font-bold text-center mb-4">Integrações</h2>
+            <p class="text-slate-600 text-center mb-12 max-w-2xl mx-auto">
+                Conecte-se às principais plataformas e serviços do ecossistema TVDE.
+            </p>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                <div class="bg-white rounded-xl shadow p-6 text-center hover:shadow-lg transition-all">
+                    <div class="w-12 h-12 bg-black rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-white font-bold">U</span>
+                    </div>
+                    <span class="text-sm font-medium">Uber</span>
+                </div>
+                <div class="bg-white rounded-xl shadow p-6 text-center hover:shadow-lg transition-all">
+                    <div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-white font-bold">B</span>
+                    </div>
+                    <span class="text-sm font-medium">Bolt</span>
+                </div>
+                <div class="bg-white rounded-xl shadow p-6 text-center hover:shadow-lg transition-all">
+                    <div class="w-12 h-12 bg-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-white font-bold">VV</span>
+                    </div>
+                    <span class="text-sm font-medium">Via Verde</span>
+                </div>
+                <div class="bg-white rounded-xl shadow p-6 text-center hover:shadow-lg transition-all">
+                    <div class="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <span class="text-white font-bold">P</span>
+                    </div>
+                    <span class="text-sm font-medium">Prio</span>
+                </div>
+                <div class="bg-white rounded-xl shadow p-6 text-center hover:shadow-lg transition-all">
+                    <div class="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <i class="fab fa-whatsapp text-white text-xl"></i>
+                    </div>
+                    <span class="text-sm font-medium">WhatsApp</span>
+                </div>
+                <div class="bg-white rounded-xl shadow p-6 text-center hover:shadow-lg transition-all">
+                    <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-cloud text-white text-xl"></i>
+                    </div>
+                    <span class="text-sm font-medium">Terabox</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Stack Section -->
+    <section class="py-16 bg-slate-100">
+        <div class="max-w-6xl mx-auto px-6">
+            <h2 class="text-3xl font-bold text-center mb-12">Stack Tecnológico</h2>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white rounded-xl p-6 shadow">
+                    <h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+                        <i class="fas fa-desktop text-blue-500"></i>
+                        Frontend
+                    </h3>
+                    <ul class="space-y-2 text-sm text-slate-600">
+                        <li class="flex items-center gap-2">
+                            <i class="fab fa-react text-cyan-500"></i>
+                            React 18 + Vite
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fab fa-css3-alt text-blue-500"></i>
+                            Tailwind CSS
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-cube text-slate-500"></i>
+                            Shadcn/UI + Radix
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-route text-purple-500"></i>
+                            React Router v6
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6 shadow">
+                    <h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+                        <i class="fas fa-server text-green-500"></i>
+                        Backend
+                    </h3>
+                    <ul class="space-y-2 text-sm text-slate-600">
+                        <li class="flex items-center gap-2">
+                            <i class="fab fa-python text-yellow-500"></i>
+                            FastAPI (Python)
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-database text-green-500"></i>
+                            MongoDB + Motor
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-key text-red-500"></i>
+                            JWT Authentication
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-lock text-slate-500"></i>
+                            Bcrypt + Fernet
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white rounded-xl p-6 shadow">
+                    <h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+                        <i class="fas fa-cogs text-purple-500"></i>
+                        Automação & Outros
+                    </h3>
+                    <ul class="space-y-2 text-sm text-slate-600">
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-robot text-purple-500"></i>
+                            Playwright (RPA)
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fab fa-whatsapp text-green-500"></i>
+                            WhatsApp Web.js
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-cloud text-blue-500"></i>
+                            Terabox API
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-file-pdf text-red-500"></i>
+                            PDF Generation
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-white py-12">
+        <div class="max-w-6xl mx-auto px-6 text-center">
+            <h2 class="text-2xl font-bold mb-4">TVDEFleet</h2>
+            <p class="text-slate-400 mb-6">Sistema Completo de Gestão de Frotas TVDE</p>
+            <div class="flex justify-center gap-6 text-slate-400">
+                <span><i class="fas fa-users mr-2"></i>Multi-tenant</span>
+                <span><i class="fas fa-shield-alt mr-2"></i>Seguro</span>
+                <span><i class="fas fa-mobile-alt mr-2"></i>Responsivo</span>
+                <span><i class="fas fa-rocket mr-2"></i>Escalável</span>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
