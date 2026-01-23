@@ -13107,6 +13107,10 @@ async def importar_ganhos_bolt(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao importar ficheiro: {str(e)}")
 
+# ==================================================
+# GANHOS BOLT/UBER - MOVIDO PARA routes/ganhos.py
+# ==================================================
+'''
 @app.get("/api/ganhos-bolt")
 async def listar_ganhos_bolt(
     credentials: HTTPAuthorizationCredentials = Depends(security),
