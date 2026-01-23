@@ -167,14 +167,14 @@ const Usuarios = ({ user, onLogout }) => {
     }
   };
 
-  // Filtrar utilizadores
+  // Filtrar utilizadores com todos os filtros avançados
   const getFilteredUsers = (users) => {
     return users.filter(u => {
-      // Filtro por pesquisa de texto
-      const searchMatch = !search || 
-        u.name?.toLowerCase().includes(search.toLowerCase()) ||
-        u.email?.toLowerCase().includes(search.toLowerCase()) ||
-        u.phone?.toLowerCase().includes(search.toLowerCase());
+      // Filtro por pesquisa de texto (usa searchTerm)
+      const searchMatch = !searchTerm || 
+        u.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.phone?.toLowerCase().includes(searchTerm.toLowerCase());
       
       // Filtro por role/perfil
       const roleMatch = !filterRole || u.role === filterRole;

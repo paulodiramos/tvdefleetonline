@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class UserStatusUpdate(BaseModel):
-    ativo: bool
+    status: str  # 'active' or 'blocked'
 
 
 class UserRoleUpdate(BaseModel):
