@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?><testsuites name="pytest tests"><testsuite name="pytest" errors="0" failures="12" skipped="0" tests="26" time="4.578" timestamp="2026-01-23T01:18:56.967997+00:00" hostname="agent-env-03427b4b-a00c-49ee-be35-9d2cb43ae576"><testcase classname="tests.test_rpa_simplificado.TestRPAFornecedores" name="test_listar_fornecedores_sem_auth" time="0.065" /><testcase classname="tests.test_rpa_simplificado.TestRPAFornecedores" name="test_fornecedor_combustivel_prio_details" time="0.043" /><testcase classname="tests.test_rpa_simplificado.TestRPAFornecedores" name="test_fornecedor_eletrico_prio_details" time="0.045" /><testcase classname="tests.test_rpa_simplificado.TestRPAFornecedores" name="test_fornecedor_gps_verizon_details" time="0.040" /><testcase classname="tests.test_rpa_simplificado.TestRPAFornecedores" name="test_fornecedor_gps_cartrack_details" time="0.043" /><testcase classname="tests.test_rpa_simplificado.TestRPAFornecedores" name="test_fornecedor_outro_details" time="0.039" /><testcase classname="tests.test_rpa_simplificado.TestRPAImportacoes" name="test_listar_importacoes_sem_auth" time="0.044" /><testcase classname="tests.test_rpa_simplificado.TestRPAImportacoes" name="test_listar_importacoes_com_auth" time="0.304"><failure message="AssertionError: Expected 200, got 401: {&quot;detail&quot;:&quot;Invalid token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">tests/test_rpa_simplificado.py:141: in test_listar_importacoes_com_auth
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 401: {"detail":"Invalid token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="tests.test_rpa_simplificado.TestRPAEstatisticas" name="test_estatisticas_sem_auth" time="0.041" /><testcase classname="tests.test_rpa_simplificado.TestRPAEstatisticas" name="test_estatisticas_com_auth" time="0.346"><failure message="AssertionError: Expected 200, got 401: {&quot;detail&quot;:&quot;Invalid token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">tests/test_rpa_simplificado.py:182: in test_estatisticas_com_auth
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 401: {"detail":"Invalid token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="tests.test_rpa_simplificado.TestRPAUpload" name="test_upload_sem_auth" time="0.044" /><testcase classname="tests.test_rpa_simplificado.TestRPAUpload" name="test_upload_fornecedor_invalido" time="0.307"><failure message="AssertionError: Expected 404, got 401: {&quot;detail&quot;:&quot;Invalid token&quot;}&#10;assert 401 == 404&#10; +  where 401 = &lt;Response [401]&gt;.status_code">tests/test_rpa_simplificado.py:229: in test_upload_fornecedor_invalido
+    assert response.status_code == 404, f"Expected 404, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 404, got 401: {"detail":"Invalid token"}
+E   assert 401 == 404
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="tests.test_rpa_simplificado.TestRPAUpload" name="test_upload_combustivel_prio_csv" time="0.300"><failure message="AssertionError: Expected 200, got 401: {&quot;detail&quot;:&quot;Invalid token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">tests/test_rpa_simplificado.py:249: in test_upload_combustivel_prio_csv
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 401: {"detail":"Invalid token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="tests.test_rpa_simplificado.TestRPAUpload" name="test_upload_eletrico_prio_csv" time="0.300"><failure message="AssertionError: Expected 200, got 401: {&quot;detail&quot;:&quot;Invalid token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">tests/test_rpa_simplificado.py:275: in test_upload_eletrico_prio_csv
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 401: {"detail":"Invalid token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="tests.test_rpa_simplificado.TestRPAUpload" name="test_upload_gps_verizon_csv" time="0.308"><failure message="AssertionError: Expected 200, got 401: {&quot;detail&quot;:&quot;Invalid token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">tests/test_rpa_simplificado.py:298: in test_upload_gps_verizon_csv
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 401: {"detail":"Invalid token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="tests.test_rpa_simplificado.TestRPAUpload" name="test_upload_gps_cartrack_csv" time="0.307"><failure message="AssertionError: Expected 200, got 401: {&quot;detail&quot;:&quot;Invalid token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">tests/test_rpa_simplificado.py:321: in test_upload_gps_cartrack_csv
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 401: {"detail":"Invalid token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="tests.test_rpa_simplificado.TestRPAUpload" name="test_upload_outro_csv" time="0.308"><failure message="AssertionError: Expected 200, got 401: {&quot;detail&quot;:&quot;Invalid token&quot;}&#10;assert 401 == 200&#10; +  where 401 = &lt;Response [401]&gt;.status_code">tests/test_rpa_simplificado.py:344: in test_upload_outro_csv
+    assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200, got 401: {"detail":"Invalid token"}
+E   assert 401 == 200
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="tests.test_rpa_simplificado.TestRPAExportar" name="test_exportar_relatorios_semanais_sem_auth" time="0.037" /><testcase classname="tests.test_rpa_simplificado.TestRPAExportar" name="test_exportar_relatorios_semanais" time="0.301"><failure message="AssertionError: Expected 200 or 404, got 401: {&quot;detail&quot;:&quot;Invalid token&quot;}&#10;assert 401 in [200, 404]&#10; +  where 401 = &lt;Response [401]&gt;.status_code">tests/test_rpa_simplificado.py:378: in test_exportar_relatorios_semanais
+    assert response.status_code in [200, 404], f"Expected 200 or 404, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200 or 404, got 401: {"detail":"Invalid token"}
+E   assert 401 in [200, 404]
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="tests.test_rpa_simplificado.TestRPAExportar" name="test_exportar_recibos_sem_auth" time="0.044" /><testcase classname="tests.test_rpa_simplificado.TestRPAExportar" name="test_exportar_recibos" time="0.342"><failure message="AssertionError: Expected 200 or 404, got 401: {&quot;detail&quot;:&quot;Invalid token&quot;}&#10;assert 401 in [200, 404]&#10; +  where 401 = &lt;Response [401]&gt;.status_code">tests/test_rpa_simplificado.py:397: in test_exportar_recibos
+    assert response.status_code in [200, 404], f"Expected 200 or 404, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200 or 404, got 401: {"detail":"Invalid token"}
+E   assert 401 in [200, 404]
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="tests.test_rpa_simplificado.TestRPAExportar" name="test_exportar_despesas_sem_auth" time="0.040" /><testcase classname="tests.test_rpa_simplificado.TestRPAExportar" name="test_exportar_despesas" time="0.314"><failure message="AssertionError: Expected 200 or 404, got 401: {&quot;detail&quot;:&quot;Invalid token&quot;}&#10;assert 401 in [200, 404]&#10; +  where 401 = &lt;Response [401]&gt;.status_code">tests/test_rpa_simplificado.py:416: in test_exportar_despesas
+    assert response.status_code in [200, 404], f"Expected 200 or 404, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200 or 404, got 401: {"detail":"Invalid token"}
+E   assert 401 in [200, 404]
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="tests.test_rpa_simplificado.TestRPAExportar" name="test_exportar_despesas_com_filtros" time="0.312"><failure message="AssertionError: Expected 200 or 404, got 401: {&quot;detail&quot;:&quot;Invalid token&quot;}&#10;assert 401 in [200, 404]&#10; +  where 401 = &lt;Response [401]&gt;.status_code">tests/test_rpa_simplificado.py:437: in test_exportar_despesas_com_filtros
+    assert response.status_code in [200, 404], f"Expected 200 or 404, got {response.status_code}: {response.text}"
+E   AssertionError: Expected 200 or 404, got 401: {"detail":"Invalid token"}
+E   assert 401 in [200, 404]
+E    +  where 401 = &lt;Response [401]&gt;.status_code</failure></testcase><testcase classname="tests.test_rpa_simplificado.TestRPAFornecedorById" name="test_get_fornecedor_combustivel_prio" time="0.046" /><testcase classname="tests.test_rpa_simplificado.TestRPAFornecedorById" name="test_get_fornecedor_invalido" time="0.043" /></testsuite></testsuites>
