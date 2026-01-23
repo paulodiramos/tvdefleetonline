@@ -113,6 +113,7 @@ import AutomacaoRPA from "@/pages/AutomacaoRPA";
 import RPASimplificado from "@/pages/RPASimplificado";
 import RPAAutomacao from "@/pages/RPAAutomacao";
 import RPADesigner from "@/pages/RPADesigner";
+import GestaoServicos from "@/pages/GestaoServicos";
 import AdminPlanosMotorista from "@/pages/AdminPlanosMotorista";
 import Terabox from "@/pages/Terabox";
 import AdminFornecedores from "@/pages/AdminFornecedores";
