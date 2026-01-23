@@ -935,6 +935,20 @@ const Usuarios = ({ user, onLogout }) => {
                     <span className="text-xs">{loadingProfile ? 'Carregando...' : 'Ver Perfil'}</span>
                   </Button>
 
+                  {/* Validar Documentos */}
+                  <Button
+                    variant="outline"
+                    className="h-auto py-3 flex flex-col items-center space-y-1 border-amber-500 text-amber-600 hover:bg-amber-50"
+                    onClick={() => {
+                      fetchUserDocuments(viewingUser.id, viewingUser.role);
+                      setShowDocsDialog(true);
+                    }}
+                    disabled={loadingDocs}
+                  >
+                    <FileText className="w-5 h-5" />
+                    <span className="text-xs">{loadingDocs ? 'Carregando...' : 'Validar Docs'}</span>
+                  </Button>
+
                   {/* Change Role */}
                   <Button
                     variant="outline"
