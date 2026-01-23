@@ -2714,3 +2714,39 @@
 2026/01/23-22:24:06.662 f2f compacted to: files[ 0 1 36 0 0 0 0 ]
 2026/01/23-22:24:06.663 f2f Delete type=2 #1052
 2026/01/23-22:24:06.663 f2f Delete type=2 #1046
+2026/01/23-22:24:18.115 f2e Level-0 table #1066: started
+2026/01/23-22:24:18.134 f2e Level-0 table #1066: 1059543 bytes OK
+2026/01/23-22:24:18.140 f2e Delete type=0 #1048
+2026/01/23-22:24:18.141 f2f Compacting 1@0 + 1@1 files
+2026/01/23-22:24:18.162 f2f Generated table #1067@0: 39846 keys, 332250 bytes
+2026/01/23-22:24:18.179 f2f Generated table #1068@0: 18148 keys, 512516 bytes
+2026/01/23-22:24:18.179 f2f Compacted 1@0 + 1@1 files => 844766 bytes
+2026/01/23-22:24:18.183 f2f compacted to: files[ 0 2 36 0 0 0 0 ]
+2026/01/23-22:24:18.184 f2f Delete type=2 #1050
+2026/01/23-22:24:18.184 f2f Delete type=2 #1066
+2026/01/23-22:24:19.151 f2f Compacting 1@1 + 11@2 files
+2026/01/23-22:24:19.211 f2f Generated table #1069@1: 11913 keys, 2158564 bytes
+2026/01/23-22:24:19.237 f2f Generated table #1070@1: 7910 keys, 2130670 bytes
+2026/01/23-22:24:19.305 f2f Generated table #1071@1: 9297 keys, 2131926 bytes
+2026/01/23-22:24:19.353 f2f Generated table #1072@1: 106388 keys, 2259184 bytes
+2026/01/23-22:24:19.400 f2f Generated table #1073@1: 97360 keys, 2246869 bytes
+2026/01/23-22:24:19.451 f2f Generated table #1074@1: 99328 keys, 2248875 bytes
+2026/01/23-22:24:19.498 f2f Generated table #1075@1: 97772 keys, 2248100 bytes
+2026/01/23-22:24:19.543 f2f Generated table #1076@1: 98075 keys, 2246108 bytes
+2026/01/23-22:24:19.591 f2f Generated table #1077@1: 97590 keys, 2245527 bytes
+2026/01/23-22:24:19.638 f2f Generated table #1078@1: 98576 keys, 2247067 bytes
+2026/01/23-22:24:19.654 f2f Generated table #1079@1: 22738 keys, 599290 bytes
+2026/01/23-22:24:19.654 f2f Compacted 1@1 + 11@2 files => 22762180 bytes
+2026/01/23-22:24:19.659 f2f compacted to: files[ 0 1 36 0 0 0 0 ]
+2026/01/23-22:24:19.659 f2f Delete type=2 #1061
+2026/01/23-22:24:19.659 f2f Delete type=2 #1056
+2026/01/23-22:24:19.659 f2f Delete type=2 #1062
+2026/01/23-22:24:19.659 f2f Delete type=2 #1064
+2026/01/23-22:24:19.659 f2f Delete type=2 #1060
+2026/01/23-22:24:19.659 f2f Delete type=2 #1054
+2026/01/23-22:24:19.659 f2f Delete type=2 #1063
+2026/01/23-22:24:19.659 f2f Delete type=2 #1058
+2026/01/23-22:24:19.660 f2f Delete type=2 #1059
+2026/01/23-22:24:19.660 f2f Delete type=2 #1055
+2026/01/23-22:24:19.660 f2f Delete type=2 #1057
+2026/01/23-22:24:19.660 f2f Delete type=2 #1068
