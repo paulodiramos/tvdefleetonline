@@ -376,10 +376,9 @@ class ViaVerdeRPA(RPAExecutor):
             # Clicar no botão de Login para abrir o popup
             self.log("A abrir popup de login...")
             try:
-                # Procurar botão de login no header - múltiplos seletores
                 login_selectors = [
-                    "a:has-text('Login')",
                     "button:has-text('Login')",
+                    "a:has-text('Login')",
                     "a:has-text('Entrar')",
                     "[href*='login']",
                     ".login-btn",
@@ -406,100 +405,183 @@ class ViaVerdeRPA(RPAExecutor):
             self.log("A aguardar popup de login...")
             await self.page.wait_for_timeout(1000)
             
-            # Estratégia: Encontrar TODOS os inputs no formulário de login
-            # O popup Via Verde tem: 1 input email + 1 input password
+            # IMPORTANTE: Encontrar o MODAL primeiro e procurar inputs DENTRO dele
+            modal = None
+            modal_selectors = [
+                "[role='dialog']",
+                ".modal.show",
+                ".modal[style*='display: block']",
+                "[class*='modal'][class*='show']",
+                ".ReactModal__Content",
+                "[aria-modal='true']",
+                ".popup-login",
+                "[class*='login-modal']"
+            ]
             
-            # Primeiro tentar encontrar pelo label "Email"
+            for selector in modal_selectors:
+                try:
+                    modal = await self.page.wait_for_selector(selector, timeout=2000)
+                    if modal:
+                        self.log(f"Modal encontrado: {selector}")
+                        break
+                except:
+                    continue
+            
+            # Se não encontrou modal específico, usar a página toda mas ser mais específico com os inputs
+            if not modal:
+                self.log("Modal específico não encontrado, a procurar formulário de login...")
+                modal = self.page  # Fallback para a página
+            
+            # Encontrar inputs VISÍVEIS do tipo email/text e password
+            self.log("A procurar campos de login...")
+            
+            # Estratégia: Usar evaluate para encontrar inputs visíveis no DOM
+            form_inputs = await self.page.evaluate('''() => {
+                // Procurar todos os inputs visíveis
+                const inputs = document.querySelectorAll('input');
+                const visibleInputs = [];
+                
+                inputs.forEach((input, idx) => {
+                    const rect = input.getBoundingClientRect();
+                    const style = window.getComputedStyle(input);
+                    const isVisible = rect.width > 0 && rect.height > 0 && 
+                                     style.display !== 'none' && 
+                                     style.visibility !== 'hidden' &&
+                                     style.opacity !== '0';
+                    
+                    if (isVisible) {
+                        visibleInputs.push({
+                            index: idx,
+                            type: input.type,
+                            name: input.name,
+                            placeholder: input.placeholder,
+                            id: input.id,
+                            className: input.className.substring(0, 50)
+                        });
+                    }
+                });
+                
+                return visibleInputs;
+            }''')
+            
+            self.log(f"Inputs visíveis encontrados: {len(form_inputs)}")
+            for inp in form_inputs[:5]:
+                self.log(f"  - type={inp['type']}, name={inp['name']}, placeholder={inp['placeholder'][:30] if inp['placeholder'] else ''}")
+            
+            # Encontrar campo de email (input visível do tipo text ou email)
             email_input = None
-            try:
-                # Tentar encontrar input associado ao label Email
-                email_input = await self.page.query_selector("input[type='email']")
-                if not email_input:
-                    # Procurar todos os inputs de texto no modal
-                    all_inputs = await self.page.query_selector_all("input[type='text'], input[type='email'], input:not([type='hidden']):not([type='password']):not([type='submit']):not([type='checkbox'])")
-                    self.log(f"Encontrados {len(all_inputs)} inputs de texto")
-                    if all_inputs:
-                        email_input = all_inputs[0]  # Primeiro input é geralmente o email
-            except Exception as e:
-                self.log(f"Erro ao procurar email: {e}", "warning")
+            for inp in form_inputs:
+                if inp['type'] in ['email', 'text'] and inp['type'] != 'hidden':
+                    # Provavelmente é o email se for o primeiro text/email visível
+                    if inp['name'] in ['email', 'username', 'user', 'login'] or \
+                       'email' in inp['placeholder'].lower() or \
+                       'email' in inp['id'].lower() or \
+                       inp['type'] == 'email':
+                        try:
+                            email_input = await self.page.query_selector(f"input[type='{inp['type']}'][name='{inp['name']}']") if inp['name'] else None
+                            if not email_input:
+                                email_input = await self.page.query_selector(f"input#{inp['id']}") if inp['id'] else None
+                            if email_input:
+                                self.log(f"Campo email identificado: name={inp['name']}, type={inp['type']}")
+                                break
+                        except:
+                            pass
+            
+            # Se não encontrou por atributos específicos, usar primeiro input visível de email/text
+            if not email_input:
+                for inp in form_inputs:
+                    if inp['type'] in ['email', 'text']:
+                        try:
+                            if inp['id']:
+                                email_input = await self.page.query_selector(f"input#{inp['id']}")
+                            elif inp['name']:
+                                email_input = await self.page.query_selector(f"input[name='{inp['name']}']")
+                            else:
+                                # Usar nth selector
+                                visible_texts = [i for i in form_inputs if i['type'] in ['email', 'text']]
+                                if visible_texts:
+                                    email_input = await self.page.query_selector(f"input[type='{visible_texts[0]['type']}']:visible")
+                            if email_input:
+                                self.log(f"Campo email selecionado (primeiro visível)")
+                                break
+                        except:
+                            pass
+            
+            if not email_input:
+                # Último recurso - primeiro input visível
+                email_input = await self.page.query_selector("input[type='email']:visible, input[type='text']:visible")
+                if email_input:
+                    self.log("Email input encontrado via seletor genérico")
             
             if not email_input:
                 self.log("Campo de email não encontrado no popup", "error")
                 await self.screenshot("viaverde_no_email_field")
                 return False
             
-            # Preencher email
+            # Preencher email - garantir que está visível e focado
             self.log("A inserir email...")
-            await email_input.click()
-            await email_input.fill("")  # Limpar primeiro
-            await email_input.type(username, delay=50)  # Digitar devagar
+            try:
+                await email_input.scroll_into_view_if_needed()
+                await email_input.click(timeout=5000)
+                await self.page.wait_for_timeout(200)
+                await email_input.fill(username)
+                self.log(f"Email preenchido: {username[:3]}***")
+            except Exception as e:
+                self.log(f"Erro ao preencher email: {e}", "warning")
+                # Tentar método alternativo
+                await self.page.type("input[type='email'], input[type='text']", username, delay=50)
+            
             await self.page.wait_for_timeout(500)
             
-            # Agora procurar campo de password
+            # Encontrar campo de password
             self.log("A procurar campo de password...")
             password_input = None
             
-            # Método 1: Seletor direto type='password'
-            try:
-                password_input = await self.page.wait_for_selector("input[type='password']", timeout=3000)
-                if password_input:
-                    self.log("Campo password encontrado com type='password'")
-            except:
-                pass
-            
-            # Método 2: Encontrar pelo placeholder
-            if not password_input:
-                try:
-                    placeholders = ["Palavra-passe", "Password", "Senha", "palavra-passe"]
-                    for ph in placeholders:
-                        try:
-                            password_input = await self.page.query_selector(f"input[placeholder*='{ph}']")
-                            if password_input:
-                                self.log(f"Campo password encontrado com placeholder: {ph}")
-                                break
-                        except:
-                            continue
-                except:
-                    pass
-            
-            # Método 3: Segundo input do formulário (depois do email)
-            if not password_input:
-                try:
-                    all_inputs = await self.page.query_selector_all("input:not([type='hidden']):not([type='submit']):not([type='checkbox']):not([type='radio'])")
-                    self.log(f"Total de inputs encontrados: {len(all_inputs)}")
-                    for idx, inp in enumerate(all_inputs):
-                        inp_type = await inp.get_attribute("type")
-                        inp_placeholder = await inp.get_attribute("placeholder") or ""
-                        self.log(f"  Input {idx}: type={inp_type}, placeholder={inp_placeholder[:30]}")
+            # Encontrar input de password visível
+            for inp in form_inputs:
+                if inp['type'] == 'password':
+                    try:
+                        if inp['id']:
+                            password_input = await self.page.query_selector(f"input#{inp['id']}")
+                        elif inp['name']:
+                            password_input = await self.page.query_selector(f"input[name='{inp['name']}']")
+                        else:
+                            password_input = await self.page.query_selector("input[type='password']")
                         
-                        # O segundo input ou qualquer um com type=password
-                        if inp_type == "password" or (idx == 1 and inp_type in ["text", "password", None]):
-                            password_input = inp
-                            self.log(f"Campo password selecionado: input {idx}")
+                        if password_input:
+                            self.log(f"Campo password identificado")
                             break
-                except Exception as e:
-                    self.log(f"Erro ao enumerar inputs: {e}", "warning")
+                    except:
+                        pass
+            
+            if not password_input:
+                password_input = await self.page.query_selector("input[type='password']:visible")
+            
+            if not password_input:
+                password_input = await self.page.query_selector("input[type='password']")
             
             if not password_input:
                 self.log("Campo de password não encontrado", "error")
                 await self.screenshot("viaverde_no_password_field")
-                
-                # Debug: capturar HTML do modal
-                try:
-                    modal_html = await self.page.evaluate("document.querySelector('.modal, [role=\"dialog\"], [class*=\"modal\"]')?.innerHTML || 'Modal não encontrado'")
-                    self.log(f"HTML do modal (primeiros 500 chars): {modal_html[:500]}")
-                except:
-                    pass
-                
                 return False
             
             # Preencher password
             self.log("A inserir password...")
-            await password_input.click()
-            await password_input.fill("")  # Limpar primeiro
-            await password_input.type(password, delay=50)  # Digitar devagar
-            await self.page.wait_for_timeout(500)
+            try:
+                await password_input.scroll_into_view_if_needed()
+                await password_input.click(timeout=5000)
+                await self.page.wait_for_timeout(200)
+                await password_input.fill(password)
+                self.log("Password preenchida")
+            except Exception as e:
+                self.log(f"Erro ao clicar no password, tentando método alternativo: {e}", "warning")
+                # Método alternativo - usar Tab do campo email e digitar
+                await email_input.press("Tab")
+                await self.page.wait_for_timeout(300)
+                await self.page.keyboard.type(password, delay=50)
+                self.log("Password preenchida via Tab")
             
+            await self.page.wait_for_timeout(500)
             await self.screenshot("viaverde_credentials_filled")
             
             # Clicar no botão de Login dentro do popup
@@ -509,16 +591,21 @@ class ViaVerdeRPA(RPAExecutor):
                 "button:has-text('Login')",
                 "button[type='submit']",
                 "input[type='submit']",
-                ".modal button.btn-primary",
+                ".btn-primary:has-text('Login')",
                 "form button",
-                "button.btn-login"
+                ".modal button:has-text('Login')"
             ]
             
             for selector in submit_selectors:
                 try:
-                    submit_btn = await self.page.wait_for_selector(selector, timeout=2000)
+                    buttons = await self.page.query_selector_all(selector)
+                    for btn in buttons:
+                        is_visible = await btn.is_visible()
+                        if is_visible:
+                            submit_btn = btn
+                            self.log(f"Botão submit encontrado: {selector}")
+                            break
                     if submit_btn:
-                        self.log(f"Botão submit encontrado: {selector}")
                         break
                 except:
                     continue
@@ -527,18 +614,17 @@ class ViaVerdeRPA(RPAExecutor):
                 await submit_btn.click()
                 self.log("Botão de login clicado")
             else:
-                # Tentar pressionar Enter no campo de password
+                # Tentar pressionar Enter
                 self.log("Botão não encontrado, a tentar Enter...")
-                await password_input.press("Enter")
+                await self.page.keyboard.press("Enter")
             
             await self.page.wait_for_timeout(5000)
             await self.screenshot("viaverde_after_login")
             
-            # Verificar login - procurar elementos que indicam sessão iniciada
+            # Verificar login
             current_url = self.page.url
             page_content = await self.page.content()
             
-            # Verificar se login foi bem sucedido
             login_success_indicators = [
                 "área reservada" in page_content.lower(),
                 "minha conta" in page_content.lower(),
@@ -554,20 +640,21 @@ class ViaVerdeRPA(RPAExecutor):
                 self.log("✅ Login Via Verde bem sucedido!")
                 return True
             else:
-                # Verificar se há mensagem de erro
-                error_selectors = [".error", ".alert-danger", ".alert-error", "[class*='error']", "[class*='invalid']"]
+                error_selectors = [".error", ".alert-danger", ".alert-error", "[class*='error']"]
                 for selector in error_selectors:
                     try:
                         error_el = await self.page.query_selector(selector)
                         if error_el:
-                            error_text = await error_el.inner_text()
-                            if error_text.strip():
-                                self.log(f"Erro de login detectado: {error_text}", "error")
-                                break
+                            is_visible = await error_el.is_visible()
+                            if is_visible:
+                                error_text = await error_el.inner_text()
+                                if error_text.strip():
+                                    self.log(f"Erro de login: {error_text}", "error")
+                                    break
                     except:
                         continue
                 
-                self.log(f"Login pode ter falhado. URL atual: {current_url}", "warning")
+                self.log(f"Login pode ter falhado. URL: {current_url}", "warning")
                 return False
                 
         except Exception as e:
