@@ -1,3 +1,2 @@
-2026/01/23-22:00:33.931 d10 Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/GCM Store/MANIFEST-000001
-2026/01/23-22:00:33.932 d10 Recovering log #3
-2026/01/23-22:00:33.932 d10 Reusing old log /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/GCM Store/000003.log 
+2026/01/23-22:01:53.754 f2f Creating DB /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/GCM Store since it was missing.
+2026/01/23-22:01:53.765 f2f Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/GCM Store/MANIFEST-000001

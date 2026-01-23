@@ -1,4 +1,2 @@
-2026/01/23-22:00:11.681 d40 Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Local Storage/leveldb/MANIFEST-000001
-2026/01/23-22:00:11.684 d40 Recovering log #4
-2026/01/23-22:00:11.684 d40 (ignoring error) /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Local Storage/leveldb/000004.log: dropping 11130 bytes; Corruption: missing start of fragmented record(2)
-2026/01/23-22:00:11.685 d40 Reusing old log /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Local Storage/leveldb/000004.log 
+2026/01/23-22:01:45.320 f60 Creating DB /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Local Storage/leveldb since it was missing.
+2026/01/23-22:01:45.339 f60 Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Local Storage/leveldb/MANIFEST-000001
