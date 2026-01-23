@@ -363,16 +363,40 @@ class ViaVerdeRPA(RPAExecutor):
             await self.page.wait_for_timeout(2000)
             await self.screenshot("viaverde_home")
             
+            # Fechar banner de cookies se existir
+            try:
+                cookie_btn = await self.page.query_selector("button:has-text('Aceitar'), button:has-text('Accept'), #onetrust-accept-btn-handler")
+                if cookie_btn:
+                    await cookie_btn.click()
+                    self.log("Banner de cookies fechado")
+                    await self.page.wait_for_timeout(500)
+            except:
+                pass
+            
             # Clicar no botão de Login para abrir o popup
             self.log("A abrir popup de login...")
             try:
-                # Procurar botão de login no header
-                login_btn = await self.page.wait_for_selector(
-                    "a[href*='login'], button:has-text('Login'), .login-btn, [data-testid='login']",
-                    timeout=5000
-                )
-                await login_btn.click()
-                await self.page.wait_for_timeout(1500)
+                # Procurar botão de login no header - múltiplos seletores
+                login_selectors = [
+                    "a:has-text('Login')",
+                    "button:has-text('Login')",
+                    "a:has-text('Entrar')",
+                    "[href*='login']",
+                    ".login-btn",
+                    ".btn-login"
+                ]
+                
+                for selector in login_selectors:
+                    try:
+                        login_btn = await self.page.wait_for_selector(selector, timeout=2000)
+                        if login_btn:
+                            await login_btn.click()
+                            self.log(f"Botão login clicado: {selector}")
+                            break
+                    except:
+                        continue
+                
+                await self.page.wait_for_timeout(2000)
             except:
                 self.log("Botão de login não encontrado, verificando se popup já está aberto...")
             
@@ -380,27 +404,24 @@ class ViaVerdeRPA(RPAExecutor):
             
             # Aguardar pelo popup/modal de login "A Minha Via Verde"
             self.log("A aguardar popup de login...")
+            await self.page.wait_for_timeout(1000)
             
-            # Tentar diferentes seletores para o campo de email
-            email_selectors = [
-                "input[type='email']",
-                "input[name='email']",
-                "input[placeholder*='Email']",
-                "input[placeholder*='email']",
-                "#email",
-                ".modal input[type='text']:first-of-type",
-                "[class*='modal'] input:first-of-type"
-            ]
+            # Estratégia: Encontrar TODOS os inputs no formulário de login
+            # O popup Via Verde tem: 1 input email + 1 input password
             
+            # Primeiro tentar encontrar pelo label "Email"
             email_input = None
-            for selector in email_selectors:
-                try:
-                    email_input = await self.page.wait_for_selector(selector, timeout=3000)
-                    if email_input:
-                        self.log(f"Campo email encontrado com seletor: {selector}")
-                        break
-                except:
-                    continue
+            try:
+                # Tentar encontrar input associado ao label Email
+                email_input = await self.page.query_selector("input[type='email']")
+                if not email_input:
+                    # Procurar todos os inputs de texto no modal
+                    all_inputs = await self.page.query_selector_all("input[type='text'], input[type='email'], input:not([type='hidden']):not([type='password']):not([type='submit']):not([type='checkbox'])")
+                    self.log(f"Encontrados {len(all_inputs)} inputs de texto")
+                    if all_inputs:
+                        email_input = all_inputs[0]  # Primeiro input é geralmente o email
+            except Exception as e:
+                self.log(f"Erro ao procurar email: {e}", "warning")
             
             if not email_input:
                 self.log("Campo de email não encontrado no popup", "error")
@@ -409,25 +430,150 @@ class ViaVerdeRPA(RPAExecutor):
             
             # Preencher email
             self.log("A inserir email...")
-            await email_input.fill(username)
+            await email_input.click()
+            await email_input.fill("")  # Limpar primeiro
+            await email_input.type(username, delay=50)  # Digitar devagar
             await self.page.wait_for_timeout(500)
             
-            # Procurar campo de password
-            password_selectors = [
-                "input[type='password']",
-                "input[name='password']",
-                "input[placeholder*='Palavra-passe']",
-                "input[placeholder*='palavra-passe']",
-                "input[placeholder*='Password']",
-                "#password"
+            # Agora procurar campo de password
+            self.log("A procurar campo de password...")
+            password_input = None
+            
+            # Método 1: Seletor direto type='password'
+            try:
+                password_input = await self.page.wait_for_selector("input[type='password']", timeout=3000)
+                if password_input:
+                    self.log("Campo password encontrado com type='password'")
+            except:
+                pass
+            
+            # Método 2: Encontrar pelo placeholder
+            if not password_input:
+                try:
+                    placeholders = ["Palavra-passe", "Password", "Senha", "palavra-passe"]
+                    for ph in placeholders:
+                        try:
+                            password_input = await self.page.query_selector(f"input[placeholder*='{ph}']")
+                            if password_input:
+                                self.log(f"Campo password encontrado com placeholder: {ph}")
+                                break
+                        except:
+                            continue
+                except:
+                    pass
+            
+            # Método 3: Segundo input do formulário (depois do email)
+            if not password_input:
+                try:
+                    all_inputs = await self.page.query_selector_all("input:not([type='hidden']):not([type='submit']):not([type='checkbox']):not([type='radio'])")
+                    self.log(f"Total de inputs encontrados: {len(all_inputs)}")
+                    for idx, inp in enumerate(all_inputs):
+                        inp_type = await inp.get_attribute("type")
+                        inp_placeholder = await inp.get_attribute("placeholder") or ""
+                        self.log(f"  Input {idx}: type={inp_type}, placeholder={inp_placeholder[:30]}")
+                        
+                        # O segundo input ou qualquer um com type=password
+                        if inp_type == "password" or (idx == 1 and inp_type in ["text", "password", None]):
+                            password_input = inp
+                            self.log(f"Campo password selecionado: input {idx}")
+                            break
+                except Exception as e:
+                    self.log(f"Erro ao enumerar inputs: {e}", "warning")
+            
+            if not password_input:
+                self.log("Campo de password não encontrado", "error")
+                await self.screenshot("viaverde_no_password_field")
+                
+                # Debug: capturar HTML do modal
+                try:
+                    modal_html = await self.page.evaluate("document.querySelector('.modal, [role=\"dialog\"], [class*=\"modal\"]')?.innerHTML || 'Modal não encontrado'")
+                    self.log(f"HTML do modal (primeiros 500 chars): {modal_html[:500]}")
+                except:
+                    pass
+                
+                return False
+            
+            # Preencher password
+            self.log("A inserir password...")
+            await password_input.click()
+            await password_input.fill("")  # Limpar primeiro
+            await password_input.type(password, delay=50)  # Digitar devagar
+            await self.page.wait_for_timeout(500)
+            
+            await self.screenshot("viaverde_credentials_filled")
+            
+            # Clicar no botão de Login dentro do popup
+            self.log("A procurar botão de submit...")
+            submit_btn = None
+            submit_selectors = [
+                "button:has-text('Login')",
+                "button[type='submit']",
+                "input[type='submit']",
+                ".modal button.btn-primary",
+                "form button",
+                "button.btn-login"
             ]
             
-            password_input = None
-            for selector in password_selectors:
+            for selector in submit_selectors:
                 try:
-                    password_input = await self.page.wait_for_selector(selector, timeout=3000)
-                    if password_input:
-                        self.log(f"Campo password encontrado com seletor: {selector}")
+                    submit_btn = await self.page.wait_for_selector(selector, timeout=2000)
+                    if submit_btn:
+                        self.log(f"Botão submit encontrado: {selector}")
+                        break
+                except:
+                    continue
+            
+            if submit_btn:
+                await submit_btn.click()
+                self.log("Botão de login clicado")
+            else:
+                # Tentar pressionar Enter no campo de password
+                self.log("Botão não encontrado, a tentar Enter...")
+                await password_input.press("Enter")
+            
+            await self.page.wait_for_timeout(5000)
+            await self.screenshot("viaverde_after_login")
+            
+            # Verificar login - procurar elementos que indicam sessão iniciada
+            current_url = self.page.url
+            page_content = await self.page.content()
+            
+            # Verificar se login foi bem sucedido
+            login_success_indicators = [
+                "área reservada" in page_content.lower(),
+                "minha conta" in page_content.lower(),
+                "sair" in page_content.lower(),
+                "logout" in page_content.lower(),
+                "area-reservada" in current_url,
+                "dashboard" in current_url,
+                "bem-vindo" in page_content.lower(),
+                "os meus dados" in page_content.lower()
+            ]
+            
+            if any(login_success_indicators):
+                self.log("✅ Login Via Verde bem sucedido!")
+                return True
+            else:
+                # Verificar se há mensagem de erro
+                error_selectors = [".error", ".alert-danger", ".alert-error", "[class*='error']", "[class*='invalid']"]
+                for selector in error_selectors:
+                    try:
+                        error_el = await self.page.query_selector(selector)
+                        if error_el:
+                            error_text = await error_el.inner_text()
+                            if error_text.strip():
+                                self.log(f"Erro de login detectado: {error_text}", "error")
+                                break
+                    except:
+                        continue
+                
+                self.log(f"Login pode ter falhado. URL atual: {current_url}", "warning")
+                return False
+                
+        except Exception as e:
+            self.log(f"Erro no login Via Verde: {str(e)}", "error")
+            await self.screenshot("viaverde_login_error")
+            return False
                         break
                 except:
                     continue
