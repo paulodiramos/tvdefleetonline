@@ -17532,9 +17532,15 @@ async def testar_conexao_plataforma(
 
 
 # ==================================================
-# CONFIGURAÇÃO DE MAPEAMENTO - Admin/Gestor
+# CONFIGURAÇÃO DE MAPEAMENTO - MOVIDO PARA routes/configuracoes.py
 # ==================================================
+# Endpoints movidos:
+# - GET /api/configuracao/mapeamento-campos
+# - POST /api/configuracao/mapeamento-campos
+# - GET /api/configuracao/sincronizacao-auto
+# - POST /api/configuracao/sincronizacao-auto
 
+'''
 @app.get("/api/configuracao/mapeamento-campos")
 async def obter_mapeamento_campos(
     current_user: dict = Depends(get_current_user)
