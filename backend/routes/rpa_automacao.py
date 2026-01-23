@@ -88,11 +88,12 @@ PLATAFORMAS = [
         "nome": "Via Verde Empresas",
         "icone": "🛣️",
         "cor": "#22C55E",
-        "descricao": "Extrair portagens com data/hora e matrícula",
-        "tipos_extracao": ["portagens"],
-        "campos_credenciais": ["username", "password"],
+        "descricao": "Extrair portagens com data/hora, local e matrícula",
+        "tipos_extracao": ["portagens", "consumos_matricula"],
+        "campos_credenciais": ["email", "password"],
         "requer_2fa": False,
-        "url_login": "https://www.viaverde.pt/empresas/login"
+        "url_login": "https://www.viaverde.pt/empresas",
+        "nota": "Login via popup - inserir email e password da conta Via Verde"
     },
     {
         "id": "prio",
