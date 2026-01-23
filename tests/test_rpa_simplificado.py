@@ -245,7 +245,7 @@ class TestRPAUpload:
         files = {"file": ("test_combustivel.csv", csv_content, "text/csv")}
         
         response = requests.post(
-            f"{BASE_URL}/api/rpa/upload/combustivel_prio",
+            f"{BASE_URL}/api/rpa/upload/combustivel_prio?parceiro_id={TEST_PARCEIRO_ID}",
             headers=headers,
             files=files
         )
