@@ -13166,6 +13166,10 @@ async def listar_ganhos_uber(
 '''
 # FIM DOS ENDPOINTS DE GANHOS COMENTADOS
 
+# ==================================================
+# ENDPOINTS PÚBLICOS - MOVIDO PARA routes/public.py
+# ==================================================
+'''
 @app.get("/api/public/veiculos")
 async def get_public_veiculos():
     """Get public vehicles available for sale or rent (including vehicles without assigned driver)"""
