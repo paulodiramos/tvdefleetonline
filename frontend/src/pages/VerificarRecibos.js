@@ -395,15 +395,22 @@ const VerificarRecibos = ({ user, onLogout }) => {
                   const liquido = (relatorio.ganhos_uber || 0) + (relatorio.uber_portagens || 0) + (relatorio.ganhos_bolt || 0) 
                     - (relatorio.via_verde || 0) - (relatorio.combustivel || 0) - (relatorio.carregamento_eletrico || 0) 
                     - (relatorio.aluguer_veiculo || 0) - (relatorio.extras || 0);
+                  const isSelected = selectedMotoristas.includes(relatorio.motorista_id);
                   
                   return (
                     <div 
                       key={relatorio.motorista_id}
-                      className="border rounded-lg p-4 hover:bg-slate-50 transition-colors"
+                      className={`border rounded-lg p-4 hover:bg-slate-50 transition-colors ${isSelected ? 'bg-blue-50 border-blue-300' : ''}`}
                       data-testid={`relatorio-${relatorio.motorista_id}`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-4">
+                          {/* Checkbox para seleção */}
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={(checked) => handleSelectMotorista(relatorio.motorista_id, checked)}
+                            className="mt-1"
+                          />
                           <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
                             <User className="w-6 h-6 text-amber-600" />
                           </div>
@@ -418,7 +425,7 @@ const VerificarRecibos = ({ user, onLogout }) => {
                               <span>Uber: {formatCurrency(relatorio.ganhos_uber)}</span>
                               <span>Bolt: {formatCurrency(relatorio.ganhos_bolt)}</span>
                             </div>
-                            {relatorio.status_info.data_envio_relatorio && (
+                            {relatorio.status_info?.data_envio_relatorio && (
                               <p className="text-xs text-slate-500 mt-1">
                                 Relatório enviado em: {new Date(relatorio.status_info.data_envio_relatorio).toLocaleString('pt-PT')}
                               </p>
