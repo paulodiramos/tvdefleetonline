@@ -17645,7 +17645,8 @@ async def salvar_config_sincronizacao(
     except Exception as e:
         logger.error(f"Erro ao salvar config sync: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
+'''
+# FIM DOS ENDPOINTS DE CONFIGURAÇÃO COMENTADOS
 
 # Include main API router LAST (after ALL routes are defined, including legacy ones)
 # This ensures all @api_router decorated endpoints are registered
