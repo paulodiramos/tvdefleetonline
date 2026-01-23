@@ -99,6 +99,7 @@ from routes.ficheiros_importados import router as ficheiros_importados_router
 from routes.agenda import router as agenda_router
 from routes.whatsapp import router as whatsapp_router
 from routes.rpa_simplificado import router as rpa_simplificado_router
+from routes.rpa_automacao import router as rpa_automacao_router
 
 # Import utilities from refactored modules
 from utils.file_handlers import (
