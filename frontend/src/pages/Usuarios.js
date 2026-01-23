@@ -651,8 +651,8 @@ const Usuarios = ({ user, onLogout }) => {
                   className="w-full mt-1 px-3 py-2 border rounded-md text-sm"
                 >
                   <option value="">Todos os parceiros</option>
-                  {allParceiros.map(p => (
-                    <option key={p.id} value={p.id}>{p.name || p.nome_empresa || p.email}</option>
+                  {allParceiros.map((p, idx) => (
+                    <option key={`parceiro-${p.id}-${idx}`} value={p.id}>{p.name || p.nome_empresa || p.email}</option>
                   ))}
                 </select>
               </div>
