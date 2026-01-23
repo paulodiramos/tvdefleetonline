@@ -2,7 +2,7 @@
 
 ## Changelog (2026-01-23 - Session 20)
 
-### 1. Gestão Avançada de Utilizadores ✅ NEW
+### 1. Gestão Avançada de Utilizadores ✅
 **Página:** `/usuarios` (apenas Admin)
 
 **Funcionalidades implementadas:**
@@ -27,18 +27,43 @@
 
 **Endpoints implementados:**
 - `PUT /api/users/{id}/status` - Bloquear/desbloquear utilizador
-  - Request: `{"status": "blocked"}` ou `{"status": "active"}`
 - `PUT /api/users/{id}/revoke` - Revogar acesso do utilizador
 - `PUT /api/users/{id}/reset-password` - Alterar senha (admin)
-- `PUT /api/users/{id}/validate-document` - Validar documento
 
-**Ficheiros modificados:**
-- `/app/frontend/src/pages/Usuarios.js` - UI completa com filtros e ações
-- `/app/backend/routes/users.py` - Endpoints de API
+**Testes:** 94% backend, 100% frontend
 
-**Testes:**
-- `/app/tests/test_user_management_iteration15.py`
-- Resultado: 94% backend (15/16), 100% frontend
+---
+
+### 2. Sistema RPA Simplificado ✅ NEW
+**Página:** `/rpa-simplificado` (Admin, Gestão, Parceiro)
+
+**Funcionalidades de Upload CSV:**
+- **Prio Combustível** - Importar abastecimentos (data, matricula, litros, valor, local)
+- **Prio Elétrico** - Importar carregamentos (data, matricula, kwh, valor, estacao)
+- **GPS Verizon** - Importar rastreamento (data, matricula, km_percorridos, tempo_conducao)
+- **GPS Cartrack** - Importar rastreamento (data, matricula, km_percorridos, tempo_conducao)
+- **Outro Sistema** - Importação genérica
+
+**Funcionalidades de Exportação CSV:**
+- Relatórios Semanais (motorista, ganhos Uber/Bolt, comissões, valores a pagar)
+- Recibos/Transações (recibos submetidos com valores e status)
+- Despesas (combustível, elétrico, outras despesas)
+
+**Endpoints implementados:**
+- `GET /api/rpa/fornecedores` - Listar fornecedores disponíveis
+- `GET /api/rpa/fornecedores/{id}` - Detalhes de um fornecedor
+- `POST /api/rpa/upload/{fornecedor_id}` - Upload e processamento de CSV
+- `GET /api/rpa/importacoes` - Histórico de importações
+- `GET /api/rpa/estatisticas` - Estatísticas de importações
+- `GET /api/rpa/exportar/relatorios-semanais` - Exportar relatórios CSV
+- `GET /api/rpa/exportar/recibos` - Exportar recibos CSV
+- `GET /api/rpa/exportar/despesas` - Exportar despesas CSV
+
+**Ficheiros:**
+- `/app/backend/routes/rpa_simplificado.py` - Backend API
+- `/app/frontend/src/pages/RPASimplificado.js` - Frontend UI
+
+**Testes:** 100% backend (26/26), 100% frontend
 
 ---
 
