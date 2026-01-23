@@ -16609,8 +16609,18 @@ async def forcar_sincronizacao(
 
 # ==================================================
 # GESTÃO DE CREDENCIAIS DE PLATAFORMAS
+# MOVIDO PARA routes/credenciais.py
 # ==================================================
 
+# @app.get("/api/credenciais-plataforma") - MOVIDO PARA routes/credenciais.py
+# @app.post("/api/credenciais-plataforma") - MOVIDO PARA routes/credenciais.py
+# @app.put("/api/credenciais-plataforma/{cred_id}") - MOVIDO PARA routes/credenciais.py
+# @app.delete("/api/credenciais-plataforma/{cred_id}") - MOVIDO PARA routes/credenciais.py
+# @app.post("/api/credenciais-plataforma/{cred_id}/testar") - MOVIDO PARA routes/credenciais.py
+# @app.post("/api/credenciais-plataforma/{cred_id}/sincronizar") - MOVIDO PARA routes/credenciais.py
+
+# Legacy endpoints comentados - ver routes/credenciais.py para implementação atual
+'''
 @app.get("/api/credenciais-plataforma")
 async def listar_credenciais(
     parceiro_id: Optional[str] = None,
