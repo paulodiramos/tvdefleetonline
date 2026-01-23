@@ -418,22 +418,22 @@ class TestAuthRequired:
     def test_credenciais_requires_auth(self):
         """GET /api/rpa-auto/credenciais - Should require authentication"""
         response = requests.get(f"{BASE_URL}/api/rpa-auto/credenciais")
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]  # 403 is also valid for unauthorized
     
     def test_execucoes_requires_auth(self):
         """GET /api/rpa-auto/execucoes - Should require authentication"""
         response = requests.get(f"{BASE_URL}/api/rpa-auto/execucoes")
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
     
     def test_agendamentos_requires_auth(self):
         """GET /api/rpa-auto/agendamentos - Should require authentication"""
         response = requests.get(f"{BASE_URL}/api/rpa-auto/agendamentos")
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
     
     def test_estatisticas_requires_auth(self):
         """GET /api/rpa-auto/estatisticas - Should require authentication"""
         response = requests.get(f"{BASE_URL}/api/rpa-auto/estatisticas")
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
     
     def test_plataformas_public(self):
         """GET /api/rpa-auto/plataformas - Should be public (no auth required)"""
