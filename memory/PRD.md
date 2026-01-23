@@ -9,77 +9,85 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 - **Database**: MongoDB
 - **Automação**: Playwright (Python)
 
+---
+
+## Progresso da Refatoração do Backend (23/01/2026)
+
+### Estado Atual
+| Componente | Linhas | Endpoints |
+|------------|--------|-----------|
+| server.py | 17.650 | 34 ativos |
+| routes/*.py | 26.487 | 510 |
+| models/*.py | 2.424 | - |
+
+### Ficheiros de Rotas Criados
+- `routes/credenciais.py` (NOVO) - Gestão de credenciais de plataformas
+- `routes/rpa_designer.py` - Sistema RPA Designer
+- `routes/rpa_automacao.py` - Automação RPA
+- `routes/rpa_simplificado.py` - Upload CSV manual
+- E mais 40+ ficheiros de rotas
+
+### Endpoints Ainda no server.py (34)
+- Uploads de ficheiros (recibos, comprovativos)
+- Sincronização de plataformas
+- Import Uber/Bolt
+- Ganhos Uber/Bolt
+- Endpoints públicos
+- Configurações de sincronização
+- Import CSV
+- Bolt test/sync
+- Configuração de mapeamento
+
+### Próximos Passos da Refatoração
+1. Mover endpoints de sincronização para `routes/sincronizacao.py`
+2. Mover endpoints de import para `routes/importacoes.py`
+3. Consolidar modelos duplicados entre server.py e models/
+
+---
+
 ## Funcionalidades Implementadas
 
-### Sistema de Automação RPA
+### Sistema de Automação RPA (Completo)
 
-#### RPA Designer (NOVO - 23/01/2026)
-- **Página**: `/rpa-designer` (apenas admin)
-- **Funcionalidade**: Upload de scripts Playwright gravados localmente
-- **Fluxo**:
-  1. Admin grava ações no seu computador usando `npx playwright codegen [URL]`
-  2. Admin faz upload do script na plataforma
-  3. Define campos de credenciais (email, password, etc.)
-  4. Parceiros vêem apenas interface simples para executar
-- **Endpoints**:
-  - `POST /api/rpa-designer/scripts` - Criar script
-  - `GET /api/rpa-designer/scripts` - Listar scripts
-  - `PUT /api/rpa-designer/scripts/{id}` - Atualizar script
-  - `DELETE /api/rpa-designer/scripts/{id}` - Eliminar script
-  - `GET /api/rpa-designer/template-script` - Obter template
-  - `GET /api/rpa-designer/plataformas-disponiveis` - Listar para parceiros
+#### RPA Designer (Admin)
+- Upload de scripts Playwright gravados localmente
+- Configuração de campos de credenciais
+- Gestão de versões de scripts
 
 #### RPA Automático
-- **Página**: `/rpa-automacao`
-- **Funcionalidade**: Execução de automações Playwright
-- **Plataformas**: Uber, Bolt, Via Verde, Prio + customizadas
-- **Integração**: Carrega plataformas do RPA Designer automaticamente
+- Plataformas: Uber, Bolt, Via Verde, Prio + customizadas
+- Execução com credenciais encriptadas
+- Logs e screenshots de depuração
 
-#### RPA Simplificado
-- **Página**: `/rpa-simplificado`
-- **Funcionalidade**: Upload manual de CSVs de fornecedores
+#### RPA Simplificado (CSV)
+- Upload manual de ficheiros de fornecedores
+- Exportação de relatórios
 
 ### Gestão de Utilizadores
-- **Página**: `/usuarios`
-- **Filtros**: Perfil, parceiro, data
-- **Ações admin**: Bloquear, revogar, alterar senha, validar documentos
+- Filtros por perfil, parceiro, data
+- Ações admin: bloquear, revogar, alterar senha
 
-### Outras Funcionalidades
-- Dashboard com estatísticas
-- Gestão de motoristas e veículos
-- Contratos e financeiro
-- Mensagens e notificações
-- Integrações: WhatsApp, Terabox
+### Integrações
+- WhatsApp Web.js
+- Terabox
+- Playwright para automação
 
-## Ficheiros Chave - RPA Designer
-
-### Backend
-- `/app/backend/routes/rpa_designer.py` - API endpoints
-- `/app/backend/rpa_scripts/` - Scripts guardados
-
-### Frontend
-- `/app/frontend/src/pages/RPADesigner.js` - Página admin
-- `/app/frontend/src/pages/RPAAutomacao.js` - Integração parceiros
+---
 
 ## Credenciais de Teste
 - Admin: `admin@tvdefleet.com` / `123456`
 - Parceiro: `geral@zmbusines.com` / `zmpt2024`
 
-## Próximas Tarefas (Backlog)
+---
+
+## Tarefas Pendentes
 
 ### P1 - Alta Prioridade
-- [ ] Validar scripts RPA em ambiente com acesso à internet
-- [ ] Refatoração do `server.py` monolítico
+- [ ] Continuar refatoração do server.py
+- [ ] Validar scripts RPA em ambiente com internet
 
 ### P2 - Média Prioridade
 - [ ] Limitar "Próximos Eventos" no dashboard a 3 itens
-- [ ] Testar automações Uber/Bolt/Prio com credenciais reais
 
 ### P3 - Baixa Prioridade
-- [ ] Exportação de dados em JSON/CSV
-- [ ] Melhorias de UI/UX gerais
-
-## Notas Técnicas
-- Browser Playwright não é persistente no ambiente preview
-- Ambiente preview não tem acesso à internet externa
-- Scripts customizados mostram badge "Custom" na lista de plataformas
+- [ ] Consolidar modelos Pydantic duplicados
