@@ -138,6 +138,117 @@ const Usuarios = ({ user, onLogout }) => {
     }
   };
 
+  // Função para carregar documentos do utilizador
+  const fetchUserDocuments = async (userId, userRole) => {
+    setLoadingDocs(true);
+    setUserDocs([]);
+    try {
+      const token = localStorage.getItem('token');
+      let docs = [];
+      
+      // Buscar documentos dependendo do role do utilizador
+      if (userRole === 'motorista') {
+        // Buscar motorista e seus documentos
+        const motorista = await axios.get(`${API}/motoristas/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => null);
+        
+        if (motorista?.data?.documentos) {
+          const docTypes = {
+            carta_conducao: 'Carta de Condução',
+            cartao_cidadao: 'Cartão de Cidadão',
+            certificado_tvde: 'Certificado TVDE',
+            comprovativo_morada: 'Comprovativo de Morada',
+            registo_criminal: 'Registo Criminal',
+            foto_perfil: 'Foto de Perfil'
+          };
+          
+          Object.entries(motorista.data.documentos).forEach(([key, value]) => {
+            if (value) {
+              docs.push({
+                tipo: docTypes[key] || key,
+                url: value,
+                validado: motorista.data.documentos_validados?.[key] || false,
+                campo: key
+              });
+            }
+          });
+        }
+      } else if (userRole === 'parceiro') {
+        // Buscar documentos do parceiro
+        const parceiroResp = await axios.get(`${API}/parceiros/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        }).catch(() => null);
+        
+        if (parceiroResp?.data) {
+          const parceiro = parceiroResp.data;
+          const docTypes = {
+            logo_url: 'Logo da Empresa',
+            certidao_permanente: 'Certidão Permanente',
+            alvara_tvde: 'Alvará TVDE'
+          };
+          
+          Object.entries(docTypes).forEach(([key, label]) => {
+            if (parceiro[key]) {
+              docs.push({
+                tipo: label,
+                url: parceiro[key],
+                validado: parceiro.documentos_validados?.[key] || false,
+                campo: key
+              });
+            }
+          });
+        }
+      }
+      
+      // Buscar documentos da collection de documentos
+      const docsResp = await axios.get(`${API}/documentos/user/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      }).catch(() => null);
+      
+      if (docsResp?.data && Array.isArray(docsResp.data)) {
+        docsResp.data.forEach(doc => {
+          docs.push({
+            tipo: doc.tipo || doc.nome || 'Documento',
+            url: doc.url || doc.file_url,
+            validado: doc.validado || false,
+            data_upload: doc.created_at || doc.data_upload,
+            campo: doc.id
+          });
+        });
+      }
+      
+      setUserDocs(docs);
+    } catch (error) {
+      console.error('Error fetching user documents:', error);
+      toast.error('Erro ao carregar documentos');
+    } finally {
+      setLoadingDocs(false);
+    }
+  };
+
+  // Função para validar/invalidar documento
+  const handleValidateDocument = async (userId, campo, validar) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/users/${userId}/validate-document`,
+        { campo, validado: validar },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      // Atualizar lista de documentos
+      setUserDocs(prev => prev.map(doc => 
+        doc.campo === campo ? { ...doc, validado: validar } : doc
+      ));
+      
+      toast.success(validar ? 'Documento validado!' : 'Validação removida');
+    } catch (error) {
+      console.error('Error validating document:', error);
+      toast.error('Erro ao validar documento');
+    }
+  };
+
   const handleOpenParceirosDialog = async (gestor) => {
     setSelectedGestor(gestor);
     
