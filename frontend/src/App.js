@@ -804,6 +804,16 @@ function App() {
             }
           />
           <Route
+            path="/rpa-automacao"
+            element={
+              user && ['admin', 'gestao', 'parceiro'].includes(user.role) ? (
+                <RPAAutomacao user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/admin/planos-motorista"
             element={
               user && user.role === 'admin' ? (
