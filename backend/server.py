@@ -101,6 +101,7 @@ from routes.whatsapp import router as whatsapp_router
 from routes.rpa_simplificado import router as rpa_simplificado_router
 from routes.rpa_automacao import router as rpa_automacao_router
 from routes.rpa_designer import router as rpa_designer_router
+from routes.credenciais import router as credenciais_router
 
 # Import utilities from refactored modules
 from utils.file_handlers import (
