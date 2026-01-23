@@ -13398,6 +13398,8 @@ async def get_public_parceiros():
     """Get public list of partners"""
     parceiros = await db.parceiros.find({}, {"_id": 0}).to_list(length=None)
     return parceiros
+'''
+# FIM DOS ENDPOINTS PÚBLICOS COMENTADOS
 
 # ==================== CONTRACT ENDPOINTS ====================
 
