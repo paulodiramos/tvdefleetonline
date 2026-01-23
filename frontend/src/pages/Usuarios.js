@@ -64,6 +64,12 @@ const Usuarios = ({ user, onLogout }) => {
   const [showDocsDialog, setShowDocsDialog] = useState(false);
   const [userDocs, setUserDocs] = useState([]);
   const [loadingDocs, setLoadingDocs] = useState(false);
+  // Estados para filtros avançados
+  const [filterRole, setFilterRole] = useState('');
+  const [filterParceiro, setFilterParceiro] = useState('');
+  const [filterDateFrom, setFilterDateFrom] = useState('');
+  const [filterDateTo, setFilterDateTo] = useState('');
+  const [allParceiros, setAllParceiros] = useState([]);
   // DEPRECATED: Estados removidos - agora usa /gestao-planos para atribuição
   const [duracaoDias, setDuracaoDias] = useState(30);
   const [showMotoristaDialog, setShowMotoristaDialog] = useState(false);
