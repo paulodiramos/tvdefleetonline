@@ -601,6 +601,133 @@ const VerificarRecibos = ({ user, onLogout }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Modal Confirmação - Aprovar sem Recibo */}
+      <Dialog open={showApproveConfirm !== null} onOpenChange={() => setShowApproveConfirm(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              Aprovar sem Recibo
+            </DialogTitle>
+            <DialogDescription>
+              Confirmar alteração de status para &quot;A Pagamento&quot;
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-slate-50 p-4 rounded-lg">
+              <p className="text-sm text-slate-600">Motorista:</p>
+              <p className="font-semibold text-lg">{showApproveConfirm?.motorista_nome}</p>
+              <p className="text-sm text-slate-500 mt-1">Semana {semana}/{ano}</p>
+            </div>
+            
+            <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+              <p className="text-sm text-amber-800">
+                <AlertCircle className="w-4 h-4 inline mr-1" />
+                <strong>Atenção:</strong> Esta ação altera o status para &quot;A Pagamento&quot; 
+                <strong> sem envio de recibo</strong>. O recibo poderá ser adicionado posteriormente.
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowApproveConfirm(null)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => handleApproveWithoutRecibo(showApproveConfirm)}
+              className="bg-green-600 hover:bg-green-700"
+              data-testid="confirm-approve-btn"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Confirmar Aprovação
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal - Alterar Status em Lote */}
+      <Dialog open={showBulkStatusModal} onOpenChange={setShowBulkStatusModal}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckSquare className="w-5 h-5 text-blue-600" />
+              Alterar Status em Lote
+            </DialogTitle>
+            <DialogDescription>
+              Alterar status de {selectedMotoristas.length} motorista(s) selecionado(s)
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <p className="text-sm text-blue-700 font-medium mb-2">
+                {selectedMotoristas.length} motorista(s) serão afetados
+              </p>
+              <p className="text-xs text-blue-600">Semana {semana}/{ano}</p>
+            </div>
+            
+            <div>
+              <Label>Novo Status</Label>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <Button
+                  variant={selectedBulkStatus === 'a_pagamento' ? 'default' : 'outline'}
+                  onClick={() => setSelectedBulkStatus('a_pagamento')}
+                  className={selectedBulkStatus === 'a_pagamento' ? 'bg-purple-600' : ''}
+                  size="sm"
+                >
+                  A Pagamento
+                </Button>
+                <Button
+                  variant={selectedBulkStatus === 'liquidado' ? 'default' : 'outline'}
+                  onClick={() => setSelectedBulkStatus('liquidado')}
+                  className={selectedBulkStatus === 'liquidado' ? 'bg-green-600' : ''}
+                  size="sm"
+                >
+                  Liquidado
+                </Button>
+                <Button
+                  variant={selectedBulkStatus === 'aprovado' ? 'default' : 'outline'}
+                  onClick={() => setSelectedBulkStatus('aprovado')}
+                  className={selectedBulkStatus === 'aprovado' ? 'bg-blue-600' : ''}
+                  size="sm"
+                >
+                  Aprovado
+                </Button>
+                <Button
+                  variant={selectedBulkStatus === 'pendente' ? 'default' : 'outline'}
+                  onClick={() => setSelectedBulkStatus('pendente')}
+                  className={selectedBulkStatus === 'pendente' ? 'bg-slate-600' : ''}
+                  size="sm"
+                >
+                  Pendente
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowBulkStatusModal(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleBulkStatusChange}
+              disabled={bulkStatusLoading}
+              className="bg-blue-600 hover:bg-blue-700"
+              data-testid="confirm-bulk-status-btn"
+            >
+              {bulkStatusLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  A processar...
+                </>
+              ) : (
+                <>
+                  <CheckSquare className="w-4 h-4 mr-2" />
+                  Alterar Status
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Layout>
   );
 };
