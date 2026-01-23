@@ -124,7 +124,8 @@ class TestRPAImportacoes:
             "password": ADMIN_PASSWORD
         })
         if response.status_code == 200:
-            return response.json().get("token")
+            data = response.json()
+            return data.get("access_token") or data.get("token")
         pytest.skip(f"Authentication failed: {response.status_code} - {response.text}")
     
     def test_listar_importacoes_sem_auth(self):
@@ -165,7 +166,8 @@ class TestRPAEstatisticas:
             "password": ADMIN_PASSWORD
         })
         if response.status_code == 200:
-            return response.json().get("token")
+            data = response.json()
+            return data.get("access_token") or data.get("token")
         pytest.skip(f"Authentication failed: {response.status_code} - {response.text}")
     
     def test_estatisticas_sem_auth(self):
@@ -203,7 +205,8 @@ class TestRPAUpload:
             "password": ADMIN_PASSWORD
         })
         if response.status_code == 200:
-            return response.json().get("token")
+            data = response.json()
+            return data.get("access_token") or data.get("token")
         pytest.skip(f"Authentication failed: {response.status_code} - {response.text}")
     
     def test_upload_sem_auth(self):
@@ -360,7 +363,8 @@ class TestRPAExportar:
             "password": ADMIN_PASSWORD
         })
         if response.status_code == 200:
-            return response.json().get("token")
+            data = response.json()
+            return data.get("access_token") or data.get("token")
         pytest.skip(f"Authentication failed: {response.status_code} - {response.text}")
     
     def test_exportar_relatorios_semanais_sem_auth(self):
