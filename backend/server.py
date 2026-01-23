@@ -17092,6 +17092,10 @@ async def get_import_history(
         logger.error(f"Erro ao obter histórico: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+# ==================================================
+# DADOS PLATAFORMA - MOVIDO PARA routes/ganhos.py
+# ==================================================
+'''
 @app.get("/api/dados/{plataforma}")
 async def get_dados_plataforma(
     plataforma: str,
@@ -17128,6 +17132,7 @@ async def get_dados_plataforma(
     except Exception as e:
         logger.error(f"Erro ao obter dados: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+'''
 
 # ==================================================
 # BOLT INTEGRATION - Sincronização Real
