@@ -1268,6 +1268,124 @@ const Usuarios = ({ user, onLogout }) => {
         </DialogContent>
       </Dialog>
 
+      {/* Modal Validação de Documentos */}
+      <Dialog open={showDocsDialog} onOpenChange={setShowDocsDialog}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-amber-600" />
+              Validar Documentos - {viewingUser?.name || viewingUser?.email}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {loadingDocs ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
+                <span className="ml-3 text-slate-600">A carregar documentos...</span>
+              </div>
+            ) : userDocs.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">
+                <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p>Nenhum documento encontrado para este utilizador.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {userDocs.map((doc, index) => (
+                  <div 
+                    key={index} 
+                    className={`border rounded-lg p-4 ${doc.validado ? 'bg-green-50 border-green-200' : 'bg-white'}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${doc.validado ? 'bg-green-100' : 'bg-amber-100'}`}>
+                          <FileText className={`w-5 h-5 ${doc.validado ? 'text-green-600' : 'text-amber-600'}`} />
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-800">{doc.tipo}</p>
+                          {doc.data_upload && (
+                            <p className="text-xs text-slate-500">
+                              Enviado em: {new Date(doc.data_upload).toLocaleDateString('pt-PT')}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        {/* Status Badge */}
+                        {doc.validado ? (
+                          <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full flex items-center gap-1">
+                            <CheckCircle className="w-3 h-3" />
+                            Validado
+                          </span>
+                        ) : (
+                          <span className="px-2 py-1 bg-amber-100 text-amber-700 text-xs rounded-full flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            Pendente
+                          </span>
+                        )}
+                        
+                        {/* Ver Documento */}
+                        {doc.url && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(doc.url, '_blank')}
+                          >
+                            <ExternalLink className="w-4 h-4 mr-1" />
+                            Ver
+                          </Button>
+                        )}
+                        
+                        {/* Validar/Invalidar */}
+                        {doc.validado ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-red-300 text-red-600 hover:bg-red-50"
+                            onClick={() => handleValidateDocument(viewingUser.id, doc.campo, false)}
+                          >
+                            <XCircle className="w-4 h-4 mr-1" />
+                            Remover
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700"
+                            onClick={() => handleValidateDocument(viewingUser.id, doc.campo, true)}
+                          >
+                            <CheckCircle className="w-4 h-4 mr-1" />
+                            Validar
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            {/* Resumo */}
+            {userDocs.length > 0 && (
+              <div className="bg-slate-50 p-4 rounded-lg mt-4">
+                <div className="flex justify-between text-sm">
+                  <span className="text-slate-600">Total de documentos:</span>
+                  <span className="font-medium">{userDocs.length}</span>
+                </div>
+                <div className="flex justify-between text-sm mt-1">
+                  <span className="text-slate-600">Validados:</span>
+                  <span className="font-medium text-green-600">{userDocs.filter(d => d.validado).length}</span>
+                </div>
+                <div className="flex justify-between text-sm mt-1">
+                  <span className="text-slate-600">Pendentes:</span>
+                  <span className="font-medium text-amber-600">{userDocs.filter(d => !d.validado).length}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Modal Perfil Completo */}
       <Dialog open={showFullProfileDialog} onOpenChange={setShowFullProfileDialog}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
