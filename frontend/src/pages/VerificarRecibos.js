@@ -528,7 +528,7 @@ const VerificarRecibos = ({ user, onLogout }) => {
               <Badge className="bg-green-100 text-green-700">Liquidado</Badge>
             </div>
             <p className="text-xs text-blue-700 mt-2">
-              Após enviar o recibo verde ou autofaturação, o status passa automaticamente para "A Pagamento".
+              Após enviar o recibo verde ou autofaturação, o status passa automaticamente para &quot;A Pagamento&quot;.
             </p>
           </CardContent>
         </Card>
@@ -572,7 +572,7 @@ const VerificarRecibos = ({ user, onLogout }) => {
 
             <div className="bg-amber-50 p-3 rounded border border-amber-200">
               <p className="text-xs text-amber-800">
-                ⚠️ Após enviar o recibo, o status será alterado automaticamente para <strong>"A Pagamento"</strong>.
+                ⚠️ Após enviar o recibo, o status será alterado automaticamente para <strong>&quot;A Pagamento&quot;</strong>.
               </p>
             </div>
           </div>
