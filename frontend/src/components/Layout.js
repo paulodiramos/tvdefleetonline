@@ -260,6 +260,11 @@ const Layout = ({ children, user, onLogout }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link to="/rpa-automacao" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>🔄 RPA Automático</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to="/rpa-simplificado" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>📤 RPA Simplificado (CSV)</span>
                         </Link>
