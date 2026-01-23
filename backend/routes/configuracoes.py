@@ -11,6 +11,8 @@ from utils.auth import get_current_user
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/configuracoes", tags=["configuracoes"])
+# Router adicional para compatibilidade com endpoints legados
+router_legacy = APIRouter(prefix="/configuracao", tags=["configuracao"])
 
 db = get_database()
 
