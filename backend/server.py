@@ -12701,13 +12701,26 @@ async def agendar_sincronizacao(credencial_id: str, horario: str, frequencia_dia
             scheduler.remove_job(job_id)
         
         # Adicionar novo job
-        scheduler.add_job(
-            executar_sincronizacao_automatica,
-            CronTrigger(hour=hora, minute=minuto, day_of_week='*/' + str(frequencia_dias)),
-            id=job_id,
-            args=[credencial_id],
-            replace_existing=True
-        )
+        # Nota: day_of_week só aceita 0-6, então usamos intervalo de dias em vez de cron
+        # Se frequencia_dias > 6, usamos IntervalTrigger em vez de CronTrigger
+        if frequencia_dias <= 6:
+            scheduler.add_job(
+                executar_sincronizacao_automatica,
+                CronTrigger(hour=hora, minute=minuto, day_of_week=f'*/{frequencia_dias}' if frequencia_dias <= 6 else '*'),
+                id=job_id,
+                args=[credencial_id],
+                replace_existing=True
+            )
+        else:
+            # Para frequências maiores que 6 dias, usar IntervalTrigger
+            from apscheduler.triggers.interval import IntervalTrigger
+            scheduler.add_job(
+                executar_sincronizacao_automatica,
+                IntervalTrigger(days=frequencia_dias, start_date=datetime.now(timezone.utc).replace(hour=hora, minute=minuto)),
+                id=job_id,
+                args=[credencial_id],
+                replace_existing=True
+            )
         
         logger.info(f"Sincronização agendada para credencial {credencial_id} às {horario} a cada {frequencia_dias} dias")
         
