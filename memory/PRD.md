@@ -218,13 +218,15 @@ Para usar WhatsApp Business API:
 
 ## Prioritized Backlog
 
-### P0 - Bloqueado
-- [ ] **WhatsApp Business API** - Aguarda credenciais do utilizador (Phone Number ID + Access Token)
+### P0 - Concluído
+- [x] **Gestão Avançada de Utilizadores** - COMPLETO (Session 20)
+  - Filtros por perfil, parceiro, data
+  - Ações: bloquear, revogar, alterar senha, validar documentos
 
 ### P1 - Alta Prioridade
 - [x] ~~Implementar sincronização Terabox~~ - COMPLETO (Session 18)
-- [ ] Refatoração do backend (migrar rotas de `relatorios` do `server.py`)
 - [ ] Limitar widget "Próximos Eventos" no dashboard a 3 itens
+- [ ] Refatoração do backend (migrar rotas de `relatorios` do `server.py`)
 
 ### P2 - Média Prioridade
 - [ ] Continuar refatoração: mover mais endpoints do `server.py` para ficheiros dedicados
@@ -240,7 +242,19 @@ Para usar WhatsApp Business API:
 
 ## Architecture Overview
 
-### Key API Endpoints - Terabox Sync (NEW)
+### Key API Endpoints - User Management (NEW)
+```
+GET  /api/users/all                    # Listar todos os utilizadores
+GET  /api/users/pending                # Listar utilizadores pendentes
+PUT  /api/users/{id}/status            # Bloquear/desbloquear
+PUT  /api/users/{id}/revoke            # Revogar acesso
+PUT  /api/users/{id}/reset-password    # Alterar senha
+PUT  /api/users/{id}/set-role          # Alterar role
+PUT  /api/users/{id}/validate-document # Validar documento
+DELETE /api/users/{id}                 # Eliminar utilizador
+```
+
+### Key API Endpoints - Terabox Sync
 ```
 POST /api/terabox/sync-documents           # Sincronizar todos os documentos
 POST /api/terabox/sync-trigger/{parceiro}  # Sincronizar parceiro específico
