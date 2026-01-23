@@ -279,24 +279,39 @@ Para usar WhatsApp Business API:
 
 ### P1 - Alta Prioridade
 - [x] ~~Implementar sincronização Terabox~~ - COMPLETO (Session 18)
+- [x] ~~Sistema RPA Automático~~ - COMPLETO (Session 20)
 - [ ] Limitar widget "Próximos Eventos" no dashboard a 3 itens
 - [ ] Refatoração do backend (migrar rotas de `relatorios` do `server.py`)
 
 ### P2 - Média Prioridade
+- [x] ~~Exportação CSV de dados~~ - COMPLETO (Session 20)
 - [ ] Continuar refatoração: mover mais endpoints do `server.py` para ficheiros dedicados
-- [ ] Implementar sincronização automática (RPA com Playwright)
 - [ ] Dashboard de ROI com cálculos automáticos
 
 ### P3 - Baixa Prioridade
 - [ ] PDF do relatório semanal com lista de transações Via Verde
-- [ ] Editor visual para automação RPA
-- [ ] Funcionalidade de exportação de dados (JSON/CSV)
+- [ ] Editor visual para automação RPA (drag-and-drop)
 
 ---
 
 ## Architecture Overview
 
-### Key API Endpoints - User Management (NEW)
+### Key API Endpoints - RPA Automação (NEW)
+```
+GET  /api/rpa-auto/plataformas              # Listar plataformas
+POST /api/rpa-auto/credenciais              # Guardar credenciais
+GET  /api/rpa-auto/credenciais              # Listar credenciais
+DELETE /api/rpa-auto/credenciais/{plat}     # Eliminar credenciais
+POST /api/rpa-auto/executar                 # Iniciar execução
+GET  /api/rpa-auto/execucoes                # Histórico
+GET  /api/rpa-auto/execucoes/{id}           # Detalhes com logs
+POST /api/rpa-auto/agendamentos             # Criar agendamento
+GET  /api/rpa-auto/agendamentos             # Listar agendamentos
+DELETE /api/rpa-auto/agendamentos/{id}      # Eliminar agendamento
+GET  /api/rpa-auto/estatisticas             # Estatísticas
+```
+
+### Key API Endpoints - User Management
 ```
 GET  /api/users/all                    # Listar todos os utilizadores
 GET  /api/users/pending                # Listar utilizadores pendentes
