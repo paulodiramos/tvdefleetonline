@@ -147,7 +147,7 @@ const RPASimplificado = ({ user, onLogout }) => {
       formData.append('file', uploadFile);
 
       const response = await axios.post(
-        `${API}/api/rpa/upload/${selectedFornecedor.id}`,
+        `${API}/rpa/upload/${selectedFornecedor.id}`,
         formData,
         {
           headers: {
@@ -182,16 +182,16 @@ const RPASimplificado = ({ user, onLogout }) => {
       let url = '';
       switch (exportType) {
         case 'relatorios':
-          url = `${API}/api/rpa/exportar/relatorios-semanais`;
+          url = `${API}/rpa/exportar/relatorios-semanais`;
           break;
         case 'recibos':
-          url = `${API}/api/rpa/exportar/recibos`;
+          url = `${API}/rpa/exportar/recibos`;
           break;
         case 'despesas':
-          url = `${API}/api/rpa/exportar/despesas`;
+          url = `${API}/rpa/exportar/despesas`;
           break;
         default:
-          url = `${API}/api/rpa/exportar/relatorios-semanais`;
+          url = `${API}/rpa/exportar/relatorios-semanais`;
       }
 
       // Adicionar filtros de data
