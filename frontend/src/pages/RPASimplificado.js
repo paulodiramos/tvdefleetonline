@@ -98,7 +98,7 @@ const RPASimplificado = ({ user, onLogout }) => {
       
       // Buscar fornecedores (público)
       try {
-        const fornecedoresRes = await axios.get(`${API}/api/rpa/fornecedores`);
+        const fornecedoresRes = await axios.get(`${API}/rpa/fornecedores`);
         setFornecedores(fornecedoresRes.data || []);
       } catch (e) {
         console.error('Erro ao carregar fornecedores:', e);
@@ -106,7 +106,7 @@ const RPASimplificado = ({ user, onLogout }) => {
       
       // Buscar importações (autenticado)
       try {
-        const importacoesRes = await axios.get(`${API}/api/rpa/importacoes`, { headers });
+        const importacoesRes = await axios.get(`${API}/rpa/importacoes`, { headers });
         setImportacoes(importacoesRes.data || []);
       } catch (e) {
         console.log('Importações não disponíveis');
@@ -115,7 +115,7 @@ const RPASimplificado = ({ user, onLogout }) => {
       
       // Buscar estatísticas (autenticado)
       try {
-        const estatisticasRes = await axios.get(`${API}/api/rpa/estatisticas`, { headers });
+        const estatisticasRes = await axios.get(`${API}/rpa/estatisticas`, { headers });
         setEstatisticas(estatisticasRes.data);
       } catch (e) {
         console.log('Estatísticas não disponíveis');
