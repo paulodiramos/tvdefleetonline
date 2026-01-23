@@ -142,6 +142,76 @@ const VerificarRecibos = ({ user, onLogout }) => {
     }
   };
 
+  // Funções de seleção
+  const handleSelectMotorista = (motoristaId, checked) => {
+    if (checked) {
+      setSelectedMotoristas([...selectedMotoristas, motoristaId]);
+    } else {
+      setSelectedMotoristas(selectedMotoristas.filter(id => id !== motoristaId));
+    }
+  };
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedMotoristas(relatorios.map(r => r.motorista_id));
+    } else {
+      setSelectedMotoristas([]);
+    }
+  };
+
+  // Aprovar sem envio de recibo (individual)
+  const handleApproveWithoutRecibo = async (motorista) => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.put(
+        `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motorista.motorista_id}/status`,
+        { status: 'a_pagamento', semana, ano },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      fetchRelatorios();
+      setShowApproveConfirm(null);
+      toast.success(`Status de ${motorista.motorista_nome} alterado para "A Pagamento"`);
+    } catch (error) {
+      console.error('Erro ao aprovar:', error);
+      toast.error('Erro ao aprovar motorista');
+    }
+  };
+
+  // Alterar status em lote
+  const handleBulkStatusChange = async () => {
+    if (selectedMotoristas.length === 0) {
+      toast.error('Selecione pelo menos um motorista');
+      return;
+    }
+
+    setBulkStatusLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      
+      // Alterar status de cada motorista selecionado
+      const promises = selectedMotoristas.map(motoristaId =>
+        axios.put(
+          `${API}/api/relatorios/parceiro/resumo-semanal/motorista/${motoristaId}/status`,
+          { status: selectedBulkStatus, semana, ano },
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+      );
+      
+      await Promise.all(promises);
+      
+      fetchRelatorios();
+      setSelectedMotoristas([]);
+      setShowBulkStatusModal(false);
+      toast.success(`Status alterado para ${selectedMotoristas.length} motorista(s)`);
+    } catch (error) {
+      console.error('Erro ao alterar status em lote:', error);
+      toast.error('Erro ao alterar status');
+    } finally {
+      setBulkStatusLoading(false);
+    }
+  };
+
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('pt-PT', { style: 'currency', currency: 'EUR' }).format(value || 0);
   };
