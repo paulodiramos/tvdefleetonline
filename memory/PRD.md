@@ -247,6 +247,9 @@ Para usar WhatsApp Business API:
 - [x] **Gestão Avançada de Utilizadores** - COMPLETO (Session 20)
   - Filtros por perfil, parceiro, data
   - Ações: bloquear, revogar, alterar senha, validar documentos
+- [x] **Sistema RPA Simplificado** - COMPLETO (Session 20)
+  - Upload CSV: Prio Combustível, Prio Elétrico, GPS Verizon, GPS Cartrack
+  - Exportação CSV: Relatórios Semanais, Recibos, Despesas
 
 ### P1 - Alta Prioridade
 - [x] ~~Implementar sincronização Terabox~~ - COMPLETO (Session 18)
