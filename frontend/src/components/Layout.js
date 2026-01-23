@@ -97,9 +97,12 @@ const Layout = ({ children, user, onLogout }) => {
         label: 'Financeiro', 
         icon: DollarSign,
         submenu: [
-          { path: '/pagamentos', label: 'Pagamentos a Motoristas' },
-          { path: '/verificar-recibos', label: 'Verificar Recibos' },
-          { path: '/gestao-extras', label: '💰 Extras/Dívidas' }
+          { path: '/resumo-semanal', label: '📊 Resumo Semanal' },
+          { path: '/gestao-extras', label: '💰 Extras/Dívidas' },
+          { path: '/verificar-recibos', label: '✅ Verificar Recibos' },
+          { path: '/pagamentos', label: '💳 Pagamentos a Motoristas' },
+          { path: '/arquivo-recibos', label: '📁 Arquivo de Recibos' },
+          { path: '/alertas-custos', label: '🔔 Alertas de Custos' }
         ]
       },
       { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' }
