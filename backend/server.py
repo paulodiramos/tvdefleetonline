@@ -16451,9 +16451,9 @@ async def startup_event():
         logger.error(f"Erro ao carregar agendamentos: {e}")
 
 # ==================================================
-# SINCRONIZAÇÃO - Configuração e Agendamento
+# SINCRONIZAÇÃO - MOVIDO PARA routes/sincronizacao.py
 # ==================================================
-
+'''
 @app.get("/api/sincronizacao/configuracoes")
 async def obter_configuracoes_sincronizacao(
     current_user: dict = Depends(get_current_user)
