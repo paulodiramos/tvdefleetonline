@@ -122,9 +122,82 @@ const Usuarios = ({ user, onLogout }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setParceiros(response.data || []);
+      setAllParceiros(response.data || []);
     } catch (error) {
       console.error('Error fetching parceiros:', error);
     }
+  };
+
+  // Função para bloquear/desbloquear utilizador
+  const handleToggleBlock = async (userId, currentStatus) => {
+    try {
+      const token = localStorage.getItem('token');
+      const newStatus = currentStatus === 'blocked' ? 'active' : 'blocked';
+      
+      await axios.put(
+        `${API}/users/${userId}/status`,
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      fetchUsers();
+      toast.success(newStatus === 'blocked' ? 'Utilizador bloqueado!' : 'Utilizador desbloqueado!');
+    } catch (error) {
+      console.error('Error toggling block:', error);
+      toast.error('Erro ao alterar estado do utilizador');
+    }
+  };
+
+  // Função para revogar utilizador (desativar completamente)
+  const handleRevokeUser = async (userId) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      await axios.put(
+        `${API}/users/${userId}/revoke`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      fetchUsers();
+      toast.success('Utilizador revogado com sucesso!');
+    } catch (error) {
+      console.error('Error revoking user:', error);
+      toast.error('Erro ao revogar utilizador');
+    }
+  };
+
+  // Filtrar utilizadores
+  const getFilteredUsers = (users) => {
+    return users.filter(u => {
+      // Filtro por pesquisa de texto
+      const searchMatch = !search || 
+        u.name?.toLowerCase().includes(search.toLowerCase()) ||
+        u.email?.toLowerCase().includes(search.toLowerCase()) ||
+        u.phone?.toLowerCase().includes(search.toLowerCase());
+      
+      // Filtro por role/perfil
+      const roleMatch = !filterRole || u.role === filterRole;
+      
+      // Filtro por parceiro
+      const parceiroMatch = !filterParceiro || 
+        u.parceiro_id === filterParceiro || 
+        u.id === filterParceiro;
+      
+      // Filtro por data
+      let dateMatch = true;
+      if (filterDateFrom || filterDateTo) {
+        const userDate = new Date(u.created_at);
+        if (filterDateFrom) {
+          dateMatch = dateMatch && userDate >= new Date(filterDateFrom);
+        }
+        if (filterDateTo) {
+          dateMatch = dateMatch && userDate <= new Date(filterDateTo + 'T23:59:59');
+        }
+      }
+      
+      return searchMatch && roleMatch && parceiroMatch && dateMatch;
+    });
   };
 
   const fetchFullProfile = async (userId) => {
