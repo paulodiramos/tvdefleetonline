@@ -928,6 +928,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
               {motoristas.length > 0 && (
                 <tfoot>
                   <tr className="bg-slate-100 font-bold text-xs">
+                    <td className="p-2"></td>
                     <td className="p-2">TOTAIS</td>
                     <td className="p-2 text-right text-green-700">{formatCurrency(totais.total_ganhos_uber)}</td>
                     <td className="p-2 text-right text-emerald-600 text-[10px]">{formatCurrency(totais.total_uber_portagens || 0)}</td>
@@ -938,7 +939,8 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
                     <td className="p-2 text-right text-blue-700">{formatCurrency(totalAluguer)}</td>
                     <td className="p-2 text-right text-orange-700">{formatCurrency(totalExtras)}</td>
                     <td className={`p-2 text-right ${isPositive ? 'text-green-700' : 'text-red-700'}`}>{formatCurrency(liquidoParceiro)}</td>
-                    <td></td>
+                    <td className="p-2"></td>
+                    <td className="p-2"></td>
                   </tr>
                 </tfoot>
               )}
