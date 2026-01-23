@@ -134,3 +134,113 @@ async def update_configuracao_geral(
     )
     
     return {"message": f"Configuration {config_tipo} updated successfully"}
+
+
+# ==================== MAPEAMENTO DE CAMPOS ====================
+
+@router.get("/mapeamento-campos")
+async def obter_mapeamento_campos(
+    current_user: dict = Depends(get_current_user)
+):
+    """Obtém configuração de mapeamento de campos para importação"""
+    try:
+        if current_user['role'] not in ['admin', 'gestao']:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        config = await db.configuracoes.find_one(
+            {'tipo': 'mapeamento_campos'},
+            {'_id': 0}
+        )
+        
+        return config.get('mapeamentos', {}) if config else {}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao obter mapeamento: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/mapeamento-campos")
+async def salvar_mapeamento_campos(
+    mapeamentos: Dict[str, Any],
+    current_user: dict = Depends(get_current_user)
+):
+    """Salva configuração de mapeamento de campos"""
+    try:
+        if current_user['role'] not in ['admin', 'gestao']:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        await db.configuracoes.update_one(
+            {'tipo': 'mapeamento_campos'},
+            {'$set': {
+                'tipo': 'mapeamento_campos',
+                'mapeamentos': mapeamentos,
+                'updated_at': datetime.now(timezone.utc),
+                'updated_by': current_user['id']
+            }},
+            upsert=True
+        )
+        
+        return {'success': True, 'message': 'Mapeamento salvo com sucesso'}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao salvar mapeamento: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================== SINCRONIZAÇÃO AUTOMÁTICA ====================
+
+@router.get("/sincronizacao-auto")
+async def obter_config_sincronizacao(
+    current_user: dict = Depends(get_current_user)
+):
+    """Obtém configuração de sincronização automática"""
+    try:
+        if current_user['role'] not in ['admin', 'gestao']:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        config = await db.configuracoes.find_one(
+            {'tipo': 'sincronizacao_auto'},
+            {'_id': 0}
+        )
+        
+        return config.get('plataformas', {}) if config else {}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao obter config sync: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/sincronizacao-auto")
+async def salvar_config_sincronizacao(
+    config: Dict[str, Any],
+    current_user: dict = Depends(get_current_user)
+):
+    """Salva configuração de sincronização automática"""
+    try:
+        if current_user['role'] not in ['admin', 'gestao']:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        await db.configuracoes.update_one(
+            {'tipo': 'sincronizacao_auto'},
+            {'$set': {
+                'tipo': 'sincronizacao_auto',
+                'plataformas': config,
+                'updated_at': datetime.now(timezone.utc),
+                'updated_by': current_user['id']
+            }},
+            upsert=True
+        )
+        
+        return {'success': True, 'message': 'Configuração salva com sucesso'}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erro ao salvar config sync: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
