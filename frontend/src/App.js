@@ -793,6 +793,16 @@ function App() {
             }
           />
           <Route
+            path="/rpa-simplificado"
+            element={
+              user && ['admin', 'gestao', 'parceiro'].includes(user.role) ? (
+                <RPASimplificado user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/admin/planos-motorista"
             element={
               user && user.role === 'admin' ? (
