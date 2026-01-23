@@ -56,7 +56,6 @@ const Layout = ({ children, user, onLogout }) => {
             { path: '/vistorias', label: 'Vistorias' }
           ]
         },
-        { path: '/resumo-semanal', icon: TrendingUp, label: 'Resumo Semanal' },
         { 
           label: 'Financeiro', 
           icon: DollarSign,
