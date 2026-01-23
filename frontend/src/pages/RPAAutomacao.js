@@ -122,9 +122,26 @@ const RPAAutomacao = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       
-      // Buscar plataformas
+      // Buscar plataformas padrão
       const platRes = await axios.get(`${API}/rpa-auto/plataformas`);
-      setPlataformas(platRes.data || []);
+      let todasPlataformas = platRes.data || [];
+      
+      // Buscar plataformas customizadas do RPA Designer
+      try {
+        const customRes = await axios.get(`${API}/rpa-designer/plataformas-disponiveis`, { headers });
+        const plataformasCustom = customRes.data || [];
+        // Adicionar às plataformas (evitar duplicados pelo id)
+        const idsExistentes = new Set(todasPlataformas.map(p => p.id));
+        for (const pc of plataformasCustom) {
+          if (!idsExistentes.has(pc.id)) {
+            todasPlataformas.push(pc);
+          }
+        }
+      } catch (e) {
+        console.log('Sem plataformas customizadas');
+      }
+      
+      setPlataformas(todasPlataformas);
       
       // Buscar credenciais
       try {
