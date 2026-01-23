@@ -621,8 +621,8 @@ const Usuarios = ({ user, onLogout }) => {
                 <Label className="text-xs text-slate-500">Pesquisar</Label>
                 <Input
                   placeholder="Nome, email ou telefone..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="mt-1"
                 />
               </div>
@@ -653,7 +653,7 @@ const Usuarios = ({ user, onLogout }) => {
                 >
                   <option value="">Todos os parceiros</option>
                   {allParceiros.map(p => (
-                    <option key={p.id} value={p.id}>{p.name || p.email}</option>
+                    <option key={p.id} value={p.id}>{p.name || p.nome_empresa || p.email}</option>
                   ))}
                 </select>
               </div>
@@ -682,13 +682,13 @@ const Usuarios = ({ user, onLogout }) => {
             </div>
             
             {/* Botão Limpar Filtros */}
-            {(search || filterRole || filterParceiro || filterDateFrom || filterDateTo) && (
+            {(searchTerm || filterRole || filterParceiro || filterDateFrom || filterDateTo) && (
               <div className="mt-3 pt-3 border-t">
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={() => {
-                    setSearch('');
+                    setSearchTerm('');
                     setFilterRole('');
                     setFilterParceiro('');
                     setFilterDateFrom('');
