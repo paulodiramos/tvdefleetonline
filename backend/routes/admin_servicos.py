@@ -126,17 +126,36 @@ async def reiniciar_whatsapp(
         # 1. Limpar locks do Chromium antes de reiniciar
         locks_limpos = limpar_locks_whatsapp()
         
-        # 2. Parar o serviço
+        # 2. Verificar se supervisor está disponível
+        check_result = run_command(["which", "supervisorctl"])
+        if not check_result["success"]:
+            # Supervisor não disponível (ambiente de produção/Kubernetes)
+            await db.logs_sistema.insert_one({
+                "tipo": "reinicio_servico",
+                "servico": "whatsapp",
+                "user_id": current_user["id"],
+                "user_email": current_user["email"],
+                "resultado": "nao_disponivel",
+                "detalhes": {"locks_limpos": locks_limpos, "ambiente": "producao"},
+                "timestamp": datetime.now(timezone.utc).isoformat()
+            })
+            return {
+                "success": False,
+                "message": "Supervisor não disponível neste ambiente. Em produção, use o painel de Kubernetes para reiniciar os pods.",
+                "locks_limpos": locks_limpos
+            }
+        
+        # 3. Parar o serviço
         stop_result = run_command(["supervisorctl", "stop", "whatsapp"])
         
-        # 3. Aguardar um momento
+        # 4. Aguardar um momento
         import time
         time.sleep(2)
         
-        # 4. Iniciar o serviço
+        # 5. Iniciar o serviço
         start_result = run_command(["supervisorctl", "start", "whatsapp"])
         
-        # 5. Verificar status
+        # 6. Verificar status
         status_result = run_command(["supervisorctl", "status", "whatsapp"])
         
         # Registar log de acção
