@@ -1,5 +1,47 @@
 # TVDEFleet - Product Requirements Document
 
+## Changelog (2026-01-23 - Session 20)
+
+### 1. Gestão Avançada de Utilizadores ✅ NEW
+**Página:** `/usuarios` (apenas Admin)
+
+**Funcionalidades implementadas:**
+- **Filtros de pesquisa avançados:**
+  - Pesquisa por texto (nome, email, telefone)
+  - Filtro por perfil (Admin, Gestor, Parceiro, Motorista)
+  - Filtro por parceiro (dropdown com lista de parceiros)
+  - Filtro por data (Data de / Data até)
+  - Botão "Limpar Filtros" quando filtros ativos
+  - Contador de resultados filtrados
+
+- **Ações de administrador no modal de detalhes:**
+  - Ver Perfil Completo
+  - Validar Documentos
+  - Alterar Role
+  - Alterar Senha
+  - Atribuir Plano (para motoristas/parceiros)
+  - Gerir Parceiros (para gestores)
+  - Bloquear/Desbloquear
+  - Revogar (desativar completamente)
+  - Eliminar
+
+**Endpoints implementados:**
+- `PUT /api/users/{id}/status` - Bloquear/desbloquear utilizador
+  - Request: `{"status": "blocked"}` ou `{"status": "active"}`
+- `PUT /api/users/{id}/revoke` - Revogar acesso do utilizador
+- `PUT /api/users/{id}/reset-password` - Alterar senha (admin)
+- `PUT /api/users/{id}/validate-document` - Validar documento
+
+**Ficheiros modificados:**
+- `/app/frontend/src/pages/Usuarios.js` - UI completa com filtros e ações
+- `/app/backend/routes/users.py` - Endpoints de API
+
+**Testes:**
+- `/app/tests/test_user_management_iteration15.py`
+- Resultado: 94% backend (15/16), 100% frontend
+
+---
+
 ## Changelog (2026-01-22 - Session 19)
 
 ### 1. Guia Visual Gmail 2FA (App Password) ✅ NEW
