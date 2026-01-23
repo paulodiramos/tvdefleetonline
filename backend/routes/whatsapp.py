@@ -146,8 +146,20 @@ async def restart_whatsapp(current_user: Dict = Depends(get_current_user)):
         async with httpx.AsyncClient() as client:
             response = await client.post(f"{WHATSAPP_SERVICE_URL}/restart/{parceiro_id}", timeout=30.0)
             return response.json()
+    except httpx.ConnectError:
+        # Serviço WhatsApp não está disponível (comum em produção)
+        return {
+            "success": False, 
+            "error": "Serviço WhatsApp não está disponível neste ambiente",
+            "message": "O serviço WhatsApp pode não estar configurado em produção. Use a página de Gestão de Serviços para verificar."
+        }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.error(f"Erro ao reiniciar WhatsApp: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "message": "Erro ao comunicar com o serviço WhatsApp"
+        }
 
 
 # ==================== SEND MESSAGES ====================
