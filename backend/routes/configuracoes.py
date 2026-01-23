@@ -312,11 +312,3 @@ async def salvar_config_sincronizacao_legacy(
     except Exception as e:
         logger.error(f"Erro ao salvar config sync: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-        
-        return {'success': True, 'message': 'Configuração salva com sucesso'}
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erro ao salvar config sync: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
