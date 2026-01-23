@@ -1,108 +1,157 @@
 <analysis>**original_problem_statement:**
-O utilizador solicitou a continuação do desenvolvimento de uma aplicação de gestão de frotas. O projeto focou-se na migração de integrações simuladas para implementações funcionais e na correção de múltiplos bugs reportados.
+O utilizador solicitou o desenvolvimento contínuo de uma aplicação de gestão de frotas. As tarefas executadas nesta sessão incluíram:
+1.  Finalizar a implementação de funcionalidades avançadas de gestão de utilizadores (filtros e ações de administrador).
+2.  Criar um sistema RPA Simplificado para upload e exportação manual de ficheiros CSV de várias fontes (Prio, Verizon, etc.).
+3.  Desenvolver um sistema de automação RPA completo, do zero, usando Playwright para extrair dados de plataformas sem API (Uber, Bolt, Via Verde, Prio).
+4.  Depurar e refinar especificamente o script de automação da Via Verde com base no feedback detalhado do utilizador, incluindo uma análise de um vídeo do processo manual.
 
-**PRODUCT REQUIREMENTS (Tarefas recentes e em progresso):**
--   **(P0) Concluir a Integração com a API do Terabox:** Implementar a lógica de upload para a API não oficial do Terabox usando um cookie de sessão, substituindo a simulação local.
--   **(P0) Corrigir Bugs de Envio de Email:** Resolver múltiplos erros, incluindo  e um bug onde o sistema usava a API do SendGrid em vez das configurações SMTP do parceiro.
--   **(P0) Melhorias na Gestão de Utilizadores (Admin):**
-    -   Permitir que o administrador visualize e valide os documentos enviados pelos utilizadores.
-    -   Adicionar filtros à lista de utilizadores (por perfil, por parceiro, por data).
-    -   Implementar ações de administrador: revogar acesso, bloquear utilizador e alterar password.
--   **(P1) Melhorias de UI e Fluxo de Trabalho:**
-    -   Alinhar a linha de totais na tabela do Resumo Semanal.
-    -   Na página Verificar Recibos, adicionar seleção em massa e um popup de confirmação para aprovar recibos sem enviar email.
-    -   Reorganizar o menu Financeiro e remover o link duplicado do Resumo Semanal do menu principal.
-    -   Melhorar as notificações de interesse em veículos para incluir todos os dados do formulário.
+**PRODUCT REQUIREMENTS:**
+-   Completar as funcionalidades de gestão de utilizadores na página .
+-   Implementar um sistema para upload manual de CSV de fornecedores como Prio, Verizon e Cartrack.
+-   Implementar um sistema para exportar relatórios semanais e transações em CSV.
+-   Construir um sistema RPA com Playwright para extrair automaticamente ganhos (Uber, Bolt) e despesas (Via Verde, Prio).
+-   Adaptar o script da Via Verde para lidar com um processo de login via popup e extrair dados da página de movimentos, conforme demonstrado pelo utilizador.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação é uma plataforma full-stack (React + FastAPI + MongoDB) com um microserviço Node.js para integração com o WhatsApp.
--   **Backend:** A lógica de integração com a API não oficial do Terabox foi implementada, e múltiplos bugs críticos de envio de email foram corrigidos. Foram adicionados novos endpoints e corrigidos os existentes para melhorar a gestão de utilizadores e notificações.
--   **Frontend:** A UI foi significativamente melhorada.  e  agora incluem guias visuais interativos para ajudar os utilizadores com configurações complexas (cookie do Terabox e App Passwords do Gmail). A página  foi reescrita para suportar ações em massa. A página  foi corrigida e expandida com novas funcionalidades de gestão para o administrador.
--   **Serviço WhatsApp:** O serviço Node.js foi melhorado para tentar restaurar automaticamente as sessões existentes no arranque, aumentando a sua estabilidade.
+A aplicação é uma plataforma full-stack (React + FastAPI + MongoDB).
+-   **Gestão de Utilizadores:** A página  foi concluída. Inclui filtros avançados (perfil, parceiro, data), estatísticas e um modal com ações de administrador (bloquear, revogar, alterar senha, validar documentos). A funcionalidade foi validada por testes de backend e frontend.
+-   **RPA Simplificado (CSV):** Foi criada uma nova página  que permite o upload manual de ficheiros CSV de fornecedores pré-configurados e a exportação de relatórios. Esta funcionalidade também foi totalmente testada.
+-   **RPA Automático (Playwright):** Foi implementada uma arquitetura completa para automação com Playwright. A nova página  permite configurar credenciais (que são encriptadas), executar e agendar automações para plataformas como Uber, Bolt, Via Verde e Prio. A infraestrutura de execução em background, logging e captura de screenshots está funcional. O script da Via Verde está em fase final de depuração.
 
 **Last working item**:
--   **Last item agent was working:** Adicionar funcionalidades avançadas de gestão de utilizadores na página  para o perfil de administrador. O agente estava a implementar os filtros por parceiro e data, e as ações para revogar/bloquear utilizadores e alterar passwords.
+-   **Last item agent was working:** Depurar o script Playwright para a automação da Via Verde. Com base num vídeo fornecido pelo utilizador que detalhava todo o fluxo manual (login, navegação, aplicação de filtros e exportação), o agente reescreveu a lógica de automação no ficheiro . A última ação foi refinar o código e remover a lógica antiga e duplicada.
 -   **Status:** IN PROGRESS
--   **Agent Testing Done:** N
--   **Which testing method agent to use?** frontend testing agent. O agente deve testar a página , verificando se os novos filtros (perfil, parceiro, data) funcionam corretamente e se as ações de administrador (validar documentos, bloquear, alterar senha) estão funcionais.
+-   **Agent Testing Done:** N (as últimas alterações no script ainda não foram testadas).
+-   **Which testing method agent to use?** backend testing agent. O agente deve focar-se em testar a execução da automação da Via Verde, validando os seguintes passos:
+    1.  Iniciar a execução através do endpoint da API.
+    2.  Analisar os logs detalhados e os screenshots gerados em  para verificar se o novo script consegue fazer o login, navegar até à página de movimentos, aplicar os filtros e encontrar o botão de exportação.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Concluir as funcionalidades avançadas de gestão de utilizadores (P0)**
-    -   **Description:** O utilizador solicitou a capacidade de filtrar utilizadores por parceiro e data, e de executar ações como revogar/bloquear e alterar a password de um utilizador.
-    -   **Attempted fixes:** O agente adicionou os componentes de UI para os filtros (dropdown de parceiros, seletor de data) e o estado React necessário. A funcionalidade de Validar Documentos foi totalmente implementada (frontend e backend). As outras ações (bloquear, alterar senha) ainda não foram ligadas no frontend nem totalmente implementadas no backend.
+-   **Issue 1: Finalizar e estabilizar o script Playwright da Via Verde (P0)**
+    -   **Description:** A automação para a Via Verde tem falhado recorrentemente. Os problemas incluem a instalação do browser Playwright que parece não ser persistente e erros na localização dos elementos corretos no popup de login. O utilizador forneceu um vídeo detalhado, e o script foi reescrito para corresponder a esse fluxo.
+    -   **Attempted fixes:**
+        -   Múltiplas revisões do script para usar seletores mais robustos.
+        -   Adição de lógica para lidar com popups e banners de cookies.
+        -   Reinstalação repetida dos browsers Playwright com o comando Downloading Chromium 141.0.7390.37 (playwright build v1194) from https://cdn.playwright.dev/dbazure/download/playwright/builds/chromium/1194/chromium-linux-arm64.zip
+|                                                                                |   0% of 175.9 MiB
+|■■■■■■■■                                                                        |  10% of 175.9 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 175.9 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 175.9 MiB
+Chromium 141.0.7390.37 (playwright build v1194) downloaded to /pw-browsers/chromium-1194
+Downloading Chromium Headless Shell 141.0.7390.37 (playwright build v1194) from https://cdn.playwright.dev/dbazure/download/playwright/builds/chromium/1194/chromium-headless-shell-linux-arm64.zip
+|                                                                                |   0% of 106.1 MiB
+|■■■■■■■■                                                                        |  10% of 106.1 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 106.1 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 106.1 MiB
+Chromium Headless Shell 141.0.7390.37 (playwright build v1194) downloaded to /pw-browsers/chromium_headless_shell-1194
+Downloading Firefox 142.0.1 (playwright build v1495) from https://cdn.playwright.dev/dbazure/download/playwright/builds/firefox/1495/firefox-debian-12-arm64.zip
+|                                                                                |   0% of 88 MiB
+|■■■■■■■■                                                                        |  10% of 88 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 88 MiB
+Firefox 142.0.1 (playwright build v1495) downloaded to /pw-browsers/firefox-1495
+Downloading Webkit 26.0 (playwright build v2215) from https://cdn.playwright.dev/dbazure/download/playwright/builds/webkit/2215/webkit-debian-12-arm64.zip
+|                                                                                |   0% of 88 MiB
+|■■■■■■■■                                                                        |  10% of 88 MiB
+|■■■■■■■■■■■■■■■■                                                                |  20% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 88 MiB
+|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 88 MiB
+Webkit 26.0 (playwright build v2215) downloaded to /pw-browsers/webkit-2215.
+        -   A última correção foi uma reescrita completa da classe  em  para espelhar o fluxo exato do vídeo do utilizador.
     -   **Next debug checklist:**
-        1.  Finalizar a lógica de filtragem no frontend em  para aplicar os filtros de parceiro e data à lista de utilizadores.
-        2.  Implementar os handlers de clique para os botões Bloquear e Alterar Senha no modal de detalhes do utilizador.
-        3.  Criar ou expor os endpoints de backend necessários para bloquear um utilizador (ex: ) e ligá-los às ações do frontend. O endpoint para alterar a senha já existe, só precisa ser ligado à UI do admin.
-    -   **Why fix this issue and what will be achieved with the fix?** Dar ao administrador as ferramentas necessárias para gerir eficazmente a base de utilizadores da plataforma.
+        1.  **CRÍTICO:** Iniciar a sessão executando  para garantir que o browser está disponível. Este tem sido um erro recorrente.
+        2.  Desencadear a automação da Via Verde a partir do frontend ou via .
+        3.  Analisar detalhadamente os novos logs de execução e os screenshots gerados. Verificar se o script consegue:
+            -   Encontrar e clicar no botão de login para abrir o popup.
+            -   Preencher o email e a password **dentro do popup**.
+            -   Clicar no botão Login do popup.
+            -   Navegar para Extratos e Movimentos após o login.
+            -   Aplicar os filtros de data e exportar os dados.
+        4.  Se falhar, comparar os screenshots de erro com o vídeo para identificar discrepâncias nos seletores ou no fluxo.
+    -   **Why fix this issue and what will be achieved with the fix?** Completar a funcionalidade de RPA mais complexa solicitada pelo utilizador, validando a arquitetura de automação.
     -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on other issue:** N/A.
-
--   **Issue 2: Persistência da Sessão WhatsApp (P1)**
-    -   **Description:** Sessões do WhatsApp não eram restauradas de forma fiável após o reinício do serviço. O agente implementou uma rotina de inicialização em  que carrega as pastas de sessão existentes no arranque para tentar restaurá-las.
-    -   **Attempted fixes:** A lógica de restauro automático foi adicionada.
-    -   **Next debug checklist:** A funcionalidade está tecnicamente implementada, mas a estabilidade a longo prazo precisa ser validada pelo utilizador. O agente explicou que as sessões podem expirar naturalmente, o que é um comportamento esperado.
-    -   **Why fix this issue and what will be achieved with the fix?** Garante uma integração com o WhatsApp estável, evitando que os parceiros tenham de escanear o QR code repetidamente.
-    -   **Status:** USER VERIFICATION PENDING
-    -   **Is recurring issue?** Y
+    -   **Is recurring issue?** Y (Tanto o problema dos seletores como o da instalação do Playwright são recorrentes).
     -   **Should Test frontend/backend/both after fix?** backend
     -   **Blocked on other issue:** N/A.
 
 **In progress Task List**:
--   **Task 1: Concluir a implementação dos filtros e ações de gestão na página de utilizadores.**
-    -   **Where to resume:**  e, se necessário, nos ficheiros de rotas do backend.
-    -   **What will be achieved with this?** Completar os requisitos do utilizador para a gestão de utilizadores.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on something:** N/A
+- N/A.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P2) UI: Limitar Próximos Eventos no Dashboard:** Limitar a lista a 3 itens na página principal.
-    -   **(P1) Refatoração do Backend:** Continuar a migração de endpoints do ficheiro monolítico .
+    -   **(P1) Validar os restantes scripts RPA:** Após estabilizar a Via Verde, testar e depurar os scripts para Uber, Bolt e Prio num ambiente com acesso à internet, usando credenciais reais.
+    -   **(P2) UI: Limitar Próximos Eventos no Dashboard:** Limitar a lista de eventos a 3 itens na página principal, conforme solicitado no handoff inicial.
 -   **Future Tasks:**
-    -   **(P2) Implementar Lógica de RPA:** Desenvolver a automação com Playwright no backend.
-    -   **(P3) Funcionalidade de Exportação de Dados:** Permitir a exportação de listas de dados (motoristas, veículos) em formato JSON/CSV.
+    -   **(P1) Refatoração do Backend:** Continuar a migração de endpoints do ficheiro monolítico .
+    -   **(P3) Funcionalidade de Exportação de Dados:** Permitir a exportação de listas de dados (motoristas, veículos) em formato JSON/CSV (esta tarefa pode ser fundida/reavaliada com o RPA Simplificado já criado).
 
 **Completed work in this session**
--   **Integração com API do Terabox (Cloud):** A lógica de serviço em  foi implementada para usar a API não oficial, e a UI em  foi atualizada com botões de teste e um guia visual para obter o cookie.
--   **Correções de Bugs de Email:** Resolvidos os erros  em dicionários e o bug que usava SendGrid em vez do SMTP configurado pelo parceiro (, ).
--   **Melhorias de UI/UX:**
-    -   **Guias Visuais:** Criados guias interativos para obter o cookie do Terabox () e para configurar App Passwords do Gmail ().
-    -   **Verificar Recibos:** Página  foi reescrita para permitir seleção e alteração de status em massa.
-    -   **Resumo Semanal:** Corrigido o alinhamento da linha de totais em .
-    -   **Menu:** Reorganizado o menu Financeiro e removido o link duplicado em .
--   **Gestão de Utilizadores:**
-    -   Corrigida a página  que não exibia utilizadores.
-    -   Implementada a funcionalidade para o administrador visualizar e validar documentos de utilizadores, incluindo o endpoint de backend .
--   **Notificações:** Melhorada a notificação de interesse em veículo para incluir todos os dados do formulário ().
--   **Serviço WhatsApp:** Adicionada a funcionalidade de restauro de sessão no arranque em .
+-   **Gestão Avançada de Utilizadores:**
+    -   Implementados filtros por perfil, parceiro e data na página de utilizadores.
+    -   Adicionadas ações de administrador (bloquear, revogar acesso, alterar senha) no frontend e backend.
+    -   Toda a funcionalidade foi validada com sucesso pelo .
+-   **Sistema RPA Simplificado (CSV):**
+    -   Criada a página  para upload de CSVs de múltiplos fornecedores.
+    -   Implementada a funcionalidade de exportação de relatórios.
+    -   A funcionalidade foi validada com sucesso pelo .
+-   **Sistema RPA Automático (Playwright):**
+    -   Desenvolvida a arquitetura completa para automações com Playwright.
+    -   Criada a UI () para gestão de credenciais, agendamento e execução de automações.
+    -   Implementada a lógica de backend () com classes para Uber, Bolt, Prio e Via Verde.
+    -   Adicionada encriptação para as credenciais armazenadas.
+    -   A infraestrutura base foi validada com sucesso pelo .
 
 **Earlier issues found/mentioned but not fixed**
 -   **UI/UX (P2):** O widget Próximos Eventos no dashboard ainda não está limitado a 3 itens.
+-   **Refatoração do Backend (P1):** A tarefa de refatorar o ficheiro monolítico  continua pendente.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Refatoração do Backend ( monolítico).
--   **Recurrence count:** 10
--   **Status:** NOT STARTED (nesta sessão).
+-   **Recurrence count:** 11
+-   **Status:** NOT STARTED
+-   **Nova Recorrência:** A instalação do browser Playwright não é persistente no ambiente. O erro  ocorreu múltiplas vezes, exigindo a reinstalação com .
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Integração com API não oficial:** O agente implementou com sucesso a interação com a API do Terabox usando um cookie de sessão, uma solução prática quando uma API oficial não está disponível.
--   **Guias de UI interativos:** Foram criados guias visuais passo a passo dentro de modais para orientar os utilizadores em processos técnicos, melhorando significativamente a experiência do utilizador.
--   **Ações em Massa no Frontend:** A página  foi refatorada para suportar operações em massa, usando um estado para gerir itens selecionados e uma barra de ações dedicada.
--   **Depuração orientada a dados:** O agente resolveu bugs complexos (especialmente de email) ao analisar logs, IDs de utilizador e o estado da base de dados, identificando inconsistências de dados como a causa raiz.
+-   **Web Automation com Playwright:** Utilização da biblioteca Playwright para automação de tarefas em websites que não disponibilizam APIs. O sistema lida com navegação, preenchimento de formulários, cliques, gestão de popups, extração de dados e captura de screenshots para depuração.
+-   **Execução de Tarefas em Background:** As automações RPA são executadas como tarefas de fundo no FastAPI, permitindo que a UI permaneça responsiva.
+-   **Encriptação de Credenciais:** Utilização da biblioteca  para encriptar e desencriptar as credenciais dos utilizadores antes de as guardar na base de dados, garantindo a segurança.
 
 **key DB schema**
--   **users / parceiros:** Armazenam o objeto  com as definições SMTP. Foi corrigida uma inconsistência onde o código procurava .
--   **documentos:** O schema suporta a validação, e um novo endpoint permite que um administrador altere o  de um documento para validado.
+-   **rpa_credentials:** 
+-   **rpa_execucoes:** 
 
 **All files of reference**
 -    (Ficheiro principal da última tarefa)
@@ -110,52 +159,51 @@ A aplicação é uma plataforma full-stack (React + FastAPI + MongoDB) com um mi
 -   
 -   
 -   
--   
--   
--   
--   
--   
--   
+-    (Vídeo do fluxo da Via Verde)
 
 **Critical Info for New Agent**
--   **Inconsistência de Dados é uma fonte de bugs:** Vários bugs foram causados por IDs de utilizador ou parceiro que estavam desatualizados no frontend ou não existiam na base de dados. Antes de assumir que uma funcionalidade está quebrada, verifique sempre se os IDs usados nos requests  ou vistos nos logs correspondem aos IDs atuais na base de dados ().
--   **Integração Terabox é Não-Oficial:** A funcionalidade depende de um cookie de sessão () e pode quebrar se o Terabox alterar a sua API web interna. A implementação está funcional, mas é frágil por natureza.
--   **Duplicidade de Serviços de Email:** Existem duas implementações de serviço de email ( para SMTP síncrono e  para SendGrid assíncrono). A maioria das chamadas foi corrigida para usar o SMTP do parceiro, mas esta dualidade pode causar confusão ou bugs futuros.
+-   **O Browser Playwright NÃO É PERSISTENTE.** O erro  é recorrente. **SEMPRE** comece qualquer trabalho relacionado com o RPA executando  ou  no terminal.
+-   **Acesso à Internet:** O ambiente de preview **não tem acesso à internet externa**. As automações RPA para sites como  ou  irão falhar com erros de rede (ex: ). Apesar disso, o fluxo de execução, a lógica de seletores e a gestão de erros podem ser depurados através dos logs e dos screenshots que o Playwright gera.
+-   **Depuração de Seletores:** Ao depurar scripts Playwright, confie nos screenshots guardados em . Eles são a fonte da verdade sobre o que o browser está a renderizar no momento da falha.
 
 **documents and test reports created in this job**
--    (atualizado)
+-   
+-   
+-   
+-    (atualizado extensivamente)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  : Pedido para adicionar funcionalidades avançadas de gestão de utilizadores. **Status: IN PROGRESS**.
-2.  : Pedido para o admin validar documentos. **Status: COMPLETED**.
-3.  : Reportou que a página de utilizadores estava vazia. **Status: COMPLETED**.
-4.  : Pedido para remover um item de menu duplicado. **Status: COMPLETED**.
-5.  : Pedido para melhorar notificações e reordenar um menu. **Status: COMPLETED**.
-6.  : Confirmou que o email funcionava e pediu 3 novas funcionalidades de UI. **Status: COMPLETED**.
-7.  : Reportou que o bug de email persistia, levando a uma investigação mais profunda. **Status: COMPLETED**.
-8.  : Pedido de ajuda com o bug de email. **Status: COMPLETED**.
-9.  : Primeiro relato do bug de SendGrid vs. SMTP. **Status: COMPLETED**.
-10. : Reportou o erro . **Status: COMPLETED**.
+10.  - O utilizador pergunta se o Playwright pode imitar a extração manual. **Status: Aclarado**.
+9.   - O utilizador especifica que quer focar-se na automação da Via Verde. **Status: Em Progresso**.
+8.   - O utilizador envia um screenshot do fluxo de login da Via Verde. **Status: Ação Tomada**.
+7.   - O utilizador reporta um erro . **Status: Resolvido Temporariamente**.
+6.   - O utilizador reporta que o script não encontra o campo de password. **Status: Em Progresso**.
+5.   - O utilizador reporta um erro de timeout ao tentar clicar no botão de login. **Status: Em Progresso**.
+4.   - O utilizador reporta novamente o erro . **Status: Resolvido Temporariamente**.
+3.   - O utilizador oferece-se para gravar um vídeo. **Status: Aceite**.
+2.   - O utilizador envia um vídeo MP4 a demonstrar todo o fluxo manual na Via Verde. **Status: Ação Tomada**.
+1.  O agente acabou de reescrever o script da Via Verde com base no vídeo. **Pendente de Teste**.
 
 **Project Health Check:**
--   **Broken:** A integridade dos dados entre o frontend e a base de dados é um ponto fraco. IDs desatualizados causam erros de difícil depuração.
+-   **Broken:** A funcionalidade de RPA com Playwright está num estado frágil devido à instabilidade do ambiente (a instalação do browser desaparece) e à necessidade de seletores precisos que só podem ser totalmente validados num ambiente com acesso à internet.
 -   **Mocked:** N/A.
 
 **3rd Party Integrations**
--   **:** Para integração com o WhatsApp Web (via microserviço Node.js).
--   **Terabox Unofficial API:** Para sincronização de ficheiros na nuvem (requer ).
--   **ReportLab, Pillow, openpyxl, httpx:** Dependências do backend Python.
--   **Playwright:** Planeado para automações futuras.
+-   ****
+-   **Terabox Unofficial API**
+-   **Playwright (NOVO):** Para automação web e extração de dados.
 
 **Testing status**
--   **Testing agent used after significant changes:** NO
+-   **Testing agent used after significant changes:** YES (para a Gestão de Utilizadores e RPA Simplificado).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** None
--   **Known regressions:** A estabilidade da sessão do WhatsApp, embora melhorada, continua a ser um risco potencial.
+-   **Test files created:** O  criou testes temporários, mas não foram criados ficheiros de teste permanentes.
+-   **Known regressions:** A instabilidade da instalação do Playwright é uma nova regressão de ambiente.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
--   **Parceiro (conta principal do utilizador):**  /  (ID na BD: )
+-   **Parceiro:**  / 
+-   **Credenciais RPA (teste):** Foram usadas  e  para os testes de configuração.
 
 **What agent forgot to execute**
--   A tarefa de UI para limitar o widget Próximos Eventos no dashboard a 3 itens continua pendente.</analysis>
+-   A tarefa de UI para limitar o widget Próximos Eventos no dashboard a 3 itens (do handoff inicial) continua pendente.
+-   A tarefa de refatoração do backend para modularizar  (do handoff inicial) continua pendente.</analysis>

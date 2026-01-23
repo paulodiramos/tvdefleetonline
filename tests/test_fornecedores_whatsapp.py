@@ -8,7 +8,7 @@ import pytest
 import requests
 import os
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fleetmanager-31.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://fleet-master-48.preview.emergentagent.com')
 
 # Test credentials
 ADMIN_EMAIL = "admin@tvdefleet.com"
