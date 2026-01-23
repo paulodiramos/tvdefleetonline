@@ -96,25 +96,39 @@ const RPASimplificado = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       
-      // Buscar fornecedores
-      const fornecedoresRes = await axios.get(`${API}/api/rpa/fornecedores`);
-      setFornecedores(fornecedoresRes.data || []);
+      // Buscar fornecedores (público)
+      try {
+        const fornecedoresRes = await axios.get(`${API}/api/rpa/fornecedores`);
+        setFornecedores(fornecedoresRes.data || []);
+      } catch (e) {
+        console.error('Erro ao carregar fornecedores:', e);
+      }
       
-      // Buscar importações
-      const importacoesRes = await axios.get(`${API}/api/rpa/importacoes`, { headers });
-      setImportacoes(importacoesRes.data || []);
+      // Buscar importações (autenticado)
+      try {
+        const importacoesRes = await axios.get(`${API}/api/rpa/importacoes`, { headers });
+        setImportacoes(importacoesRes.data || []);
+      } catch (e) {
+        console.log('Importações não disponíveis');
+        setImportacoes([]);
+      }
       
-      // Buscar estatísticas
+      // Buscar estatísticas (autenticado)
       try {
         const estatisticasRes = await axios.get(`${API}/api/rpa/estatisticas`, { headers });
         setEstatisticas(estatisticasRes.data);
       } catch (e) {
         console.log('Estatísticas não disponíveis');
+        setEstatisticas({
+          total_importacoes: 0,
+          importacoes_sucesso: 0,
+          importacoes_erro: 0,
+          taxa_sucesso: 0
+        });
       }
       
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
-      toast.error('Erro ao carregar dados');
     } finally {
       setLoading(false);
     }
