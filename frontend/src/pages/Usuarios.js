@@ -800,54 +800,12 @@ const Usuarios = ({ user, onLogout }) => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Search and Filter Bar */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="flex-1">
-                <Input
-                  placeholder="Pesquisar por nome, email ou telefone..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              <div className="w-full sm:w-48">
-                <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Filtrar por role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos</SelectItem>
-                    <SelectItem value="motorista">Motorista</SelectItem>
-                    <SelectItem value="parceiro">Parceiro</SelectItem>
-                    <SelectItem value="gestao">Gestor</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
             {/* Simple List */}
             <div className="space-y-2">
-              {registeredUsers
-                .filter(regUser => {
-                  // Apply role filter
-                  if (roleFilter !== 'todos' && regUser.role !== roleFilter) {
-                    return false;
-                  }
-                  // Apply search filter
-                  if (searchTerm) {
-                    const search = searchTerm.toLowerCase();
-                    return (
-                      regUser.name?.toLowerCase().includes(search) ||
-                      regUser.email?.toLowerCase().includes(search) ||
-                      regUser.phone?.toLowerCase().includes(search)
-                    );
-                  }
-                  return true;
-                })
-                .map((regUser) => (
+              {getFilteredUsers(registeredUsers).map((regUser) => (
                 <div
                   key={regUser.id}
+                  data-testid={`user-row-${regUser.id}`}
                   className="flex items-center justify-between p-3 border rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
                   onClick={() => {
                     setViewingUser(regUser);
@@ -860,7 +818,7 @@ const Usuarios = ({ user, onLogout }) => {
                       {regUser.name?.charAt(0)?.toUpperCase() || '?'}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-slate-800 truncate">{regUser.name}</span>
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getRoleBadgeColor(
@@ -879,6 +837,12 @@ const Usuarios = ({ user, onLogout }) => {
                           <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
                             <Lock className="w-3 h-3 mr-1" />
                             Bloqueado
+                          </span>
+                        )}
+                        {regUser.status === 'revoked' && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                            <UserX className="w-3 h-3 mr-1" />
+                            Revogado
                           </span>
                         )}
                       </div>
@@ -901,6 +865,7 @@ const Usuarios = ({ user, onLogout }) => {
                   <Button
                     size="sm"
                     variant="ghost"
+                    data-testid={`view-user-${regUser.id}`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setViewingUser(regUser);
@@ -912,21 +877,7 @@ const Usuarios = ({ user, onLogout }) => {
                 </div>
               ))}
               
-              {registeredUsers
-                .filter(regUser => {
-                  if (roleFilter !== 'todos' && regUser.role !== roleFilter) {
-                    return false;
-                  }
-                  if (searchTerm) {
-                    const search = searchTerm.toLowerCase();
-                    return (
-                      regUser.name?.toLowerCase().includes(search) ||
-                      regUser.email?.toLowerCase().includes(search) ||
-                      regUser.phone?.toLowerCase().includes(search)
-                    );
-                  }
-                  return true;
-                }).length === 0 && (
+              {getFilteredUsers(registeredUsers).length === 0 && (
                 <div className="text-center py-8 text-slate-500">
                   Nenhum utilizador encontrado
                 </div>
