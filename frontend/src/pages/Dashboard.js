@@ -668,7 +668,7 @@ const Dashboard = ({ user, onLogout }) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {proximasDatas.slice(0, 10).map((vehicleData, index) => (
+                {proximasDatas.slice(0, 3).map((vehicleData, index) => (
                   <div key={index} className="bg-white p-4 rounded-lg border border-blue-200">
                     <div className="flex justify-between items-start mb-3">
                       <div>
