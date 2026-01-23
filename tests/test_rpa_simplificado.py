@@ -13,6 +13,7 @@ BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
 # Test credentials
 ADMIN_EMAIL = "admin@tvdefleet.com"
 ADMIN_PASSWORD = "123456"
+TEST_PARCEIRO_ID = "ab2a25aa-4f70-4c7b-835d-9204b0cd0d7e"  # Santos & Filhos Lda
 
 
 class TestRPAFornecedores:
