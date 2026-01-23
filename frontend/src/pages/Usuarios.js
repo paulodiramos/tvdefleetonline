@@ -86,8 +86,15 @@ const Usuarios = ({ user, onLogout }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      setPendingUsers(response.data.pending_users || []);
-      setRegisteredUsers(response.data.registered_users || []);
+      // Handle both array and object response formats
+      const users = Array.isArray(response.data) ? response.data : [];
+      
+      // Separate users by approval status
+      const pending = users.filter(u => u.approved === false);
+      const registered = users.filter(u => u.approved !== false);
+      
+      setPendingUsers(pending);
+      setRegisteredUsers(registered);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Erro ao carregar utilizadores');
