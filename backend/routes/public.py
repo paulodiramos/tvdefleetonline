@@ -143,7 +143,10 @@ async def public_contacto(contacto_data: Dict[str, Any]):
                     "contacto_externo": {
                         "nome": contacto_data.get("nome"),
                         "email": contacto_data.get("email"),
-                        "telefone": contacto_data.get("telefone")
+                        "telefone": contacto_data.get("telefone"),
+                        "assunto": contacto_data.get("assunto"),
+                        "mensagem": contacto_data.get("mensagem"),
+                        "contacto_id": contacto_data.get("id")
                     },
                     "criada_em": datetime.now(timezone.utc).isoformat(),
                     "ultima_mensagem_em": datetime.now(timezone.utc).isoformat(),
