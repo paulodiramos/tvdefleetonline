@@ -16624,6 +16624,8 @@ async def forcar_sincronizacao(
             )
         
         raise HTTPException(status_code=500, detail=str(e))
+'''
+# FIM DOS ENDPOINTS DE SINCRONIZAÇÃO COMENTADOS
 
 # ==================================================
 # GESTÃO DE CREDENCIAIS DE PLATAFORMAS
