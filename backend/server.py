@@ -14237,6 +14237,7 @@ app.include_router(ficheiros_importados_router, prefix="/api")
 app.include_router(agenda_router, prefix="/api")
 app.include_router(whatsapp_router, prefix="/api")
 app.include_router(rpa_simplificado_router, prefix="/api")
+app.include_router(rpa_automacao_router, prefix="/api")
 
 # api_router will be included at the very end of the file, after all routes are defined
 # ==================== DOCUMENTO VALIDATION SYSTEM ====================
