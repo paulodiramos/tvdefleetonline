@@ -95,6 +95,8 @@ const RPAAutomacao = ({ user, onLogout }) => {
   const [showAgendamentoModal, setShowAgendamentoModal] = useState(false);
   const [showDetalhesModal, setShowDetalhesModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showNovaPlataformaModal, setShowNovaPlataformaModal] = useState(false);
+  const [showDeletePlataformaModal, setShowDeletePlataformaModal] = useState(false);
   
   // Form states
   const [selectedPlataforma, setSelectedPlataforma] = useState(null);
@@ -107,6 +109,17 @@ const RPAAutomacao = ({ user, onLogout }) => {
     hora: '06:00',
     tipo_extracao: 'todos',
     ativo: true 
+  });
+  const [novaPlataformaForm, setNovaPlataformaForm] = useState({
+    nome: '',
+    icone: '🔧',
+    cor: '#6B7280',
+    descricao: '',
+    url_login: '',
+    tipos_extracao: ['todos'],
+    campos_credenciais: ['email', 'password'],
+    requer_2fa: false,
+    notas: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -122,7 +135,7 @@ const RPAAutomacao = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       
-      // Buscar plataformas padrão
+      // Buscar plataformas (agora inclui pré-definidas + personalizadas)
       const platRes = await axios.get(`${API}/rpa-auto/plataformas`);
       let todasPlataformas = platRes.data || [];
       
