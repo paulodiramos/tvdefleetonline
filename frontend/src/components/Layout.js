@@ -102,37 +102,58 @@ const Layout = ({ children, user, onLogout }) => {
       ];
     }
 
-    // Parceiro menu
+    // Parceiro menu - filtrado por permissões
     if (user.role === 'parceiro') {
-      return [
-        { 
+      const motoristasSubmenu = filtrarSubmenu([
+        { path: '/motoristas', label: 'Lista de Motoristas' },
+        { path: '/contratos', label: '📄 Gestão de Contratos' },
+        { path: '/criar-contrato', label: '➕ Criar Contrato' }
+      ]);
+      
+      const veiculosSubmenu = filtrarSubmenu([
+        { path: '/vehicles', label: 'Lista de Veículos' },
+        { path: '/vistorias', label: 'Vistorias' }
+      ]);
+      
+      const financeiroSubmenu = filtrarSubmenu([
+        { path: '/resumo-semanal', label: '📊 Resumo Semanal' },
+        { path: '/gestao-extras', label: '💰 Extras/Dívidas' },
+        { path: '/verificar-recibos', label: '✅ Verificar Recibos' },
+        { path: '/pagamentos-parceiro', label: '💳 Pagamentos' },
+        { path: '/arquivo-recibos', label: '📁 Arquivo de Recibos' },
+        { path: '/alertas-custos', label: '🔔 Alertas de Custos' }
+      ]);
+      
+      const items = [];
+      
+      if (motoristasSubmenu.length > 0) {
+        items.push({ 
           label: 'Motoristas', 
           icon: Users,
-          submenu: [
-            { path: '/motoristas', label: 'Lista de Motoristas' },
-            { path: '/contratos', label: '📄 Gestão de Contratos' },
-            { path: '/criar-contrato', label: '➕ Criar Contrato' }
-          ]
-        },
-        { 
+          submenu: motoristasSubmenu
+        });
+      }
+      
+      if (veiculosSubmenu.length > 0) {
+        items.push({ 
           label: 'Veículos', 
           icon: Car,
-          submenu: [
-            { path: '/vehicles', label: 'Lista de Veículos' },
-            { path: '/vistorias', label: 'Vistorias' }
-          ]
-        },
-        { 
+          submenu: veiculosSubmenu
+        });
+      }
+      
+      if (financeiroSubmenu.length > 0) {
+        items.push({ 
           label: 'Financeiro', 
           icon: DollarSign,
-          submenu: [
-            { path: '/resumo-semanal', label: '📊 Resumo Semanal' },
-            { path: '/gestao-extras', label: '💰 Extras/Dívidas' },
-            { path: '/verificar-recibos', label: '✅ Verificar Recibos' },
-            { path: '/pagamentos-parceiro', label: '💳 Pagamentos' },
-            { path: '/arquivo-recibos', label: '📁 Arquivo de Recibos' },
-            { path: '/alertas-custos', label: '🔔 Alertas de Custos' }
-          ]
+          submenu: financeiroSubmenu
+        });
+      }
+      
+      items.push({ path: '/mensagens', icon: MessageSquare, label: 'Mensagens' });
+      
+      return items;
+    }
         },
         { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' }
       ];
