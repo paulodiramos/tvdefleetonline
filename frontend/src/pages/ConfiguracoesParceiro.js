@@ -229,7 +229,8 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
     smtp: false,
     uber: false,
     bolt: false,
-    viaverde: false
+    viaverde: false,
+    terabox: false
   });
   
   // Configuração de Email
