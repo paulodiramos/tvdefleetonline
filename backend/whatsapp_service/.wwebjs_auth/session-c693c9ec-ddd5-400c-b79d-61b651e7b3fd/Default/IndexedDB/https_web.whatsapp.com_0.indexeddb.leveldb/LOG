@@ -79,3 +79,8 @@
 2026/01/24-21:54:11.224 905 compacted to: files[ 0 0 1 0 0 0 0 ]
 2026/01/24-21:54:11.224 905 Delete type=2 #113
 2026/01/24-21:54:11.224 905 Manual compaction at level-1 from '\x00*\x00\x00\xc8\x11\x00w\x00o\x00r\x00k\x00e\x00r\x00_\x00w\x00a\x00m\x00_\x00e\x00v\x00e\x00n\x00t\x00s' @ 121359 : 1 .. '\x00$\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/01/24-23:42:15.544 907 Level-0 table #116: started
+2026/01/24-23:42:15.559 907 Level-0 table #116: 1129212 bytes OK
+2026/01/24-23:42:15.563 907 Delete type=2 #92
+2026/01/24-23:42:15.563 907 Delete type=0 #111
+2026/01/24-23:42:15.563 907 Delete type=2 #110

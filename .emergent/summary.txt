@@ -1,149 +1,153 @@
 <analysis>**original_problem_statement:**
-O utilizador solicitou uma série de alterações e correções que evoluíram ao longo da sessão. Inicialmente, o objetivo era remover a funcionalidade do WhatsApp devido à sua instabilidade em produção. No entanto, o utilizador reverteu essa decisão e solicitou que o WhatsApp fosse corrigido para funcionar de forma fiável no domínio de produção (). Isto tornou-se a tarefa principal.
+A sessão começou com o objetivo de corrigir um problema em que o QR Code do WhatsApp não era exibido na interface do utilizador. Após a correção inicial, a conversa evoluiu para a resolução de problemas de instabilidade com a solução baseada em  alojada no Railway.
 
-Para além disso, o utilizador pediu:
-1.  Remoção das páginas  e .
-2.  Unificação do sistema de gestão de planos para incluir gestores, para além de parceiros e motoristas.
-3.  Implementação de um sistema para que os administradores possam criar e gerir plataformas de RPA personalizadas, em vez de estarem pré-definidas no código.
-4.  Interligação das páginas relacionadas com o RPA (, , ) com botões de navegação.
-5.  Configuração do Terabox por parceiro no perfil do mesmo.
-6.  Correção da UI na página de mapeamento de configurações para incluir o menu superior e um botão de voltar.
-7.  Após o deployment, o utilizador reportou que o QR Code do WhatsApp não aparecia, bloqueando a funcionalidade.
+O utilizador então solicitou a substituição completa dessa solução por uma integração com a **API oficial do WhatsApp Cloud**, que se tornou a tarefa principal.
 
-**PRODUCT REQUIREMENTS:**
--   **WhatsApp Funcional em Produção:** A integração com o WhatsApp tem de ser estável e funcionar no ambiente de produção, suportando múltiplas sessões de parceiros em simultâneo.
--   **Sistema RPA Dinâmico:** Um administrador deve poder criar novas plataformas de automação (ex: Galp Frota) diretamente na UI, para além dos scripts de RPA.
--   **Sistema de Planos Unificado:** A gestão de planos de subscrição deve ser centralizada, suportando os perfis de ,  e .
--   **Configurações por Parceiro:** Cada parceiro deve poder configurar as suas próprias integrações (WhatsApp, Terabox) no seu perfil.
--   **Navegabilidade da UI:** Melhorar a experiência do utilizador adicionando navegação contextual entre as páginas relacionadas.
--   **Base de Código Limpa:** Remover funcionalidades obsoletas (RPA Simplificado, páginas antigas) e continuar a refatoração do backend.
+Posteriormente, as solicitações expandiram-se para:
+1.  Adicionar instruções detalhadas sobre como instalar e usar o Playwright na página do RPA Designer.
+2.  Implementar um sistema completo para importar dados de ficheiros CSV (descarregados pelos scripts de RPA) para gerar resumos semanais, incluindo opções de upload manual e agendamento automático.
+3.  Permitir que os administradores eliminem qualquer plataforma de RPA (pré-definida ou personalizada).
+4.  Criar um sistema de permissões para que os administradores possam controlar o acesso de cada parceiro a plataformas de RPA específicas.
+5.  Criar um sistema de permissões global para que os administradores possam ativar ou desativar funcionalidades principais da aplicação (ex: Vistorias, Contratos, WhatsApp) para cada parceiro.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação é uma plataforma full-stack (React + FastAPI + MongoDB).
--   **Solução para o WhatsApp:** Foi implementada uma arquitetura de microserviço. O serviço do WhatsApp (Node.js + ) foi isolado num projeto separado () e preparado para ser implantado num VPS externo (Railway), contornando as limitações do ambiente de produção principal. O backend da aplicação principal foi configurado para comunicar com este serviço externo através da variável de ambiente . O utilizador já fez o deploy deste serviço no Railway.
--   **Plataformas RPA Dinâmicas:** A página  e o seu backend () foram modificados para permitir que administradores criem, editem e eliminem plataformas de automação, que agora são guardadas na base de dados.
--   **Sistema de Planos Unificado:** A página  foi refatorada para gerir planos para ,  e , consolidando a funcionalidade. Páginas antigas de planos foram removidas.
--   **Funcionalidades Removidas:** O RPA Simplificado e as páginas  e  foram completamente removidos do frontend e backend.
--   **UI Melhorada:** As páginas de RPA estão agora interligadas com botões de navegação. A página de configuração de mapeamento usa o layout principal da aplicação e tem um botão de voltar.
--   **Configuração de Terabox:** Foi adicionado um novo separador nas configurações do parceiro para gerir as credenciais do Terabox.
+-   **Nova Arquitetura WhatsApp:** A integração instável com o Railway () foi completamente removida e substituída por uma integração direta com a API oficial do WhatsApp Cloud. O frontend em  foi atualizado para permitir que cada parceiro configure o seu  e , e o backend foi atualizado com uma nova rota () para gerir a comunicação.
+-   **Sistema de Importação de RPA:** Foi criada uma nova página () que permite aos parceiros fazer o upload manual de ficheiros CSV (ex: da Bolt, Uber) ou agendar a execução automática dos scripts de RPA. O backend processa estes ficheiros, cria resumos semanais e guarda-os na base de dados.
+-   **Instruções de RPA Melhoradas:** A página do RPA Designer agora contém um modal com instruções detalhadas sobre como instalar o Playwright (com Python ou Node.js) e usar o gravador  para criar novos scripts.
+-   **Gestão de Plataformas RPA:** Os administradores podem agora eliminar qualquer plataforma (pré-definida ou personalizada) a partir da página RPA Automação, com um popup de confirmação detalhado.
+-   **Sistema de Permissões (Backend e Admin UI):** Foram implementadas duas novas funcionalidades de administração:
+    1.  **Permissões de Plataformas RPA ():** O admin pode atribuir acesso a plataformas de RPA específicas para cada parceiro.
+    2.  **Permissões de Funcionalidades ():** O admin pode ativar/desativar o acesso a funcionalidades chave da aplicação (como Vistorias, Contratos, etc.) para cada parceiro. O backend e as páginas de administração para estas funcionalidades estão concluídos.
 
 **Last working item**:
--   **Last item agent was working:** Depurar o motivo pelo qual o QR Code do WhatsApp não está a ser exibido na interface do utilizador. O utilizador relata que a página fica A inicializar... indefinidamente. O agente confirmou que o backend está a receber com sucesso os dados do QR Code do serviço externo no Railway, mas suspeita que o frontend está a tentar aceder a uma chave de objeto incorreta no JSON da resposta.
+-   **Last item agent was working:** Testar a execução da automação da plataforma Bolt para o parceiro Zeny Macaia Unipessoal Lda, a pedido do utilizador, para validar os novos sistemas de permissões.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** frontend testing agent. O problema é puramente de frontend. O agente deve verificar a página de integrações ( ou ) para confirmar que o QR code é renderizado após a correção.
+-   **Which testing method agent to use?** frontend testing agent. O agente deve simular o login como o parceiro  (password: ), navegar para a automação de RPA e executar o script da Bolt, verificando os logs para confirmar o sucesso.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: O QR Code do WhatsApp não é exibido no frontend (P0)**
-    -   **Description:** Após a implementação bem-sucedida do serviço WhatsApp externo, a etapa final de exibir o QR Code para o utilizador conectar a sua conta está a falhar. A API externa retorna o QR code, mas o componente React não o renderiza.
-    -   **Attempted fixes:** O agente confirmou com  que o endpoint do serviço externo () retorna um JSON com o QR code em base64, e que o backend da aplicação principal está a receber essa resposta.
+-   **Issue 1: Concluir o teste de automação para o parceiro Zeny (P0)**
+    -   **Description:** O utilizador solicitou um teste end-to-end do fluxo de automação da Bolt para o parceiro Zeny. O agente reiniciou a palavra-passe do parceiro, mas não concluiu a execução e verificação do teste.
     -   **Next debug checklist:**
-        1.  Analisar o ficheiro de frontend que obtém e exibe o QR Code (provavelmente  ou ).
-        2.  Localizar a função  ou  que faz a chamada para obter o QR Code.
-        3.  Verificar como a resposta é tratada. A suspeita é que o código espera  quando a API retorna .
-        4.  Corrigir o nome da chave no código JavaScript (e.g., ).
-        5.  Aplicar a correção com a ferramenta .
-        6.  Pedir um screenshot da página de integrações para validar que o QR Code aparece.
-    -   **Why fix this issue and what will be achieved with the fix?** Esta é a última etapa para tornar a funcionalidade crítica do WhatsApp utilizável. Sem o QR Code, os parceiros não podem conectar as suas contas.
+        1.  Fazer login como  com a password .
+        2.  Navegar para a página RPA Automação.
+        3.  Confirmar que apenas as plataformas permitidas (incluindo a Bolt) estão visíveis.
+        4.  Executar a automação da Bolt.
+        5.  Verificar os logs do backend para confirmar que o script Playwright foi executado sem erros.
+        6.  Verificar se o ficheiro foi descarregado e se a importação de dados foi acionada.
+    -   **Why fix this issue and what will be achieved with the fix?** Validar que o sistema de permissões da plataforma e o fluxo de execução do RPA estão a funcionar corretamente em conjunto.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** frontend
+    -   **Should Test frontend/backend/both after fix?** both
 
 **In progress Task List**:
-- N/A
+-   **Task 1: Implementar verificação de permissões de funcionalidades no Frontend (P0)**
+    -   **Description:** O backend e a interface de administração para gerir as permissões de funcionalidades por parceiro estão concluídos. No entanto, o frontend ainda não implementa a lógica para ocultar/desativar os itens do menu e as páginas para funcionalidades que foram desativadas para um parceiro.
+    -   **Where to resume:**
+        1.  Criar um  em React que, após o login, obtenha as funcionalidades permitidas para o utilizador atual.
+        2.  Em , usar este contexto para renderizar condicionalmente os itens do menu lateral.
+        3.  Nas rotas principais em  ou no início de cada página de funcionalidade (ex: ), adicionar uma verificação para redirecionar o utilizador se ele tentar aceder a uma URL para a qual não tem permissão.
+    -   **What will be achieved with this?** A funcionalidade de gestão de permissões ficará totalmente operacional, permitindo que os administradores controlem dinamicamente a UI e o acesso para cada parceiro.
+    -   **Status:** IN PROGRESS
+    -   **Should Test frontend/backend/both after fix?** frontend
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1) Finalizar Refatoração do :** Após a correção do problema do WhatsApp, retomar a tarefa de refatoração do backend. Remover os grandes blocos de código comentados e migrar os 14 endpoints restantes do  para ficheiros de rotas dedicados, limpando a base de código.
-    -   **(P2) Teste End-to-End Pós-Correção:** Realizar um teste completo das funcionalidades principais para garantir que não há regressões, incluindo o fluxo completo de conexão do WhatsApp, criação/execução de RPA e gestão de planos.
+    -   **(P1) Finalizar Refatoração do :** Retomar a tarefa recorrente de mover os endpoints e modelos Pydantic restantes do monolítico  para ficheiros de rotas e modelos dedicados.
+    -   **(P2) Implementar lógica de agendamento no backend:** A UI para agendar a execução de RPA existe, mas a lógica do backend (usando, por exemplo, ) para executar as tarefas de forma recorrente precisa de ser implementada.
 -   **Future Tasks:**
-    -   **(P1) Consolidação de Modelos Pydantic:** Mover as classes de modelo Pydantic restantes de  para ficheiros dedicados em .
+    -   **(P1) Testar o parser de CSV com ficheiros reais:** A importação foi testada com dados simulados. É necessário testar com ficheiros CSV reais das plataformas (Uber, Bolt, etc.) para garantir que o parsing é robusto.
 
 **Completed work in this session**
--   **Arquitetura do WhatsApp com Microserviço Externo:** Implementada uma solução robusta para o WhatsApp, empacotando o serviço Node.js para ser implantado num VPS (Railway) e guiando o utilizador no processo.
--   **Plataformas RPA Personalizáveis:** Implementada a funcionalidade para administradores criarem e gerirem plataformas de RPA através da interface.
--   **Sistema de Planos Unificado:** Refatorada a UI para gerir planos para ,  e  num único local.
--   **Limpeza de Código:** Removidas as páginas e rotas obsoletas (, , RPA Simplificado).
--   **Melhorias de UI:** Interligadas as páginas de RPA e corrigido o layout da página de mapeamento de configuração.
--   **Configuração de Terabox:** Adicionada a capacidade de os parceiros configurarem o Terabox nos seus perfis.
--   **Correção de Erros de Teste:** Resolvidos problemas de endpoints 404 e chaves duplicadas no React, identificados pelo agente de testes.
--   **Criação de Documentação:** Gerados os guias  e .
+-   **Refatoração da Integração WhatsApp:** Migração completa da solução instável baseada em  para a API oficial do WhatsApp Cloud.
+-   **Criação do Sistema de Importação de RPA:** Implementação de uma nova funcionalidade completa para importação manual e agendada de dados de RPA, incluindo UI e backend.
+-   **Melhorias na Gestão de RPA:** Adição de instruções de instalação do Playwright, criação de um script Bolt e implementação da funcionalidade de eliminação de todas as plataformas pelo admin.
+-   **Implementação de Sistema de Permissões:** Criação de sistemas de back-end e UI de administração para gerir o acesso dos parceiros a plataformas de RPA e a funcionalidades globais da aplicação.
+-   **Correção de Ambiente:** Instalação dos browsers do Playwright no ambiente do servidor, resolvendo um erro de execução.
 
 **Earlier issues found/mentioned but not fixed**
--   A refatoração do  foi iniciada mas ainda não foi concluída. Os blocos de código comentados e os endpoints restantes precisam de ser tratados.
+-   A implementação do frontend para o sistema de permissões de funcionalidades não foi iniciada.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Refatoração do Backend ( monolítico).
--   **Recurrence count:** 13
+-   **Recurrence count:** 14
 -   **Status:** IN PROGRESS
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Microserviço Externo:** A funcionalidade do WhatsApp foi externalizada para um serviço Node.js autónomo implantado no Railway para contornar as limitações do ambiente de execução principal (especialmente a necessidade de instalar o Chromium).
--   **Configuração por Variável de Ambiente:** A aplicação principal comunica com o microserviço através de uma URL configurada na variável .
--   **Gestão Dinâmica de Entidades:** O sistema de RPA foi refatorado para que as plataformas sejam entidades geríveis na base de dados em vez de constantes no código.
+-   **WhatsApp Cloud API:** A integração de mensagens agora usa a API oficial da Meta através de chamadas HTTP diretas, eliminando a necessidade de um serviço externo, QR codes e a manutenção de uma sessão com um telemóvel.
+-   **Feature Flags/Permissions:** Foi introduzido um sistema de permissões baseado em funções que permite ao administrador granularmente controlar o acesso de cada parceiro às funcionalidades da aplicação.
+-   **RPA Data Pipeline:** Foi criado um pipeline para automatizar a recolha e processamento de dados: o Playwright descarrega ficheiros, que são depois importados (manual ou automaticamente) e processados para gerar relatórios.
 
 **key DB schema**
--   ****: 
--   ****:  (NOVO)
+-   ****: Adicionado campo .
+-   ****: Nova coleção para mapear  e .
+-   ****: Nova coleção para registar o histórico de uploads de CSV.
+-   ****: Nova coleção para armazenar os dados processados dos CSVs, agregados por motorista.
 
 **changes in tech stack**
--   A arquitetura agora inclui um **microserviço Node.js** hospedado externamente no **Railway.app**.
+-   O microserviço Node.js no Railway foi completamente descontinuado em favor de chamadas diretas à API do WhatsApp Cloud.
 
 **All files of reference**
--    (ou ): Ficheiro chave para a correção do problema do QR Code.
--   : Contém a  que aponta para o serviço no Railway.
--   : Diretório com o código completo do serviço WhatsApp externo.
--   : Ficheiro que ainda precisa de ser refatorado.
+-   : Página de administração para as permissões globais.
+-   : Ficheiro a ser modificado para implementar o controlo de acesso no menu.
+-   : Rota que fornece as permissões de um utilizador.
+-   : Contém a lógica de parsing dos CSVs, que pode precisar de ajustes para ficheiros reais.
+
+**Areas that need refactoring**:
+-   O diretório  e a rota  são obsoletos e podem ser eliminados para limpar a base de código.
+
+**key api endpoints**
+-   : Define as funcionalidades permitidas para um parceiro.
+-   : Obtém as funcionalidades permitidas para o utilizador atual.
+-   : Define as plataformas RPA permitidas para um parceiro.
+-   : Faz o upload de um ficheiro CSV para processamento.
+-   : Envia uma mensagem via WhatsApp Cloud API.
 
 **Critical Info for New Agent**
--   **A prioridade máxima é corrigir a exibição do QR Code do WhatsApp.** O problema está quase certamente no código frontend que lida com a resposta da API. Verifique a diferença entre  e  no objeto de resposta.
--   **A solução do WhatsApp é EXTERNA.** Não tente executar ou depurar o serviço WhatsApp (processo Node.js) dentro do ambiente do agente. A comunicação é feita via HTTP para a URL configurada em .
--   Após corrigir o QR Code, a próxima tarefa de alta prioridade é **finalizar a refatoração do **, uma dívida técnica recorrente.
+-   A tarefa mais importante é implementar o frontend para o sistema de **permissões de funcionalidades**. O backend está pronto, mas a UI não esconde/restringe o acesso às funcionalidades desativadas.
+-   O teste imediato a ser concluído é a **automação da Bolt para o parceiro Zeny**. A password foi redefinida para .
+-   A integração do WhatsApp foi **completamente alterada**. Ignore toda a informação sobre QR Code, , e Railway. O foco é a nova **WhatsApp Cloud API**, que requer que cada parceiro configure os seus próprios tokens da Meta.
 
 **documents and test reports created in this job**
--   
--   
--   
--   
--    (diretório com vários ficheiros)
+-    (Atualizado extensivamente)
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  : O utilizador confirma que o QR code ainda não está visível. **Status: In Progress**.
-2.  : O utilizador descreve a mensagem que vê na UI. **Status: In Progress**.
-3.  : O utilizador pergunta se a solução do Railway é para produção. **Status: Confirmed**.
-4.  : O utilizador pergunta a porta do serviço no Railway. **Status: Answered**.
-5.  : O utilizador fornece a URL interna, sendo instruído a usar a pública. **Status: Corrected**.
-6.  : O utilizador confirma que o deploy no Railway foi bem-sucedido após corrigir o . **Status: Action Taken**.
-7.  : O utilizador fornece um erro de log do build no Railway. **Status: Resolved**.
-8.  : O utilizador pede os ficheiros para criar o repositório no GitHub. **Status: Provided**.
-9.  : O utilizador pede um guia para o deploy no Railway. **Status: Provided**.
-10. : O utilizador escolhe a opção de usar um VPS externo para o serviço WhatsApp. **Status: Action Taken**.
+1.  **User**: : Pedido para criar um sistema de permissões de funcionalidades global. **Status: Implementado (Admin UI/Backend), Pendente (Frontend Enforcement).**
+2.  **User**: : Pedido para testar o fluxo de automação da Bolt para um parceiro específico. **Status: In Progress.**
+3.  **User**: : Pedido para adicionar um script de RPA à base de dados, garantindo que seja editável. **Status: Completed.**
+4.  **User**: : Forneceu o código Playwright gravado para a automação da Bolt. **Status: Completed.**
+5.  **User**: : Pedido para que o sistema de importação de CSV tenha opções manuais e automáticas. **Status: Completed.**
+6.  **User**: : Pedido para testar a funcionalidade de importação de CSV. **Status: Completed.**
+7.  **User**: : Pedido para permitir que admins eliminem plataformas de RPA. **Status: Completed.**
+8.  **User**: : Especificação de que os admins devem poder eliminar TODAS as plataformas (não apenas as personalizadas). **Status: Completed.**
+9.  **User**: : Pedido para um sistema de permissões por plataforma de RPA. **Status: Completed.**
+10. **User**: : Pergunta sobre o que fazer com o código Playwright gravado. **Status: Answered.**
 
 **Project Health Check:**
--   **Broken:** A funcionalidade de conexão do WhatsApp está bloqueada. O utilizador não consegue escanear o QR Code, o que impede o uso de toda a integração.
+-   **Broken:** O sistema de permissões de funcionalidades está incompleto. Os parceiros ainda podem ver e aceder a todas as funcionalidades, mesmo que um admin as tenha desativado.
 -   **Mocked:** N/A.
 
 **3rd Party Integrations**
--   **Playwright:** Para automação RPA.
--   **whatsapp-web.js:** Usado no microserviço externo para a integração com o WhatsApp.
--   **Railway.app:** Plataforma de PaaS usada para hospedar o microserviço do WhatsApp.
--   **Terabox Unofficial API:** Integrado para armazenamento de ficheiros.
+-   **WhatsApp Cloud API (Meta):** Nova integração para envio de mensagens. Requer que cada parceiro obtenha um  e  da sua conta Meta Business.
+-   **Playwright:** Utilizado para automação RPA. Instalado no servidor para execução e o utilizador foi instruído sobre como instalá-lo localmente para gravação de scripts.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES ()
+-   **Testing agent used after significant changes:** NO (Não foi usado desde a implementação das novas funcionalidades principais).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** Sim, o agente de testes criou testes em .
--   **Known regressions:** Nenhuma. O problema atual é uma nova questão resultante da nova arquitetura.
+-   **Test files created:** Não.
+-   **Known regressions:** Nenhuma.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
--   **Parceiro:**  / 
+-   **Parceiro de teste (Zeny):**  / 
+-   **Parceiro de teste (Maria):**  /  (password original, pode não funcionar).
 
 **What agent forgot to execute**
--   O agente diagnosticou corretamente a causa provável do problema do QR Code (discrepância no nome da chave JSON), mas não implementou a correção no código frontend antes do final da sessão.</analysis>
+-   O agente não implementou a parte do frontend do sistema de permissões de funcionalidades, que é crucial para que a funcionalidade funcione. Ele criou o backend e a UI de administração, mas não a lógica do lado do cliente para ocultar ou restringir o acesso.
+-   O agente não removeu os ficheiros e diretórios obsoletos relacionados com a antiga integração do WhatsApp (, ), deixando dívida técnica no projeto.</analysis>
