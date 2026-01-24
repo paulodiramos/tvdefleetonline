@@ -272,31 +272,46 @@ async def eliminar_plataforma(
     plataforma_id: str,
     current_user: Dict = Depends(get_current_user)
 ):
-    """Eliminar plataforma personalizada (apenas admin)"""
+    """Eliminar qualquer plataforma (apenas admin)"""
     if current_user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Apenas administradores podem eliminar plataformas")
     
-    # Verificar se é uma plataforma personalizada
+    # Verificar se é uma plataforma personalizada na BD
     plataforma = await db.rpa_plataformas.find_one({"id": plataforma_id})
-    if not plataforma:
-        # Verificar se é pré-definida
-        predefinida = next((p for p in PLATAFORMAS_PREDEFINIDAS if p["id"] == plataforma_id), None)
-        if predefinida:
-            raise HTTPException(status_code=400, detail="Plataformas pré-definidas não podem ser eliminadas")
+    
+    # Verificar se é pré-definida
+    predefinida = next((p for p in PLATAFORMAS_PREDEFINIDAS if p["id"] == plataforma_id), None)
+    
+    if not plataforma and not predefinida:
         raise HTTPException(status_code=404, detail="Plataforma não encontrada")
     
-    # Verificar se há credenciais associadas
-    credenciais_count = await db.rpa_credenciais.count_documents({"plataforma": plataforma_id})
-    if credenciais_count > 0:
-        # Desactivar em vez de eliminar
-        await db.rpa_plataformas.update_one(
-            {"id": plataforma_id},
-            {"$set": {"ativo": False, "deleted_at": datetime.now(timezone.utc).isoformat()}}
-        )
-        return {"success": True, "message": f"Plataforma desactivada (tinha {credenciais_count} credenciais associadas)"}
+    # Se for pré-definida, guardar na BD como eliminada
+    if predefinida:
+        await db.rpa_plataformas_eliminadas.insert_one({
+            "id": plataforma_id,
+            "nome": predefinida["nome"],
+            "tipo": "predefinida",
+            "deleted_at": datetime.now(timezone.utc).isoformat(),
+            "deleted_by": current_user["id"]
+        })
+        
+        # Eliminar credenciais associadas
+        await db.rpa_credenciais.delete_many({"plataforma": plataforma_id})
+        return {"success": True, "message": f"Plataforma pré-definida '{predefinida['nome']}' eliminada com sucesso"}
     
-    await db.rpa_plataformas.delete_one({"id": plataforma_id})
-    return {"success": True, "message": "Plataforma eliminada com sucesso"}
+    # Se for personalizada
+    if plataforma:
+        # Eliminar credenciais associadas
+        await db.rpa_credenciais.delete_many({"plataforma": plataforma_id})
+        
+        # Eliminar scripts associados
+        await db.rpa_scripts.delete_many({"plataforma": plataforma_id})
+        
+        # Eliminar a plataforma
+        await db.rpa_plataformas.delete_one({"id": plataforma_id})
+        return {"success": True, "message": f"Plataforma '{plataforma['nome']}' eliminada com sucesso"}
+    
+    return {"success": False, "message": "Erro ao eliminar plataforma"}
 
 
 # ==================== ENDPOINTS CREDENCIAIS ====================
