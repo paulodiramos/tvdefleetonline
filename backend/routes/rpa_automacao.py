@@ -182,17 +182,121 @@ def decrypt_value(encrypted: str) -> str:
 
 @router.get("/plataformas")
 async def listar_plataformas():
-    """Listar plataformas disponíveis para automação"""
-    return PLATAFORMAS
+    """Listar todas as plataformas disponíveis para automação"""
+    return await get_todas_plataformas()
 
 
 @router.get("/plataformas/{plataforma_id}")
-async def get_plataforma(plataforma_id: str):
+async def get_plataforma_endpoint(plataforma_id: str):
     """Obter detalhes de uma plataforma"""
-    plataforma = next((p for p in PLATAFORMAS if p["id"] == plataforma_id), None)
+    plataforma = await get_plataforma_by_id(plataforma_id)
     if not plataforma:
         raise HTTPException(status_code=404, detail="Plataforma não encontrada")
     return plataforma
+
+
+@router.post("/plataformas")
+async def criar_plataforma(
+    dados: PlataformaCreate,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Criar nova plataforma personalizada (apenas admin)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas administradores podem criar plataformas")
+    
+    # Gerar ID único baseado no nome
+    plataforma_id = dados.nome.lower().replace(" ", "_").replace("-", "_")
+    
+    # Verificar se já existe
+    existente = await get_plataforma_by_id(plataforma_id)
+    if existente:
+        raise HTTPException(status_code=400, detail="Já existe uma plataforma com este nome")
+    
+    nova_plataforma = {
+        "id": plataforma_id,
+        "nome": dados.nome,
+        "icone": dados.icone,
+        "cor": dados.cor,
+        "descricao": dados.descricao,
+        "url_login": dados.url_login,
+        "tipos_extracao": dados.tipos_extracao,
+        "campos_credenciais": dados.campos_credenciais,
+        "requer_2fa": dados.requer_2fa,
+        "notas": dados.notas,
+        "tipo": "personalizada",
+        "ativo": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_by": current_user["id"]
+    }
+    
+    await db.rpa_plataformas.insert_one(nova_plataforma)
+    
+    return {"success": True, "plataforma": nova_plataforma}
+
+
+@router.put("/plataformas/{plataforma_id}")
+async def actualizar_plataforma(
+    plataforma_id: str,
+    dados: PlataformaUpdate,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Actualizar plataforma personalizada (apenas admin)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas administradores podem editar plataformas")
+    
+    # Verificar se é uma plataforma personalizada
+    plataforma = await db.rpa_plataformas.find_one({"id": plataforma_id})
+    if not plataforma:
+        # Verificar se é pré-definida
+        predefinida = next((p for p in PLATAFORMAS_PREDEFINIDAS if p["id"] == plataforma_id), None)
+        if predefinida:
+            raise HTTPException(status_code=400, detail="Plataformas pré-definidas não podem ser editadas")
+        raise HTTPException(status_code=404, detail="Plataforma não encontrada")
+    
+    # Actualizar campos fornecidos
+    update_data = {k: v for k, v in dados.dict().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    update_data["updated_by"] = current_user["id"]
+    
+    await db.rpa_plataformas.update_one(
+        {"id": plataforma_id},
+        {"$set": update_data}
+    )
+    
+    plataforma_actualizada = await db.rpa_plataformas.find_one({"id": plataforma_id}, {"_id": 0})
+    return {"success": True, "plataforma": plataforma_actualizada}
+
+
+@router.delete("/plataformas/{plataforma_id}")
+async def eliminar_plataforma(
+    plataforma_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Eliminar plataforma personalizada (apenas admin)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas administradores podem eliminar plataformas")
+    
+    # Verificar se é uma plataforma personalizada
+    plataforma = await db.rpa_plataformas.find_one({"id": plataforma_id})
+    if not plataforma:
+        # Verificar se é pré-definida
+        predefinida = next((p for p in PLATAFORMAS_PREDEFINIDAS if p["id"] == plataforma_id), None)
+        if predefinida:
+            raise HTTPException(status_code=400, detail="Plataformas pré-definidas não podem ser eliminadas")
+        raise HTTPException(status_code=404, detail="Plataforma não encontrada")
+    
+    # Verificar se há credenciais associadas
+    credenciais_count = await db.rpa_credenciais.count_documents({"plataforma": plataforma_id})
+    if credenciais_count > 0:
+        # Desactivar em vez de eliminar
+        await db.rpa_plataformas.update_one(
+            {"id": plataforma_id},
+            {"$set": {"ativo": False, "deleted_at": datetime.now(timezone.utc).isoformat()}}
+        )
+        return {"success": True, "message": f"Plataforma desactivada (tinha {credenciais_count} credenciais associadas)"}
+    
+    await db.rpa_plataformas.delete_one({"id": plataforma_id})
+    return {"success": True, "message": "Plataforma eliminada com sucesso"}
 
 
 # ==================== ENDPOINTS CREDENCIAIS ====================
@@ -205,7 +309,7 @@ async def guardar_credenciais(
     """Guardar credenciais de acesso a uma plataforma (encriptadas)"""
     
     # Verificar plataforma válida
-    plataforma = next((p for p in PLATAFORMAS if p["id"] == dados.plataforma), None)
+    plataforma = await get_plataforma_by_id(dados.plataforma)
     if not plataforma:
         raise HTTPException(status_code=400, detail="Plataforma inválida")
     
