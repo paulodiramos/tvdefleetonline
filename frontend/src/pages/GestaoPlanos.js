@@ -742,7 +742,7 @@ const GestaoPlanos = ({ user, onLogout }) => {
                 />
               </div>
 
-              {planoForm.tipo_usuario === 'parceiro' && (
+              {(planoForm.tipo_usuario === 'parceiro' || planoForm.tipo_usuario === 'gestao') && (
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <Label htmlFor="tipo_cobranca">Tipo de Cobrança *</Label>
