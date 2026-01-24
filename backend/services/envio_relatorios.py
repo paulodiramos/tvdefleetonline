@@ -301,9 +301,9 @@ async def enviar_relatorio_motorista(
             except Exception as e:
                 logger.error(f"Erro ao usar SMTP do parceiro: {e}")
         
-        # Fallback para SendGrid se SMTP não disponível
+        # Fallback para SMTP do sistema se SMTP do parceiro não disponível
         if email_result is None:
-            email_result = send_email_sendgrid(email, subject, html_content)
+            email_result = send_email_smtp(email, subject, html_content)
         
         results["email"] = {
             "enviado": email_result.get("success", False),
