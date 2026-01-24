@@ -74,7 +74,10 @@ import {
   Fuel,
   MapPin,
   Shield,
-  ChevronRight
+  ChevronRight,
+  FileCode,
+  TableProperties,
+  ExternalLink
 } from 'lucide-react';
 
 const RPAAutomacao = ({ user, onLogout }) => {
