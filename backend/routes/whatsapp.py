@@ -49,6 +49,59 @@ def get_parceiro_id(current_user: Dict) -> str:
 
 # ==================== STATUS & QR CODE ====================
 
+@router.get("/whatsapp/config")
+async def get_whatsapp_config(current_user: Dict = Depends(get_current_user)):
+    """Obter configuração do WhatsApp do parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = get_parceiro_id(current_user)
+    
+    # Buscar configuração na base de dados
+    config = await db.whatsapp_config.find_one(
+        {"parceiro_id": parceiro_id},
+        {"_id": 0}
+    )
+    
+    if not config:
+        return {
+            "parceiro_id": parceiro_id,
+            "configurado": False,
+            "telefone_comercial": None,
+            "nome_comercial": None
+        }
+    
+    return {
+        "parceiro_id": parceiro_id,
+        "configurado": True,
+        **config
+    }
+
+
+@router.post("/whatsapp/config")
+async def save_whatsapp_config(
+    config: dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Guardar configuração do WhatsApp do parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO, "admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    parceiro_id = get_parceiro_id(current_user)
+    
+    await db.whatsapp_config.update_one(
+        {"parceiro_id": parceiro_id},
+        {"$set": {
+            **config,
+            "parceiro_id": parceiro_id,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }},
+        upsert=True
+    )
+    
+    return {"success": True, "message": "Configuração guardada com sucesso"}
+
+
 @router.get("/whatsapp/status")
 async def get_whatsapp_status(current_user: Dict = Depends(get_current_user)):
     """Obter estado da conexão WhatsApp do parceiro"""
