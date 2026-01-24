@@ -380,43 +380,57 @@ const ConfiguracaoMapeamento = ({ user, onLogout }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
-      </div>
+      <Layout user={user} onLogout={onLogout}>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+        </div>
+      </Layout>
     );
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-5xl mx-auto">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-800">Configuração de Importação</h1>
-        <p className="text-slate-500">Configure o mapeamento de campos e sincronização automática</p>
-      </div>
-
-      {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="flex flex-wrap">
-          <TabsTrigger value="uber">Uber</TabsTrigger>
-          <TabsTrigger value="bolt">Bolt</TabsTrigger>
-          <TabsTrigger value="viaverde">Via Verde</TabsTrigger>
-          <TabsTrigger value="combustivel">Combustível</TabsTrigger>
-          <TabsTrigger value="eletrico">Elétrico</TabsTrigger>
-          <TabsTrigger value="gps">GPS</TabsTrigger>
-          <TabsTrigger value="sync">Sync Auto</TabsTrigger>
-        </TabsList>
-
-        <div className="mt-4">
-          <TabsContent value="uber">{renderMappingTable('uber')}</TabsContent>
-          <TabsContent value="bolt">{renderMappingTable('bolt')}</TabsContent>
-          <TabsContent value="viaverde">{renderMappingTable('viaverde')}</TabsContent>
-          <TabsContent value="combustivel">{renderMappingTable('combustivel')}</TabsContent>
-          <TabsContent value="eletrico">{renderMappingTable('eletrico')}</TabsContent>
-          <TabsContent value="gps">{renderMappingTable('gps')}</TabsContent>
-          <TabsContent value="sync">{renderAutoSyncConfig()}</TabsContent>
+    <Layout user={user} onLogout={onLogout}>
+      <div className="p-6 space-y-6 max-w-5xl mx-auto">
+        {/* Header com botão voltar */}
+        <div className="flex items-center gap-4">
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="shrink-0"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800">Configuração de Importação</h1>
+            <p className="text-slate-500">Configure o mapeamento de campos e sincronização automática</p>
+          </div>
         </div>
-      </Tabs>
-    </div>
+
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="flex flex-wrap">
+            <TabsTrigger value="uber">Uber</TabsTrigger>
+            <TabsTrigger value="bolt">Bolt</TabsTrigger>
+            <TabsTrigger value="viaverde">Via Verde</TabsTrigger>
+            <TabsTrigger value="combustivel">Combustível</TabsTrigger>
+            <TabsTrigger value="eletrico">Elétrico</TabsTrigger>
+            <TabsTrigger value="gps">GPS</TabsTrigger>
+            <TabsTrigger value="sync">Sync Auto</TabsTrigger>
+          </TabsList>
+
+          <div className="mt-4">
+            <TabsContent value="uber">{renderMappingTable('uber')}</TabsContent>
+            <TabsContent value="bolt">{renderMappingTable('bolt')}</TabsContent>
+            <TabsContent value="viaverde">{renderMappingTable('viaverde')}</TabsContent>
+            <TabsContent value="combustivel">{renderMappingTable('combustivel')}</TabsContent>
+            <TabsContent value="eletrico">{renderMappingTable('eletrico')}</TabsContent>
+            <TabsContent value="gps">{renderMappingTable('gps')}</TabsContent>
+            <TabsContent value="sync">{renderAutoSyncConfig()}</TabsContent>
+          </div>
+        </Tabs>
+      </div>
+    </Layout>
   );
 };
 
