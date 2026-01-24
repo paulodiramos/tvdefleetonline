@@ -389,15 +389,24 @@ const Integracoes = ({ user, onLogout }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      if (response.data.connected) {
+      // Verificar se já está conectado
+      if (response.data.connected || response.data.ready) {
         toast.success('Já está conectado ao WhatsApp!');
         setQrCode(null);
         fetchWhatsAppStatus();
-      } else if (response.data.qrCode) {
+      } 
+      // O serviço externo retorna "qr" (não "qrCode")
+      else if (response.data.qr) {
+        setQrCode(response.data.qr);
+        toast.info('Escaneie o QR Code com o WhatsApp do seu telemóvel');
+      }
+      // Fallback para "qrCode" caso seja usado em outra versão
+      else if (response.data.qrCode) {
         setQrCode(response.data.qrCode);
         toast.info('Escaneie o QR Code com o WhatsApp do seu telemóvel');
-      } else {
-        toast.info(response.data.message || 'A inicializar... aguarde');
+      } 
+      else {
+        toast.info(response.data.message || 'A inicializar... aguarde por alguns segundos e tente novamente');
       }
     } catch (error) {
       console.error('Error fetching QR:', error);
