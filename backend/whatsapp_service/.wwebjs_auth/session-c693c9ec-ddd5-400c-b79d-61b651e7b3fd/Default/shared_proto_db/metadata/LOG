@@ -1,2 +1,3 @@
-2026/01/24-11:57:00.959 9f3 Creating DB /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/shared_proto_db/metadata since it was missing.
-2026/01/24-11:57:00.964 9f3 Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/shared_proto_db/metadata/MANIFEST-000001
+2026/01/24-13:37:01.469 903 Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/shared_proto_db/metadata/MANIFEST-000001
+2026/01/24-13:37:01.469 903 Recovering log #3
+2026/01/24-13:37:01.470 903 Reusing old log /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/shared_proto_db/metadata/000003.log 

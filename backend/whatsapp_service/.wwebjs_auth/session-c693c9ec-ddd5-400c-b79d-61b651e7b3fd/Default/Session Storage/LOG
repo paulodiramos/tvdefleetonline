@@ -1,2 +1,3 @@
-2026/01/24-11:57:01.232 a22 Creating DB /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Session Storage since it was missing.
-2026/01/24-11:57:01.240 a22 Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Session Storage/MANIFEST-000001
+2026/01/24-13:37:01.813 92f Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Session Storage/MANIFEST-000001
+2026/01/24-13:37:01.814 92f Recovering log #3
+2026/01/24-13:37:01.815 92f Reusing old log /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Session Storage/000003.log 
