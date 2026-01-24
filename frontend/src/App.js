@@ -47,7 +47,6 @@ import Pagamentos from "@/pages/Pagamentos";
 import UploadCSV from "@/pages/UploadCSV";
 import Planos from "@/pages/Planos";
 import Configuracoes from "@/pages/Configuracoes";
-import CartoesFrota from "@/pages/CartoesFrota";
 import Integracoes from "@/pages/Integracoes";
 import Comunicacoes from "@/pages/Comunicacoes";
 import ConfiguracaoComunicacoes from "@/pages/ConfiguracaoComunicacoes";
@@ -106,7 +105,6 @@ import TermosPrivacidadeAdmin from "@/pages/TermosPrivacidadeAdmin";
 import FicheirosImportados from "@/pages/FicheirosImportados";
 import ConfiguracaoCSV from "@/pages/ConfiguracaoCSV";
 import ImportarDespesas from "@/pages/ImportarDespesas";
-import Automacao from "@/pages/Automacao";
 import FichaMotorista from "@/pages/FichaMotorista";
 import ConfiguracoesParceiro from "@/pages/ConfiguracoesParceiro";
 // RPA - Apenas Designer e Automação activos
