@@ -1136,6 +1136,150 @@ const RPAAutomacao = ({ user, onLogout }) => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Modal Nova Plataforma */}
+      <Dialog open={showNovaPlataformaModal} onOpenChange={setShowNovaPlataformaModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5" />
+              Nova Plataforma
+            </DialogTitle>
+            <DialogDescription>
+              Adicione uma nova plataforma para automação RPA
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-4 gap-4">
+              <div className="col-span-3">
+                <Label>Nome da Plataforma *</Label>
+                <Input
+                  placeholder="Ex: Galp Frota"
+                  value={novaPlataformaForm.nome}
+                  onChange={(e) => setNovaPlataformaForm(prev => ({ ...prev, nome: e.target.value }))}
+                />
+              </div>
+              <div>
+                <Label>Ícone</Label>
+                <Input
+                  placeholder="🔧"
+                  value={novaPlataformaForm.icone}
+                  onChange={(e) => setNovaPlataformaForm(prev => ({ ...prev, icone: e.target.value }))}
+                  className="text-center text-xl"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Cor</Label>
+                <div className="flex gap-2">
+                  <Input
+                    type="color"
+                    value={novaPlataformaForm.cor}
+                    onChange={(e) => setNovaPlataformaForm(prev => ({ ...prev, cor: e.target.value }))}
+                    className="w-14 h-9 p-1"
+                  />
+                  <Input
+                    value={novaPlataformaForm.cor}
+                    onChange={(e) => setNovaPlataformaForm(prev => ({ ...prev, cor: e.target.value }))}
+                    className="font-mono"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Requer 2FA?</Label>
+                <div className="flex items-center gap-2 mt-2">
+                  <Switch
+                    checked={novaPlataformaForm.requer_2fa}
+                    onCheckedChange={(checked) => setNovaPlataformaForm(prev => ({ ...prev, requer_2fa: checked }))}
+                  />
+                  <span className="text-sm text-slate-600">
+                    {novaPlataformaForm.requer_2fa ? 'Sim' : 'Não'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <Label>URL de Login</Label>
+              <Input
+                placeholder="https://portal.exemplo.com/login"
+                value={novaPlataformaForm.url_login}
+                onChange={(e) => setNovaPlataformaForm(prev => ({ ...prev, url_login: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <Label>Descrição</Label>
+              <Input
+                placeholder="Descrição da plataforma e tipo de dados a extrair"
+                value={novaPlataformaForm.descricao}
+                onChange={(e) => setNovaPlataformaForm(prev => ({ ...prev, descricao: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <Label>Tipos de Extração (separados por vírgula)</Label>
+              <Input
+                placeholder="ganhos, portagens, combustivel"
+                value={novaPlataformaForm.tipos_extracao.join(', ')}
+                onChange={(e) => setNovaPlataformaForm(prev => ({ 
+                  ...prev, 
+                  tipos_extracao: e.target.value.split(',').map(t => t.trim()).filter(Boolean)
+                }))}
+              />
+            </div>
+
+            <div>
+              <Label>Notas Adicionais</Label>
+              <Input
+                placeholder="Instruções especiais para login ou extração"
+                value={novaPlataformaForm.notas}
+                onChange={(e) => setNovaPlataformaForm(prev => ({ ...prev, notas: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowNovaPlataformaModal(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCriarPlataforma} disabled={saving || !novaPlataformaForm.nome}>
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+              Criar Plataforma
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Confirmar Eliminação de Plataforma */}
+      <AlertDialog open={showDeletePlataformaModal} onOpenChange={setShowDeletePlataformaModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar Plataforma?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem a certeza que deseja eliminar a plataforma "{selectedPlataforma?.nome}"?
+              {selectedPlataforma && (
+                <span className="block mt-2 text-amber-600">
+                  Se existirem credenciais associadas, a plataforma será apenas desactivada.
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleEliminarPlataforma}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Layout>
   );
 };
