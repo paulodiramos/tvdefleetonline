@@ -359,6 +359,11 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>🤖 RPA Automação</span>
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/whatsapp" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>📱 WhatsApp</span>
+                        </Link>
+                      </DropdownMenuItem>
                     </>
                   )}
 
