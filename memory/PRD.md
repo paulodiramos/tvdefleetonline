@@ -4,52 +4,50 @@
 Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de gestão de motoristas, veículos, financeiro e automações RPA.
 
 ## Arquitetura
-- **Frontend**: React + Vite + Tailwind CSS + Shadcn/UI
-- **Backend**: FastAPI (Python)
+- **Frontend**: React (porta 3000)
+- **Backend**: FastAPI (porta 8001)
+- **WhatsApp Service**: Node.js (porta 3001) - **Requer configuração adicional em produção**
 - **Database**: MongoDB
-- **Automação**: Playwright (Python)
-- **WhatsApp**: whatsapp-web.js (Node.js) com Chromium (auto-instalação)
 
 ---
 
-## ✅ Alterações desta Sessão (24/01/2026)
+## ⚠️ Limitação em Produção: WhatsApp
 
-### 1. Sistema de Plataformas Personalizadas no RPA
-- ✅ **Backend**: Endpoints CRUD para criar/editar/eliminar plataformas
-  - `POST /api/rpa-auto/plataformas` - Criar nova plataforma
-  - `PUT /api/rpa-auto/plataformas/{id}` - Actualizar plataforma
-  - `DELETE /api/rpa-auto/plataformas/{id}` - Eliminar plataforma
-- ✅ **Frontend**: Botão "Nova Plataforma" (apenas admin)
-- ✅ **Frontend**: Modal de criação com campos: nome, ícone, cor, URL login, tipos extração, 2FA
-- ✅ **Frontend**: Badge "Personalizada" para distinguir das pré-definidas
-- ✅ **Frontend**: Botão eliminar para plataformas personalizadas
-- ✅ **Plataformas pré-definidas** protegidas (Uber, Bolt, Via Verde, Prio)
+### Problema
+O serviço WhatsApp usa `whatsapp-web.js` que requer:
+1. Node.js runtime
+2. Chromium browser instalado
+3. Um processo separado a correr na porta 3001
 
-### 2. Página Configuração Mapeamento
-- ✅ Menu superior sempre visível (usa Layout)
-- ✅ Botão de voltar adicionado
+### Estado Actual
+- Em **preview/desenvolvimento**: Funciona ✅
+- Em **produção (Emergent)**: Mostra "Serviço Offline" ⚠️
 
-### 3. Configurações por Parceiro
-- ✅ Tab Terabox adicionada
-- ✅ Templates de mensagem WhatsApp para eventos/vistorias
+### Solução
+O frontend foi actualizado para mostrar mensagem clara quando o serviço não está disponível:
+> "Serviço WhatsApp não disponível. Contacte o suporte técnico para activar esta funcionalidade."
 
-### 4. Sistema Automático de Chromium
-- ✅ Auto-detecção e instalação do Chromium
-- ✅ Endpoints de diagnóstico `/health` e `/system-info`
+### Para Activar em Produção
+1. Configurar um servidor separado com Node.js e Chromium
+2. Executar o serviço: `cd /app/backend/whatsapp_service && node index.js`
+3. Garantir que o backend consegue aceder a `http://localhost:3001`
 
 ---
 
-## Sistema RPA - Plataformas
+## ✅ Funcionalidades Completas
 
-### Pré-definidas (protegidas)
-- Uber Driver
-- Bolt Fleet
-- Via Verde Empresas
-- Prio Energy
+### Sistema RPA
+- Plataformas pré-definidas: Uber, Bolt, Via Verde, Prio
+- Criar plataformas personalizadas (admin)
+- Páginas interligadas: RPA Automação ↔ RPA Designer ↔ Mapeamento
 
-### Personalizadas (admin pode criar)
-- Galp Frota (exemplo criado)
-- [Admin pode adicionar mais via interface]
+### Integrações
+- Terabox: Configuração por parceiro
+- WhatsApp: UI melhorada com mensagem de erro clara
+
+### UI/UX
+- Menu e botão voltar em todas as páginas de configuração
+- Links de navegação entre páginas relacionadas
 
 ---
 
@@ -60,16 +58,16 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 ---
 
 ## Tarefas Concluídas
-- ✅ Sistema de criar plataformas personalizadas no RPA
-- ✅ Menu e botão voltar na página de mapeamento
-- ✅ Terabox configurado por parceiro
-- ✅ Templates WhatsApp para eventos/vistorias
-- ✅ Auto-instalação do Chromium
+- ✅ Sistema de plataformas personalizadas no RPA
+- ✅ Páginas RPA interligadas
+- ✅ Menu/botão voltar nas páginas de configuração
+- ✅ Mensagem clara quando WhatsApp offline
 
 ## Tarefas Pendentes
 
 ### P2 - Média Prioridade
 - [ ] Limitar "Próximos Eventos" no dashboard a 3 itens
+- [ ] Configurar WhatsApp para funcionar em produção (requer servidor dedicado)
 
 ### P3 - Baixa Prioridade
 - [ ] Limpeza de código comentado no server.py
