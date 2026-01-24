@@ -506,7 +506,25 @@ const Integracoes = ({ user, onLogout }) => {
             )}
 
             {/* QR Code Section */}
-            {!whatsappStatus?.pronto && (
+            {whatsappStatus?.servico_ativo === false && (
+              <Alert className="bg-amber-50 border-amber-200">
+                <AlertCircle className="h-4 w-4 text-amber-600" />
+                <AlertDescription className="text-amber-800">
+                  <p className="font-semibold mb-2">Serviço WhatsApp não disponível</p>
+                  <p className="text-sm mb-2">
+                    O serviço de integração WhatsApp requer configuração adicional no servidor.
+                  </p>
+                  <p className="text-sm">
+                    <strong>Erro:</strong> {whatsappStatus?.erro || 'Serviço offline'}
+                  </p>
+                  <p className="text-xs mt-2 text-amber-600">
+                    Contacte o suporte técnico para activar esta funcionalidade.
+                  </p>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {!whatsappStatus?.pronto && whatsappStatus?.servico_ativo !== false && (
               <div className="space-y-4">
                 <Alert>
                   <AlertCircle className="h-4 w-4" />
