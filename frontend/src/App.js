@@ -797,16 +797,8 @@ function App() {
               )
             }
           />
-          <Route
-            path="/admin/planos-motorista"
-            element={
-              user && user.role === 'admin' ? (
-                <AdminPlanosMotorista user={user} onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
+          {/* Planos de Motorista agora unificado em /gestao-planos */}
+          <Route path="/admin/planos-motorista" element={<Navigate to="/gestao-planos" replace />} />
           <Route
             path="/admin/fornecedores"
             element={
