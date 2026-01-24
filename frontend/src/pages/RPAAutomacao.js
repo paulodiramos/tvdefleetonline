@@ -523,6 +523,7 @@ const RPAAutomacao = ({ user, onLogout }) => {
               {plataformas.map((plat) => {
                 const configurada = isPlataformaConfigurada(plat.id);
                 const credencial = credenciais.find(c => c.plataforma === plat.id);
+                const isPredefinida = plat.tipo === 'predefinida' || !plat.tipo;
                 
                 return (
                   <Card key={plat.id} className={`transition-shadow ${configurada ? 'border-green-200' : ''}`}>
@@ -539,21 +540,36 @@ const RPAAutomacao = ({ user, onLogout }) => {
                             <CardTitle className="text-lg flex items-center gap-2">
                               {plat.nome}
                               {configurada && <CheckCircle className="w-4 h-4 text-green-500" />}
-                              {plat.is_custom && (
+                              {(plat.is_custom || plat.tipo === 'personalizada') && (
                                 <Badge variant="outline" className="text-xs text-purple-600 border-purple-300">
-                                  Custom
+                                  Personalizada
                                 </Badge>
                               )}
                             </CardTitle>
                             <CardDescription>{plat.descricao}</CardDescription>
                           </div>
                         </div>
-                        {plat.requer_2fa && (
-                          <Badge variant="outline" className="text-amber-600 border-amber-300">
-                            <Shield className="w-3 h-3 mr-1" />
-                            2FA
-                          </Badge>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {plat.requer_2fa && (
+                            <Badge variant="outline" className="text-amber-600 border-amber-300">
+                              <Shield className="w-3 h-3 mr-1" />
+                              2FA
+                            </Badge>
+                          )}
+                          {user?.role === 'admin' && !isPredefinida && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                              onClick={() => {
+                                setSelectedPlataforma(plat);
+                                setShowDeletePlataformaModal(true);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </CardHeader>
                     <CardContent>
