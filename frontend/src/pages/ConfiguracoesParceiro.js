@@ -222,7 +222,11 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
-  const [activeTab, setActiveTab] = useState('email');
+  
+  // Get tab from URL params
+  const urlParams = new URLSearchParams(window.location.search);
+  const tabFromUrl = urlParams.get('tab');
+  const [activeTab, setActiveTab] = useState(tabFromUrl || 'email');
   
   // Estado para mostrar/esconder passwords
   const [showPasswords, setShowPasswords] = useState({
