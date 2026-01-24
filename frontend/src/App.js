@@ -784,26 +784,7 @@ function App() {
               )
             }
           />
-          <Route
-            path="/automacao-rpa"
-            element={
-              user && user.role === 'admin' ? (
-                <AutomacaoRPA user={user} onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
-          <Route
-            path="/rpa-simplificado"
-            element={
-              user && ['admin', 'gestao', 'parceiro'].includes(user.role) ? (
-                <RPASimplificado user={user} onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
+          {/* RPA - Apenas Designer (admin) e Automação (todos) activos */}
           <Route
             path="/rpa-automacao"
             element={
