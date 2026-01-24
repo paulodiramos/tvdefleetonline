@@ -399,12 +399,14 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>Meu Plano</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/terabox" className="flex items-center space-x-2 cursor-pointer">
-                          <HardDrive className="w-4 h-4" />
-                          <span>Terabox</span>
-                        </Link>
-                      </DropdownMenuItem>
+                      {itemPermitido('Terabox') && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/terabox" className="flex items-center space-x-2 cursor-pointer">
+                            <HardDrive className="w-4 h-4" />
+                            <span>Terabox</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
                       <div className="px-2 py-1.5">
                         <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
@@ -432,23 +434,29 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>🔗 Integrações</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/rpa-automacao" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>🤖 RPA Automação</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/importacao-rpa" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>📥 Importação Dados</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/whatsapp" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>📱 WhatsApp</span>
-                        </Link>
-                      </DropdownMenuItem>
+                      {itemPermitido('🤖 RPA Automação') && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/rpa-automacao" className="flex items-center space-x-2 cursor-pointer pl-6">
+                            <span>🤖 RPA Automação</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {itemPermitido('📥 Importação Dados') && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/importacao-rpa" className="flex items-center space-x-2 cursor-pointer pl-6">
+                            <span>📥 Importação Dados</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {itemPermitido('📱 WhatsApp') && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/whatsapp" className="flex items-center space-x-2 cursor-pointer pl-6">
+                            <span>📱 WhatsApp</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                     </>
-                  )}}
+                  )}
 
                   {/* Motorista Panel */}
                   {user.role === 'motorista' && (
