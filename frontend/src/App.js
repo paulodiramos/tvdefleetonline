@@ -799,6 +799,16 @@ function App() {
             }
           />
           <Route
+            path="/admin/permissoes-plataformas"
+            element={
+              user && user.role === 'admin' ? (
+                <GestaoPermissoesParceiros user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/admin/gestao-servicos"
             element={
               user && user.role === 'admin' ? (
