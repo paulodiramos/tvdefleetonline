@@ -821,16 +821,48 @@ async function restoreExistingSessions() {
     }
 }
 
-// Start server
-app.listen(PORT, '0.0.0.0', async () => {
-    console.log(`WhatsApp Web Service (Multi-Session) running on port ${PORT}`);
+// Initialize and start server
+async function startServer() {
+    console.log('==========================================');
+    console.log('TVDEFleet WhatsApp Service - Starting');
+    console.log('==========================================');
     
-    // Wait a bit before restoring sessions
-    console.log('Waiting 5 seconds before restoring existing sessions...');
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    // Check and install Chromium if needed
+    CHROMIUM_EXECUTABLE = await ensureChromium();
     
-    // Restore existing sessions in background
-    restoreExistingSessions().catch(err => {
-        console.error('Error in session restoration:', err);
+    if (!CHROMIUM_EXECUTABLE) {
+        console.error('==========================================');
+        console.error('❌ FATAL: Chromium is required but not available');
+        console.error('The WhatsApp service cannot function without Chromium.');
+        console.error('');
+        console.error('To fix this, run:');
+        console.error('  apt-get update && apt-get install -y chromium');
+        console.error('');
+        console.error('Or set CHROMIUM_PATH environment variable.');
+        console.error('==========================================');
+        
+        // Start server anyway to provide status endpoints
+        app.listen(PORT, '0.0.0.0', () => {
+            console.log(`WhatsApp Web Service running on port ${PORT} (LIMITED MODE - no Chromium)`);
+        });
+        return;
+    }
+    
+    // Start server
+    app.listen(PORT, '0.0.0.0', async () => {
+        console.log(`✅ WhatsApp Web Service (Multi-Session) running on port ${PORT}`);
+        console.log(`✅ Using Chromium: ${CHROMIUM_EXECUTABLE}`);
+        
+        // Wait a bit before restoring sessions
+        console.log('Waiting 5 seconds before restoring existing sessions...');
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        
+        // Restore existing sessions in background
+        restoreExistingSessions().catch(err => {
+            console.error('Error in session restoration:', err);
+        });
     });
-});
+}
+
+// Start the server
+startServer();
