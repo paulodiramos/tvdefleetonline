@@ -660,28 +660,31 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
             </Card>
           </TabsContent>
 
-          {/* Tab WhatsApp */}
+          {/* Tab WhatsApp Cloud API */}
           <TabsContent value="whatsapp" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MessageCircle className="w-5 h-5 text-green-600" />
-                  Configuração de WhatsApp
+                  WhatsApp Business Cloud API
                 </CardTitle>
                 <CardDescription>
-                  Configure o WhatsApp para enviar mensagens aos motoristas
+                  Configure a API oficial da Meta para enviar mensagens aos motoristas
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Status */}
                 <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
                   <div className="flex items-center gap-2">
-                    {configWhatsApp.ativo ? (
+                    {whatsappStatus?.configured ? (
                       <CheckCircle className="w-5 h-5 text-green-500" />
                     ) : (
                       <AlertCircle className="w-5 h-5 text-amber-500" />
                     )}
                     <span className="font-medium text-green-800">
-                      {configWhatsApp.ativo ? 'WhatsApp Ativo' : 'WhatsApp Inativo'}
+                      {whatsappStatus?.configured 
+                        ? `Conectado: ${whatsappStatus.phone || 'Verificado'}`
+                        : 'WhatsApp Não Configurado'}
                     </span>
                   </div>
                   <Switch
@@ -690,87 +693,124 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Número de WhatsApp</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                      <Input
-                        placeholder="+351 9XX XXX XXX"
-                        value={configWhatsApp.telefone}
-                        onChange={(e) => setConfigWhatsApp(prev => ({ ...prev, telefone: e.target.value }))}
-                        className="pl-10"
-                      />
+                {/* Guia de Configuração */}
+                <Alert className="bg-blue-50 border-blue-200">
+                  <HelpCircle className="h-4 w-4 text-blue-600" />
+                  <AlertDescription className="text-blue-800">
+                    <strong>Como configurar (grátis até 1000 msgs/mês):</strong>
+                    <ol className="list-decimal ml-4 mt-2 space-y-1 text-sm">
+                      <li>
+                        Aceda a{' '}
+                        <a 
+                          href="https://developers.facebook.com/apps" 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 underline font-medium"
+                        >
+                          developers.facebook.com/apps
+                        </a>
+                      </li>
+                      <li>Clique "Criar Aplicação" → Selecione "Empresa" → "WhatsApp"</li>
+                      <li>No painel do WhatsApp, copie o <strong>Phone Number ID</strong></li>
+                      <li>Gere um <strong>Access Token</strong> permanente</li>
+                      <li>Cole os valores abaixo e clique "Testar Conexão"</li>
+                    </ol>
+                    <div className="mt-3 flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => window.open('https://developers.facebook.com/apps', '_blank')}
+                        className="text-blue-600 border-blue-300"
+                      >
+                        <ExternalLink className="w-3 h-3 mr-1" />
+                        Abrir Meta Developers
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => window.open('https://developers.facebook.com/docs/whatsapp/cloud-api/get-started', '_blank')}
+                        className="text-blue-600 border-blue-300"
+                      >
+                        <HelpCircle className="w-3 h-3 mr-1" />
+                        Documentação
+                      </Button>
                     </div>
-                    <p className="text-xs text-slate-500">Inclua o código do país (+351)</p>
-                  </div>
+                  </AlertDescription>
+                </Alert>
+
+                {/* Campos de Configuração */}
+                <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-2">
-                    <Label>Nome de Exibição</Label>
+                    <Label>Phone Number ID *</Label>
                     <Input
-                      placeholder="Nome da sua empresa"
-                      value={configWhatsApp.nome_exibicao}
-                      onChange={(e) => setConfigWhatsApp(prev => ({ ...prev, nome_exibicao: e.target.value }))}
+                      placeholder="Ex: 123456789012345"
+                      value={configWhatsApp.phone_number_id}
+                      onChange={(e) => setConfigWhatsApp(prev => ({ ...prev, phone_number_id: e.target.value }))}
+                    />
+                    <p className="text-xs text-slate-500">Encontre em: WhatsApp → API Setup → Phone Number ID</p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label>Access Token *</Label>
+                    <div className="relative">
+                      <Input
+                        type={showPasswords.whatsapp ? 'text' : 'password'}
+                        placeholder="Cole o Access Token aqui"
+                        value={configWhatsApp.access_token}
+                        onChange={(e) => setConfigWhatsApp(prev => ({ ...prev, access_token: e.target.value }))}
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                        onClick={() => setShowPasswords(prev => ({ ...prev, whatsapp: !prev.whatsapp }))}
+                      >
+                        {showPasswords.whatsapp ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-slate-500">Gere um token permanente em: Business Settings → System Users</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Business Account ID (opcional)</Label>
+                    <Input
+                      placeholder="Ex: 123456789012345"
+                      value={configWhatsApp.business_account_id}
+                      onChange={(e) => setConfigWhatsApp(prev => ({ ...prev, business_account_id: e.target.value }))}
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Mensagem de Boas-Vindas (opcional)</Label>
-                  <Textarea
-                    placeholder="Olá! Bem-vindo à nossa frota. Este é o canal de comunicação oficial..."
-                    value={configWhatsApp.mensagem_boas_vindas}
-                    onChange={(e) => setConfigWhatsApp(prev => ({ ...prev, mensagem_boas_vindas: e.target.value }))}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Template de Relatório Semanal (opcional)</Label>
-                  <Textarea
-                    placeholder="Olá {nome}! Segue o seu relatório semanal..."
-                    value={configWhatsApp.mensagem_relatorio}
-                    onChange={(e) => setConfigWhatsApp(prev => ({ ...prev, mensagem_relatorio: e.target.value }))}
-                    rows={3}
-                  />
-                  <p className="text-xs text-slate-500">Use {'{nome}'}, {'{semana}'}, {'{total}'} para variáveis</p>
-                </div>
-
-                <div className="space-y-3 p-4 bg-slate-50 rounded-lg">
-                  <h4 className="font-medium text-sm">Notificações Automáticas</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-normal">Relatórios semanais</Label>
-                      <Switch
-                        checked={configWhatsApp.enviar_relatorios_semanais}
-                        onCheckedChange={(checked) => setConfigWhatsApp(prev => ({ ...prev, enviar_relatorios_semanais: checked }))}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-normal">Alertas de documentos</Label>
-                      <Switch
-                        checked={configWhatsApp.enviar_alertas_documentos}
-                        onCheckedChange={(checked) => setConfigWhatsApp(prev => ({ ...prev, enviar_alertas_documentos: checked }))}
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label className="text-sm font-normal">Alertas de veículos</Label>
-                      <Switch
-                        checked={configWhatsApp.enviar_alertas_veiculos}
-                        onCheckedChange={(checked) => setConfigWhatsApp(prev => ({ ...prev, enviar_alertas_veiculos: checked }))}
-                      />
-                    </div>
-                  </div>
-                </div>
-
+                {/* Botões */}
                 <div className="flex gap-2 pt-4">
-                  <Button onClick={handleSaveWhatsApp} disabled={saving} className="bg-green-600 hover:bg-green-700">
+                  <Button 
+                    onClick={handleSaveWhatsApp} 
+                    disabled={saving} 
+                    className="bg-green-600 hover:bg-green-700"
+                  >
                     {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                     Guardar
                   </Button>
-                  <Button variant="outline" onClick={handleTestarWhatsApp} disabled={testing || !configWhatsApp.telefone}>
-                    {testing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <ExternalLink className="w-4 h-4 mr-2" />}
-                    Testar WhatsApp
+                  <Button 
+                    variant="outline" 
+                    onClick={handleTestarWhatsApp} 
+                    disabled={testingWhatsApp || !configWhatsApp.phone_number_id || !configWhatsApp.access_token}
+                  >
+                    {testingWhatsApp ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <TestTube className="w-4 h-4 mr-2" />}
+                    Testar Conexão
                   </Button>
+                </div>
+
+                {/* Info sobre custos */}
+                <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
+                  <strong>💡 Sobre custos:</strong>
+                  <ul className="list-disc ml-4 mt-1">
+                    <li>1000 conversas grátis por mês</li>
+                    <li>Depois: ~€0.04 por conversa</li>
+                    <li>Sem necessidade de telemóvel ligado 24/7</li>
+                    <li>100% fiável e oficial da Meta</li>
+                  </ul>
                 </div>
               </CardContent>
             </Card>
