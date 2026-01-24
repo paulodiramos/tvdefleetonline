@@ -93,7 +93,8 @@ const defaultFieldMappings = {
   }
 };
 
-const ConfiguracaoMapeamento = ({ user }) => {
+const ConfiguracaoMapeamento = ({ user, onLogout }) => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('uber');
   const [mappings, setMappings] = useState({});
   const [loading, setLoading] = useState(false);
