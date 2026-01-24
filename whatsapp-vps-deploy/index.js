@@ -70,7 +70,13 @@ function cleanLocks(sessionDir) {
 // Create WhatsApp client
 async function getOrCreateClient(parceiro_id) {
     if (clients.has(parceiro_id)) {
-        return clients.get(parceiro_id);
+        const existingClient = clients.get(parceiro_id);
+        const status = clientStatus.get(parceiro_id);
+        
+        // If client exists and is ready, return it
+        if (status?.ready) {
+            return existingClient;
+        }
     }
 
     if (!CHROMIUM_PATH) {
@@ -128,6 +134,12 @@ async function getOrCreateClient(parceiro_id) {
 
     client.on('authenticated', () => {
         console.log(`Authenticated: ${parceiro_id}`);
+        clientStatus.set(parceiro_id, {
+            connected: true,
+            ready: false,
+            hasQrCode: false,
+            authenticating: true
+        });
     });
 
     client.on('auth_failure', (msg) => {
@@ -226,9 +238,11 @@ app.get('/qr/:parceiro_id', async (req, res) => {
         } else {
             const status = clientStatus.get(parceiro_id);
             if (status?.ready) {
-                res.json({ success: true, ready: true, message: 'Already connected' });
+                res.json({ success: true, ready: true, connected: true, message: 'Already connected' });
+            } else if (status?.authenticating) {
+                res.json({ success: false, message: 'Authenticating, please wait...' });
             } else {
-                res.json({ success: false, message: 'QR not ready yet' });
+                res.json({ success: false, message: 'QR not ready yet, please try again in a few seconds' });
             }
         }
     } catch (error) {
@@ -236,20 +250,35 @@ app.get('/qr/:parceiro_id', async (req, res) => {
     }
 });
 
-// Send message
+// Send message - accepts both formats: {phone, message} or {telefone, mensagem}
 app.post('/send/:parceiro_id', async (req, res) => {
     try {
         const { parceiro_id } = req.params;
-        const { telefone, mensagem } = req.body;
+        // Accept both field name formats
+        const telefone = req.body.telefone || req.body.phone || req.body.phone_number;
+        const mensagem = req.body.mensagem || req.body.message;
+
+        if (!telefone || !mensagem) {
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Missing required fields: telefone/phone and mensagem/message' 
+            });
+        }
 
         const client = clients.get(parceiro_id);
         if (!client) {
-            return res.status(400).json({ success: false, error: 'Client not initialized' });
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Client not initialized. Please scan QR code first.' 
+            });
         }
 
         const status = clientStatus.get(parceiro_id);
         if (!status?.ready) {
-            return res.status(400).json({ success: false, error: 'Client not ready' });
+            return res.status(400).json({ 
+                success: false, 
+                error: 'Client not ready. Please wait for connection or scan QR code again.' 
+            });
         }
 
         // Format phone number
@@ -259,14 +288,78 @@ app.post('/send/:parceiro_id', async (req, res) => {
         }
         numero = numero + '@c.us';
 
-        await client.sendMessage(numero, mensagem);
-        res.json({ success: true, message: 'Message sent' });
+        const result = await client.sendMessage(numero, mensagem);
+        res.json({ 
+            success: true, 
+            message: 'Message sent',
+            messageId: result.id?._serialized || result.id
+        });
+    } catch (error) {
+        console.error(`Send error:`, error.message);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Logout (disconnect session)
+app.post('/logout/:parceiro_id', async (req, res) => {
+    try {
+        const { parceiro_id } = req.params;
+        const client = clients.get(parceiro_id);
+        
+        if (client) {
+            await client.logout();
+            await client.destroy();
+            clients.delete(parceiro_id);
+            clientStatus.delete(parceiro_id);
+            qrCodes.delete(parceiro_id);
+            
+            // Remove session files
+            const sessionDir = path.join(AUTH_PATH, `session-${parceiro_id}`);
+            if (fs.existsSync(sessionDir)) {
+                fs.rmSync(sessionDir, { recursive: true, force: true });
+            }
+        }
+        
+        res.json({ success: true, message: 'Logged out and session cleared' });
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
 
-// Disconnect
+// Restart client
+app.post('/restart/:parceiro_id', async (req, res) => {
+    try {
+        const { parceiro_id } = req.params;
+        
+        // Destroy existing client if any
+        const existingClient = clients.get(parceiro_id);
+        if (existingClient) {
+            try {
+                await existingClient.destroy();
+            } catch (e) { /* ignore */ }
+            clients.delete(parceiro_id);
+        }
+        
+        clientStatus.delete(parceiro_id);
+        qrCodes.delete(parceiro_id);
+        
+        // Create new client
+        await getOrCreateClient(parceiro_id);
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        
+        const status = clientStatus.get(parceiro_id) || {};
+        res.json({ 
+            success: true, 
+            message: 'Client restarted',
+            status,
+            hasQrCode: qrCodes.has(parceiro_id)
+        });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+// Disconnect (without logout - keeps session)
 app.post('/disconnect/:parceiro_id', async (req, res) => {
     try {
         const { parceiro_id } = req.params;
@@ -283,6 +376,21 @@ app.post('/disconnect/:parceiro_id', async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
+});
+
+// Get all sessions (admin)
+app.get('/sessions', (req, res) => {
+    const sessions = [];
+    for (const [parceiro_id, status] of clientStatus.entries()) {
+        sessions.push({
+            parceiro_id,
+            ...status
+        });
+    }
+    res.json({
+        total: sessions.length,
+        sessions
+    });
 });
 
 // Start server
