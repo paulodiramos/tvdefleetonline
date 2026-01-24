@@ -111,7 +111,6 @@ import ConfiguracoesParceiro from "@/pages/ConfiguracoesParceiro";
 import RPAAutomacao from "@/pages/RPAAutomacao";
 import RPADesigner from "@/pages/RPADesigner";
 import GestaoServicos from "@/pages/GestaoServicos";
-import AdminPlanosMotorista from "@/pages/AdminPlanosMotorista";
 import Terabox from "@/pages/Terabox";
 import AdminFornecedores from "@/pages/AdminFornecedores";
 import WhatsAppEnvio from "@/pages/WhatsAppEnvio";
