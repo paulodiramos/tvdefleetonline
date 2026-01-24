@@ -677,7 +677,7 @@ async def criar_agendamento(
     """Criar agendamento de execução automática"""
     
     # Verificar plataforma válida
-    plataforma = next((p for p in PLATAFORMAS if p["id"] == dados.plataforma), None)
+    plataforma = await get_plataforma_by_id(dados.plataforma)
     if not plataforma:
         raise HTTPException(status_code=400, detail="Plataforma inválida")
     
