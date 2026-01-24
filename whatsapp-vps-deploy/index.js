@@ -258,6 +258,8 @@ app.post('/send/:parceiro_id', async (req, res) => {
         const telefone = req.body.telefone || req.body.phone || req.body.phone_number;
         const mensagem = req.body.mensagem || req.body.message;
 
+        console.log(`[SEND] Request for parceiro: ${parceiro_id}, phone: ${telefone}`);
+
         if (!telefone || !mensagem) {
             return res.status(400).json({ 
                 success: false, 
@@ -267,6 +269,7 @@ app.post('/send/:parceiro_id', async (req, res) => {
 
         const client = clients.get(parceiro_id);
         if (!client) {
+            console.log(`[SEND] No client found for parceiro: ${parceiro_id}`);
             return res.status(400).json({ 
                 success: false, 
                 error: 'Client not initialized. Please scan QR code first.' 
@@ -274,6 +277,8 @@ app.post('/send/:parceiro_id', async (req, res) => {
         }
 
         const status = clientStatus.get(parceiro_id);
+        console.log(`[SEND] Client status:`, status);
+        
         if (!status?.ready) {
             return res.status(400).json({ 
                 success: false, 
@@ -281,37 +286,44 @@ app.post('/send/:parceiro_id', async (req, res) => {
             });
         }
 
-        // Format phone number
+        // Format phone number - ensure it has country code
         let numero = telefone.replace(/\D/g, '');
-        if (!numero.startsWith('351')) {
+        
+        // Handle Portuguese numbers
+        if (numero.startsWith('9') && numero.length === 9) {
+            numero = '351' + numero;
+        } else if (!numero.startsWith('351') && numero.length === 9) {
             numero = '351' + numero;
         }
-        numero = numero + '@c.us';
+        
+        const chatId = numero + '@c.us';
+        console.log(`[SEND] Sending to: ${chatId}`);
 
-        // Send message with error handling for known whatsapp-web.js bugs
-        try {
-            const result = await client.sendMessage(numero, mensagem);
-            res.json({ 
-                success: true, 
-                message: 'Message sent',
-                messageId: result?.id?._serialized || result?.id || 'sent'
+        // Check if number is registered on WhatsApp
+        const isRegistered = await client.isRegisteredUser(chatId);
+        console.log(`[SEND] Is registered on WhatsApp: ${isRegistered}`);
+        
+        if (!isRegistered) {
+            return res.status(400).json({ 
+                success: false, 
+                error: `Número ${telefone} não está registado no WhatsApp` 
             });
-        } catch (sendError) {
-            // Known bug: "Cannot read properties of undefined (reading 'markedUnread')"
-            // This error often occurs AFTER the message is sent successfully
-            if (sendError.message && sendError.message.includes('markedUnread')) {
-                console.log(`Message likely sent despite error: ${sendError.message}`);
-                res.json({ 
-                    success: true, 
-                    message: 'Message sent (with warning)',
-                    warning: 'Message was sent but confirmation had issues'
-                });
-            } else {
-                throw sendError;
-            }
         }
+
+        // Send message
+        const result = await client.sendMessage(chatId, mensagem);
+        console.log(`[SEND] Message sent, ID: ${result?.id?._serialized}`);
+        
+        res.json({ 
+            success: true, 
+            message: 'Message sent',
+            messageId: result?.id?._serialized || result?.id || 'sent',
+            sentTo: chatId
+        });
+
     } catch (error) {
-        console.error(`Send error:`, error.message);
+        console.error(`[SEND ERROR]:`, error.message);
+        console.error(`[SEND ERROR STACK]:`, error.stack);
         res.status(500).json({ success: false, error: error.message });
     }
 });
