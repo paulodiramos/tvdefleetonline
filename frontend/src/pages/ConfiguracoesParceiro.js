@@ -417,7 +417,7 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
       setSaving(true);
       const token = localStorage.getItem('token');
       await axios.put(
-        `${API}/api/parceiros/${user.id}/config-whatsapp`,
+        `${API}/api/whatsapp/config`,
         configWhatsApp,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -431,24 +431,27 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
 
   const handleTestarWhatsApp = async () => {
     try {
-      setTesting(true);
+      setTestingWhatsApp(true);
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${API}/api/parceiros/${user.id}/whatsapp/enviar-teste`,
+        `${API}/api/whatsapp/test`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      if (response.data.whatsapp_link) {
-        window.open(response.data.whatsapp_link, '_blank');
-        toast.success('Link WhatsApp aberto!');
-      } else {
-        toast.success(response.data.message);
+      if (response.data.success) {
+        setWhatsappStatus({ 
+          configured: true, 
+          phone: response.data.phone_number,
+          name: response.data.verified_name
+        });
+        toast.success(`Conectado! Número: ${response.data.phone_number}`);
       }
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Erro ao testar WhatsApp');
+      setWhatsappStatus({ configured: false, error: error.response?.data?.detail });
+      toast.error(error.response?.data?.detail || 'Erro ao testar conexão');
     } finally {
-      setTesting(false);
+      setTestingWhatsApp(false);
     }
   };
 
