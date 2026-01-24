@@ -305,6 +305,17 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
         }
       } catch (e) { /* ignore */ }
       
+      // Buscar configurações de Terabox
+      try {
+        const teraboxRes = await axios.get(`${API}/api/terabox/credentials`, { headers });
+        if (teraboxRes.data) {
+          setConfigTerabox(prev => ({ ...prev, ...teraboxRes.data }));
+          if (teraboxRes.data.cookie) {
+            setTeraboxStatus({ conectado: true });
+          }
+        }
+      } catch (e) { /* ignore */ }
+      
       // Buscar credenciais de plataformas
       try {
         const credsRes = await axios.get(`${API}/api/parceiros/${user.id}/credenciais-plataformas`, { headers });
@@ -333,6 +344,47 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
       toast.error(error.response?.data?.detail || 'Erro ao guardar configuração');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSaveTerabox = async () => {
+    try {
+      setSaving(true);
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/api/terabox/credentials`,
+        configTerabox,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Configuração de Terabox guardada!');
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao guardar configuração');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTestarTerabox = async () => {
+    try {
+      setTestingTerabox(true);
+      const token = localStorage.getItem('token');
+      const res = await axios.post(
+        `${API}/api/terabox/cloud/test-connection`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (res.data.success) {
+        setTeraboxStatus({ conectado: true, info: res.data });
+        toast.success('Conexão Terabox verificada com sucesso!');
+      } else {
+        setTeraboxStatus({ conectado: false, erro: res.data.message });
+        toast.error(res.data.message || 'Falha na conexão');
+      }
+    } catch (error) {
+      setTeraboxStatus({ conectado: false, erro: error.response?.data?.detail });
+      toast.error(error.response?.data?.detail || 'Erro ao testar conexão');
+    } finally {
+      setTestingTerabox(false);
     }
   };
 
