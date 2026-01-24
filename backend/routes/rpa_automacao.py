@@ -87,7 +87,7 @@ class PlataformaUpdate(BaseModel):
 
 # ==================== PLATAFORMAS PRÉ-DEFINIDAS ====================
 
-PLATAFORMAS = [
+PLATAFORMAS_PREDEFINIDAS = [
     {
         "id": "uber",
         "nome": "Uber Driver",
@@ -97,7 +97,8 @@ PLATAFORMAS = [
         "tipos_extracao": ["ganhos"],
         "campos_credenciais": ["email", "password"],
         "requer_2fa": True,
-        "url_login": "https://auth.uber.com/"
+        "url_login": "https://auth.uber.com/",
+        "tipo": "predefinida"
     },
     {
         "id": "bolt",
