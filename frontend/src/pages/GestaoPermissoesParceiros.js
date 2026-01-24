@@ -116,7 +116,7 @@ const GestaoPermissoesParceiros = ({ user, onLogout }) => {
     
     try {
       await axios.put(
-        `${API}/api/parceiro-plataformas/${parceiroId}`,
+        `${API}/api/rpa-auto/parceiro-plataformas/${parceiroId}`,
         permissoes[parceiroId]?.plataformas || [],
         { headers: { Authorization: `Bearer ${token}` } }
       );
