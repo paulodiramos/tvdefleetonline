@@ -12,58 +12,44 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 
 ---
 
-## ✅ Sistema de Auto-Instalação do Chromium (24/01/2026)
+## ✅ Alterações desta Sessão (24/01/2026)
 
-### Como Funciona
-O serviço WhatsApp agora detecta e instala o Chromium automaticamente:
+### 1. Sistema de Plataformas Personalizadas no RPA
+- ✅ **Backend**: Endpoints CRUD para criar/editar/eliminar plataformas
+  - `POST /api/rpa-auto/plataformas` - Criar nova plataforma
+  - `PUT /api/rpa-auto/plataformas/{id}` - Actualizar plataforma
+  - `DELETE /api/rpa-auto/plataformas/{id}` - Eliminar plataforma
+- ✅ **Frontend**: Botão "Nova Plataforma" (apenas admin)
+- ✅ **Frontend**: Modal de criação com campos: nome, ícone, cor, URL login, tipos extração, 2FA
+- ✅ **Frontend**: Badge "Personalizada" para distinguir das pré-definidas
+- ✅ **Frontend**: Botão eliminar para plataformas personalizadas
+- ✅ **Plataformas pré-definidas** protegidas (Uber, Bolt, Via Verde, Prio)
 
-1. **Na Inicialização**: Verifica múltiplos caminhos para o Chromium
-2. **Se Não Encontrado**: Tenta instalar automaticamente via `apt-get`
-3. **Endpoints de Diagnóstico**: `/health` e `/system-info` mostram o estado
+### 2. Página Configuração Mapeamento
+- ✅ Menu superior sempre visível (usa Layout)
+- ✅ Botão de voltar adicionado
 
-### Caminhos Verificados
-- `/usr/bin/chromium`
-- `/usr/bin/chromium-browser`
-- `/usr/bin/google-chrome`
-- `/usr/bin/google-chrome-stable`
-- `$CHROMIUM_PATH` (variável de ambiente)
+### 3. Configurações por Parceiro
+- ✅ Tab Terabox adicionada
+- ✅ Templates de mensagem WhatsApp para eventos/vistorias
 
-### Endpoints de Diagnóstico
-```bash
-# Health check com estado do Chromium
-curl http://localhost:3001/health
-
-# Informação detalhada do sistema
-curl http://localhost:3001/system-info
-```
-
-### Script de Inicialização
-Também criado `/app/scripts/start-whatsapp.sh` que pode ser usado como alternativa.
+### 4. Sistema Automático de Chromium
+- ✅ Auto-detecção e instalação do Chromium
+- ✅ Endpoints de diagnóstico `/health` e `/system-info`
 
 ---
 
-## Configurações por Parceiro (`/configuracoes-parceiro`)
+## Sistema RPA - Plataformas
 
-### Tabs Disponíveis:
-1. **Email** - Configuração SMTP
-2. **WhatsApp** - Número, templates, notificações automáticas
-3. **Terabox** - Cookie, pasta raiz, sincronização
-4. **Plataformas** - Credenciais Uber/Bolt/Via Verde
+### Pré-definidas (protegidas)
+- Uber Driver
+- Bolt Fleet
+- Via Verde Empresas
+- Prio Energy
 
----
-
-## Templates de Mensagem WhatsApp
-
-### Eventos/Vistorias (Novos)
-- **Vistoria Agendada**: data, hora, local, veículo
-- **Lembrete de Vistoria**: notificação prévia
-- **Manutenção Agendada**: tipo, data, local
-
-### Existentes
-- Relatório Semanal
-- Documento a Expirar
-- Boas-vindas
-- Mensagem Personalizada
+### Personalizadas (admin pode criar)
+- Galp Frota (exemplo criado)
+- [Admin pode adicionar mais via interface]
 
 ---
 
@@ -74,11 +60,11 @@ Também criado `/app/scripts/start-whatsapp.sh` que pode ser usado como alternat
 ---
 
 ## Tarefas Concluídas
-- ✅ Sistema automático de detecção/instalação do Chromium
-- ✅ Endpoints de diagnóstico (`/health`, `/system-info`)
-- ✅ WhatsApp configurado por parceiro
+- ✅ Sistema de criar plataformas personalizadas no RPA
+- ✅ Menu e botão voltar na página de mapeamento
 - ✅ Terabox configurado por parceiro
-- ✅ Templates de mensagem para eventos/vistorias
+- ✅ Templates WhatsApp para eventos/vistorias
+- ✅ Auto-instalação do Chromium
 
 ## Tarefas Pendentes
 
