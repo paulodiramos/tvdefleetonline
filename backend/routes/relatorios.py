@@ -2154,10 +2154,10 @@ async def send_motorista_email(
         else:
             logger.warning(f"Parceiro ID não encontrado para motorista {motorista_id}")
         
-        # Fallback para SendGrid se SMTP não disponível
+        # Fallback para SMTP do sistema se SMTP do parceiro não disponível
         if email_result is None:
-            logger.info("Usando fallback SendGrid")
-            email_result = send_email_sendgrid(
+            logger.info("Usando fallback SMTP do sistema")
+            email_result = send_email_smtp(
                 to_email=email_destino,
                 subject=f"Relatório Semanal - Semana {semana}/{ano}",
                 html_content=html_content
