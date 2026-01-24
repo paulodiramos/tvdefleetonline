@@ -360,7 +360,23 @@ const RPADesigner = ({ user, onLogout }) => {
               <p className="text-slate-600">Criar e gerir scripts de automação Playwright</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap justify-end">
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/rpa-automacao')}
+              className="border-green-200 text-green-700 hover:bg-green-50"
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              RPA Automação
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={() => navigate('/configuracao-mapeamento')}
+              className="border-blue-200 text-blue-700 hover:bg-blue-50"
+            >
+              <TableProperties className="w-4 h-4 mr-2" />
+              Mapeamento
+            </Button>
             <Button variant="outline" onClick={() => setShowInstrucoesModal(true)}>
               <HelpCircle className="w-4 h-4 mr-2" />
               Instruções
