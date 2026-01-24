@@ -350,12 +350,17 @@ const Layout = ({ children, user, onLogout }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link to="/importacao-rpa" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>📥 Importação Dados</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to="/whatsapp" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>📱 WhatsApp</span>
                         </Link>
                       </DropdownMenuItem>
                     </>
-                  )}
+                  )}}
 
                   {/* Motorista Panel */}
                   {user.role === 'motorista' && (
