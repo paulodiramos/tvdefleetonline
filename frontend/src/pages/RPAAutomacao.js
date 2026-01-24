@@ -429,12 +429,30 @@ const RPAAutomacao = ({ user, onLogout }) => {
               <p className="text-slate-600">Extração automática de dados de plataformas</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap justify-end">
             {user?.role === 'admin' && (
-              <Button onClick={() => setShowNovaPlataformaModal(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Nova Plataforma
-              </Button>
+              <>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/rpa-designer')}
+                  className="border-purple-200 text-purple-700 hover:bg-purple-50"
+                >
+                  <FileCode className="w-4 h-4 mr-2" />
+                  RPA Designer
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/configuracao-mapeamento')}
+                  className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                >
+                  <TableProperties className="w-4 h-4 mr-2" />
+                  Mapeamento
+                </Button>
+                <Button onClick={() => setShowNovaPlataformaModal(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nova Plataforma
+                </Button>
+              </>
             )}
             <Button variant="outline" onClick={fetchDados}>
               <RefreshCw className="w-4 h-4 mr-2" />
