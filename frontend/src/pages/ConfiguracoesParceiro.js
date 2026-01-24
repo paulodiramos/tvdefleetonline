@@ -296,11 +296,19 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
         }
       } catch (e) { /* ignore */ }
       
-      // Buscar configurações de WhatsApp
+      // Buscar configurações de WhatsApp Cloud API
       try {
-        const whatsappRes = await axios.get(`${API}/api/parceiros/${user.id}/config-whatsapp`, { headers });
+        const whatsappRes = await axios.get(`${API}/api/whatsapp/config`, { headers });
         if (whatsappRes.data) {
-          setConfigWhatsApp(prev => ({ ...prev, ...whatsappRes.data }));
+          setConfigWhatsApp(prev => ({ 
+            ...prev, 
+            phone_number_id: whatsappRes.data.phone_number_id || '',
+            business_account_id: whatsappRes.data.business_account_id || '',
+            ativo: whatsappRes.data.ativo || false
+          }));
+          if (whatsappRes.data.access_token_configured) {
+            setWhatsappStatus({ configured: true });
+          }
         }
       } catch (e) { /* ignore */ }
       
