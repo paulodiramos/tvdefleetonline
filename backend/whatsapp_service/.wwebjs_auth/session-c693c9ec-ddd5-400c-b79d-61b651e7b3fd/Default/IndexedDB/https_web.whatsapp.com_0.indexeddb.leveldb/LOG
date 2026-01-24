@@ -77,3 +77,29 @@
 2026/01/24-09:49:25.469 9e6 Delete type=2 #1188
 2026/01/24-09:49:25.469 9e6 Delete type=2 #1154
 2026/01/24-09:49:25.469 9e6 Delete type=2 #1205
+2026/01/24-10:23:17.915 9eb Compacting 1@1 + 11@2 files
+2026/01/24-10:23:17.946 9eb Generated table #1232@1: 11818 keys, 2153337 bytes
+2026/01/24-10:23:17.982 9eb Generated table #1233@1: 7921 keys, 2129428 bytes
+2026/01/24-10:23:18.015 9eb Generated table #1234@1: 9055 keys, 2132525 bytes
+2026/01/24-10:23:18.066 9eb Generated table #1235@1: 94422 keys, 2243667 bytes
+2026/01/24-10:23:18.110 9eb Generated table #1236@1: 97797 keys, 2247309 bytes
+2026/01/24-10:23:18.155 9eb Generated table #1237@1: 99196 keys, 2247590 bytes
+2026/01/24-10:23:18.198 9eb Generated table #1238@1: 97430 keys, 2245530 bytes
+2026/01/24-10:23:18.243 9eb Generated table #1239@1: 98711 keys, 2249258 bytes
+2026/01/24-10:23:18.286 9eb Generated table #1240@1: 97470 keys, 2246451 bytes
+2026/01/24-10:23:18.337 9eb Generated table #1241@1: 99156 keys, 2247036 bytes
+2026/01/24-10:23:18.342 9eb Generated table #1242@1: 6576 keys, 153929 bytes
+2026/01/24-10:23:18.343 9eb Compacted 1@1 + 11@2 files => 22296060 bytes
+2026/01/24-10:23:18.345 9eb compacted to: files[ 0 0 35 0 0 0 0 ]
+2026/01/24-10:23:18.345 9eb Delete type=2 #1169
+2026/01/24-10:23:18.345 9eb Delete type=2 #1167
+2026/01/24-10:23:18.345 9eb Delete type=2 #1161
+2026/01/24-10:23:18.345 9eb Delete type=2 #1207
+2026/01/24-10:23:18.345 9eb Delete type=2 #1162
+2026/01/24-10:23:18.345 9eb Delete type=2 #1165
+2026/01/24-10:23:18.346 9eb Delete type=2 #1179
+2026/01/24-10:23:18.346 9eb Delete type=2 #1166
+2026/01/24-10:23:18.346 9eb Delete type=2 #1164
+2026/01/24-10:23:18.346 9eb Delete type=2 #1168
+2026/01/24-10:23:18.346 9eb Delete type=2 #1160
+2026/01/24-10:23:18.346 9eb Delete type=2 #1163
