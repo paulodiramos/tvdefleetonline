@@ -1,2 +1,3 @@
-2026/01/23-22:01:45.261 f2f Creating DB /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Sync Data/LevelDB since it was missing.
-2026/01/23-22:01:45.280 f2f Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Sync Data/LevelDB/MANIFEST-000001
+2026/01/24-00:23:20.285 f74 Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Sync Data/LevelDB/MANIFEST-000001
+2026/01/24-00:23:20.286 f74 Recovering log #3
+2026/01/24-00:23:20.287 f74 Reusing old log /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Sync Data/LevelDB/000003.log 
