@@ -106,3 +106,11 @@
 2026/01/24-11:38:03.194 9e6 Level-0 table #1244: started
 2026/01/24-11:38:03.211 9e6 Level-0 table #1244: 1195724 bytes OK
 2026/01/24-11:38:03.215 9e6 Delete type=0 #1203
+2026/01/24-11:38:14.446 9e6 Compacting 1@0 + 0@1 files
+2026/01/24-11:38:14.462 9e6 Generated table #1245@0: 26024 keys, 459224 bytes
+2026/01/24-11:38:14.465 9e6 Generated table #1246@0: 294 keys, 43498 bytes
+2026/01/24-11:38:14.468 9e6 Generated table #1247@0: 811 keys, 35355 bytes
+2026/01/24-11:38:14.470 9e6 Generated table #1248@0: 394 keys, 28974 bytes
+2026/01/24-11:38:14.470 9e6 Compacted 1@0 + 0@1 files => 567051 bytes
+2026/01/24-11:38:14.472 9e6 compacted to: files[ 0 4 35 0 0 0 0 ]
+2026/01/24-11:38:14.472 9e6 Delete type=2 #1244
