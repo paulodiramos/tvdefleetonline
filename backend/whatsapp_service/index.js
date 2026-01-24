@@ -123,6 +123,11 @@ async function getOrCreateClient(parceiro_id) {
         return clients.get(parceiro_id);
     }
     
+    // Check if Chromium is available
+    if (!CHROMIUM_EXECUTABLE) {
+        throw new Error('Chromium not available. WhatsApp service cannot create clients.');
+    }
+    
     // Clean up locks for this specific session before creating client
     const sessionDir = path.join(AUTH_PATH, `session-${parceiro_id}`, 'Default');
     if (fs.existsSync(sessionDir)) {
@@ -138,6 +143,7 @@ async function getOrCreateClient(parceiro_id) {
     }
     
     console.log(`Creating new WhatsApp client for partner: ${parceiro_id}`);
+    console.log(`Using Chromium at: ${CHROMIUM_EXECUTABLE}`);
     
     const client = new Client({
         authStrategy: new LocalAuth({
@@ -146,7 +152,7 @@ async function getOrCreateClient(parceiro_id) {
         }),
         puppeteer: {
             headless: true,
-            executablePath: '/usr/bin/chromium',
+            executablePath: CHROMIUM_EXECUTABLE,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
