@@ -426,10 +426,18 @@ const RPAAutomacao = ({ user, onLogout }) => {
               <p className="text-slate-600">Extração automática de dados de plataformas</p>
             </div>
           </div>
-          <Button variant="outline" onClick={fetchDados}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Atualizar
-          </Button>
+          <div className="flex gap-2">
+            {user?.role === 'admin' && (
+              <Button onClick={() => setShowNovaPlataformaModal(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Nova Plataforma
+              </Button>
+            )}
+            <Button variant="outline" onClick={fetchDados}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Atualizar
+            </Button>
+          </div>
         </div>
 
         {/* Stats Cards */}
