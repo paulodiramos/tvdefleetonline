@@ -58,7 +58,34 @@ class AgendamentoCreate(BaseModel):
     ativo: bool = True
 
 
-# ==================== PLATAFORMAS DISPONÍVEIS ====================
+class PlataformaCreate(BaseModel):
+    """Modelo para criar nova plataforma"""
+    nome: str
+    icone: str = "🔧"
+    cor: str = "#6B7280"
+    descricao: str = ""
+    url_login: str = ""
+    tipos_extracao: List[str] = ["todos"]
+    campos_credenciais: List[str] = ["email", "password"]
+    requer_2fa: bool = False
+    notas: str = ""
+
+
+class PlataformaUpdate(BaseModel):
+    """Modelo para actualizar plataforma"""
+    nome: Optional[str] = None
+    icone: Optional[str] = None
+    cor: Optional[str] = None
+    descricao: Optional[str] = None
+    url_login: Optional[str] = None
+    tipos_extracao: Optional[List[str]] = None
+    campos_credenciais: Optional[List[str]] = None
+    requer_2fa: Optional[bool] = None
+    notas: Optional[str] = None
+    ativo: Optional[bool] = None
+
+
+# ==================== PLATAFORMAS PRÉ-DEFINIDAS ====================
 
 PLATAFORMAS = [
     {
