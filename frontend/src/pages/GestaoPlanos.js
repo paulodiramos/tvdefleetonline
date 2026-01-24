@@ -316,11 +316,21 @@ const GestaoPlanos = ({ user, onLogout }) => {
   };
 
   const getTipoUsuarioLabel = (tipo) => {
-    return tipo === 'motorista' ? 'Motorista' : 'Parceiro';
+    const labels = {
+      motorista: 'Motorista',
+      parceiro: 'Parceiro',
+      gestao: 'Gestor'
+    };
+    return labels[tipo] || tipo;
   };
 
   const getTipoUsuarioColor = (tipo) => {
-    return tipo === 'motorista' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800';
+    const colors = {
+      motorista: 'bg-green-100 text-green-800',
+      parceiro: 'bg-blue-100 text-blue-800',
+      gestao: 'bg-purple-100 text-purple-800'
+    };
+    return colors[tipo] || 'bg-gray-100 text-gray-800';
   };
 
   const getUserDisplayName = (user) => {
