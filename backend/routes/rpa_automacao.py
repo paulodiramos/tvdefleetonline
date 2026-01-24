@@ -109,7 +109,8 @@ PLATAFORMAS_PREDEFINIDAS = [
         "tipos_extracao": ["ganhos"],
         "campos_credenciais": ["email", "password"],
         "requer_2fa": False,
-        "url_login": "https://fleets.bolt.eu/login"
+        "url_login": "https://fleets.bolt.eu/login",
+        "tipo": "predefinida"
     },
     {
         "id": "viaverde",
@@ -121,7 +122,8 @@ PLATAFORMAS_PREDEFINIDAS = [
         "campos_credenciais": ["email", "password"],
         "requer_2fa": False,
         "url_login": "https://www.viaverde.pt/empresas",
-        "nota": "Login via popup - inserir email e password da conta Via Verde"
+        "nota": "Login via popup - inserir email e password da conta Via Verde",
+        "tipo": "predefinida"
     },
     {
         "id": "prio",
@@ -132,9 +134,38 @@ PLATAFORMAS_PREDEFINIDAS = [
         "tipos_extracao": ["combustivel", "eletrico", "todos"],
         "campos_credenciais": ["email", "password"],
         "requer_2fa": False,
-        "url_login": "https://areaprivada.prio.pt/login"
+        "url_login": "https://areaprivada.prio.pt/login",
+        "tipo": "predefinida"
     }
 ]
+
+
+async def get_todas_plataformas():
+    """Obter todas as plataformas (pré-definidas + personalizadas)"""
+    # Buscar plataformas personalizadas da base de dados
+    plataformas_custom = await db.rpa_plataformas.find(
+        {"ativo": {"$ne": False}},
+        {"_id": 0}
+    ).to_list(100)
+    
+    # Combinar pré-definidas com personalizadas
+    todas = list(PLATAFORMAS_PREDEFINIDAS) + plataformas_custom
+    return todas
+
+
+async def get_plataforma_by_id(plataforma_id: str):
+    """Obter uma plataforma específica por ID"""
+    # Primeiro verificar nas pré-definidas
+    for p in PLATAFORMAS_PREDEFINIDAS:
+        if p["id"] == plataforma_id:
+            return p
+    
+    # Se não encontrou, buscar nas personalizadas
+    plataforma = await db.rpa_plataformas.find_one(
+        {"id": plataforma_id},
+        {"_id": 0}
+    )
+    return plataforma
 
 
 def encrypt_value(value: str) -> str:
