@@ -68,7 +68,8 @@ import {
   Play,
   BarChart3,
   Zap,
-  TableProperties
+  TableProperties,
+  ExternalLink
 } from 'lucide-react';
 
 const RPADesigner = ({ user, onLogout }) => {
