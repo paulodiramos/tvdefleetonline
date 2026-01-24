@@ -256,6 +256,18 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
     enviar_alertas_veiculos: true
   });
   
+  // Configuração de Terabox
+  const [configTerabox, setConfigTerabox] = useState({
+    cookie: '',
+    pasta_raiz: '/TVDEFleet',
+    ativo: false,
+    sincronizar_documentos: true,
+    sincronizar_relatorios: true,
+    sincronizar_vistorias: true
+  });
+  const [teraboxStatus, setTeraboxStatus] = useState(null);
+  const [testingTerabox, setTestingTerabox] = useState(false);
+  
   // Credenciais de Plataformas
   const [credenciais, setCredenciais] = useState({
     uber_email: '',
