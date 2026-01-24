@@ -1,6 +1,6 @@
 {
   "name": "tvdefleet-whatsapp-service",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "WhatsApp Web Service for TVDEFleet",
   "main": "index.js",
   "scripts": {
@@ -8,7 +8,7 @@
     "dev": "node index.js"
   },
   "dependencies": {
-    "whatsapp-web.js": "^1.26.0",
+    "whatsapp-web.js": "github:pedroslopez/whatsapp-web.js#main",
     "express": "^4.21.0",
     "cors": "^2.8.5",
     "qrcode": "^1.5.4"
