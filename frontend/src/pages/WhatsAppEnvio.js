@@ -51,28 +51,56 @@ const TEMPLATES_MENSAGEM = [
     nome: 'Relatório Semanal',
     icon: FileText,
     descricao: 'Enviar resumo dos ganhos da semana',
-    variaveis: ['nome_motorista', 'periodo', 'total_ganhos', 'total_despesas', 'liquido']
+    variaveis: ['nome_motorista', 'periodo', 'total_ganhos', 'total_despesas', 'liquido'],
+    categoria: 'relatorios'
   },
   {
     id: 'documento_expirando',
     nome: 'Documento a Expirar',
     icon: AlertCircle,
     descricao: 'Alertar sobre documento próximo do vencimento',
-    variaveis: ['nome_motorista', 'tipo_documento', 'data_expiracao', 'dias_restantes']
+    variaveis: ['nome_motorista', 'tipo_documento', 'data_expiracao', 'dias_restantes'],
+    categoria: 'alertas'
+  },
+  {
+    id: 'vistoria_agendada',
+    nome: 'Vistoria Agendada',
+    icon: Clock,
+    descricao: 'Notificar sobre vistoria marcada',
+    variaveis: ['nome_motorista', 'data_vistoria', 'hora_vistoria', 'local', 'veiculo'],
+    categoria: 'eventos'
+  },
+  {
+    id: 'vistoria_lembrete',
+    nome: 'Lembrete de Vistoria',
+    icon: AlertCircle,
+    descricao: 'Lembrar motorista de vistoria próxima',
+    variaveis: ['nome_motorista', 'data_vistoria', 'hora_vistoria', 'local'],
+    categoria: 'eventos'
+  },
+  {
+    id: 'manutencao_agendada',
+    nome: 'Manutenção Agendada',
+    icon: Settings,
+    descricao: 'Notificar sobre manutenção do veículo',
+    variaveis: ['nome_motorista', 'veiculo', 'tipo_manutencao', 'data', 'local'],
+    categoria: 'eventos'
   },
   {
     id: 'boas_vindas',
     nome: 'Boas-vindas',
     icon: User,
     descricao: 'Mensagem de boas-vindas para novos motoristas',
-    variaveis: ['nome_motorista', 'nome_parceiro']
+    variaveis: ['nome_motorista', 'nome_parceiro'],
+    categoria: 'geral'
   },
   {
     id: 'personalizado',
     nome: 'Mensagem Personalizada',
     icon: MessageCircle,
     descricao: 'Escrever mensagem livre',
-    variaveis: []
+    variaveis: [],
+    categoria: 'geral'
   }
 ];
 
