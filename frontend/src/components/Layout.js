@@ -4,7 +4,9 @@ import {
   Building, ClipboardCheck, Package, Settings, LogOut, ChevronDown, 
   Shield, Bell, Menu, X, Home, User, HardDrive, Building2, MessageCircle
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
+import { API } from '@/App';
 import Notificacoes from './Notificacoes';
 import CriarTemplateModal from './CriarTemplateModal';
 import {
