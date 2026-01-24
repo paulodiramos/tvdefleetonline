@@ -1,61 +1,82 @@
 """
 Serviço de envio de relatórios para motoristas.
-Suporta envio por WhatsApp (link direto) e Email (SendGrid).
+Suporta envio por WhatsApp (link direto) e Email (SMTP do parceiro ou sistema).
 """
 import os
 import logging
+import smtplib
+import ssl
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from typing import Optional, Dict, List
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
-# SendGrid (quando configurado)
-SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY")
-SENDER_EMAIL = os.environ.get("SENDER_EMAIL", "relatorios@tvdefleet.com")
+# SMTP Configuration from environment (fallback when partner SMTP not available)
+SMTP_HOST = os.environ.get("SMTP_HOST")
+SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
+SMTP_USER = os.environ.get("SMTP_USER")
+SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD")
+SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", os.environ.get("SMTP_USER"))
+SMTP_FROM_NAME = os.environ.get("SMTP_FROM_NAME", "TVDEFleet")
 
-def send_email_sendgrid(
+def send_email_smtp(
     to_email: str,
     subject: str,
     html_content: str,
     plain_content: Optional[str] = None
 ) -> Dict:
     """
-    Envia email via SendGrid.
+    Envia email via SMTP configurado no sistema.
     Retorna {"success": True/False, "message": "..."}
     """
-    if not SENDGRID_API_KEY:
+    if not all([SMTP_HOST, SMTP_USER, SMTP_PASSWORD]):
         return {
             "success": False,
-            "message": "SendGrid API key não configurada. Configure SENDGRID_API_KEY no .env"
+            "message": "Email não enviado - Configuração SMTP incompleta. Configure SMTP_HOST, SMTP_USER e SMTP_PASSWORD no .env"
         }
     
     try:
-        from sendgrid import SendGridAPIClient
-        from sendgrid.helpers.mail import Mail, Email, To, Content
+        # Create message
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = f"{SMTP_FROM_NAME} <{SMTP_FROM_EMAIL}>"
+        msg['To'] = to_email
         
-        message = Mail(
-            from_email=Email(SENDER_EMAIL, "TVDEFleet"),
-            to_emails=To(to_email),
-            subject=subject
-        )
-        
-        if html_content:
-            message.add_content(Content("text/html", html_content))
+        # Add plain text and HTML parts
         if plain_content:
-            message.add_content(Content("text/plain", plain_content))
+            msg.attach(MIMEText(plain_content, 'plain', 'utf-8'))
+        msg.attach(MIMEText(html_content, 'html', 'utf-8'))
         
-        sg = SendGridAPIClient(SENDGRID_API_KEY)
-        response = sg.send(message)
+        # Connect and send
+        context = ssl.create_default_context()
         
-        if response.status_code in [200, 202]:
-            logger.info(f"Email enviado com sucesso para {to_email}")
-            return {"success": True, "message": "Email enviado com sucesso"}
+        if SMTP_PORT == 465:
+            # SSL connection
+            server = smtplib.SMTP_SSL(SMTP_HOST, SMTP_PORT, context=context)
         else:
-            logger.error(f"Erro ao enviar email: {response.status_code}")
-            return {"success": False, "message": f"Erro: {response.status_code}"}
-            
+            # TLS connection (STARTTLS)
+            server = smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=30)
+            server.ehlo()
+            server.starttls(context=context)
+            server.ehlo()
+        
+        server.login(SMTP_USER, SMTP_PASSWORD)
+        server.sendmail(SMTP_FROM_EMAIL, to_email, msg.as_string())
+        server.quit()
+        
+        logger.info(f"✓ Email enviado com sucesso para {to_email} via SMTP")
+        return {"success": True, "message": "Email enviado com sucesso"}
+        
+    except smtplib.SMTPAuthenticationError:
+        logger.error("SMTP Authentication failed")
+        return {"success": False, "message": "Falha na autenticação SMTP. Verifique as credenciais."}
+    except smtplib.SMTPConnectError as e:
+        logger.error(f"SMTP Connection failed: {e}")
+        return {"success": False, "message": "Não foi possível conectar ao servidor SMTP."}
     except Exception as e:
-        logger.error(f"Erro ao enviar email via SendGrid: {str(e)}")
+        logger.error(f"Erro ao enviar email via SMTP: {str(e)}")
         return {"success": False, "message": str(e)}
 
 
