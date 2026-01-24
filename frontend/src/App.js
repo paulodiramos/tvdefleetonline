@@ -835,7 +835,16 @@ function App() {
               )
             }
           />
-          {/* WhatsApp removido - não funciona em produção */}
+          <Route
+            path="/whatsapp"
+            element={
+              user && (user.role === 'parceiro' || user.role === 'admin' || user.role === 'gestao') ? (
+                <WhatsAppEnvio user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
           <Route
             path="/relatorio-fornecedores"
             element={
