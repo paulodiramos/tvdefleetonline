@@ -577,7 +577,7 @@ const RPAAutomacao = ({ user, onLogout }) => {
                               2FA
                             </Badge>
                           )}
-                          {user?.role === 'admin' && !isPredefinida && (
+                          {user?.role === 'admin' && (
                             <Button
                               variant="ghost"
                               size="icon"
@@ -586,6 +586,7 @@ const RPAAutomacao = ({ user, onLogout }) => {
                                 setSelectedPlataforma(plat);
                                 setShowDeletePlataformaModal(true);
                               }}
+                              title="Eliminar plataforma"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
