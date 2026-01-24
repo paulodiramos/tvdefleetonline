@@ -530,7 +530,7 @@ const GestaoPlanos = ({ user, onLogout }) => {
                           placeholder="Buscar por nome ou email..."
                           className="mb-2"
                         />
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <Badge 
                             variant={filtroTipoUsuario === 'all' ? 'default' : 'outline'}
                             className="cursor-pointer hover:bg-blue-100"
@@ -539,18 +539,25 @@ const GestaoPlanos = ({ user, onLogout }) => {
                             Todos ({usuarios.length})
                           </Badge>
                           <Badge 
-                            variant={filtroTipoUsuario === 'motorista' ? 'default' : 'outline'}
-                            className="cursor-pointer hover:bg-green-100"
-                            onClick={() => setFiltroTipoUsuario('motorista')}
-                          >
-                            Motoristas ({usuarios.filter(u => u.tipo === 'motorista').length})
-                          </Badge>
-                          <Badge 
                             variant={filtroTipoUsuario === 'parceiro' ? 'default' : 'outline'}
                             className="cursor-pointer hover:bg-blue-100"
                             onClick={() => setFiltroTipoUsuario('parceiro')}
                           >
                             Parceiros ({usuarios.filter(u => u.tipo === 'parceiro').length})
+                          </Badge>
+                          <Badge 
+                            variant={filtroTipoUsuario === 'gestao' ? 'default' : 'outline'}
+                            className="cursor-pointer hover:bg-purple-100"
+                            onClick={() => setFiltroTipoUsuario('gestao')}
+                          >
+                            Gestores ({usuarios.filter(u => u.tipo === 'gestao').length})
+                          </Badge>
+                          <Badge 
+                            variant={filtroTipoUsuario === 'motorista' ? 'default' : 'outline'}
+                            className="cursor-pointer hover:bg-green-100"
+                            onClick={() => setFiltroTipoUsuario('motorista')}
+                          >
+                            Motoristas ({usuarios.filter(u => u.tipo === 'motorista').length})
                           </Badge>
                         </div>
                       </div>
