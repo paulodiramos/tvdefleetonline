@@ -766,16 +766,6 @@ function App() {
               )
             }
           />
-          <Route
-            path="/automacao"
-            element={
-              user ? (
-                <Automacao user={user} onLogout={handleLogout} />
-              ) : (
-                <Navigate to="/login" />
-              )
-            }
-          />
           {/* RPA - Apenas Designer (admin) e Automação (todos) activos */}
           <Route
             path="/rpa-automacao"
