@@ -295,6 +295,11 @@ const Layout = ({ children, user, onLogout }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link to="/whatsapp" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>📱 WhatsApp</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to="/configuracao-csv" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>📊 Extração CSV</span>
                         </Link>
