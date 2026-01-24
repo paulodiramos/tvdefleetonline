@@ -330,11 +330,6 @@ const Layout = ({ children, user, onLogout }) => {
                         </div>
                       </div>
                       <DropdownMenuItem asChild>
-                        <Link to="/admin/gestao-servicos" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>🖥️ Gestão de Serviços</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
                         <Link to="/configuracoes-parceiro" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>📧 Email & Credenciais</span>
                         </Link>
