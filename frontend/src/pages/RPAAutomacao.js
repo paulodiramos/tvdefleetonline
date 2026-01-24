@@ -1280,14 +1280,20 @@ const RPAAutomacao = ({ user, onLogout }) => {
       <AlertDialog open={showDeletePlataformaModal} onOpenChange={setShowDeletePlataformaModal}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Eliminar Plataforma?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem a certeza que deseja eliminar a plataforma &quot;{selectedPlataforma?.nome}&quot;?
-              {selectedPlataforma && (
-                <span className="block mt-2 text-amber-600">
-                  Se existirem credenciais associadas, a plataforma será apenas desactivada.
-                </span>
-              )}
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="w-5 h-5" />
+              Eliminar Plataforma?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>Tem a certeza que deseja eliminar a plataforma <strong>"{selectedPlataforma?.nome}"</strong>?</p>
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg mt-2">
+                <p className="text-red-700 text-sm font-medium">⚠️ Esta ação é irreversível!</p>
+                <ul className="text-red-600 text-xs mt-1 list-disc list-inside">
+                  <li>Todos os scripts associados serão eliminados</li>
+                  <li>Credenciais configuradas serão removidas</li>
+                  <li>Histórico de execuções será perdido</li>
+                </ul>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1297,7 +1303,7 @@ const RPAAutomacao = ({ user, onLogout }) => {
               className="bg-red-600 hover:bg-red-700"
             >
               {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
-              Eliminar
+              Sim, Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
