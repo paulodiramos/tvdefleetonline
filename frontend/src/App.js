@@ -111,6 +111,7 @@ import ConfiguracoesParceiro from "@/pages/ConfiguracoesParceiro";
 import RPAAutomacao from "@/pages/RPAAutomacao";
 import RPADesigner from "@/pages/RPADesigner";
 import ImportacaoRPA from "@/pages/ImportacaoRPA";
+import GestaoPermissoesParceiros from "@/pages/GestaoPermissoesParceiros";
 import GestaoServicos from "@/pages/GestaoServicos";
 import Terabox from "@/pages/Terabox";
 import AdminFornecedores from "@/pages/AdminFornecedores";
