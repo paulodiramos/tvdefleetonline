@@ -6,27 +6,50 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 ## Arquitetura
 - **Frontend**: React (porta 3000)
 - **Backend**: FastAPI (porta 8001)
-- **WhatsApp Service**: Node.js externo hospedado no Railway
 - **Database**: MongoDB
 
 ---
 
-## ✅ WhatsApp - FUNCIONAL (Atualizado: 24/01/2025)
+## ✅ WhatsApp Business Cloud API (Atualizado: 24/01/2025)
 
-### Arquitetura
-O serviço WhatsApp usa uma arquitetura de microserviço externo:
-1. **Serviço Node.js no Railway**: `https://tvdefleet-whatsap-production.up.railway.app`
-2. **Backend FastAPI**: Comunica com o serviço externo via HTTP
-3. **Frontend React**: Exibe QR Code para conexão
+### Nova Arquitetura (Sem Railway!)
+A integração WhatsApp foi **completamente refatorada** para usar a **API oficial da Meta**:
 
-### Estado Actual
-- ✅ **QR Code a funcionar**: Corrigido problema de exibição do QR Code
-- ✅ **Serviço externo no Railway**: Ativo e funcional
-- ✅ **Multi-sessão**: Cada parceiro tem a sua própria sessão WhatsApp
+```
+Antes (instável):
+TVDEFleet → Railway → whatsapp-web.js → WhatsApp Web → Mensagem ❌
 
-### Correção Aplicada (24/01/2025)
-- **Problema**: O frontend esperava `response.data.qrCode` mas o serviço Railway retorna `response.data.qr`
-- **Solução**: Atualizado `Integracoes.js` para verificar ambas as chaves (`qr` e `qrCode`)
+Agora (oficial e estável):
+TVDEFleet → Meta Graph API → Mensagem ✅
+```
+
+### Vantagens
+- ✅ **100% oficial** - API da Meta
+- ✅ **Sem Railway** - Integração direta
+- ✅ **Sem QR Code** - Não precisa escanear
+- ✅ **Sem telemóvel ligado** - Funciona 24/7
+- ✅ **1000 msgs grátis/mês** por número
+- ✅ **Cada parceiro configura o seu próprio número**
+
+### Configuração por Parceiro
+Cada parceiro acede a `Configurações → WhatsApp` e:
+1. Cria conta em developers.facebook.com
+2. Adiciona número WhatsApp Business
+3. Copia Phone Number ID e Access Token
+4. Cola nas configurações e testa
+
+### Ficheiros Relevantes
+- `/app/backend/routes/whatsapp_cloud.py` - Nova API WhatsApp Cloud
+- `/app/frontend/src/pages/ConfiguracoesParceiro.js` - UI de configuração
+
+---
+
+## ✅ Sistema de Email SMTP por Parceiro
+
+Cada parceiro configura o seu próprio email:
+- **Gmail**: smtp.gmail.com:587 + App Password
+- **Outlook**: smtp.office365.com:587
+- **Outros**: Configuração personalizada
 
 ---
 
@@ -38,16 +61,12 @@ O serviço WhatsApp usa uma arquitetura de microserviço externo:
 - Páginas interligadas: RPA Automação ↔ RPA Designer ↔ Mapeamento
 
 ### Integrações
-- Terabox: Configuração por parceiro
-- WhatsApp: QR Code funcional com serviço externo
-
-### UI/UX
-- Menu e botão voltar em todas as páginas de configuração
-- Links de navegação entre páginas relacionadas
+- ✅ WhatsApp Cloud API (oficial Meta)
+- ✅ Email SMTP por parceiro
+- ✅ Terabox por parceiro
 
 ### Sistema de Planos
 - Gestão unificada para parceiro, gestor e motorista
-- Página única: GestaoPlanos.js
 
 ---
 
@@ -56,31 +75,30 @@ O serviço WhatsApp usa uma arquitetura de microserviço externo:
 
 ---
 
-## Tarefas Concluídas
+## Tarefas Concluídas (24/01/2025)
+- ✅ **Migração WhatsApp para Cloud API** - Removida dependência do Railway
+- ✅ Nova página de Integrações simplificada
+- ✅ Configuração WhatsApp na página do parceiro
 - ✅ Sistema de plataformas personalizadas no RPA
-- ✅ Páginas RPA interligadas
-- ✅ Menu/botão voltar nas páginas de configuração
-- ✅ WhatsApp com serviço externo no Railway
-- ✅ QR Code do WhatsApp a funcionar (24/01/2025)
 - ✅ Sistema de planos unificado
-- ✅ Remoção de páginas obsoletas (/automacao, /cartoes-frota)
+- ✅ Remoção de páginas obsoletas
 
 ## Tarefas Pendentes
 
 ### P1 - Alta Prioridade
-- [ ] Finalizar refatoração do `server.py` (remover código comentado, migrar endpoints restantes)
-- [ ] Consolidação de modelos Pydantic em ficheiros dedicados
+- [ ] Finalizar refatoração do `server.py` (remover código comentado)
+- [ ] Consolidação de modelos Pydantic
 
 ### P2 - Média Prioridade
 - [ ] Limitar "Próximos Eventos" no dashboard a 3 itens
-
-### P3 - Baixa Prioridade
 - [ ] Testes end-to-end completos
 
 ---
 
-## Ficheiros Chave
-- `/app/frontend/src/pages/Integracoes.js` - Página de integrações (WhatsApp, Terabox)
-- `/app/backend/routes/whatsapp.py` - API do WhatsApp
-- `/app/backend/.env` - Configuração WHATSAPP_SERVICE_URL
-- `/app/whatsapp-vps-deploy/` - Código do serviço externo WhatsApp
+## Ficheiros Removidos/Obsoletos
+- `/app/backend/routes/whatsapp.py` - Substituído por whatsapp_cloud.py
+- `/app/whatsapp-vps-deploy/` - Já não é necessário (pode eliminar do Railway)
+
+## Notas Importantes
+- **Railway pode ser desativado** - A solução WhatsApp já não depende dele
+- Cada parceiro deve criar conta no Meta Developers para usar WhatsApp
