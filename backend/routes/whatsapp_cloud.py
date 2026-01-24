@@ -372,6 +372,7 @@ _Mensagem enviada automaticamente pelo TVDEFleet_"""
     return {
         "success": True,
         "message": f"Relatório enviado para {nome}",
+        "motorista": nome,
         "message_id": result.get("message_id")
     }
 
