@@ -116,7 +116,7 @@ import GestaoServicos from "@/pages/GestaoServicos";
 import AdminPlanosMotorista from "@/pages/AdminPlanosMotorista";
 import Terabox from "@/pages/Terabox";
 import AdminFornecedores from "@/pages/AdminFornecedores";
-// WhatsApp removido - não funciona em produção
+import WhatsAppEnvio from "@/pages/WhatsAppEnvio";
 import RelatorioFornecedores from "@/pages/RelatorioFornecedores";
 import AlertasCustos from "@/pages/AlertasCustos";
 
