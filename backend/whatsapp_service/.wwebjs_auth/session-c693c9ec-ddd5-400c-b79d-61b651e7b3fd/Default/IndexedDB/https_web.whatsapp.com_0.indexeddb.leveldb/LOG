@@ -1,3 +1,6 @@
 2026/01/24-00:23:20.888 f75 Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
 2026/01/24-00:23:20.889 f75 Recovering log #1113
 2026/01/24-00:23:20.900 f75 Reusing old log /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/001113.log 
+2026/01/24-00:23:38.925 f75 Level-0 table #1146: started
+2026/01/24-00:23:38.973 f75 Level-0 table #1146: 1264910 bytes OK
+2026/01/24-00:23:38.978 f75 Delete type=0 #1113
