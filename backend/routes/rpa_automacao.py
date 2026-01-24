@@ -141,15 +141,22 @@ PLATAFORMAS_PREDEFINIDAS = [
 
 
 async def get_todas_plataformas():
-    """Obter todas as plataformas (pré-definidas + personalizadas)"""
+    """Obter todas as plataformas (pré-definidas + personalizadas), excluindo eliminadas"""
+    # Buscar plataformas eliminadas
+    eliminadas = await db.rpa_plataformas_eliminadas.find({}, {"id": 1}).to_list(100)
+    ids_eliminadas = [p["id"] for p in eliminadas]
+    
     # Buscar plataformas personalizadas da base de dados
     plataformas_custom = await db.rpa_plataformas.find(
         {"ativo": {"$ne": False}},
         {"_id": 0}
     ).to_list(100)
     
-    # Combinar pré-definidas com personalizadas
-    todas = list(PLATAFORMAS_PREDEFINIDAS) + plataformas_custom
+    # Filtrar pré-definidas que não foram eliminadas
+    predefinidas_ativas = [p for p in PLATAFORMAS_PREDEFINIDAS if p["id"] not in ids_eliminadas]
+    
+    # Combinar pré-definidas (não eliminadas) com personalizadas
+    todas = predefinidas_ativas + plataformas_custom
     return todas
 
 
