@@ -96,13 +96,15 @@ const GestaoPlanos = ({ user, onLogout }) => {
   const fetchUsuarios = async () => {
     try {
       const token = localStorage.getItem('token');
-      const [parceirosRes, motoristasRes] = await Promise.all([
+      const [parceirosRes, motoristasRes, gestoresRes] = await Promise.all([
         axios.get(`${API}/parceiros`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${API}/motoristas`, { headers: { Authorization: `Bearer ${token}` } })
+        axios.get(`${API}/motoristas`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API}/gestores`, { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] }))
       ]);
       
       const allUsers = [
         ...parceirosRes.data.map(p => ({ ...p, tipo: 'parceiro' })),
+        ...gestoresRes.data.map(g => ({ ...g, tipo: 'gestao' })),
         ...motoristasRes.data.map(m => ({ ...m, tipo: 'motorista' }))
       ];
       setUsuarios(allUsers);
