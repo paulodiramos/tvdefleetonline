@@ -1,2 +1,3 @@
-2026/01/23-23:23:36.320 5381 Creating DB /app/backend/whatsapp_service/.wwebjs_auth/session-admin/Default/GCM Store since it was missing.
-2026/01/23-23:23:36.337 5381 Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-admin/Default/GCM Store/MANIFEST-000001
+2026/01/24-00:23:16.227 eee Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-admin/Default/GCM Store/MANIFEST-000001
+2026/01/24-00:23:16.227 eee Recovering log #3
+2026/01/24-00:23:16.227 eee Reusing old log /app/backend/whatsapp_service/.wwebjs_auth/session-admin/Default/GCM Store/000003.log 
