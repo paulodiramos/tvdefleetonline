@@ -571,10 +571,10 @@ const GestaoPlanos = ({ user, onLogout }) => {
                           })
                           .map((u) => (
                           <div
-                            key={u.id}
+                            key={`${u.tipo}-${u.id}`}
                             onClick={() => setUsuarioSelecionado(u)}
                             className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                              usuarioSelecionado?.id === u.id
+                              usuarioSelecionado?.id === u.id && usuarioSelecionado?.tipo === u.tipo
                                 ? 'border-blue-500 bg-blue-50'
                                 : 'hover:border-blue-300'
                             }`}
@@ -584,8 +584,8 @@ const GestaoPlanos = ({ user, onLogout }) => {
                                 <p className="font-medium">{getUserDisplayName(u)}</p>
                                 <p className="text-xs text-slate-500">{u.email}</p>
                               </div>
-                              <Badge className={u.tipo === 'motorista' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}>
-                                {u.tipo === 'motorista' ? 'Motorista' : 'Parceiro'}
+                              <Badge className={getTipoUsuarioColor(u.tipo)}>
+                                {getTipoUsuarioLabel(u.tipo)}
                               </Badge>
                             </div>
                           </div>
