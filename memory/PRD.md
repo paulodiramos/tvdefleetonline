@@ -8,6 +8,27 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 - **Backend**: FastAPI (Python)
 - **Database**: MongoDB
 - **Automação**: Playwright (Python)
+- **WhatsApp**: whatsapp-web.js (Node.js) com Chromium
+
+---
+
+## ✅ Alterações desta Sessão (24/01/2026)
+
+### 1. WhatsApp Corrigido para Produção
+- ✅ Instalado Chromium no ambiente (`/usr/bin/chromium`)
+- ✅ Corrigido limpeza automática de lock files no `index.js`
+- ✅ Reativado router do WhatsApp no `server.py`
+- ✅ Restaurada rota e link no frontend (`/whatsapp`)
+- ⚠️ **NOTA PARA DEPLOYMENT**: O Chromium precisa ser instalado no ambiente de produção
+
+### 2. RPA Simplificado Removido
+- ✅ Eliminado `/app/backend/routes/rpa_simplificado.py`
+- ✅ Eliminado `/app/frontend/src/pages/RPASimplificado.js`
+- ✅ Removido import e referências do `server.py`
+
+### 3. Sistema RPA Ativo
+- **RPA Designer** (`/rpa-designer`): Admin pode criar e gerir scripts Playwright
+- **RPA Automação** (`/rpa-automacao`): Execução de automações configuradas
 
 ---
 
@@ -21,33 +42,6 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 
 ### Taxa de Modularização: 97.4% ✅
 
-### Endpoints Movidos/Comentados Nesta Sessão
-- ✅ GET/POST /api/credenciais-plataforma/* (6 endpoints)
-- ✅ GET/POST /api/configuracao/* (4 endpoints)
-- ✅ GET /api/ganhos-bolt, /api/ganhos-uber (2 endpoints)
-- ✅ GET/POST /api/public/* (3 endpoints)
-- ✅ GET /api/logs-sincronizacao (1 endpoint)
-- ✅ GET/POST /api/sincronizacao/* (3 endpoints)
-- ✅ GET /api/dados/{plataforma} (1 endpoint)
-
-### Endpoints Restantes no server.py (14)
-Estes endpoints precisam de tratamento especial ou têm dependências:
-1. **Uploads** (2): /uploads/recibos, /uploads/comprovativo_pagamento
-2. **Sincronização Manual** (1): /api/sincronizar/{parceiro_id}/{plataforma}
-3. **Import Ganhos** (2): /api/import/uber/ganhos, /api/import/bolt/ganhos
-4. **Import CSV** (2): /api/import-csv/{plataforma}, /api/import-csv/history
-5. **Bolt Integration** (3): /api/bolt/test-connection, sync-earnings, save-credentials
-6. **Admin/Parceiro Creds** (4): /api/admin/credenciais-parceiros, /api/parceiro/credenciais-plataformas
-
-### Ficheiros de Rotas Principais
-- `routes/credenciais.py` - Gestão de credenciais (NOVO)
-- `routes/configuracoes.py` - Configurações do sistema
-- `routes/sincronizacao.py` - Sincronização de plataformas
-- `routes/ganhos.py` - Ganhos Uber/Bolt
-- `routes/public.py` - Endpoints públicos
-- `routes/rpa_designer.py` - Sistema RPA Designer
-- E mais 40+ ficheiros
-
 ---
 
 ## Funcionalidades Implementadas
@@ -55,14 +49,19 @@ Estes endpoints precisam de tratamento especial ou têm dependências:
 ### Sistema de Automação RPA
 - RPA Designer (Admin) - Upload de scripts Playwright
 - RPA Automático - Execução com credenciais encriptadas
-- RPA Simplificado - Upload manual de CSVs
+
+### WhatsApp Business
+- Envio de mensagens individuais
+- Envio em massa para motoristas
+- QR Code para autenticação por parceiro
+- Multi-sessão (cada parceiro tem sessão própria)
 
 ### Gestão de Utilizadores
 - Filtros por perfil, parceiro, data
 - Ações admin: bloquear, revogar, alterar senha
 
 ### Integrações
-- WhatsApp Web.js
+- WhatsApp Web.js (Multi-sessão)
 - Terabox
 - Playwright
 
@@ -74,7 +73,26 @@ Estes endpoints precisam de tratamento especial ou têm dependências:
 
 ---
 
+## Requisitos de Deployment
+
+### Para WhatsApp funcionar em produção:
+1. Instalar Chromium: `apt-get install -y chromium`
+2. Verificar path: `/usr/bin/chromium`
+3. Diretório de sessões: `/app/backend/whatsapp_service/.wwebjs_auth`
+
+### Serviços necessários:
+- Backend (FastAPI): porta 8001
+- Frontend (React): porta 3000
+- WhatsApp Service (Node.js): porta 3001
+- MongoDB
+
+---
+
 ## Tarefas Pendentes
+
+### P1 - Alta Prioridade
+- [ ] Validar WhatsApp no domínio tvdefleet.com após deployment
+- [ ] Teste end-to-end do fluxo RPA Designer
 
 ### P2 - Média Prioridade  
 - [ ] Limitar "Próximos Eventos" no dashboard a 3 itens
