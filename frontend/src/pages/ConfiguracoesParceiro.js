@@ -766,6 +766,126 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
             </Card>
           </TabsContent>
 
+          {/* Tab Terabox */}
+          <TabsContent value="terabox" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <HardDrive className="w-5 h-5 text-blue-600" />
+                  Configuração de Terabox
+                </CardTitle>
+                <CardDescription>
+                  Configure o armazenamento em nuvem Terabox para guardar documentos
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="flex items-center gap-2">
+                    {teraboxStatus?.conectado ? (
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <AlertCircle className="w-5 h-5 text-amber-500" />
+                    )}
+                    <span className="font-medium text-blue-800">
+                      {teraboxStatus?.conectado ? 'Terabox Conectado' : 'Terabox Não Configurado'}
+                    </span>
+                  </div>
+                  <Switch
+                    checked={configTerabox.ativo}
+                    onCheckedChange={(checked) => setConfigTerabox(prev => ({ ...prev, ativo: checked }))}
+                  />
+                </div>
+
+                <Alert>
+                  <HelpCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    <strong>Como obter o Cookie do Terabox:</strong>
+                    <ol className="list-decimal list-inside mt-2 space-y-1 text-sm">
+                      <li>Aceda a <a href="https://www.terabox.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">terabox.com</a> e faça login</li>
+                      <li>Abra as Ferramentas de Desenvolvedor (F12)</li>
+                      <li>Vá ao separador "Application" ou "Storage"</li>
+                      <li>Procure por "Cookies" → "terabox.com"</li>
+                      <li>Copie o valor do cookie "ndus" ou "BDUSS"</li>
+                    </ol>
+                  </AlertDescription>
+                </Alert>
+
+                <div className="space-y-2">
+                  <Label>Cookie de Autenticação</Label>
+                  <div className="relative">
+                    <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      type={showPasswords.terabox ? "text" : "password"}
+                      placeholder="ndus=xxx ou BDUSS=xxx"
+                      value={configTerabox.cookie}
+                      onChange={(e) => setConfigTerabox(prev => ({ ...prev, cookie: e.target.value }))}
+                      className="pl-10 pr-10 font-mono text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswords(prev => ({ ...prev, terabox: !prev.terabox }))}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                    >
+                      {showPasswords.terabox ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Pasta Raiz no Terabox</Label>
+                  <div className="relative">
+                    <FolderOpen className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input
+                      placeholder="/TVDEFleet"
+                      value={configTerabox.pasta_raiz}
+                      onChange={(e) => setConfigTerabox(prev => ({ ...prev, pasta_raiz: e.target.value }))}
+                      className="pl-10"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500">Pasta onde os documentos serão guardados</p>
+                </div>
+
+                <div className="space-y-3 p-4 bg-slate-50 rounded-lg">
+                  <h4 className="font-medium text-sm">Sincronização Automática</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-normal">Documentos dos motoristas</Label>
+                      <Switch
+                        checked={configTerabox.sincronizar_documentos}
+                        onCheckedChange={(checked) => setConfigTerabox(prev => ({ ...prev, sincronizar_documentos: checked }))}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-normal">Relatórios semanais</Label>
+                      <Switch
+                        checked={configTerabox.sincronizar_relatorios}
+                        onCheckedChange={(checked) => setConfigTerabox(prev => ({ ...prev, sincronizar_relatorios: checked }))}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-normal">Vistorias e fichas</Label>
+                      <Switch
+                        checked={configTerabox.sincronizar_vistorias}
+                        onCheckedChange={(checked) => setConfigTerabox(prev => ({ ...prev, sincronizar_vistorias: checked }))}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <Button onClick={handleSaveTerabox} disabled={saving} className="bg-blue-600 hover:bg-blue-700">
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                    Guardar
+                  </Button>
+                  <Button variant="outline" onClick={handleTestarTerabox} disabled={testingTerabox || !configTerabox.cookie}>
+                    {testingTerabox ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCw className="w-4 h-4 mr-2" />}
+                    Testar Conexão
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Tab Credenciais Plataformas */}
           <TabsContent value="credenciais" className="space-y-4">
             {/* Uber */}
