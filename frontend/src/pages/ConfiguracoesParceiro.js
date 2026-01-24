@@ -15,7 +15,8 @@ import { toast } from 'sonner';
 import { 
   ArrowLeft, Mail, Lock, Server, Send, Eye, EyeOff, 
   Car, Shield, Save, Loader2, TestTube, CheckCircle, AlertCircle,
-  MessageCircle, Phone, ExternalLink, HelpCircle, Key, Copy, Check, ShieldCheck
+  MessageCircle, Phone, ExternalLink, HelpCircle, Key, Copy, Check, ShieldCheck,
+  HardDrive, FolderOpen, RefreshCw
 } from 'lucide-react';
 
 const API = process.env.REACT_APP_BACKEND_URL;
