@@ -195,6 +195,61 @@ const RPAAutomacao = ({ user, onLogout }) => {
     }
   };
 
+  const handleCriarPlataforma = async () => {
+    if (!novaPlataformaForm.nome) {
+      toast.error('Nome da plataforma é obrigatório');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/rpa-auto/plataformas`, novaPlataformaForm, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Plataforma criada com sucesso!');
+      setShowNovaPlataformaModal(false);
+      setNovaPlataformaForm({
+        nome: '',
+        icone: '🔧',
+        cor: '#6B7280',
+        descricao: '',
+        url_login: '',
+        tipos_extracao: ['todos'],
+        campos_credenciais: ['email', 'password'],
+        requer_2fa: false,
+        notas: ''
+      });
+      fetchDados();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao criar plataforma');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEliminarPlataforma = async () => {
+    if (!selectedPlataforma) return;
+
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/rpa-auto/plataformas/${selectedPlataforma.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      toast.success('Plataforma eliminada com sucesso!');
+      setShowDeletePlataformaModal(false);
+      setSelectedPlataforma(null);
+      fetchDados();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao eliminar plataforma');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleSaveCredenciais = async () => {
     if (!selectedPlataforma || !credForm.email || !credForm.password) {
       toast.error('Preencha todos os campos');
