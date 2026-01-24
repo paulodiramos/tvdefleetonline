@@ -66,7 +66,9 @@ import {
   HelpCircle,
   Download,
   Play,
-  BarChart3
+  BarChart3,
+  Zap,
+  TableProperties
 } from 'lucide-react';
 
 const RPADesigner = ({ user, onLogout }) => {
