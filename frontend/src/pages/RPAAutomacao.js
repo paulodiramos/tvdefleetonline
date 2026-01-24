@@ -1260,7 +1260,7 @@ const RPAAutomacao = ({ user, onLogout }) => {
           <AlertDialogHeader>
             <AlertDialogTitle>Eliminar Plataforma?</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem a certeza que deseja eliminar a plataforma "{selectedPlataforma?.nome}"?
+              Tem a certeza que deseja eliminar a plataforma &quot;{selectedPlataforma?.nome}&quot;?
               {selectedPlataforma && (
                 <span className="block mt-2 text-amber-600">
                   Se existirem credenciais associadas, a plataforma será apenas desactivada.
