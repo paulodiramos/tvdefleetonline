@@ -266,12 +266,40 @@ async function getOrCreateClient(parceiro_id) {
 
 // ==================== API ENDPOINTS ====================
 
-// Health check
+// Health check with Chromium status
 app.get('/health', (req, res) => {
     res.json({ 
-        status: 'ok', 
+        status: CHROMIUM_EXECUTABLE ? 'ok' : 'limited',
         service: 'whatsapp-web-service',
-        activeSessions: clients.size
+        chromium: {
+            available: !!CHROMIUM_EXECUTABLE,
+            path: CHROMIUM_EXECUTABLE || 'not found',
+            message: CHROMIUM_EXECUTABLE 
+                ? 'Chromium is available' 
+                : 'Chromium not found - run: apt-get install -y chromium'
+        },
+        activeSessions: clients.size,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// System info endpoint
+app.get('/system-info', (req, res) => {
+    res.json({
+        chromium: {
+            available: !!CHROMIUM_EXECUTABLE,
+            path: CHROMIUM_EXECUTABLE,
+            searchedPaths: CHROMIUM_PATHS
+        },
+        sessions: {
+            active: clients.size,
+            authPath: AUTH_PATH
+        },
+        environment: {
+            nodeVersion: process.version,
+            platform: process.platform,
+            port: PORT
+        }
     });
 });
 
@@ -285,7 +313,7 @@ app.get('/status/:parceiro_id', (req, res) => {
             connected: false,
             ready: false,
             hasQrCode: false,
-            error: null,
+            error: CHROMIUM_EXECUTABLE ? null : 'Chromium not available',
             clientInfo: null,
             initialized: false
         });
