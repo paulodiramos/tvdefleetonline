@@ -288,12 +288,28 @@ app.post('/send/:parceiro_id', async (req, res) => {
         }
         numero = numero + '@c.us';
 
-        const result = await client.sendMessage(numero, mensagem);
-        res.json({ 
-            success: true, 
-            message: 'Message sent',
-            messageId: result.id?._serialized || result.id
-        });
+        // Send message with error handling for known whatsapp-web.js bugs
+        try {
+            const result = await client.sendMessage(numero, mensagem);
+            res.json({ 
+                success: true, 
+                message: 'Message sent',
+                messageId: result?.id?._serialized || result?.id || 'sent'
+            });
+        } catch (sendError) {
+            // Known bug: "Cannot read properties of undefined (reading 'markedUnread')"
+            // This error often occurs AFTER the message is sent successfully
+            if (sendError.message && sendError.message.includes('markedUnread')) {
+                console.log(`Message likely sent despite error: ${sendError.message}`);
+                res.json({ 
+                    success: true, 
+                    message: 'Message sent (with warning)',
+                    warning: 'Message was sent but confirmation had issues'
+                });
+            } else {
+                throw sendError;
+            }
+        }
     } catch (error) {
         console.error(`Send error:`, error.message);
         res.status(500).json({ success: false, error: error.message });
