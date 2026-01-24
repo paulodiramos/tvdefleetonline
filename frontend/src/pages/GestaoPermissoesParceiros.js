@@ -40,8 +40,8 @@ const GestaoPermissoesParceiros = ({ user, onLogout }) => {
     
     try {
       const [plataformasRes, permissoesRes] = await Promise.all([
-        axios.get(`${API}/api/plataformas`, { headers }),
-        axios.get(`${API}/api/admin/parceiros-plataformas`, { headers })
+        axios.get(`${API}/api/rpa-auto/plataformas`, { headers }),
+        axios.get(`${API}/api/rpa-auto/admin/parceiros-plataformas`, { headers })
       ]);
       
       setPlataformas(plataformasRes.data || []);
