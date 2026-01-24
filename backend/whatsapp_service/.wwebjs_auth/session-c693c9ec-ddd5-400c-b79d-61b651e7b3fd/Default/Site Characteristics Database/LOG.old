@@ -1,2 +1,3 @@
-2026/01/24-11:57:00.854 9fb Creating DB /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Site Characteristics Database since it was missing.
-2026/01/24-11:57:00.860 9fb Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Site Characteristics Database/MANIFEST-000001
+2026/01/24-15:34:25.563 905 Reusing MANIFEST /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Site Characteristics Database/MANIFEST-000001
+2026/01/24-15:34:25.563 905 Recovering log #3
+2026/01/24-15:34:25.564 905 Reusing old log /app/backend/whatsapp_service/.wwebjs_auth/session-c693c9ec-ddd5-400c-b79d-61b651e7b3fd/Default/Site Characteristics Database/000003.log 
