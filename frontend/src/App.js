@@ -810,6 +810,16 @@ function App() {
             }
           />
           <Route
+            path="/admin/gestao-funcionalidades"
+            element={
+              user && user.role === 'admin' ? (
+                <GestaoFuncionalidades user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/admin/gestao-servicos"
             element={
               user && user.role === 'admin' ? (
