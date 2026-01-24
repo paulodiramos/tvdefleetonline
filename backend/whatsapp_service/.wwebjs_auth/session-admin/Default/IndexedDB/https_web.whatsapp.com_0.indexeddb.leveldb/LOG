@@ -66,3 +66,7 @@
 2026/01/24-09:49:09.556 962 Manual compaction at level-1 from '\x00"\x00\x00\xc8\x0d\x00l\x00o\x00c\x00a\x00l\x00_\x00s\x00t\x00o\x00r\x00a\x00g\x00e' @ 72130 : 0 .. '\x00#\x00\x00\x00' @ 0 : 0; will stop at (end)
 2026/01/24-09:49:09.560 968 Manual compaction at level-0 from '\x00\x1c\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x1d\x00\x00\x00' @ 0 : 0; will stop at (end)
 2026/01/24-09:49:09.560 968 Manual compaction at level-1 from '\x00\x1c\x00\x00\x00' @ 72057594037927935 : 1 .. '\x00\x1d\x00\x00\x00' @ 0 : 0; will stop at (end)
+2026/01/24-11:27:27.240 967 Level-0 table #82: started
+2026/01/24-11:27:27.255 967 Level-0 table #82: 1175814 bytes OK
+2026/01/24-11:27:27.263 967 Delete type=0 #78
+2026/01/24-11:27:27.263 967 Delete type=2 #77
