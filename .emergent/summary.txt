@@ -1,259 +1,149 @@
 <analysis>**original_problem_statement:**
-O utilizador solicitou várias funcionalidades e correções, que evoluíram ao longo da sessão:
-1.  Inicialmente, o foco era depurar um script de automação Playwright para o site Via Verde.
-2.  O pedido evoluiu para a criação de um RPA Designer, um sistema onde um administrador pode criar e fazer upload de scripts de automação Playwright, que os parceiros podem depois executar com as suas próprias credenciais.
-3.  O utilizador pediu a criação de uma página de portfólio para mostrar as funcionalidades da aplicação.
-4.  Foram solicitadas modificações no portfólio para remover referências a tecnologias específicas e funcionalidades exclusivas.
-5.  O utilizador reportou erros com a funcionalidade do WhatsApp, relacionados com o Chromium não ser encontrado ou o perfil estar bloqueado.
-6.  Foi solicitado que se continuasse a refatoração do ficheiro monolítico .
-7.  Foi solicitado que se limitasse a lista de Próximos Eventos no dashboard.
-8.  Foi pedida uma funcionalidade de administrador para reiniciar serviços do sistema, especialmente o WhatsApp.
-9.  O utilizador forneceu logs de erro de deployment para serem corrigidos.
-10. Por fim, o utilizador pediu para simplificar drasticamente a aplicação, removendo todas as funcionalidades exceto o novo sistema de RPA ( e ) e eliminando completamente a funcionalidade do WhatsApp, que se provou instável em produção.
+O utilizador solicitou uma série de alterações e correções que evoluíram ao longo da sessão. Inicialmente, o objetivo era remover a funcionalidade do WhatsApp devido à sua instabilidade em produção. No entanto, o utilizador reverteu essa decisão e solicitou que o WhatsApp fosse corrigido para funcionar de forma fiável no domínio de produção (). Isto tornou-se a tarefa principal.
+
+Para além disso, o utilizador pediu:
+1.  Remoção das páginas  e .
+2.  Unificação do sistema de gestão de planos para incluir gestores, para além de parceiros e motoristas.
+3.  Implementação de um sistema para que os administradores possam criar e gerir plataformas de RPA personalizadas, em vez de estarem pré-definidas no código.
+4.  Interligação das páginas relacionadas com o RPA (, , ) com botões de navegação.
+5.  Configuração do Terabox por parceiro no perfil do mesmo.
+6.  Correção da UI na página de mapeamento de configurações para incluir o menu superior e um botão de voltar.
+7.  Após o deployment, o utilizador reportou que o QR Code do WhatsApp não aparecia, bloqueando a funcionalidade.
 
 **PRODUCT REQUIREMENTS:**
--   **Sistema RPA Dinâmico:** Um administrador deve poder fazer upload de scripts Playwright, definir os campos de credenciais necessários e um ícone. Os parceiros devem ver estas automações disponíveis, preencher as suas credenciais e executá-las sem ver o código-fonte.
--   **Foco e Simplificação:** Remover todas as outras funcionalidades, incluindo o RPA Simplificado (upload de CSV) e toda a integração com o WhatsApp, para focar a aplicação no novo sistema de RPA dinâmico.
--   **Refatoração:** Concluir a modularização do backend, movendo os endpoints restantes de  para ficheiros de rotas dedicados.
--   **Correções de UI:** Limitar a lista de Próximos Eventos no dashboard a 3 itens.
--   **Gestão de Serviços:** Criar uma interface de administrador para monitorizar e reiniciar serviços do sistema.
--   **Estabilidade de Deployment:** Corrigir quaisquer erros que impeçam o deployment bem-sucedido da aplicação em produção.
+-   **WhatsApp Funcional em Produção:** A integração com o WhatsApp tem de ser estável e funcionar no ambiente de produção, suportando múltiplas sessões de parceiros em simultâneo.
+-   **Sistema RPA Dinâmico:** Um administrador deve poder criar novas plataformas de automação (ex: Galp Frota) diretamente na UI, para além dos scripts de RPA.
+-   **Sistema de Planos Unificado:** A gestão de planos de subscrição deve ser centralizada, suportando os perfis de ,  e .
+-   **Configurações por Parceiro:** Cada parceiro deve poder configurar as suas próprias integrações (WhatsApp, Terabox) no seu perfil.
+-   **Navegabilidade da UI:** Melhorar a experiência do utilizador adicionando navegação contextual entre as páginas relacionadas.
+-   **Base de Código Limpa:** Remover funcionalidades obsoletas (RPA Simplificado, páginas antigas) e continuar a refatoração do backend.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-A aplicação é uma plataforma full-stack (React + FastAPI + MongoDB) que foi significativamente alterada nesta sessão.
--   **Sistema RPA Dinâmico:** Foi implementada uma nova arquitetura completa.
-    -    (Admin): Uma nova página que permite ao administrador fazer upload de scripts Playwright, nomeá-los, associá-los a um ícone e definir os campos de credenciais necessários. O backend correspondente () foi criado para gerir estes scripts personalizados.
-    -    (Parceiro): A página existente foi modificada para, além das automações pré-definidas, listar e permitir a execução das automações personalizadas criadas pelo administrador.
--   **Refatoração do Backend:** O ficheiro monolítico  foi extensivamente refatorado. A maioria dos endpoints (97.4%) foi movida para ficheiros de rotas modulares em . Apenas 14 endpoints legados permanecem ativos no . Grandes blocos de código refatorado foram comentados, aguardando remoção.
--   **Funcionalidades de Admin:** Foi criada uma nova página de gestão de serviços () que permite a um administrador ver o estado dos serviços do sistema (via backend                          RUNNING   pid 46, uptime 0:00:02
-code-server                      STOPPED   Not started
-frontend                         STOPPING  
-mongodb                          RUNNING   pid 49, uptime 0:00:02
-nginx-code-proxy                 RUNNING   pid 45, uptime 0:00:02
-whatsapp                         RUNNING   pid 51, uptime 0:00:02
-supervisor> ) e reiniciá-los.
--   **UI do Dashboard:** O widget Próximas Intervenções foi atualizado para mostrar no máximo 3 itens.
--   **Correções de Deployment:** Foram corrigidos erros críticos que impediam o deployment, incluindo uma expressão cron inválida e código que dependia do backend                          RUNNING   pid 46, uptime 0:00:02
-code-server                      STOPPED   Not started
-frontend                         STOPPED   Jan 24 12:17 AM
-mongodb                          RUNNING   pid 49, uptime 0:00:02
-nginx-code-proxy                 RUNNING   pid 45, uptime 0:00:02
-whatsapp                         RUNNING   pid 51, uptime 0:00:02
-supervisor> , que não está disponível no ambiente de produção.
--   **Funcionalidades em Remoção:** O código para o RPA Simplificado e para a integração com o WhatsApp foi parcialmente removido (rotas de frontend e links de menu), mas os ficheiros e a lógica de backend ainda existem e precisam de ser completamente eliminados.
+A aplicação é uma plataforma full-stack (React + FastAPI + MongoDB).
+-   **Solução para o WhatsApp:** Foi implementada uma arquitetura de microserviço. O serviço do WhatsApp (Node.js + ) foi isolado num projeto separado () e preparado para ser implantado num VPS externo (Railway), contornando as limitações do ambiente de produção principal. O backend da aplicação principal foi configurado para comunicar com este serviço externo através da variável de ambiente . O utilizador já fez o deploy deste serviço no Railway.
+-   **Plataformas RPA Dinâmicas:** A página  e o seu backend () foram modificados para permitir que administradores criem, editem e eliminem plataformas de automação, que agora são guardadas na base de dados.
+-   **Sistema de Planos Unificado:** A página  foi refatorada para gerir planos para ,  e , consolidando a funcionalidade. Páginas antigas de planos foram removidas.
+-   **Funcionalidades Removidas:** O RPA Simplificado e as páginas  e  foram completamente removidos do frontend e backend.
+-   **UI Melhorada:** As páginas de RPA estão agora interligadas com botões de navegação. A página de configuração de mapeamento usa o layout principal da aplicação e tem um botão de voltar.
+-   **Configuração de Terabox:** Foi adicionado um novo separador nas configurações do parceiro para gerir as credenciais do Terabox.
 
 **Last working item**:
--   **Last item agent was working:** Simplificar a aplicação, focando-a no sistema RPA. O agente estava a remover funcionalidades consideradas desnecessárias ou instáveis, nomeadamente o RPA Simplificado e a integração com o WhatsApp. Foram removidas as rotas do frontend em  e os links de navegação em . No backend, o router do WhatsApp em  foi comentado.
+-   **Last item agent was working:** Depurar o motivo pelo qual o QR Code do WhatsApp não está a ser exibido na interface do utilizador. O utilizador relata que a página fica A inicializar... indefinidamente. O agente confirmou que o backend está a receber com sucesso os dados do QR Code do serviço externo no Railway, mas suspeita que o frontend está a tentar aceder a uma chave de objeto incorreta no JSON da resposta.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** both. É necessária uma verificação completa de regressão após a remoção das funcionalidades para garantir que as partes restantes (RPA Designer, RPA Automação, Gestão de Utilizadores, etc.) não foram afetadas negativamente.
+-   **Which testing method agent to use?** frontend testing agent. O problema é puramente de frontend. O agente deve verificar a página de integrações ( ou ) para confirmar que o QR code é renderizado após a correção.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Instabilidade do ambiente Playwright/Chromium (P1)**
-    -   **Description:** Durante a sessão, a aplicação encontrou erros  e , relacionados com a integração do WhatsApp (que usava , semelhante ao Playwright). Embora o WhatsApp esteja a ser removido, o core da aplicação (RPA) depende de uma tecnologia semelhante (Playwright) que já se mostrou instável no handoff anterior.
-    -   **Attempted fixes:** Instalação manual do Chromium, limpeza de ficheiros de lock () e reinício dos serviços. Estas são soluções temporárias.
+-   **Issue 1: O QR Code do WhatsApp não é exibido no frontend (P0)**
+    -   **Description:** Após a implementação bem-sucedida do serviço WhatsApp externo, a etapa final de exibir o QR Code para o utilizador conectar a sua conta está a falhar. A API externa retorna o QR code, mas o componente React não o renderiza.
+    -   **Attempted fixes:** O agente confirmou com  que o endpoint do serviço externo () retorna um JSON com o QR code em base64, e que o backend da aplicação principal está a receber essa resposta.
     -   **Next debug checklist:**
-        1.  Investigar uma forma de garantir que a instalação do Playwright e seus browsers (Downloading Chromium 141.0.7390.37 (playwright build v1194) from https://cdn.playwright.dev/dbazure/download/playwright/builds/chromium/1194/chromium-linux-arm64.zip
-|                                                                                |   0% of 175.9 MiB
-|■■■■■■■■                                                                        |  10% of 175.9 MiB
-|■■■■■■■■■■■■■■■■                                                                |  20% of 175.9 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 175.9 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 175.9 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 175.9 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 175.9 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 175.9 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 175.9 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 175.9 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 175.9 MiB
-Chromium 141.0.7390.37 (playwright build v1194) downloaded to /pw-browsers/chromium-1194
-Downloading Chromium Headless Shell 141.0.7390.37 (playwright build v1194) from https://cdn.playwright.dev/dbazure/download/playwright/builds/chromium/1194/chromium-headless-shell-linux-arm64.zip
-|                                                                                |   0% of 106.1 MiB
-|■■■■■■■■                                                                        |  10% of 106.1 MiB
-|■■■■■■■■■■■■■■■■                                                                |  20% of 106.1 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 106.1 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 106.1 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 106.1 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 106.1 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 106.1 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 106.1 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 106.1 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 106.1 MiB
-Chromium Headless Shell 141.0.7390.37 (playwright build v1194) downloaded to /pw-browsers/chromium_headless_shell-1194
-Downloading Firefox 142.0.1 (playwright build v1495) from https://cdn.playwright.dev/dbazure/download/playwright/builds/firefox/1495/firefox-debian-12-arm64.zip
-|                                                                                |   0% of 88 MiB
-|■■■■■■■■                                                                        |  10% of 88 MiB
-|■■■■■■■■■■■■■■■■                                                                |  20% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 88 MiB
-Firefox 142.0.1 (playwright build v1495) downloaded to /pw-browsers/firefox-1495
-Downloading Webkit 26.0 (playwright build v2215) from https://cdn.playwright.dev/dbazure/download/playwright/builds/webkit/2215/webkit-debian-12-arm64.zip
-|                                                                                |   0% of 88 MiB
-|■■■■■■■■                                                                        |  10% of 88 MiB
-|■■■■■■■■■■■■■■■■                                                                |  20% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■                                                        |  30% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                                |  40% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                        |  50% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                                |  60% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                        |  70% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■                |  80% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■        |  90% of 88 MiB
-|■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■| 100% of 88 MiB
-Webkit 26.0 (playwright build v2215) downloaded to /pw-browsers/webkit-2215) seja persistente no ambiente de execução.
-        2.  Modificar o código de inicialização do Playwright () para usar  e argumentos como  e  que são recomendados para ambientes de contentores.
-        3.  Garantir que os perfis de utilizador do browser sejam criados em diretórios únicos por execução para evitar conflitos de lock.
-    -   **Why fix this issue and what will be achieved with the fix?** A estabilidade do Playwright é crítica para a única funcionalidade principal que restará na aplicação. Sem isso, o produto principal não funcionará de forma fiável.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** backend
-    -   **Blocked on other issue:** N/A
+        1.  Analisar o ficheiro de frontend que obtém e exibe o QR Code (provavelmente  ou ).
+        2.  Localizar a função  ou  que faz a chamada para obter o QR Code.
+        3.  Verificar como a resposta é tratada. A suspeita é que o código espera  quando a API retorna .
+        4.  Corrigir o nome da chave no código JavaScript (e.g., ).
+        5.  Aplicar a correção com a ferramenta .
+        6.  Pedir um screenshot da página de integrações para validar que o QR Code aparece.
+    -   **Why fix this issue and what will be achieved with the fix?** Esta é a última etapa para tornar a funcionalidade crítica do WhatsApp utilizável. Sem o QR Code, os parceiros não podem conectar as suas contas.
+    -   **Status:** IN PROGRESS
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** frontend
 
 **In progress Task List**:
--   **Task 1: Concluir a Simplificação da Aplicação (P0)**
-    -   **Where to resume:** O agente removeu os pontos de entrada do frontend (rotas e menus) e comentou o router principal do backend para o WhatsApp. O próximo passo é a remoção física dos ficheiros e código não utilizados.
-        -   **Backend:**
-            -   Eliminar o ficheiro  e o diretório .
-            -   Eliminar o ficheiro .
-            -   Remover a entrada do serviço  do ficheiro .
-            -   Remover o import do router do WhatsApp em  (linha 100).
-        -   **Frontend:**
-            -   Eliminar os ficheiros de página  e .
-            -   Analisar e remover quaisquer componentes ou chamadas de API que eram usadas exclusivamente por estas páginas.
-    -   **What will be achieved with this?** Uma base de código mais limpa, focada e estável, alinhada com a visão atual do utilizador para o produto.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on something:** Não.
+- N/A
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1) Finalizar Refatoração do :** Após a simplificação, remover permanentemente os grandes blocos de código comentados em  que correspondem a endpoints já migrados, limpando o ficheiro.
-    -   **(P2) Teste End-to-End do RPA Designer:** Validar todo o fluxo do RPA personalizado. Isto inclui:
-        1.  Admin a fazer login e a navegar para .
-        2.  Admin a fazer upload de um script Playwright funcional (p. ex., uma versão simples para ).
-        3.  Parceiro a fazer login e a navegar para .
-        4.  Verificar que a nova automação aparece.
-        5.  Parceiro a inserir credenciais (fictícias) e a executar a automação.
-        6.  Verificar os logs de execução e os screenshots no backend para confirmar o sucesso.
+    -   **(P1) Finalizar Refatoração do :** Após a correção do problema do WhatsApp, retomar a tarefa de refatoração do backend. Remover os grandes blocos de código comentados e migrar os 14 endpoints restantes do  para ficheiros de rotas dedicados, limpando a base de código.
+    -   **(P2) Teste End-to-End Pós-Correção:** Realizar um teste completo das funcionalidades principais para garantir que não há regressões, incluindo o fluxo completo de conexão do WhatsApp, criação/execução de RPA e gestão de planos.
 -   **Future Tasks:**
-    -   **(P1) Consolidação de Modelos Pydantic:** Migrar as classes de modelo Pydantic restantes de  para ficheiros dedicados dentro de  para completar a modularização.
+    -   **(P1) Consolidação de Modelos Pydantic:** Mover as classes de modelo Pydantic restantes de  para ficheiros dedicados em .
 
 **Completed work in this session**
--   **Sistema RPA Designer (Implementado):** Criada de raiz a funcionalidade para administradores fazerem upload e gerirem scripts de automação Playwright personalizados.
--   **Integração RPA (Concluída):** A página de automação dos parceiros foi atualizada para exibir e executar os scripts personalizados criados no RPA Designer.
--   **Refatoração do  (Progresso Significativo):** Reduzido o número de endpoints ativos em  de mais de 35 para 14 (97.4% de modularização dos endpoints).
--   **Página de Gestão de Serviços (Implementada):** Criada uma nova interface de administrador para monitorizar e reiniciar serviços do sistema.
--   **Correções de Erros de Deployment (Resolvido):** Corrigida uma expressão cron inválida e adaptado o código de gestão de serviços para ser compatível com um ambiente de produção sem backend                          RUNNING   pid 46, uptime 0:00:16
-code-server                      STOPPED   Not started
-frontend                         RUNNING   pid 243, uptime 0:00:07
-mongodb                          RUNNING   pid 49, uptime 0:00:16
-nginx-code-proxy                 RUNNING   pid 45, uptime 0:00:16
-whatsapp                         RUNNING   pid 51, uptime 0:00:16
-supervisor> .
--   **Correção de Erros do WhatsApp/Chromium (Resolvido Temporariamente):** Resolvidos problemas de  e  que impediam a inicialização do serviço WhatsApp.
--   **Correção de UI no Dashboard (Concluída):** Limitada a lista Próximas Intervenções para exibir um máximo de 3 itens.
--   **Criação de Portfólio (Concluída):** Gerados ficheiros  e  e posteriormente refinados para remover informações sensíveis (stack tecnológico).
--   **Simplificação da Aplicação (Iniciada):** Começou o processo de remoção das funcionalidades RPA Simplificado e WhatsApp da interface do utilizador.
+-   **Arquitetura do WhatsApp com Microserviço Externo:** Implementada uma solução robusta para o WhatsApp, empacotando o serviço Node.js para ser implantado num VPS (Railway) e guiando o utilizador no processo.
+-   **Plataformas RPA Personalizáveis:** Implementada a funcionalidade para administradores criarem e gerirem plataformas de RPA através da interface.
+-   **Sistema de Planos Unificado:** Refatorada a UI para gerir planos para ,  e  num único local.
+-   **Limpeza de Código:** Removidas as páginas e rotas obsoletas (, , RPA Simplificado).
+-   **Melhorias de UI:** Interligadas as páginas de RPA e corrigido o layout da página de mapeamento de configuração.
+-   **Configuração de Terabox:** Adicionada a capacidade de os parceiros configurarem o Terabox nos seus perfis.
+-   **Correção de Erros de Teste:** Resolvidos problemas de endpoints 404 e chaves duplicadas no React, identificados pelo agente de testes.
+-   **Criação de Documentação:** Gerados os guias  e .
 
 **Earlier issues found/mentioned but not fixed**
--   A tarefa de refatorar o ficheiro monolítico  foi bastante avançada, mas não concluída a 100% (remoção de código comentado e migração de modelos Pydantic ainda pendentes).
+-   A refatoração do  foi iniciada mas ainda não foi concluída. Os blocos de código comentados e os endpoints restantes precisam de ser tratados.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Refatoração do Backend ( monolítico).
--   **Recurrence count:** 12
+-   **Recurrence count:** 13
 -   **Status:** IN PROGRESS
--   **Nova Recorrência:** A instabilidade da instalação do browser (Playwright/Puppeteer) e os erros de execução (, ) foram recorrentes, tal como no handoff anterior.
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **RPA Dinâmico:** Implementação de um sistema onde scripts de automação (Playwright) não são hard-coded, mas sim armazenados na base de dados e carregados dinamicamente para execução.
--   **Gestão de Serviços via API:** Criação de endpoints de backend que interagem com o gestor de processos do sistema (backend                          RUNNING   pid 46, uptime 0:00:16
-code-server                      STOPPED   Not started
-frontend                         RUNNING   pid 243, uptime 0:00:07
-mongodb                          RUNNING   pid 49, uptime 0:00:16
-nginx-code-proxy                 RUNNING   pid 45, uptime 0:00:16
-whatsapp                         RUNNING   pid 51, uptime 0:00:16
-supervisor> ) para permitir o controlo de serviços a partir da interface do utilizador.
--   **Código Agnóstico ao Ambiente:** Refatoração do código para funcionar tanto em ambientes de desenvolvimento (com backend                          RUNNING   pid 46, uptime 0:00:16
-code-server                      STOPPED   Not started
-frontend                         RUNNING   pid 243, uptime 0:00:07
-mongodb                          RUNNING   pid 49, uptime 0:00:16
-nginx-code-proxy                 RUNNING   pid 45, uptime 0:00:16
-whatsapp                         RUNNING   pid 51, uptime 0:00:16
-supervisor> ) como em ambientes de produção contentorizados (onde o comando pode não existir), adicionando verificações e mensagens de erro adequadas.
--   **Refatoração de Backend:** Aplicação de um padrão de modularização em FastAPI, movendo s de um ficheiro monolítico para uma estrutura de diretórios .
+-   **Microserviço Externo:** A funcionalidade do WhatsApp foi externalizada para um serviço Node.js autónomo implantado no Railway para contornar as limitações do ambiente de execução principal (especialmente a necessidade de instalar o Chromium).
+-   **Configuração por Variável de Ambiente:** A aplicação principal comunica com o microserviço através de uma URL configurada na variável .
+-   **Gestão Dinâmica de Entidades:** O sistema de RPA foi refatorado para que as plataformas sejam entidades geríveis na base de dados em vez de constantes no código.
 
 **key DB schema**
--   **rpa_scripts:**  (NOVO)
+-   ****: 
+-   ****:  (NOVO)
 
 **changes in tech stack**
--   Nenhuma alteração fundamental, mas a aplicação está a remover a dependência do  e a focar-se exclusivamente no Playwright para automação.
+-   A arquitetura agora inclui um **microserviço Node.js** hospedado externamente no **Railway.app**.
 
 **All files of reference**
--    (Ficheiro principal da refatoração)
--    (Onde as rotas foram removidas)
--    (Onde os links do menu foram removidos)
--    (Nova rota para o designer RPA)
--    (Nova página para o designer RPA)
--    (Nova rota para gestão de serviços)
--    (Nova página para gestão de serviços)
+-    (ou ): Ficheiro chave para a correção do problema do QR Code.
+-   : Contém a  que aponta para o serviço no Railway.
+-   : Diretório com o código completo do serviço WhatsApp externo.
+-   : Ficheiro que ainda precisa de ser refatorado.
 
 **Critical Info for New Agent**
--   **A prioridade MÁXIMA é a simplificação.** O utilizador quer que a aplicação se foque exclusivamente no novo sistema de RPA (Designer + Automação). Deve continuar a tarefa de remover completamente todo o código relacionado com o RPA Simplificado e o WhatsApp. Não tente corrigir ou reativar o WhatsApp.
--   **Refatoração do :** O ficheiro  contém grandes blocos de código comentados (). Após a remoção das funcionalidades antigas, o próximo passo lógico é apagar estes blocos para limpar permanentemente o ficheiro.
--   **Instabilidade do Ambiente de Browser:** Esteja ciente de que o ambiente Playwright/Chromium pode ser instável. Erros como browser not found ou profile lock podem ocorrer. A resolução destes problemas de forma permanente é uma tarefa de alta prioridade (Issue 1).
--   **Código de Produção:** Foram feitas alterações para que a aplicação não falhe em ambientes de produção onde backend                          RUNNING   pid 46, uptime 0:00:16
-code-server                      STOPPED   Not started
-frontend                         RUNNING   pid 243, uptime 0:00:07
-mongodb                          RUNNING   pid 49, uptime 0:00:16
-nginx-code-proxy                 RUNNING   pid 45, uptime 0:00:16
-whatsapp                         RUNNING   pid 51, uptime 0:00:16
-supervisor>  não existe. Tenha isso em mente se modificar a funcionalidade de gestão de serviços.
+-   **A prioridade máxima é corrigir a exibição do QR Code do WhatsApp.** O problema está quase certamente no código frontend que lida com a resposta da API. Verifique a diferença entre  e  no objeto de resposta.
+-   **A solução do WhatsApp é EXTERNA.** Não tente executar ou depurar o serviço WhatsApp (processo Node.js) dentro do ambiente do agente. A comunicação é feita via HTTP para a URL configurada em .
+-   Após corrigir o QR Code, a próxima tarefa de alta prioridade é **finalizar a refatoração do **, uma dívida técnica recorrente.
 
 **documents and test reports created in this job**
 -   
 -   
--    (atualizado extensivamente)
+-   
+-   
+-    (diretório com vários ficheiros)
 
 **Last 10 User Messages and any pending HUMAN messages**
--   10.  - Pedido claro para simplificar a aplicação, mantendo apenas o novo RPA e removendo o resto, especialmente o WhatsApp. **Status: Em Progresso.**
--   9.  - Pedido para analisar e corrigir erros de deployment. **Status: Concluído.**
--   8.  - Pedido para criar uma página de admin para reiniciar serviços. **Status: Concluído.**
--   7.  - Instrução para avançar para a próxima tarefa planeada. **Status: Ação Tomada.**
--   6.  - Instrução para continuar com a tarefa de refatoração P1. **Status: Ação Tomada.**
--   5.  - Pedido para remover referências a tecnologias do portfólio. **Status: Concluído.**
--   4.  - Pedido para remover secções do portfólio. **Status: Concluído.**
--   3.  - Pedido para criar um portfólio. **Status: Concluído.**
--   2.  - Confirmação para prosseguir com a ideia de upload de scripts RPA. **Status: Ação Tomada.**
--   1.  - Pergunta sobre como implementar a opção de RPA dinâmico. **Status: Ação Tomada.**
+1.  : O utilizador confirma que o QR code ainda não está visível. **Status: In Progress**.
+2.  : O utilizador descreve a mensagem que vê na UI. **Status: In Progress**.
+3.  : O utilizador pergunta se a solução do Railway é para produção. **Status: Confirmed**.
+4.  : O utilizador pergunta a porta do serviço no Railway. **Status: Answered**.
+5.  : O utilizador fornece a URL interna, sendo instruído a usar a pública. **Status: Corrected**.
+6.  : O utilizador confirma que o deploy no Railway foi bem-sucedido após corrigir o . **Status: Action Taken**.
+7.  : O utilizador fornece um erro de log do build no Railway. **Status: Resolved**.
+8.  : O utilizador pede os ficheiros para criar o repositório no GitHub. **Status: Provided**.
+9.  : O utilizador pede um guia para o deploy no Railway. **Status: Provided**.
+10. : O utilizador escolhe a opção de usar um VPS externo para o serviço WhatsApp. **Status: Action Taken**.
 
 **Project Health Check:**
--   **Broken:** A aplicação está num estado de transição instável. Funcionalidades inteiras estão a ser removidas, e o código restante requer testes de regressão completos para garantir que não foi quebrado no processo.
+-   **Broken:** A funcionalidade de conexão do WhatsApp está bloqueada. O utilizador não consegue escanear o QR Code, o que impede o uso de toda a integração.
 -   **Mocked:** N/A.
 
 **3rd Party Integrations**
--   **Playwright:** Usado para a funcionalidade principal de automação RPA.
--   **Terabox Unofficial API:** Presente, mas o seu uso e estado são incertos após a simplificação.
--   ~~****~~: A ser completamente removido.
+-   **Playwright:** Para automação RPA.
+-   **whatsapp-web.js:** Usado no microserviço externo para a integração com o WhatsApp.
+-   **Railway.app:** Plataforma de PaaS usada para hospedar o microserviço do WhatsApp.
+-   **Terabox Unofficial API:** Integrado para armazenamento de ficheiros.
 
 **Testing status**
--   **Testing agent used after significant changes:** NO. O agente implementou múltiplas funcionalidades complexas (RPA Designer, Gestão de Serviços), fez refatoração e correções de deployment, e iniciou a remoção de features sem invocar o testing agent. É necessária uma passagem completa de testes.
+-   **Testing agent used after significant changes:** YES ()
 -   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** []
--   **Known regressions:** A instabilidade do ambiente de automação do browser (Playwright/Puppeteer) é uma regressão conhecida e recorrente.
+-   **Test files created:** Sim, o agente de testes criou testes em .
+-   **Known regressions:** Nenhuma. O problema atual é uma nova questão resultante da nova arquitetura.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
 -   **Parceiro:**  / 
 
 **What agent forgot to execute**
--   O agente seguiu as instruções mais recentes do utilizador. A tarefa original de depurar o script da Via Verde foi substituída por tarefas de maior prioridade, como a criação do RPA Designer e a simplificação da aplicação. Essa depuração agora faz parte da tarefa futura de testar os scripts personalizados.</analysis>
+-   O agente diagnosticou corretamente a causa provável do problema do QR Code (discrepância no nome da chave JSON), mas não implementou a correção no código frontend antes do final da sessão.</analysis>
