@@ -14,7 +14,7 @@ import { Badge } from '../components/ui/badge';
 import { 
   Settings, Save, RefreshCw, FileSpreadsheet, Columns, Play, 
   CheckCircle, AlertCircle, Loader2, Fuel, Zap, Car, CreditCard,
-  ArrowLeft
+  ArrowLeft, Bot, FileCode
 } from 'lucide-react';
 import { toast } from 'sonner';
 
