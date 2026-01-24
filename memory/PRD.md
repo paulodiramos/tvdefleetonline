@@ -21,49 +21,36 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 - ✅ Restaurada rota e link no frontend (`/whatsapp`)
 - ⚠️ **NOTA PARA DEPLOYMENT**: O Chromium precisa ser instalado no ambiente de produção
 
-### 2. RPA Simplificado Removido
-- ✅ Eliminado `/app/backend/routes/rpa_simplificado.py`
-- ✅ Eliminado `/app/frontend/src/pages/RPASimplificado.js`
-- ✅ Removido import e referências do `server.py`
+### 2. Rotas Removidas
+- ✅ Removida `/automacao` - funcionalidade duplicada (usar `/rpa-automacao`)
+- ✅ Removida `/cartoes-frota` - não utilizada
+- ✅ Removida `/admin/planos-motorista` - redirecciona para `/gestao-planos`
+- ✅ Eliminado `RPA Simplificado` - ficheiros e referências
 
-### 3. Sistema RPA Ativo
+### 3. Sistema de Planos Unificado
+- ✅ Actualizado `/gestao-planos` para suportar **Parceiros, Gestores e Motoristas**
+- ✅ Adicionado tipo "Gestor" com cor roxa no badge
+- ✅ Filtros actualizados para os 3 tipos de utilizador
+- ✅ Tipo de cobrança disponível para Parceiros e Gestores
+
+### 4. Ficheiros Eliminados
+- `/app/frontend/src/pages/Automacao.js`
+- `/app/frontend/src/pages/CartoesFrota.js`
+- `/app/frontend/src/pages/AdminPlanosMotorista.js`
+- `/app/frontend/src/pages/RPASimplificado.js`
+- `/app/backend/routes/rpa_simplificado.py`
+
+---
+
+## Sistema RPA Activo
 - **RPA Designer** (`/rpa-designer`): Admin pode criar e gerir scripts Playwright
 - **RPA Automação** (`/rpa-automacao`): Execução de automações configuradas
 
----
-
-## ✅ Refatoração do Backend - CONCLUÍDA (97.4%)
-
-### Estado Final (23/01/2026)
-| Componente | Endpoints |
-|------------|-----------|
-| **server.py** | **14** |
-| **routes/*.py** | **514** |
-
-### Taxa de Modularização: 97.4% ✅
-
----
-
-## Funcionalidades Implementadas
-
-### Sistema de Automação RPA
-- RPA Designer (Admin) - Upload de scripts Playwright
-- RPA Automático - Execução com credenciais encriptadas
-
-### WhatsApp Business
-- Envio de mensagens individuais
-- Envio em massa para motoristas
-- QR Code para autenticação por parceiro
-- Multi-sessão (cada parceiro tem sessão própria)
-
-### Gestão de Utilizadores
-- Filtros por perfil, parceiro, data
-- Ações admin: bloquear, revogar, alterar senha
-
-### Integrações
-- WhatsApp Web.js (Multi-sessão)
-- Terabox
-- Playwright
+## Sistema de Planos (`/gestao-planos`)
+- Tipos de utilizador: Parceiro, Gestor, Motorista
+- Preços por periodicidade: Semanal, Mensal, Trimestral, Semestral, Anual
+- Módulos configuráveis por tipo
+- Atribuição individual ou em massa
 
 ---
 
@@ -94,10 +81,10 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 - [ ] Validar WhatsApp no domínio tvdefleet.com após deployment
 - [ ] Teste end-to-end do fluxo RPA Designer
 
-### P2 - Média Prioridade  
+### P2 - Média Prioridade
 - [ ] Limitar "Próximos Eventos" no dashboard a 3 itens
-- [ ] Mover os 14 endpoints restantes para rotas
+- [ ] Limpeza de código comentado no server.py
 
 ### P3 - Baixa Prioridade
-- [ ] Limpeza de código comentado no server.py
+- [ ] Mover os 14 endpoints restantes do `server.py` para rotas
 - [ ] Validar scripts RPA em ambiente com internet
