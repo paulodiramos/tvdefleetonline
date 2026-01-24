@@ -188,9 +188,30 @@ def decrypt_value(encrypted: str) -> str:
 # ==================== ENDPOINTS PLATAFORMAS ====================
 
 @router.get("/plataformas")
-async def listar_plataformas():
-    """Listar todas as plataformas disponíveis para automação"""
-    return await get_todas_plataformas()
+async def listar_plataformas(current_user: Dict = Depends(get_current_user)):
+    """Listar plataformas disponíveis (filtradas por permissões do parceiro)"""
+    todas = await get_todas_plataformas()
+    
+    # Admin vê todas
+    if current_user["role"] == "admin":
+        return todas
+    
+    # Parceiro/Gestão vê apenas as que tem permissão
+    parceiro_id = current_user["id"] if current_user["role"] == "parceiro" else current_user.get("parceiro_id")
+    
+    if not parceiro_id:
+        return todas
+    
+    # Buscar permissões do parceiro
+    permissoes = await db.parceiro_plataformas.find_one({"parceiro_id": parceiro_id})
+    
+    if not permissoes or not permissoes.get("plataformas_permitidas"):
+        # Se não tem permissões configuradas, não vê nenhuma
+        return []
+    
+    # Filtrar apenas plataformas permitidas
+    plataformas_permitidas = permissoes.get("plataformas_permitidas", [])
+    return [p for p in todas if p["id"] in plataformas_permitidas]
 
 
 @router.get("/plataformas/{plataforma_id}")
@@ -200,6 +221,78 @@ async def get_plataforma_endpoint(plataforma_id: str):
     if not plataforma:
         raise HTTPException(status_code=404, detail="Plataforma não encontrada")
     return plataforma
+
+
+# ==================== GESTÃO DE PERMISSÕES (Admin) ====================
+
+@router.get("/parceiro-plataformas/{parceiro_id}")
+async def get_permissoes_parceiro(
+    parceiro_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter plataformas permitidas para um parceiro (admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    permissoes = await db.parceiro_plataformas.find_one(
+        {"parceiro_id": parceiro_id},
+        {"_id": 0}
+    )
+    
+    if not permissoes:
+        return {"parceiro_id": parceiro_id, "plataformas_permitidas": []}
+    
+    return permissoes
+
+
+@router.put("/parceiro-plataformas/{parceiro_id}")
+async def update_permissoes_parceiro(
+    parceiro_id: str,
+    plataformas: List[str],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar plataformas permitidas para um parceiro (admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    await db.parceiro_plataformas.update_one(
+        {"parceiro_id": parceiro_id},
+        {"$set": {
+            "parceiro_id": parceiro_id,
+            "plataformas_permitidas": plataformas,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_by": current_user["id"]
+        }},
+        upsert=True
+    )
+    
+    return {"success": True, "message": f"Permissões atualizadas para {len(plataformas)} plataformas"}
+
+
+@router.get("/admin/parceiros-plataformas")
+async def listar_todas_permissoes(current_user: Dict = Depends(get_current_user)):
+    """Listar permissões de todos os parceiros (admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    # Buscar todos os parceiros
+    parceiros = await db.users.find(
+        {"role": "parceiro"},
+        {"_id": 0, "id": 1, "name": 1, "email": 1, "empresa": 1}
+    ).to_list(100)
+    
+    # Buscar permissões de cada parceiro
+    resultado = []
+    for parceiro in parceiros:
+        permissoes = await db.parceiro_plataformas.find_one({"parceiro_id": parceiro["id"]})
+        resultado.append({
+            "parceiro_id": parceiro["id"],
+            "nome": parceiro.get("name") or parceiro.get("empresa", ""),
+            "email": parceiro.get("email", ""),
+            "plataformas_permitidas": permissoes.get("plataformas_permitidas", []) if permissoes else []
+        })
+    
+    return resultado
 
 
 @router.post("/plataformas")
