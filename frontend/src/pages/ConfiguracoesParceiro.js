@@ -804,9 +804,9 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
                     <ol className="list-decimal list-inside mt-2 space-y-1 text-sm">
                       <li>Aceda a <a href="https://www.terabox.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">terabox.com</a> e faça login</li>
                       <li>Abra as Ferramentas de Desenvolvedor (F12)</li>
-                      <li>Vá ao separador "Application" ou "Storage"</li>
-                      <li>Procure por "Cookies" → "terabox.com"</li>
-                      <li>Copie o valor do cookie "ndus" ou "BDUSS"</li>
+                      <li>Vá ao separador &quot;Application&quot; ou &quot;Storage&quot;</li>
+                      <li>Procure por &quot;Cookies&quot; → &quot;terabox.com&quot;</li>
+                      <li>Copie o valor do cookie &quot;ndus&quot; ou &quot;BDUSS&quot;</li>
                     </ol>
                   </AlertDescription>
                 </Alert>
