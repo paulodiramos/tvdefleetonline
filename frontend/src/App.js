@@ -571,7 +571,7 @@ function App() {
           <Route
             path="/configuracao-mapeamento"
             element={
-              user && (user.role === 'admin' || user.role === 'gestao') ? <ConfiguracaoMapeamento user={user} /> : <Navigate to="/dashboard" />
+              user && (user.role === 'admin' || user.role === 'gestao') ? <ConfiguracaoMapeamento user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
             }
           />
           <Route
