@@ -154,10 +154,6 @@ const Layout = ({ children, user, onLogout }) => {
       
       return items;
     }
-        },
-        { path: '/mensagens', icon: MessageSquare, label: 'Mensagens' }
-      ];
-    }
 
     // Admin/Gestao menu
     const items = [
