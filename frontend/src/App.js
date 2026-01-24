@@ -788,6 +788,16 @@ function App() {
             }
           />
           <Route
+            path="/importacao-rpa"
+            element={
+              user && ['admin', 'parceiro', 'gestao'].includes(user.role) ? (
+                <ImportacaoRPA user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/admin/gestao-servicos"
             element={
               user && user.role === 'admin' ? (
