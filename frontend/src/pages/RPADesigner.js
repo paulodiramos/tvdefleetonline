@@ -839,7 +839,7 @@ const RPADesigner = ({ user, onLogout }) => {
 
       {/* Modal Instruções */}
       <Dialog open={showInstrucoesModal} onOpenChange={setShowInstrucoesModal}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <HelpCircle className="w-5 h-5" />
@@ -848,15 +848,37 @@ const RPADesigner = ({ user, onLogout }) => {
           </DialogHeader>
           
           <div className="space-y-4 py-4">
-            <div className="p-4 bg-slate-50 rounded-lg space-y-3">
-              <h4 className="font-medium">1. Instalar Playwright no seu computador</h4>
-              <code className="block p-2 bg-slate-200 rounded text-sm">
-                npm init playwright@latest
-              </code>
+            {/* Instalação */}
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
+              <h4 className="font-medium text-blue-800">📦 1. Instalar Playwright no seu computador</h4>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-blue-700 font-medium">Opção A - Com Node.js (Recomendado):</p>
+                <code className="block p-2 bg-white rounded text-sm border">
+                  npm init playwright@latest
+                </code>
+                <p className="text-xs text-blue-600">
+                  Escolha: TypeScript ou JavaScript → Pasta: tests → Não instalar GitHub Actions → Instalar browsers: Sim
+                </p>
+              </div>
+              
+              <div className="space-y-2 pt-2">
+                <p className="text-sm text-blue-700 font-medium">Opção B - Com Python:</p>
+                <code className="block p-2 bg-white rounded text-sm border">
+                  pip install playwright && playwright install
+                </code>
+              </div>
+              
+              <div className="text-xs text-blue-600 pt-2">
+                💡 <strong>Pré-requisito:</strong> Instale o{' '}
+                <a href="https://nodejs.org" target="_blank" rel="noopener noreferrer" className="underline">Node.js</a>
+                {' '}(v18+) primeiro se não tiver.
+              </div>
             </div>
             
+            {/* Gravador */}
             <div className="p-4 bg-slate-50 rounded-lg space-y-3">
-              <h4 className="font-medium">2. Iniciar o Gravador</h4>
+              <h4 className="font-medium">🎬 2. Iniciar o Gravador</h4>
               <code className="block p-2 bg-slate-200 rounded text-sm">
                 npx playwright codegen https://site-alvo.com
               </code>
@@ -864,10 +886,16 @@ const RPADesigner = ({ user, onLogout }) => {
                 Isto abre um browser onde pode navegar normalmente. 
                 Todas as suas ações serão gravadas e convertidas em código Python.
               </p>
+              <div className="text-xs text-slate-500 bg-slate-100 p-2 rounded">
+                <strong>Opções úteis:</strong><br/>
+                • <code>--target python</code> - Gera código Python (padrão)<br/>
+                • <code>--viewport-size=1280,720</code> - Define tamanho da janela
+              </div>
             </div>
             
+            {/* Gravar Ações */}
             <div className="p-4 bg-slate-50 rounded-lg space-y-3">
-              <h4 className="font-medium">3. Gravar as Ações</h4>
+              <h4 className="font-medium">🖱️ 3. Gravar as Ações</h4>
               <p className="text-sm text-slate-600">
                 No browser que abriu, faça exatamente o que quer automatizar:
               </p>
@@ -880,8 +908,9 @@ const RPADesigner = ({ user, onLogout }) => {
               </ul>
             </div>
             
+            {/* Copiar Código */}
             <div className="p-4 bg-slate-50 rounded-lg space-y-3">
-              <h4 className="font-medium">4. Copiar e Adaptar o Código</h4>
+              <h4 className="font-medium">📋 4. Copiar e Adaptar o Código</h4>
               <p className="text-sm text-slate-600">
                 O código Python aparece numa janela lateral. Copie-o e:
               </p>
@@ -892,15 +921,40 @@ const RPADesigner = ({ user, onLogout }) => {
               </ul>
             </div>
             
+            {/* Exemplo de código */}
+            <div className="p-4 bg-slate-900 rounded-lg">
+              <h4 className="font-medium text-green-400 mb-2">💻 Exemplo de Código</h4>
+              <pre className="text-xs text-green-300 overflow-x-auto">
+{`# Variáveis que o sistema substitui automaticamente
+email = "{{email}}"
+password = "{{password}}"
+
+# Código gerado pelo Playwright
+page.goto("https://exemplo.com/login")
+page.fill('input[name="email"]', email)
+page.fill('input[name="password"]', password)
+page.click('button[type="submit"]')
+
+# Aguardar e extrair dados
+page.wait_for_selector('.dados-tabela')
+dados = page.inner_text('.dados-tabela')`}
+              </pre>
+            </div>
+            
+            {/* Nota importante */}
             <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
               <p className="text-sm text-amber-800">
-                <strong>Nota:</strong> Os parceiros NÃO vêem o código do script. 
+                <strong>⚠️ Nota:</strong> Os parceiros NÃO vêem o código do script. 
                 Eles apenas preenchem as credenciais e clicam em "Executar".
               </p>
             </div>
           </div>
           
           <DialogFooter>
+            <Button variant="outline" onClick={() => window.open('https://playwright.dev/docs/codegen', '_blank')}>
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Documentação Oficial
+            </Button>
             <Button onClick={() => setShowInstrucoesModal(false)}>Entendi</Button>
           </DialogFooter>
         </DialogContent>
