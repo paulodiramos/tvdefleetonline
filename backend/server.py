@@ -14268,10 +14268,9 @@ app.include_router(cartoes_frota_router, prefix="/api")
 app.include_router(templates_contratos_router, prefix="/api")
 app.include_router(ficheiros_importados_router, prefix="/api")
 app.include_router(agenda_router, prefix="/api")
-# WhatsApp desactivado - não funciona em produção (Kubernetes)
-# app.include_router(whatsapp_router, prefix="/api")
+# WhatsApp Web Service - requer Chromium instalado no ambiente
+app.include_router(whatsapp_router, prefix="/api")
 # RPA Simplificado removido - usar apenas rpa_automacao e rpa_designer
-# app.include_router(rpa_simplificado_router, prefix="/api")
 app.include_router(rpa_automacao_router, prefix="/api")
 app.include_router(rpa_designer_router, prefix="/api")
 app.include_router(credenciais_router, prefix="/api")
