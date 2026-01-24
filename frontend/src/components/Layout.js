@@ -19,11 +19,75 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 
+// Mapeamento de funcionalidades para itens de menu
+const FUNCIONALIDADES_MENU = {
+  vistorias: ['Vistorias'],
+  contratos: ['📄 Gestão de Contratos', '➕ Criar Contrato', 'Gestão de Contratos', 'Criar Contrato'],
+  rpa_automacao: ['🤖 RPA Automação', '📥 Importação Dados', 'RPA Automação', 'Importação Dados', '📝 RPA Designer', 'RPA Designer'],
+  relatorios: ['📊 Resumo Semanal', 'Resumo Semanal'],
+  financeiro: ['💰 Extras/Dívidas', '✅ Verificar Recibos', '💳 Pagamentos', '📁 Arquivo de Recibos', 'Extras/Dívidas', 'Verificar Recibos', 'Pagamentos', 'Arquivo de Recibos'],
+  alertas: ['🔔 Alertas de Custos', 'Alertas de Custos'],
+  motoristas: ['Lista de Motoristas', 'Motoristas'],
+  veiculos: ['Lista de Veículos', 'Veículos'],
+  whatsapp: ['📱 WhatsApp', 'WhatsApp'],
+  terabox: ['Terabox']
+};
+
 const Layout = ({ children, user, onLogout }) => {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [notificacoesOpen, setNotificacoesOpen] = useState(false);
   const [criarTemplateOpen, setCriarTemplateOpen] = useState(false);
+  const [permissoes, setPermissoes] = useState([]);
+  const [permissoesLoaded, setPermissoesLoaded] = useState(false);
+
+  // Carregar permissões de funcionalidades
+  useEffect(() => {
+    const carregarPermissoes = async () => {
+      if (!user || user.role === 'admin' || user.role === 'motorista') {
+        setPermissoesLoaded(true);
+        return;
+      }
+      
+      try {
+        const response = await axios.get(`${API}/permissoes/minhas`);
+        setPermissoes(response.data.funcionalidades || []);
+      } catch (err) {
+        console.error('Erro ao carregar permissões:', err);
+        // Em caso de erro, permitir tudo (fallback)
+        setPermissoes(Object.keys(FUNCIONALIDADES_MENU));
+      } finally {
+        setPermissoesLoaded(true);
+      }
+    };
+    
+    carregarPermissoes();
+  }, [user]);
+
+  // Verificar se um item de menu está permitido
+  const itemPermitido = useCallback((label) => {
+    // Admin tem acesso a tudo
+    if (!user || user.role === 'admin' || user.role === 'motorista') return true;
+    
+    // Se permissões não carregaram ainda, mostrar tudo
+    if (!permissoesLoaded) return true;
+    
+    // Verificar se o label está associado a alguma funcionalidade
+    for (const [funcId, labels] of Object.entries(FUNCIONALIDADES_MENU)) {
+      if (labels.some(l => label.includes(l) || l.includes(label))) {
+        return permissoes.includes(funcId);
+      }
+    }
+    
+    // Items não mapeados - mostrar por padrão
+    return true;
+  }, [user, permissoes, permissoesLoaded]);
+
+  // Filtrar submenu baseado nas permissões
+  const filtrarSubmenu = useCallback((submenu) => {
+    if (!user || user.role === 'admin' || user.role === 'motorista') return submenu;
+    return submenu.filter(item => itemPermitido(item.label));
+  }, [user, itemPermitido]);
 
   const getNavItems = () => {
     if (!user) return [];
