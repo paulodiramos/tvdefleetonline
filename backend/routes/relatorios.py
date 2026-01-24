@@ -16,7 +16,7 @@ from services.envio_relatorios import (
     generate_whatsapp_link,
     generate_relatorio_motorista_text,
     generate_relatorio_motorista_html,
-    send_email_sendgrid
+    send_email_smtp
 )
 
 logger = logging.getLogger(__name__)
