@@ -222,6 +222,53 @@ Por favor, renove o documento o mais rapidamente possível.
 
 _TVDEFleet - Gestão de Frotas TVDE_`);
           break;
+        case 'vistoria_agendada':
+          setMensagem(`🚗 *Vistoria Agendada*
+
+Olá {nome_motorista}! 👋
+
+A sua vistoria foi agendada:
+
+📅 *Data:* {data_vistoria}
+🕐 *Hora:* {hora_vistoria}
+📍 *Local:* {local}
+🚘 *Veículo:* {veiculo}
+
+Por favor, compareça no local 15 minutos antes.
+
+_TVDEFleet - Gestão de Frotas TVDE_`);
+          break;
+        case 'vistoria_lembrete':
+          setMensagem(`⏰ *Lembrete de Vistoria*
+
+Olá {nome_motorista}! 👋
+
+Relembramos que tem uma vistoria amanhã:
+
+📅 *Data:* {data_vistoria}
+🕐 *Hora:* {hora_vistoria}
+📍 *Local:* {local}
+
+Não se esqueça de levar todos os documentos necessários!
+
+_TVDEFleet - Gestão de Frotas TVDE_`);
+          break;
+        case 'manutencao_agendada':
+          setMensagem(`🔧 *Manutenção Agendada*
+
+Olá {nome_motorista}! 👋
+
+O seu veículo tem uma manutenção agendada:
+
+🚘 *Veículo:* {veiculo}
+🔧 *Tipo:* {tipo_manutencao}
+📅 *Data:* {data}
+📍 *Local:* {local}
+
+Por favor, entregue o veículo na data indicada.
+
+_TVDEFleet - Gestão de Frotas TVDE_`);
+          break;
         case 'boas_vindas':
           setMensagem(`👋 *Bem-vindo à TVDEFleet!*
 
