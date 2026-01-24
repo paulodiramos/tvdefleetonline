@@ -265,6 +265,11 @@ const Layout = ({ children, user, onLogout }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link to="/admin/gestao-funcionalidades" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>⚙️ Funcionalidades Parceiros</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to="/configuracao-mapeamento" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>🗺️ Mapeamento Importação</span>
                         </Link>
