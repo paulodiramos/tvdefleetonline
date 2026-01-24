@@ -97,7 +97,7 @@ from routes.cartoes_frota import router as cartoes_frota_router
 from routes.templates_contratos import router as templates_contratos_router
 from routes.ficheiros_importados import router as ficheiros_importados_router
 from routes.agenda import router as agenda_router
-from routes.whatsapp import router as whatsapp_router
+from routes.whatsapp_cloud import router as whatsapp_router
 from routes.rpa_automacao import router as rpa_automacao_router
 from routes.rpa_designer import router as rpa_designer_router
 from routes.credenciais import router as credenciais_router
