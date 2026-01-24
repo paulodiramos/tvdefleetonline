@@ -77,7 +77,8 @@ import {
   ChevronRight,
   FileCode,
   TableProperties,
-  ExternalLink
+  ExternalLink,
+  Users
 } from 'lucide-react';
 
 const RPAAutomacao = ({ user, onLogout }) => {
