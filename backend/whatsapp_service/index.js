@@ -63,12 +63,26 @@ async function getOrCreateClient(parceiro_id) {
         return clients.get(parceiro_id);
     }
     
+    // Clean up locks for this specific session before creating client
+    const sessionDir = path.join(AUTH_PATH, `session-${parceiro_id}`, 'Default');
+    if (fs.existsSync(sessionDir)) {
+        ['SingletonLock', 'SingletonCookie', 'SingletonSocket'].forEach(lockFile => {
+            const lockPath = path.join(sessionDir, lockFile);
+            try {
+                if (fs.existsSync(lockPath)) {
+                    fs.unlinkSync(lockPath);
+                    console.log(`Cleaned lock for ${parceiro_id}: ${lockFile}`);
+                }
+            } catch (e) { /* ignore */ }
+        });
+    }
+    
     console.log(`Creating new WhatsApp client for partner: ${parceiro_id}`);
     
     const client = new Client({
         authStrategy: new LocalAuth({
             clientId: parceiro_id,
-            dataPath: '/app/backend/whatsapp_service/.wwebjs_auth'
+            dataPath: AUTH_PATH
         }),
         puppeteer: {
             headless: true,
