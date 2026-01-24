@@ -379,7 +379,7 @@ async def listar_credenciais(
         del cred["email_encrypted"]
         
         # Adicionar info da plataforma
-        plataforma = next((p for p in PLATAFORMAS if p["id"] == cred["plataforma"]), None)
+        plataforma = await get_plataforma_by_id(cred["plataforma"])
         if plataforma:
             cred["plataforma_nome"] = plataforma["nome"]
             cred["plataforma_icone"] = plataforma["icone"]
