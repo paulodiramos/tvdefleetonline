@@ -14,48 +14,37 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 
 ## ✅ Alterações desta Sessão (24/01/2026)
 
-### 1. WhatsApp Corrigido para Produção
-- ✅ Instalado Chromium no ambiente (`/usr/bin/chromium`)
-- ✅ Corrigido limpeza automática de lock files no `index.js`
-- ✅ Reativado router do WhatsApp no `server.py`
-- ✅ Restaurada rota e link no frontend (`/whatsapp`)
-- ✅ Adicionado endpoint `/api/whatsapp/config` para configuração
-- ⚠️ **NOTA PARA DEPLOYMENT**: O Chromium precisa ser instalado no ambiente de produção
+### 1. WhatsApp por Parceiro
+- ✅ Cada parceiro configura o seu próprio WhatsApp no perfil (`/configuracoes-parceiro`)
+- ✅ Acesso disponível para parceiros e gestores
+- ✅ Novos templates de mensagem: Vistoria Agendada, Lembrete de Vistoria, Manutenção
+- ✅ Sistema de envio em massa por tipo de evento
 
-### 2. Rotas Removidas
-- ✅ Removida `/automacao` - funcionalidade duplicada
-- ✅ Removida `/cartoes-frota` - não utilizada
-- ✅ Removida `/admin/planos-motorista` - redirecciona para `/gestao-planos`
-- ✅ Eliminado RPA Simplificado
+### 2. Terabox por Parceiro
+- ✅ Nova tab "Terabox" nas configurações do parceiro
+- ✅ Configuração de cookie de autenticação com instruções
+- ✅ Opções de sincronização: documentos, relatórios, vistorias
+- ✅ Teste de conexão integrado
 
-### 3. Sistema de Planos Unificado (`/gestao-planos`)
-- ✅ Adicionado tipo **Gestor** às opções (Parceiro, Gestor, Motorista)
-- ✅ Badges com cores: Parceiro (azul), Gestor (roxo), Motorista (verde)
-- ✅ Filtros actualizados para os 3 tipos de utilizador
-- ✅ Corrigido duplicate key warning na lista de utilizadores
+### 3. Requisitos de Deployment Documentados
+- ✅ Criado `/app/DEPLOYMENT.md` com instruções completas
+- ✅ O Chromium é necessário para o WhatsApp funcionar
+- ✅ Deve ser instalado no Dockerfile ou script de inicialização
 
-### 4. RPA Designer
-- ✅ Adicionado endpoint `/api/rpa-designer/template` (alias)
-- ✅ 1 script activo ("Via Verde Teste")
-
-### 5. Terabox Preparado para Produção
-- ✅ Integração com API Terabox funcional
-- ✅ 78 pastas e 5 ficheiros configurados
-- ✅ Endpoints de stats, ficheiros, pastas funcionais
+### 4. Templates de Mensagem WhatsApp (Novos)
+- Vistoria Agendada (data, hora, local, veículo)
+- Lembrete de Vistoria (notificação prévia)
+- Manutenção Agendada (tipo, data, local)
 
 ---
 
-## Testes Realizados (Iteration 18)
+## Configurações por Parceiro (`/configuracoes-parceiro`)
 
-### Backend: 80% (24/30 testes)
-- Gestão Planos: 7/7 ✅
-- RPA Designer: 4/5 ✅ (template corrigido)
-- RPA Automação: 6/6 ✅
-- WhatsApp: 3/3 ✅
-- Terabox: 5/5 ✅
-
-### Frontend: 100%
-- Todas as 5 páginas carregam correctamente
+### Tabs Disponíveis:
+1. **Email** - Configuração SMTP
+2. **WhatsApp** - Número, templates, notificações automáticas
+3. **Terabox** - Cookie, pasta raiz, sincronização
+4. **Plataformas** - Credenciais Uber/Bolt/Via Verde
 
 ---
 
@@ -67,10 +56,13 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 
 ## Requisitos de Deployment
 
-### Para WhatsApp funcionar em produção:
+### Chromium (para WhatsApp)
 ```bash
-apt-get install -y chromium
+# Adicionar ao Dockerfile ou script de inicialização
+apt-get update && apt-get install -y chromium
 ```
+
+O Chromium é necessário porque o `whatsapp-web.js` usa o Puppeteer para simular um browser e conectar ao WhatsApp Web. Sem o Chromium instalado, o serviço não consegue criar sessões.
 
 ### Serviços necessários:
 - Backend (FastAPI): porta 8001
@@ -80,16 +72,16 @@ apt-get install -y chromium
 
 ---
 
-## Tarefas Concluídas (P1)
-- ✅ Validação WhatsApp - endpoints funcionais
-- ✅ Teste RPA Designer - script activo e template disponível
-- ✅ Terabox preparado - API funcional
+## Tarefas Concluídas
+- ✅ WhatsApp configurado por parceiro
+- ✅ Terabox configurado por parceiro  
+- ✅ Templates de mensagem para eventos/vistorias
+- ✅ Documentação de deployment
 
 ## Tarefas Pendentes
 
 ### P2 - Média Prioridade
 - [ ] Limitar "Próximos Eventos" no dashboard a 3 itens
-- [ ] Configurar credenciais do parceiro de teste
 
 ### P3 - Baixa Prioridade
 - [ ] Limpeza de código comentado no server.py
