@@ -377,7 +377,7 @@ const GestaoPlanos = ({ user, onLogout }) => {
               Gestão de Planos
             </h1>
             <p className="text-slate-600 mt-2">
-              Configure e atribua planos para parceiros e motoristas
+              Configure e atribua planos para parceiros, gestores e motoristas
             </p>
           </div>
         </div>
