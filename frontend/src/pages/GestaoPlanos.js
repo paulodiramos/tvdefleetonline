@@ -715,6 +715,7 @@ const GestaoPlanos = ({ user, onLogout }) => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="parceiro">Parceiro</SelectItem>
+                      <SelectItem value="gestao">Gestor</SelectItem>
                       <SelectItem value="motorista">Motorista</SelectItem>
                     </SelectContent>
                   </Select>
