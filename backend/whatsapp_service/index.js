@@ -9,6 +9,7 @@ const qrcode = require('qrcode');
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const app = express();
 app.use(cors());
@@ -17,9 +18,68 @@ app.use(express.json());
 const PORT = process.env.WHATSAPP_SERVICE_PORT || 3001;
 const AUTH_PATH = '/app/backend/whatsapp_service/.wwebjs_auth';
 
+// Chromium paths to check
+const CHROMIUM_PATHS = [
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    process.env.CHROMIUM_PATH
+].filter(Boolean);
+
+// Find Chromium executable
+function findChromium() {
+    for (const chromePath of CHROMIUM_PATHS) {
+        if (fs.existsSync(chromePath)) {
+            console.log(`✅ Chromium found at: ${chromePath}`);
+            return chromePath;
+        }
+    }
+    return null;
+}
+
+// Install Chromium automatically
+async function ensureChromium() {
+    let chromiumPath = findChromium();
+    
+    if (chromiumPath) {
+        return chromiumPath;
+    }
+    
+    console.log('⚠️ Chromium not found. Attempting auto-installation...');
+    
+    try {
+        // Try to install Chromium
+        if (fs.existsSync('/etc/debian_version')) {
+            console.log('📦 Installing Chromium on Debian/Ubuntu...');
+            execSync('apt-get update -qq && apt-get install -y -qq chromium || apt-get install -y -qq chromium-browser', {
+                stdio: 'inherit'
+            });
+        } else if (fs.existsSync('/etc/alpine-release')) {
+            console.log('📦 Installing Chromium on Alpine...');
+            execSync('apk add --no-cache chromium', { stdio: 'inherit' });
+        }
+        
+        chromiumPath = findChromium();
+        if (chromiumPath) {
+            console.log(`✅ Chromium installed successfully at: ${chromiumPath}`);
+            return chromiumPath;
+        }
+    } catch (error) {
+        console.error('❌ Failed to auto-install Chromium:', error.message);
+    }
+    
+    console.error('❌ Chromium is required but not found.');
+    console.error('Please install it manually: apt-get install -y chromium');
+    return null;
+}
+
+// Global Chromium path (set on startup)
+let CHROMIUM_EXECUTABLE = null;
+
 // Clean up stale lock files on startup
 function cleanupLockFiles() {
-    console.log('Cleaning up stale lock files...');
+    console.log('🧹 Cleaning up stale lock files...');
     try {
         if (fs.existsSync(AUTH_PATH)) {
             const sessions = fs.readdirSync(AUTH_PATH);
@@ -43,7 +103,7 @@ function cleanupLockFiles() {
                 }
             });
         }
-        console.log('Lock file cleanup complete');
+        console.log('✅ Lock file cleanup complete');
     } catch (error) {
         console.error('Error cleaning up lock files:', error);
     }
