@@ -245,17 +245,15 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
     ativo: false
   });
   
-  // Configuração de WhatsApp
+  // Configuração de WhatsApp Cloud API
   const [configWhatsApp, setConfigWhatsApp] = useState({
-    telefone: '',
-    nome_exibicao: '',
-    mensagem_boas_vindas: '',
-    mensagem_relatorio: '',
-    ativo: false,
-    enviar_relatorios_semanais: true,
-    enviar_alertas_documentos: true,
-    enviar_alertas_veiculos: true
+    phone_number_id: '',
+    access_token: '',
+    business_account_id: '',
+    ativo: false
   });
+  const [whatsappStatus, setWhatsappStatus] = useState(null);
+  const [testingWhatsApp, setTestingWhatsApp] = useState(false);
   
   // Configuração de Terabox
   const [configTerabox, setConfigTerabox] = useState({
