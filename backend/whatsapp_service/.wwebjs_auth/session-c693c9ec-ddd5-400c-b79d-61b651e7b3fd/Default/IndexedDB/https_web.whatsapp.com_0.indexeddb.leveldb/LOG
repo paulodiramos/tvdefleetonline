@@ -4,3 +4,11 @@
 2026/01/24-00:23:38.925 f75 Level-0 table #1146: started
 2026/01/24-00:23:38.973 f75 Level-0 table #1146: 1264910 bytes OK
 2026/01/24-00:23:38.978 f75 Delete type=0 #1113
+2026/01/24-00:23:44.821 f75 Compacting 1@0 + 0@1 files
+2026/01/24-00:23:44.841 f75 Generated table #1147@0: 26611 keys, 517945 bytes
+2026/01/24-00:23:44.846 f75 Generated table #1148@0: 44 keys, 7555 bytes
+2026/01/24-00:23:44.852 f75 Generated table #1149@0: 596 keys, 51179 bytes
+2026/01/24-00:23:44.857 f75 Generated table #1150@0: 282 keys, 29294 bytes
+2026/01/24-00:23:44.857 f75 Compacted 1@0 + 0@1 files => 605973 bytes
+2026/01/24-00:23:44.861 f75 compacted to: files[ 0 4 37 0 0 0 0 ]
+2026/01/24-00:23:44.862 f75 Delete type=2 #1146
