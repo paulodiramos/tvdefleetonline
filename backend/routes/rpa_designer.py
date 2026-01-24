@@ -408,6 +408,7 @@ async def get_estatisticas_admin(
 # ==================== TEMPLATE DE SCRIPT ====================
 
 @router.get("/template-script")
+@router.get("/template")  # Alias para compatibilidade
 async def get_template_script(
     current_user: Dict = Depends(get_current_user)
 ):
