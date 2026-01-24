@@ -230,7 +230,8 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
     uber: false,
     bolt: false,
     viaverde: false,
-    terabox: false
+    terabox: false,
+    whatsapp: false
   });
   
   // Configuração de Email
