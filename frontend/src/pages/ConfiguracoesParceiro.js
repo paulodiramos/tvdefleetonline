@@ -426,7 +426,7 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-3 w-full max-w-lg">
+          <TabsList className="grid grid-cols-4 w-full max-w-2xl">
             <TabsTrigger value="email" className="flex items-center gap-2">
               <Mail className="w-4 h-4" />
               Email
@@ -434,6 +434,10 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
             <TabsTrigger value="whatsapp" className="flex items-center gap-2">
               <MessageCircle className="w-4 h-4" />
               WhatsApp
+            </TabsTrigger>
+            <TabsTrigger value="terabox" className="flex items-center gap-2">
+              <HardDrive className="w-4 h-4" />
+              Terabox
             </TabsTrigger>
             <TabsTrigger value="credenciais" className="flex items-center gap-2">
               <Lock className="w-4 h-4" />
