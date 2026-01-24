@@ -8,33 +8,37 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 - **Backend**: FastAPI (Python)
 - **Database**: MongoDB
 - **Automação**: Playwright (Python)
-- **WhatsApp**: whatsapp-web.js (Node.js) com Chromium
+- **WhatsApp**: whatsapp-web.js (Node.js) com Chromium (auto-instalação)
 
 ---
 
-## ✅ Alterações desta Sessão (24/01/2026)
+## ✅ Sistema de Auto-Instalação do Chromium (24/01/2026)
 
-### 1. WhatsApp por Parceiro
-- ✅ Cada parceiro configura o seu próprio WhatsApp no perfil (`/configuracoes-parceiro`)
-- ✅ Acesso disponível para parceiros e gestores
-- ✅ Novos templates de mensagem: Vistoria Agendada, Lembrete de Vistoria, Manutenção
-- ✅ Sistema de envio em massa por tipo de evento
+### Como Funciona
+O serviço WhatsApp agora detecta e instala o Chromium automaticamente:
 
-### 2. Terabox por Parceiro
-- ✅ Nova tab "Terabox" nas configurações do parceiro
-- ✅ Configuração de cookie de autenticação com instruções
-- ✅ Opções de sincronização: documentos, relatórios, vistorias
-- ✅ Teste de conexão integrado
+1. **Na Inicialização**: Verifica múltiplos caminhos para o Chromium
+2. **Se Não Encontrado**: Tenta instalar automaticamente via `apt-get`
+3. **Endpoints de Diagnóstico**: `/health` e `/system-info` mostram o estado
 
-### 3. Requisitos de Deployment Documentados
-- ✅ Criado `/app/DEPLOYMENT.md` com instruções completas
-- ✅ O Chromium é necessário para o WhatsApp funcionar
-- ✅ Deve ser instalado no Dockerfile ou script de inicialização
+### Caminhos Verificados
+- `/usr/bin/chromium`
+- `/usr/bin/chromium-browser`
+- `/usr/bin/google-chrome`
+- `/usr/bin/google-chrome-stable`
+- `$CHROMIUM_PATH` (variável de ambiente)
 
-### 4. Templates de Mensagem WhatsApp (Novos)
-- Vistoria Agendada (data, hora, local, veículo)
-- Lembrete de Vistoria (notificação prévia)
-- Manutenção Agendada (tipo, data, local)
+### Endpoints de Diagnóstico
+```bash
+# Health check com estado do Chromium
+curl http://localhost:3001/health
+
+# Informação detalhada do sistema
+curl http://localhost:3001/system-info
+```
+
+### Script de Inicialização
+Também criado `/app/scripts/start-whatsapp.sh` que pode ser usado como alternativa.
 
 ---
 
@@ -48,35 +52,33 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 
 ---
 
+## Templates de Mensagem WhatsApp
+
+### Eventos/Vistorias (Novos)
+- **Vistoria Agendada**: data, hora, local, veículo
+- **Lembrete de Vistoria**: notificação prévia
+- **Manutenção Agendada**: tipo, data, local
+
+### Existentes
+- Relatório Semanal
+- Documento a Expirar
+- Boas-vindas
+- Mensagem Personalizada
+
+---
+
 ## Credenciais de Teste
 - Admin: `admin@tvdefleet.com` / `123456`
 - Parceiro: `geral@zmbusines.com` / `zmpt2024`
 
 ---
 
-## Requisitos de Deployment
-
-### Chromium (para WhatsApp)
-```bash
-# Adicionar ao Dockerfile ou script de inicialização
-apt-get update && apt-get install -y chromium
-```
-
-O Chromium é necessário porque o `whatsapp-web.js` usa o Puppeteer para simular um browser e conectar ao WhatsApp Web. Sem o Chromium instalado, o serviço não consegue criar sessões.
-
-### Serviços necessários:
-- Backend (FastAPI): porta 8001
-- Frontend (React): porta 3000
-- WhatsApp Service (Node.js): porta 3001
-- MongoDB
-
----
-
 ## Tarefas Concluídas
+- ✅ Sistema automático de detecção/instalação do Chromium
+- ✅ Endpoints de diagnóstico (`/health`, `/system-info`)
 - ✅ WhatsApp configurado por parceiro
-- ✅ Terabox configurado por parceiro  
+- ✅ Terabox configurado por parceiro
 - ✅ Templates de mensagem para eventos/vistorias
-- ✅ Documentação de deployment
 
 ## Tarefas Pendentes
 
@@ -85,4 +87,3 @@ O Chromium é necessário porque o `whatsapp-web.js` usa o Puppeteer para simula
 
 ### P3 - Baixa Prioridade
 - [ ] Limpeza de código comentado no server.py
-- [ ] Mover os 14 endpoints restantes para rotas
