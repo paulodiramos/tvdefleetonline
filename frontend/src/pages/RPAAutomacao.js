@@ -448,6 +448,14 @@ const RPAAutomacao = ({ user, onLogout }) => {
                   <TableProperties className="w-4 h-4 mr-2" />
                   Mapeamento
                 </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => navigate('/admin/permissoes-plataformas')}
+                  className="border-amber-200 text-amber-700 hover:bg-amber-50"
+                >
+                  <Users className="w-4 h-4 mr-2" />
+                  Permissões
+                </Button>
                 <Button onClick={() => setShowNovaPlataformaModal(true)}>
                   <Plus className="w-4 h-4 mr-2" />
                   Nova Plataforma
