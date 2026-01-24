@@ -7,12 +7,50 @@ const express = require('express');
 const cors = require('cors');
 const qrcode = require('qrcode');
 const { Client, LocalAuth } = require('whatsapp-web.js');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 const PORT = process.env.WHATSAPP_SERVICE_PORT || 3001;
+const AUTH_PATH = '/app/backend/whatsapp_service/.wwebjs_auth';
+
+// Clean up stale lock files on startup
+function cleanupLockFiles() {
+    console.log('Cleaning up stale lock files...');
+    try {
+        if (fs.existsSync(AUTH_PATH)) {
+            const sessions = fs.readdirSync(AUTH_PATH);
+            sessions.forEach(session => {
+                const sessionPath = path.join(AUTH_PATH, session);
+                if (fs.statSync(sessionPath).isDirectory()) {
+                    const defaultPath = path.join(sessionPath, 'Default');
+                    if (fs.existsSync(defaultPath)) {
+                        ['SingletonLock', 'SingletonCookie', 'SingletonSocket'].forEach(lockFile => {
+                            const lockPath = path.join(defaultPath, lockFile);
+                            if (fs.existsSync(lockPath)) {
+                                try {
+                                    fs.unlinkSync(lockPath);
+                                    console.log(`Removed lock file: ${lockPath}`);
+                                } catch (e) {
+                                    console.error(`Failed to remove ${lockPath}:`, e.message);
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+        }
+        console.log('Lock file cleanup complete');
+    } catch (error) {
+        console.error('Error cleaning up lock files:', error);
+    }
+}
+
+// Run cleanup on startup
+cleanupLockFiles();
 
 // Store multiple WhatsApp clients (one per partner)
 const clients = new Map();
