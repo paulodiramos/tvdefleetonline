@@ -974,22 +974,49 @@ const RPAAutomacao = ({ user, onLogout }) => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Data Início (opcional)</Label>
-                <Input
-                  type="date"
-                  value={execForm.data_inicio}
-                  onChange={(e) => setExecForm(prev => ({ ...prev, data_inicio: e.target.value }))}
-                />
+                <Label>Semana</Label>
+                <Select 
+                  value={String(execForm.semana)} 
+                  onValueChange={(v) => setExecForm(prev => ({ ...prev, semana: parseInt(v) }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Semana" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[...Array(53)].map((_, i) => (
+                      <SelectItem key={i + 1} value={String(i + 1)}>
+                        Semana {i + 1}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
-                <Label>Data Fim (opcional)</Label>
-                <Input
-                  type="date"
-                  value={execForm.data_fim}
-                  onChange={(e) => setExecForm(prev => ({ ...prev, data_fim: e.target.value }))}
-                />
+                <Label>Ano</Label>
+                <Select 
+                  value={String(execForm.ano)} 
+                  onValueChange={(v) => setExecForm(prev => ({ ...prev, ano: parseInt(v) }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Ano" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[2024, 2025, 2026].map((ano) => (
+                      <SelectItem key={ano} value={String(ano)}>{ano}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
+
+            {execForm.semana && execForm.ano && (
+              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-800 font-medium">
+                  📅 Período: {calcularPeriodoSemana(execForm.semana, execForm.ano).inicio} a {calcularPeriodoSemana(execForm.semana, execForm.ano).fim}
+                </p>
+                <p className="text-xs text-blue-600 mt-1">Segunda a Domingo</p>
+              </div>
+            )}
 
             <div className="p-3 bg-slate-50 rounded-lg">
               <p className="text-sm text-slate-600">
