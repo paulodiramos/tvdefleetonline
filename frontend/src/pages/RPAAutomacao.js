@@ -330,7 +330,7 @@ const RPAAutomacao = ({ user, onLogout }) => {
 
       toast.success('Execução iniciada! Acompanhe o progresso no histórico.');
       setShowExecutarModal(false);
-      setExecForm({ tipo_extracao: 'todos', semana: new Date().getWeek(), ano: new Date().getFullYear() });
+      setExecForm({ tipo_extracao: 'todos', semana: getWeekNumber(new Date()), ano: new Date().getFullYear() });
       fetchDados();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Erro ao iniciar execução');
@@ -690,7 +690,11 @@ const RPAAutomacao = ({ user, onLogout }) => {
                               className="flex-1"
                               onClick={() => {
                                 setSelectedPlataforma(plat);
-                                setExecForm({ tipo_extracao: 'todos', data_inicio: '', data_fim: '' });
+                                setExecForm({ 
+                                  tipo_extracao: 'todos', 
+                                  semana: getWeekNumber(new Date()), 
+                                  ano: new Date().getFullYear() 
+                                });
                                 setShowExecutarModal(true);
                               }}
                             >
