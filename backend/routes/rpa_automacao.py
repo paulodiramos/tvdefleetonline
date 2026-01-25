@@ -604,9 +604,31 @@ async def executar_automacao(
             detail=f"Credenciais não configuradas para {plataforma['nome']}. Configure primeiro em Configurações."
         )
     
+    # Calcular período (semana/ano ou datas específicas)
+    now = datetime.now(timezone.utc)
+    semana = dados.semana
+    ano = dados.ano
+    
+    if dados.semana and dados.ano:
+        # Usar semana/ano para calcular segunda a domingo
+        data_inicio, data_fim = calcular_periodo_semana(dados.semana, dados.ano)
+    elif dados.data_inicio and dados.data_fim:
+        # Usar datas específicas
+        data_inicio = dados.data_inicio
+        data_fim = dados.data_fim
+        # Calcular semana a partir da data
+        from datetime import datetime as dt
+        d = dt.strptime(data_inicio, "%Y-%m-%d")
+        semana = d.isocalendar()[1]
+        ano = d.year
+    else:
+        # Default: semana atual (segunda a domingo)
+        semana = now.isocalendar()[1]
+        ano = now.year
+        data_inicio, data_fim = calcular_periodo_semana(semana, ano)
+    
     # Criar registo de execução
     execucao_id = str(uuid.uuid4())
-    now = datetime.now(timezone.utc)
     
     execucao = {
         "id": execucao_id,
@@ -614,8 +636,10 @@ async def executar_automacao(
         "plataforma": dados.plataforma,
         "plataforma_nome": plataforma["nome"],
         "tipo_extracao": dados.tipo_extracao,
-        "data_inicio": dados.data_inicio,
-        "data_fim": dados.data_fim,
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "semana": semana,
+        "ano": ano,
         "status": "pendente",
         "progresso": 0,
         "logs": [],
