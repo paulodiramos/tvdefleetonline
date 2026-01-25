@@ -14322,44 +14322,7 @@ async def download_ficha_vistoria_template(current_user: Dict = Depends(get_curr
     )
 
 
-@api_router.get("/configuracoes/categorias-plataformas")
-async def get_categorias_plataformas(current_user: Dict = Depends(get_current_user)):
-    """Get platform categories configuration"""
-    try:
-        # Default categories
-        default_uber = [
-            "UberX", "Share", "Electric", "Black", "Comfort",
-            "XL", "XXL", "Pet", "Package"
-        ]
-        
-        default_bolt = [
-            "Economy", "Comfort", "Executive", "XL", "Green",
-            "XXL", "Motorista Privado", "Pet"
-        ]
-        
-        # Fetch custom categories
-        uber_config = await db.configuracoes_sistema.find_one(
-            {"tipo": "categorias_uber"},
-            {"_id": 0}
-        )
-        
-        bolt_config = await db.configuracoes_sistema.find_one(
-            {"tipo": "categorias_bolt"},
-            {"_id": 0}
-        )
-        
-        return {
-            "uber": uber_config.get("categorias") if uber_config else default_uber,
-            "bolt": bolt_config.get("categorias") if bolt_config else default_bolt
-        }
-        
-    except Exception as e:
-        logger.error(f"Error fetching platform categories: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-        raise HTTPException(status_code=500, detail=str(e))
-
+# NOTE: Endpoints /configuracoes/categorias-plataformas moved to routes/configuracoes.py
 
 # ============================================================================
 # GOOGLE DRIVE STORAGE INTEGRATION
