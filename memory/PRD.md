@@ -10,6 +10,36 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 
 ---
 
+## ✅ Sistema de Agendamento RPA (Implementado: 25/01/2025)
+
+### Descrição
+Sistema que permite agendar execuções automáticas de automações RPA (Bolt, Uber, Via Verde, etc).
+
+### Componentes
+- **Serviço Scheduler**: `/app/backend/services/rpa_scheduler.py`
+  - Loop de verificação a cada 5 minutos
+  - Verifica `rpa_agendamentos` com `proxima_execucao` no passado
+  - Executa automações em background
+  - Atualiza `proxima_execucao` após cada execução
+
+### Endpoints
+- `POST /api/rpa-auto/agendamentos` - Criar novo agendamento
+- `GET /api/rpa-auto/agendamentos` - Listar agendamentos
+- `PUT /api/rpa-auto/agendamentos/{id}` - Atualizar agendamento
+- `DELETE /api/rpa-auto/agendamentos/{id}` - Eliminar agendamento
+- `POST /api/rpa-auto/agendamentos/executar-pendentes` - Forçar execução (admin)
+
+### Frequências Suportadas
+- **Diário**: Executa todos os dias à hora configurada
+- **Semanal**: Executa no dia da semana configurado (0=Segunda, 6=Domingo)
+- **Mensal**: Executa no dia 1 de cada mês
+
+### Ficheiros Relevantes
+- `/app/backend/services/rpa_scheduler.py`
+- `/app/backend/routes/rpa_automacao.py`
+
+---
+
 ## ✅ Sistema de Permissões de Funcionalidades (Implementado: 25/01/2025)
 
 ### Descrição
