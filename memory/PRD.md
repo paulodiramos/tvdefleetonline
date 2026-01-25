@@ -117,7 +117,7 @@ Cada parceiro configura o seu próprio email:
 
 ### P1 - Alta Prioridade
 - [x] ~~Refatoração do `server.py`~~ - Removidas 1434 linhas, 38 endpoints duplicados (25/01/2025)
-- [ ] Implementar lógica de agendamento de RPA no backend (apscheduler)
+- [x] ~~Implementar lógica de agendamento de RPA~~ - Scheduler automático implementado (25/01/2025)
 
 ### P2 - Média Prioridade
 - [ ] Testar parser CSV com ficheiros reais das plataformas
