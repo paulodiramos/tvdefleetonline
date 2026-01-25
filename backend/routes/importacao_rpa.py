@@ -121,13 +121,18 @@ async def upload_csv(
         resumo["id"] = str(uuid.uuid4())
         
         # Verificar se já existe resumo para este motorista/semana/plataforma
-        existing = await db.resumos_semanais_rpa.find_one({
+        # Usar nome + email para identificação única (Uber não tem email)
+        query = {
             "parceiro_id": parceiro_id,
-            "email": motorista_data["email"],
+            "motorista": motorista_data["nome"],  # Usar nome como chave principal
             "plataforma": plataforma,
             "semana": semana,
             "ano": ano
-        })
+        }
+        if motorista_data["email"]:
+            query["email"] = motorista_data["email"]
+        
+        existing = await db.resumos_semanais_rpa.find_one(query)
         
         if existing:
             await db.resumos_semanais_rpa.update_one(
