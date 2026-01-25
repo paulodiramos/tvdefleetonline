@@ -768,10 +768,34 @@ async def get_execucao(
         raise HTTPException(status_code=404, detail="Execução não encontrada")
     
     # Verificar permissões
-    if current_user["role"] == "parceiro" and execucao["parceiro_id"] != current_user["id"]:
+    if current_user["role"] == "parceiro" and execucao.get("parceiro_id") != current_user["id"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
-    return execucao
+    # Converter para dicionário seguro (sem ObjectId)
+    result = {
+        "id": execucao.get("id"),
+        "parceiro_id": execucao.get("parceiro_id"),
+        "plataforma": execucao.get("plataforma"),
+        "plataforma_nome": execucao.get("plataforma_nome"),
+        "tipo_extracao": execucao.get("tipo_extracao"),
+        "data_inicio": execucao.get("data_inicio"),
+        "data_fim": execucao.get("data_fim"),
+        "semana": execucao.get("semana"),
+        "ano": execucao.get("ano"),
+        "status": execucao.get("status"),
+        "progresso": execucao.get("progresso", 0),
+        "total_registos": execucao.get("total_registos", 0),
+        "logs": execucao.get("logs", []),
+        "screenshots": execucao.get("screenshots", []),
+        "dados_extraidos": execucao.get("dados_extraidos", []),
+        "erros": execucao.get("erros", []),
+        "iniciado_por": execucao.get("iniciado_por"),
+        "created_at": execucao.get("created_at"),
+        "iniciado_em": execucao.get("iniciado_em"),
+        "terminado_em": execucao.get("terminado_em")
+    }
+    
+    return result
 
 
 @router.post("/execucoes/{execucao_id}/cancelar")
