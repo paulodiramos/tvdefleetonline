@@ -570,7 +570,7 @@ async def executar_automacao(
         "parceiro_id": parceiro_id,
         "plataforma": dados.plataforma,
         "ativo": True
-    })
+    }, {"_id": 0})  # Excluir _id para evitar erro de serialização
     
     if not credencial:
         raise HTTPException(
