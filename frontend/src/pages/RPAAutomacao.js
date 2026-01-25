@@ -322,15 +322,15 @@ const RPAAutomacao = ({ user, onLogout }) => {
       const response = await axios.post(`${API}/rpa-auto/executar`, {
         plataforma: selectedPlataforma.id,
         tipo_extracao: execForm.tipo_extracao,
-        data_inicio: execForm.data_inicio || null,
-        data_fim: execForm.data_fim || null
+        semana: parseInt(execForm.semana),
+        ano: parseInt(execForm.ano)
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
       toast.success('Execução iniciada! Acompanhe o progresso no histórico.');
       setShowExecutarModal(false);
-      setExecForm({ tipo_extracao: 'todos', data_inicio: '', data_fim: '' });
+      setExecForm({ tipo_extracao: 'todos', semana: new Date().getWeek(), ano: new Date().getFullYear() });
       fetchDados();
     } catch (error) {
       toast.error(error.response?.data?.detail || 'Erro ao iniciar execução');
