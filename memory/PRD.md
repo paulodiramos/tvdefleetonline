@@ -116,13 +116,13 @@ Cada parceiro configura o seu próprio email:
 ## Tarefas Pendentes
 
 ### P1 - Alta Prioridade
-- [x] ~~Refatoração do `server.py`~~ - Removidos 802 linhas de endpoints duplicados (25/01/2025)
+- [x] ~~Refatoração do `server.py`~~ - Removidas 1434 linhas, 38 endpoints duplicados (25/01/2025)
 - [ ] Implementar lógica de agendamento de RPA no backend (apscheduler)
 
 ### P2 - Média Prioridade
 - [ ] Testar parser CSV com ficheiros reais das plataformas
 - [ ] Limitar "Próximos Eventos" no dashboard a 3 itens
-- [ ] Continuar refatoração do server.py (171 endpoints restantes, ~16900 linhas)
+- [ ] Continuar refatoração do server.py (155 endpoints restantes, ~16300 linhas)
 
 ---
 
