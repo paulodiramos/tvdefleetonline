@@ -102,40 +102,9 @@ const RPAAutomacao = ({ user, onLogout }) => {
   const [showNovaPlataformaModal, setShowNovaPlataformaModal] = useState(false);
   const [showDeletePlataformaModal, setShowDeletePlataformaModal] = useState(false);
   
-  // Form states
-  const [selectedPlataforma, setSelectedPlataforma] = useState(null);
-  const [selectedExecucao, setSelectedExecucao] = useState(null);
-  const [credForm, setCredForm] = useState({ email: '', password: '' });
-  const [execForm, setExecForm] = useState({ 
-    tipo_extracao: 'todos', 
-    semana: new Date().getWeek(), 
-    ano: new Date().getFullYear() 
-  });
-  const [agendForm, setAgendForm] = useState({ 
-    frequencia: 'semanal', 
-    dia_semana: 1, 
-    hora: '06:00',
-    tipo_extracao: 'todos',
-    ativo: true 
-  });
-  const [novaPlataformaForm, setNovaPlataformaForm] = useState({
-    nome: '',
-    icone: '🔧',
-    cor: '#6B7280',
-    descricao: '',
-    url_login: '',
-    tipos_extracao: ['todos'],
-    campos_credenciais: ['email', 'password'],
-    requer_2fa: false,
-    notas: ''
-  });
-  const [showPassword, setShowPassword] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [executing, setExecuting] = useState(false);
-
   // Helper para obter semana do ano
-  Date.prototype.getWeek = function() {
-    const d = new Date(Date.UTC(this.getFullYear(), this.getMonth(), this.getDate()));
+  const getWeekNumber = (date) => {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
     const dayNum = d.getUTCDay() || 7;
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
@@ -159,6 +128,37 @@ const RPAAutomacao = ({ user, onLogout }) => {
       fim: fimSemana.toLocaleDateString('pt-PT')
     };
   };
+
+  // Form states
+  const [selectedPlataforma, setSelectedPlataforma] = useState(null);
+  const [selectedExecucao, setSelectedExecucao] = useState(null);
+  const [credForm, setCredForm] = useState({ email: '', password: '' });
+  const [execForm, setExecForm] = useState({ 
+    tipo_extracao: 'todos', 
+    semana: getWeekNumber(new Date()), 
+    ano: new Date().getFullYear() 
+  });
+  const [agendForm, setAgendForm] = useState({ 
+    frequencia: 'semanal', 
+    dia_semana: 1, 
+    hora: '06:00',
+    tipo_extracao: 'todos',
+    ativo: true 
+  });
+  const [novaPlataformaForm, setNovaPlataformaForm] = useState({
+    nome: '',
+    icone: '🔧',
+    cor: '#6B7280',
+    descricao: '',
+    url_login: '',
+    tipos_extracao: ['todos'],
+    campos_credenciais: ['email', 'password'],
+    requer_2fa: false,
+    notas: ''
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [executing, setExecuting] = useState(false);
 
   useEffect(() => {
     fetchDados();
