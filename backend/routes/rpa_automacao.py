@@ -47,6 +47,32 @@ class ExecucaoCreate(BaseModel):
     tipo_extracao: str = "todos"  # ganhos, portagens, combustivel, eletrico, todos
     data_inicio: Optional[str] = None
     data_fim: Optional[str] = None
+    semana: Optional[int] = None  # Número da semana (1-53)
+    ano: Optional[int] = None     # Ano
+
+
+def calcular_periodo_semana(semana: int, ano: int) -> tuple:
+    """Calcular data início (segunda) e fim (domingo) de uma semana"""
+    from datetime import datetime, timedelta
+    
+    # Primeiro dia do ano
+    jan1 = datetime(ano, 1, 1)
+    
+    # Encontrar a primeira segunda-feira do ano
+    dias_ate_segunda = (7 - jan1.weekday()) % 7
+    if jan1.weekday() == 0:  # Se 1 de Janeiro é segunda
+        dias_ate_segunda = 0
+    primeira_segunda = jan1 + timedelta(days=dias_ate_segunda)
+    
+    # Se a semana 1 começou no ano anterior, ajustar
+    if primeira_segunda.day > 4:  # Se a primeira segunda é depois do dia 4
+        primeira_segunda = primeira_segunda - timedelta(days=7)
+    
+    # Calcular início da semana solicitada
+    inicio_semana = primeira_segunda + timedelta(weeks=semana - 1)
+    fim_semana = inicio_semana + timedelta(days=6)
+    
+    return inicio_semana.strftime("%Y-%m-%d"), fim_semana.strftime("%Y-%m-%d")
 
 
 class AgendamentoCreate(BaseModel):
