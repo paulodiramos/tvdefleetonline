@@ -976,11 +976,11 @@ const RPAAutomacao = ({ user, onLogout }) => {
               <div className="space-y-2">
                 <Label>Semana</Label>
                 <Select 
-                  value={String(execForm.semana)} 
+                  value={execForm.semana ? String(execForm.semana) : String(getWeekNumber(new Date()))} 
                   onValueChange={(v) => setExecForm(prev => ({ ...prev, semana: parseInt(v) }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Semana" />
+                    <SelectValue>Semana {execForm.semana || getWeekNumber(new Date())}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {[...Array(53)].map((_, i) => (
@@ -994,11 +994,11 @@ const RPAAutomacao = ({ user, onLogout }) => {
               <div className="space-y-2">
                 <Label>Ano</Label>
                 <Select 
-                  value={String(execForm.ano)} 
+                  value={execForm.ano ? String(execForm.ano) : String(new Date().getFullYear())} 
                   onValueChange={(v) => setExecForm(prev => ({ ...prev, ano: parseInt(v) }))}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Ano" />
+                    <SelectValue>{execForm.ano || new Date().getFullYear()}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {[2024, 2025, 2026].map((ano) => (
@@ -1009,14 +1009,12 @@ const RPAAutomacao = ({ user, onLogout }) => {
               </div>
             </div>
 
-            {execForm.semana && execForm.ano && (
-              <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-sm text-blue-800 font-medium">
-                  📅 Período: {calcularPeriodoSemana(execForm.semana, execForm.ano).inicio} a {calcularPeriodoSemana(execForm.semana, execForm.ano).fim}
-                </p>
-                <p className="text-xs text-blue-600 mt-1">Segunda a Domingo</p>
-              </div>
-            )}
+            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-800 font-medium">
+                📅 Período: {calcularPeriodoSemana(execForm.semana || getWeekNumber(new Date()), execForm.ano || new Date().getFullYear()).inicio} a {calcularPeriodoSemana(execForm.semana || getWeekNumber(new Date()), execForm.ano || new Date().getFullYear()).fim}
+              </p>
+              <p className="text-xs text-blue-600 mt-1">Segunda a Domingo</p>
+            </div>
 
             <div className="p-3 bg-slate-50 rounded-lg">
               <p className="text-sm text-slate-600">
