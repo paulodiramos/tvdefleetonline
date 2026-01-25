@@ -19,56 +19,180 @@ class CSVParser:
     """Parser de CSV para diferentes plataformas"""
     
     @staticmethod
+    def _limpar_valor(valor: str) -> float:
+        """Limpar e converter valor monetário para float"""
+        if not valor or valor == "":
+            return 0.0
+        # Remover símbolos de moeda, espaços e converter vírgula para ponto
+        valor_limpo = str(valor).replace("€", "").replace(" ", "").replace(",", ".").strip()
+        try:
+            return float(valor_limpo) if valor_limpo else 0.0
+        except:
+            return 0.0
+    
+    @staticmethod
     def parse_bolt(content: str) -> List[Dict]:
-        """Parse CSV da Bolt Fleet"""
+        """Parse CSV da Bolt Fleet - formato real português"""
         results = []
+        # Remover BOM se existir
+        if content.startswith('\ufeff'):
+            content = content[1:]
+        
         reader = csv.DictReader(StringIO(content), delimiter=',')
         
         for row in reader:
             try:
-                # Adaptar campos da Bolt
+                # Formato real da Bolt Portugal
+                motorista = row.get("Motorista", row.get("Driver name", ""))
+                email = row.get("Email", row.get("Driver email", ""))
+                telefone = row.get("Telemóvel", row.get("Phone", ""))
+                
+                # Ganhos - formato "Ganhos brutos (total)|€"
+                ganhos_bruto = CSVParser._limpar_valor(
+                    row.get("Ganhos brutos (total)|€", 
+                    row.get("Ganhos brutos (total)", 
+                    row.get("Gross earnings", "0")))
+                )
+                
+                comissao = CSVParser._limpar_valor(
+                    row.get("Comissões|€",
+                    row.get("Comissões",
+                    row.get("Commission", "0")))
+                )
+                
+                ganhos_liquido = CSVParser._limpar_valor(
+                    row.get("Ganhos líquidos|€",
+                    row.get("Ganhos líquidos",
+                    row.get("Net earnings", "0")))
+                )
+                
+                gorjetas = CSVParser._limpar_valor(
+                    row.get("Gorjetas dos passageiros|€",
+                    row.get("Gorjetas",
+                    row.get("Tips", "0")))
+                )
+                
+                bonus = CSVParser._limpar_valor(
+                    row.get("Ganhos da campanha|€",
+                    row.get("Bónus",
+                    row.get("Bonus", "0")))
+                )
+                
+                portagens = CSVParser._limpar_valor(
+                    row.get("Portagens|€",
+                    row.get("Portagens", "0"))
+                )
+                
+                total_taxas = CSVParser._limpar_valor(
+                    row.get("Total de taxas|€",
+                    row.get("Total de taxas", "0"))
+                )
+                
                 record = {
                     "plataforma": "bolt",
-                    "motorista_nome": row.get("Driver name", row.get("Nome do motorista", "")),
-                    "motorista_email": row.get("Driver email", row.get("Email", "")),
-                    "data": row.get("Date", row.get("Data", "")),
-                    "corridas": int(row.get("Rides", row.get("Corridas", 0)) or 0),
-                    "valor_bruto": float(row.get("Gross earnings", row.get("Ganhos brutos", "0").replace(",", ".").replace("€", "").strip()) or 0),
-                    "comissao": float(row.get("Commission", row.get("Comissão", "0").replace(",", ".").replace("€", "").strip()) or 0),
-                    "valor_liquido": float(row.get("Net earnings", row.get("Ganhos líquidos", "0").replace(",", ".").replace("€", "").strip()) or 0),
-                    "bonus": float(row.get("Bonus", row.get("Bónus", "0").replace(",", ".").replace("€", "").strip()) or 0),
-                    "gorjetas": float(row.get("Tips", row.get("Gorjetas", "0").replace(",", ".").replace("€", "").strip()) or 0),
+                    "motorista_nome": motorista,
+                    "motorista_email": email,
+                    "motorista_telefone": telefone,
+                    "valor_bruto": ganhos_bruto,
+                    "comissao": comissao,
+                    "valor_liquido": ganhos_liquido,
+                    "gorjetas": gorjetas,
+                    "bonus": bonus,
+                    "portagens": portagens,
+                    "total_taxas": total_taxas,
+                    "pagamento_previsto": CSVParser._limpar_valor(row.get("Pagamento previsto|€", "0")),
                 }
-                results.append(record)
+                
+                # Só adicionar se tiver dados válidos
+                if motorista and (ganhos_bruto > 0 or ganhos_liquido > 0):
+                    results.append(record)
+                    
             except Exception as e:
-                logger.warning(f"Erro ao processar linha Bolt: {e}")
+                logger.warning(f"Erro ao processar linha Bolt: {e} - Row: {row}")
                 continue
         
         return results
     
     @staticmethod
     def parse_uber(content: str) -> List[Dict]:
-        """Parse CSV da Uber"""
+        """Parse CSV da Uber - formato real português"""
         results = []
+        # Remover BOM se existir
+        if content.startswith('\ufeff'):
+            content = content[1:]
+        
         reader = csv.DictReader(StringIO(content), delimiter=',')
         
         for row in reader:
             try:
+                # Formato real da Uber Portugal
+                uuid = row.get("UUID do motorista", "")
+                nome = row.get("Nome próprio do motorista", row.get("First name", ""))
+                apelido = row.get("Apelido do motorista", row.get("Last name", ""))
+                nome_completo = f"{nome} {apelido}".strip()
+                
+                # Valor total pago
+                pago_total = CSVParser._limpar_valor(
+                    row.get("Pago a si", 
+                    row.get("Paid to you", "0"))
+                )
+                
+                # Rendimentos
+                rendimentos = CSVParser._limpar_valor(
+                    row.get("Pago a si : Os seus rendimentos",
+                    row.get("Your earnings", "0"))
+                )
+                
+                # Tarifa bruta
+                tarifa = CSVParser._limpar_valor(
+                    row.get("Pago a si:Os seus rendimentos:Tarifa:Tarifa",
+                    row.get("Pago a si : Os seus rendimentos : Tarifa",
+                    row.get("Fare", "0")))
+                )
+                
+                # Taxa de serviço (comissão Uber)
+                taxa_servico = CSVParser._limpar_valor(
+                    row.get("Pago a si:Os seus rendimentos:Taxa de serviço",
+                    row.get("Service fee", "0"))
+                )
+                
+                # Gorjetas
+                gorjetas = CSVParser._limpar_valor(
+                    row.get("Pago a si:Os seus rendimentos:Gratificação",
+                    row.get("Tips", "0"))
+                )
+                
+                # Portagens
+                portagens = CSVParser._limpar_valor(
+                    row.get("Pago a si:Saldo da viagem:Reembolsos:Portagem",
+                    row.get("Tolls", "0"))
+                )
+                
+                # Transferência bancária (pode ser negativo se foi pago ao parceiro)
+                transferencia = CSVParser._limpar_valor(
+                    row.get("Pago a si:Saldo da viagem:Pagamentos:Transferido para uma conta bancária", "0")
+                )
+                
                 record = {
                     "plataforma": "uber",
-                    "motorista_nome": row.get("Driver", row.get("Motorista", "")),
-                    "motorista_email": row.get("Email", ""),
-                    "data": row.get("Date", row.get("Data", "")),
-                    "corridas": int(row.get("Trips", row.get("Viagens", 0)) or 0),
-                    "valor_bruto": float(row.get("Gross Fares", row.get("Tarifas brutas", "0").replace(",", ".").replace("€", "").strip()) or 0),
-                    "comissao": float(row.get("Service Fee", row.get("Taxa de serviço", "0").replace(",", ".").replace("€", "").strip()) or 0),
-                    "valor_liquido": float(row.get("Net Payout", row.get("Pagamento líquido", "0").replace(",", ".").replace("€", "").strip()) or 0),
-                    "bonus": float(row.get("Promotions", row.get("Promoções", "0").replace(",", ".").replace("€", "").strip()) or 0),
-                    "gorjetas": float(row.get("Tips", row.get("Gorjetas", "0").replace(",", ".").replace("€", "").strip()) or 0),
+                    "motorista_uuid": uuid,
+                    "motorista_nome": nome_completo,
+                    "motorista_email": "",  # Uber não inclui email no CSV
+                    "valor_bruto": tarifa if tarifa > 0 else abs(pago_total),
+                    "comissao": abs(taxa_servico),
+                    "valor_liquido": pago_total if pago_total > 0 else rendimentos,
+                    "gorjetas": gorjetas,
+                    "portagens": portagens,
+                    "transferencia_bancaria": transferencia,
+                    "rendimentos_totais": rendimentos,
                 }
-                results.append(record)
+                
+                # Só adicionar se tiver dados válidos (excluir linhas de transferência pura)
+                if nome_completo and pago_total != 0:
+                    results.append(record)
+                    
             except Exception as e:
-                logger.warning(f"Erro ao processar linha Uber: {e}")
+                logger.warning(f"Erro ao processar linha Uber: {e} - Row: {row}")
                 continue
         
         return results
