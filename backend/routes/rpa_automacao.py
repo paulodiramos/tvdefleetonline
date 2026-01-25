@@ -821,6 +821,13 @@ async def get_execucao(
     if current_user["role"] == "parceiro" and execucao.get("parceiro_id") != current_user["id"]:
         raise HTTPException(status_code=403, detail="Não autorizado")
     
+    # Limpar dados_extraidos de ObjectIds
+    dados_extraidos = []
+    for dado in execucao.get("dados_extraidos", []):
+        if isinstance(dado, dict):
+            dado_limpo = {k: v for k, v in dado.items() if k != "_id"}
+            dados_extraidos.append(dado_limpo)
+    
     # Converter para dicionário seguro (sem ObjectId)
     result = {
         "id": execucao.get("id"),
@@ -837,7 +844,7 @@ async def get_execucao(
         "total_registos": execucao.get("total_registos", 0),
         "logs": execucao.get("logs", []),
         "screenshots": execucao.get("screenshots", []),
-        "dados_extraidos": execucao.get("dados_extraidos", []),
+        "dados_extraidos": dados_extraidos,
         "erros": execucao.get("erros", []),
         "iniciado_por": execucao.get("iniciado_por"),
         "created_at": execucao.get("created_at"),
