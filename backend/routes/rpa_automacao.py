@@ -927,6 +927,23 @@ async def eliminar_agendamento(
     return {"message": "Agendamento eliminado"}
 
 
+@router.post("/agendamentos/executar-pendentes")
+async def executar_agendamentos_pendentes(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Executar manualmente todos os agendamentos pendentes (admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    try:
+        from services.rpa_scheduler import verificar_e_executar_agendamentos
+        await verificar_e_executar_agendamentos()
+        return {"message": "Verificação de agendamentos executada"}
+    except Exception as e:
+        logger.error(f"Erro ao executar agendamentos: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ==================== ENDPOINTS DADOS EXTRAÍDOS ====================
 
 @router.get("/dados/{plataforma}")
