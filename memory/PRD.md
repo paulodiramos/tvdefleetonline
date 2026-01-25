@@ -1,7 +1,7 @@
 # TVDEFleet - Product Requirements Document
 
 ## Visão Geral
-Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de gestão de motoristas, veículos, financeiro e automações RPA.
+Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de gestão de motoristas, veículos, financeiro, automações RPA e sistema de permissões granular.
 
 ## Arquitetura
 - **Frontend**: React (porta 3000)
@@ -10,16 +10,58 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 
 ---
 
+## ✅ Sistema de Permissões de Funcionalidades (Implementado: 25/01/2025)
+
+### Descrição
+Sistema que permite ao admin controlar granularmente quais funcionalidades cada parceiro pode aceder.
+
+### Funcionalidades Disponíveis (15 total)
+- **comunicacao**: whatsapp, email
+- **veiculos**: vistorias, veiculos, agenda_veiculos, anuncios_venda
+- **documentos**: contratos, documentos
+- **automacao**: rpa_automacao, importacao_csv
+- **financeiro**: relatorios, financeiro
+- **gestao**: motoristas
+- **sistema**: alertas
+- **integracao**: terabox
+
+### Endpoints Backend
+- `GET /api/permissoes/minhas` - Retorna funcionalidades do utilizador atual
+- `GET /api/permissoes/funcionalidades` - Lista todas as funcionalidades disponíveis
+- `GET /api/permissoes/parceiro/{id}` - Permissões de um parceiro específico
+- `PUT /api/permissoes/parceiro/{id}` - Atualizar permissões (admin only)
+- `GET /api/permissoes/admin/todos-parceiros` - Listar todos os parceiros com permissões
+
+### Frontend
+- **Layout.js**: Carrega permissões via `GET /api/permissoes/minhas` no `useEffect`
+- **itemPermitido()**: Função que verifica se um item de menu deve ser mostrado
+- **filtrarSubmenu()**: Filtra submenus baseado nas permissões
+
+### Ficheiros Relevantes
+- `/app/backend/routes/permissoes_funcionalidades.py`
+- `/app/frontend/src/components/Layout.js`
+- `/app/frontend/src/contexts/PermissionsContext.js`
+
+---
+
+## ✅ Sistema de Permissões de Plataformas RPA (Implementado)
+
+### Descrição
+Sistema que permite ao admin controlar quais plataformas de RPA cada parceiro pode utilizar.
+
+### Endpoints
+- `GET /api/rpa-auto/plataformas` - Lista plataformas (filtradas por permissões)
+- `GET /api/rpa-auto/parceiro-plataformas/{id}` - Permissões de plataformas de um parceiro
+- `PUT /api/rpa-auto/parceiro-plataformas/{id}` - Atualizar permissões (admin only)
+
+---
+
 ## ✅ WhatsApp Business Cloud API (Atualizado: 24/01/2025)
 
 ### Nova Arquitetura (Sem Railway!)
-A integração WhatsApp foi **completamente refatorada** para usar a **API oficial da Meta**:
+A integração WhatsApp usa a **API oficial da Meta**:
 
 ```
-Antes (instável):
-TVDEFleet → Railway → whatsapp-web.js → WhatsApp Web → Mensagem ❌
-
-Agora (oficial e estável):
 TVDEFleet → Meta Graph API → Mensagem ✅
 ```
 
@@ -27,9 +69,7 @@ TVDEFleet → Meta Graph API → Mensagem ✅
 - ✅ **100% oficial** - API da Meta
 - ✅ **Sem Railway** - Integração direta
 - ✅ **Sem QR Code** - Não precisa escanear
-- ✅ **Sem telemóvel ligado** - Funciona 24/7
 - ✅ **1000 msgs grátis/mês** por número
-- ✅ **Cada parceiro configura o seu próprio número**
 
 ### Configuração por Parceiro
 Cada parceiro acede a `Configurações → WhatsApp` e:
@@ -39,8 +79,8 @@ Cada parceiro acede a `Configurações → WhatsApp` e:
 4. Cola nas configurações e testa
 
 ### Ficheiros Relevantes
-- `/app/backend/routes/whatsapp_cloud.py` - Nova API WhatsApp Cloud
-- `/app/frontend/src/pages/ConfiguracoesParceiro.js` - UI de configuração
+- `/app/backend/routes/whatsapp_cloud.py`
+- `/app/frontend/src/pages/ConfiguracoesParceiro.js`
 
 ---
 
@@ -53,52 +93,44 @@ Cada parceiro configura o seu próprio email:
 
 ---
 
-## ✅ Funcionalidades Completas
+## ✅ Sistema RPA
 
-### Sistema RPA
 - Plataformas pré-definidas: Uber, Bolt, Via Verde, Prio
 - Criar plataformas personalizadas (admin)
-- Páginas interligadas: RPA Automação ↔ RPA Designer ↔ Mapeamento
-
-### Integrações
-- ✅ WhatsApp Cloud API (oficial Meta)
-- ✅ Email SMTP por parceiro
-- ✅ Terabox por parceiro
-
-### Sistema de Planos
-- Gestão unificada para parceiro, gestor e motorista
+- Execução de scripts Playwright
+- Importação de CSV (manual ou agendada)
+- Páginas: RPA Automação, RPA Designer, Importação Dados
 
 ---
 
 ## Credenciais de Teste
 - Admin: `admin@tvdefleet.com` / `123456`
+- Parceiro Zeny: `geral@zmbusines.com` / `zeny123`
 
 ---
 
-## Tarefas Concluídas (24/01/2025)
-- ✅ **Migração WhatsApp para Cloud API** - Removida dependência do Railway
-- ✅ Nova página de Integrações simplificada
-- ✅ Configuração WhatsApp na página do parceiro
-- ✅ Sistema de plataformas personalizadas no RPA
-- ✅ Sistema de planos unificado
-- ✅ Remoção de páginas obsoletas
+## Tarefas Concluídas (25/01/2025)
+- ✅ **Sistema de Permissões de Funcionalidades** - Backend + Frontend + Testes
+- ✅ **Limpeza de código obsoleto** - Removidos whatsapp-vps-deploy/ e whatsapp.py
 
 ## Tarefas Pendentes
 
 ### P1 - Alta Prioridade
-- [ ] Finalizar refatoração do `server.py` (remover código comentado)
-- [ ] Consolidação de modelos Pydantic
+- [ ] Finalizar refatoração do `server.py` (mover endpoints restantes)
+- [ ] Implementar lógica de agendamento de RPA no backend (apscheduler)
 
 ### P2 - Média Prioridade
+- [ ] Testar parser CSV com ficheiros reais das plataformas
 - [ ] Limitar "Próximos Eventos" no dashboard a 3 itens
-- [ ] Testes end-to-end completos
 
 ---
 
-## Ficheiros Removidos/Obsoletos
+## Ficheiros Removidos (25/01/2025)
+- `/app/whatsapp-vps-deploy/` - Directório obsoleto do Railway
 - `/app/backend/routes/whatsapp.py` - Substituído por whatsapp_cloud.py
-- `/app/whatsapp-vps-deploy/` - Já não é necessário (pode eliminar do Railway)
+
+---
 
 ## Notas Importantes
-- **Railway pode ser desativado** - A solução WhatsApp já não depende dele
-- Cada parceiro deve criar conta no Meta Developers para usar WhatsApp
+- **Railway foi desativado** - WhatsApp usa API Cloud oficial
+- **Sistema de permissões activo** - Menu filtrado por funcionalidades
