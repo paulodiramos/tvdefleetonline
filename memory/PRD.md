@@ -151,7 +151,7 @@ Cada parceiro configura o seu próprio email:
 
 ### P2 - Média Prioridade
 - [x] ~~Limitar "Próximos Eventos" no dashboard~~ - Alertas limitados a 5 itens (25/01/2025)
-- [ ] Testar parser CSV com ficheiros reais das plataformas
+- [x] ~~Testar parser CSV com ficheiros reais~~ - Bolt e Uber testados com sucesso (25/01/2025)
 - [ ] Continuar refatoração do server.py (~151 endpoints restantes, ~16100 linhas)
 
 ---
