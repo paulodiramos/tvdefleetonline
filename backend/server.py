@@ -15034,6 +15034,14 @@ async def startup_event():
         logger.info(f"Carregados {len(credenciais)} agendamentos de sincronização")
     except Exception as e:
         logger.error(f"Erro ao carregar agendamentos: {e}")
+    
+    # Iniciar scheduler de agendamentos RPA
+    try:
+        from services.rpa_scheduler import verificar_agendamentos_periodicamente
+        asyncio.create_task(verificar_agendamentos_periodicamente(intervalo_minutos=5))
+        logger.info("🤖 Scheduler de agendamentos RPA iniciado (verificação a cada 5 minutos)")
+    except Exception as e:
+        logger.error(f"Erro ao iniciar scheduler RPA: {e}")
 
 # ==================================================
 # SINCRONIZAÇÃO - MOVIDO PARA routes/sincronizacao.py
