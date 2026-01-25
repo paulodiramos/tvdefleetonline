@@ -725,7 +725,7 @@ const Dashboard = ({ user, onLogout }) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {alertas.map((alerta) => (
+                {alertas.slice(0, 5).map((alerta) => (
                   <div key={alerta.id} className="bg-white p-4 rounded-lg border border-red-200 flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
@@ -760,6 +760,11 @@ const Dashboard = ({ user, onLogout }) => {
                     </div>
                   </div>
                 ))}
+                {alertas.length > 5 && (
+                  <p className="text-center text-sm text-slate-500 pt-2">
+                    ... e mais {alertas.length - 5} alertas
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
