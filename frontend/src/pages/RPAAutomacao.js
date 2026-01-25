@@ -106,7 +106,11 @@ const RPAAutomacao = ({ user, onLogout }) => {
   const [selectedPlataforma, setSelectedPlataforma] = useState(null);
   const [selectedExecucao, setSelectedExecucao] = useState(null);
   const [credForm, setCredForm] = useState({ email: '', password: '' });
-  const [execForm, setExecForm] = useState({ tipo_extracao: 'todos', data_inicio: '', data_fim: '' });
+  const [execForm, setExecForm] = useState({ 
+    tipo_extracao: 'todos', 
+    semana: new Date().getWeek(), 
+    ano: new Date().getFullYear() 
+  });
   const [agendForm, setAgendForm] = useState({ 
     frequencia: 'semanal', 
     dia_semana: 1, 
@@ -128,6 +132,33 @@ const RPAAutomacao = ({ user, onLogout }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [saving, setSaving] = useState(false);
   const [executing, setExecuting] = useState(false);
+
+  // Helper para obter semana do ano
+  Date.prototype.getWeek = function() {
+    const d = new Date(Date.UTC(this.getFullYear(), this.getMonth(), this.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  };
+
+  // Calcular período da semana (segunda a domingo)
+  const calcularPeriodoSemana = (semana, ano) => {
+    const jan1 = new Date(ano, 0, 1);
+    const diasAtePrimeiraSeg = (8 - jan1.getDay()) % 7;
+    const primeiraSeg = new Date(ano, 0, 1 + diasAtePrimeiraSeg);
+    
+    const inicioSemana = new Date(primeiraSeg);
+    inicioSemana.setDate(primeiraSeg.getDate() + (semana - 1) * 7);
+    
+    const fimSemana = new Date(inicioSemana);
+    fimSemana.setDate(inicioSemana.getDate() + 6);
+    
+    return {
+      inicio: inicioSemana.toLocaleDateString('pt-PT'),
+      fim: fimSemana.toLocaleDateString('pt-PT')
+    };
+  };
 
   useEffect(() => {
     fetchDados();
