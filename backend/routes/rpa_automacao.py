@@ -731,10 +731,28 @@ async def listar_execucoes(
     
     execucoes = await db.rpa_execucoes.find(
         query,
-        {"_id": 0, "logs": 0}  # Excluir logs detalhados na listagem
+        {"_id": 0, "logs": 0, "dados_extraidos": 0}  # Excluir campos pesados
     ).sort("created_at", -1).limit(limit).to_list(limit)
     
-    return execucoes
+    # Converter para lista de dicionários simples
+    result = []
+    for e in execucoes:
+        result.append({
+            "id": e.get("id"),
+            "parceiro_id": e.get("parceiro_id"),
+            "plataforma": e.get("plataforma"),
+            "plataforma_nome": e.get("plataforma_nome"),
+            "tipo_extracao": e.get("tipo_extracao"),
+            "status": e.get("status"),
+            "progresso": e.get("progresso", 0),
+            "total_registos": e.get("total_registos", 0),
+            "erros": e.get("erros", []),
+            "created_at": e.get("created_at"),
+            "iniciado_em": e.get("iniciado_em"),
+            "terminado_em": e.get("terminado_em")
+        })
+    
+    return result
 
 
 @router.get("/execucoes/{execucao_id}")
