@@ -142,17 +142,20 @@ Cada parceiro configura o seu próprio email:
 ## Tarefas Concluídas (25/01/2025)
 - ✅ **Sistema de Permissões de Funcionalidades** - Backend + Frontend + Testes
 - ✅ **Limpeza de código obsoleto** - Removidos whatsapp-vps-deploy/ e whatsapp.py
+- ✅ **Correção UI Modal de Execução RPA** - Seletores de semana/ano inicializados com valores atuais (25/01/2025)
+- ✅ **Correção Modal de Detalhes da Execução RPA** - Carregamento de detalhes funcionando (25/01/2025)
 
 ## Tarefas Pendentes
 
 ### P1 - Alta Prioridade
 - [x] ~~Refatoração do `server.py`~~ - Removidas 1538 linhas, ~42 endpoints duplicados (25/01/2025)
 - [x] ~~Implementar lógica de agendamento de RPA~~ - Scheduler automático implementado (25/01/2025)
+- [ ] Continuar refatoração do server.py (~151 endpoints restantes, ~16100 linhas)
 
 ### P2 - Média Prioridade
 - [x] ~~Limitar "Próximos Eventos" no dashboard~~ - Alertas limitados a 5 itens (25/01/2025)
 - [x] ~~Testar parser CSV com ficheiros reais~~ - Bolt e Uber testados com sucesso (25/01/2025)
-- [ ] Continuar refatoração do server.py (~151 endpoints restantes, ~16100 linhas)
+- [ ] Testar parser CSV da Via Verde com ficheiro de exemplo
 
 ---
 
