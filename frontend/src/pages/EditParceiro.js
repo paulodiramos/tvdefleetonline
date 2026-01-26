@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import DashboardParceiroTab from '@/components/DashboardParceiroTab';
 import ContratosParceiroTab from '@/components/ContratosParceiroTab';
 import CredenciaisAutomacaoTab from '@/components/CredenciaisAutomacaoTab';
+import PlanoModulosParceiroTab from '@/components/PlanoModulosParceiroTab';
 
 const EditParceiro = ({ user, onLogout }) => {
   const navigate = useNavigate();
