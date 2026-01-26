@@ -77,6 +77,7 @@ import Financeiro from "@/pages/Financeiro";
 import GestaoPlanos from "@/pages/GestaoPlanos";
 import GestaoPlanosMotorista from "@/pages/GestaoPlanosMotorista";
 import ConfiguracaoPlanos from "@/pages/ConfiguracaoPlanos";
+import AdminGestaoPlanos from "@/pages/AdminGestaoPlanos";
 import ConfiguracaoRelatorios from "@/pages/ConfiguracaoRelatorios";
 import GerarRelatorioSemanal from "@/pages/GerarRelatorioSemanal";
 import VerificarRecibos from "@/pages/VerificarRecibos";
