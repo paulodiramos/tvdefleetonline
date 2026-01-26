@@ -175,6 +175,55 @@ Cada parceiro configura o seu próprio email:
 - [x] ~~Limitar "Próximos Eventos" no dashboard~~ - Alertas limitados a 5 itens (25/01/2025)
 - [x] ~~Testar parser CSV com ficheiros reais~~ - Bolt e Uber testados com sucesso (25/01/2025)
 - [ ] Testar parser CSV da Via Verde com ficheiro de exemplo
+- [ ] Loja online de planos/módulos (frontend parceiro/motorista)
+- [ ] Página "Meu Plano" para parceiros verem e fazerem upgrade
+
+---
+
+## ✅ Sistema de Gestão de Planos e Módulos (Implementado: 26/01/2025)
+
+### Descrição
+Sistema completo para criar, gerir e atribuir planos e módulos a parceiros e motoristas.
+
+### Estrutura de Preços
+- **Por Veículo**: Preço multiplicado pelo número de veículos
+- **Por Motorista**: Preço multiplicado pelo número de motoristas
+- **Preço Fixo**: Preço único independente da quantidade
+- **Periodicidades**: Semanal, Mensal, Anual
+
+### Funcionalidades Admin
+- Criar/Editar/Desativar planos
+- Criar/Editar/Desativar módulos
+- Definir limites (máx veículos/motoristas)
+- Adicionar promoções (normal, pioneiro, lançamento)
+- Definir preços especiais por parceiro
+- Atribuir planos/módulos com trial ou oferta gratuita
+- Ver estatísticas (subscrições ativas, receita mensal)
+
+### Funcionalidades Parceiro
+- Ver plano atual e módulos ativos
+- Atualizar para plano superior (futuramente)
+- Comprar módulos individuais (futuramente)
+
+### Endpoints Principais
+- `GET /api/gestao-planos/planos` - Listar planos
+- `GET /api/gestao-planos/modulos` - Listar módulos
+- `POST /api/gestao-planos/subscricoes/atribuir-plano` - Atribuir plano
+- `POST /api/gestao-planos/subscricoes/atribuir-modulo` - Atribuir módulo
+- `GET /api/gestao-planos/subscricoes/user/{id}` - Ver subscrição de utilizador
+- `POST /api/gestao-planos/seed` - Popular dados iniciais
+
+### Ficheiros Principais
+- `/app/backend/models/planos_modulos.py` - Modelos Pydantic
+- `/app/backend/services/planos_modulos_service.py` - Lógica de negócio
+- `/app/backend/routes/gestao_planos.py` - Endpoints API
+- `/app/frontend/src/pages/AdminGestaoPlanos.js` - UI Admin
+- `/app/frontend/src/components/PlanoModulosParceiroTab.js` - UI Detalhes Parceiro
+
+### Próximos Passos
+1. Integração If Then Pay para pagamentos online
+2. Integração Moloni para faturação automática
+3. Loja online para parceiros/motoristas
 
 ---
 
