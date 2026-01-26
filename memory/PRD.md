@@ -145,11 +145,30 @@ Cada parceiro configura o seu próprio email:
 - ✅ **Correção UI Modal de Execução RPA** - Seletores de semana/ano inicializados com valores atuais (25/01/2025)
 - ✅ **Correção Modal de Detalhes da Execução RPA** - Carregamento de detalhes funcionando (25/01/2025)
 
+## Tarefas Concluídas (26/01/2025)
+- ✅ **Sistema de Gestão de Planos e Módulos** - Estrutura completa implementada
+  - Backend: Modelos, serviço e rotas em `/app/backend/routes/gestao_planos.py`
+  - Frontend Admin: `/app/frontend/src/pages/AdminGestaoPlanos.js`
+  - Módulos predefinidos: Emails, Manutenção, Agenda, Publicidade, Contratos, WhatsApp, Relatórios, RPA, Vistorias, Autofaturação
+  - Planos base: Gratuito, Profissional, Enterprise (parceiros) + Gratuito, Premium (motoristas)
+  - Tipos de cobrança: fixo, por_veiculo, por_motorista
+  - Periodicidades: semanal, mensal, anual
+  - Promoções e campanhas (normal, pioneiro, lançamento)
+  - Preços especiais por parceiro
+- ✅ **Atribuição de Planos/Módulos nos Detalhes do Parceiro**
+  - Componente: `/app/frontend/src/components/PlanoModulosParceiroTab.js`
+  - Atribuir plano com trial, oferta gratuita ou desconto especial
+  - Adicionar módulos individuais com trial ou oferta
+  - Visualizar módulos ativos
+
 ## Tarefas Pendentes
 
 ### P1 - Alta Prioridade
 - [x] ~~Refatoração do `server.py`~~ - Removidas 1538 linhas, ~42 endpoints duplicados (25/01/2025)
 - [x] ~~Implementar lógica de agendamento de RPA~~ - Scheduler automático implementado (25/01/2025)
+- [x] ~~Sistema de Gestão de Planos e Módulos~~ - Implementado (26/01/2025)
+- [ ] Integração If Then Pay - Pagamentos online (Multibanco, MB Way, Cartão, Débito Direto)
+- [ ] Integração Moloni - Faturação automática após pagamento
 - [ ] Continuar refatoração do server.py (~151 endpoints restantes, ~16100 linhas)
 
 ### P2 - Média Prioridade
