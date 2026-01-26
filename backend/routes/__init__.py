@@ -26,6 +26,7 @@ from .sincronizacao import router as sincronizacao_router
 from .public import router as public_router
 from .ganhos import router as ganhos_router
 from .manutencao import router as manutencao_router
+from .gestao_planos import router as gestao_planos_router
 
 __all__ = [
     'auth_router',
