@@ -104,6 +104,7 @@ from routes.credenciais import router as credenciais_router
 from routes.admin_servicos import router as admin_servicos_router
 from routes.importacao_rpa import router as importacao_rpa_router
 from routes.permissoes_funcionalidades import router as permissoes_router
+from routes.gestao_planos import router as gestao_planos_router
 
 # Import utilities from refactored modules
 from utils.file_handlers import (
