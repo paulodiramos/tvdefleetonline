@@ -373,12 +373,49 @@ class AtribuirPlanoRequest(BaseModel):
     """Request para atribuir plano a utilizador"""
     user_id: str
     plano_id: str
+    num_veiculos: int = 0
+    num_motoristas: int = 0
     periodicidade: Periodicidade = Periodicidade.MENSAL
     trial_dias: Optional[int] = None
     oferta: bool = False
     oferta_dias: Optional[int] = None
     oferta_motivo: Optional[str] = None
     desconto_percentagem: Optional[float] = None
+
+
+class AtualizarRecursosRequest(BaseModel):
+    """Request para atualizar número de veículos/motoristas (gera pro-rata)"""
+    user_id: str
+    num_veiculos: Optional[int] = None
+    num_motoristas: Optional[int] = None
+    motivo: Optional[str] = None
+
+
+class CalculoPrecoResponse(BaseModel):
+    """Resposta do cálculo de preço"""
+    plano_id: str
+    plano_nome: str
+    periodicidade: str
+    num_veiculos: int
+    num_motoristas: int
+    preco_base: float
+    preco_veiculos: float
+    preco_motoristas: float
+    preco_total: float
+    desconto_aplicado: Optional[float] = None
+    preco_final: float
+
+
+class ProRataResponse(BaseModel):
+    """Resposta do cálculo pro-rata"""
+    dias_restantes: int
+    dias_periodo: int
+    preco_mensal_anterior: float
+    preco_mensal_novo: float
+    diferenca_mensal: float
+    valor_prorata: float  # O que precisa pagar agora
+    nova_mensalidade: float  # Próxima mensalidade
+    data_proxima_cobranca: str
 
 
 # ==================== MÓDULOS PREDEFINIDOS ====================
