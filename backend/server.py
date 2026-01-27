@@ -11463,21 +11463,27 @@ async def importar_ganhos_uber(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao importar ficheiro: {str(e)}")
 
-# =============================================================================
-# IMPORTAÇÃO DE GANHOS BOLT
-# =============================================================================
+# CONTINUAÇÃO DO COMENTÁRIO - IMPORT BOLT TAMBÉM MOVIDO PARA routes/import_ganhos.py
 
 @app.post("/api/import/bolt/ganhos")
-async def importar_ganhos_bolt(
+async def importar_ganhos_bolt_DEPRECATED(
     file: UploadFile = File(...),
     parceiro_id: Optional[str] = Form(None),
     periodo_inicio: Optional[str] = Form(None),
     periodo_fim: Optional[str] = Form(None),
     credentials: HTTPAuthorizationCredentials = Depends(security)
 ):
-    """Importa ficheiro CSV de ganhos da Bolt"""
-    try:
-        # Verificar autenticação
+    """DEPRECATED - Movido para routes/import_ganhos.py"""
+    raise HTTPException(status_code=301, detail="Use /api/import/bolt/ganhos (novo router)")
+
+# FIM IMPORTAÇÃO DE GANHOS DEPRECATED
+'''
+
+# =============================================================================
+# BOLT INTEGRATION - MOVIDO PARA routes/bolt_integration.py
+# =============================================================================
+'''
+@app.post("/api/bolt/test-connection")
         user = await get_current_user(credentials)
         if user['role'] not in ['admin', 'manager']:
             raise HTTPException(status_code=403, detail="Acesso negado")
