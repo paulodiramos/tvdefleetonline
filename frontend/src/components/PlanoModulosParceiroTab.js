@@ -559,7 +559,7 @@ const PlanoModulosParceiroTab = ({ parceiroId, parceiroNome }) => {
 
       {/* Modal Atribuir Plano */}
       <Dialog open={showAtribuirPlanoModal} onOpenChange={setShowAtribuirPlanoModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Atribuir Plano</DialogTitle>
             <DialogDescription>Parceiro: {parceiroNome}</DialogDescription>
@@ -576,11 +576,39 @@ const PlanoModulosParceiroTab = ({ parceiroId, parceiroNome }) => {
                 <SelectContent>
                   {planos.map(p => (
                     <SelectItem key={p.id} value={p.id}>
-                      {p.icone} {p.nome} - €{p.precos?.mensal || 0}/mês
+                      {p.icone} {p.nome}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            
+            {/* Veículos e Motoristas */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Car className="w-4 h-4 text-blue-500" />
+                  Nº de Veículos
+                </Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={planoForm.num_veiculos}
+                  onChange={(e) => setPlanoForm(prev => ({ ...prev, num_veiculos: parseInt(e.target.value) || 0 }))}
+                />
+              </div>
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-green-500" />
+                  Nº de Motoristas
+                </Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={planoForm.num_motoristas}
+                  onChange={(e) => setPlanoForm(prev => ({ ...prev, num_motoristas: parseInt(e.target.value) || 0 }))}
+                />
+              </div>
             </div>
             
             <div>
@@ -597,6 +625,39 @@ const PlanoModulosParceiroTab = ({ parceiroId, parceiroNome }) => {
                 </SelectContent>
               </Select>
             </div>
+            
+            {/* Tabela de Cálculo de Preço */}
+            {precoCalculado && !precoCalculado.erro && (
+              <div className="border rounded-lg overflow-hidden">
+                <div className="bg-slate-100 px-3 py-2 font-semibold text-sm">
+                  Cálculo do Preço
+                </div>
+                <table className="w-full text-sm">
+                  <tbody>
+                    <tr className="border-t">
+                      <td className="p-2">Base do plano</td>
+                      <td className="text-right p-2">€{precoCalculado.preco_base}</td>
+                    </tr>
+                    {planoForm.num_veiculos > 0 && (
+                      <tr className="border-t">
+                        <td className="p-2">{planoForm.num_veiculos} veículos × €{precoCalculado.preco_por_veiculo || 0}</td>
+                        <td className="text-right p-2">€{precoCalculado.preco_veiculos}</td>
+                      </tr>
+                    )}
+                    {planoForm.num_motoristas > 0 && (
+                      <tr className="border-t">
+                        <td className="p-2">{planoForm.num_motoristas} motoristas × €{precoCalculado.preco_por_motorista || 0}</td>
+                        <td className="text-right p-2">€{precoCalculado.preco_motoristas}</td>
+                      </tr>
+                    )}
+                    <tr className="border-t bg-blue-50 font-semibold">
+                      <td className="p-2">Total ({planoForm.periodicidade})</td>
+                      <td className="text-right p-2 text-blue-600">€{precoCalculado.preco_final}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )}
             
             <div className="flex items-center gap-4 p-3 bg-amber-50 rounded-lg">
               <Switch
