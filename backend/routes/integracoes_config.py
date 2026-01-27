@@ -69,7 +69,7 @@ def mask_key(key: str, show_chars: int = 4) -> str:
 
 # ==================== OBTER CONFIGURAÇÕES ====================
 
-@router.get("/")
+@router.get("")
 async def get_integracoes_config(
     current_user: Dict = Depends(get_current_user)
 ):
