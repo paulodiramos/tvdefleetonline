@@ -854,6 +854,16 @@ function App() {
             }
           />
           <Route
+            path="/config/comissoes"
+            element={
+              user && (user.role === 'admin' || user.role === 'parceiro') ? (
+                <ConfigComissoesParceiro user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
             path="/admin/gestao-servicos"
             element={
               user && user.role === 'admin' ? (
