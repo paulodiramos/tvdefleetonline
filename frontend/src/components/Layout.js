@@ -40,8 +40,9 @@ const Layout = ({ children, user, onLogout }) => {
   const [criarTemplateOpen, setCriarTemplateOpen] = useState(false);
   const [permissoes, setPermissoes] = useState([]);
   const [permissoesLoaded, setPermissoesLoaded] = useState(false);
+  const [modulosAtivos, setModulosAtivos] = useState([]);
 
-  // Carregar permissões de funcionalidades
+  // Carregar permissões de funcionalidades e módulos ativos
   useEffect(() => {
     const carregarPermissoes = async () => {
       if (!user || user.role === 'admin' || user.role === 'motorista') {
@@ -50,8 +51,12 @@ const Layout = ({ children, user, onLogout }) => {
       }
       
       try {
-        const response = await axios.get(`${API}/permissoes/minhas`);
-        setPermissoes(response.data.funcionalidades || []);
+        const [permissoesRes, modulosRes] = await Promise.all([
+          axios.get(`${API}/permissoes/minhas`),
+          axios.get(`${API}/gestao-planos/modulos-ativos/user/${user.id}`).catch(() => ({ data: { modulos_ativos: [] } }))
+        ]);
+        setPermissoes(permissoesRes.data.funcionalidades || []);
+        setModulosAtivos(modulosRes.data.modulos_ativos || []);
       } catch (err) {
         console.error('Erro ao carregar permissões:', err);
         // Em caso de erro, permitir tudo (fallback)
@@ -63,6 +68,17 @@ const Layout = ({ children, user, onLogout }) => {
     
     carregarPermissoes();
   }, [user]);
+  
+  // Verificar se tem módulo de comissões ativo
+  const temModuloComissoes = useCallback(() => {
+    if (user?.role === 'admin') return true;
+    return modulosAtivos.some(m => 
+      m.toLowerCase().includes('comiss') || 
+      m.toLowerCase().includes('commission') ||
+      m.toLowerCase().includes('relatorios') ||
+      m.toLowerCase().includes('reports')
+    );
+  }, [user, modulosAtivos]);
 
   // Verificar se um item de menu está permitido
   const itemPermitido = useCallback((label) => {
