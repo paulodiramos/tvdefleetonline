@@ -110,6 +110,24 @@ class Precos(BaseModel):
     setup: Optional[float] = None  # Taxa única de setup
 
 
+class PrecosPlano(BaseModel):
+    """Estrutura de preços para planos de parceiros (base + por veículo + por motorista)"""
+    # Preço base do plano
+    base_semanal: Optional[float] = 0
+    base_mensal: Optional[float] = 0
+    base_anual: Optional[float] = 0
+    # Custo adicional por veículo
+    por_veiculo_semanal: Optional[float] = 0
+    por_veiculo_mensal: Optional[float] = 0
+    por_veiculo_anual: Optional[float] = 0
+    # Custo adicional por motorista
+    por_motorista_semanal: Optional[float] = 0
+    por_motorista_mensal: Optional[float] = 0
+    por_motorista_anual: Optional[float] = 0
+    # Taxa única de setup
+    setup: Optional[float] = 0
+
+
 # ==================== MÓDULO ====================
 
 class ModuloSistema(BaseModel):
