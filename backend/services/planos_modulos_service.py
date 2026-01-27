@@ -513,12 +513,6 @@ class PlanosModulosService:
             "data_proxima_cobranca": proxima_cobranca.isoformat() if proxima_cobranca else None,
             "detalhes_novo": preco_novo
         }
-            "preco_final": round(preco_final, 2),
-            "desconto_aplicado": desconto_aplicado,
-            "promocao_aplicada": promocao_aplicada,
-            "num_veiculos": num_veiculos if tipo_cobranca == "por_veiculo" else None,
-            "num_motoristas": num_motoristas if tipo_cobranca == "por_motorista" else None
-        }
     
     # ==================== SUBSCRIÇÕES ====================
     
