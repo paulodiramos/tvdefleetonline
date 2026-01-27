@@ -507,7 +507,7 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+          <TabsList className="grid grid-cols-5 w-full max-w-3xl">
             <TabsTrigger value="email" className="flex items-center gap-2">
               <Mail className="w-4 h-4" />
               Email
@@ -519,6 +519,10 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
             <TabsTrigger value="terabox" className="flex items-center gap-2">
               <HardDrive className="w-4 h-4" />
               Terabox
+            </TabsTrigger>
+            <TabsTrigger value="sincronizacao" className="flex items-center gap-2" data-testid="tab-sincronizacao">
+              <RefreshCw className="w-4 h-4" />
+              Sincronização
             </TabsTrigger>
             <TabsTrigger value="credenciais" className="flex items-center gap-2">
               <Lock className="w-4 h-4" />
