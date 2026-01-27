@@ -79,6 +79,7 @@ import GestaoPlanosMotorista from "@/pages/GestaoPlanosMotorista";
 import ConfiguracaoPlanos from "@/pages/ConfiguracaoPlanos";
 import AdminGestaoPlanos from "@/pages/AdminGestaoPlanos";
 import AdminIntegracoes from "@/pages/AdminIntegracoes";
+import AdminComissoes from "@/pages/AdminComissoes";
 import ConfiguracaoRelatorios from "@/pages/ConfiguracaoRelatorios";
 import GerarRelatorioSemanal from "@/pages/GerarRelatorioSemanal";
 import VerificarRecibos from "@/pages/VerificarRecibos";
