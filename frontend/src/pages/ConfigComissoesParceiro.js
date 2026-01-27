@@ -247,34 +247,34 @@ const ConfigComissoesParceiro = ({ user, onLogout }) => {
 
   return (
     <Layout user={user} onLogout={onLogout}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-testid="config-comissoes-page">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)} data-testid="btn-voltar">
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+              <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2" data-testid="page-title">
                 <Settings className="w-6 h-6" />
                 Configuração de Comissões
               </h1>
               <p className="text-slate-600">Configure escalas de comissão e classificação de motoristas</p>
             </div>
           </div>
-          <Button onClick={handleSaveConfig} disabled={saving}>
+          <Button onClick={handleSaveConfig} disabled={saving} data-testid="btn-guardar-config">
             {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
             Guardar Tudo
           </Button>
         </div>
 
-        <Tabs defaultValue="comissoes" className="space-y-6">
+        <Tabs defaultValue="comissoes" className="space-y-6" data-testid="tabs-comissoes">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="comissoes" className="flex items-center gap-2">
+            <TabsTrigger value="comissoes" className="flex items-center gap-2" data-testid="tab-comissoes">
               <Percent className="w-4 h-4" />
               Comissões
             </TabsTrigger>
-            <TabsTrigger value="classificacao" className="flex items-center gap-2">
+            <TabsTrigger value="classificacao" className="flex items-center gap-2" data-testid="tab-classificacao">
               <Award className="w-4 h-4" />
               Classificação
             </TabsTrigger>
