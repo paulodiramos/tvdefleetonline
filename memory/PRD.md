@@ -199,6 +199,7 @@ Cada parceiro configura o seu próprio email:
 - [x] ~~Classificação de Motoristas (5 níveis)~~ - Implementado (27/01/2025)
 - [x] ~~Configuração de Comissões pelo Parceiro~~ - Implementado (27/01/2025)
 - [x] ~~Turnos de motoristas por veículo~~ - Implementado (27/01/2025)
+- [x] ~~Sistema de Sincronização Automática~~ - Implementado (27/01/2025)
 - [ ] **Processamento real Ifthenpay** - Usar credenciais para gerar referências MB
 - [ ] **Processamento real Moloni** - Emitir faturas automaticamente
 - [ ] Continuar refatoração do server.py (~151 endpoints restantes, ~16100 linhas)
@@ -209,6 +210,40 @@ Cada parceiro configura o seu próprio email:
 - [ ] Testar parser CSV da Via Verde com ficheiro de exemplo
 - [ ] Loja online de planos/módulos (frontend parceiro/motorista)
 - [ ] Página "Meu Plano" para parceiros verem e fazerem upgrade
+
+---
+
+## ✅ Sistema de Sincronização Automática de Dados (Implementado: 27/01/2025)
+
+### Descrição
+Sistema completo para automatizar a recolha de dados de Uber, Bolt, Via Verde e Abastecimentos, com agendamento e notificações.
+
+### Funcionalidades
+- **Fontes de Dados**: Uber (RPA/CSV), Bolt (API/RPA/CSV), Via Verde (RPA/CSV), Abastecimentos (RPA/CSV)
+- **Métodos de Recolha**: Automático (RPA), API Oficial, Upload Manual (CSV)
+- **Agendamento Global**: Frequência (diário/semanal/mensal), dia da semana/mês, hora
+- **Resumo Semanal**: Geração automática, envio email/WhatsApp aos motoristas
+- **Notificações ao Parceiro**: Sistema, Email, WhatsApp
+- **Histórico**: Listagem de sincronizações com status, fontes e timestamps
+- **Estatísticas**: Total, taxa de sucesso, última sync, próxima execução
+
+### Endpoints
+- `GET /api/sincronizacao-auto/fontes` - Listar fontes disponíveis
+- `GET /api/sincronizacao-auto/config` - Obter configuração do parceiro
+- `PUT /api/sincronizacao-auto/config` - Atualizar configuração
+- `POST /api/sincronizacao-auto/executar` - Executar sincronização manual
+- `GET /api/sincronizacao-auto/historico` - Obter histórico de execuções
+- `GET /api/sincronizacao-auto/estatisticas` - Obter estatísticas
+
+### Ficheiros
+- `/app/frontend/src/components/ConfigSincronizacao.js` - Componente de configuração
+- `/app/frontend/src/pages/ConfiguracoesParceiro.js` - Tab "Sincronização"
+- `/app/backend/routes/sincronizacao.py` - Endpoints de sincronização automática
+- `/app/backend/services/sincronizacao_service.py` - Serviço de sincronização
+
+### Módulo para Cobrança
+- Valor fixo por frota (não por veículo/motorista)
+- Disponível após contratação do módulo
 
 ---
 
