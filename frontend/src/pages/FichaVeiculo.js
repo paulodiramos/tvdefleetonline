@@ -3853,6 +3853,15 @@ const FichaVeiculo = ({ user, onLogout }) => {
             </div>
           </TabsContent>
 
+          {/* Turnos de Motoristas */}
+          <TabsContent value="turnos">
+            <Card>
+              <CardContent className="pt-6">
+                <VeiculoTurnos veiculoId={vehicleId} user={user} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           {/* Dispositivos */}
           <TabsContent value="dispositivos">
             <Card>
