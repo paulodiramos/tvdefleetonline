@@ -946,6 +946,11 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
             </Card>
           </TabsContent>
 
+          {/* Tab Sincronização Automática */}
+          <TabsContent value="sincronizacao" className="space-y-4">
+            <ConfigSincronizacao user={user} />
+          </TabsContent>
+
           {/* Tab Credenciais Plataformas */}
           <TabsContent value="credenciais" className="space-y-4">
             {/* Uber */}
