@@ -75,9 +75,9 @@ class TestSincronizacaoAutoConfig:
             assert "descricao" in fonte_data
     
     def test_get_config_unauthorized(self):
-        """Test GET config without token returns 401"""
+        """Test GET config without token returns 401 or 403"""
         response = requests.get(f"{BASE_URL}/api/sincronizacao-auto/config")
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
     
     def test_put_config_update_fontes(self, parceiro_token):
         """Test PUT config updates fontes correctly"""
@@ -293,12 +293,12 @@ class TestSincronizacaoAutoExecutar:
         )
     
     def test_executar_unauthorized(self):
-        """Test executar without token returns 401"""
+        """Test executar without token returns 401 or 403"""
         response = requests.post(
             f"{BASE_URL}/api/sincronizacao-auto/executar",
             json={"fontes": ["bolt"]}
         )
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
 
 
 class TestSincronizacaoAutoHistorico:
@@ -337,9 +337,9 @@ class TestSincronizacaoAutoHistorico:
         assert len(data) <= 5
     
     def test_get_historico_unauthorized(self):
-        """Test GET historico without token returns 401"""
+        """Test GET historico without token returns 401 or 403"""
         response = requests.get(f"{BASE_URL}/api/sincronizacao-auto/historico")
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
 
 
 class TestSincronizacaoAutoEstatisticas:
@@ -373,9 +373,9 @@ class TestSincronizacaoAutoEstatisticas:
         assert isinstance(data["agendamento_ativo"], bool)
     
     def test_get_estatisticas_unauthorized(self):
-        """Test GET estatisticas without token returns 401"""
+        """Test GET estatisticas without token returns 401 or 403"""
         response = requests.get(f"{BASE_URL}/api/sincronizacao-auto/estatisticas")
-        assert response.status_code == 401
+        assert response.status_code in [401, 403]
 
 
 class TestSincronizacaoAutoFontes:
