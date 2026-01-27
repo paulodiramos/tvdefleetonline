@@ -260,7 +260,7 @@ const AdicionarRecursosCard = ({ userId, onAdicaoCompleta }) => {
         <CardContent className="space-y-4">
           {/* Recursos Atuais */}
           {subscricao && (
-            <div className="flex gap-6 p-4 bg-slate-100 rounded-lg">
+            <div className="flex flex-wrap gap-6 p-4 bg-slate-100 rounded-lg">
               <div className="flex items-center gap-2">
                 <Car className="w-5 h-5 text-green-600" />
                 <span className="font-medium">{subscricao.num_veiculos || 0}</span>
@@ -271,10 +271,16 @@ const AdicionarRecursosCard = ({ userId, onAdicaoCompleta }) => {
                 <span className="font-medium">{subscricao.num_motoristas || 0}</span>
                 <span className="text-slate-500">motoristas</span>
               </div>
-              <div className="flex items-center gap-2 ml-auto">
-                <Euro className="w-4 h-4 text-slate-500" />
-                <span className="font-semibold text-blue-600">€{subscricao.preco_final?.toFixed(2) || '0.00'}</span>
-                <span className="text-slate-500 text-sm">/{subscricao.periodicidade || 'mês'}</span>
+              <div className="flex flex-col items-end ml-auto">
+                <div className="flex items-center gap-1">
+                  <Euro className="w-4 h-4 text-slate-500" />
+                  <span className="font-semibold text-blue-600">€{formatarEuros(subscricao.preco_final)}</span>
+                  <span className="text-slate-500 text-sm">/{subscricao.periodicidade || 'mês'}</span>
+                  <Badge variant="outline" className="ml-1 text-xs">c/IVA</Badge>
+                </div>
+                <span className="text-xs text-slate-400">
+                  €{formatarEuros(calcularSemIva(subscricao.preco_final))} s/IVA
+                </span>
               </div>
             </div>
           )}
