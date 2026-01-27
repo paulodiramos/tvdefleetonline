@@ -172,6 +172,20 @@ Cada parceiro configura o seu próprio email:
   - Para planos de motoristas, mostra preços simples
   - Testado com 100% de sucesso (7/7 features)
 
+- ✅ **Sistema de Pré-Pagamento Pro-Rata** - Implementado e testado
+  - Backend: `/app/backend/services/prepagamento_service.py`
+  - API: `/app/backend/routes/prepagamento.py`
+  - Frontend: `/app/frontend/src/components/AdicionarRecursosCard.js`
+  - Funcionalidades:
+    - Parceiro solicita adição de veículos/motoristas na página `/meu-plano`
+    - Sistema calcula valor pro-rata até à data de renovação
+    - **Bloqueio automático** até pagamento ser confirmado
+    - Modal de pagamento com opções: Multibanco, MBWAY, Cartão
+    - Admin pode confirmar pagamento manualmente
+    - Após confirmação: recursos são aplicados e mensalidade atualizada
+  - Testado: 100% sucesso (16/16 backend + 8/8 frontend)
+  - **NOTA: Gateway Ifthenpay SIMULADA** - referências são placeholders
+
 ## Tarefas Pendentes
 
 ### P1 - Alta Prioridade
@@ -179,12 +193,8 @@ Cada parceiro configura o seu próprio email:
 - [x] ~~Implementar lógica de agendamento de RPA~~ - Scheduler automático implementado (25/01/2025)
 - [x] ~~Sistema de Gestão de Planos e Módulos~~ - Implementado (26/01/2025)
 - [x] ~~UI de preços por veículo/motorista~~ - Implementado (27/01/2025)
-- [ ] **Sistema de Pré-Pagamento Pro-Rata** - Quando adiciona veículo/motorista:
-  - Bloquear até pagamento da diferença
-  - Calcular valor pro-rata até renovação
-  - Pagamento via MBWAY, Multibanco, Débito em conta, Cartão
-  - Após pagamento: desbloquear e atualizar valor de renovação
-- [ ] Integração Ifthenpay - Pagamentos online (Multibanco, MB Way, Cartão, Débito Direto)
+- [x] ~~Sistema de Pré-Pagamento Pro-Rata~~ - Implementado (27/01/2025)
+- [ ] **Integração Ifthenpay** - Pagamentos online (Multibanco, MB Way, Cartão, Débito Direto) - **PENDENTE: substituir simulação por integração real**
 - [ ] Integração Moloni - Faturação automática após pagamento
 - [ ] Continuar refatoração do server.py (~151 endpoints restantes, ~16100 linhas)
 
