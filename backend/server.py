@@ -11480,24 +11480,10 @@ async def importar_ganhos_bolt_DEPRECATED(
 '''
 
 # =============================================================================
-# BOLT INTEGRATION - MOVIDO PARA routes/bolt_integration.py
+# CÓDIGO BOLT INTEGRATION COMENTADO - MOVIDO PARA routes/bolt_integration.py
 # =============================================================================
-'''
-@app.post("/api/bolt/test-connection")
-        user = await get_current_user(credentials)
-        if user['role'] not in ['admin', 'manager']:
-            raise HTTPException(status_code=403, detail="Acesso negado")
-        
-        # Ler conteúdo do ficheiro
-        contents = await file.read()
-        
-        # Handle BOM (Byte Order Mark) - try utf-8-sig first
-        for encoding in ['utf-8-sig', 'utf-8', 'latin-1', 'cp1252']:
-            try:
-                decoded = contents.decode(encoding)
-                break
-            except UnicodeDecodeError:
-                continue
+# Os endpoints /api/bolt/* foram movidos para routes/bolt_integration.py
+# Ver também: routes/import_ganhos.py para endpoints de importação de ganhos
         
         # Detect delimiter (Portuguese Excel often uses semicolon)
         sample = decoded[:1000]
