@@ -568,6 +568,7 @@ class PlanosModulosService:
         if request.trial_dias and request.trial_dias > 0:
             status = StatusSubscricao.TRIAL.value
             data_fim = (now + timedelta(days=request.trial_dias)).isoformat()
+            proxima_cobranca = (now + timedelta(days=request.trial_dias)).isoformat()
             trial_info = {
                 "ativo": True,
                 "data_inicio": now.isoformat(),
@@ -577,25 +578,37 @@ class PlanosModulosService:
         elif request.oferta and request.oferta_dias:
             status = StatusSubscricao.ATIVO.value
             data_fim = (now + timedelta(days=request.oferta_dias)).isoformat()
+            proxima_cobranca = (now + timedelta(days=request.oferta_dias)).isoformat()
             trial_info = {"ativo": False}
         else:
-            status = StatusSubscricao.PENDENTE_PAGAMENTO.value
+            status = StatusSubscricao.ATIVO.value
             data_fim = None
+            # Próxima cobrança = próximo mês
+            if now.month == 12:
+                proxima_cobranca = now.replace(year=now.year + 1, month=1, day=1).isoformat()
+            else:
+                proxima_cobranca = now.replace(month=now.month + 1, day=1).isoformat()
             trial_info = {"ativo": False}
         
-        # Calcular preço
+        # Calcular preço com veículos e motoristas
+        periodicidade = request.periodicidade.value if hasattr(request.periodicidade, 'value') else request.periodicidade
         preco_info = await self.calcular_preco_plano(
             request.plano_id,
-            request.periodicidade.value if hasattr(request.periodicidade, 'value') else request.periodicidade,
-            request.user_id
+            periodicidade,
+            request.user_id,
+            request.num_veiculos,
+            request.num_motoristas
         )
         
-        preco_base = preco_info["preco_base"]
-        preco_final = preco_info["preco_final"]
+        preco_base = preco_info.get("preco_base", 0)
+        preco_veiculos = preco_info.get("preco_veiculos", 0)
+        preco_motoristas = preco_info.get("preco_motoristas", 0)
+        preco_total = preco_info.get("preco_total", 0)
+        preco_final = preco_info.get("preco_final", preco_total)
         
         # Aplicar desconto especial se definido
         if request.desconto_percentagem:
-            preco_final = preco_base * (1 - request.desconto_percentagem / 100)
+            preco_final = preco_total * (1 - request.desconto_percentagem / 100)
         
         if request.oferta:
             preco_final = 0
@@ -615,16 +628,22 @@ class PlanosModulosService:
             "plano_id": request.plano_id,
             "plano_nome": plano.get("nome"),
             "plano_categoria": plano.get("categoria"),
+            "num_veiculos": request.num_veiculos,
+            "num_motoristas": request.num_motoristas,
             "modulos_individuais": [],
-            "periodicidade": request.periodicidade.value if hasattr(request.periodicidade, 'value') else request.periodicidade,
-            "preco_base": preco_base,
+            "periodicidade": periodicidade,
+            "preco_base": round(preco_base, 2),
+            "preco_veiculos": round(preco_veiculos, 2),
+            "preco_motoristas": round(preco_motoristas, 2),
+            "preco_modulos": 0,
             "preco_final": round(preco_final, 2),
             "data_inicio": now.isoformat(),
             "data_fim": data_fim,
-            "proxima_cobranca": data_fim if not request.oferta else None,
+            "proxima_cobranca": proxima_cobranca,
             "status": status,
             "auto_renovacao": True,
             "trial": trial_info,
+            "historico_ajustes": [],
             "desconto_especial": {
                 "ativo": request.desconto_percentagem is not None or request.oferta,
                 "percentagem": request.desconto_percentagem,
