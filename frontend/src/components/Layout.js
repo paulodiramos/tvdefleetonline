@@ -476,6 +476,13 @@ const Layout = ({ children, user, onLogout }) => {
                           </Link>
                         </DropdownMenuItem>
                       )}
+                      {temModuloComissoes() && (
+                        <DropdownMenuItem asChild>
+                          <Link to="/config/comissoes" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="config-comissoes-link">
+                            <span>💰 Comissões</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
                     </>
                   )}
 
