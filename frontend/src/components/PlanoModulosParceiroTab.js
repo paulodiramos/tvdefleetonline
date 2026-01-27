@@ -56,11 +56,15 @@ const PlanoModulosParceiroTab = ({ parceiroId, parceiroNome }) => {
   // Modals
   const [showAtribuirPlanoModal, setShowAtribuirPlanoModal] = useState(false);
   const [showAtribuirModuloModal, setShowAtribuirModuloModal] = useState(false);
+  const [showAtualizarRecursosModal, setShowAtualizarRecursosModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [precoCalculado, setPrecoCalculado] = useState(null);
   
   // Forms
   const [planoForm, setPlanoForm] = useState({
     plano_id: '',
+    num_veiculos: 0,
+    num_motoristas: 0,
     periodicidade: 'mensal',
     trial_dias: 0,
     oferta: false,
@@ -68,6 +72,13 @@ const PlanoModulosParceiroTab = ({ parceiroId, parceiroNome }) => {
     oferta_motivo: '',
     desconto_percentagem: 0
   });
+  
+  const [recursosForm, setRecursosForm] = useState({
+    num_veiculos: 0,
+    num_motoristas: 0,
+    motivo: ''
+  });
+  const [prorataCalculado, setProrataCalculado] = useState(null);
   
   const [moduloForm, setModuloForm] = useState({
     modulo_codigo: '',
@@ -109,6 +120,61 @@ const PlanoModulosParceiroTab = ({ parceiroId, parceiroNome }) => {
   useEffect(() => {
     fetchDados();
   }, [fetchDados]);
+  
+  // Calcular preço quando form muda
+  useEffect(() => {
+    const calcularPreco = async () => {
+      if (!planoForm.plano_id) {
+        setPrecoCalculado(null);
+        return;
+      }
+      
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API}/gestao-planos/planos/${planoForm.plano_id}/calcular-preco`, {
+          params: {
+            periodicidade: planoForm.periodicidade,
+            num_veiculos: planoForm.num_veiculos || 0,
+            num_motoristas: planoForm.num_motoristas || 0
+          },
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setPrecoCalculado(res.data);
+      } catch (error) {
+        console.error('Erro ao calcular preço:', error);
+      }
+    };
+    
+    calcularPreco();
+  }, [planoForm.plano_id, planoForm.periodicidade, planoForm.num_veiculos, planoForm.num_motoristas]);
+  
+  // Calcular pro-rata quando recursos mudam
+  useEffect(() => {
+    const calcularProrata = async () => {
+      if (!subscricao?.plano_id) {
+        setProrataCalculado(null);
+        return;
+      }
+      
+      try {
+        const token = localStorage.getItem('token');
+        const res = await axios.get(`${API}/gestao-planos/subscricoes/user/${parceiroId}/calcular-prorata`, {
+          params: {
+            num_veiculos: recursosForm.num_veiculos,
+            num_motoristas: recursosForm.num_motoristas
+          },
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setProrataCalculado(res.data);
+      } catch (error) {
+        console.error('Erro ao calcular pro-rata:', error);
+      }
+    };
+    
+    if (showAtualizarRecursosModal) {
+      calcularProrata();
+    }
+  }, [recursosForm.num_veiculos, recursosForm.num_motoristas, parceiroId, subscricao, showAtualizarRecursosModal]);
 
   const handleAtribuirPlano = async () => {
     if (!planoForm.plano_id) {
@@ -121,9 +187,15 @@ const PlanoModulosParceiroTab = ({ parceiroId, parceiroNome }) => {
       const token = localStorage.getItem('token');
       await axios.post(`${API}/gestao-planos/subscricoes/atribuir-plano`, {
         user_id: parceiroId,
-        ...planoForm,
+        plano_id: planoForm.plano_id,
+        num_veiculos: parseInt(planoForm.num_veiculos) || 0,
+        num_motoristas: parseInt(planoForm.num_motoristas) || 0,
+        periodicidade: planoForm.periodicidade,
         trial_dias: planoForm.oferta ? 0 : parseInt(planoForm.trial_dias) || 0,
-        oferta_dias: planoForm.oferta ? parseInt(planoForm.oferta_dias) || 30 : 0
+        oferta: planoForm.oferta,
+        oferta_dias: planoForm.oferta ? parseInt(planoForm.oferta_dias) || 30 : 0,
+        oferta_motivo: planoForm.oferta_motivo,
+        desconto_percentagem: planoForm.desconto_percentagem || null
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
