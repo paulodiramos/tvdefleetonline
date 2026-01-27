@@ -1,0 +1,76 @@
+{
+  "summary": "Complete testing of Comissões and Turnos System for TVDEFleet. All backend APIs (12/12) and frontend features tested and PASSED. The system allows partners to configure commission scales, driver classifications, and manage vehicle shifts.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "features_tested": {
+    "config_comissoes_page": {
+      "status": "PASS",
+      "details": "Page /config/comissoes loads correctly with 3 tabs (Comissões, Classificação, Meus Motoristas). Partner can access via dropdown menu when module is active."
+    },
+    "comissoes_link_menu": {
+      "status": "PASS",
+      "details": "💰 Comissões link appears in user dropdown menu for partners with relatorios_avancados module"
+    },
+    "guardar_config_parceiro": {
+      "status": "PASS",
+      "details": "PUT /api/comissoes/parceiro/config works correctly. Toast 'Configuração guardada com sucesso' shown on save."
+    },
+    "turnos_tab_ficha_veiculo": {
+      "status": "PASS",
+      "details": "Tab 'Turnos' in FichaVeiculo shows VeiculoTurnos component with Motorista Principal select, Adicionar Turno button, and Turnos Configurados table"
+    },
+    "adicionar_turno": {
+      "status": "PASS",
+      "details": "POST /api/comissoes/turnos/veiculo/{id} works. Modal shows motorista select, time pickers, weekday selection, and notes field."
+    },
+    "listar_turnos": {
+      "status": "PASS",
+      "details": "GET /api/comissoes/turnos/veiculo/{id} returns turnos array and motorista_principal_id"
+    },
+    "definir_motorista_principal": {
+      "status": "PASS",
+      "details": "PUT /api/comissoes/turnos/veiculo/{id}/principal works. Motorista principal shown as 'Arlei Oliveira' in test vehicle."
+    },
+    "remover_turno": {
+      "status": "PASS",
+      "details": "DELETE /api/comissoes/turnos/veiculo/{id}/turno/{turno_id} works correctly"
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_comissoes_turnos.py",
+    "/app/test_reports/pytest/pytest_comissoes_turnos.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "ConfigComissoesParceiro.js correctly implements 3 commission types: valor fixo, percentagem fixa, escala por valor faturado",
+    "VeiculoTurnos.js properly handles CRUD operations for shifts with weekday selection",
+    "Layout.js temModuloComissoes() function correctly checks for commission-related modules",
+    "Backend routes properly validate user roles (admin/parceiro) for all endpoints"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_comissoes_turnos.py"
+  ],
+  "success_rate": {
+    "backend": "100% (12/12 tests passed)",
+    "frontend": "100% (8/8 features verified via Playwright)"
+  },
+  "test_credentials": {
+    "admin": "admin@tvdefleet.com / 123456",
+    "parceiro": "geral@zmbusines.com / zeny123",
+    "veiculo_teste": "36b6fe3c-4db7-4b16-ab9b-b9452fc52379"
+  },
+  "seed_data_creation": "Created and removed test turnos during testing. Existing turno for 'Arlei Oliveira' preserved.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Comissões and Turnos system is fully functional. Partner Zeny has access to /config/comissoes page with 3 tabs. Vehicle AS-14-NI has 1 turno configured with Arlei Oliveira as motorista principal. Commission config supports: valor fixo (€/semana), percentagem fixa (%), or escala por valor faturado (multiple levels). Classification has 5 levels: Bronze, Prata, Ouro, Platina, Diamante with bonus percentages.",
+  "mocked_integrations": {
+    "none": "All features are fully implemented without mocks"
+  }
+}
