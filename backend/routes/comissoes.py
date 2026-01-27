@@ -382,11 +382,7 @@ async def obter_turnos_veiculo(
 @router.post("/turnos/veiculo/{veiculo_id}")
 async def adicionar_turno(
     veiculo_id: str,
-    motorista_id: str,
-    hora_inicio: str,
-    hora_fim: str,
-    dias_semana: Optional[List[int]] = None,
-    notas: Optional[str] = None,
+    request: AdicionarTurnoRequest,
     current_user: Dict = Depends(get_current_user)
 ):
     """Adicionar turno a um veículo"""
@@ -396,11 +392,11 @@ async def adicionar_turno(
     service = get_service()
     turno = await service.adicionar_turno(
         veiculo_id=veiculo_id,
-        motorista_id=motorista_id,
-        hora_inicio=hora_inicio,
-        hora_fim=hora_fim,
-        dias_semana=dias_semana,
-        notas=notas
+        motorista_id=request.motorista_id,
+        hora_inicio=request.hora_inicio,
+        hora_fim=request.hora_fim,
+        dias_semana=request.dias_semana,
+        notas=request.notas
     )
     return turno
 
@@ -409,11 +405,7 @@ async def adicionar_turno(
 async def atualizar_turno(
     veiculo_id: str,
     turno_id: str,
-    hora_inicio: Optional[str] = None,
-    hora_fim: Optional[str] = None,
-    dias_semana: Optional[List[int]] = None,
-    ativo: Optional[bool] = None,
-    notas: Optional[str] = None,
+    request: AtualizarTurnoRequest,
     current_user: Dict = Depends(get_current_user)
 ):
     """Atualizar um turno"""
@@ -421,16 +413,16 @@ async def atualizar_turno(
         raise HTTPException(status_code=403, detail="Não autorizado")
     
     updates = {}
-    if hora_inicio is not None:
-        updates["hora_inicio"] = hora_inicio
-    if hora_fim is not None:
-        updates["hora_fim"] = hora_fim
-    if dias_semana is not None:
-        updates["dias_semana"] = dias_semana
-    if ativo is not None:
-        updates["ativo"] = ativo
-    if notas is not None:
-        updates["notas"] = notas
+    if request.hora_inicio is not None:
+        updates["hora_inicio"] = request.hora_inicio
+    if request.hora_fim is not None:
+        updates["hora_fim"] = request.hora_fim
+    if request.dias_semana is not None:
+        updates["dias_semana"] = request.dias_semana
+    if request.ativo is not None:
+        updates["ativo"] = request.ativo
+    if request.notas is not None:
+        updates["notas"] = request.notas
     
     service = get_service()
     sucesso = await service.atualizar_turno(veiculo_id, turno_id, updates)
@@ -463,7 +455,7 @@ async def remover_turno(
 @router.put("/turnos/veiculo/{veiculo_id}/principal")
 async def definir_motorista_principal(
     veiculo_id: str,
-    motorista_id: str,
+    request: DefinirMotoristaPrincipalRequest,
     current_user: Dict = Depends(get_current_user)
 ):
     """Definir motorista principal de um veículo"""
@@ -471,6 +463,6 @@ async def definir_motorista_principal(
         raise HTTPException(status_code=403, detail="Não autorizado")
     
     service = get_service()
-    await service.definir_motorista_principal(veiculo_id, motorista_id)
+    await service.definir_motorista_principal(veiculo_id, request.motorista_id)
     
     return {"sucesso": True}
