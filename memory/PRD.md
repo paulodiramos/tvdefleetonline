@@ -161,13 +161,30 @@ Cada parceiro configura o seu próprio email:
   - Adicionar módulos individuais com trial ou oferta
   - Visualizar módulos ativos
 
+## Tarefas Concluídas (27/01/2025)
+- ✅ **UI de Preços por Veículo e Motorista** - Campos adicionados no modal de planos
+  - Modal de criação/edição agora mostra:
+    - **Preço Base do Plano** (semanal/mensal/anual)
+    - **Preço por Veículo** (semanal/mensal/anual)
+    - **Preço por Motorista** (semanal/mensal/anual)
+    - **Taxa de Setup**
+  - Cards de planos exibem estrutura de preços completa
+  - Para planos de motoristas, mostra preços simples
+  - Testado com 100% de sucesso (7/7 features)
+
 ## Tarefas Pendentes
 
 ### P1 - Alta Prioridade
 - [x] ~~Refatoração do `server.py`~~ - Removidas 1538 linhas, ~42 endpoints duplicados (25/01/2025)
 - [x] ~~Implementar lógica de agendamento de RPA~~ - Scheduler automático implementado (25/01/2025)
 - [x] ~~Sistema de Gestão de Planos e Módulos~~ - Implementado (26/01/2025)
-- [ ] Integração If Then Pay - Pagamentos online (Multibanco, MB Way, Cartão, Débito Direto)
+- [x] ~~UI de preços por veículo/motorista~~ - Implementado (27/01/2025)
+- [ ] **Sistema de Pré-Pagamento Pro-Rata** - Quando adiciona veículo/motorista:
+  - Bloquear até pagamento da diferença
+  - Calcular valor pro-rata até renovação
+  - Pagamento via MBWAY, Multibanco, Débito em conta, Cartão
+  - Após pagamento: desbloquear e atualizar valor de renovação
+- [ ] Integração Ifthenpay - Pagamentos online (Multibanco, MB Way, Cartão, Débito Direto)
 - [ ] Integração Moloni - Faturação automática após pagamento
 - [ ] Continuar refatoração do server.py (~151 endpoints restantes, ~16100 linhas)
 
