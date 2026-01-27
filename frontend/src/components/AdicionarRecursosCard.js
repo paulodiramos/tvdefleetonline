@@ -469,13 +469,19 @@ const AdicionarRecursosCard = ({ userId, onAdicaoCompleta }) => {
                     {selectedPedido.motoristas_adicionar > 0 && `+${selectedPedido.motoristas_adicionar} motorista(s)`}
                   </span>
                 </div>
-                <div className="flex justify-between">
+                <div className="flex justify-between items-start">
                   <span className="text-slate-600">Valor Pro-Rata:</span>
-                  <span className="font-bold text-blue-600 text-lg">€{selectedPedido.valor_prorata?.toFixed(2)}</span>
+                  <div className="text-right">
+                    <div className="font-bold text-blue-600 text-lg">€{formatarEuros(selectedPedido.valor_prorata)} <span className="text-xs font-normal text-slate-500">c/IVA</span></div>
+                    <div className="text-xs text-slate-400">€{formatarEuros(calcularSemIva(selectedPedido.valor_prorata))} s/IVA</div>
+                  </div>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-sm items-start">
                   <span className="text-slate-500">Nova mensalidade:</span>
-                  <span>€{selectedPedido.nova_mensalidade?.toFixed(2)}</span>
+                  <div className="text-right">
+                    <span>€{formatarEuros(selectedPedido.nova_mensalidade)} <span className="text-xs text-slate-400">c/IVA</span></span>
+                    <div className="text-xs text-slate-400">€{formatarEuros(calcularSemIva(selectedPedido.nova_mensalidade))} s/IVA</div>
+                  </div>
                 </div>
               </div>
 
