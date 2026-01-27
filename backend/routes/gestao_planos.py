@@ -14,7 +14,7 @@ from utils.database import get_database
 from services.planos_modulos_service import PlanosModulosService
 from models.planos_modulos import (
     ModuloCreate, ModuloUpdate, PlanoCreate, PlanoUpdate,
-    AtribuirPlanoRequest, AtribuirModuloRequest,
+    AtribuirPlanoRequest, AtribuirModuloRequest, AtualizarRecursosRequest,
     Periodicidade, TipoUsuario
 )
 
