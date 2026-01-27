@@ -218,6 +218,12 @@ const MeuPlanoParceiro = ({ user, onLogout }) => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Card de Adicionar Recursos (Sistema de Pré-Pagamento) */}
+        <AdicionarRecursosCard 
+          userId={user?.id} 
+          onAdicaoCompleta={fetchMeuPlano}
+        />
       </div>
 
       {/* Modal Trocar Plano */}
