@@ -649,7 +649,7 @@ class PlanosModulosService:
                 "percentagem": request.desconto_percentagem,
                 "motivo": request.oferta_motivo if request.oferta else None
             },
-            "metodo_pagamento": request.metodo_pagamento,
+            "metodo_pagamento": None,
             "created_at": now.isoformat(),
             "updated_at": now.isoformat(),
             "created_by": atribuido_por,
