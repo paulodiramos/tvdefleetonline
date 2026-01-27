@@ -93,7 +93,10 @@ const MeuPlanoParceiro = ({ user, onLogout }) => {
     );
   }
 
-  if (!planoData || !planoData.tem_plano) {
+  // Verifica se tem plano (pode vir como tem_plano ou plano)
+  const temPlano = planoData?.tem_plano || planoData?.plano;
+  
+  if (!planoData || !temPlano) {
     return (
       <Layout user={user} onLogout={onLogout}>
         <Card>
@@ -110,7 +113,7 @@ const MeuPlanoParceiro = ({ user, onLogout }) => {
     );
   }
 
-  const { plano, modulos, custo_semanal, custo_mensal, total_veiculos, total_motoristas, motoristas_com_recibos, detalhes_calculo } = planoData;
+  const { plano, modulos = [], custo_semanal = 0, custo_mensal = 0, total_veiculos = 0, total_motoristas = 0, motoristas_com_recibos = 0, detalhes_calculo } = planoData;
 
   return (
     <Layout user={user} onLogout={onLogout}>
