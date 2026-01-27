@@ -15634,9 +15634,9 @@ async def get_dados_plataforma(
 '''
 
 # ==================================================
-# BOLT INTEGRATION - Sincronização Real
+# BOLT INTEGRATION - MOVIDO PARA routes/bolt_integration.py
 # ==================================================
-
+'''
 @app.post("/api/bolt/test-connection")
 async def test_bolt_connection(
     request: dict,
