@@ -5,6 +5,7 @@ Lógica de negócio para planos, módulos, subscrições e preços
 
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Any, Tuple
+from calendar import monthrange
 import uuid
 import logging
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -13,9 +14,9 @@ from models.planos_modulos import (
     ModuloSistema, ModuloCreate, ModuloUpdate,
     PlanoSistema, PlanoCreate, PlanoUpdate,
     Subscricao, SubscricaoCreate, ModuloSubscrito,
-    AtribuirModuloRequest, AtribuirPlanoRequest,
+    AtribuirModuloRequest, AtribuirPlanoRequest, AtualizarRecursosRequest,
     Promocao, PrecoEspecial, TrialInfo, DescontoEspecial,
-    TipoCobranca, TipoUsuario, Periodicidade, StatusSubscricao,
+    TipoUsuario, Periodicidade, StatusSubscricao, PrecosPlano,
     MODULOS_PREDEFINIDOS, PLANOS_PREDEFINIDOS, Precos, LimitesPlano
 )
 
