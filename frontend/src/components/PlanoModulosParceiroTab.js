@@ -280,6 +280,44 @@ const PlanoModulosParceiroTab = ({ parceiroId, parceiroNome }) => {
       toast.error('Erro ao cancelar subscrição');
     }
   };
+  
+  const handleAtualizarRecursos = async () => {
+    if (!prorataCalculado) {
+      toast.error('Aguarde o cálculo do pro-rata');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/gestao-planos/subscricoes/user/${parceiroId}/atualizar-recursos`, null, {
+        params: {
+          num_veiculos: recursosForm.num_veiculos,
+          num_motoristas: recursosForm.num_motoristas,
+          motivo: recursosForm.motivo || 'Ajuste de recursos'
+        },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      toast.success(`Recursos atualizados! ${prorataCalculado.valor_prorata > 0 ? `Fatura pro-rata: €${prorataCalculado.valor_prorata}` : ''}`);
+      setShowAtualizarRecursosModal(false);
+      fetchDados();
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao atualizar recursos');
+    } finally {
+      setSaving(false);
+    }
+  };
+  
+  const openAtualizarRecursosModal = () => {
+    setRecursosForm({
+      num_veiculos: subscricao?.num_veiculos || 0,
+      num_motoristas: subscricao?.num_motoristas || 0,
+      motivo: ''
+    });
+    setProrataCalculado(null);
+    setShowAtualizarRecursosModal(true);
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
