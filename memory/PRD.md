@@ -197,9 +197,10 @@ Cada parceiro configura o seu próprio email:
 - [x] ~~Configuração Ifthenpay e Moloni~~ - Página admin `/admin/integracoes` (27/01/2025)
 - [x] ~~Sistema de Comissões por Escala~~ - Implementado (27/01/2025)
 - [x] ~~Classificação de Motoristas (5 níveis)~~ - Implementado (27/01/2025)
+- [x] ~~Configuração de Comissões pelo Parceiro~~ - Implementado (27/01/2025)
+- [x] ~~Turnos de motoristas por veículo~~ - Implementado (27/01/2025)
 - [ ] **Processamento real Ifthenpay** - Usar credenciais para gerar referências MB
 - [ ] **Processamento real Moloni** - Emitir faturas automaticamente
-- [ ] **Turnos de motoristas por veículo** - UI para gerir turnos com horários
 - [ ] Continuar refatoração do server.py (~151 endpoints restantes, ~16100 linhas)
 
 ### P2 - Média Prioridade
@@ -208,6 +209,53 @@ Cada parceiro configura o seu próprio email:
 - [ ] Testar parser CSV da Via Verde com ficheiro de exemplo
 - [ ] Loja online de planos/módulos (frontend parceiro/motorista)
 - [ ] Página "Meu Plano" para parceiros verem e fazerem upgrade
+
+---
+
+## ✅ Gestão de Turnos de Veículos (Implementado: 27/01/2025)
+
+### Descrição
+Sistema para atribuir múltiplos motoristas a um veículo com horários de início/fim e dias da semana.
+
+### Funcionalidades
+- **Motorista Principal**: Responsável padrão do veículo
+- **Turnos Configurados**: Tabela com motorista, horário (HH:MM - HH:MM), dias da semana, estado (ativo/inativo), notas
+- **Cobertura Semanal**: Visualização dos turnos por dia da semana
+- **Modal de Turno**: Adicionar/editar com seleção de motorista, horas, dias da semana, notas
+
+### Endpoints
+- `GET /api/comissoes/turnos/veiculo/{id}` - Listar turnos do veículo
+- `POST /api/comissoes/turnos/veiculo/{id}` - Adicionar turno
+- `PUT /api/comissoes/turnos/veiculo/{id}/turno/{turno_id}` - Atualizar turno
+- `DELETE /api/comissoes/turnos/veiculo/{id}/turno/{turno_id}` - Remover turno
+- `PUT /api/comissoes/turnos/veiculo/{id}/principal` - Definir motorista principal
+
+### Ficheiros
+- `/app/frontend/src/components/VeiculoTurnos.js` - Componente de gestão de turnos
+- `/app/frontend/src/pages/FichaVeiculo.js` - Tab "Turnos" adicionada
+- `/app/backend/routes/comissoes.py` - Endpoints de turnos
+- `/app/backend/services/comissoes_service.py` - Lógica de negócio
+
+---
+
+## ✅ Configuração de Comissões pelo Parceiro (Implementado: 27/01/2025)
+
+### Descrição
+Página para parceiros configurarem as suas próprias escalas de comissão (se módulo ativo).
+
+### Funcionalidades
+- **Tipo de Comissão**: Valor fixo (€/semana), Percentagem fixa (%), ou Escala por valor faturado
+- **Escala Própria**: Criar/editar níveis com valor mínimo, máximo e percentagem
+- **Classificação Própria**: Personalizar bónus por nível de classificação
+- **Gestão de Motoristas**: Atribuir classificação manual aos motoristas
+
+### Acesso Condicional
+Link "💰 Comissões" só aparece no menu se parceiro tiver módulo `relatorios_avancados`, `comissoes` ou similar.
+
+### Ficheiros
+- `/app/frontend/src/pages/ConfigComissoesParceiro.js` - Página de configuração
+- `/app/frontend/src/components/Layout.js` - Link condicional no menu
+- `/app/backend/routes/comissoes.py` - Endpoints `/parceiro/config`
 
 ---
 
