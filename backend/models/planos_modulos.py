@@ -418,6 +418,91 @@ class ProRataResponse(BaseModel):
     data_proxima_cobranca: str
 
 
+# ==================== SISTEMA DE PRÉ-PAGAMENTO PRO-RATA ====================
+
+class StatusPedidoAdicao(str, Enum):
+    """Status do pedido de adição de recursos"""
+    PENDENTE_PAGAMENTO = "pendente_pagamento"
+    PAGAMENTO_INICIADO = "pagamento_iniciado"
+    PAGO = "pago"
+    APLICADO = "aplicado"
+    EXPIRADO = "expirado"
+    CANCELADO = "cancelado"
+
+
+class MetodoPagamento(str, Enum):
+    """Métodos de pagamento disponíveis"""
+    MBWAY = "mbway"
+    MULTIBANCO = "multibanco"
+    CARTAO = "cartao"
+    DEBITO_DIRETO = "debito_direto"
+
+
+class PedidoAdicaoRecursos(BaseModel):
+    """Pedido de adição de veículos/motoristas (bloqueado até pagamento)"""
+    id: str
+    user_id: str
+    user_nome: Optional[str] = None
+    subscricao_id: str
+    
+    # Recursos atuais
+    veiculos_atual: int = 0
+    motoristas_atual: int = 0
+    
+    # Recursos a adicionar
+    veiculos_adicionar: int = 0
+    motoristas_adicionar: int = 0
+    
+    # Recursos novos (após aplicação)
+    veiculos_novo: int = 0
+    motoristas_novo: int = 0
+    
+    # Valores
+    valor_prorata: float  # Valor a pagar para desbloquear
+    nova_mensalidade: float  # Nova mensalidade após aplicação
+    dias_restantes: int
+    dias_periodo: int
+    
+    # Status e datas
+    status: StatusPedidoAdicao = StatusPedidoAdicao.PENDENTE_PAGAMENTO
+    created_at: datetime
+    expires_at: datetime  # Expira após X horas sem pagamento
+    updated_at: Optional[datetime] = None
+    
+    # Pagamento
+    metodo_pagamento: Optional[MetodoPagamento] = None
+    pagamento_id: Optional[str] = None  # ID do pagamento na gateway
+    pagamento_referencia: Optional[str] = None  # Referência MB, entidade, etc
+    pagamento_entidade: Optional[str] = None  # Entidade Multibanco
+    pagamento_data: Optional[datetime] = None
+    
+    # Aplicação
+    aplicado_em: Optional[datetime] = None
+    aplicado_por: Optional[str] = None
+    
+    # Metadata
+    notas: Optional[str] = None
+
+
+class SolicitarAdicaoRequest(BaseModel):
+    """Request para solicitar adição de veículos/motoristas"""
+    veiculos_adicionar: int = 0
+    motoristas_adicionar: int = 0
+
+
+class IniciarPagamentoRequest(BaseModel):
+    """Request para iniciar pagamento de um pedido"""
+    pedido_id: str
+    metodo_pagamento: MetodoPagamento
+
+
+class ConfirmarPagamentoRequest(BaseModel):
+    """Request para confirmar pagamento (manual ou webhook)"""
+    pedido_id: str
+    pagamento_id: Optional[str] = None
+    referencia: Optional[str] = None
+
+
 # ==================== MÓDULOS PREDEFINIDOS ====================
 
 MODULOS_PREDEFINIDOS = {
