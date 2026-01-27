@@ -11322,9 +11322,9 @@ async def executar_sincronizacao_automatica(credencial_id: str):
         logger.error(f"Erro na sincronização automática de {credencial_id}: {e}")
 
 # =============================================================================
-# IMPORTAÇÃO DE GANHOS UBER
+# IMPORTAÇÃO DE GANHOS - MOVIDO PARA routes/import_ganhos.py
 # =============================================================================
-
+'''
 @app.post("/api/import/uber/ganhos")
 async def importar_ganhos_uber(
     file: UploadFile = File(...),
