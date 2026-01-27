@@ -126,6 +126,31 @@ class AtualizarClassificacaoRequest(BaseModel):
     motivo: Optional[str] = None
 
 
+# ==================== REQUESTS PARA TURNOS ====================
+
+class AdicionarTurnoRequest(BaseModel):
+    """Request para adicionar turno a um veículo"""
+    motorista_id: str
+    hora_inicio: str  # Formato "HH:MM"
+    hora_fim: str     # Formato "HH:MM"
+    dias_semana: Optional[List[int]] = None  # 0=Segunda, 6=Domingo
+    notas: Optional[str] = None
+
+
+class AtualizarTurnoRequest(BaseModel):
+    """Request para atualizar um turno"""
+    hora_inicio: Optional[str] = None
+    hora_fim: Optional[str] = None
+    dias_semana: Optional[List[int]] = None
+    ativo: Optional[bool] = None
+    notas: Optional[str] = None
+
+
+class DefinirMotoristaPrincipalRequest(BaseModel):
+    """Request para definir motorista principal de um veículo"""
+    motorista_id: str
+
+
 class CriarNivelClassificacaoRequest(BaseModel):
     """Request para criar/atualizar nível de classificação"""
     nivel: int  # 1-5
