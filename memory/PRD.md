@@ -194,8 +194,12 @@ Cada parceiro configura o seu próprio email:
 - [x] ~~Sistema de Gestão de Planos e Módulos~~ - Implementado (26/01/2025)
 - [x] ~~UI de preços por veículo/motorista~~ - Implementado (27/01/2025)
 - [x] ~~Sistema de Pré-Pagamento Pro-Rata~~ - Implementado (27/01/2025)
-- [ ] **Integração Ifthenpay** - Pagamentos online (Multibanco, MB Way, Cartão, Débito Direto) - **CONFIGURAÇÃO NO ADMIN CONCLUÍDA**
-- [ ] Integração Moloni - Faturação automática após pagamento - **CONFIGURAÇÃO NO ADMIN CONCLUÍDA**
+- [x] ~~Configuração Ifthenpay e Moloni~~ - Página admin `/admin/integracoes` (27/01/2025)
+- [x] ~~Sistema de Comissões por Escala~~ - Implementado (27/01/2025)
+- [x] ~~Classificação de Motoristas (5 níveis)~~ - Implementado (27/01/2025)
+- [ ] **Processamento real Ifthenpay** - Usar credenciais para gerar referências MB
+- [ ] **Processamento real Moloni** - Emitir faturas automaticamente
+- [ ] **Turnos de motoristas por veículo** - UI para gerir turnos com horários
 - [ ] Continuar refatoração do server.py (~151 endpoints restantes, ~16100 linhas)
 
 ### P2 - Média Prioridade
@@ -204,6 +208,35 @@ Cada parceiro configura o seu próprio email:
 - [ ] Testar parser CSV da Via Verde com ficheiro de exemplo
 - [ ] Loja online de planos/módulos (frontend parceiro/motorista)
 - [ ] Página "Meu Plano" para parceiros verem e fazerem upgrade
+
+---
+
+## ✅ Sistema de Comissões e Classificação de Motoristas (Implementado: 27/01/2025)
+
+### Descrição
+Sistema flexível de comissões baseado em valor faturado com bónus por classificação de motorista.
+
+### Escalas de Comissão (níveis ilimitados)
+- Comissão % baseada no **valor faturado semanal**
+- Escala padrão: 10% (até €500) → 12% → 14% → 16% → 18% (>€2000)
+- Admin pode criar/editar escalas em `/admin/comissoes`
+
+### Classificação de Motoristas (5 níveis)
+| Nível | Meses Mín. | Cuidado Veículo | Bónus |
+|-------|------------|-----------------|-------|
+| 🥉 Bronze | 0 | 0% | +0% |
+| 🥈 Prata | 3 | 60% | +1% |
+| 🥇 Ouro | 6 | 75% | +2% |
+| 💎 Platina | 12 | 85% | +3.5% |
+| 👑 Diamante | 24 | 95% | +5% |
+
+### Cálculo Total
+- **Comissão Total = Comissão Base (escala) + Bónus (classificação)**
+- Exemplo: €1200 faturado + Ouro = 14% + 2% = **16% (€192)**
+
+### Ficheiros
+- Backend: `/app/backend/services/comissoes_service.py`, `/app/backend/routes/comissoes.py`
+- Frontend: `/app/frontend/src/pages/AdminComissoes.js`
 
 ---
 
