@@ -200,9 +200,10 @@ Cada parceiro configura o seu próprio email:
 - [x] ~~Configuração de Comissões pelo Parceiro~~ - Implementado (27/01/2025)
 - [x] ~~Turnos de motoristas por veículo~~ - Implementado (27/01/2025)
 - [x] ~~Sistema de Sincronização Automática~~ - Implementado (27/01/2025)
+- [x] ~~Refatoração Parcial server.py~~ - Criados import_ganhos.py e bolt_integration.py (27/01/2025)
 - [ ] **Processamento real Ifthenpay** - Usar credenciais para gerar referências MB
 - [ ] **Processamento real Moloni** - Emitir faturas automaticamente
-- [ ] Continuar refatoração do server.py (~151 endpoints restantes, ~16100 linhas)
+- [ ] Continuar refatoração do server.py (~36 endpoints @app restantes, ~16000 linhas)
 
 ### P2 - Média Prioridade
 - [x] ~~Limitar "Próximos Eventos" no dashboard~~ - Alertas limitados a 5 itens (25/01/2025)
