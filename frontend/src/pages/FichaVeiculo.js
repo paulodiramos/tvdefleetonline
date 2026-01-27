@@ -1612,8 +1612,9 @@ const FichaVeiculo = ({ user, onLogout }) => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-9 w-full">
+          <TabsList className="grid grid-cols-10 w-full">
             <TabsTrigger value="info">Informações</TabsTrigger>
+            <TabsTrigger value="turnos">Turnos</TabsTrigger>
             <TabsTrigger value="dispositivos">Dispositivos</TabsTrigger>
             <TabsTrigger value="historico">Histórico</TabsTrigger>
             <TabsTrigger value="seguro">Seguro</TabsTrigger>
