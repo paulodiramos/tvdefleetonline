@@ -108,6 +108,8 @@ from routes.gestao_planos import router as gestao_planos_router
 from routes.prepagamento import router as prepagamento_router
 from routes.integracoes_config import router as integracoes_router
 from routes.comissoes import router as comissoes_router
+from routes.import_ganhos import router as import_ganhos_router
+from routes.bolt_integration import router as bolt_integration_router
 
 # Import utilities from refactored modules
 from utils.file_handlers import (
