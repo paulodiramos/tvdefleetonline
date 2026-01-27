@@ -354,9 +354,14 @@ const PlanoModulosParceiroTab = ({ parceiroId, parceiroNome }) => {
             </CardTitle>
             <div className="flex gap-2">
               {subscricao?.plano_id && (
-                <Button variant="ghost" size="sm" className="text-red-500" onClick={handleCancelarSubscricao}>
-                  <XCircle className="w-4 h-4" />
-                </Button>
+                <>
+                  <Button variant="outline" size="sm" onClick={openAtualizarRecursosModal}>
+                    <Settings className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-red-500" onClick={handleCancelarSubscricao}>
+                    <XCircle className="w-4 h-4" />
+                  </Button>
+                </>
               )}
               <Button size="sm" onClick={() => setShowAtribuirPlanoModal(true)}>
                 {subscricao?.plano_id ? 'Alterar' : 'Atribuir Plano'}
@@ -375,35 +380,99 @@ const PlanoModulosParceiroTab = ({ parceiroId, parceiroNome }) => {
                 {getStatusBadge(subscricao.status)}
               </div>
               
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div>
-                  <p className="text-slate-500">Periodicidade</p>
-                  <p className="font-medium capitalize">{subscricao.periodicidade}</p>
-                </div>
-                <div>
-                  <p className="text-slate-500">Valor</p>
-                  <p className="font-medium">€{subscricao.preco_final}</p>
-                </div>
-                <div>
-                  <p className="text-slate-500">Desde</p>
-                  <p className="font-medium">{new Date(subscricao.data_inicio).toLocaleDateString('pt-PT')}</p>
+              {/* Recursos e Custos */}
+              <div className="p-3 bg-slate-50 rounded-lg">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Car className="w-4 h-4 text-blue-500" />
+                    <div>
+                      <p className="text-slate-500">Veículos</p>
+                      <p className="font-semibold">{subscricao.num_veiculos || 0}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-green-500" />
+                    <div>
+                      <p className="text-slate-500">Motoristas</p>
+                      <p className="font-semibold">{subscricao.num_motoristas || 0}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Periodicidade</p>
+                    <p className="font-medium capitalize">{subscricao.periodicidade}</p>
+                  </div>
+                  <div>
+                    <p className="text-slate-500">Próx. Cobrança</p>
+                    <p className="font-medium">
+                      {subscricao.proxima_cobranca 
+                        ? new Date(subscricao.proxima_cobranca).toLocaleDateString('pt-PT')
+                        : '-'}
+                    </p>
+                  </div>
                 </div>
               </div>
               
-              {subscricao.trial?.ativo && (
-                <Badge className="bg-amber-100 text-amber-700">
-                  <Gift className="w-3 h-3 mr-1" />
-                  Trial até {new Date(subscricao.trial.data_fim).toLocaleDateString('pt-PT')}
-                </Badge>
-              )}
+              {/* Tabela de Custos */}
+              <div className="border rounded-lg overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-slate-100">
+                    <tr>
+                      <th className="text-left p-2">Descrição</th>
+                      <th className="text-right p-2">Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-t">
+                      <td className="p-2">Base do plano</td>
+                      <td className="text-right p-2">€{subscricao.preco_base || 0}</td>
+                    </tr>
+                    {(subscricao.num_veiculos || 0) > 0 && (
+                      <tr className="border-t">
+                        <td className="p-2">Veículos ({subscricao.num_veiculos}x)</td>
+                        <td className="text-right p-2">€{subscricao.preco_veiculos || 0}</td>
+                      </tr>
+                    )}
+                    {(subscricao.num_motoristas || 0) > 0 && (
+                      <tr className="border-t">
+                        <td className="p-2">Motoristas ({subscricao.num_motoristas}x)</td>
+                        <td className="text-right p-2">€{subscricao.preco_motoristas || 0}</td>
+                      </tr>
+                    )}
+                    {(subscricao.preco_modulos || 0) > 0 && (
+                      <tr className="border-t">
+                        <td className="p-2">Módulos adicionais</td>
+                        <td className="text-right p-2">€{subscricao.preco_modulos}</td>
+                      </tr>
+                    )}
+                    <tr className="border-t bg-blue-50 font-semibold">
+                      <td className="p-2">Total Mensal</td>
+                      <td className="text-right p-2 text-blue-600">€{subscricao.preco_final || 0}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
               
-              {subscricao.desconto_especial?.ativo && (
-                <Badge className="bg-green-100 text-green-700">
-                  <Euro className="w-3 h-3 mr-1" />
-                  {subscricao.desconto_especial.percentagem ? `${subscricao.desconto_especial.percentagem}% desconto` : 'Oferta'}
-                  {subscricao.desconto_especial.motivo && ` - ${subscricao.desconto_especial.motivo}`}
+              <div className="flex flex-wrap gap-2">
+                {subscricao.trial?.ativo && (
+                  <Badge className="bg-amber-100 text-amber-700">
+                    <Gift className="w-3 h-3 mr-1" />
+                    Trial até {new Date(subscricao.trial.data_fim).toLocaleDateString('pt-PT')}
+                  </Badge>
+                )}
+                
+                {subscricao.desconto_especial?.ativo && (
+                  <Badge className="bg-green-100 text-green-700">
+                    <Euro className="w-3 h-3 mr-1" />
+                    {subscricao.desconto_especial.percentagem ? `${subscricao.desconto_especial.percentagem}% desconto` : 'Oferta'}
+                    {subscricao.desconto_especial.motivo && ` - ${subscricao.desconto_especial.motivo}`}
+                  </Badge>
+                )}
+                
+                <Badge variant="outline">
+                  <Calendar className="w-3 h-3 mr-1" />
+                  Desde {new Date(subscricao.data_inicio).toLocaleDateString('pt-PT')}
                 </Badge>
-              )}
+              </div>
             </div>
           ) : (
             <div className="text-center py-4 text-slate-500">
