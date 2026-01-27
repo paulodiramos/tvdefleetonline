@@ -13,7 +13,7 @@ import requests
 import os
 import time
 
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://feature-flags-4.preview.emergentagent.com')
+BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', 'https://subscription-mgr-4.preview.emergentagent.com')
 
 # Test credentials
 PARCEIRO_EMAIL = "parceiro@tvdefleet.com"
