@@ -574,26 +574,42 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
                         <p className="text-sm text-slate-600">{plano.descricao}</p>
                         
                         <div className="p-3 bg-slate-50 rounded-lg space-y-2">
-                          <p className="text-xs text-slate-500 font-medium">Preços</p>
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs text-slate-500 font-medium">Preços</p>
+                            <Badge variant="outline" className="text-xs">c/IVA</Badge>
+                          </div>
                           {/* Base */}
-                          <div className="flex items-center gap-2 text-sm">
+                          <div className="flex items-center justify-between text-sm">
                             <span className="text-blue-600 font-medium">Base:</span>
-                            <span>€{plano.precos_plano?.base_mensal || plano.precos?.mensal || 0}/mês</span>
+                            <div className="text-right">
+                              <span>€{formatarEuros(plano.precos_plano?.base_mensal || plano.precos?.mensal || 0)}/mês</span>
+                              <span className="text-xs text-slate-400 ml-1">(€{formatarEuros(calcularSemIva(plano.precos_plano?.base_mensal || plano.precos?.mensal || 0))} s/IVA)</span>
+                            </div>
                           </div>
                           {/* Por Veículo */}
                           {(plano.precos_plano?.por_veiculo_mensal > 0 || plano.precos_plano?.por_veiculo_anual > 0) && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <Car className="w-3 h-3 text-green-600" />
-                              <span className="text-green-600 font-medium">Por Veículo:</span>
-                              <span>+€{plano.precos_plano?.por_veiculo_mensal || 0}/mês</span>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="flex items-center gap-1">
+                                <Car className="w-3 h-3 text-green-600" />
+                                <span className="text-green-600 font-medium">Por Veículo:</span>
+                              </span>
+                              <div className="text-right">
+                                <span>+€{formatarEuros(plano.precos_plano?.por_veiculo_mensal || 0)}/mês</span>
+                                <span className="text-xs text-slate-400 ml-1">(€{formatarEuros(calcularSemIva(plano.precos_plano?.por_veiculo_mensal || 0))} s/IVA)</span>
+                              </div>
                             </div>
                           )}
                           {/* Por Motorista */}
                           {(plano.precos_plano?.por_motorista_mensal > 0 || plano.precos_plano?.por_motorista_anual > 0) && (
-                            <div className="flex items-center gap-2 text-sm">
-                              <Users className="w-3 h-3 text-purple-600" />
-                              <span className="text-purple-600 font-medium">Por Motorista:</span>
-                              <span>+€{plano.precos_plano?.por_motorista_mensal || 0}/mês</span>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="flex items-center gap-1">
+                                <Users className="w-3 h-3 text-purple-600" />
+                                <span className="text-purple-600 font-medium">Por Motorista:</span>
+                              </span>
+                              <div className="text-right">
+                                <span>+€{formatarEuros(plano.precos_plano?.por_motorista_mensal || 0)}/mês</span>
+                                <span className="text-xs text-slate-400 ml-1">(€{formatarEuros(calcularSemIva(plano.precos_plano?.por_motorista_mensal || 0))} s/IVA)</span>
+                              </div>
                             </div>
                           )}
                         </div>
