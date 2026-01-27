@@ -991,49 +991,207 @@ const AdminGestaoPlanos = ({ user, onLogout }) => {
             </div>
             
             {/* Preços */}
-            <div className="p-4 bg-slate-50 rounded-lg">
+            <div className="p-4 bg-slate-50 rounded-lg space-y-4">
               <h4 className="font-semibold mb-3 flex items-center gap-2">
                 <Euro className="w-4 h-4" />
                 Preços
               </h4>
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label>Semanal (€)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={planoForm.precos?.semanal || ''}
-                    onChange={(e) => setPlanoForm(prev => ({ 
-                      ...prev, 
-                      precos: { ...prev.precos, semanal: parseFloat(e.target.value) || 0 }
-                    }))}
-                  />
+              
+              {/* Preços para Parceiros - modelo base + por veículo + por motorista */}
+              {planoForm.tipo_usuario === 'parceiro' ? (
+                <>
+                  {/* Preço Base */}
+                  <div>
+                    <Label className="text-sm font-medium text-blue-700 mb-2 block">Preço Base do Plano</Label>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <Label className="text-xs text-slate-500">Semanal (€)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={planoForm.precos_plano?.base_semanal || ''}
+                          onChange={(e) => setPlanoForm(prev => ({ 
+                            ...prev, 
+                            precos_plano: { ...prev.precos_plano, base_semanal: parseFloat(e.target.value) || 0 }
+                          }))}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-500">Mensal (€)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={planoForm.precos_plano?.base_mensal || ''}
+                          onChange={(e) => setPlanoForm(prev => ({ 
+                            ...prev, 
+                            precos_plano: { ...prev.precos_plano, base_mensal: parseFloat(e.target.value) || 0 }
+                          }))}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-500">Anual (€)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={planoForm.precos_plano?.base_anual || ''}
+                          onChange={(e) => setPlanoForm(prev => ({ 
+                            ...prev, 
+                            precos_plano: { ...prev.precos_plano, base_anual: parseFloat(e.target.value) || 0 }
+                          }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Preço por Veículo */}
+                  <div className="pt-3 border-t border-slate-200">
+                    <Label className="text-sm font-medium text-green-700 mb-2 flex items-center gap-2">
+                      <Car className="w-4 h-4" />
+                      Preço por Veículo
+                    </Label>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <Label className="text-xs text-slate-500">Semanal (€)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={planoForm.precos_plano?.por_veiculo_semanal || ''}
+                          onChange={(e) => setPlanoForm(prev => ({ 
+                            ...prev, 
+                            precos_plano: { ...prev.precos_plano, por_veiculo_semanal: parseFloat(e.target.value) || 0 }
+                          }))}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-500">Mensal (€)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={planoForm.precos_plano?.por_veiculo_mensal || ''}
+                          onChange={(e) => setPlanoForm(prev => ({ 
+                            ...prev, 
+                            precos_plano: { ...prev.precos_plano, por_veiculo_mensal: parseFloat(e.target.value) || 0 }
+                          }))}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-500">Anual (€)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={planoForm.precos_plano?.por_veiculo_anual || ''}
+                          onChange={(e) => setPlanoForm(prev => ({ 
+                            ...prev, 
+                            precos_plano: { ...prev.precos_plano, por_veiculo_anual: parseFloat(e.target.value) || 0 }
+                          }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Preço por Motorista */}
+                  <div className="pt-3 border-t border-slate-200">
+                    <Label className="text-sm font-medium text-purple-700 mb-2 flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      Preço por Motorista
+                    </Label>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <Label className="text-xs text-slate-500">Semanal (€)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={planoForm.precos_plano?.por_motorista_semanal || ''}
+                          onChange={(e) => setPlanoForm(prev => ({ 
+                            ...prev, 
+                            precos_plano: { ...prev.precos_plano, por_motorista_semanal: parseFloat(e.target.value) || 0 }
+                          }))}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-500">Mensal (€)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={planoForm.precos_plano?.por_motorista_mensal || ''}
+                          onChange={(e) => setPlanoForm(prev => ({ 
+                            ...prev, 
+                            precos_plano: { ...prev.precos_plano, por_motorista_mensal: parseFloat(e.target.value) || 0 }
+                          }))}
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-500">Anual (€)</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={planoForm.precos_plano?.por_motorista_anual || ''}
+                          onChange={(e) => setPlanoForm(prev => ({ 
+                            ...prev, 
+                            precos_plano: { ...prev.precos_plano, por_motorista_anual: parseFloat(e.target.value) || 0 }
+                          }))}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Taxa de Setup */}
+                  <div className="pt-3 border-t border-slate-200">
+                    <div className="w-1/3">
+                      <Label className="text-sm font-medium text-slate-700 mb-2 block">Taxa de Setup (€)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={planoForm.precos_plano?.setup || ''}
+                        onChange={(e) => setPlanoForm(prev => ({ 
+                          ...prev, 
+                          precos_plano: { ...prev.precos_plano, setup: parseFloat(e.target.value) || 0 }
+                        }))}
+                      />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                /* Preços simples para Motoristas */
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label>Semanal (€)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={planoForm.precos?.semanal || ''}
+                      onChange={(e) => setPlanoForm(prev => ({ 
+                        ...prev, 
+                        precos: { ...prev.precos, semanal: parseFloat(e.target.value) || 0 }
+                      }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Mensal (€)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={planoForm.precos?.mensal || ''}
+                      onChange={(e) => setPlanoForm(prev => ({ 
+                        ...prev, 
+                        precos: { ...prev.precos, mensal: parseFloat(e.target.value) || 0 }
+                      }))}
+                    />
+                  </div>
+                  <div>
+                    <Label>Anual (€)</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={planoForm.precos?.anual || ''}
+                      onChange={(e) => setPlanoForm(prev => ({ 
+                        ...prev, 
+                        precos: { ...prev.precos, anual: parseFloat(e.target.value) || 0 }
+                      }))}
+                    />
+                  </div>
                 </div>
-                <div>
-                  <Label>Mensal (€)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={planoForm.precos?.mensal || ''}
-                    onChange={(e) => setPlanoForm(prev => ({ 
-                      ...prev, 
-                      precos: { ...prev.precos, mensal: parseFloat(e.target.value) || 0 }
-                    }))}
-                  />
-                </div>
-                <div>
-                  <Label>Anual (€)</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    value={planoForm.precos?.anual || ''}
-                    onChange={(e) => setPlanoForm(prev => ({ 
-                      ...prev, 
-                      precos: { ...prev.precos, anual: parseFloat(e.target.value) || 0 }
-                    }))}
-                  />
-                </div>
-              </div>
+              )}
             </div>
             
             {/* Limites */}
