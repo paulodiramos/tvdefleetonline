@@ -256,12 +256,12 @@ async def adicionar_preco_especial(
 async def calcular_preco(
     plano_id: str,
     periodicidade: str = Query("mensal", description="semanal, mensal, anual"),
-    num_veiculos: int = Query(1),
-    num_motoristas: int = Query(1),
+    num_veiculos: int = Query(0),
+    num_motoristas: int = Query(0),
     codigo_promocional: Optional[str] = Query(None),
     current_user: Dict = Depends(get_current_user)
 ):
-    """Calcular preço de um plano para o utilizador atual"""
+    """Calcular preço de um plano (base + veículos + motoristas)"""
     service = get_service()
     resultado = await service.calcular_preco_plano(
         plano_id,
@@ -272,6 +272,52 @@ async def calcular_preco(
         codigo_promocional
     )
     return resultado
+
+
+@router.get("/subscricoes/user/{user_id}/calcular-prorata")
+async def calcular_prorata(
+    user_id: str,
+    num_veiculos: Optional[int] = Query(None),
+    num_motoristas: Optional[int] = Query(None),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Calcular valor pro-rata para alteração de recursos"""
+    if current_user["role"] != UserRole.ADMIN and current_user["id"] != user_id:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    service = get_service()
+    resultado = await service.calcular_prorata(user_id, num_veiculos, num_motoristas)
+    
+    if "erro" in resultado:
+        raise HTTPException(status_code=400, detail=resultado["erro"])
+    
+    return resultado
+
+
+@router.post("/subscricoes/user/{user_id}/atualizar-recursos")
+async def atualizar_recursos(
+    user_id: str,
+    num_veiculos: Optional[int] = None,
+    num_motoristas: Optional[int] = None,
+    motivo: Optional[str] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar número de veículos/motoristas e gerar fatura pro-rata"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    service = get_service()
+    try:
+        request = AtualizarRecursosRequest(
+            user_id=user_id,
+            num_veiculos=num_veiculos,
+            num_motoristas=num_motoristas,
+            motivo=motivo
+        )
+        resultado = await service.atualizar_recursos_subscricao(request, current_user["id"])
+        return resultado
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # ==================== SUBSCRIÇÕES ====================
