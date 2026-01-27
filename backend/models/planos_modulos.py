@@ -298,13 +298,20 @@ class Subscricao(BaseModel):
     plano_nome: Optional[str] = None
     plano_categoria: Optional[str] = None
     
+    # Quantidade de recursos (para cálculo de preço)
+    num_veiculos: int = 0
+    num_motoristas: int = 0
+    
     # Módulos individuais adicionais
     modulos_individuais: List[ModuloSubscrito] = []
     
     # Cobrança
     periodicidade: Periodicidade = Periodicidade.MENSAL
-    preco_base: float = 0
-    preco_final: float = 0  # Após descontos
+    preco_base: float = 0  # Base do plano
+    preco_veiculos: float = 0  # Custo total veículos
+    preco_motoristas: float = 0  # Custo total motoristas
+    preco_modulos: float = 0  # Custo módulos individuais
+    preco_final: float = 0  # Total após descontos
     
     # Datas
     data_inicio: datetime
@@ -324,6 +331,9 @@ class Subscricao(BaseModel):
     metodo_pagamento: Optional[str] = None  # "multibanco", "mbway", "cartao", "debito_direto"
     ultimo_pagamento: Optional[datetime] = None
     
+    # Histórico de ajustes (pro-rata)
+    historico_ajustes: List[Dict] = []
+    
     # Metadata
     created_at: datetime
     updated_at: datetime
@@ -336,6 +346,8 @@ class SubscricaoCreate(BaseModel):
     user_id: str
     user_tipo: TipoUsuario
     plano_id: Optional[str] = None
+    num_veiculos: int = 0
+    num_motoristas: int = 0
     modulos_individuais: List[str] = []  # Lista de códigos de módulos
     periodicidade: Periodicidade = Periodicidade.MENSAL
     trial_dias: Optional[int] = None
