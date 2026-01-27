@@ -1,0 +1,406 @@
+"""
+Rotas para Gestão de Comissões, Classificações e Turnos
+"""
+
+from fastapi import APIRouter, HTTPException, Depends, Query
+from typing import Dict, Any, List, Optional
+from datetime import datetime, timezone
+import logging
+
+from models.user import UserRole
+from models.comissoes import (
+    CriarEscalaRequest, AtualizarNiveisEscalaRequest,
+    CriarNivelClassificacaoRequest, AtualizarClassificacaoRequest
+)
+from utils.auth import get_current_user
+from utils.database import get_database
+from services.comissoes_service import ComissoesService
+
+router = APIRouter(prefix="/comissoes", tags=["comissoes"])
+db = get_database()
+logger = logging.getLogger(__name__)
+
+
+def get_service():
+    return ComissoesService(db)
+
+
+# ==================== ESCALAS DE COMISSÃO ====================
+
+@router.get("/escalas")
+async def listar_escalas(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Listar todas as escalas de comissão"""
+    service = get_service()
+    escalas = await service.listar_escalas()
+    return {"escalas": escalas}
+
+
+@router.get("/escalas/ativa")
+async def obter_escala_ativa(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter a escala de comissão ativa"""
+    service = get_service()
+    escala = await service.obter_escala_ativa()
+    if not escala:
+        # Criar escala padrão
+        escala = await service.seed_escala_padrao()
+        if escala.get("existente"):
+            escala = await service.obter_escala_ativa()
+    return escala
+
+
+@router.get("/escalas/{escala_id}")
+async def obter_escala(
+    escala_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter uma escala por ID"""
+    service = get_service()
+    escala = await service.obter_escala(escala_id)
+    if not escala:
+        raise HTTPException(status_code=404, detail="Escala não encontrada")
+    return escala
+
+
+@router.post("/escalas")
+async def criar_escala(
+    request: CriarEscalaRequest,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Criar nova escala de comissão (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    service = get_service()
+    escala = await service.criar_escala(
+        nome=request.nome,
+        descricao=request.descricao,
+        niveis=request.niveis,
+        created_by=current_user["id"]
+    )
+    return escala
+
+
+@router.put("/escalas/{escala_id}/niveis")
+async def atualizar_niveis_escala(
+    escala_id: str,
+    request: AtualizarNiveisEscalaRequest,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar níveis de uma escala (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    service = get_service()
+    escala = await service.atualizar_niveis_escala(
+        escala_id=escala_id,
+        niveis=request.niveis,
+        updated_by=current_user["id"]
+    )
+    return escala
+
+
+@router.delete("/escalas/{escala_id}")
+async def eliminar_escala(
+    escala_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Eliminar uma escala (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    service = get_service()
+    sucesso = await service.eliminar_escala(escala_id)
+    if not sucesso:
+        raise HTTPException(status_code=404, detail="Escala não encontrada")
+    return {"sucesso": True}
+
+
+@router.post("/escalas/seed")
+async def seed_escala_padrao(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Criar escala padrão (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    service = get_service()
+    result = await service.seed_escala_padrao()
+    return result
+
+
+# ==================== CLASSIFICAÇÃO DE MOTORISTAS ====================
+
+@router.get("/classificacao/config")
+async def obter_config_classificacao(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter configuração de classificação de motoristas"""
+    service = get_service()
+    config = await service.obter_config_classificacao()
+    return config
+
+
+@router.put("/classificacao/config")
+async def atualizar_config_classificacao(
+    niveis: List[dict],
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar níveis de classificação (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    service = get_service()
+    config = await service.atualizar_niveis_classificacao(
+        niveis=niveis,
+        updated_by=current_user["id"]
+    )
+    return config
+
+
+@router.post("/classificacao/seed")
+async def seed_classificacao(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Criar níveis de classificação padrão (Admin only)"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    
+    service = get_service()
+    result = await service.seed_niveis_classificacao()
+    return result
+
+
+@router.get("/classificacao/motorista/{motorista_id}")
+async def obter_classificacao_motorista(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter classificação de um motorista"""
+    service = get_service()
+    classificacao = await service.obter_classificacao_motorista(motorista_id)
+    if not classificacao:
+        # Calcular e atribuir
+        classificacao = await service.atribuir_classificacao_motorista(motorista_id)
+    return classificacao
+
+
+@router.put("/classificacao/motorista/{motorista_id}")
+async def atualizar_classificacao_motorista(
+    motorista_id: str,
+    request: AtualizarClassificacaoRequest,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar classificação de um motorista (Admin ou Parceiro)"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    service = get_service()
+    
+    try:
+        classificacao = await service.atribuir_classificacao_motorista(
+            motorista_id=motorista_id,
+            nivel_id=request.nivel_id,
+            nivel_manual=request.nivel_manual,
+            pontuacao_cuidado_veiculo=request.pontuacao_cuidado_veiculo,
+            atribuido_por=current_user["id"],
+            motivo=request.motivo
+        )
+        return classificacao
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/classificacao/motorista/{motorista_id}/recalcular")
+async def recalcular_classificacao(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Recalcular classificação automaticamente"""
+    service = get_service()
+    
+    try:
+        classificacao = await service.atribuir_classificacao_motorista(
+            motorista_id=motorista_id,
+            nivel_manual=False,
+            atribuido_por="sistema"
+        )
+        return classificacao
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+# ==================== CÁLCULO DE COMISSÃO ====================
+
+@router.post("/calcular")
+async def calcular_comissao(
+    motorista_id: str,
+    valor_faturado: float,
+    escala_id: Optional[str] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Calcular comissão de um motorista"""
+    service = get_service()
+    
+    try:
+        resultado = await service.calcular_comissao(
+            motorista_id=motorista_id,
+            valor_faturado=valor_faturado,
+            escala_id=escala_id
+        )
+        return resultado.model_dump()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/simular")
+async def simular_comissao(
+    valor_faturado: float,
+    nivel_classificacao: int = 1,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Simular cálculo de comissão (sem motorista específico)"""
+    service = get_service()
+    
+    escala = await service.obter_escala_ativa()
+    if not escala:
+        await service.seed_escala_padrao()
+        escala = await service.obter_escala_ativa()
+    
+    config = await service.obter_config_classificacao()
+    niveis = config.get("niveis", [])
+    nivel = next((n for n in niveis if n["nivel"] == nivel_classificacao), niveis[0] if niveis else None)
+    
+    nivel_escala = service.obter_nivel_escala_para_valor(escala, valor_faturado)
+    
+    percentagem_base = nivel_escala["percentagem_comissao"] if nivel_escala else 0
+    bonus = nivel["bonus_percentagem"] if nivel else 0
+    
+    valor_base = valor_faturado * (percentagem_base / 100)
+    valor_bonus = valor_faturado * (bonus / 100)
+    
+    return {
+        "valor_faturado": valor_faturado,
+        "escala_nome": escala["nome"],
+        "nivel_escala": nivel_escala["nome"] if nivel_escala else "N/A",
+        "percentagem_base": percentagem_base,
+        "valor_comissao_base": round(valor_base, 2),
+        "nivel_classificacao": nivel["nome"] if nivel else "N/A",
+        "bonus_percentagem": bonus,
+        "valor_bonus": round(valor_bonus, 2),
+        "percentagem_total": percentagem_base + bonus,
+        "valor_total": round(valor_base + valor_bonus, 2)
+    }
+
+
+# ==================== TURNOS ====================
+
+@router.get("/turnos/veiculo/{veiculo_id}")
+async def obter_turnos_veiculo(
+    veiculo_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter turnos de um veículo"""
+    service = get_service()
+    turnos = await service.obter_turnos_veiculo(veiculo_id)
+    return turnos
+
+
+@router.post("/turnos/veiculo/{veiculo_id}")
+async def adicionar_turno(
+    veiculo_id: str,
+    motorista_id: str,
+    hora_inicio: str,
+    hora_fim: str,
+    dias_semana: Optional[List[int]] = None,
+    notas: Optional[str] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Adicionar turno a um veículo"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    service = get_service()
+    turno = await service.adicionar_turno(
+        veiculo_id=veiculo_id,
+        motorista_id=motorista_id,
+        hora_inicio=hora_inicio,
+        hora_fim=hora_fim,
+        dias_semana=dias_semana,
+        notas=notas
+    )
+    return turno
+
+
+@router.put("/turnos/veiculo/{veiculo_id}/turno/{turno_id}")
+async def atualizar_turno(
+    veiculo_id: str,
+    turno_id: str,
+    hora_inicio: Optional[str] = None,
+    hora_fim: Optional[str] = None,
+    dias_semana: Optional[List[int]] = None,
+    ativo: Optional[bool] = None,
+    notas: Optional[str] = None,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar um turno"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    updates = {}
+    if hora_inicio is not None:
+        updates["hora_inicio"] = hora_inicio
+    if hora_fim is not None:
+        updates["hora_fim"] = hora_fim
+    if dias_semana is not None:
+        updates["dias_semana"] = dias_semana
+    if ativo is not None:
+        updates["ativo"] = ativo
+    if notas is not None:
+        updates["notas"] = notas
+    
+    service = get_service()
+    sucesso = await service.atualizar_turno(veiculo_id, turno_id, updates)
+    
+    if not sucesso:
+        raise HTTPException(status_code=404, detail="Turno não encontrado")
+    
+    return {"sucesso": True}
+
+
+@router.delete("/turnos/veiculo/{veiculo_id}/turno/{turno_id}")
+async def remover_turno(
+    veiculo_id: str,
+    turno_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Remover um turno"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    service = get_service()
+    sucesso = await service.remover_turno(veiculo_id, turno_id)
+    
+    if not sucesso:
+        raise HTTPException(status_code=404, detail="Turno não encontrado")
+    
+    return {"sucesso": True}
+
+
+@router.put("/turnos/veiculo/{veiculo_id}/principal")
+async def definir_motorista_principal(
+    veiculo_id: str,
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Definir motorista principal de um veículo"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    service = get_service()
+    await service.definir_motorista_principal(veiculo_id, motorista_id)
+    
+    return {"sucesso": True}
