@@ -847,6 +847,120 @@ const PlanoModulosParceiroTab = ({ parceiroId, parceiroNome }) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Modal Atualizar Recursos */}
+      <Dialog open={showAtualizarRecursosModal} onOpenChange={setShowAtualizarRecursosModal}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Atualizar Veículos/Motoristas</DialogTitle>
+            <DialogDescription>
+              Alterações geram fatura pro-rata até à próxima cobrança
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {/* Campos de Recursos */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Car className="w-4 h-4 text-blue-500" />
+                  Nº de Veículos
+                </Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={recursosForm.num_veiculos}
+                  onChange={(e) => setRecursosForm(prev => ({ ...prev, num_veiculos: parseInt(e.target.value) || 0 }))}
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Atual: {subscricao?.num_veiculos || 0}
+                </p>
+              </div>
+              <div>
+                <Label className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-green-500" />
+                  Nº de Motoristas
+                </Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={recursosForm.num_motoristas}
+                  onChange={(e) => setRecursosForm(prev => ({ ...prev, num_motoristas: parseInt(e.target.value) || 0 }))}
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Atual: {subscricao?.num_motoristas || 0}
+                </p>
+              </div>
+            </div>
+            
+            <div>
+              <Label>Motivo (opcional)</Label>
+              <Input
+                value={recursosForm.motivo}
+                onChange={(e) => setRecursosForm(prev => ({ ...prev, motivo: e.target.value }))}
+                placeholder="Ex: Adicionou 2 novos veículos"
+              />
+            </div>
+            
+            {/* Cálculo Pro-Rata */}
+            {prorataCalculado && !prorataCalculado.erro && (
+              <div className="border rounded-lg overflow-hidden">
+                <div className="bg-slate-100 px-3 py-2 font-semibold text-sm">
+                  Cálculo Pro-Rata
+                </div>
+                <div className="p-3 space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span>Mensalidade atual:</span>
+                    <span>€{prorataCalculado.preco_mensal_anterior}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Nova mensalidade:</span>
+                    <span className="font-semibold">€{prorataCalculado.preco_mensal_novo}</span>
+                  </div>
+                  <div className="flex justify-between text-slate-600">
+                    <span>Diferença:</span>
+                    <span className={prorataCalculado.diferenca_mensal > 0 ? 'text-red-600' : 'text-green-600'}>
+                      {prorataCalculado.diferenca_mensal > 0 ? '+' : ''}€{prorataCalculado.diferenca_mensal}
+                    </span>
+                  </div>
+                  <div className="border-t pt-2 mt-2">
+                    <div className="flex justify-between text-slate-600">
+                      <span>Dias até próxima cobrança:</span>
+                      <span>{prorataCalculado.dias_restantes} dias</span>
+                    </div>
+                  </div>
+                  {prorataCalculado.valor_prorata > 0 && (
+                    <div className="bg-amber-50 p-2 rounded mt-2">
+                      <div className="flex justify-between font-semibold text-amber-700">
+                        <span>Valor pro-rata a pagar agora:</span>
+                        <span>€{prorataCalculado.valor_prorata}</span>
+                      </div>
+                      <p className="text-xs text-amber-600 mt-1">
+                        Será gerada uma fatura para este valor
+                      </p>
+                    </div>
+                  )}
+                  {prorataCalculado.valor_prorata <= 0 && (
+                    <div className="bg-green-50 p-2 rounded mt-2">
+                      <p className="text-sm text-green-700">
+                        Sem valor pro-rata a cobrar
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAtualizarRecursosModal(false)}>Cancelar</Button>
+            <Button onClick={handleAtualizarRecursos} disabled={saving || !prorataCalculado}>
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />}
+              Confirmar Alteração
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
