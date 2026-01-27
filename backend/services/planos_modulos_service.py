@@ -802,6 +802,90 @@ class PlanosModulosService:
         
         return result.modified_count > 0
     
+    async def atualizar_recursos_subscricao(
+        self, 
+        request: AtualizarRecursosRequest,
+        atualizado_por: str
+    ) -> Dict:
+        """Atualizar número de veículos/motoristas e gerar fatura pro-rata"""
+        now = datetime.now(timezone.utc)
+        
+        subscricao = await self.get_subscricao_user(request.user_id)
+        if not subscricao:
+            raise ValueError("Subscrição não encontrada")
+        
+        if not subscricao.get("plano_id"):
+            raise ValueError("Utilizador não tem plano ativo")
+        
+        # Calcular pro-rata
+        prorata = await self.calcular_prorata(
+            request.user_id,
+            request.num_veiculos,
+            request.num_motoristas
+        )
+        
+        if "erro" in prorata:
+            raise ValueError(prorata["erro"])
+        
+        # Registar ajuste no histórico
+        ajuste = {
+            "id": str(uuid.uuid4()),
+            "data": now.isoformat(),
+            "tipo": "alteracao_recursos",
+            "veiculos_anterior": prorata["veiculos_atual"],
+            "motoristas_anterior": prorata["motoristas_atual"],
+            "veiculos_novo": prorata["veiculos_novo"],
+            "motoristas_novo": prorata["motoristas_novo"],
+            "valor_prorata": prorata["valor_prorata"],
+            "nova_mensalidade": prorata["nova_mensalidade"],
+            "motivo": request.motivo,
+            "atualizado_por": atualizado_por
+        }
+        
+        # Atualizar subscrição
+        updates = {
+            "num_veiculos": prorata["veiculos_novo"],
+            "num_motoristas": prorata["motoristas_novo"],
+            "preco_veiculos": prorata["detalhes_novo"]["preco_veiculos"],
+            "preco_motoristas": prorata["detalhes_novo"]["preco_motoristas"],
+            "preco_final": prorata["nova_mensalidade"],
+            "updated_at": now.isoformat()
+        }
+        
+        await self.db.subscricoes.update_one(
+            {"id": subscricao["id"]},
+            {
+                "$set": updates,
+                "$push": {"historico_ajustes": ajuste}
+            }
+        )
+        
+        logger.info(f"Recursos atualizados para {request.user_id}: {prorata['veiculos_novo']} veículos, {prorata['motoristas_novo']} motoristas")
+        
+        # Criar fatura pro-rata se houver valor a pagar
+        fatura_prorata = None
+        if prorata["valor_prorata"] > 0:
+            fatura_prorata = {
+                "id": str(uuid.uuid4()),
+                "tipo": "prorata",
+                "user_id": request.user_id,
+                "subscricao_id": subscricao["id"],
+                "valor": prorata["valor_prorata"],
+                "descricao": f"Ajuste pro-rata: +{prorata['veiculos_novo'] - prorata['veiculos_atual']} veículos, +{prorata['motoristas_novo'] - prorata['motoristas_atual']} motoristas",
+                "status": "pendente",
+                "created_at": now.isoformat(),
+                "created_by": atualizado_por
+            }
+            await self.db.faturas_subscricao.insert_one(fatura_prorata)
+            fatura_prorata.pop("_id", None)
+        
+        return {
+            "sucesso": True,
+            "prorata": prorata,
+            "fatura_prorata": fatura_prorata,
+            "nova_mensalidade": prorata["nova_mensalidade"]
+        }
+    
     # ==================== VERIFICAÇÃO DE LIMITES ====================
     
     async def verificar_limites_user(self, user_id: str) -> Dict:
