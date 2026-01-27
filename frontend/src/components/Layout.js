@@ -374,6 +374,16 @@ const Layout = ({ children, user, onLogout }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
+                        <Link to="/admin/comissoes" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>💰 Comissões e Classificação</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin/integracoes" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>🔌 Integrações Pagamento</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
                         <Link to="/configuracao-mapeamento" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>🗺️ Mapeamento Importação</span>
                         </Link>
