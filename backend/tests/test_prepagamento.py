@@ -64,7 +64,7 @@ class TestPrepagamentoMeusPedidos:
             "password": PARCEIRO_PASSWORD
         })
         assert response.status_code == 200
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     def test_meus_pedidos_returns_list(self, parceiro_token):
         """Test that meus-pedidos returns a list of orders"""
@@ -108,7 +108,7 @@ class TestPrepagamentoAdminEndpoints:
             "password": ADMIN_PASSWORD
         })
         assert response.status_code == 200
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     @pytest.fixture(scope="class")
     def parceiro_token(self):
@@ -118,7 +118,7 @@ class TestPrepagamentoAdminEndpoints:
             "password": PARCEIRO_PASSWORD
         })
         assert response.status_code == 200
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     def test_admin_pedidos_pendentes(self, admin_token):
         """Test admin can list all pending orders"""
@@ -172,7 +172,7 @@ class TestPrepagamentoSolicitarAdicao:
             "password": PARCEIRO_PASSWORD
         })
         assert response.status_code == 200
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     def test_solicitar_adicao_validation_zero_values(self, parceiro_token):
         """Test that zero values are rejected"""
@@ -212,7 +212,7 @@ class TestPrepagamentoVerificarBloqueio:
             "password": PARCEIRO_PASSWORD
         })
         assert response.status_code == 200
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     def test_verificar_bloqueio(self, parceiro_token):
         """Test checking if user is blocked from adding resources"""
@@ -244,7 +244,7 @@ class TestPrepagamentoFullFlow:
             "password": ADMIN_PASSWORD
         })
         assert response.status_code == 200
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     @pytest.fixture(scope="class")
     def parceiro_token(self):
@@ -254,7 +254,7 @@ class TestPrepagamentoFullFlow:
             "password": PARCEIRO_PASSWORD
         })
         assert response.status_code == 200
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     def test_flow_check_existing_pending_orders(self, parceiro_token, admin_token):
         """Check and cancel any existing pending orders before testing flow"""
@@ -319,7 +319,7 @@ class TestPrepagamentoIniciarPagamento:
             "password": PARCEIRO_PASSWORD
         })
         assert response.status_code == 200
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     def test_iniciar_pagamento_requires_pedido(self, parceiro_token):
         """Test that iniciar-pagamento requires valid pedido_id"""
@@ -346,7 +346,7 @@ class TestPrepagamentoCancelarPedido:
             "password": PARCEIRO_PASSWORD
         })
         assert response.status_code == 200
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     def test_cancelar_pedido_invalid_id(self, parceiro_token):
         """Test canceling with invalid pedido_id"""
@@ -411,7 +411,7 @@ class TestPrepagamentoSubscricaoIntegration:
             "password": PARCEIRO_PASSWORD
         })
         assert response.status_code == 200
-        return response.json().get("token")
+        return response.json().get("access_token")
     
     def test_subscricao_user_endpoint(self, parceiro_token):
         """Test getting user subscription"""
