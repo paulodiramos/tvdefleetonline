@@ -15866,9 +15866,11 @@ async def save_bolt_credentials(
     except Exception as e:
         logger.error(f"Erro ao guardar credenciais: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+'''
+# FIM BOLT INTEGRATION COMENTADO
 
 # ==================================================
-# CREDENCIAIS PARCEIROS - Admin only
+# CREDENCIAIS PARCEIROS - Admin only - MANTIDO TEMPORARIAMENTE
 # ==================================================
 
 @app.get("/api/admin/credenciais-parceiros")
