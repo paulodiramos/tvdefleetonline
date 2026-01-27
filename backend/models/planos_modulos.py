@@ -234,7 +234,7 @@ class PlanoUpdate(BaseModel):
     nome: Optional[str] = None
     descricao: Optional[str] = None
     categoria: Optional[str] = None
-    tipo_cobranca: Optional[TipoCobranca] = None
+    precos_plano: Optional[PrecosPlano] = None
     precos: Optional[Precos] = None
     limites: Optional[LimitesPlano] = None
     modulos_incluidos: Optional[List[str]] = None
