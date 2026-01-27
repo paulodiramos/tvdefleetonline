@@ -296,6 +296,75 @@ async def simular_comissao(
     }
 
 
+# ==================== CONFIGURAÇÃO DO PARCEIRO ====================
+
+@router.get("/parceiro/config")
+async def obter_config_parceiro(
+    current_user: Dict = Depends(get_current_user)
+):
+    """Obter configuração de comissões do parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    config = await db.config_comissoes_parceiro.find_one(
+        {"parceiro_id": current_user["id"]},
+        {"_id": 0}
+    )
+    
+    if not config:
+        # Retornar configuração padrão
+        service = get_service()
+        escala_global = await service.obter_escala_ativa()
+        classificacao_global = await service.obter_config_classificacao()
+        
+        config = {
+            "parceiro_id": current_user["id"],
+            "usar_escala_propria": False,
+            "usar_valor_fixo": False,
+            "valor_fixo_comissao": 0,
+            "percentagem_fixa": 15,
+            "escala_propria": escala_global.get("niveis", []) if escala_global else [],
+            "usar_classificacao_propria": False,
+            "niveis_classificacao": classificacao_global.get("niveis", []) if classificacao_global else []
+        }
+    
+    return config
+
+
+@router.put("/parceiro/config")
+async def atualizar_config_parceiro(
+    config: Dict,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar configuração de comissões do parceiro"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    now = datetime.now(timezone.utc)
+    
+    config_update = {
+        "parceiro_id": current_user["id"],
+        "usar_escala_propria": config.get("usar_escala_propria", False),
+        "usar_valor_fixo": config.get("usar_valor_fixo", False),
+        "valor_fixo_comissao": float(config.get("valor_fixo_comissao", 0)),
+        "percentagem_fixa": float(config.get("percentagem_fixa", 15)),
+        "escala_propria": config.get("escala_propria", []),
+        "usar_classificacao_propria": config.get("usar_classificacao_propria", False),
+        "niveis_classificacao": config.get("niveis_classificacao", []),
+        "updated_at": now.isoformat()
+    }
+    
+    await db.config_comissoes_parceiro.update_one(
+        {"parceiro_id": current_user["id"]},
+        {"$set": config_update},
+        upsert=True
+    )
+    
+    logger.info(f"Configuração de comissões do parceiro {current_user['id']} atualizada")
+    
+    return {"sucesso": True, "mensagem": "Configuração guardada"}
+
+
 # ==================== TURNOS ====================
 
 @router.get("/turnos/veiculo/{veiculo_id}")
