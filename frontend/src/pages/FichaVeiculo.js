@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import Layout from '@/components/Layout';
+import VeiculoTurnos from '@/components/VeiculoTurnos';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { 
   Car, User, Shield, ClipboardCheck, Wrench, Calendar, 
-  TrendingUp, History, Edit, Save, X, Plus, FileText, Upload, Download, Trash2, AlertCircle, Bell, CheckCircle, CreditCard, MapPin 
+  TrendingUp, History, Edit, Save, X, Plus, FileText, Upload, Download, Trash2, AlertCircle, Bell, CheckCircle, CreditCard, MapPin, Users 
 } from 'lucide-react';
 
 // Helper function to parse DD/MM/YYYY dates
