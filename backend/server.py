@@ -107,6 +107,7 @@ from routes.permissoes_funcionalidades import router as permissoes_router
 from routes.gestao_planos import router as gestao_planos_router
 from routes.prepagamento import router as prepagamento_router
 from routes.integracoes_config import router as integracoes_router
+from routes.comissoes import router as comissoes_router
 
 # Import utilities from refactored modules
 from utils.file_handlers import (
