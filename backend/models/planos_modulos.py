@@ -541,13 +541,17 @@ MODULOS_PREDEFINIDOS = {
 # ==================== PLANOS PREDEFINIDOS ====================
 
 PLANOS_PREDEFINIDOS = {
+    # ===== PLANOS PARCEIROS =====
     "parceiro_gratuito": {
         "nome": "Gratuito",
         "descricao": "Plano básico gratuito para começar",
         "tipo_usuario": "parceiro",
         "categoria": "gratuito",
-        "tipo_cobranca": "fixo",
-        "precos": {"semanal": 0, "mensal": 0, "anual": 0},
+        "precos_plano": {
+            "base_mensal": 0,
+            "por_veiculo_mensal": 0,
+            "por_motorista_mensal": 0,
+        },
         "limites": {"max_veiculos": 3, "max_motoristas": 5},
         "modulos_incluidos": ["dashboard_basico"],
         "icone": "🆓",
@@ -560,39 +564,52 @@ PLANOS_PREDEFINIDOS = {
         "descricao": "Para frotas em crescimento",
         "tipo_usuario": "parceiro",
         "categoria": "profissional",
-        "tipo_cobranca": "fixo",
-        "precos": {"semanal": 9.99, "mensal": 29.99, "anual": 299.99},
-        "limites": {"max_veiculos": 15, "max_motoristas": 20},
+        "precos_plano": {
+            "base_mensal": 19.99,
+            "base_anual": 199.99,
+            "por_veiculo_mensal": 4.99,
+            "por_veiculo_anual": 49.99,
+            "por_motorista_mensal": 2.99,
+            "por_motorista_anual": 29.99,
+        },
+        "limites": None,  # Sem limites
         "modulos_incluidos": ["emails", "agenda", "contratos", "relatorios_avancados"],
         "icone": "⭐",
         "cor": "#3B82F6",
         "ordem": 2,
         "permite_trial": True,
         "dias_trial": 14,
-        "features_destaque": ["Até 15 veículos", "Até 20 motoristas", "Emails", "Contratos", "Relatórios"]
+        "features_destaque": ["Base €19.99/mês", "+€4.99/veículo", "+€2.99/motorista", "Emails, Contratos, Relatórios"]
     },
     "parceiro_enterprise": {
         "nome": "Enterprise",
         "descricao": "Para grandes frotas com todas as funcionalidades",
         "tipo_usuario": "parceiro",
         "categoria": "enterprise",
-        "tipo_cobranca": "por_veiculo",
-        "precos": {"semanal": 2.99, "mensal": 9.99, "anual": 99.99},  # Por veículo
-        "limites": {"max_veiculos": None, "max_motoristas": None},  # Ilimitado
+        "precos_plano": {
+            "base_mensal": 49.99,
+            "base_anual": 499.99,
+            "por_veiculo_mensal": 3.99,
+            "por_veiculo_anual": 39.99,
+            "por_motorista_mensal": 1.99,
+            "por_motorista_anual": 19.99,
+        },
+        "limites": None,  # Sem limites
         "modulos_incluidos": ["emails", "agenda", "contratos", "relatorios_avancados", "whatsapp", "rpa_automacao", "vistorias", "manutencao_veiculos"],
         "icone": "🏆",
         "cor": "#8B5CF6",
         "ordem": 3,
         "permite_trial": True,
         "dias_trial": 30,
-        "features_destaque": ["Veículos ilimitados", "Motoristas ilimitados", "Todos os módulos", "Suporte prioritário"]
+        "features_destaque": ["Base €49.99/mês", "+€3.99/veículo", "+€1.99/motorista", "Todos os módulos", "Suporte prioritário"]
     },
+    
+    # ===== PLANOS MOTORISTAS (sem limites) =====
     "motorista_gratuito": {
         "nome": "Gratuito",
         "descricao": "Acesso básico para motoristas",
         "tipo_usuario": "motorista",
         "categoria": "gratuito",
-        "tipo_cobranca": "fixo",
         "precos": {"semanal": 0, "mensal": 0, "anual": 0},
         "modulos_incluidos": ["dashboard_ganhos"],
         "icone": "🆓",
@@ -605,7 +622,6 @@ PLANOS_PREDEFINIDOS = {
         "descricao": "Funcionalidades avançadas para motoristas",
         "tipo_usuario": "motorista",
         "categoria": "premium",
-        "tipo_cobranca": "fixo",
         "precos": {"semanal": 1.99, "mensal": 4.99, "anual": 49.99},
         "modulos_incluidos": ["dashboard_ganhos", "autofaturacao"],
         "icone": "⭐",
