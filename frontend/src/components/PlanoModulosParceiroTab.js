@@ -43,7 +43,10 @@ import {
   XCircle,
   Clock,
   AlertTriangle,
-  Trash2
+  Trash2,
+  Car,
+  Users,
+  Settings
 } from 'lucide-react';
 
 const PlanoModulosParceiroTab = ({ parceiroId, parceiroNome }) => {
