@@ -190,9 +190,12 @@ class PlanoSistema(BaseModel):
     descricao: str
     tipo_usuario: TipoUsuario = TipoUsuario.PARCEIRO
     categoria: str = "standard"  # "gratuito", "basico", "profissional", "enterprise"
-    tipo_cobranca: TipoCobranca = TipoCobranca.FIXO
+    # Nova estrutura de preços para parceiros
+    precos_plano: Optional[PrecosPlano] = PrecosPlano()
+    # Preços simples para motoristas (mantém compatibilidade)
     precos: Precos = Precos()
-    limites: LimitesPlano = LimitesPlano()
+    # Limites só aplicam a parceiros
+    limites: Optional[LimitesPlano] = None
     modulos_incluidos: List[str] = []  # Códigos dos módulos incluídos
     icone: str = "📦"
     cor: str = "#3B82F6"
@@ -214,9 +217,9 @@ class PlanoCreate(BaseModel):
     descricao: str
     tipo_usuario: TipoUsuario = TipoUsuario.PARCEIRO
     categoria: str = "standard"
-    tipo_cobranca: TipoCobranca = TipoCobranca.FIXO
+    precos_plano: Optional[PrecosPlano] = PrecosPlano()
     precos: Precos = Precos()
-    limites: LimitesPlano = LimitesPlano()
+    limites: Optional[LimitesPlano] = None
     modulos_incluidos: List[str] = []
     icone: str = "📦"
     cor: str = "#3B82F6"
