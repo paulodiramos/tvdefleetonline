@@ -308,9 +308,15 @@ const AdicionarRecursosCard = ({ userId, onAdicaoCompleta }) => {
                         Expira: {new Date(pedido.expires_at).toLocaleString('pt-PT')}
                       </span>
                     </div>
-                    <span className="text-lg font-bold text-blue-600">
-                      €{pedido.valor_prorata?.toFixed(2)}
-                    </span>
+                    <div className="text-right">
+                      <span className="text-lg font-bold text-blue-600">
+                        €{formatarEuros(pedido.valor_prorata)}
+                      </span>
+                      <Badge variant="outline" className="ml-1 text-xs">c/IVA</Badge>
+                      <div className="text-xs text-slate-400">
+                        €{formatarEuros(calcularSemIva(pedido.valor_prorata))} s/IVA
+                      </div>
+                    </div>
                   </div>
                   
                   <div className="flex gap-4 text-sm">
@@ -329,7 +335,8 @@ const AdicionarRecursosCard = ({ userId, onAdicaoCompleta }) => {
                   </div>
                   
                   <div className="text-sm text-slate-600">
-                    Nova mensalidade após pagamento: <strong>€{pedido.nova_mensalidade?.toFixed(2)}</strong>
+                    Nova mensalidade: <strong>€{formatarEuros(pedido.nova_mensalidade)}</strong> c/IVA
+                    <span className="text-slate-400 ml-2">(€{formatarEuros(calcularSemIva(pedido.nova_mensalidade))} s/IVA)</span>
                   </div>
                   
                   <div className="flex gap-2">
