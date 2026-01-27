@@ -10,7 +10,8 @@ import logging
 from models.user import UserRole
 from models.comissoes import (
     CriarEscalaRequest, AtualizarNiveisEscalaRequest,
-    CriarNivelClassificacaoRequest, AtualizarClassificacaoRequest
+    CriarNivelClassificacaoRequest, AtualizarClassificacaoRequest,
+    AdicionarTurnoRequest, AtualizarTurnoRequest, DefinirMotoristaPrincipalRequest
 )
 from utils.auth import get_current_user
 from utils.database import get_database
