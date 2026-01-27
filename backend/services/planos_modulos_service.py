@@ -657,6 +657,7 @@ class PlanosModulosService:
         }
         
         await self.db.subscricoes.insert_one(subscricao)
+        subscricao.pop("_id", None)  # Remover _id adicionado pelo MongoDB
         
         # Atualizar utilizador
         update_user = {
