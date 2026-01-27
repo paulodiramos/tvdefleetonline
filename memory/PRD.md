@@ -194,8 +194,8 @@ Cada parceiro configura o seu próprio email:
 - [x] ~~Sistema de Gestão de Planos e Módulos~~ - Implementado (26/01/2025)
 - [x] ~~UI de preços por veículo/motorista~~ - Implementado (27/01/2025)
 - [x] ~~Sistema de Pré-Pagamento Pro-Rata~~ - Implementado (27/01/2025)
-- [ ] **Integração Ifthenpay** - Pagamentos online (Multibanco, MB Way, Cartão, Débito Direto) - **PENDENTE: substituir simulação por integração real**
-- [ ] Integração Moloni - Faturação automática após pagamento
+- [ ] **Integração Ifthenpay** - Pagamentos online (Multibanco, MB Way, Cartão, Débito Direto) - **CONFIGURAÇÃO NO ADMIN CONCLUÍDA**
+- [ ] Integração Moloni - Faturação automática após pagamento - **CONFIGURAÇÃO NO ADMIN CONCLUÍDA**
 - [ ] Continuar refatoração do server.py (~151 endpoints restantes, ~16100 linhas)
 
 ### P2 - Média Prioridade
