@@ -316,27 +316,57 @@ class PlanosModulosService:
         plano_id: str, 
         periodicidade: str,
         user_id: Optional[str] = None,
-        num_veiculos: int = 1,
-        num_motoristas: int = 1,
+        num_veiculos: int = 0,
+        num_motoristas: int = 0,
         codigo_promocional: Optional[str] = None
     ) -> Dict:
-        """Calcular preço final de um plano"""
+        """Calcular preço final de um plano para parceiros (base + veículos + motoristas)"""
         plano = await self.get_plano(plano_id)
         if not plano:
             return {"erro": "Plano não encontrado"}
         
-        # Preço base
-        precos = plano.get("precos", {})
-        preco_base = precos.get(periodicidade, 0) or 0
+        tipo_usuario = plano.get("tipo_usuario", "parceiro")
         
-        # Aplicar tipo de cobrança
-        tipo_cobranca = plano.get("tipo_cobranca", "fixo")
-        if tipo_cobranca == "por_veiculo":
-            preco_base = preco_base * num_veiculos
-        elif tipo_cobranca == "por_motorista":
-            preco_base = preco_base * num_motoristas
+        # Para motoristas, usar preços simples
+        if tipo_usuario == "motorista":
+            precos = plano.get("precos", {})
+            preco_base = precos.get(periodicidade, 0) or 0
+            return {
+                "plano_id": plano_id,
+                "plano_nome": plano.get("nome"),
+                "periodicidade": periodicidade,
+                "tipo_usuario": tipo_usuario,
+                "num_veiculos": 0,
+                "num_motoristas": 0,
+                "preco_base": round(preco_base, 2),
+                "preco_veiculos": 0,
+                "preco_motoristas": 0,
+                "preco_total": round(preco_base, 2),
+                "desconto_aplicado": None,
+                "preco_final": round(preco_base, 2)
+            }
         
-        preco_final = preco_base
+        # Para parceiros, usar precos_plano (base + por veículo + por motorista)
+        precos_plano = plano.get("precos_plano", {})
+        
+        # Mapear periodicidade para campo
+        periodo_map = {
+            "semanal": "semanal",
+            "mensal": "mensal", 
+            "anual": "anual"
+        }
+        periodo = periodo_map.get(periodicidade, "mensal")
+        
+        preco_base = precos_plano.get(f"base_{periodo}", 0) or 0
+        preco_por_veiculo = precos_plano.get(f"por_veiculo_{periodo}", 0) or 0
+        preco_por_motorista = precos_plano.get(f"por_motorista_{periodo}", 0) or 0
+        
+        # Calcular totais
+        preco_veiculos = preco_por_veiculo * num_veiculos
+        preco_motoristas = preco_por_motorista * num_motoristas
+        preco_total = preco_base + preco_veiculos + preco_motoristas
+        
+        preco_final = preco_total
         desconto_aplicado = None
         promocao_aplicada = None
         
@@ -345,13 +375,14 @@ class PlanosModulosService:
             precos_especiais = plano.get("precos_especiais", [])
             for pe in precos_especiais:
                 if pe.get("parceiro_id") == user_id:
-                    if pe.get(f"preco_fixo_{periodicidade}"):
-                        preco_final = pe[f"preco_fixo_{periodicidade}"]
-                        desconto_aplicado = {"tipo": "preco_especial", "motivo": pe.get("motivo")}
-                    elif pe.get("desconto_percentagem"):
+                    if pe.get("desconto_percentagem"):
                         desconto = pe["desconto_percentagem"] / 100
-                        preco_final = preco_base * (1 - desconto)
-                        desconto_aplicado = {"tipo": "desconto_especial", "percentagem": pe["desconto_percentagem"]}
+                        preco_final = preco_total * (1 - desconto)
+                        desconto_aplicado = {
+                            "tipo": "desconto_especial", 
+                            "percentagem": pe["desconto_percentagem"],
+                            "motivo": pe.get("motivo")
+                        }
                     break
         
         # Verificar código promocional
@@ -373,21 +404,115 @@ class PlanosModulosService:
                         if promo.get("utilizacoes_atuais", 0) >= promo["max_utilizacoes"]:
                             continue
                     
-                    if promo.get("preco_fixo"):
-                        preco_final = promo["preco_fixo"]
-                    else:
-                        desconto = promo.get("desconto_percentagem", 0) / 100
-                        preco_final = preco_base * (1 - desconto)
-                    
+                    desconto = promo.get("desconto_percentagem", 0) / 100
+                    preco_final = preco_total * (1 - desconto)
                     promocao_aplicada = promo
+                    desconto_aplicado = {
+                        "tipo": "promocao",
+                        "percentagem": promo.get("desconto_percentagem"),
+                        "nome": promo.get("nome")
+                    }
                     break
         
         return {
             "plano_id": plano_id,
             "plano_nome": plano.get("nome"),
             "periodicidade": periodicidade,
-            "tipo_cobranca": tipo_cobranca,
-            "preco_base": preco_base,
+            "tipo_usuario": tipo_usuario,
+            "num_veiculos": num_veiculos,
+            "num_motoristas": num_motoristas,
+            "preco_base": round(preco_base, 2),
+            "preco_por_veiculo": round(preco_por_veiculo, 2),
+            "preco_por_motorista": round(preco_por_motorista, 2),
+            "preco_veiculos": round(preco_veiculos, 2),
+            "preco_motoristas": round(preco_motoristas, 2),
+            "preco_total": round(preco_total, 2),
+            "desconto_aplicado": desconto_aplicado,
+            "promocao_aplicada": promocao_aplicada,
+            "preco_final": round(preco_final, 2)
+        }
+    
+    async def calcular_prorata(
+        self,
+        user_id: str,
+        novo_num_veiculos: Optional[int] = None,
+        novo_num_motoristas: Optional[int] = None
+    ) -> Dict:
+        """Calcular valor pro-rata quando parceiro adiciona veículos/motoristas"""
+        subscricao = await self.get_subscricao_user(user_id)
+        if not subscricao:
+            return {"erro": "Subscrição não encontrada"}
+        
+        if not subscricao.get("plano_id"):
+            return {"erro": "Utilizador não tem plano ativo"}
+        
+        plano = await self.get_plano(subscricao["plano_id"])
+        if not plano:
+            return {"erro": "Plano não encontrado"}
+        
+        periodicidade = subscricao.get("periodicidade", "mensal")
+        num_veiculos_atual = subscricao.get("num_veiculos", 0)
+        num_motoristas_atual = subscricao.get("num_motoristas", 0)
+        
+        novo_veiculos = novo_num_veiculos if novo_num_veiculos is not None else num_veiculos_atual
+        novo_motoristas = novo_num_motoristas if novo_num_motoristas is not None else num_motoristas_atual
+        
+        # Calcular preço atual
+        preco_atual = await self.calcular_preco_plano(
+            subscricao["plano_id"], periodicidade, user_id,
+            num_veiculos_atual, num_motoristas_atual
+        )
+        
+        # Calcular novo preço
+        preco_novo = await self.calcular_preco_plano(
+            subscricao["plano_id"], periodicidade, user_id,
+            novo_veiculos, novo_motoristas
+        )
+        
+        # Calcular dias restantes até próxima cobrança
+        now = datetime.now(timezone.utc)
+        proxima_cobranca = subscricao.get("proxima_cobranca")
+        if proxima_cobranca:
+            if isinstance(proxima_cobranca, str):
+                proxima_cobranca = datetime.fromisoformat(proxima_cobranca.replace('Z', '+00:00'))
+            dias_restantes = (proxima_cobranca - now).days
+        else:
+            # Se não tem próxima cobrança, assumir fim do mês
+            _, dias_mes = monthrange(now.year, now.month)
+            dias_restantes = dias_mes - now.day
+        
+        dias_restantes = max(0, dias_restantes)
+        
+        # Dias do período
+        if periodicidade == "semanal":
+            dias_periodo = 7
+        elif periodicidade == "anual":
+            dias_periodo = 365
+        else:
+            _, dias_periodo = monthrange(now.year, now.month)
+        
+        # Calcular diferença
+        diferenca_mensal = preco_novo["preco_final"] - preco_atual["preco_final"]
+        
+        # Pro-rata: diferença × (dias restantes / dias período)
+        valor_prorata = diferenca_mensal * (dias_restantes / dias_periodo) if dias_periodo > 0 else 0
+        
+        return {
+            "user_id": user_id,
+            "veiculos_atual": num_veiculos_atual,
+            "motoristas_atual": num_motoristas_atual,
+            "veiculos_novo": novo_veiculos,
+            "motoristas_novo": novo_motoristas,
+            "dias_restantes": dias_restantes,
+            "dias_periodo": dias_periodo,
+            "preco_mensal_anterior": round(preco_atual["preco_final"], 2),
+            "preco_mensal_novo": round(preco_novo["preco_final"], 2),
+            "diferenca_mensal": round(diferenca_mensal, 2),
+            "valor_prorata": round(max(0, valor_prorata), 2),  # Só cobra se aumentou
+            "nova_mensalidade": round(preco_novo["preco_final"], 2),
+            "data_proxima_cobranca": proxima_cobranca.isoformat() if proxima_cobranca else None,
+            "detalhes_novo": preco_novo
+        }
             "preco_final": round(preco_final, 2),
             "desconto_aplicado": desconto_aplicado,
             "promocao_aplicada": promocao_aplicada,
