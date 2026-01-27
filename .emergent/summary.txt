@@ -1,153 +1,148 @@
 <analysis>**original_problem_statement:**
-A sessão começou com o objetivo de corrigir um problema em que o QR Code do WhatsApp não era exibido na interface do utilizador. Após a correção inicial, a conversa evoluiu para a resolução de problemas de instabilidade com a solução baseada em  alojada no Railway.
+A sessão evoluiu de uma correção de bug para a implementação de um robusto **Sistema de Gestão de Planos, Módulos e Subscrições**.
 
-O utilizador então solicitou a substituição completa dessa solução por uma integração com a **API oficial do WhatsApp Cloud**, que se tornou a tarefa principal.
-
-Posteriormente, as solicitações expandiram-se para:
-1.  Adicionar instruções detalhadas sobre como instalar e usar o Playwright na página do RPA Designer.
-2.  Implementar um sistema completo para importar dados de ficheiros CSV (descarregados pelos scripts de RPA) para gerar resumos semanais, incluindo opções de upload manual e agendamento automático.
-3.  Permitir que os administradores eliminem qualquer plataforma de RPA (pré-definida ou personalizada).
-4.  Criar um sistema de permissões para que os administradores possam controlar o acesso de cada parceiro a plataformas de RPA específicas.
-5.  Criar um sistema de permissões global para que os administradores possam ativar ou desativar funcionalidades principais da aplicação (ex: Vistorias, Contratos, WhatsApp) para cada parceiro.
+Requisitos do Utilizador:
+1.  **Estrutura de Planos:** Para parceiros e motoristas, com módulos adicionais (ex: Contratos).
+2.  **Preços Complexos:** Preço base + custo por veículo + custo por motorista, com periodicidades e descontos.
+3.  **Faturação Pro-Rata:** Ao adicionar veículos/motoristas, o sistema deve cobrar a diferença proporcional até ao final do ciclo e atualizar a subscrição. O parceiro fica bloqueado até efetuar este pré-pagamento.
+4.  **Integrações:**
+    *   **Pagamentos:** Ifthenpay (gateway portuguesa).
+    *   **Faturação:** Moloni.
+5.  **Gestão de Comissões e Classificação:**
+    *   **Turnos de Veículos:** Atribuir múltiplos motoristas a um veículo com horários de início/fim.
+    *   **Comissões por Escala:** Níveis de comissão ilimitados com base no valor faturado.
+    *   **Classificação de Motoristas:** 5 níveis de classificação (baseados em critérios como antiguidade e cuidado com o veículo) que dão um bónus percentual sobre a comissão base.
+6.  **Interfaces de Gestão:**
+    *   **Admin:** Para gerir planos, preços, integrações (Ifthenpay/Moloni), escalas de comissão e classificações de motoristas.
+    *   **Parceiro:** Para ver o seu plano, solicitar adição de recursos (veículos/motoristas) e configurar as suas próprias comissões (se o módulo estiver ativo).
+7.  **IVA (VAT):** Exibir todos os preços com e sem IVA (23%).
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
--   **Nova Arquitetura WhatsApp:** A integração instável com o Railway () foi completamente removida e substituída por uma integração direta com a API oficial do WhatsApp Cloud. O frontend em  foi atualizado para permitir que cada parceiro configure o seu  e , e o backend foi atualizado com uma nova rota () para gerir a comunicação.
--   **Sistema de Importação de RPA:** Foi criada uma nova página () que permite aos parceiros fazer o upload manual de ficheiros CSV (ex: da Bolt, Uber) ou agendar a execução automática dos scripts de RPA. O backend processa estes ficheiros, cria resumos semanais e guarda-os na base de dados.
--   **Instruções de RPA Melhoradas:** A página do RPA Designer agora contém um modal com instruções detalhadas sobre como instalar o Playwright (com Python ou Node.js) e usar o gravador  para criar novos scripts.
--   **Gestão de Plataformas RPA:** Os administradores podem agora eliminar qualquer plataforma (pré-definida ou personalizada) a partir da página RPA Automação, com um popup de confirmação detalhado.
--   **Sistema de Permissões (Backend e Admin UI):** Foram implementadas duas novas funcionalidades de administração:
-    1.  **Permissões de Plataformas RPA ():** O admin pode atribuir acesso a plataformas de RPA específicas para cada parceiro.
-    2.  **Permissões de Funcionalidades ():** O admin pode ativar/desativar o acesso a funcionalidades chave da aplicação (como Vistorias, Contratos, etc.) para cada parceiro. O backend e as páginas de administração para estas funcionalidades estão concluídos.
+-   **Sistema de Gestão de Planos (Backend e Frontend Admin):** A estrutura para criar/gerir planos com preços complexos (base + por veículo/motorista) está completa e funcional.
+-   **Sistema de Pré-Pagamento Pro-Rata:** O fluxo completo para um parceiro solicitar mais recursos (veículos/motoristas) está implementado. O sistema calcula o valor pro-rata, bloqueia o utilizador, e apresenta um modal de pagamento. O pagamento em si está simulado (mocked).
+-   **Exibição de IVA:** Todos os componentes de UI relevantes (cards de planos, modal de pagamento, etc.) mostram os valores com e sem IVA (23%).
+-   **Configuração de Integrações (Admin):** Foi criada uma página de administração para que o admin possa inserir, guardar e testar as chaves de API da Ifthenpay e Moloni de forma segura.
+-   **Sistema de Comissões (Backend e Frontend Admin):** A lógica de negócio para as comissões por escala e classificação de motoristas está implementada no backend. A UI de administração para configurar as escalas de comissão e os níveis de classificação (com os seus bónus) está completa e funcional, incluindo um simulador.
+-   **Página de Configuração para Parceiro (Iniciada):** Os ficheiros e rotas de backend para o parceiro configurar as suas comissões foram criados, mas a UI não está finalizada.
 
 **Last working item**:
--   **Last item agent was working:** Testar a execução da automação da plataforma Bolt para o parceiro Zeny Macaia Unipessoal Lda, a pedido do utilizador, para validar os novos sistemas de permissões.
+-   **Last item agent was working:** O agente estava a trabalhar na implementação da página de configuração de comissões para o parceiro. A intenção é que, se o parceiro tiver o módulo de comissões contratado, uma nova opção de menu apareça no seu perfil, levando-o para esta página onde pode gerir as suas próprias escalas. O trabalho foi iniciado, mas a UI não foi concluída.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** frontend testing agent. O agente deve simular o login como o parceiro  (password: ), navegar para a automação de RPA e executar o script da Bolt, verificando os logs para confirmar o sucesso.
+-   **Which testing method agent to use?** frontend testing agent. O agente deve validar que um parceiro com o módulo Comissões pode aceder à nova página , ver as configurações padrão e modificá-las. Deve também confirmar que o link do menu só aparece quando o módulo está ativo na subscrição do parceiro.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: Concluir o teste de automação para o parceiro Zeny (P0)**
-    -   **Description:** O utilizador solicitou um teste end-to-end do fluxo de automação da Bolt para o parceiro Zeny. O agente reiniciou a palavra-passe do parceiro, mas não concluiu a execução e verificação do teste.
+-   **Issue 1: (P0) Finalizar a página de configuração de comissões para o parceiro.**
+    -   **Description:** A página  foi criada, mas está vazia. É necessário construir a UI para que o parceiro possa ver e editar as suas configurações de comissão e associar esta página a um item de menu que só aparece se o módulo correspondente estiver subscrito.
     -   **Next debug checklist:**
-        1.  Fazer login como  com a password .
-        2.  Navegar para a página RPA Automação.
-        3.  Confirmar que apenas as plataformas permitidas (incluindo a Bolt) estão visíveis.
-        4.  Executar a automação da Bolt.
-        5.  Verificar os logs do backend para confirmar que o script Playwright foi executado sem erros.
-        6.  Verificar se o ficheiro foi descarregado e se a importação de dados foi acionada.
-    -   **Why fix this issue and what will be achieved with the fix?** Validar que o sistema de permissões da plataforma e o fluxo de execução do RPA estão a funcionar corretamente em conjunto.
+        1.  Implementar a UI em , consumindo os endpoints GET e POST de .
+        2.  Modificar o componente de layout/navegação do parceiro para obter os módulos subscritos.
+        3.  Adicionar uma verificação para renderizar o link do menu para  apenas se o módulo de comissões estiver presente.
+    -   **Why fix this issue and what will be achieved with the fix?** Cumpre um requisito explícito do utilizador de permitir a autogestão das comissões pelo parceiro.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** both
 
 **In progress Task List**:
--   **Task 1: Implementar verificação de permissões de funcionalidades no Frontend (P0)**
-    -   **Description:** O backend e a interface de administração para gerir as permissões de funcionalidades por parceiro estão concluídos. No entanto, o frontend ainda não implementa a lógica para ocultar/desativar os itens do menu e as páginas para funcionalidades que foram desativadas para um parceiro.
-    -   **Where to resume:**
-        1.  Criar um  em React que, após o login, obtenha as funcionalidades permitidas para o utilizador atual.
-        2.  Em , usar este contexto para renderizar condicionalmente os itens do menu lateral.
-        3.  Nas rotas principais em  ou no início de cada página de funcionalidade (ex: ), adicionar uma verificação para redirecionar o utilizador se ele tentar aceder a uma URL para a qual não tem permissão.
-    -   **What will be achieved with this?** A funcionalidade de gestão de permissões ficará totalmente operacional, permitindo que os administradores controlem dinamicamente a UI e o acesso para cada parceiro.
+-   **Task 1: (P0) Concluir Sistema de Comissões - Lado do Parceiro**
+    -   **Where to resume:** Implementar a interface de utilizador em .
+    -   **What will be achieved with this?** Os parceiros poderão configurar as suas próprias escalas de comissão, tornando o módulo funcional.
     -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** frontend
+    -   **Should Test frontend/backend/both after fix?** both
+    -   **Blocked on something:** Nenhum.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1) Finalizar Refatoração do :** Retomar a tarefa recorrente de mover os endpoints e modelos Pydantic restantes do monolítico  para ficheiros de rotas e modelos dedicados.
-    -   **(P2) Implementar lógica de agendamento no backend:** A UI para agendar a execução de RPA existe, mas a lógica do backend (usando, por exemplo, ) para executar as tarefas de forma recorrente precisa de ser implementada.
+    -   **(P1) Gestão de Turnos de Veículos:** Implementar a lógica de backend e a UI para permitir a atribuição de múltiplos motoristas a um veículo, cada um com o seu horário de início e fim.
+    -   **(P1) Implementar Integração Ifthenpay:** Substituir o fluxo de pagamento simulado pela integração real com a API da Ifthenpay, utilizando as credenciais guardadas na base de dados.
+    -   **(P1) Implementar Integração Moloni:** Após um pagamento bem-sucedido via Ifthenpay, chamar a API da Moloni para emitir a fatura correspondente.
 -   **Future Tasks:**
-    -   **(P1) Testar o parser de CSV com ficheiros reais:** A importação foi testada com dados simulados. É necessário testar com ficheiros CSV reais das plataformas (Uber, Bolt, etc.) para garantir que o parsing é robusto.
+    -   **(P2) Refatoração Contínua do :** Extrair mais lógica de rotas para ficheiros dedicados.
+    -   **(P2) Testar o parser de CSV da Via Verde:** Requisito antigo que ainda está pendente.
+    -   **(P2) Criar uma página dedicada para o histórico de execuções de RPA.**
+    -   **(P3) Loja online de planos/módulos:** Permitir que os parceiros subscrevam e comprem módulos diretamente.
 
 **Completed work in this session**
--   **Refatoração da Integração WhatsApp:** Migração completa da solução instável baseada em  para a API oficial do WhatsApp Cloud.
--   **Criação do Sistema de Importação de RPA:** Implementação de uma nova funcionalidade completa para importação manual e agendada de dados de RPA, incluindo UI e backend.
--   **Melhorias na Gestão de RPA:** Adição de instruções de instalação do Playwright, criação de um script Bolt e implementação da funcionalidade de eliminação de todas as plataformas pelo admin.
--   **Implementação de Sistema de Permissões:** Criação de sistemas de back-end e UI de administração para gerir o acesso dos parceiros a plataformas de RPA e a funcionalidades globais da aplicação.
--   **Correção de Ambiente:** Instalação dos browsers do Playwright no ambiente do servidor, resolvendo um erro de execução.
-
-**Earlier issues found/mentioned but not fixed**
--   A implementação do frontend para o sistema de permissões de funcionalidades não foi iniciada.
+-   Implementada a UI no admin para definir preços por veículo e por motorista nos planos.
+-   Construído o sistema de pré-pagamento pro-rata completo (backend e frontend), incluindo o bloqueio do utilizador até ao pagamento.
+-   Adicionada a exibição de preços com e sem IVA em toda a aplicação.
+-   Criada a página de administração para configurar as integrações Ifthenpay e Moloni de forma segura.
+-   Implementado o sistema de comissões por escala e classificação de motoristas (backend e UI de administração).
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Refatoração do Backend ( monolítico).
--   **Recurrence count:** 14
+-   **Recurrence count:** 17
 -   **Status:** IN PROGRESS
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **WhatsApp Cloud API:** A integração de mensagens agora usa a API oficial da Meta através de chamadas HTTP diretas, eliminando a necessidade de um serviço externo, QR codes e a manutenção de uma sessão com um telemóvel.
--   **Feature Flags/Permissions:** Foi introduzido um sistema de permissões baseado em funções que permite ao administrador granularmente controlar o acesso de cada parceiro às funcionalidades da aplicação.
--   **RPA Data Pipeline:** Foi criado um pipeline para automatizar a recolha e processamento de dados: o Playwright descarrega ficheiros, que são depois importados (manual ou automaticamente) e processados para gerar relatórios.
+-   **Pré-Pagamento Pro-Rata:** Lógica de negócio que calcula custos proporcionais, exige pagamento antecipado e bloqueia o acesso a novas ações até à liquidação.
+-   **Gestão Segura de Credenciais:** As chaves de API são guardadas na base de dados e devolvidas à UI de forma mascarada, com um endpoint de teste que valida as credenciais sem as expor.
+-   **Cálculo de Comissão Dinâmica:** Um sistema flexível que combina uma comissão base por níveis de faturação com um bónus percentual baseado na classificação do motorista.
+-   **Renderização Condicional de UI:** A necessidade de mostrar/ocultar elementos de navegação (como o menu de configuração de comissões) com base nos módulos subscritos pelo utilizador.
 
 **key DB schema**
--   ****: Adicionado campo .
--   ****: Nova coleção para mapear  e .
--   ****: Nova coleção para registar o histórico de uploads de CSV.
--   ****: Nova coleção para armazenar os dados processados dos CSVs, agregados por motorista.
-
-**changes in tech stack**
--   O microserviço Node.js no Railway foi completamente descontinuado em favor de chamadas diretas à API do WhatsApp Cloud.
+-   ****: Definições dos planos e seus preços complexos.
+-   **** (embutido no documento do utilizador): Regista o plano ativo de um utilizador, veículos e motoristas.
+-   ****: Armazena pedidos pendentes para adicionar recursos, incluindo o valor pro-rata e o estado do pagamento.
+-   ****: Armazena as chaves de API da Ifthenpay e Moloni de forma segura.
+-   ****: Armazena os níveis de comissão base definidos pelo admin.
+-   ****: Armazena os níveis de classificação de motorista e os seus bónus.
+-   ****: Armazenará as configurações de comissão personalizadas para cada parceiro.
 
 **All files of reference**
--   : Página de administração para as permissões globais.
--   : Ficheiro a ser modificado para implementar o controlo de acesso no menu.
--   : Rota que fornece as permissões de um utilizador.
--   : Contém a lógica de parsing dos CSVs, que pode precisar de ajustes para ficheiros reais.
-
-**Areas that need refactoring**:
--   O diretório  e a rota  são obsoletos e podem ser eliminados para limpar a base de código.
-
-**key api endpoints**
--   : Define as funcionalidades permitidas para um parceiro.
--   : Obtém as funcionalidades permitidas para o utilizador atual.
--   : Define as plataformas RPA permitidas para um parceiro.
--   : Faz o upload de um ficheiro CSV para processamento.
--   : Envia uma mensagem via WhatsApp Cloud API.
+-   : **(Ação Imediata Necessária)** Onde a UI de configuração para o parceiro precisa de ser construída.
+-   : Contém os endpoints que a nova página irá consumir.
+-   : Onde a rota para a nova página foi adicionada.
 
 **Critical Info for New Agent**
--   A tarefa mais importante é implementar o frontend para o sistema de **permissões de funcionalidades**. O backend está pronto, mas a UI não esconde/restringe o acesso às funcionalidades desativadas.
--   O teste imediato a ser concluído é a **automação da Bolt para o parceiro Zeny**. A password foi redefinida para .
--   A integração do WhatsApp foi **completamente alterada**. Ignore toda a informação sobre QR Code, , e Railway. O foco é a nova **WhatsApp Cloud API**, que requer que cada parceiro configure os seus próprios tokens da Meta.
+-   A sua tarefa prioritária (P0) é finalizar a página de configuração de comissões para o parceiro (). Isto inclui construir a UI e garantir que o acesso a esta página só é possível se o parceiro tiver o módulo de comissões ativo na sua subscrição.
+-   A seguir, o foco deve ser a implementação da **Gestão de Turnos de Veículos**, um requisito explícito e pendente do utilizador.
+-   As integrações com Ifthenpay e Moloni são o passo seguinte para tornar o sistema de pagamentos funcional. A infraestrutura de configuração está pronta, falta implementar a lógica de negócio que usa as chaves.
 
 **documents and test reports created in this job**
--    (Atualizado extensivamente)
+-    (atualizado extensivamente)
+-   
+-   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User**: : Pedido para criar um sistema de permissões de funcionalidades global. **Status: Implementado (Admin UI/Backend), Pendente (Frontend Enforcement).**
-2.  **User**: : Pedido para testar o fluxo de automação da Bolt para um parceiro específico. **Status: In Progress.**
-3.  **User**: : Pedido para adicionar um script de RPA à base de dados, garantindo que seja editável. **Status: Completed.**
-4.  **User**: : Forneceu o código Playwright gravado para a automação da Bolt. **Status: Completed.**
-5.  **User**: : Pedido para que o sistema de importação de CSV tenha opções manuais e automáticas. **Status: Completed.**
-6.  **User**: : Pedido para testar a funcionalidade de importação de CSV. **Status: Completed.**
-7.  **User**: : Pedido para permitir que admins eliminem plataformas de RPA. **Status: Completed.**
-8.  **User**: : Especificação de que os admins devem poder eliminar TODAS as plataformas (não apenas as personalizadas). **Status: Completed.**
-9.  **User**: : Pedido para um sistema de permissões por plataforma de RPA. **Status: Completed.**
-10. **User**: : Pergunta sobre o que fazer com o código Playwright gravado. **Status: Answered.**
+1.  **User:**  - **Em progresso.** Originou a tarefa atual.
+2.  **Agent:** Propôs um plano de implementação para o sistema de comissões e pediu confirmação para avançar com os turnos. - **Respondido.**
+3.  **User:**  - **Parcialmente Implementado.** Forneceu os detalhes para o sistema de comissões. A parte dos turnos está pendente.
+4.  **Agent:** Pediu clarificação sobre o sistema de comissões. - **Respondido.**
+5.  **User:**  - **Parcialmente Implementado.** O pedido que iniciou o desenvolvimento do sistema de comissões e turnos.
+6.  **Agent:** Finalizou a página de configuração de integrações e perguntou se deveria avançar com a implementação real. - **Respondido.**
+7.  **User:**  - **Concluído.** O pedido para criar a página de configuração de integrações.
+8.  **Agent:** Finalizou a adição de IVA e perguntou se deveria avançar com as integrações. - **Respondido.**
+9.  **User:**  - **Concluído.** O pedido para adicionar a exibição de IVA.
+10. **User:**  - **Concluído.** Aprovou o plano do agente para o sistema pro-rata.
 
 **Project Health Check:**
--   **Broken:** O sistema de permissões de funcionalidades está incompleto. Os parceiros ainda podem ver e aceder a todas as funcionalidades, mesmo que um admin as tenha desativado.
--   **Mocked:** N/A.
+-   **Broken:**
+    -   A funcionalidade de configuração de comissões pelo parceiro está inacabada.
+-   **Mocked:**
+    -   Todo o fluxo de pagamento do sistema pro-rata depende de uma confirmação simulada. As integrações com Ifthenpay e Moloni ainda não são funcionais.
 
 **3rd Party Integrations**
--   **WhatsApp Cloud API (Meta):** Nova integração para envio de mensagens. Requer que cada parceiro obtenha um  e  da sua conta Meta Business.
--   **Playwright:** Utilizado para automação RPA. Instalado no servidor para execução e o utilizador foi instruído sobre como instalá-lo localmente para gravação de scripts.
+-   **WhatsApp Cloud API (Meta):** Ativa
+-   **Playwright:** Ativa
+-   **Ifthenpay:** Planeada (UI para chaves completa, playbook obtido)
+-   **Moloni:** Planeada (UI para chaves completa, playbook obtido)
 
 **Testing status**
--   **Testing agent used after significant changes:** NO (Não foi usado desde a implementação das novas funcionalidades principais).
--   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** Não.
+-   **Testing agent used after significant changes:** YES
+-   **Test files created:** Nenhum ficheiro de teste dedicado foi criado.
 -   **Known regressions:** Nenhuma.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
 -   **Parceiro de teste (Zeny):**  / 
--   **Parceiro de teste (Maria):**  /  (password original, pode não funcionar).
 
 **What agent forgot to execute**
--   O agente não implementou a parte do frontend do sistema de permissões de funcionalidades, que é crucial para que a funcionalidade funcione. Ele criou o backend e a UI de administração, mas não a lógica do lado do cliente para ocultar ou restringir o acesso.
--   O agente não removeu os ficheiros e diretórios obsoletos relacionados com a antiga integração do WhatsApp (, ), deixando dívida técnica no projeto.</analysis>
+-   O agente ainda não abordou a implementação dos **turnos de motoristas por veículo**, que foi parte de um dos últimos grandes pedidos do utilizador.
+-   O pedido antigo de testar o parser de CSV da Via Verde continua pendente.</analysis>
