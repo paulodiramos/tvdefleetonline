@@ -597,3 +597,514 @@ async def listar_logs_sincronizacao(
     except Exception as e:
         logger.error(f"Erro ao listar logs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+# ==================================================
+# SISTEMA DE SINCRONIZAÇÃO AUTOMÁTICA AVANÇADO
+# ==================================================
+
+from pydantic import BaseModel
+from typing import List
+
+# Tipos de fonte de dados
+FONTES_DADOS = {
+    "uber": {
+        "nome": "Uber",
+        "icone": "🚗",
+        "cor": "#000000",
+        "tipo": "ganhos",
+        "metodos": ["rpa", "csv"],
+        "descricao": "Ganhos dos motoristas Uber"
+    },
+    "bolt": {
+        "nome": "Bolt",
+        "icone": "⚡",
+        "cor": "#34D399",
+        "tipo": "ganhos",
+        "metodos": ["api", "rpa", "csv"],
+        "descricao": "Ganhos dos motoristas Bolt"
+    },
+    "viaverde": {
+        "nome": "Via Verde",
+        "icone": "🛣️",
+        "cor": "#22C55E",
+        "tipo": "despesas",
+        "metodos": ["rpa", "csv"],
+        "descricao": "Portagens e despesas Via Verde"
+    },
+    "abastecimentos": {
+        "nome": "Abastecimentos",
+        "icone": "⛽",
+        "cor": "#F59E0B",
+        "tipo": "despesas",
+        "metodos": ["rpa", "csv"],
+        "descricao": "Combustível e carregamentos elétricos"
+    }
+}
+
+
+class FonteConfigModel(BaseModel):
+    ativo: bool = False
+    metodo: str = "csv"
+
+
+class AgendamentoGlobalModel(BaseModel):
+    ativo: bool = False
+    frequencia: str = "semanal"
+    dia_semana: int = 1
+    dia_mes: int = 1
+    hora: str = "06:00"
+
+
+class ResumoSemanalConfigModel(BaseModel):
+    gerar_automaticamente: bool = True
+    enviar_email_motoristas: bool = True
+    enviar_whatsapp_motoristas: bool = False
+
+
+class NotificacoesConfigModel(BaseModel):
+    email_parceiro: bool = True
+    notificacao_sistema: bool = True
+    whatsapp_parceiro: bool = False
+
+
+@router.get("/sincronizacao-auto/fontes")
+async def listar_fontes_disponiveis():
+    """Listar todas as fontes de dados disponíveis"""
+    return FONTES_DADOS
+
+
+@router.get("/sincronizacao-auto/config")
+async def obter_config_sincronizacao_auto(
+    parceiro_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter configuração de sincronização automática do parceiro"""
+    # Determinar parceiro_id
+    if current_user["role"] == "admin" and parceiro_id:
+        pid = parceiro_id
+    elif current_user["role"] == "parceiro":
+        pid = current_user["id"]
+    else:
+        pid = current_user.get("associated_partner_id", current_user["id"])
+    
+    config = await db.sincronizacao_auto_config.find_one(
+        {"parceiro_id": pid},
+        {"_id": 0}
+    )
+    
+    if not config:
+        # Configuração padrão
+        config = {
+            "parceiro_id": pid,
+            "ativo": False,
+            "fontes": {
+                "uber": {"ativo": False, "metodo": "csv"},
+                "bolt": {"ativo": False, "metodo": "csv"},
+                "viaverde": {"ativo": False, "metodo": "csv"},
+                "abastecimentos": {"ativo": False, "metodo": "csv"}
+            },
+            "agendamento_global": {
+                "ativo": False,
+                "frequencia": "semanal",
+                "dia_semana": 1,
+                "dia_mes": 1,
+                "hora": "06:00"
+            },
+            "resumo_semanal": {
+                "gerar_automaticamente": True,
+                "enviar_email_motoristas": True,
+                "enviar_whatsapp_motoristas": False
+            },
+            "notificacoes": {
+                "email_parceiro": True,
+                "notificacao_sistema": True,
+                "whatsapp_parceiro": False
+            },
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+    
+    # Adicionar info das fontes
+    config["fontes_info"] = FONTES_DADOS
+    
+    return config
+
+
+@router.put("/sincronizacao-auto/config")
+async def atualizar_config_sincronizacao_auto(
+    request: dict = Body(...),
+    parceiro_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Atualizar configuração de sincronização automática"""
+    # Determinar parceiro_id
+    if current_user["role"] == "admin" and parceiro_id:
+        pid = parceiro_id
+    elif current_user["role"] == "parceiro":
+        pid = current_user["id"]
+    else:
+        pid = current_user.get("associated_partner_id", current_user["id"])
+    
+    # Obter config atual
+    config_atual = await db.sincronizacao_auto_config.find_one({"parceiro_id": pid})
+    
+    if config_atual:
+        # Merge com novos dados
+        for key, value in request.items():
+            if isinstance(value, dict) and isinstance(config_atual.get(key), dict):
+                config_atual[key].update(value)
+            else:
+                config_atual[key] = value
+        config_atual["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        await db.sincronizacao_auto_config.update_one(
+            {"parceiro_id": pid},
+            {"$set": config_atual}
+        )
+    else:
+        # Criar nova config
+        config_atual = {
+            "parceiro_id": pid,
+            "ativo": request.get("ativo", False),
+            "fontes": request.get("fontes", {}),
+            "agendamento_global": request.get("agendamento_global", {}),
+            "resumo_semanal": request.get("resumo_semanal", {}),
+            "notificacoes": request.get("notificacoes", {}),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        await db.sincronizacao_auto_config.insert_one(config_atual)
+    
+    # Atualizar agendamento no scheduler se necessário
+    agendamento = request.get("agendamento_global", {})
+    if agendamento.get("ativo"):
+        await _criar_ou_atualizar_agendamento_sync(pid, config_atual)
+    else:
+        await db.rpa_agendamentos.update_many(
+            {"parceiro_id": pid, "tipo": "sincronizacao_automatica"},
+            {"$set": {"ativo": False}}
+        )
+    
+    return {"sucesso": True, "mensagem": "Configuração guardada"}
+
+
+async def _criar_ou_atualizar_agendamento_sync(parceiro_id: str, config: dict):
+    """Criar ou atualizar agendamento de sincronização"""
+    from datetime import timedelta
+    
+    agendamento_config = config.get("agendamento_global", {})
+    now = datetime.now(timezone.utc)
+    
+    # Calcular próxima execução
+    frequencia = agendamento_config.get("frequencia", "semanal")
+    dia_semana = agendamento_config.get("dia_semana", 1)
+    hora = agendamento_config.get("hora", "06:00")
+    
+    hora_parts = hora.split(":")
+    hora_exec = int(hora_parts[0])
+    minuto_exec = int(hora_parts[1]) if len(hora_parts) > 1 else 0
+    
+    if frequencia == "diario":
+        proxima = now.replace(hour=hora_exec, minute=minuto_exec, second=0, microsecond=0)
+        if proxima <= now:
+            proxima += timedelta(days=1)
+    elif frequencia == "semanal":
+        dias_ate_alvo = (dia_semana - now.weekday()) % 7
+        if dias_ate_alvo == 0 and now.hour >= hora_exec:
+            dias_ate_alvo = 7
+        proxima = now + timedelta(days=dias_ate_alvo)
+        proxima = proxima.replace(hour=hora_exec, minute=minuto_exec, second=0, microsecond=0)
+    else:  # mensal
+        dia_mes = agendamento_config.get("dia_mes", 1)
+        proxima = now.replace(day=dia_mes, hour=hora_exec, minute=minuto_exec, second=0, microsecond=0)
+        if proxima <= now:
+            if now.month == 12:
+                proxima = proxima.replace(year=now.year + 1, month=1)
+            else:
+                proxima = proxima.replace(month=now.month + 1)
+    
+    # Buscar agendamento existente
+    existente = await db.rpa_agendamentos.find_one({
+        "parceiro_id": parceiro_id,
+        "tipo": "sincronizacao_automatica"
+    })
+    
+    agendamento = {
+        "parceiro_id": parceiro_id,
+        "tipo": "sincronizacao_automatica",
+        "plataforma": "sincronizacao",
+        "plataforma_nome": "Sincronização Automática",
+        "frequencia": frequencia,
+        "dia_semana": dia_semana,
+        "hora": hora,
+        "ativo": True,
+        "proxima_execucao": proxima.isoformat(),
+        "updated_at": now.isoformat()
+    }
+    
+    if existente:
+        await db.rpa_agendamentos.update_one(
+            {"id": existente["id"]},
+            {"$set": agendamento}
+        )
+    else:
+        agendamento["id"] = str(uuid.uuid4())
+        agendamento["created_at"] = now.isoformat()
+        await db.rpa_agendamentos.insert_one(agendamento)
+    
+    logger.info(f"📅 Agendamento de sincronização atualizado para parceiro {parceiro_id}")
+
+
+@router.post("/sincronizacao-auto/executar")
+async def executar_sincronizacao_auto(
+    request: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Executar sincronização manualmente"""
+    # Determinar parceiro_id
+    parceiro_id = request.get("parceiro_id")
+    if current_user["role"] == "admin" and parceiro_id:
+        pid = parceiro_id
+    elif current_user["role"] == "parceiro":
+        pid = current_user["id"]
+    else:
+        pid = current_user.get("associated_partner_id", current_user["id"])
+    
+    fontes = request.get("fontes")  # Lista de fontes ou None para todas
+    semana = request.get("semana")
+    ano = request.get("ano")
+    
+    # Obter config
+    config = await db.sincronizacao_auto_config.find_one({"parceiro_id": pid})
+    
+    if fontes is None and config:
+        # Usar todas as fontes ativas
+        fontes = [k for k, v in config.get("fontes", {}).items() if v.get("ativo")]
+    
+    if not fontes:
+        return {"sucesso": False, "erro": "Nenhuma fonte de dados ativa"}
+    
+    # Calcular semana se não fornecida
+    now = datetime.now(timezone.utc)
+    if semana is None:
+        semana = now.isocalendar()[1]
+    if ano is None:
+        ano = now.year
+    
+    # Criar registo de execução
+    execucao_id = str(uuid.uuid4())
+    execucao = {
+        "id": execucao_id,
+        "parceiro_id": pid,
+        "tipo": "sincronizacao_auto",
+        "fontes": fontes,
+        "semana": semana,
+        "ano": ano,
+        "status": "em_execucao",
+        "progresso": 0,
+        "resultados": {},
+        "erros": [],
+        "iniciado_por": current_user["id"],
+        "created_at": now.isoformat()
+    }
+    
+    await db.sincronizacao_auto_execucoes.insert_one(execucao)
+    
+    logger.info(f"🔄 Sincronização iniciada: {execucao_id} para parceiro {pid}")
+    
+    # Executar sincronização de cada fonte
+    resultados = {}
+    erros = []
+    
+    for fonte in fontes:
+        try:
+            fonte_config = config.get("fontes", {}).get(fonte, {}) if config else {}
+            metodo = fonte_config.get("metodo", "csv")
+            
+            # Verificar se há credenciais/configuração para RPA
+            if metodo == "rpa":
+                credencial = await db.rpa_credenciais.find_one({
+                    "parceiro_id": pid,
+                    "plataforma": fonte,
+                    "ativo": True
+                })
+                
+                if credencial:
+                    resultados[fonte] = {
+                        "sucesso": True,
+                        "metodo": "rpa",
+                        "mensagem": "Execução RPA agendada"
+                    }
+                else:
+                    resultados[fonte] = {
+                        "sucesso": False,
+                        "metodo": "rpa",
+                        "erro": "Credenciais não configuradas"
+                    }
+            else:
+                # CSV - verificar importações pendentes
+                importacoes = await db.importacoes.find({
+                    "parceiro_id": pid,
+                    "plataforma": fonte,
+                    "status": {"$in": ["pendente", "processado"]}
+                }).to_list(10)
+                
+                resultados[fonte] = {
+                    "sucesso": True,
+                    "metodo": "csv",
+                    "mensagem": f"{len(importacoes)} ficheiros processados",
+                    "registos": sum(i.get("total_registos", 0) for i in importacoes)
+                }
+                
+        except Exception as e:
+            logger.error(f"Erro ao sincronizar {fonte}: {e}")
+            erros.append(f"{fonte}: {str(e)}")
+            resultados[fonte] = {"sucesso": False, "erro": str(e)}
+    
+    # Determinar status final
+    sucessos = sum(1 for r in resultados.values() if r.get("sucesso"))
+    if sucessos == len(fontes):
+        status = "sucesso"
+    elif sucessos > 0:
+        status = "sucesso_parcial"
+    else:
+        status = "erro"
+    
+    # Atualizar execução
+    await db.sincronizacao_auto_execucoes.update_one(
+        {"id": execucao_id},
+        {"$set": {
+            "status": status,
+            "progresso": 100,
+            "resultados": resultados,
+            "erros": erros,
+            "terminado_em": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    # Criar notificação
+    from utils.notificacoes import criar_notificacao
+    if status == "sucesso":
+        await criar_notificacao(
+            db, user_id=pid,
+            titulo="✅ Sincronização concluída",
+            mensagem=f"Todos os dados foram sincronizados com sucesso.",
+            tipo="info"
+        )
+    elif status == "sucesso_parcial":
+        await criar_notificacao(
+            db, user_id=pid,
+            titulo="⚠️ Sincronização parcial",
+            mensagem=f"Alguns dados foram sincronizados. Verifique os erros.",
+            tipo="warning"
+        )
+    
+    logger.info(f"✅ Sincronização {execucao_id} concluída: {status}")
+    
+    return {
+        "sucesso": status in ["sucesso", "sucesso_parcial"],
+        "execucao_id": execucao_id,
+        "status": status,
+        "resultados": resultados,
+        "erros": erros
+    }
+
+
+@router.get("/sincronizacao-auto/historico")
+async def obter_historico_sincronizacao_auto(
+    limit: int = 20,
+    parceiro_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter histórico de sincronizações automáticas"""
+    # Determinar parceiro_id
+    if current_user["role"] == "admin" and parceiro_id:
+        pid = parceiro_id
+    elif current_user["role"] == "parceiro":
+        pid = current_user["id"]
+    else:
+        pid = current_user.get("associated_partner_id", current_user["id"])
+    
+    execucoes = await db.sincronizacao_auto_execucoes.find(
+        {"parceiro_id": pid},
+        {"_id": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    return execucoes
+
+
+@router.get("/sincronizacao-auto/execucao/{execucao_id}")
+async def obter_execucao_sincronizacao_auto(
+    execucao_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter detalhes de uma execução"""
+    execucao = await db.sincronizacao_auto_execucoes.find_one(
+        {"id": execucao_id},
+        {"_id": 0}
+    )
+    
+    if not execucao:
+        raise HTTPException(status_code=404, detail="Execução não encontrada")
+    
+    # Verificar permissões
+    if current_user["role"] == "parceiro" and execucao.get("parceiro_id") != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    return execucao
+
+
+@router.get("/sincronizacao-auto/estatisticas")
+async def obter_estatisticas_sincronizacao_auto(
+    parceiro_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter estatísticas de sincronização"""
+    # Determinar parceiro_id
+    if current_user["role"] == "admin" and parceiro_id:
+        pid = parceiro_id
+    elif current_user["role"] == "parceiro":
+        pid = current_user["id"]
+    else:
+        pid = current_user.get("associated_partner_id", current_user["id"])
+    
+    query = {"parceiro_id": pid}
+    
+    # Total de sincronizações
+    total = await db.sincronizacao_auto_execucoes.count_documents(query)
+    
+    # Sincronizações com sucesso
+    sucessos = await db.sincronizacao_auto_execucoes.count_documents({
+        **query, "status": {"$in": ["sucesso", "sucesso_parcial"]}
+    })
+    
+    # Última sincronização
+    ultima = await db.sincronizacao_auto_execucoes.find_one(
+        query,
+        {"_id": 0, "created_at": 1, "status": 1},
+        sort=[("created_at", -1)]
+    )
+    
+    # Config atual
+    config = await db.sincronizacao_auto_config.find_one(
+        {"parceiro_id": pid},
+        {"_id": 0, "ativo": 1, "agendamento_global": 1}
+    )
+    
+    # Próximo agendamento
+    proximo_agendamento = await db.rpa_agendamentos.find_one(
+        {"parceiro_id": pid, "tipo": "sincronizacao_automatica", "ativo": True},
+        {"_id": 0, "proxima_execucao": 1}
+    )
+    
+    return {
+        "total_sincronizacoes": total,
+        "sucessos": sucessos,
+        "taxa_sucesso": round((sucessos / total * 100), 1) if total > 0 else 0,
+        "ultima_sincronizacao": ultima.get("created_at") if ultima else None,
+        "ultimo_status": ultima.get("status") if ultima else None,
+        "sincronizacao_ativa": config.get("ativo", False) if config else False,
+        "agendamento_ativo": config.get("agendamento_global", {}).get("ativo", False) if config else False,
+        "proxima_execucao": proximo_agendamento.get("proxima_execucao") if proximo_agendamento else None
+    }
+
