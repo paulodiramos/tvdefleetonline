@@ -206,17 +206,80 @@ async def get_parceiros(current_user: Dict = Depends(get_current_user)):
 
 @router.get("/meu-plano")
 async def get_meu_plano(current_user: Dict = Depends(get_current_user)):
-    """Get current parceiro's plan details"""
+    """Get current parceiro's plan details with costs calculated"""
     if current_user["role"] != UserRole.PARCEIRO:
         raise HTTPException(status_code=403, detail="Only parceiros can access this")
     
-    parceiro = await db.parceiros.find_one({"id": current_user["id"]}, {"_id": 0})
+    parceiro_id = current_user["id"]
+    
+    # Tentar buscar dados da subscrição primeiro (sistema novo)
+    subscricao = await db.subscricoes.find_one({"user_id": parceiro_id}, {"_id": 0})
+    
+    if subscricao and subscricao.get("plano_id"):
+        # Sistema novo com subscrições
+        plano = await db.planos_sistema.find_one({"id": subscricao["plano_id"]}, {"_id": 0})
+        
+        # Buscar módulos incluídos no plano
+        modulos = []
+        if plano and plano.get("modulos_incluidos"):
+            for codigo in plano["modulos_incluidos"]:
+                modulo = await db.modulos_sistema.find_one({"codigo": codigo}, {"_id": 0})
+                if modulo:
+                    modulos.append(modulo)
+        
+        # Calcular custos
+        preco_plano = plano.get("precos_plano", {}) if plano else {}
+        periodicidade = subscricao.get("periodicidade", "mensal")
+        
+        # Preços base por periodicidade
+        preco_base_semanal = preco_plano.get("base_mensal", 0) / 4 if periodicidade != "semanal" else preco_plano.get("base_semanal", 0)
+        por_veiculo_semanal = preco_plano.get("por_veiculo_mensal", 0) / 4 if periodicidade != "semanal" else preco_plano.get("por_veiculo_semanal", 0)
+        por_motorista_semanal = preco_plano.get("por_motorista_mensal", 0) / 4 if periodicidade != "semanal" else preco_plano.get("por_motorista_semanal", 0)
+        
+        num_veiculos = subscricao.get("num_veiculos", 0)
+        num_motoristas = subscricao.get("num_motoristas", 0)
+        
+        custo_veiculos_semanal = num_veiculos * por_veiculo_semanal
+        custo_motoristas_semanal = num_motoristas * por_motorista_semanal
+        custo_semanal = preco_base_semanal + custo_veiculos_semanal + custo_motoristas_semanal
+        custo_mensal = custo_semanal * 4
+        
+        return {
+            "tem_plano": True,
+            "plano": plano,
+            "plano_nome": subscricao.get("plano_nome"),
+            "plano_valida_ate": subscricao.get("data_fim"),
+            "plano_status": subscricao.get("status", "ativo"),
+            "modulos": modulos,
+            "total_veiculos": num_veiculos,
+            "total_motoristas": num_motoristas,
+            "custo_semanal": round(custo_semanal, 2),
+            "custo_mensal": round(custo_mensal, 2),
+            "periodicidade": periodicidade,
+            "proxima_cobranca": subscricao.get("proxima_cobranca"),
+            "detalhes_calculo": {
+                "preco_base_semanal": round(preco_base_semanal, 2),
+                "por_veiculo_semanal": round(por_veiculo_semanal, 2),
+                "por_motorista_semanal": round(por_motorista_semanal, 2),
+                "tipo_cobranca": "por_veiculo" if por_veiculo_semanal > 0 else "fixo",
+                "custo_base": round(preco_base_semanal, 2),
+                "custo_veiculos": round(custo_veiculos_semanal, 2),
+                "custo_motoristas": round(custo_motoristas_semanal, 2)
+            }
+        }
+    
+    # Sistema antigo (fallback)
+    parceiro = await db.parceiros.find_one({"id": parceiro_id}, {"_id": 0})
+    if not parceiro:
+        parceiro = await db.users.find_one({"id": parceiro_id}, {"_id": 0})
+    
     if not parceiro:
         raise HTTPException(status_code=404, detail="Parceiro not found")
     
     plano_id = parceiro.get("plano_id")
     if not plano_id:
         return {
+            "tem_plano": False,
             "plano": None,
             "message": "Nenhum plano atribuído"
         }
@@ -224,10 +287,17 @@ async def get_meu_plano(current_user: Dict = Depends(get_current_user)):
     plano = await db.planos_sistema.find_one({"id": plano_id}, {"_id": 0})
     
     return {
+        "tem_plano": True,
         "plano": plano,
         "plano_nome": parceiro.get("plano_nome"),
         "plano_valida_ate": parceiro.get("plano_valida_ate"),
-        "plano_status": parceiro.get("plano_status", "pendente")
+        "plano_status": parceiro.get("plano_status", "pendente"),
+        "modulos": [],
+        "total_veiculos": 0,
+        "total_motoristas": 0,
+        "custo_semanal": 0,
+        "custo_mensal": 0,
+        "detalhes_calculo": {}
     }
 
 
