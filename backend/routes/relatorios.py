@@ -894,11 +894,13 @@ async def get_resumo_semanal_parceiro(
             bolt_query_conditions.append({"email_motorista": motorista_email})
         
         # Query para encontrar registos por semana/ano
+        # Suporta múltiplos formatos: semana/ano, periodo_semana/periodo_ano, periodo_inicio
         bolt_query = {
             "$and": [
                 {"$or": bolt_query_conditions},
                 {"$or": [
                     {"semana": semana, "ano": ano},
+                    {"periodo_semana": semana, "periodo_ano": ano},
                     {"periodo_inicio": {"$regex": f"^{data_inicio[:7]}"}},
                     {"periodo_inicio": data_inicio}
                 ]}
