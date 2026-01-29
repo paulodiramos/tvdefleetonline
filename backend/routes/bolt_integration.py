@@ -287,3 +287,298 @@ async def get_bolt_sync_logs(
     ).sort("data_inicio", -1).limit(limit).to_list(limit)
     
     return logs
+
+
+# ==================== BOLT OFFICIAL API ENDPOINTS ====================
+
+@router.post("/api/test-connection")
+async def test_bolt_api_connection(
+    request: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Testar conexão com Bolt API oficial usando client_id e client_secret"""
+    try:
+        if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        client_id = request.get("client_id")
+        client_secret = request.get("client_secret")
+        
+        if not client_id or not client_secret:
+            raise HTTPException(status_code=400, detail="Client ID e Client Secret são obrigatórios")
+        
+        logger.info(f"🧪 Testando conexão Bolt API para client_id: {client_id[:8]}...")
+        
+        from services.bolt_api_service import test_bolt_api_credentials
+        result = await test_bolt_api_credentials(client_id, client_secret)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Erro ao testar conexão Bolt API: {e}")
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+
+@router.post("/api/save-credentials")
+async def save_bolt_api_credentials(
+    request: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Guardar credenciais da Bolt API oficial"""
+    try:
+        if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        parceiro_id = current_user["id"] if current_user["role"] == "parceiro" else request.get("parceiro_id")
+        client_id = request.get("client_id")
+        client_secret = request.get("client_secret")
+        
+        if not all([parceiro_id, client_id, client_secret]):
+            raise HTTPException(status_code=400, detail="Dados incompletos")
+        
+        cred = {
+            "parceiro_id": parceiro_id,
+            "plataforma": "bolt_api",
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "tipo": "api_oficial",
+            "ativo": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        
+        existing = await db.credenciais_bolt_api.find_one({
+            "parceiro_id": parceiro_id,
+            "plataforma": "bolt_api"
+        })
+        
+        if existing:
+            await db.credenciais_bolt_api.update_one(
+                {"parceiro_id": parceiro_id, "plataforma": "bolt_api"},
+                {"$set": cred}
+            )
+            message = "Credenciais API atualizadas"
+        else:
+            await db.credenciais_bolt_api.insert_one(cred)
+            message = "Credenciais API guardadas"
+        
+        logger.info(f"✅ Credenciais Bolt API guardadas para parceiro {parceiro_id}")
+        return {"success": True, "message": message}
+        
+    except Exception as e:
+        logger.error(f"Erro ao guardar credenciais Bolt API: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/api/credentials")
+async def get_bolt_api_credentials(
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter credenciais da Bolt API do parceiro atual"""
+    parceiro_id = current_user["id"]
+    
+    cred = await db.credenciais_bolt_api.find_one(
+        {"parceiro_id": parceiro_id, "plataforma": "bolt_api"},
+        {"_id": 0, "client_secret": 0}  # Não retorna o secret
+    )
+    
+    if cred:
+        # Mascarar client_id parcialmente
+        cred["client_id_masked"] = cred.get("client_id", "")[:8] + "..." if cred.get("client_id") else None
+        cred["has_secret"] = True
+    
+    return cred or {"configured": False, "message": "Credenciais API não configuradas"}
+
+
+@router.post("/api/sync-data")
+async def sync_bolt_api_data(
+    request: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Sincronizar dados via Bolt API oficial"""
+    try:
+        if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+            raise HTTPException(status_code=403, detail="Acesso negado")
+        
+        parceiro_id = current_user["id"] if current_user["role"] == "parceiro" else request.get("parceiro_id")
+        start_date = request.get("start_date")
+        end_date = request.get("end_date")
+        
+        # Buscar credenciais
+        cred = await db.credenciais_bolt_api.find_one({
+            "parceiro_id": parceiro_id,
+            "plataforma": "bolt_api",
+            "ativo": True
+        })
+        
+        if not cred:
+            raise HTTPException(status_code=400, detail="Credenciais Bolt API não configuradas")
+        
+        # Criar log de sincronização
+        log_id = str(uuid.uuid4())
+        log = {
+            "id": log_id,
+            "parceiro_id": parceiro_id,
+            "plataforma": "bolt_api",
+            "tipo": "api_oficial",
+            "status": "em_progresso",
+            "data_inicio": datetime.now(timezone.utc).isoformat(),
+            "usuario_id": current_user["id"]
+        }
+        await db.logs_sincronizacao_parceiro.insert_one(log)
+        
+        try:
+            from services.bolt_api_service import sync_bolt_data
+            
+            result = await sync_bolt_data(
+                cred["client_id"],
+                cred["client_secret"],
+                start_date or (datetime.now(timezone.utc).replace(day=1)).strftime("%Y-%m-%d"),
+                end_date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            )
+            
+            if result.get("success"):
+                # Guardar dados sincronizados
+                sync_record = {
+                    "id": str(uuid.uuid4()),
+                    "parceiro_id": parceiro_id,
+                    "plataforma": "bolt_api",
+                    "tipo_dados": "sync_completo",
+                    "fleet_data": result.get("fleet"),
+                    "drivers_data": result.get("drivers"),
+                    "vehicles_data": result.get("vehicles"),
+                    "earnings_data": result.get("earnings"),
+                    "synced_at": result.get("synced_at"),
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                await db.bolt_api_sync_data.insert_one(sync_record)
+                
+                # Atualizar log
+                await db.logs_sincronizacao_parceiro.update_one(
+                    {"id": log_id},
+                    {"$set": {
+                        "status": "sucesso",
+                        "data_fim": datetime.now(timezone.utc).isoformat(),
+                        "dados_sincronizados": {
+                            "drivers": len(result.get("drivers", {}).get("data", [])),
+                            "vehicles": len(result.get("vehicles", {}).get("data", [])),
+                        }
+                    }}
+                )
+                
+                return {
+                    "success": True,
+                    "message": "Dados sincronizados com sucesso via Bolt API",
+                    "summary": {
+                        "drivers": len(result.get("drivers", {}).get("data", [])),
+                        "vehicles": len(result.get("vehicles", {}).get("data", [])),
+                    }
+                }
+            else:
+                await db.logs_sincronizacao_parceiro.update_one(
+                    {"id": log_id},
+                    {"$set": {
+                        "status": "erro",
+                        "mensagem_erro": result.get("error", "Erro desconhecido"),
+                        "data_fim": datetime.now(timezone.utc).isoformat()
+                    }}
+                )
+                return {
+                    "success": False,
+                    "message": result.get("error", "Erro na sincronização")
+                }
+                
+        except Exception as e:
+            await db.logs_sincronizacao_parceiro.update_one(
+                {"id": log_id},
+                {"$set": {
+                    "status": "erro",
+                    "mensagem_erro": str(e),
+                    "data_fim": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            raise
+        
+    except Exception as e:
+        logger.error(f"Erro na sincronização Bolt API: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/api/fleet-info")
+async def get_bolt_fleet_info(
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter informações da frota via Bolt API"""
+    try:
+        parceiro_id = current_user["id"]
+        
+        cred = await db.credenciais_bolt_api.find_one({
+            "parceiro_id": parceiro_id,
+            "plataforma": "bolt_api",
+            "ativo": True
+        })
+        
+        if not cred:
+            raise HTTPException(status_code=400, detail="Credenciais Bolt API não configuradas")
+        
+        from services.bolt_api_service import BoltAPIClient
+        
+        client = BoltAPIClient(cred["client_id"], cred["client_secret"])
+        try:
+            fleet_info = await client.get_fleet_info()
+            return {
+                "success": True,
+                "data": fleet_info
+            }
+        finally:
+            await client.close()
+        
+    except Exception as e:
+        logger.error(f"Erro ao obter info da frota Bolt: {e}")
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+
+@router.get("/api/drivers")
+async def get_bolt_api_drivers(
+    page: int = 1,
+    limit: int = 100,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter lista de motoristas via Bolt API"""
+    try:
+        parceiro_id = current_user["id"]
+        
+        cred = await db.credenciais_bolt_api.find_one({
+            "parceiro_id": parceiro_id,
+            "plataforma": "bolt_api",
+            "ativo": True
+        })
+        
+        if not cred:
+            raise HTTPException(status_code=400, detail="Credenciais Bolt API não configuradas")
+        
+        from services.bolt_api_service import BoltAPIClient
+        
+        client = BoltAPIClient(cred["client_id"], cred["client_secret"])
+        try:
+            drivers = await client.get_drivers(page, limit)
+            return {
+                "success": True,
+                "data": drivers
+            }
+        finally:
+            await client.close()
+        
+    except Exception as e:
+        logger.error(f"Erro ao obter motoristas Bolt: {e}")
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
