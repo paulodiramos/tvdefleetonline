@@ -77,7 +77,7 @@ const FREQUENCIAS = [
 
 const METODOS = {
   rpa: { label: 'Automático (RPA)', icon: '🤖', description: 'Login automático e download' },
-  api: { label: 'API Oficial', icon: '🔌', description: 'Integração direta' },
+  api: { label: 'API Oficial', icon: '🔌', description: 'Integração direta com API' },
   csv: { label: 'Upload Manual', icon: '📄', description: 'Carregar ficheiro CSV' },
 };
 
