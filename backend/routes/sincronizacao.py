@@ -1062,12 +1062,18 @@ async def executar_sincronizacao_auto(
                                                 matricula = bolt_vehicle.get("reg_number", "").upper().replace(" ", "-")
                                                 
                                                 # Buscar veículo local - tentar várias formas
+                                                # Verifica tanto parceiro_id quanto parceiro_atribuido
                                                 veiculo_local = await db.vehicles.find_one({
-                                                    "parceiro_id": pid,
-                                                    "$or": [
-                                                        {"matricula": matricula},
-                                                        {"matricula": matricula.replace("-", "")},
-                                                        {"matricula": {"$regex": matricula.replace("-", ""), "$options": "i"}}
+                                                    "$and": [
+                                                        {"$or": [
+                                                            {"parceiro_id": pid},
+                                                            {"parceiro_atribuido": pid}
+                                                        ]},
+                                                        {"$or": [
+                                                            {"matricula": matricula},
+                                                            {"matricula": matricula.replace("-", "")},
+                                                            {"matricula": {"$regex": matricula.replace("-", ""), "$options": "i"}}
+                                                        ]}
                                                     ]
                                                 }, {"_id": 0})
                                                 
