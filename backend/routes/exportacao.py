@@ -389,3 +389,500 @@ async def _gerar_csv_veiculos(campos: str, delimitador: str, current_user: dict)
         writer.writerow(row)
     
     return '\ufeff' + output.getvalue()
+
+
+# =============================================================================
+# IMPORTAÇÃO DE DADOS
+# =============================================================================
+
+# Mapeamento inverso: label -> campo_db
+LABEL_TO_CAMPO_MOTORISTAS = {v["label"]: {"id": k, "campo_db": v["campo_db"]} for k, v in CAMPOS_MOTORISTAS.items()}
+LABEL_TO_CAMPO_VEICULOS = {v["label"]: {"id": k, "campo_db": v["campo_db"]} for k, v in CAMPOS_VEICULOS.items()}
+
+
+def parse_csv_value(value: str, campo_id: str) -> any:
+    """Converte valor do CSV para o tipo apropriado"""
+    if value is None or value.strip() == "":
+        return None
+    
+    value = value.strip()
+    
+    # Campos booleanos
+    if value.lower() in ["sim", "yes", "true", "1"]:
+        return True
+    if value.lower() in ["não", "nao", "no", "false", "0"]:
+        return False
+    
+    # Campos numéricos
+    if campo_id in ["ano", "num_lugares", "num_portas", "km_atual", "cilindrada", "potencia"]:
+        try:
+            return int(value.replace(".", "").replace(",", ""))
+        except:
+            return value
+    
+    return value
+
+
+def set_nested_value(obj: dict, path: str, value: any):
+    """Define valor em campo aninhado (ex: 'seguro.validade')"""
+    keys = path.split('.')
+    for key in keys[:-1]:
+        if key not in obj:
+            obj[key] = {}
+        obj = obj[key]
+    obj[keys[-1]] = value
+
+
+@router.post("/importar/motoristas/preview")
+async def preview_importar_motoristas(
+    file: UploadFile = File(...),
+    delimitador: str = Form(";"),
+    current_user: dict = Depends(get_current_user)
+):
+    """Pré-visualizar importação de motoristas - mostra alterações detectadas"""
+    from fastapi import File, UploadFile, Form
+    
+    if current_user["role"] not in ["admin", "parceiro", "gestao"]:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+    
+    try:
+        contents = await file.read()
+        
+        # Decodificar ficheiro
+        for encoding in ['utf-8-sig', 'utf-8', 'latin-1', 'cp1252']:
+            try:
+                decoded = contents.decode(encoding)
+                break
+            except UnicodeDecodeError:
+                continue
+        
+        # Remover BOM se presente
+        if decoded.startswith('\ufeff'):
+            decoded = decoded[1:]
+        
+        # Detectar delimitador
+        sample = decoded[:1000]
+        if delimitador == "auto":
+            delimitador = ';' if sample.count(';') > sample.count(',') else ','
+        
+        csv_reader = csv.DictReader(io.StringIO(decoded), delimiter=delimitador)
+        
+        # Buscar motoristas existentes do parceiro
+        query = {}
+        if current_user["role"] == "parceiro":
+            query["parceiro_id"] = current_user["id"]
+        elif current_user["role"] == "gestao":
+            query["parceiro_id"] = current_user.get("associated_partner_id", current_user["id"])
+        
+        motoristas_db = await db.motoristas.find(query, {"_id": 0}).to_list(None)
+        motoristas_por_nif = {m.get("nif"): m for m in motoristas_db if m.get("nif")}
+        
+        # Processar linhas do CSV
+        preview_results = []
+        linhas_ignoradas = 0
+        erros = []
+        
+        for row_num, row in enumerate(csv_reader, start=2):
+            # Encontrar NIF no CSV
+            nif = None
+            for label in ["NIF", "nif", "Nif"]:
+                if label in row:
+                    nif = row[label].strip() if row[label] else None
+                    break
+            
+            if not nif:
+                linhas_ignoradas += 1
+                continue
+            
+            # Verificar se motorista existe
+            motorista_existente = motoristas_por_nif.get(nif)
+            if not motorista_existente:
+                linhas_ignoradas += 1
+                erros.append(f"Linha {row_num}: NIF '{nif}' não encontrado")
+                continue
+            
+            # Detectar alterações
+            alteracoes = []
+            for csv_label, csv_value in row.items():
+                if csv_label not in LABEL_TO_CAMPO_MOTORISTAS:
+                    continue
+                
+                campo_info = LABEL_TO_CAMPO_MOTORISTAS[csv_label]
+                campo_id = campo_info["id"]
+                campo_db = campo_info["campo_db"]
+                
+                # Ignorar campo NIF (é o identificador)
+                if campo_id == "nif":
+                    continue
+                
+                # Valor atual no DB
+                valor_atual = get_nested_value(motorista_existente, campo_db)
+                valor_atual_str = format_value(valor_atual) if valor_atual else ""
+                
+                # Valor novo do CSV
+                valor_novo = csv_value.strip() if csv_value else ""
+                
+                # Comparar
+                if valor_atual_str != valor_novo and valor_novo:
+                    alteracoes.append({
+                        "campo": csv_label,
+                        "campo_id": campo_id,
+                        "valor_atual": valor_atual_str or "(vazio)",
+                        "valor_novo": valor_novo
+                    })
+            
+            if alteracoes:
+                preview_results.append({
+                    "linha": row_num,
+                    "nif": nif,
+                    "nome": motorista_existente.get("name", ""),
+                    "motorista_id": motorista_existente.get("id"),
+                    "alteracoes": alteracoes
+                })
+        
+        return {
+            "sucesso": True,
+            "total_linhas": row_num - 1,
+            "registos_para_atualizar": len(preview_results),
+            "linhas_ignoradas": linhas_ignoradas,
+            "preview": preview_results,
+            "erros": erros[:10]  # Limitar erros mostrados
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao processar ficheiro: {e}")
+        raise HTTPException(status_code=400, detail=f"Erro ao processar ficheiro: {str(e)}")
+
+
+@router.post("/importar/motoristas/confirmar")
+async def confirmar_importar_motoristas(
+    file: UploadFile = File(...),
+    delimitador: str = Form(";"),
+    current_user: dict = Depends(get_current_user)
+):
+    """Confirmar e executar importação de motoristas"""
+    from fastapi import File, UploadFile, Form
+    
+    if current_user["role"] not in ["admin", "parceiro", "gestao"]:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+    
+    try:
+        contents = await file.read()
+        
+        # Decodificar ficheiro
+        for encoding in ['utf-8-sig', 'utf-8', 'latin-1', 'cp1252']:
+            try:
+                decoded = contents.decode(encoding)
+                break
+            except UnicodeDecodeError:
+                continue
+        
+        if decoded.startswith('\ufeff'):
+            decoded = decoded[1:]
+        
+        csv_reader = csv.DictReader(io.StringIO(decoded), delimiter=delimitador)
+        
+        # Buscar motoristas existentes
+        query = {}
+        if current_user["role"] == "parceiro":
+            query["parceiro_id"] = current_user["id"]
+        elif current_user["role"] == "gestao":
+            query["parceiro_id"] = current_user.get("associated_partner_id", current_user["id"])
+        
+        motoristas_db = await db.motoristas.find(query, {"_id": 0}).to_list(None)
+        motoristas_por_nif = {m.get("nif"): m for m in motoristas_db if m.get("nif")}
+        
+        # Processar e atualizar
+        atualizados = 0
+        erros = []
+        
+        for row_num, row in enumerate(csv_reader, start=2):
+            nif = None
+            for label in ["NIF", "nif", "Nif"]:
+                if label in row:
+                    nif = row[label].strip() if row[label] else None
+                    break
+            
+            if not nif:
+                continue
+            
+            motorista_existente = motoristas_por_nif.get(nif)
+            if not motorista_existente:
+                continue
+            
+            # Preparar atualizações
+            updates = {}
+            for csv_label, csv_value in row.items():
+                if csv_label not in LABEL_TO_CAMPO_MOTORISTAS:
+                    continue
+                
+                campo_info = LABEL_TO_CAMPO_MOTORISTAS[csv_label]
+                campo_id = campo_info["id"]
+                campo_db = campo_info["campo_db"]
+                
+                if campo_id == "nif":
+                    continue
+                
+                valor_atual = get_nested_value(motorista_existente, campo_db)
+                valor_atual_str = format_value(valor_atual) if valor_atual else ""
+                valor_novo = csv_value.strip() if csv_value else ""
+                
+                if valor_atual_str != valor_novo and valor_novo:
+                    valor_convertido = parse_csv_value(valor_novo, campo_id)
+                    if '.' in campo_db:
+                        # Campo aninhado
+                        set_nested_value(updates, campo_db, valor_convertido)
+                    else:
+                        updates[campo_db] = valor_convertido
+            
+            if updates:
+                try:
+                    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+                    await db.motoristas.update_one(
+                        {"id": motorista_existente["id"]},
+                        {"$set": updates}
+                    )
+                    atualizados += 1
+                except Exception as e:
+                    erros.append(f"Linha {row_num}: Erro ao atualizar - {str(e)}")
+        
+        # Log da importação
+        log = {
+            "id": str(uuid.uuid4()),
+            "tipo": "importacao_motoristas",
+            "ficheiro": file.filename,
+            "total_atualizados": atualizados,
+            "erros": len(erros),
+            "executado_por": current_user["id"],
+            "data": datetime.now(timezone.utc).isoformat()
+        }
+        await db.logs_importacao.insert_one(log)
+        
+        return {
+            "sucesso": True,
+            "atualizados": atualizados,
+            "erros": erros[:10]
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro na importação: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro na importação: {str(e)}")
+
+
+@router.post("/importar/veiculos/preview")
+async def preview_importar_veiculos(
+    file: UploadFile = File(...),
+    delimitador: str = Form(";"),
+    current_user: dict = Depends(get_current_user)
+):
+    """Pré-visualizar importação de veículos - mostra alterações detectadas"""
+    from fastapi import File, UploadFile, Form
+    
+    if current_user["role"] not in ["admin", "parceiro", "gestao"]:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+    
+    try:
+        contents = await file.read()
+        
+        for encoding in ['utf-8-sig', 'utf-8', 'latin-1', 'cp1252']:
+            try:
+                decoded = contents.decode(encoding)
+                break
+            except UnicodeDecodeError:
+                continue
+        
+        if decoded.startswith('\ufeff'):
+            decoded = decoded[1:]
+        
+        if delimitador == "auto":
+            sample = decoded[:1000]
+            delimitador = ';' if sample.count(';') > sample.count(',') else ','
+        
+        csv_reader = csv.DictReader(io.StringIO(decoded), delimiter=delimitador)
+        
+        # Buscar veículos existentes
+        query = {}
+        if current_user["role"] == "parceiro":
+            query["parceiro_id"] = current_user["id"]
+        elif current_user["role"] == "gestao":
+            query["parceiro_id"] = current_user.get("associated_partner_id", current_user["id"])
+        
+        veiculos_db = await db.vehicles.find(query, {"_id": 0}).to_list(None)
+        veiculos_por_matricula = {v.get("matricula"): v for v in veiculos_db if v.get("matricula")}
+        
+        preview_results = []
+        linhas_ignoradas = 0
+        erros = []
+        
+        for row_num, row in enumerate(csv_reader, start=2):
+            matricula = None
+            for label in ["Matrícula", "Matricula", "matricula", "MATRICULA"]:
+                if label in row:
+                    matricula = row[label].strip().upper() if row[label] else None
+                    break
+            
+            if not matricula:
+                linhas_ignoradas += 1
+                continue
+            
+            veiculo_existente = veiculos_por_matricula.get(matricula)
+            if not veiculo_existente:
+                linhas_ignoradas += 1
+                erros.append(f"Linha {row_num}: Matrícula '{matricula}' não encontrada")
+                continue
+            
+            alteracoes = []
+            for csv_label, csv_value in row.items():
+                if csv_label not in LABEL_TO_CAMPO_VEICULOS:
+                    continue
+                
+                campo_info = LABEL_TO_CAMPO_VEICULOS[csv_label]
+                campo_id = campo_info["id"]
+                campo_db = campo_info["campo_db"]
+                
+                if campo_id == "matricula":
+                    continue
+                
+                valor_atual = get_nested_value(veiculo_existente, campo_db)
+                valor_atual_str = format_value(valor_atual) if valor_atual else ""
+                valor_novo = csv_value.strip() if csv_value else ""
+                
+                if valor_atual_str != valor_novo and valor_novo:
+                    alteracoes.append({
+                        "campo": csv_label,
+                        "campo_id": campo_id,
+                        "valor_atual": valor_atual_str or "(vazio)",
+                        "valor_novo": valor_novo
+                    })
+            
+            if alteracoes:
+                preview_results.append({
+                    "linha": row_num,
+                    "matricula": matricula,
+                    "marca_modelo": f"{veiculo_existente.get('marca', '')} {veiculo_existente.get('modelo', '')}".strip(),
+                    "veiculo_id": veiculo_existente.get("id"),
+                    "alteracoes": alteracoes
+                })
+        
+        return {
+            "sucesso": True,
+            "total_linhas": row_num - 1,
+            "registos_para_atualizar": len(preview_results),
+            "linhas_ignoradas": linhas_ignoradas,
+            "preview": preview_results,
+            "erros": erros[:10]
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro ao processar ficheiro: {e}")
+        raise HTTPException(status_code=400, detail=f"Erro ao processar ficheiro: {str(e)}")
+
+
+@router.post("/importar/veiculos/confirmar")
+async def confirmar_importar_veiculos(
+    file: UploadFile = File(...),
+    delimitador: str = Form(";"),
+    current_user: dict = Depends(get_current_user)
+):
+    """Confirmar e executar importação de veículos"""
+    from fastapi import File, UploadFile, Form
+    
+    if current_user["role"] not in ["admin", "parceiro", "gestao"]:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+    
+    try:
+        contents = await file.read()
+        
+        for encoding in ['utf-8-sig', 'utf-8', 'latin-1', 'cp1252']:
+            try:
+                decoded = contents.decode(encoding)
+                break
+            except UnicodeDecodeError:
+                continue
+        
+        if decoded.startswith('\ufeff'):
+            decoded = decoded[1:]
+        
+        csv_reader = csv.DictReader(io.StringIO(decoded), delimiter=delimitador)
+        
+        query = {}
+        if current_user["role"] == "parceiro":
+            query["parceiro_id"] = current_user["id"]
+        elif current_user["role"] == "gestao":
+            query["parceiro_id"] = current_user.get("associated_partner_id", current_user["id"])
+        
+        veiculos_db = await db.vehicles.find(query, {"_id": 0}).to_list(None)
+        veiculos_por_matricula = {v.get("matricula"): v for v in veiculos_db if v.get("matricula")}
+        
+        atualizados = 0
+        erros = []
+        
+        for row_num, row in enumerate(csv_reader, start=2):
+            matricula = None
+            for label in ["Matrícula", "Matricula", "matricula", "MATRICULA"]:
+                if label in row:
+                    matricula = row[label].strip().upper() if row[label] else None
+                    break
+            
+            if not matricula:
+                continue
+            
+            veiculo_existente = veiculos_por_matricula.get(matricula)
+            if not veiculo_existente:
+                continue
+            
+            updates = {}
+            for csv_label, csv_value in row.items():
+                if csv_label not in LABEL_TO_CAMPO_VEICULOS:
+                    continue
+                
+                campo_info = LABEL_TO_CAMPO_VEICULOS[csv_label]
+                campo_id = campo_info["id"]
+                campo_db = campo_info["campo_db"]
+                
+                if campo_id == "matricula":
+                    continue
+                
+                valor_atual = get_nested_value(veiculo_existente, campo_db)
+                valor_atual_str = format_value(valor_atual) if valor_atual else ""
+                valor_novo = csv_value.strip() if csv_value else ""
+                
+                if valor_atual_str != valor_novo and valor_novo:
+                    valor_convertido = parse_csv_value(valor_novo, campo_id)
+                    if '.' in campo_db:
+                        set_nested_value(updates, campo_db, valor_convertido)
+                    else:
+                        updates[campo_db] = valor_convertido
+            
+            if updates:
+                try:
+                    updates["updated_at"] = datetime.now(timezone.utc).isoformat()
+                    await db.vehicles.update_one(
+                        {"id": veiculo_existente["id"]},
+                        {"$set": updates}
+                    )
+                    atualizados += 1
+                except Exception as e:
+                    erros.append(f"Linha {row_num}: Erro ao atualizar - {str(e)}")
+        
+        log = {
+            "id": str(uuid.uuid4()),
+            "tipo": "importacao_veiculos",
+            "ficheiro": file.filename,
+            "total_atualizados": atualizados,
+            "erros": len(erros),
+            "executado_por": current_user["id"],
+            "data": datetime.now(timezone.utc).isoformat()
+        }
+        await db.logs_importacao.insert_one(log)
+        
+        return {
+            "sucesso": True,
+            "atualizados": atualizados,
+            "erros": erros[:10]
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro na importação: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro na importação: {str(e)}")
+
