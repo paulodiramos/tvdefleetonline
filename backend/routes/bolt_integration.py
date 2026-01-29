@@ -517,7 +517,7 @@ async def sync_bolt_api_data(
 async def get_bolt_fleet_info(
     current_user: dict = Depends(get_current_user)
 ):
-    """Obter informações da frota via Bolt API"""
+    """Obter informações das empresas/frotas via Bolt API"""
     try:
         parceiro_id = current_user["id"]
         
@@ -534,10 +534,10 @@ async def get_bolt_fleet_info(
         
         client = BoltAPIClient(cred["client_id"], cred["client_secret"])
         try:
-            fleet_info = await client.get_fleet_info()
+            companies = await client.get_companies()
             return {
                 "success": True,
-                "data": fleet_info
+                "data": companies
             }
         finally:
             await client.close()
