@@ -1005,7 +1005,16 @@ async def executar_sincronizacao_auto(
                                         
                                         # Buscar motorista local APENAS do parceiro atual
                                         # Não cria nem move motoristas de outros parceiros
+                                        # Verifica tanto parceiro_id quanto parceiro_atribuido
                                         motorista_local = None
+                                        
+                                        # Query base para filtrar por parceiro
+                                        parceiro_filter = {
+                                            "$or": [
+                                                {"parceiro_id": pid},
+                                                {"parceiro_atribuido": pid}
+                                            ]
+                                        }
                                         
                                         # Tentar por telefone (várias variações)
                                         if bolt_phone:
@@ -1017,10 +1026,12 @@ async def executar_sincronizacao_auto(
                                             ]
                                             for phone_var in phone_variations:
                                                 motorista_local = await db.motoristas.find_one({
-                                                    "parceiro_id": pid,
-                                                    "$or": [
-                                                        {"phone": phone_var},
-                                                        {"phone": {"$regex": phone_var[-9:] if len(phone_var) >= 9 else phone_var}}
+                                                    "$and": [
+                                                        parceiro_filter,
+                                                        {"$or": [
+                                                            {"phone": phone_var},
+                                                            {"phone": {"$regex": phone_var[-9:] if len(phone_var) >= 9 else phone_var}}
+                                                        ]}
                                                     ]
                                                 }, {"_id": 0})
                                                 if motorista_local:
@@ -1029,8 +1040,10 @@ async def executar_sincronizacao_auto(
                                         # Se não encontrou por telefone, tentar por email
                                         if not motorista_local and bolt_email:
                                             motorista_local = await db.motoristas.find_one({
-                                                "parceiro_id": pid,
-                                                "email": {"$regex": f"^{bolt_email}$", "$options": "i"}
+                                                "$and": [
+                                                    parceiro_filter,
+                                                    {"email": {"$regex": f"^{bolt_email}$", "$options": "i"}}
+                                                ]
                                             }, {"_id": 0})
                                         
                                         if motorista_local:
