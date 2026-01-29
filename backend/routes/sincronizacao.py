@@ -1046,8 +1046,10 @@ async def executar_sincronizacao_auto(
                                             # Criar ou atualizar registo de ganhos
                                             ganho_existente = await db.ganhos_bolt.find_one({
                                                 "motorista_id": motorista_local["id"],
-                                                "periodo_semana": semana,
-                                                "periodo_ano": ano
+                                                "$or": [
+                                                    {"periodo_semana": semana, "periodo_ano": ano},
+                                                    {"semana": semana, "ano": ano}
+                                                ]
                                             })
                                             
                                             ganho_data = {
