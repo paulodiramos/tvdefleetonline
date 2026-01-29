@@ -1001,6 +1001,7 @@ async def executar_sincronizacao_auto(
                                         bolt_phone = bolt_driver.get("phone", "").replace(" ", "")
                                         bolt_email = bolt_driver.get("email", "").lower()
                                         bolt_name = f"{bolt_driver.get('first_name', '')} {bolt_driver.get('last_name', '')}".strip()
+                                        bolt_driver_uuid = bolt_driver.get("driver_uuid", "")
                                         
                                         # Buscar motorista local por telefone ou email
                                         query = {"parceiro_id": pid}
