@@ -159,24 +159,70 @@ class BoltAPIClient:
             }
     
     # ==================== Fleet Endpoints ====================
+    # Based on https://apidocs.bolt.eu/fleetIntegration/fleetIntegrationGatewayAuth/
     
-    async def get_fleet_info(self) -> Dict:
-        """Get fleet information"""
-        return await self._make_request('GET', '/v1/fleet')
+    async def test_api(self) -> Dict:
+        """Test API endpoint - POST /fleetIntegration/v1/test"""
+        return await self._make_request('POST', '/fleetIntegration/v1/test', json_data={})
+    
+    async def get_companies(self) -> Dict:
+        """Get fleet companies - GET /fleetIntegration/v1/getCompanies"""
+        return await self._make_request('GET', '/fleetIntegration/v1/getCompanies')
     
     async def get_drivers(self, page: int = 1, limit: int = 100) -> Dict:
-        """Get list of drivers"""
-        params = {'page': page, 'limit': limit}
-        return await self._make_request('GET', '/v1/drivers', params=params)
-    
-    async def get_driver(self, driver_id: str) -> Dict:
-        """Get driver details"""
-        return await self._make_request('GET', f'/v1/drivers/{driver_id}')
+        """Get list of drivers - POST /fleetIntegration/v1/getDrivers"""
+        json_data = {
+            "pager": {
+                "page": page,
+                "pageSize": limit
+            }
+        }
+        return await self._make_request('POST', '/fleetIntegration/v1/getDrivers', json_data=json_data)
     
     async def get_vehicles(self, page: int = 1, limit: int = 100) -> Dict:
-        """Get list of vehicles"""
-        params = {'page': page, 'limit': limit}
-        return await self._make_request('GET', '/v1/vehicles', params=params)
+        """Get list of vehicles - POST /fleetIntegration/v1/getVehicles"""
+        json_data = {
+            "pager": {
+                "page": page,
+                "pageSize": limit
+            }
+        }
+        return await self._make_request('POST', '/fleetIntegration/v1/getVehicles', json_data=json_data)
+    
+    async def get_fleet_orders(self, start_date: str, end_date: str, page: int = 1, limit: int = 100) -> Dict:
+        """
+        Get fleet orders (rides/trips) - POST /fleetIntegration/v1/getFleetOrders
+        Args:
+            start_date: ISO format datetime
+            end_date: ISO format datetime
+        """
+        json_data = {
+            "pager": {
+                "page": page,
+                "pageSize": limit
+            },
+            "timeRange": {
+                "start": start_date,
+                "end": end_date
+            }
+        }
+        return await self._make_request('POST', '/fleetIntegration/v1/getFleetOrders', json_data=json_data)
+    
+    async def get_fleet_state_logs(self, start_date: str, end_date: str, page: int = 1, limit: int = 100) -> Dict:
+        """
+        Get driver state logs - POST /fleetIntegration/v1/getFleetStateLogs
+        """
+        json_data = {
+            "pager": {
+                "page": page,
+                "pageSize": limit
+            },
+            "timeRange": {
+                "start": start_date,
+                "end": end_date
+            }
+        }
+        return await self._make_request('POST', '/fleetIntegration/v1/getFleetStateLogs', json_data=json_data)
     
     async def get_vehicle(self, vehicle_id: str) -> Dict:
         """Get vehicle details"""
