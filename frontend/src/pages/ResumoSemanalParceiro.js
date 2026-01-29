@@ -658,7 +658,8 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
             <h1 className="text-lg font-bold text-slate-800">Resumo Semanal</h1>
             <p className="text-xs text-slate-500">Ganhos e despesas semanais</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Navegação de semana */}
             <div className="flex items-center gap-1 bg-white rounded border px-2 py-1">
               <Button variant="ghost" size="sm" onClick={handlePreviousWeek} className="h-6 w-6 p-0">
                 <ChevronLeft className="w-3 h-3" />
@@ -668,6 +669,69 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
               <ChevronRight className="w-3 h-3" />
             </Button>
           </div>
+          
+          {/* Botão de Sincronização com Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="sm" variant="default" className="h-7 text-xs bg-blue-600 hover:bg-blue-700">
+                {syncLoading.all ? (
+                  <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                ) : (
+                  <RefreshCw className="w-3 h-3 mr-1" />
+                )}
+                Sincronizar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <div className="px-2 py-1.5">
+                <p className="text-xs font-semibold text-slate-500">Sincronizar dados</p>
+              </div>
+              <DropdownMenuSeparator />
+              
+              {SYNC_SOURCES.map((source) => {
+                const Icon = source.icon;
+                return (
+                  <DropdownMenuItem 
+                    key={source.id}
+                    onClick={() => handleSync(source.id)}
+                    disabled={syncLoading[source.id]}
+                    className="cursor-pointer"
+                  >
+                    <div className={`w-6 h-6 rounded flex items-center justify-center mr-2 ${source.color}`}>
+                      {syncLoading[source.id] ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : (
+                        <Icon className="w-3 h-3" />
+                      )}
+                    </div>
+                    <span>{source.name}</span>
+                    {syncLoading[source.id] && (
+                      <Badge variant="secondary" className="ml-auto text-xs">
+                        A sincronizar...
+                      </Badge>
+                    )}
+                  </DropdownMenuItem>
+                );
+              })}
+              
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={handleSyncAll}
+                disabled={syncLoading.all}
+                className="cursor-pointer"
+              >
+                <div className="w-6 h-6 rounded bg-purple-500 text-white flex items-center justify-center mr-2">
+                  {syncLoading.all ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Play className="w-3 h-3" />
+                  )}
+                </div>
+                <span className="font-medium">Sincronizar Tudo</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
           <Button size="sm" variant="outline" onClick={() => navigate('/importar-ficheiros')} className="h-7 text-xs">
             <Upload className="w-3 h-3 mr-1" />
             Importar
