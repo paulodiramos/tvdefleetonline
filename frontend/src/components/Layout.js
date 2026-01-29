@@ -430,6 +430,12 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>Meu Plano</span>
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/loja-planos" className="flex items-center space-x-2 cursor-pointer" data-testid="link-loja-planos">
+                          <Building2 className="w-4 h-4" />
+                          <span>Loja de Planos</span>
+                        </Link>
+                      </DropdownMenuItem>
                       {itemPermitido('Terabox') && (
                         <DropdownMenuItem asChild>
                           <Link to="/terabox" className="flex items-center space-x-2 cursor-pointer">
