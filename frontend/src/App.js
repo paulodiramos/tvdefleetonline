@@ -319,6 +319,16 @@ function App() {
             }
           />
           <Route
+            path="/loja-planos"
+            element={
+              user && user.role === 'parceiro' ? (
+                <LojaPlanos user={user} onLogout={handleLogout} />
+              ) : (
+                <Navigate to="/dashboard" />
+              )
+            }
+          />
+          <Route
             path="/meu-plano-motorista"
             element={
               user && user.role === 'motorista' ? (
