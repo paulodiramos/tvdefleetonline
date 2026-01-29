@@ -1099,41 +1099,125 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
             {/* Bolt */}
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold text-xs">B</span>
+                <CardTitle className="flex items-center justify-between text-base">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center">
+                      <span className="text-white font-bold text-xs">B</span>
+                    </div>
+                    Bolt
                   </div>
-                  Bolt
+                  {boltApiStatus?.configured && (
+                    <span className="flex items-center gap-1 text-xs text-green-600">
+                      <CheckCircle className="w-3 h-3" />
+                      API Configurada
+                    </span>
+                  )}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <Label className="text-xs">Email</Label>
-                    <Input
-                      placeholder="email@bolt.eu"
-                      value={credenciais.bolt_email}
-                      onChange={(e) => setCredenciais(prev => ({ ...prev, bolt_email: e.target.value }))}
-                    />
+              <CardContent className="space-y-4">
+                {/* Bolt API Oficial */}
+                <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Key className="w-4 h-4 text-green-600" />
+                    <span className="text-sm font-medium text-green-800">API Oficial (Recomendado)</span>
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Password</Label>
-                    <div className="relative">
+                  <p className="text-xs text-green-700 mb-3">
+                    Obtenha as credenciais em <a href="https://fleets.bolt.eu" target="_blank" rel="noopener noreferrer" className="underline">fleets.bolt.eu</a> → API Credentials
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Client ID</Label>
                       <Input
-                        type={showPasswords.bolt ? 'text' : 'password'}
-                        placeholder="••••••••"
-                        value={credenciais.bolt_password}
-                        onChange={(e) => setCredenciais(prev => ({ ...prev, bolt_password: e.target.value }))}
+                        placeholder="seu-client-id"
+                        value={credenciais.bolt_client_id}
+                        onChange={(e) => setCredenciais(prev => ({ ...prev, bolt_client_id: e.target.value }))}
                       />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
-                        onClick={() => togglePasswordVisibility('bolt')}
-                      >
-                        {showPasswords.bolt ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </Button>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Client Secret</Label>
+                      <div className="relative">
+                        <Input
+                          type={showPasswords.bolt_api ? 'text' : 'password'}
+                          placeholder="seu-client-secret"
+                          value={credenciais.bolt_client_secret}
+                          onChange={(e) => setCredenciais(prev => ({ ...prev, bolt_client_secret: e.target.value }))}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                          onClick={() => setShowPasswords(prev => ({ ...prev, bolt_api: !prev.bolt_api }))}
+                        >
+                          {showPasswords.bolt_api ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {boltApiStatus && !boltApiStatus.configured && (
+                    <Alert className={`mt-3 ${boltApiStatus.success ? 'bg-green-100 border-green-300' : 'bg-red-100 border-red-300'}`}>
+                      <AlertDescription className={boltApiStatus.success ? 'text-green-800' : 'text-red-800'}>
+                        {boltApiStatus.message}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  <div className="flex gap-2 mt-3">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={handleTestBoltApi}
+                      disabled={testingBoltApi || !credenciais.bolt_client_id || !credenciais.bolt_client_secret}
+                    >
+                      {testingBoltApi ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <TestTube className="w-4 h-4 mr-1" />}
+                      Testar Conexão
+                    </Button>
+                    <Button 
+                      size="sm"
+                      onClick={handleSaveBoltApi}
+                      disabled={saving || !credenciais.bolt_client_id || !credenciais.bolt_client_secret}
+                    >
+                      {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
+                      Guardar API
+                    </Button>
+                  </div>
+                </div>
+                
+                {/* Bolt Legacy (Email/Password) */}
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Lock className="w-4 h-4 text-slate-500" />
+                    <span className="text-sm font-medium text-slate-600">Login Tradicional (Legado)</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs">Email</Label>
+                      <Input
+                        placeholder="email@bolt.eu"
+                        value={credenciais.bolt_email}
+                        onChange={(e) => setCredenciais(prev => ({ ...prev, bolt_email: e.target.value }))}
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs">Password</Label>
+                      <div className="relative">
+                        <Input
+                          type={showPasswords.bolt ? 'text' : 'password'}
+                          placeholder="••••••••"
+                          value={credenciais.bolt_password}
+                          onChange={(e) => setCredenciais(prev => ({ ...prev, bolt_password: e.target.value }))}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                          onClick={() => togglePasswordVisibility('bolt')}
+                        >
+                          {showPasswords.bolt ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
