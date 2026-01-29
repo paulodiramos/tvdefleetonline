@@ -169,58 +169,62 @@ class BoltAPIClient:
         """Get fleet companies - GET /fleetIntegration/v1/getCompanies"""
         return await self._make_request('GET', '/fleetIntegration/v1/getCompanies')
     
-    async def get_drivers(self, page: int = 1, limit: int = 100) -> Dict:
+    async def get_drivers(self, company_id: int, start_ts: str = None, end_ts: str = None, limit: int = 100, offset: int = 0) -> Dict:
         """Get list of drivers - POST /fleetIntegration/v1/getDrivers"""
+        if not start_ts:
+            # Default: last 30 days
+            start_ts = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+        if not end_ts:
+            end_ts = datetime.now(timezone.utc).isoformat()
+            
         json_data = {
-            "pager": {
-                "page": page,
-                "pageSize": limit
-            }
+            "company_id": company_id,
+            "start_ts": start_ts,
+            "end_ts": end_ts,
+            "limit": limit,
+            "offset": offset
         }
         return await self._make_request('POST', '/fleetIntegration/v1/getDrivers', json_data=json_data)
     
-    async def get_vehicles(self, page: int = 1, limit: int = 100) -> Dict:
+    async def get_vehicles(self, company_id: int, start_ts: str = None, end_ts: str = None, limit: int = 100, offset: int = 0) -> Dict:
         """Get list of vehicles - POST /fleetIntegration/v1/getVehicles"""
+        if not start_ts:
+            start_ts = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+        if not end_ts:
+            end_ts = datetime.now(timezone.utc).isoformat()
+            
         json_data = {
-            "pager": {
-                "page": page,
-                "pageSize": limit
-            }
+            "company_id": company_id,
+            "start_ts": start_ts,
+            "end_ts": end_ts,
+            "limit": limit,
+            "offset": offset
         }
         return await self._make_request('POST', '/fleetIntegration/v1/getVehicles', json_data=json_data)
     
-    async def get_fleet_orders(self, start_date: str, end_date: str, page: int = 1, limit: int = 100) -> Dict:
+    async def get_fleet_orders(self, company_id: int, start_ts: str, end_ts: str, limit: int = 100, offset: int = 0) -> Dict:
         """
         Get fleet orders (rides/trips) - POST /fleetIntegration/v1/getFleetOrders
-        Args:
-            start_date: ISO format datetime
-            end_date: ISO format datetime
         """
         json_data = {
-            "pager": {
-                "page": page,
-                "pageSize": limit
-            },
-            "timeRange": {
-                "start": start_date,
-                "end": end_date
-            }
+            "company_id": company_id,
+            "start_ts": start_ts,
+            "end_ts": end_ts,
+            "limit": limit,
+            "offset": offset
         }
         return await self._make_request('POST', '/fleetIntegration/v1/getFleetOrders', json_data=json_data)
     
-    async def get_fleet_state_logs(self, start_date: str, end_date: str, page: int = 1, limit: int = 100) -> Dict:
+    async def get_fleet_state_logs(self, company_id: int, start_ts: str, end_ts: str, limit: int = 100, offset: int = 0) -> Dict:
         """
         Get driver state logs - POST /fleetIntegration/v1/getFleetStateLogs
         """
         json_data = {
-            "pager": {
-                "page": page,
-                "pageSize": limit
-            },
-            "timeRange": {
-                "start": start_date,
-                "end": end_date
-            }
+            "company_id": company_id,
+            "start_ts": start_ts,
+            "end_ts": end_ts,
+            "limit": limit,
+            "offset": offset
         }
         return await self._make_request('POST', '/fleetIntegration/v1/getFleetStateLogs', json_data=json_data)
 
