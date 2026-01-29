@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -28,7 +29,14 @@ import {
   Settings,
   Wallet,
   MinusCircle,
-  Smartphone
+  Smartphone,
+  RefreshCw,
+  Car,
+  Fuel,
+  CreditCard,
+  MapPin,
+  Play,
+  CheckCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -39,6 +47,13 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 const API = process.env.REACT_APP_BACKEND_URL;
 
