@@ -48,6 +48,7 @@ import UploadCSV from "@/pages/UploadCSV";
 import Planos from "@/pages/Planos";
 import Configuracoes from "@/pages/Configuracoes";
 import Integracoes from "@/pages/Integracoes";
+import ExportarDados from "@/pages/ExportarDados";
 import Comunicacoes from "@/pages/Comunicacoes";
 import ConfiguracaoComunicacoes from "@/pages/ConfiguracaoComunicacoes";
 import ConfiguracaoCategorias from "@/pages/ConfiguracaoCategorias";
