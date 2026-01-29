@@ -437,6 +437,35 @@ Interface para parceiros visualizarem e compararem planos disponíveis.
 
 ---
 
+## ✅ Integração Bolt API Oficial (Implementado: 29/01/2025)
+
+### Descrição
+Integração com a API oficial da Bolt Fleet usando OAuth2 Client Credentials.
+
+### Funcionalidades
+- **Autenticação OAuth2**: Token endpoint com client_id e client_secret
+- **Auto-refresh de Token**: Token renova automaticamente antes de expirar (10 min)
+- **Endpoints disponíveis**:
+  - `POST /api/bolt/api/test-connection` - Testar conexão
+  - `POST /api/bolt/api/save-credentials` - Guardar credenciais
+  - `GET /api/bolt/api/credentials` - Obter credenciais (mascaradas)
+  - `POST /api/bolt/api/sync-data` - Sincronizar dados
+  - `GET /api/bolt/api/fleet-info` - Info da frota
+  - `GET /api/bolt/api/drivers` - Lista de motoristas
+
+### Ficheiros
+- `/app/backend/services/bolt_api_service.py` - Cliente da API Bolt
+- `/app/backend/routes/bolt_integration.py` - Endpoints (legado + API oficial)
+- `/app/frontend/src/pages/ConfiguracoesParceiro.js` - UI com campos API
+
+### Como obter credenciais
+1. Aceder a fleets.bolt.eu
+2. Ir a API Credentials
+3. Clicar "Generate credentials"
+4. Copiar Client ID e Secret
+
+---
+
 ## Notas Importantes
 - **Railway foi desativado** - WhatsApp usa API Cloud oficial
 - **Sistema de permissões activo** - Menu filtrado por funcionalidades
