@@ -61,10 +61,18 @@ class SincronizacaoService:
     
     async def obter_config_parceiro(self, parceiro_id: str) -> Dict:
         """Obter configuração de sincronização de um parceiro"""
-        config = await self.db.sincronizacao_config.find_one(
+        # Tentar primeiro a colecção nova
+        config = await self.db.sincronizacao_auto_config.find_one(
             {"parceiro_id": parceiro_id},
             {"_id": 0}
         )
+        
+        # Fallback para colecção antiga
+        if not config:
+            config = await self.db.sincronizacao_config.find_one(
+                {"parceiro_id": parceiro_id},
+                {"_id": 0}
+            )
         
         if not config:
             # Configuração padrão
