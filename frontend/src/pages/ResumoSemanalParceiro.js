@@ -557,6 +557,72 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     }
   };
 
+  // Função de sincronização
+  const handleSync = async (fonte) => {
+    setSyncLoading(prev => ({ ...prev, [fonte]: true }));
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/api/sincronizacao-auto/executar`,
+        { fontes: [fonte], semana, ano },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.sucesso) {
+        const resultado = response.data.resultados?.[fonte];
+        if (resultado?.sucesso) {
+          toast.success(`${fonte.charAt(0).toUpperCase() + fonte.slice(1)} sincronizado com sucesso!`);
+          // Recarregar dados do resumo
+          fetchResumo();
+        } else {
+          toast.error(resultado?.erro || `Erro ao sincronizar ${fonte}`);
+        }
+      } else {
+        toast.error(response.data.erros?.[0] || 'Erro na sincronização');
+      }
+    } catch (error) {
+      console.error(`Erro ao sincronizar ${fonte}:`, error);
+      toast.error(error.response?.data?.detail || `Erro ao sincronizar ${fonte}`);
+    } finally {
+      setSyncLoading(prev => ({ ...prev, [fonte]: false }));
+    }
+  };
+  
+  // Sincronização de todas as fontes
+  const handleSyncAll = async () => {
+    setSyncLoading(prev => ({ ...prev, all: true }));
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/api/sincronizacao-auto/executar`,
+        { semana, ano },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.sucesso) {
+        toast.success('Sincronização completa executada!');
+        fetchResumo();
+      } else {
+        toast.error('Algumas fontes falharam na sincronização');
+      }
+    } catch (error) {
+      toast.error('Erro na sincronização');
+    } finally {
+      setSyncLoading(prev => ({ ...prev, all: false }));
+    }
+  };
+
+  // Configuração das fontes de sincronização
+  const SYNC_SOURCES = [
+    { id: 'uber', name: 'Uber', icon: Car, color: 'bg-black text-white' },
+    { id: 'bolt', name: 'Bolt', icon: Car, color: 'bg-green-500 text-white' },
+    { id: 'viaverde', name: 'Via Verde', icon: CreditCard, color: 'bg-emerald-500 text-white' },
+    { id: 'gps', name: 'GPS', icon: MapPin, color: 'bg-blue-500 text-white' },
+    { id: 'abastecimentos', name: 'Combustível', icon: Fuel, color: 'bg-orange-500 text-white' },
+  ];
+
   if (loading) {
     return (
       <Layout user={user} onLogout={onLogout}>
