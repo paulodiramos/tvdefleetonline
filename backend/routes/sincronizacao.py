@@ -1061,7 +1061,7 @@ async def executar_sincronizacao_auto(
                                             
                                             ganho_data = {
                                                 "id": ganho_existente["id"] if ganho_existente else str(uuid.uuid4()),
-                                                "identificador_motorista_bolt": bolt_driver.get("id"),
+                                                "identificador_motorista_bolt": bolt_driver_uuid,
                                                 "motorista_id": motorista_local["id"],
                                                 "nome_motorista": motorista_local.get("name", bolt_name),
                                                 "email_motorista": motorista_local.get("email", bolt_email),
