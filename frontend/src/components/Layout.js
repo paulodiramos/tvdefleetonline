@@ -479,6 +479,11 @@ const Layout = ({ children, user, onLogout }) => {
                           </Link>
                         </DropdownMenuItem>
                       )}
+                      <DropdownMenuItem asChild>
+                        <Link to="/exportar-dados" className="flex items-center space-x-2 cursor-pointer pl-6" data-testid="link-exportar-dados">
+                          <span>📤 Exportar Dados</span>
+                        </Link>
+                      </DropdownMenuItem>
                       {itemPermitido('📱 WhatsApp') && (
                         <DropdownMenuItem asChild>
                           <Link to="/whatsapp" className="flex items-center space-x-2 cursor-pointer pl-6">
