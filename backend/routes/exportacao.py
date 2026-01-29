@@ -571,7 +571,6 @@ async def confirmar_importar_motoristas(
     current_user: dict = Depends(get_current_user)
 ):
     """Confirmar e executar importação de motoristas"""
-    from fastapi import File, UploadFile, Form
     
     if current_user["role"] not in ["admin", "parceiro", "gestao"]:
         raise HTTPException(status_code=403, detail="Acesso negado")
@@ -595,9 +594,18 @@ async def confirmar_importar_motoristas(
         # Buscar motoristas existentes
         query = {}
         if current_user["role"] == "parceiro":
-            query["parceiro_id"] = current_user["id"]
+            query["$or"] = [
+                {"parceiro_id": current_user["id"]},
+                {"parceiro_id": None},
+                {"parceiro_id": {"$exists": False}}
+            ]
         elif current_user["role"] == "gestao":
-            query["parceiro_id"] = current_user.get("associated_partner_id", current_user["id"])
+            pid = current_user.get("associated_partner_id", current_user["id"])
+            query["$or"] = [
+                {"parceiro_id": pid},
+                {"parceiro_id": None},
+                {"parceiro_id": {"$exists": False}}
+            ]
         
         motoristas_db = await db.motoristas.find(query, {"_id": 0}).to_list(None)
         motoristas_por_nif = {m.get("nif"): m for m in motoristas_db if m.get("nif")}
