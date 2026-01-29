@@ -58,12 +58,37 @@ class BoltAPIClient:
         
         try:
             async with session.post(self.TOKEN_URL, data=data, headers=headers) as response:
-                if response.status != 200:
-                    error_text = await response.text()
-                    logger.error(f"Bolt token error: {response.status} - {error_text}")
-                    raise Exception(f"Failed to get Bolt access token: {response.status}")
+                response_text = await response.text()
                 
-                token_data = await response.json()
+                if response.status == 401:
+                    logger.error(f"Bolt auth failed (401): {response_text}")
+                    raise Exception("Credenciais inválidas. Verifique o Client ID e Client Secret.")
+                
+                if response.status == 403:
+                    logger.error(f"Bolt auth forbidden (403): {response_text}")
+                    raise Exception("Acesso negado. Verifique se a sua conta Bolt tem acesso à API Fleet Integration.")
+                
+                if response.status == 400:
+                    logger.error(f"Bolt bad request (400): {response_text}")
+                    try:
+                        error_json = await response.json()
+                        error_desc = error_json.get('error_description', error_json.get('error', response_text))
+                        raise Exception(f"Erro na requisição: {error_desc}")
+                    except:
+                        raise Exception(f"Erro na requisição: {response_text}")
+                
+                if response.status != 200:
+                    logger.error(f"Bolt token error: {response.status} - {response_text}")
+                    raise Exception(f"Erro ao obter token Bolt (HTTP {response.status})")
+                
+                try:
+                    token_data = await response.json()
+                except:
+                    token_data = None
+                    # Try to parse the text response
+                    import json
+                    token_data = json.loads(response_text)
+                
                 self._access_token = token_data['access_token']
                 expires_in = token_data.get('expires_in', 600)  # Default 10 minutes
                 self._token_expires_at = datetime.now(timezone.utc) + timedelta(seconds=expires_in)
