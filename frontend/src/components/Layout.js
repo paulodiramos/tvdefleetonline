@@ -453,31 +453,24 @@ const Layout = ({ children, user, onLogout }) => {
                       </div>
                       <DropdownMenuItem asChild>
                         <Link to="/configuracoes-parceiro" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>📧 Email & Credenciais</span>
+                          <span>📧 Email & Comunicações</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/credenciais-plataformas" className="flex items-center space-x-2 cursor-pointer pl-6">
+                        <Link to="/configuracoes-parceiro?tab=credenciais" className="flex items-center space-x-2 cursor-pointer pl-6">
                           <span>🔐 Credenciais Plataformas</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/configuracao-relatorios" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>⚙️ Configurações</span>
+                        <Link to="/configuracoes-parceiro?tab=sincronizacao" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>🔄 Sincronização Auto</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/integracoes" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>🔗 Integrações</span>
+                        <Link to="/configuracao-relatorios" className="flex items-center space-x-2 cursor-pointer pl-6">
+                          <span>⚙️ Configurações Relatórios</span>
                         </Link>
                       </DropdownMenuItem>
-                      {itemPermitido('🤖 RPA Automação') && (
-                        <DropdownMenuItem asChild>
-                          <Link to="/rpa-automacao" className="flex items-center space-x-2 cursor-pointer pl-6">
-                            <span>🤖 RPA Automação</span>
-                          </Link>
-                        </DropdownMenuItem>
-                      )}
                       {itemPermitido('📥 Importação Dados') && (
                         <DropdownMenuItem asChild>
                           <Link to="/importacao-rpa" className="flex items-center space-x-2 cursor-pointer pl-6">
