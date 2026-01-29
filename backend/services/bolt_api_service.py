@@ -266,14 +266,25 @@ async def sync_bolt_data(client_id: str, client_secret: str, start_date: str, en
         
         company_id = company_ids[0]  # Use first company
         
+        # Convert dates to Unix timestamps
+        try:
+            start_ts = int(datetime.fromisoformat(start_date.replace('Z', '+00:00')).timestamp())
+        except:
+            start_ts = int((datetime.now(timezone.utc) - timedelta(days=30)).timestamp())
+        
+        try:
+            end_ts = int(datetime.fromisoformat(end_date.replace('Z', '+00:00')).timestamp())
+        except:
+            end_ts = int(datetime.now(timezone.utc).timestamp())
+        
         # Get drivers
-        drivers_data = await client.get_drivers(company_id, start_date, end_date)
+        drivers_data = await client.get_drivers(company_id, start_ts, end_ts)
         
         # Get vehicles
-        vehicles_data = await client.get_vehicles(company_id, start_date, end_date)
+        vehicles_data = await client.get_vehicles(company_id, start_ts, end_ts)
         
         # Get orders (rides) for the date range
-        orders_data = await client.get_fleet_orders(company_id, start_date, end_date)
+        orders_data = await client.get_fleet_orders(company_id, start_ts, end_ts)
         
         return {
             "success": True,
