@@ -3,13 +3,14 @@ Rotas para Exportação de Dados (Motoristas e Veículos)
 Permite exportar dados para CSV com seleção de campos
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, File, UploadFile, Form
 from fastapi.responses import StreamingResponse
 from typing import Dict, List, Optional
 from datetime import datetime, timezone
 import csv
 import io
 import logging
+import uuid
 
 from utils.database import get_database
 from utils.auth import get_current_user
