@@ -248,20 +248,36 @@ async def sync_bolt_data(client_id: str, client_secret: str, start_date: str, en
     """
     client = BoltAPIClient(client_id, client_secret)
     try:
-        # Get companies
+        # Get companies first
         companies_data = await client.get_companies()
         
+        if companies_data.get("code") != 0:
+            return {
+                "success": False,
+                "error": f"Erro ao obter empresas: {companies_data.get('message')}"
+            }
+        
+        company_ids = companies_data.get("data", {}).get("company_ids", [])
+        if not company_ids:
+            return {
+                "success": False,
+                "error": "Nenhuma empresa encontrada na conta Bolt"
+            }
+        
+        company_id = company_ids[0]  # Use first company
+        
         # Get drivers
-        drivers_data = await client.get_drivers()
+        drivers_data = await client.get_drivers(company_id, start_date, end_date)
         
         # Get vehicles
-        vehicles_data = await client.get_vehicles()
+        vehicles_data = await client.get_vehicles(company_id, start_date, end_date)
         
         # Get orders (rides) for the date range
-        orders_data = await client.get_fleet_orders(start_date, end_date)
+        orders_data = await client.get_fleet_orders(company_id, start_date, end_date)
         
         return {
             "success": True,
+            "company_id": company_id,
             "companies": companies_data,
             "drivers": drivers_data,
             "vehicles": vehicles_data,
