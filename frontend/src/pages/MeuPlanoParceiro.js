@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { API } from '@/App';
 import Layout from '@/components/Layout';
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 
 const MeuPlanoParceiro = ({ user, onLogout }) => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [planoData, setPlanoData] = useState(null);
   const [planosDisponiveis, setPlanosDisponiveis] = useState([]);
