@@ -505,6 +505,12 @@ function App() {
             }
           />
           <Route
+            path="/exportar-dados"
+            element={
+              user && ['admin', 'parceiro', 'gestao'].includes(user.role) ? <ExportarDados user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
+            }
+          />
+          <Route
             path="/gerar-relatorio-semanal"
             element={
               user && user.role === 'parceiro' ? <GerarRelatorioSemanal user={user} onLogout={handleLogout} /> : <Navigate to="/dashboard" />
