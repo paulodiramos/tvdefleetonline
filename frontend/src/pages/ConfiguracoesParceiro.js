@@ -953,6 +953,14 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
 
           {/* Tab Credenciais Plataformas */}
           <TabsContent value="credenciais" className="space-y-4">
+            {/* Info Card */}
+            <Alert className="bg-blue-50 border-blue-200">
+              <Shield className="h-4 w-4 text-blue-600" />
+              <AlertDescription className="text-blue-800">
+                <strong>Credenciais das Plataformas</strong> - Configure aqui os dados de acesso às plataformas de TVDE (Uber, Bolt) e Via Verde para sincronização automática de dados e ganhos.
+              </AlertDescription>
+            </Alert>
+            
             {/* Uber */}
             <Card>
               <CardHeader className="pb-3">
