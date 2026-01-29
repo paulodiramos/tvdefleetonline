@@ -962,7 +962,7 @@ async def executar_sincronizacao_auto(
                         }
                     else:
                         try:
-                            # Calcular período
+                            # Calcular período da semana analisada
                             data_inicio, data_fim = calcular_periodo_semana(semana, ano)
                             start_ts = int(datetime.fromisoformat(data_inicio.replace('Z', '+00:00')).timestamp())
                             end_ts = int(datetime.fromisoformat(data_fim.replace('Z', '+00:00')).timestamp())
@@ -983,16 +983,99 @@ async def executar_sincronizacao_auto(
                                     company_id = company_ids[0]
                                     
                                     # Buscar dados
-                                    drivers = await client.get_drivers(company_id, start_ts, end_ts)
-                                    vehicles = await client.get_vehicles(company_id, start_ts, end_ts)
-                                    orders = await client.get_fleet_orders(company_id, start_ts, end_ts)
+                                    drivers_response = await client.get_drivers(company_id, start_ts, end_ts)
+                                    vehicles_response = await client.get_vehicles(company_id, start_ts, end_ts)
+                                    orders_response = await client.get_fleet_orders(company_id, start_ts, end_ts)
                                     
-                                    # Contar resultados
-                                    n_drivers = len(drivers.get("data", {}).get("drivers", []))
-                                    n_vehicles = len(vehicles.get("data", {}).get("vehicles", []))
-                                    n_orders = len(orders.get("data", {}).get("orders", []))
+                                    # Extrair listas
+                                    bolt_drivers = drivers_response.get("data", {}).get("drivers", [])
+                                    bolt_vehicles = vehicles_response.get("data", {}).get("vehicles", [])
+                                    bolt_orders = orders_response.get("data", {}).get("orders", [])
                                     
-                                    # Guardar dados
+                                    # === ASSOCIAR MOTORISTAS E VEÍCULOS ===
+                                    motoristas_associados = 0
+                                    veiculos_associados = 0
+                                    ganhos_criados = 0
+                                    
+                                    for bolt_driver in bolt_drivers:
+                                        bolt_phone = bolt_driver.get("phone", "").replace(" ", "")
+                                        bolt_email = bolt_driver.get("email", "").lower()
+                                        bolt_name = f"{bolt_driver.get('first_name', '')} {bolt_driver.get('last_name', '')}".strip()
+                                        
+                                        # Buscar motorista local por telefone ou email
+                                        query = {"parceiro_id": pid}
+                                        if bolt_phone:
+                                            query["$or"] = [
+                                                {"phone": bolt_phone},
+                                                {"phone": bolt_phone.replace("+351", "")},
+                                                {"phone": {"$regex": bolt_phone[-9:]}},
+                                                {"email": {"$regex": bolt_email, "$options": "i"}} if bolt_email else {}
+                                            ]
+                                        
+                                        motorista_local = await db.motoristas.find_one(query, {"_id": 0})
+                                        
+                                        if motorista_local:
+                                            motoristas_associados += 1
+                                            
+                                            # Buscar veículo associado ao motorista na Bolt
+                                            bolt_vehicle = bolt_driver.get("vehicle", {})
+                                            if bolt_vehicle:
+                                                matricula = bolt_vehicle.get("reg_number", "").upper().replace(" ", "-")
+                                                
+                                                # Buscar veículo local
+                                                veiculo_local = await db.vehicles.find_one({
+                                                    "parceiro_id": pid,
+                                                    "matricula": {"$regex": matricula.replace("-", ""), "$options": "i"}
+                                                }, {"_id": 0})
+                                                
+                                                if veiculo_local:
+                                                    veiculos_associados += 1
+                                            
+                                            # === CALCULAR GANHOS DO MOTORISTA ===
+                                            # Filtrar orders deste motorista
+                                            driver_orders = [o for o in bolt_orders if o.get("driver_id") == bolt_driver.get("id")]
+                                            
+                                            total_ganhos = sum(float(o.get("driver_total", 0) or 0) for o in driver_orders)
+                                            total_viagens = len(driver_orders)
+                                            
+                                            # Criar ou atualizar registo de ganhos
+                                            ganho_existente = await db.ganhos_bolt.find_one({
+                                                "motorista_id": motorista_local["id"],
+                                                "periodo_semana": semana,
+                                                "periodo_ano": ano
+                                            })
+                                            
+                                            ganho_data = {
+                                                "id": ganho_existente["id"] if ganho_existente else str(uuid.uuid4()),
+                                                "identificador_motorista_bolt": bolt_driver.get("id"),
+                                                "motorista_id": motorista_local["id"],
+                                                "nome_motorista": motorista_local.get("name", bolt_name),
+                                                "email_motorista": motorista_local.get("email", bolt_email),
+                                                "telemovel_motorista": motorista_local.get("phone", bolt_phone),
+                                                "veiculo_id": veiculo_local["id"] if veiculo_local else None,
+                                                "veiculo_matricula": veiculo_local.get("matricula") if veiculo_local else bolt_vehicle.get("reg_number"),
+                                                "periodo_ano": ano,
+                                                "periodo_semana": semana,
+                                                "ganhos_brutos_total": total_ganhos,
+                                                "numero_viagens": total_viagens,
+                                                "parceiro_id": pid,
+                                                "fonte": "bolt_api",
+                                                "synced_at": datetime.now(timezone.utc).isoformat(),
+                                                "updated_at": datetime.now(timezone.utc).isoformat()
+                                            }
+                                            
+                                            if ganho_existente:
+                                                await db.ganhos_bolt.update_one(
+                                                    {"id": ganho_existente["id"]},
+                                                    {"$set": ganho_data}
+                                                )
+                                            else:
+                                                ganho_data["created_at"] = datetime.now(timezone.utc).isoformat()
+                                                await db.ganhos_bolt.insert_one(ganho_data)
+                                            
+                                            ganhos_criados += 1
+                                    
+                                    # Guardar sync record
                                     sync_record = {
                                         "id": str(uuid.uuid4()),
                                         "parceiro_id": pid,
@@ -1000,9 +1083,10 @@ async def executar_sincronizacao_auto(
                                         "semana": semana,
                                         "ano": ano,
                                         "company_id": company_id,
-                                        "drivers": drivers.get("data", {}),
-                                        "vehicles": vehicles.get("data", {}),
-                                        "orders": orders.get("data", {}),
+                                        "motoristas_bolt": len(bolt_drivers),
+                                        "motoristas_associados": motoristas_associados,
+                                        "veiculos_associados": veiculos_associados,
+                                        "ganhos_criados": ganhos_criados,
                                         "synced_at": datetime.now(timezone.utc).isoformat()
                                     }
                                     await db.bolt_api_sync_data.insert_one(sync_record)
@@ -1010,10 +1094,12 @@ async def executar_sincronizacao_auto(
                                     resultados[fonte] = {
                                         "sucesso": True,
                                         "metodo": "api",
-                                        "mensagem": "Dados sincronizados via Bolt API",
-                                        "motoristas": n_drivers,
-                                        "veiculos": n_vehicles,
-                                        "viagens": n_orders
+                                        "mensagem": f"Dados sincronizados: {motoristas_associados} motoristas, {ganhos_criados} registos de ganhos",
+                                        "motoristas_bolt": len(bolt_drivers),
+                                        "motoristas_associados": motoristas_associados,
+                                        "veiculos_associados": veiculos_associados,
+                                        "ganhos_criados": ganhos_criados,
+                                        "viagens": len(bolt_orders)
                                     }
                             finally:
                                 await client.close()
