@@ -26,7 +26,15 @@ class BoltAPIClient:
     async def _get_session(self) -> aiohttp.ClientSession:
         """Get or create aiohttp session"""
         if self._session is None or self._session.closed:
-            self._session = aiohttp.ClientSession()
+            # Use headers that mimic a real browser/application
+            connector = aiohttp.TCPConnector(ssl=False)
+            self._session = aiohttp.ClientSession(
+                connector=connector,
+                headers={
+                    'User-Agent': 'BoltFleetIntegration/1.0',
+                    'Accept': 'application/json',
+                }
+            )
         return self._session
     
     async def close(self):
