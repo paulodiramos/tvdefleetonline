@@ -1017,6 +1017,12 @@ async def executar_sincronizacao_auto(
                                         if motorista_local:
                                             motoristas_associados += 1
                                             
+                                            # Atualizar motorista com identificador Bolt
+                                            await db.motoristas.update_one(
+                                                {"id": motorista_local["id"]},
+                                                {"$set": {"identificador_motorista_bolt": bolt_driver.get("id")}}
+                                            )
+                                            
                                             # Buscar veículo associado ao motorista na Bolt
                                             bolt_vehicle = bolt_driver.get("vehicle", {})
                                             veiculo_local = None
