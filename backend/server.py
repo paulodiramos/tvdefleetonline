@@ -12644,6 +12644,7 @@ app.include_router(integracoes_router, prefix="/api")
 app.include_router(comissoes_router, prefix="/api")
 app.include_router(import_ganhos_router, prefix="/api")
 app.include_router(bolt_integration_router, prefix="/api")
+app.include_router(exportacao_router, prefix="/api")
 
 # api_router will be included at the very end of the file, after all routes are defined
 # ==================== DOCUMENTO VALIDATION SYSTEM ====================
