@@ -43,6 +43,7 @@ import GestaoPlanosParceiros from "@/pages/GestaoPlanosParceiros";
 import DashboardPlanosAtivos from "@/pages/DashboardPlanosAtivos";
 import MeuPlanoParceiro from "@/pages/MeuPlanoParceiro";
 import MeuPlanoMotorista from "@/pages/MeuPlanoMotorista";
+import LojaPlanos from "@/pages/LojaPlanos";
 import Pagamentos from "@/pages/Pagamentos";
 import UploadCSV from "@/pages/UploadCSV";
 import Planos from "@/pages/Planos";
