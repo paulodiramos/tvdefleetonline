@@ -1025,7 +1025,7 @@ async def executar_sincronizacao_auto(
                                             )
                                             
                                             # Buscar veículo associado ao motorista na Bolt
-                                            bolt_vehicle = bolt_driver.get("vehicle", {})
+                                            bolt_vehicle = bolt_driver.get("active_vehicle") or bolt_driver.get("vehicle", {})
                                             veiculo_local = None
                                             if bolt_vehicle:
                                                 matricula = bolt_vehicle.get("reg_number", "").upper().replace(" ", "-")
