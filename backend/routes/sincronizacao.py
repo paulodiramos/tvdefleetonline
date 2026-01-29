@@ -1058,10 +1058,14 @@ async def executar_sincronizacao_auto(
                                                 "email_motorista": motorista_local.get("email", bolt_email),
                                                 "telemovel_motorista": motorista_local.get("phone", bolt_phone),
                                                 "veiculo_id": veiculo_local["id"] if veiculo_local else None,
-                                                "veiculo_matricula": veiculo_local.get("matricula") if veiculo_local else bolt_vehicle.get("reg_number"),
-                                                "periodo_ano": ano,
+                                                "veiculo_matricula": veiculo_local.get("matricula") if veiculo_local else (bolt_vehicle.get("reg_number") if bolt_vehicle else None),
+                                                "semana": semana,
+                                                "ano": ano,
                                                 "periodo_semana": semana,
+                                                "periodo_ano": ano,
                                                 "ganhos_brutos_total": total_ganhos,
+                                                "ganhos_liquidos": total_ganhos,  # Campo usado pelo resumo
+                                                "ganhos": total_ganhos,  # Campo alternativo
                                                 "numero_viagens": total_viagens,
                                                 "parceiro_id": pid,
                                                 "fonte": "bolt_api",
