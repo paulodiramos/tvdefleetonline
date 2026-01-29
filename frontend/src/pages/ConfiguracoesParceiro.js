@@ -280,9 +280,16 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
     uber_password: '',
     bolt_email: '',
     bolt_password: '',
+    bolt_client_id: '',
+    bolt_client_secret: '',
+    bolt_api_configured: false,
     viaverde_usuario: '',
     viaverde_password: ''
   });
+  
+  // Estado para teste de API Bolt
+  const [testingBoltApi, setTestingBoltApi] = useState(false);
+  const [boltApiStatus, setBoltApiStatus] = useState(null);
 
   useEffect(() => {
     fetchConfiguracoes();
