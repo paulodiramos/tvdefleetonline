@@ -110,6 +110,7 @@ from routes.integracoes_config import router as integracoes_router
 from routes.comissoes import router as comissoes_router
 from routes.import_ganhos import router as import_ganhos_router
 from routes.bolt_integration import router as bolt_integration_router
+from routes.exportacao import router as exportacao_router
 
 # Import utilities from refactored modules
 from utils.file_handlers import (
