@@ -601,9 +601,7 @@ function App() {
           />
           <Route
             path="/credenciais-plataformas"
-            element={
-              user && user.role === 'parceiro' ? <CredenciaisPlataformas user={user} /> : <Navigate to="/dashboard" />
-            }
+            element={<Navigate to="/configuracoes-parceiro?tab=credenciais" replace />}
           />
           <Route
             path="/vehicle-data"
