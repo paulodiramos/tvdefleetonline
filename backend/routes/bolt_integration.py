@@ -573,9 +573,20 @@ async def get_bolt_api_drivers(
         
         client = BoltAPIClient(cred["client_id"], cred["client_secret"])
         try:
-            drivers = await client.get_drivers(page, limit)
+            # First get company ID
+            companies = await client.get_companies()
+            if companies.get("code") != 0:
+                return {"success": False, "message": f"Erro: {companies.get('message')}"}
+            
+            company_ids = companies.get("data", {}).get("company_ids", [])
+            if not company_ids:
+                return {"success": False, "message": "Nenhuma empresa encontrada"}
+            
+            company_id = company_ids[0]
+            drivers = await client.get_drivers(company_id, limit=limit, offset=(page-1)*limit)
             return {
                 "success": True,
+                "company_id": company_id,
                 "data": drivers
             }
         finally:
