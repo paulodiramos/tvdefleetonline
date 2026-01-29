@@ -373,6 +373,39 @@ Sistema completo para criar, gerir e atribuir planos e módulos a parceiros e mo
 
 ---
 
+## ✅ Sistema de Exportação/Importação de Dados (Implementado: 29/01/2025)
+
+### Descrição
+Sistema completo para exportar e importar dados de motoristas e veículos via CSV.
+
+### Exportação
+- **Campos Selecionáveis**: 20 campos para motoristas, 22 campos para veículos
+- **Delimitadores**: Ponto-e-vírgula (;) para Excel PT, Vírgula (,) para internacional
+- **Formatos**: CSV individual ou ZIP com ambos os ficheiros
+- **BOM UTF-8**: Incluído para compatibilidade com Excel
+
+### Importação
+- **Apenas Atualização**: Não cria registos novos, apenas atualiza existentes
+- **Chaves Únicas**: NIF para motoristas, Matrícula para veículos
+- **Preview**: Pré-visualização das alterações antes de confirmar
+- **Validação**: Erros detalhados para linhas ignoradas
+
+### Endpoints
+- `GET /api/exportacao/campos` - Listar campos disponíveis
+- `GET /api/exportacao/motoristas` - Exportar motoristas para CSV
+- `GET /api/exportacao/veiculos` - Exportar veículos para CSV
+- `GET /api/exportacao/completa` - Exportar ambos em ZIP
+- `POST /api/exportacao/importar/motoristas/preview` - Preview de importação
+- `POST /api/exportacao/importar/motoristas/confirmar` - Confirmar importação
+- `POST /api/exportacao/importar/veiculos/preview` - Preview de veículos
+- `POST /api/exportacao/importar/veiculos/confirmar` - Confirmar importação
+
+### Ficheiros
+- `/app/backend/routes/exportacao.py` - Endpoints de export/import
+- `/app/frontend/src/pages/ExportarDados.js` - UI completa
+
+---
+
 ## Ficheiros Removidos (25/01/2025)
 - `/app/whatsapp-vps-deploy/` - Directório obsoleto do Railway
 - `/app/backend/routes/whatsapp.py` - Substituído por whatsapp_cloud.py
