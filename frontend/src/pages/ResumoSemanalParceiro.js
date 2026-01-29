@@ -84,6 +84,10 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   const [bulkStatus, setBulkStatus] = useState('');
   const [showBulkEmailModal, setShowBulkEmailModal] = useState(false);
   const [sendingEmails, setSendingEmails] = useState(false);
+  
+  // Estados de sincronização
+  const [syncLoading, setSyncLoading] = useState({});
+  const [showSyncMenu, setShowSyncMenu] = useState(false);
 
   const STATUS_LABELS = {
     pendente: { label: 'Pendente', color: 'bg-slate-100 text-slate-700' },
