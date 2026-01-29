@@ -413,6 +413,28 @@ Sistema completo para exportar e importar dados de motoristas e veículos via CS
 
 ---
 
+## ✅ Loja de Planos e Módulos (Implementado: 29/01/2025)
+
+### Descrição
+Interface para parceiros visualizarem e compararem planos disponíveis.
+
+### Funcionalidades
+- **Listagem de Planos**: Gratuito, Profissional, Enterprise com preços e features
+- **Toggle Mensal/Anual**: Mostra preços anuais com desconto de 17%
+- **Tab de Módulos**: Lista de módulos disponíveis com indicador de incluído/não incluído
+- **Modal de Upgrade**: Preparado para integração com pagamento (Ifthenpay)
+- **Marcação de Plano Atual**: Indica claramente qual é o plano ativo
+
+### Ficheiros
+- `/app/frontend/src/pages/LojaPlanos.js` - Página da loja
+- `/app/frontend/src/pages/MeuPlanoParceiro.js` - Link para a loja
+
+### Notas
+- A funcionalidade de pagamento real depende da integração Ifthenpay (P1)
+- Por agora, mostra mensagem para contactar suporte
+
+---
+
 ## Notas Importantes
 - **Railway foi desativado** - WhatsApp usa API Cloud oficial
 - **Sistema de permissões activo** - Menu filtrado por funcionalidades
