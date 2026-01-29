@@ -127,9 +127,14 @@ const MeuPlanoParceiro = ({ user, onLogout }) => {
             </h1>
             <p className="text-slate-600 mt-2">Gerir a sua subscrição e módulos</p>
           </div>
-          <Button onClick={() => setShowTrocarPlano(true)} variant="outline">
-            Trocar Plano
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate('/loja-planos')} variant="default">
+              Ver Planos
+            </Button>
+            <Button onClick={() => setShowTrocarPlano(true)} variant="outline">
+              Trocar Plano
+            </Button>
+          </div>
         </div>
 
         {/* Plan Overview */}
