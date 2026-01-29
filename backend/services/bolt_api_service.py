@@ -223,54 +223,6 @@ class BoltAPIClient:
             }
         }
         return await self._make_request('POST', '/fleetIntegration/v1/getFleetStateLogs', json_data=json_data)
-    
-    async def get_vehicle(self, vehicle_id: str) -> Dict:
-        """Get vehicle details"""
-        return await self._make_request('GET', f'/v1/vehicles/{vehicle_id}')
-    
-    # ==================== Earnings/Reports Endpoints ====================
-    
-    async def get_earnings_report(self, start_date: str, end_date: str, driver_id: str = None) -> Dict:
-        """
-        Get earnings report for a date range
-        Args:
-            start_date: ISO format date (YYYY-MM-DD)
-            end_date: ISO format date (YYYY-MM-DD)
-            driver_id: Optional driver ID to filter by
-        """
-        params = {
-            'start_date': start_date,
-            'end_date': end_date
-        }
-        if driver_id:
-            params['driver_id'] = driver_id
-        
-        return await self._make_request('GET', '/v1/reports/earnings', params=params)
-    
-    async def get_rides_report(self, start_date: str, end_date: str, driver_id: str = None) -> Dict:
-        """
-        Get rides/trips report for a date range
-        """
-        params = {
-            'start_date': start_date,
-            'end_date': end_date
-        }
-        if driver_id:
-            params['driver_id'] = driver_id
-        
-        return await self._make_request('GET', '/v1/reports/rides', params=params)
-    
-    async def get_weekly_report(self, week_start: str, driver_id: str = None) -> Dict:
-        """
-        Get weekly summary report
-        Args:
-            week_start: Start of week date (YYYY-MM-DD)
-        """
-        params = {'week_start': week_start}
-        if driver_id:
-            params['driver_id'] = driver_id
-        
-        return await self._make_request('GET', '/v1/reports/weekly', params=params)
 
 
 # ==================== Helper Functions ====================
@@ -288,12 +240,12 @@ async def test_bolt_api_credentials(client_id: str, client_secret: str) -> Dict:
 async def sync_bolt_data(client_id: str, client_secret: str, start_date: str, end_date: str) -> Dict:
     """
     Sync data from Bolt API
-    Returns earnings and driver data
+    Returns drivers, vehicles and orders data
     """
     client = BoltAPIClient(client_id, client_secret)
     try:
-        # Get fleet info
-        fleet_info = await client.get_fleet_info()
+        # Get companies
+        companies_data = await client.get_companies()
         
         # Get drivers
         drivers_data = await client.get_drivers()
@@ -301,15 +253,15 @@ async def sync_bolt_data(client_id: str, client_secret: str, start_date: str, en
         # Get vehicles
         vehicles_data = await client.get_vehicles()
         
-        # Get earnings report
-        earnings_data = await client.get_earnings_report(start_date, end_date)
+        # Get orders (rides) for the date range
+        orders_data = await client.get_fleet_orders(start_date, end_date)
         
         return {
             "success": True,
-            "fleet": fleet_info,
+            "companies": companies_data,
             "drivers": drivers_data,
             "vehicles": vehicles_data,
-            "earnings": earnings_data,
+            "orders": orders_data,
             "synced_at": datetime.now(timezone.utc).isoformat()
         }
     except Exception as e:
