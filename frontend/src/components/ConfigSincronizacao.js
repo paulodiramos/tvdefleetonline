@@ -368,6 +368,27 @@ const ConfigSincronizacao = ({ user }) => {
                         </Select>
                       </div>
                       
+                      {/* Opção de atraso para Via Verde */}
+                      {fonte === 'viaverde' && (
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm">Atraso na sincronização</Label>
+                          <Select
+                            value={config.fontes[fonte]?.atraso || '0'}
+                            onValueChange={(v) => updateFonte(fonte, 'atraso', v)}
+                          >
+                            <SelectTrigger className="w-40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0">Sem atraso</SelectItem>
+                              <SelectItem value="1">1 semana</SelectItem>
+                              <SelectItem value="2">2 semanas</SelectItem>
+                              <SelectItem value="mensal">Mensal</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      
                       <Button 
                         variant="outline" 
                         size="sm" 
