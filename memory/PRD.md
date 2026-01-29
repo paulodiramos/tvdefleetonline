@@ -211,9 +211,9 @@ Cada parceiro configura o seu próprio email:
 ### P2 - Média Prioridade
 - [x] ~~Limitar "Próximos Eventos" no dashboard~~ - Alertas limitados a 5 itens (25/01/2025)
 - [x] ~~Testar parser CSV com ficheiros reais~~ - Bolt e Uber testados com sucesso (25/01/2025)
+- [x] ~~Página "Meu Plano" para parceiros~~ - Implementada com cálculo de custos (29/01/2025)
 - [ ] Testar parser CSV da Via Verde com ficheiro de exemplo
 - [ ] Loja online de planos/módulos (frontend parceiro/motorista)
-- [ ] Página "Meu Plano" para parceiros verem e fazerem upgrade
 
 ---
 
