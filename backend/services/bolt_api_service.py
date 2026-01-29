@@ -14,7 +14,7 @@ class BoltAPIClient:
     """Client for Bolt Fleet API with OAuth2 authentication"""
     
     TOKEN_URL = "https://oidc.bolt.eu/token"
-    API_BASE_URL = "https://fleet-integration-api.bolt.eu"
+    API_BASE_URL = "https://node.bolt.eu/fleet-integration-gateway"
     
     def __init__(self, client_id: str, client_secret: str):
         self.client_id = client_id
