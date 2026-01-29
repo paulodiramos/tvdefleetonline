@@ -1,141 +1,130 @@
 <analysis>**original_problem_statement:**
-A sessão evoluiu de uma correção de bug para a implementação de um robusto **Sistema de Gestão de Planos, Módulos e Subscrições**.
-
-Requisitos do Utilizador:
-1.  **Estrutura de Planos:** Para parceiros e motoristas, com módulos adicionais (ex: Contratos).
-2.  **Preços Complexos:** Preço base + custo por veículo + custo por motorista, com periodicidades e descontos.
-3.  **Faturação Pro-Rata:** Ao adicionar veículos/motoristas, o sistema deve cobrar a diferença proporcional até ao final do ciclo e atualizar a subscrição. O parceiro fica bloqueado até efetuar este pré-pagamento.
-4.  **Integrações:**
-    *   **Pagamentos:** Ifthenpay (gateway portuguesa).
-    *   **Faturação:** Moloni.
-5.  **Gestão de Comissões e Classificação:**
-    *   **Turnos de Veículos:** Atribuir múltiplos motoristas a um veículo com horários de início/fim.
-    *   **Comissões por Escala:** Níveis de comissão ilimitados com base no valor faturado.
-    *   **Classificação de Motoristas:** 5 níveis de classificação (baseados em critérios como antiguidade e cuidado com o veículo) que dão um bónus percentual sobre a comissão base.
-6.  **Interfaces de Gestão:**
-    *   **Admin:** Para gerir planos, preços, integrações (Ifthenpay/Moloni), escalas de comissão e classificações de motoristas.
-    *   **Parceiro:** Para ver o seu plano, solicitar adição de recursos (veículos/motoristas) e configurar as suas próprias comissões (se o módulo estiver ativo).
-7.  **IVA (VAT):** Exibir todos os preços com e sem IVA (23%).
+A sessão começou com a tarefa de finalizar uma página de configuração para parceiros e evoluiu para incluir vários novos pedidos de funcionalidades:
+1.  **Gestão de Turnos de Veículos:** Atribuir múltiplos motoristas a um veículo com horários.
+2.  **Sistema de Sincronização Automática:** Criar um módulo para automatizar a recolha de dados da Uber (API), Bolt, Via Verde e abastecimentos. O sistema deve permitir agendamento (dia da semana/mês, hora), execução manual e gerar resumos semanais. Este será um módulo pago.
+3.  **Refatoração do Backend:** Mover endpoints do ficheiro monolítico  para ficheiros de rotas dedicados.
+4.  **Sistema de Exportação de Dados:** Permitir que parceiros e gestores exportem dados de motoristas e veículos para CSV, com seleção de campos e de delimitador (vírgula ou ponto e vírgula).
+5.  **Sistema de Importação de Dados:** No mesmo ecrã de exportação, permitir a importação de um ficheiro CSV para **atualizar** (não criar) registos existentes, usando NIF para motoristas e Matrícula para veículos como chaves. A funcionalidade deve incluir uma pré-visualização das alterações.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
--   **Sistema de Gestão de Planos (Backend e Frontend Admin):** A estrutura para criar/gerir planos com preços complexos (base + por veículo/motorista) está completa e funcional.
--   **Sistema de Pré-Pagamento Pro-Rata:** O fluxo completo para um parceiro solicitar mais recursos (veículos/motoristas) está implementado. O sistema calcula o valor pro-rata, bloqueia o utilizador, e apresenta um modal de pagamento. O pagamento em si está simulado (mocked).
--   **Exibição de IVA:** Todos os componentes de UI relevantes (cards de planos, modal de pagamento, etc.) mostram os valores com e sem IVA (23%).
--   **Configuração de Integrações (Admin):** Foi criada uma página de administração para que o admin possa inserir, guardar e testar as chaves de API da Ifthenpay e Moloni de forma segura.
--   **Sistema de Comissões (Backend e Frontend Admin):** A lógica de negócio para as comissões por escala e classificação de motoristas está implementada no backend. A UI de administração para configurar as escalas de comissão e os níveis de classificação (com os seus bónus) está completa e funcional, incluindo um simulador.
--   **Página de Configuração para Parceiro (Iniciada):** Os ficheiros e rotas de backend para o parceiro configurar as suas comissões foram criados, mas a UI não está finalizada.
+-   **Sistema de Gestão de Planos e Comissões:** Totalmente funcional, incluindo a página de configuração de comissões para o parceiro, que agora é renderizada condicionalmente com base na sua subscrição.
+-   **Sistema de Gestão de Turnos:** A lógica de backend e a interface de utilizador para atribuir turnos a veículos estão completas e integradas na ficha do veículo.
+-   **Sistema de Sincronização Automática:** A lógica de backend e a interface de utilizador para configurar e agendar sincronizações de dados de plataformas externas (Uber, Bolt, etc.) estão completas.
+-   **Sistema de Exportação de Dados:** Funcionalidade completa que permite aos utilizadores exportar dados de motoristas e veículos para CSV, com seleção de campos e formato.
+-   **Refatoração Parcial do Backend:** Vários endpoints (importação de ganhos, integração Bolt) foram movidos de  para novos ficheiros de rotas (, ).
+-   **Sistema de Importação de Dados (Backend Parcial):** Os endpoints de backend para pré-visualizar e executar a importação de CSV foram criados, mas contêm um bug crítico. A UI foi atualizada para incluir a funcionalidade de importação.
 
 **Last working item**:
--   **Last item agent was working:** O agente estava a trabalhar na implementação da página de configuração de comissões para o parceiro. A intenção é que, se o parceiro tiver o módulo de comissões contratado, uma nova opção de menu apareça no seu perfil, levando-o para esta página onde pode gerir as suas próprias escalas. O trabalho foi iniciado, mas a UI não foi concluída.
+-   **Last item agent was working:** O agente estava a depurar a funcionalidade de importação de dados via CSV. Especificamente, o endpoint de pré-visualização () não estava a conseguir encontrar motoristas existentes na base de dados pelo seu NIF, mesmo quando o NIF existia. O problema ocorre tanto para utilizadores  como para , sugerindo uma falha na lógica da query de busca no MongoDB.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** frontend testing agent. O agente deve validar que um parceiro com o módulo Comissões pode aceder à nova página , ver as configurações padrão e modificá-las. Deve também confirmar que o link do menu só aparece quando o módulo está ativo na subscrição do parceiro.
+-   **Which testing method agent to use?** backend testing agent. O agente deve criar testes para o endpoint  que simulem o upload de um ficheiro CSV para os seguintes cenários:
+    1.  **Utilizador Admin:** O CSV contém um NIF de um motorista que existe na BD (independentemente do parceiro). O teste deve confirmar que o motorista é encontrado.
+    2.  **Utilizador Parceiro:** O CSV contém um NIF de um motorista que pertence a esse parceiro. O teste deve confirmar que o motorista é encontrado.
+    3.  **Utilizador Parceiro:** O CSV contém um NIF de um motorista que pertence a outro parceiro. O teste deve confirmar que o motorista **não** é encontrado.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: (P0) Finalizar a página de configuração de comissões para o parceiro.**
-    -   **Description:** A página  foi criada, mas está vazia. É necessário construir a UI para que o parceiro possa ver e editar as suas configurações de comissão e associar esta página a um item de menu que só aparece se o módulo correspondente estiver subscrito.
+-   **Issue 1: (P0) Corrigir lógica de busca na importação de CSV.**
+    -   **Attempted fixes:** O agente tentou ajustar a query para incluir motoristas sem  e verificou que o NIF estava a ser lido corretamente do CSV. A depuração revelou que a query para o utilizador  (que não deveria ter filtros de parceiro) também estava a falhar, apontando para um problema mais profundo na construção da query ou na comparação dos dados.
     -   **Next debug checklist:**
-        1.  Implementar a UI em , consumindo os endpoints GET e POST de .
-        2.  Modificar o componente de layout/navegação do parceiro para obter os módulos subscritos.
-        3.  Adicionar uma verificação para renderizar o link do menu para  apenas se o módulo de comissões estiver presente.
-    -   **Why fix this issue and what will be achieved with the fix?** Cumpre um requisito explícito do utilizador de permitir a autogestão das comissões pelo parceiro.
+        1.  No ficheiro , na função , adicionar logs detalhados antes da chamada . Registar o , o  (se aplicável), e a  exata que está a ser executada no MongoDB.
+        2.  Analisar a lógica de construção da . Para um , a query deve ser simplesmente . Para um , deve ser . Confirmar porque a versão do  está a falhar.
+        3.  Verificar possíveis problemas de tipo de dados ou de formatação. Garantir que o NIF extraído do CSV (string) corresponde exatamente ao formato do NIF na base de dados (sem espaços extra, etc.).
+        4.  Corrigir a lógica de construção da query para lidar corretamente com os diferentes papéis (admin, manager, parceiro).
+    -   **Why fix this issue and what will be achieved with the fix?** Para completar a funcionalidade de importação de dados, um requisito chave para o utilizador poder gerir os seus dados em massa.
     -   **Status:** IN PROGRESS
     -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** both
+    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Blocked on other issue:** N/A
 
 **In progress Task List**:
--   **Task 1: (P0) Concluir Sistema de Comissões - Lado do Parceiro**
-    -   **Where to resume:** Implementar a interface de utilizador em .
-    -   **What will be achieved with this?** Os parceiros poderão configurar as suas próprias escalas de comissão, tornando o módulo funcional.
+-   **Task 1: (P0) Completar a funcionalidade de importação de dados.**
+    -   **Where to resume:** Depurar a função  em .
+    -   **What will be achieved with this?** Um sistema de importação/atualização de dados via CSV totalmente funcional e seguro.
     -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on something:** Nenhum.
+    -   **Should Test frontend/backend/both after fix?** backend
+    -   **Blocked on something:** O bug descrito em All Pending/In progress Issue list.
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   **(P1) Gestão de Turnos de Veículos:** Implementar a lógica de backend e a UI para permitir a atribuição de múltiplos motoristas a um veículo, cada um com o seu horário de início e fim.
-    -   **(P1) Implementar Integração Ifthenpay:** Substituir o fluxo de pagamento simulado pela integração real com a API da Ifthenpay, utilizando as credenciais guardadas na base de dados.
-    -   **(P1) Implementar Integração Moloni:** Após um pagamento bem-sucedido via Ifthenpay, chamar a API da Moloni para emitir a fatura correspondente.
+    -   **(P1) Implementar Integração Ifthenpay:** Substituir o fluxo de pagamento simulado pela integração real com a API da Ifthenpay.
+    -   **(P1) Implementar Integração Moloni:** Após um pagamento bem-sucedido, chamar a API da Moloni para emitir a fatura.
+    -   **(P2) Testar o parser de CSV da Via Verde:** Requisito antigo que continua pendente.
+    -   **(P2) Criar uma página dedicada para o histórico de execuções de sincronização.**
 -   **Future Tasks:**
-    -   **(P2) Refatoração Contínua do :** Extrair mais lógica de rotas para ficheiros dedicados.
-    -   **(P2) Testar o parser de CSV da Via Verde:** Requisito antigo que ainda está pendente.
-    -   **(P2) Criar uma página dedicada para o histórico de execuções de RPA.**
+    -   **(P2) Refatoração Contínua do :** Apesar do progresso, ainda existem 36 endpoints ativos no  que precisam ser movidos para ficheiros de rotas dedicados.
     -   **(P3) Loja online de planos/módulos:** Permitir que os parceiros subscrevam e comprem módulos diretamente.
 
 **Completed work in this session**
--   Implementada a UI no admin para definir preços por veículo e por motorista nos planos.
--   Construído o sistema de pré-pagamento pro-rata completo (backend e frontend), incluindo o bloqueio do utilizador até ao pagamento.
--   Adicionada a exibição de preços com e sem IVA em toda a aplicação.
--   Criada a página de administração para configurar as integrações Ifthenpay e Moloni de forma segura.
--   Implementado o sistema de comissões por escala e classificação de motoristas (backend e UI de administração).
+-   **Configuração de Comissões do Parceiro:** Finalizada a UI e a lógica de acesso condicional.
+-   **Gestão de Turnos de Veículos:** Funcionalidade completa (Backend e Frontend).
+-   **Sistema de Sincronização Automática:** Funcionalidade completa (Backend e Frontend).
+-   **Sistema de Exportação de Dados:** Funcionalidade completa para exportar dados para CSV.
+-   **Refatoração Parcial do Backend:** Endpoints de importação de ganhos e integração Bolt movidos de  para ficheiros dedicados.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Refatoração do Backend ( monolítico).
--   **Recurrence count:** 17
+-   **Recurrence count:** 18
 -   **Status:** IN PROGRESS
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Pré-Pagamento Pro-Rata:** Lógica de negócio que calcula custos proporcionais, exige pagamento antecipado e bloqueia o acesso a novas ações até à liquidação.
--   **Gestão Segura de Credenciais:** As chaves de API são guardadas na base de dados e devolvidas à UI de forma mascarada, com um endpoint de teste que valida as credenciais sem as expor.
--   **Cálculo de Comissão Dinâmica:** Um sistema flexível que combina uma comissão base por níveis de faturação com um bónus percentual baseado na classificação do motorista.
--   **Renderização Condicional de UI:** A necessidade de mostrar/ocultar elementos de navegação (como o menu de configuração de comissões) com base nos módulos subscritos pelo utilizador.
+-   **Manuseamento de CSV:** Utilização do módulo  do Python para exportar e importar dados, incluindo a gestão de diferentes delimitadores e a pré-visualização de alterações.
+-   **Refatoração de API Monolítica:** Estratégia de mover gradualmente endpoints de um  para  modulares em FastAPI.
+-   **Desenvolvimento Orientado a Componentes:** Criação de componentes React dedicados (, ) para gerir a complexidade de páginas com múltiplas abas.
 
 **key DB schema**
--   ****: Definições dos planos e seus preços complexos.
--   **** (embutido no documento do utilizador): Regista o plano ativo de um utilizador, veículos e motoristas.
--   ****: Armazena pedidos pendentes para adicionar recursos, incluindo o valor pro-rata e o estado do pagamento.
--   ****: Armazena as chaves de API da Ifthenpay e Moloni de forma segura.
--   ****: Armazena os níveis de comissão base definidos pelo admin.
--   ****: Armazena os níveis de classificação de motorista e os seus bónus.
--   ****: Armazenará as configurações de comissão personalizadas para cada parceiro.
+-   ****: Atualizado para incluir um array .
+-   ****: Nova coleção para guardar as configurações de sincronização por parceiro.
+-   ****: Nova coleção para registar o histórico de execuções de sincronização.
 
 **All files of reference**
--   : **(Ação Imediata Necessária)** Onde a UI de configuração para o parceiro precisa de ser construída.
--   : Contém os endpoints que a nova página irá consumir.
--   : Onde a rota para a nova página foi adicionada.
+-   : **(Ação Imediata Necessária)** Ficheiro que contém o bug na lógica de importação.
+-   : A página de frontend correspondente.
+-   : Ficheiro que ainda necessita de refatoração.
 
 **Critical Info for New Agent**
--   A sua tarefa prioritária (P0) é finalizar a página de configuração de comissões para o parceiro (). Isto inclui construir a UI e garantir que o acesso a esta página só é possível se o parceiro tiver o módulo de comissões ativo na sua subscrição.
--   A seguir, o foco deve ser a implementação da **Gestão de Turnos de Veículos**, um requisito explícito e pendente do utilizador.
--   As integrações com Ifthenpay e Moloni são o passo seguinte para tornar o sistema de pagamentos funcional. A infraestrutura de configuração está pronta, falta implementar a lógica de negócio que usa as chaves.
+-   A sua prioridade máxima (P0) é corrigir o bug na funcionalidade de importação de CSV em . A lógica de busca por NIF/Matrícula está a falhar, impedindo a conclusão da funcionalidade.
+-   O problema parece estar na forma como a query do MongoDB é construída para diferentes tipos de utilizadores (admin vs. parceiro).
+-   Após a correção, o fluxo natural de trabalho seria avançar para as integrações de pagamento (Ifthenpay e Moloni), que são os próximos grandes itens de valor pendentes.
 
 **documents and test reports created in this job**
--    (atualizado extensivamente)
+-    (atualizado)
+-   
 -   
 -   
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:**  - **Em progresso.** Originou a tarefa atual.
-2.  **Agent:** Propôs um plano de implementação para o sistema de comissões e pediu confirmação para avançar com os turnos. - **Respondido.**
-3.  **User:**  - **Parcialmente Implementado.** Forneceu os detalhes para o sistema de comissões. A parte dos turnos está pendente.
-4.  **Agent:** Pediu clarificação sobre o sistema de comissões. - **Respondido.**
-5.  **User:**  - **Parcialmente Implementado.** O pedido que iniciou o desenvolvimento do sistema de comissões e turnos.
-6.  **Agent:** Finalizou a página de configuração de integrações e perguntou se deveria avançar com a implementação real. - **Respondido.**
-7.  **User:**  - **Concluído.** O pedido para criar a página de configuração de integrações.
-8.  **Agent:** Finalizou a adição de IVA e perguntou se deveria avançar com as integrações. - **Respondido.**
-9.  **User:**  - **Concluído.** O pedido para adicionar a exibição de IVA.
-10. **User:**  - **Concluído.** Aprovou o plano do agente para o sistema pro-rata.
+1.  **User:**  - Confirma os requisitos para a funcionalidade de importação (apenas atualização, chaves únicas, pré-visualização). **(In Progress)**
+2.  **Agent:** Pergunta os requisitos detalhados para a funcionalidade de importação.
+3.  **User:**  - Solicita a funcionalidade de importação. **(In Progress)**
+4.  **Agent:** Finaliza a funcionalidade de exportação.
+5.  **User:**  - Fornece os requisitos para a funcionalidade de exportação. **(Done)**
+6.  **Agent:** Pergunta os requisitos para a funcionalidade de exportação.
+7.  **User:**  - Solicita a funcionalidade de exportação. **(Done)**
+8.  **User:**  - Confirma o plano de refatoração do . **(Partially Done)**
+9.  **Agent:** Propõe um plano para a refatoração.
+10. **User:**  - Solicita a refatoração do backend. **(Partially Done)**
 
 **Project Health Check:**
 -   **Broken:**
-    -   A funcionalidade de configuração de comissões pelo parceiro está inacabada.
+    -   A funcionalidade de importação de dados por CSV está implementada mas não funciona devido a um bug crítico no backend.
 -   **Mocked:**
-    -   Todo o fluxo de pagamento do sistema pro-rata depende de uma confirmação simulada. As integrações com Ifthenpay e Moloni ainda não são funcionais.
+    -   O fluxo de pagamento com Ifthenpay e a emissão de faturas com Moloni continuam a ser simulados.
 
 **3rd Party Integrations**
 -   **WhatsApp Cloud API (Meta):** Ativa
 -   **Playwright:** Ativa
--   **Ifthenpay:** Planeada (UI para chaves completa, playbook obtido)
--   **Moloni:** Planeada (UI para chaves completa, playbook obtido)
+-   **Ifthenpay:** Planeada (UI de configuração pronta, lógica pendente)
+-   **Moloni:** Planeada (UI de configuração pronta, lógica pendente)
 
 **Testing status**
--   **Testing agent used after significant changes:** YES
+-   **Testing agent used after significant changes:** YES (usado para todas as funcionalidades concluídas nesta sessão).
 -   **Test files created:** Nenhum ficheiro de teste dedicado foi criado.
 -   **Known regressions:** Nenhuma.
 
@@ -144,5 +133,4 @@ Requisitos do Utilizador:
 -   **Parceiro de teste (Zeny):**  / 
 
 **What agent forgot to execute**
--   O agente ainda não abordou a implementação dos **turnos de motoristas por veículo**, que foi parte de um dos últimos grandes pedidos do utilizador.
--   O pedido antigo de testar o parser de CSV da Via Verde continua pendente.</analysis>
+-   O pedido antigo para testar o parser de CSV da Via Verde continua pendente e foi movido para as tarefas futuras.</analysis>

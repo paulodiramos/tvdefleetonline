@@ -58,7 +58,7 @@
 
 ### Login via Frontend
 ```
-1. Acesse: https://plan-manager-22.preview.emergentagent.com/login
+1. Acesse: https://datahub-34.preview.emergentagent.com/login
 2. Use qualquer credencial acima
 3. Navegue conforme as permissões do role
 ```
