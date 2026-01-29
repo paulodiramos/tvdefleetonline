@@ -436,8 +436,8 @@ async def sync_bolt_api_data(
             result = await sync_bolt_data(
                 cred["client_id"],
                 cred["client_secret"],
-                start_date or (datetime.now(timezone.utc).replace(day=1)).strftime("%Y-%m-%d"),
-                end_date or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+                start_date or (datetime.now(timezone.utc).replace(day=1)).isoformat(),
+                end_date or datetime.now(timezone.utc).isoformat()
             )
             
             if result.get("success"):
@@ -447,24 +447,29 @@ async def sync_bolt_api_data(
                     "parceiro_id": parceiro_id,
                     "plataforma": "bolt_api",
                     "tipo_dados": "sync_completo",
-                    "fleet_data": result.get("fleet"),
+                    "companies_data": result.get("companies"),
                     "drivers_data": result.get("drivers"),
                     "vehicles_data": result.get("vehicles"),
-                    "earnings_data": result.get("earnings"),
+                    "orders_data": result.get("orders"),
                     "synced_at": result.get("synced_at"),
                     "created_at": datetime.now(timezone.utc).isoformat()
                 }
                 await db.bolt_api_sync_data.insert_one(sync_record)
                 
                 # Atualizar log
+                drivers_list = result.get("drivers", {}).get("rows", result.get("drivers", {}).get("data", []))
+                vehicles_list = result.get("vehicles", {}).get("rows", result.get("vehicles", {}).get("data", []))
+                orders_list = result.get("orders", {}).get("rows", result.get("orders", {}).get("data", []))
+                
                 await db.logs_sincronizacao_parceiro.update_one(
                     {"id": log_id},
                     {"$set": {
                         "status": "sucesso",
                         "data_fim": datetime.now(timezone.utc).isoformat(),
                         "dados_sincronizados": {
-                            "drivers": len(result.get("drivers", {}).get("data", [])),
-                            "vehicles": len(result.get("vehicles", {}).get("data", [])),
+                            "drivers": len(drivers_list) if isinstance(drivers_list, list) else 0,
+                            "vehicles": len(vehicles_list) if isinstance(vehicles_list, list) else 0,
+                            "orders": len(orders_list) if isinstance(orders_list, list) else 0,
                         }
                     }}
                 )
@@ -473,8 +478,9 @@ async def sync_bolt_api_data(
                     "success": True,
                     "message": "Dados sincronizados com sucesso via Bolt API",
                     "summary": {
-                        "drivers": len(result.get("drivers", {}).get("data", [])),
-                        "vehicles": len(result.get("vehicles", {}).get("data", [])),
+                        "drivers": len(drivers_list) if isinstance(drivers_list, list) else 0,
+                        "vehicles": len(vehicles_list) if isinstance(vehicles_list, list) else 0,
+                        "orders": len(orders_list) if isinstance(orders_list, list) else 0,
                     }
                 }
             else:
