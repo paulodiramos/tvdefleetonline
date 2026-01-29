@@ -941,6 +941,95 @@ async def executar_sincronizacao_auto(
                         "metodo": "rpa",
                         "erro": "Credenciais não configuradas"
                     }
+            elif metodo == "api":
+                # Executar via API oficial (Bolt)
+                if fonte == "bolt":
+                    from services.bolt_api_service import BoltAPIClient
+                    from routes.rpa_automacao import calcular_periodo_semana
+                    
+                    # Buscar credenciais API
+                    cred = await db.credenciais_bolt_api.find_one({
+                        "parceiro_id": pid,
+                        "plataforma": "bolt_api",
+                        "ativo": True
+                    })
+                    
+                    if not cred:
+                        resultados[fonte] = {
+                            "sucesso": False,
+                            "metodo": "api",
+                            "erro": "Credenciais Bolt API não configuradas"
+                        }
+                    else:
+                        try:
+                            # Calcular período
+                            data_inicio, data_fim = calcular_periodo_semana(semana, ano)
+                            start_ts = int(datetime.fromisoformat(data_inicio.replace('Z', '+00:00')).timestamp())
+                            end_ts = int(datetime.fromisoformat(data_fim.replace('Z', '+00:00')).timestamp())
+                            
+                            client = BoltAPIClient(cred["client_id"], cred["client_secret"])
+                            try:
+                                # Obter company_id
+                                companies = await client.get_companies()
+                                company_ids = companies.get("data", {}).get("company_ids", [])
+                                
+                                if not company_ids:
+                                    resultados[fonte] = {
+                                        "sucesso": False,
+                                        "metodo": "api",
+                                        "erro": "Nenhuma empresa Bolt encontrada"
+                                    }
+                                else:
+                                    company_id = company_ids[0]
+                                    
+                                    # Buscar dados
+                                    drivers = await client.get_drivers(company_id, start_ts, end_ts)
+                                    vehicles = await client.get_vehicles(company_id, start_ts, end_ts)
+                                    orders = await client.get_fleet_orders(company_id, start_ts, end_ts)
+                                    
+                                    # Contar resultados
+                                    n_drivers = len(drivers.get("data", {}).get("drivers", []))
+                                    n_vehicles = len(vehicles.get("data", {}).get("vehicles", []))
+                                    n_orders = len(orders.get("data", {}).get("orders", []))
+                                    
+                                    # Guardar dados
+                                    sync_record = {
+                                        "id": str(uuid.uuid4()),
+                                        "parceiro_id": pid,
+                                        "plataforma": "bolt_api",
+                                        "semana": semana,
+                                        "ano": ano,
+                                        "company_id": company_id,
+                                        "drivers": drivers.get("data", {}),
+                                        "vehicles": vehicles.get("data", {}),
+                                        "orders": orders.get("data", {}),
+                                        "synced_at": datetime.now(timezone.utc).isoformat()
+                                    }
+                                    await db.bolt_api_sync_data.insert_one(sync_record)
+                                    
+                                    resultados[fonte] = {
+                                        "sucesso": True,
+                                        "metodo": "api",
+                                        "mensagem": "Dados sincronizados via Bolt API",
+                                        "motoristas": n_drivers,
+                                        "veiculos": n_vehicles,
+                                        "viagens": n_orders
+                                    }
+                            finally:
+                                await client.close()
+                                
+                        except Exception as api_err:
+                            resultados[fonte] = {
+                                "sucesso": False,
+                                "metodo": "api",
+                                "erro": str(api_err)
+                            }
+                else:
+                    resultados[fonte] = {
+                        "sucesso": False,
+                        "metodo": "api",
+                        "erro": "API oficial não disponível para esta fonte"
+                    }
             else:
                 # CSV - verificar importações pendentes
                 importacoes = await db.importacoes.find({
