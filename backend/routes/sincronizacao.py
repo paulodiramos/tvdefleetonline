@@ -1045,7 +1045,7 @@ async def executar_sincronizacao_auto(
                                             
                                             # === CALCULAR GANHOS DO MOTORISTA ===
                                             # Filtrar orders deste motorista
-                                            driver_orders = [o for o in bolt_orders if o.get("driver_id") == bolt_driver.get("id")]
+                                            driver_orders = [o for o in bolt_orders if o.get("driver_uuid") == bolt_driver_uuid or o.get("driver_id") == bolt_driver_uuid]
                                             
                                             total_ganhos = sum(float(o.get("driver_total", 0) or 0) for o in driver_orders)
                                             total_viagens = len(driver_orders)
