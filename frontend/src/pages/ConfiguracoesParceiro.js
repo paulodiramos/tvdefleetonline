@@ -343,10 +343,86 @@ const ConfiguracoesParceiro = ({ user, onLogout }) => {
           setCredenciais(prev => ({ ...prev, ...credsRes.data }));
         }
       } catch (e) { /* ignore */ }
+      
+      // Buscar credenciais Bolt API
+      try {
+        const boltApiRes = await axios.get(`${API}/api/bolt/api/credentials`, { headers });
+        if (boltApiRes.data && boltApiRes.data.configured !== false) {
+          setCredenciais(prev => ({ 
+            ...prev, 
+            bolt_client_id: boltApiRes.data.client_id || '',
+            bolt_api_configured: boltApiRes.data.has_secret || false
+          }));
+          setBoltApiStatus({ configured: true });
+        }
+      } catch (e) { /* ignore */ }
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  // Testar conexão Bolt API
+  const handleTestBoltApi = async () => {
+    if (!credenciais.bolt_client_id || !credenciais.bolt_client_secret) {
+      toast.error('Preencha Client ID e Client Secret');
+      return;
+    }
+    
+    setTestingBoltApi(true);
+    setBoltApiStatus(null);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(
+        `${API}/api/bolt/api/test-connection`,
+        {
+          client_id: credenciais.bolt_client_id,
+          client_secret: credenciais.bolt_client_secret
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.success) {
+        setBoltApiStatus({ success: true, message: response.data.message });
+        toast.success('Conexão Bolt API estabelecida com sucesso!');
+      } else {
+        setBoltApiStatus({ success: false, message: response.data.message });
+        toast.error(response.data.message || 'Erro na conexão');
+      }
+    } catch (error) {
+      setBoltApiStatus({ success: false, message: error.response?.data?.detail || 'Erro ao testar conexão' });
+      toast.error('Erro ao testar conexão Bolt API');
+    } finally {
+      setTestingBoltApi(false);
+    }
+  };
+  
+  // Guardar credenciais Bolt API
+  const handleSaveBoltApi = async () => {
+    if (!credenciais.bolt_client_id || !credenciais.bolt_client_secret) {
+      toast.error('Preencha Client ID e Client Secret');
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${API}/api/bolt/api/save-credentials`,
+        {
+          client_id: credenciais.bolt_client_id,
+          client_secret: credenciais.bolt_client_secret
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('Credenciais Bolt API guardadas!');
+      setBoltApiStatus({ configured: true });
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao guardar credenciais');
+    } finally {
+      setSaving(false);
     }
   };
 
