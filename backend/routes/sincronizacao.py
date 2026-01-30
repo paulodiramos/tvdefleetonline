@@ -567,6 +567,123 @@ async def set_config_sincronizacao_auto(
 
 
 # ==================================================
+# CREDENCIAIS RPA CENTRALIZADAS (Admin)
+# ==================================================
+
+@router.get("/rpa-central/credenciais")
+async def listar_credenciais_rpa_central(
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar credenciais RPA centrais (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas admin pode ver credenciais centrais")
+    
+    creds = await db.rpa_credenciais_central.find({}, {"_id": 0, "password": 0}).to_list(100)
+    return creds
+
+
+@router.post("/rpa-central/credenciais")
+async def guardar_credenciais_rpa_central(
+    request: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Guardar credenciais RPA centrais (Admin only)
+    As credenciais centrais ficam disponíveis para todos os parceiros
+    """
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas admin pode definir credenciais centrais")
+    
+    plataforma = request.get("plataforma")  # uber, viaverde, etc
+    email = request.get("email")
+    password = request.get("password")
+    
+    if not plataforma or not email or not password:
+        raise HTTPException(status_code=400, detail="Plataforma, email e password são obrigatórios")
+    
+    # Encriptar password
+    from cryptography.fernet import Fernet
+    import os
+    ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY", Fernet.generate_key().decode())
+    cipher_suite = Fernet(ENCRYPTION_KEY.encode() if isinstance(ENCRYPTION_KEY, str) else ENCRYPTION_KEY)
+    encrypted_password = cipher_suite.encrypt(password.encode()).decode()
+    
+    now = datetime.now(timezone.utc)
+    
+    # Verificar se já existe
+    existing = await db.rpa_credenciais_central.find_one({"plataforma": plataforma})
+    
+    cred_data = {
+        "plataforma": plataforma,
+        "email": email,
+        "password": encrypted_password,
+        "ativo": True,
+        "updated_at": now.isoformat(),
+        "updated_by": current_user["id"]
+    }
+    
+    if existing:
+        await db.rpa_credenciais_central.update_one(
+            {"plataforma": plataforma},
+            {"$set": cred_data}
+        )
+    else:
+        cred_data["id"] = str(uuid.uuid4())
+        cred_data["created_at"] = now.isoformat()
+        cred_data["created_by"] = current_user["id"]
+        await db.rpa_credenciais_central.insert_one(cred_data)
+    
+    logger.info(f"🔑 Credenciais RPA centrais guardadas para {plataforma} por {current_user['email']}")
+    
+    return {"success": True, "message": f"Credenciais {plataforma} guardadas"}
+
+
+@router.delete("/rpa-central/credenciais/{plataforma}")
+async def remover_credenciais_rpa_central(
+    plataforma: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Remover credenciais RPA centrais (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas admin pode remover credenciais centrais")
+    
+    result = await db.rpa_credenciais_central.delete_one({"plataforma": plataforma})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Credenciais não encontradas")
+    
+    return {"success": True, "message": f"Credenciais {plataforma} removidas"}
+
+
+@router.post("/rpa-central/testar")
+async def testar_credenciais_rpa_central(
+    request: dict = Body(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Testar credenciais RPA centrais (Admin only)"""
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Apenas admin pode testar credenciais")
+    
+    plataforma = request.get("plataforma")
+    
+    if not plataforma:
+        raise HTTPException(status_code=400, detail="Plataforma é obrigatória")
+    
+    # Buscar credenciais
+    cred = await db.rpa_credenciais_central.find_one({"plataforma": plataforma})
+    if not cred:
+        raise HTTPException(status_code=404, detail="Credenciais não encontradas")
+    
+    # TODO: Implementar teste real com Playwright
+    # Por agora, apenas verificar se existem
+    return {
+        "success": True,
+        "plataforma": plataforma,
+        "email": cred.get("email"),
+        "status": "Credenciais configuradas - teste RPA pendente"
+    }
+
+
+# ==================================================
 # LOGS DE SINCRONIZAÇÃO
 # ==================================================
 
