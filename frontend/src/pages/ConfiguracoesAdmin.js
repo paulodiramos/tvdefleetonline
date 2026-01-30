@@ -296,6 +296,10 @@ const ConfiguracoesAdmin = ({ user, onLogout }) => {
                   <Key className="w-4 h-4" />
                   <span>Integrações</span>
                 </TabsTrigger>
+                <TabsTrigger value="rpa" className="flex items-center space-x-2">
+                  <Zap className="w-4 h-4" />
+                  <span>RPA Central</span>
+                </TabsTrigger>
               </TabsList>
 
               {/* Terms and Conditions Tab */}
