@@ -628,138 +628,147 @@ const ConfiguracoesAdmin = ({ user, onLogout }) => {
                 </div>
               </TabsContent>
 
-              {/* RPA Central Tab */}
+              {/* RPA Scripts Tab */}
               <TabsContent value="rpa" className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold mb-2">Credenciais RPA Centrais</h3>
+                  <h3 className="text-lg font-semibold mb-2">Scripts RPA (Automação)</h3>
                   <p className="text-sm text-slate-600 mb-4">
-                    Configure as credenciais de acesso às plataformas que serão usadas na sincronização automática RPA.
-                    Estas credenciais ficam disponíveis para todos os parceiros.
+                    Gerir os scripts de automação RPA que os parceiros podem usar com as suas próprias credenciais.
                   </p>
                 </div>
 
-                {/* Adicionar nova credencial */}
-                <Card className="border-dashed">
-                  <CardContent className="pt-4">
-                    <h4 className="font-medium mb-3">Adicionar Nova Credencial</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                      <div>
-                        <Label>Plataforma</Label>
-                        <select
-                          className="w-full p-2 border rounded-md mt-1"
-                          value={newRpaCredencial.plataforma}
-                          onChange={(e) => setNewRpaCredencial({ ...newRpaCredencial, plataforma: e.target.value })}
-                        >
-                          <option value="">Selecionar...</option>
-                          <option value="uber">Uber</option>
-                          <option value="viaverde">Via Verde</option>
-                          <option value="galp">Galp Fleet</option>
-                          <option value="repsol">Repsol Move</option>
-                        </select>
-                      </div>
-                      <div>
-                        <Label>Email/Username</Label>
-                        <Input
-                          type="email"
-                          placeholder="email@exemplo.com"
-                          value={newRpaCredencial.email}
-                          onChange={(e) => setNewRpaCredencial({ ...newRpaCredencial, email: e.target.value })}
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label>Password</Label>
-                        <div className="relative mt-1">
-                          <Input
-                            type={showPassword.new ? "text" : "password"}
-                            placeholder="••••••••"
-                            value={newRpaCredencial.password}
-                            onChange={(e) => setNewRpaCredencial({ ...newRpaCredencial, password: e.target.value })}
-                          />
-                          <button
-                            type="button"
-                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
-                            onClick={() => setShowPassword({ ...showPassword, new: !showPassword.new })}
-                          >
-                            {showPassword.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
+                {/* Info sobre como funciona */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+                  <h4 className="font-medium text-amber-800 mb-2">⚠️ Como funciona o RPA</h4>
+                  <ul className="text-sm text-amber-700 space-y-1">
+                    <li>• <strong>Admin:</strong> Define os scripts de automação (passos de login, navegação, extração)</li>
+                    <li>• <strong>Parceiros:</strong> Configuram as suas próprias credenciais nas suas configurações</li>
+                    <li>• <strong>Sistema:</strong> Executa os scripts usando as credenciais de cada parceiro</li>
+                  </ul>
+                </div>
+
+                {/* Scripts disponíveis */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Uber Script */}
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center text-xl">
+                            🚗
+                          </div>
+                          <div>
+                            <h4 className="font-medium">Uber</h4>
+                            <p className="text-xs text-slate-500">Extração de ganhos semanais</p>
+                          </div>
                         </div>
+                        <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">Ativo</span>
                       </div>
-                      <div className="flex items-end">
-                        <Button
-                          onClick={handleSaveRpaCredencial}
-                          disabled={saving || !newRpaCredencial.plataforma || !newRpaCredencial.email || !newRpaCredencial.password}
-                          className="w-full bg-green-600 hover:bg-green-700"
-                        >
-                          <Save className="w-4 h-4 mr-2" />
-                          Guardar
+                      <div className="text-sm text-slate-600 space-y-1">
+                        <p>• Login em drivers.uber.com</p>
+                        <p>• Navegar para Pagamentos</p>
+                        <p>• Extrair dados da semana selecionada</p>
+                      </div>
+                      <div className="mt-3 pt-3 border-t flex justify-between items-center">
+                        <span className="text-xs text-slate-400">Última atualização: Jan 2026</span>
+                        <Button variant="outline" size="sm" onClick={() => window.open('/rpa-designer?plataforma=uber', '_blank')}>
+                          Editar Script
                         </Button>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
 
-                {/* Lista de credenciais existentes */}
-                <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <h4 className="font-medium">Credenciais Configuradas</h4>
-                    <Button variant="outline" size="sm" onClick={fetchRpaCredenciais}>
-                      <RefreshCw className="w-4 h-4 mr-1" />
-                      Atualizar
-                    </Button>
-                  </div>
-                  
-                  {rpaCredenciais.length === 0 ? (
-                    <div className="text-center py-8 text-slate-500 border rounded-lg bg-slate-50">
-                      Nenhuma credencial RPA configurada
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {rpaCredenciais.map((cred) => (
-                        <div key={cred.id} className="flex items-center justify-between p-4 border rounded-lg bg-white">
-                          <div className="flex items-center space-x-4">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                              cred.plataforma === 'uber' ? 'bg-black text-white' :
-                              cred.plataforma === 'viaverde' ? 'bg-green-500 text-white' :
-                              cred.plataforma === 'galp' ? 'bg-orange-500 text-white' :
-                              'bg-gray-500 text-white'
-                            }`}>
-                              {cred.plataforma === 'uber' ? '🚗' :
-                               cred.plataforma === 'viaverde' ? '🛣️' :
-                               cred.plataforma === 'galp' ? '⛽' : '📦'}
-                            </div>
-                            <div>
-                              <p className="font-medium capitalize">{cred.plataforma}</p>
-                              <p className="text-sm text-slate-500">{cred.email}</p>
-                            </div>
+                  {/* Via Verde Script */}
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-green-500 text-white rounded-full flex items-center justify-center text-xl">
+                            🛣️
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-2 py-1 text-xs rounded ${cred.ativo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                              {cred.ativo ? 'Ativo' : 'Inativo'}
-                            </span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                              onClick={() => handleDeleteRpaCredencial(cred.plataforma)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                          <div>
+                            <h4 className="font-medium">Via Verde</h4>
+                            <p className="text-xs text-slate-500">Extração de portagens</p>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                        <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">Ativo</span>
+                      </div>
+                      <div className="text-sm text-slate-600 space-y-1">
+                        <p>• Login em viaverde.pt/empresas</p>
+                        <p>• Navegar para Extratos</p>
+                        <p>• Download CSV do período</p>
+                      </div>
+                      <div className="mt-3 pt-3 border-t flex justify-between items-center">
+                        <span className="text-xs text-slate-400">Última atualização: Jan 2026</span>
+                        <Button variant="outline" size="sm" onClick={() => window.open('/rpa-designer?plataforma=viaverde', '_blank')}>
+                          Editar Script
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Galp Script */}
+                  <Card>
+                    <CardContent className="pt-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-orange-500 text-white rounded-full flex items-center justify-center text-xl">
+                            ⛽
+                          </div>
+                          <div>
+                            <h4 className="font-medium">Galp Fleet</h4>
+                            <p className="text-xs text-slate-500">Extração de abastecimentos</p>
+                          </div>
+                        </div>
+                        <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded">Em desenvolvimento</span>
+                      </div>
+                      <div className="text-sm text-slate-600 space-y-1">
+                        <p>• Login em galpfleet.pt</p>
+                        <p>• Navegar para Movimentos</p>
+                        <p>• Extrair consumos por veículo</p>
+                      </div>
+                      <div className="mt-3 pt-3 border-t flex justify-between items-center">
+                        <span className="text-xs text-slate-400">Script pendente</span>
+                        <Button variant="outline" size="sm" disabled>
+                          Criar Script
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Bolt - Info only */}
+                  <Card className="bg-slate-50">
+                    <CardContent className="pt-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center text-xl">
+                            ⚡
+                          </div>
+                          <div>
+                            <h4 className="font-medium">Bolt</h4>
+                            <p className="text-xs text-slate-500">API Oficial</p>
+                          </div>
+                        </div>
+                        <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded">Via API</span>
+                      </div>
+                      <div className="text-sm text-slate-600 space-y-1">
+                        <p>• Não necessita RPA</p>
+                        <p>• Usa API oficial da Bolt Fleet</p>
+                        <p>• Parceiros configuram Client ID/Secret</p>
+                      </div>
+                      <div className="mt-3 pt-3 border-t">
+                        <span className="text-xs text-slate-400">Sincronização automática via API</span>
+                      </div>
+                    </CardContent>
+                  </Card>
                 </div>
 
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-medium text-blue-800 mb-2">ℹ️ Como funciona</h4>
-                  <ul className="text-sm text-blue-700 space-y-1">
-                    <li>• As credenciais centrais são usadas pelo sistema de RPA para extrair dados automaticamente</li>
-                    <li>• A sincronização RPA faz login automático nas plataformas e extrai os dados de ganhos/despesas</li>
-                    <li>• Todos os parceiros podem beneficiar da sincronização usando estas credenciais centrais</li>
-                    <li>• Recomendado: Use uma conta dedicada para RPA em cada plataforma</li>
-                  </ul>
+                  <h4 className="font-medium text-blue-800 mb-2">ℹ️ Nota sobre Credenciais</h4>
+                  <p className="text-sm text-blue-700">
+                    Cada parceiro configura as suas próprias credenciais em <strong>Configurações → Plataformas</strong>. 
+                    Os scripts RPA usam essas credenciais para extrair dados de forma segura e individual.
+                  </p>
                 </div>
               </TabsContent>
             </Tabs>
