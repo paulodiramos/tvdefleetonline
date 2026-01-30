@@ -986,7 +986,7 @@ async def executar_sincronizacao_auto(
                                     drivers_response = await client.get_drivers(company_id, start_ts, end_ts)
                                     vehicles_response = await client.get_vehicles(company_id, start_ts, end_ts)
                                     
-                                    # Paginar orders para obter todas
+                                    # Paginar orders para obter todas (com delay para evitar rate limits)
                                     bolt_orders = []
                                     offset = 0
                                     limit = 100
@@ -999,6 +999,8 @@ async def executar_sincronizacao_auto(
                                         if len(order_list) < limit:
                                             break
                                         offset += limit
+                                        # Delay para evitar rate limits
+                                        await asyncio.sleep(0.5)
                                     
                                     # Extrair listas
                                     bolt_drivers = drivers_response.get("data", {}).get("drivers", [])
