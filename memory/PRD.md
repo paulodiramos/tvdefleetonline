@@ -468,6 +468,28 @@ Integração com a API oficial da Bolt Fleet usando OAuth2 Client Credentials.
 
 ---
 
+## ✅ Correções de Bugs - Resumo Semanal Bolt (30/01/2025)
+
+### Bug 1: Valores Bolt não aparecem no Resumo Semanal
+**Problema**: Os valores de ganhos da Bolt sincronizados não apareciam nas semanas 1 e 2 do resumo semanal.
+
+**Causa Raiz**: A query de `ganhos_bolt` só verificava `semana/ano`, mas os dados importados usam `periodo_semana/periodo_ano`.
+
+**Correção**: Adicionado `periodo_semana/periodo_ano` à query `$or` em `/app/backend/routes/relatorios.py` (linhas 896-912).
+
+**Verificação**: Semana 2/2026 agora mostra €7506.32 em ganhos Bolt (8 motoristas).
+
+### Bug 2: Sincronização não deve criar/mover motoristas
+**Problema**: Risco da sincronização criar motoristas novos ou associar motoristas de outros parceiros.
+
+**Causa Raiz**: A query só verificava `parceiro_id`, não `parceiro_atribuido`.
+
+**Correção**: Adicionado `parceiro_atribuido` à query `$or` em `/app/backend/routes/sincronizacao.py` (linhas 1006-1048). A lógica apenas atualiza motoristas existentes.
+
+**Verificação**: Código revisto confirma que não há operações de criação de motoristas.
+
+---
+
 ## Notas Importantes
 - **Railway foi desativado** - WhatsApp usa API Cloud oficial
 - **Sistema de permissões activo** - Menu filtrado por funcionalidades
