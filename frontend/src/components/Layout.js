@@ -318,12 +318,7 @@ const Layout = ({ children, user, onLogout }) => {
                   {/* Admin Panel */}
                   {user.role === 'admin' && (
                     <>
-                      <DropdownMenuItem asChild>
-                        <Link to="/planos-parceiros" className="flex items-center space-x-2 cursor-pointer">
-                          <Package className="w-4 h-4" />
-                          <span>Gestão de Planos</span>
-                        </Link>
-                      </DropdownMenuItem>
+                      {/* Gestão Principal */}
                       <DropdownMenuItem asChild>
                         <Link to="/usuarios" className="flex items-center space-x-2 cursor-pointer">
                           <Users className="w-4 h-4" />
@@ -331,91 +326,78 @@ const Layout = ({ children, user, onLogout }) => {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/terabox" className="flex items-center space-x-2 cursor-pointer">
-                          <HardDrive className="w-4 h-4" />
-                          <span>Terabox</span>
+                        <Link to="/planos-parceiros" className="flex items-center space-x-2 cursor-pointer">
+                          <Package className="w-4 h-4" />
+                          <span>Planos & Módulos</span>
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin/gestao-funcionalidades" className="flex items-center space-x-2 cursor-pointer">
+                          <Settings className="w-4 h-4" />
+                          <span>Permissões Parceiros</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      
                       <DropdownMenuSeparator />
+                      
+                      {/* Sincronização & Dados */}
                       <div className="px-2 py-1.5">
-                        <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
-                          <Settings className="w-3 h-3" />
-                          <span>Configurações</span>
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
+                          Sincronização
                         </div>
                       </div>
                       <DropdownMenuItem asChild>
-                        <Link to="/admin/fornecedores" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>🏢 Fornecedores</span>
+                        <Link to="/configuracoes-admin" className="flex items-center space-x-2 cursor-pointer pl-4">
+                          <span>⚙️ Configurações Gerais</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/rpa-designer" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>📝 RPA Designer</span>
+                        <Link to="/configuracao-sincronizacao" className="flex items-center space-x-2 cursor-pointer pl-4">
+                          <span>🔄 Sincronização Auto</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/rpa-automacao" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>🔄 RPA Automação</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/importacao-rpa" className="flex items-center space-x-2 cursor-pointer pl-6">
+                        <Link to="/importacao-rpa" className="flex items-center space-x-2 cursor-pointer pl-4">
                           <span>📥 Importação Dados</span>
                         </Link>
                       </DropdownMenuItem>
+                      
+                      <DropdownMenuSeparator />
+                      
+                      {/* Comunicações */}
+                      <div className="px-2 py-1.5">
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
+                          Comunicações
+                        </div>
+                      </div>
                       <DropdownMenuItem asChild>
-                        <Link to="/admin/gestao-funcionalidades" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>⚙️ Funcionalidades Parceiros</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/admin/gestao-planos" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>📦 Gestão Planos e Módulos</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/admin/comissoes" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>💰 Comissões e Classificação</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/admin/integracoes" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>🔌 Integrações Pagamento</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/configuracao-mapeamento" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>🗺️ Mapeamento Importação</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/configuracao-integracao" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>Integrações</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/configuracoes-comunicacao" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>Comunicações</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/configuracao-categorias" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>Categorias Uber/Bolt</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/whatsapp" className="flex items-center space-x-2 cursor-pointer pl-6">
+                        <Link to="/whatsapp" className="flex items-center space-x-2 cursor-pointer pl-4">
                           <span>📱 WhatsApp</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/configuracao-csv" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>📊 Extração CSV</span>
+                        <Link to="/comunicacoes" className="flex items-center space-x-2 cursor-pointer pl-4">
+                          <span>📧 Comunicações</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      
+                      <DropdownMenuSeparator />
+                      
+                      {/* Sistema */}
+                      <div className="px-2 py-1.5">
+                        <div className="text-xs font-semibold text-slate-500 uppercase tracking-wide px-2">
+                          Sistema
+                        </div>
+                      </div>
+                      <DropdownMenuItem asChild>
+                        <Link to="/terabox" className="flex items-center space-x-2 cursor-pointer pl-4">
+                          <HardDrive className="w-4 h-4" />
+                          <span>Terabox</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to="/termos-privacidade" className="flex items-center space-x-2 cursor-pointer pl-6">
-                          <span>Termos & Privacidade</span>
+                        <Link to="/termos-privacidade" className="flex items-center space-x-2 cursor-pointer pl-4">
+                          <span>📜 Termos & Privacidade</span>
                         </Link>
                       </DropdownMenuItem>
                     </>
