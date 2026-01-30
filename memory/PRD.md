@@ -204,6 +204,8 @@ Cada parceiro configura o seu próprio email:
 - [x] ~~Sistema de Exportação de Dados CSV~~ - Implementado com seleção de campos (29/01/2025)
 - [x] ~~Sistema de Importação de Dados CSV~~ - Funcionalidade completa de importação com preview e atualização (29/01/2025)
 - [x] ~~Página "Meu Plano" para Parceiros~~ - Página completa com detalhes do plano, custos e módulos (29/01/2025)
+- [x] ~~Correção Resumo Semanal Bolt~~ - Query suporta período_semana/ano além de semana/ano (30/01/2025)
+- [x] ~~Segurança na Sincronização~~ - Verifica parceiro_id e parceiro_atribuido (30/01/2025)
 - [ ] **Processamento real Ifthenpay** - Usar credenciais para gerar referências MB
 - [ ] **Processamento real Moloni** - Emitir faturas automaticamente
 - [ ] Continuar refatoração do server.py (~36 endpoints @app restantes, ~16000 linhas)
