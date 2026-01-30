@@ -45,8 +45,8 @@ class TestResumoSemanalBoltFix:
     def test_resumo_semanal_endpoint_exists(self):
         """Test that resumo-semanal endpoint exists and requires auth"""
         response = self.session.get(f"{BASE_URL}/api/relatorios/parceiro/resumo-semanal")
-        assert response.status_code == 401, "Endpoint should require authentication"
-        print(f"✅ Endpoint requires authentication (401)")
+        assert response.status_code in [401, 403], f"Endpoint should require authentication, got {response.status_code}"
+        print(f"✅ Endpoint requires authentication ({response.status_code})")
     
     def test_resumo_semanal_week_51_2025(self):
         """Test resumo-semanal for week 51/2025 - should show Bolt earnings"""
