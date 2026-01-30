@@ -985,12 +985,24 @@ async def executar_sincronizacao_auto(
                                     # Buscar dados
                                     drivers_response = await client.get_drivers(company_id, start_ts, end_ts)
                                     vehicles_response = await client.get_vehicles(company_id, start_ts, end_ts)
-                                    orders_response = await client.get_fleet_orders(company_id, start_ts, end_ts)
+                                    
+                                    # Paginar orders para obter todas
+                                    bolt_orders = []
+                                    offset = 0
+                                    limit = 100
+                                    while True:
+                                        orders_response = await client.get_fleet_orders(company_id, start_ts, end_ts, limit=limit, offset=offset)
+                                        order_list = orders_response.get("data", {}).get("orders", [])
+                                        if not order_list:
+                                            break
+                                        bolt_orders.extend(order_list)
+                                        if len(order_list) < limit:
+                                            break
+                                        offset += limit
                                     
                                     # Extrair listas
                                     bolt_drivers = drivers_response.get("data", {}).get("drivers", [])
                                     bolt_vehicles = vehicles_response.get("data", {}).get("vehicles", [])
-                                    bolt_orders = orders_response.get("data", {}).get("orders", [])
                                     
                                     # === ASSOCIAR MOTORISTAS E VEÍCULOS ===
                                     motoristas_associados = 0
