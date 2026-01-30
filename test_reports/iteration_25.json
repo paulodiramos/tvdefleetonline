@@ -1,0 +1,91 @@
+{
+  "summary": "Backend testing for TVDEFleet bug fixes: 1) Bolt earnings query now supports both semana/ano and periodo_semana/periodo_ano formats. 2) Sincronização logic checks both parceiro_id and parceiro_atribuido without creating new motoristas. All 8 tests PASSED.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "features_tested": {
+    "resumo_semanal_week_51_2025": {
+      "status": "PASS",
+      "details": "GET /api/relatorios/parceiro/resumo-semanal?semana=51&ano=2025 returns total_ganhos_bolt=€2104.19 (9 motoristas with earnings)"
+    },
+    "resumo_semanal_week_2_2026": {
+      "status": "PASS",
+      "details": "GET /api/relatorios/parceiro/resumo-semanal?semana=2&ano=2026 returns total_ganhos_bolt=€7506.32 (8 motoristas with earnings) - uses periodo_semana/periodo_ano format"
+    },
+    "resumo_semanal_week_1_2026": {
+      "status": "PASS",
+      "details": "GET /api/relatorios/parceiro/resumo-semanal?semana=1&ano=2026 returns total_ganhos_bolt=€0.00 (data exists but with zero values)"
+    },
+    "bolt_query_multiple_formats": {
+      "status": "PASS",
+      "details": "relatorios.py lines 896-912 now support: semana/ano, periodo_semana/periodo_ano, periodo_inicio formats"
+    },
+    "sincronizacao_parceiro_filter": {
+      "status": "PASS",
+      "details": "sincronizacao.py lines 1006-1048 check both parceiro_id and parceiro_atribuido when associating motoristas"
+    },
+    "sincronizacao_no_new_motoristas": {
+      "status": "PASS",
+      "details": "Sincronização logic only updates existing motoristas, does not create new ones"
+    },
+    "admin_access": {
+      "status": "PASS",
+      "details": "Admin can access resumo-semanal endpoint and see all motoristas"
+    },
+    "auth_required": {
+      "status": "PASS",
+      "details": "Endpoint returns 403 without authentication"
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_resumo_semanal_bolt.py",
+    "/app/test_reports/pytest/pytest_resumo_semanal_bolt.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "relatorios.py bolt_query correctly uses $and with $or to support multiple week/year formats",
+    "sincronizacao.py correctly filters motoristas by parceiro using $or for parceiro_id and parceiro_atribuido",
+    "Database tvdefleet_db is correctly configured (not tvdefleet)"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_resumo_semanal_bolt.py"
+  ],
+  "success_rate": {
+    "backend": "100% (8/8 tests passed)",
+    "frontend": "N/A (backend only testing requested)"
+  },
+  "test_credentials": {
+    "parceiro": "geral@zmbusines.com / zeny123",
+    "admin": "admin@tvdefleet.com / 123456"
+  },
+  "seed_data_creation": "No seed data created. Tests use existing production data.",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "Bug fixes verified: 1) Bolt earnings now appear in resumo-semanal for weeks using periodo_semana/periodo_ano format. Week 51/2025 shows €2104.19, Week 2/2026 shows €7506.32. 2) Sincronização logic correctly filters by parceiro and doesn't create new motoristas. Database is tvdefleet_db.",
+  "mocked_integrations": {
+    "has_mocked_apis": false,
+    "mocked_apis_list": []
+  },
+  "bug_verification": {
+    "bug_1_bolt_earnings": {
+      "description": "Valores sincronizados da Bolt não aparecem nas semanas 1 e 2 do resumo semanal",
+      "root_cause": "Query only checked semana/ano format, but imported data uses periodo_semana/periodo_ano",
+      "fix_location": "/app/backend/routes/relatorios.py lines 896-912",
+      "fix_description": "Added periodo_semana/periodo_ano to the $or query conditions",
+      "verification": "Week 2/2026 now shows €7506.32 in Bolt earnings (8 motoristas)"
+    },
+    "bug_2_sincronizacao_motoristas": {
+      "description": "Sincronização não deve criar motoristas novos nem reatribuí-los entre parceiros",
+      "root_cause": "Query only checked parceiro_id, not parceiro_atribuido",
+      "fix_location": "/app/backend/routes/sincronizacao.py lines 1006-1048",
+      "fix_description": "Added parceiro_atribuido to the $or filter and removed motorista creation logic",
+      "verification": "Code review confirms both fields are checked and no insert operations for motoristas"
+    }
+  }
+}
