@@ -242,7 +242,7 @@ const ConfiguracoesAdmin = ({ user, onLogout }) => {
                 </TabsTrigger>
                 <TabsTrigger value="rpa" className="flex items-center space-x-2">
                   <Zap className="w-4 h-4" />
-                  <span>RPA Central</span>
+                  <span>RPA Scripts</span>
                 </TabsTrigger>
               </TabsList>
 
