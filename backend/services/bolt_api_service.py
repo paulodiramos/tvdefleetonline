@@ -133,6 +133,16 @@ class BoltAPIClient:
                             raise Exception(f"Bolt API error after retry: {retry_response.status} - {error_text}")
                         return await retry_response.json()
                 
+                if response.status == 429:
+                    # Rate limited - wait and retry
+                    logger.warning("Bolt API rate limited, waiting 2 seconds...")
+                    await asyncio.sleep(2)
+                    async with session.request(method, url, headers=headers, params=params, json=json_data) as retry_response:
+                        if retry_response.status != 200:
+                            error_text = await retry_response.text()
+                            raise Exception(f"Bolt API error: {retry_response.status} - {error_text}")
+                        return await retry_response.json()
+                
                 if response.status != 200:
                     error_text = await response.text()
                     raise Exception(f"Bolt API error: {response.status} - {error_text}")
