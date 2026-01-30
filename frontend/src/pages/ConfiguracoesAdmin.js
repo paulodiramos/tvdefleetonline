@@ -5,17 +5,13 @@ import Layout from '@/components/Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { FileText, Shield, Save, Key, Zap, Eye, EyeOff, Trash2, RefreshCw } from 'lucide-react';
+import { FileText, Shield, Save, Key, Zap } from 'lucide-react';
 
 const ConfiguracoesAdmin = ({ user, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [rpaCredenciais, setRpaCredenciais] = useState([]);
-  const [newRpaCredencial, setNewRpaCredencial] = useState({ plataforma: '', email: '', password: '' });
-  const [showPassword, setShowPassword] = useState({});
   const [configData, setConfigData] = useState({
     condicoes_gerais: '',
     politica_privacidade: '',
