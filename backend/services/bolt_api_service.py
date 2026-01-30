@@ -205,9 +205,10 @@ class BoltAPIClient:
     async def get_fleet_orders(self, company_id: int, start_ts: int, end_ts: int, limit: int = 100, offset: int = 0) -> Dict:
         """
         Get fleet orders (rides/trips) - POST /fleetIntegration/v1/getFleetOrders
+        Note: company_ids must be an array according to API validation
         """
         json_data = {
-            "company_id": company_id,
+            "company_ids": [company_id],  # Must be array
             "start_ts": start_ts,
             "end_ts": end_ts,
             "limit": limit,
