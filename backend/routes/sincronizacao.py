@@ -1040,17 +1040,28 @@ async def executar_sincronizacao_auto(
             
             # Verificar se há credenciais/configuração para RPA
             if metodo == "rpa":
-                credencial = await db.rpa_credenciais.find_one({
-                    "parceiro_id": pid,
+                # Primeiro tentar credenciais centrais (geridas pelo Admin)
+                credencial = await db.rpa_credenciais_central.find_one({
                     "plataforma": fonte,
                     "ativo": True
                 })
                 
+                # Se não houver central, tentar credenciais do parceiro
+                if not credencial:
+                    credencial = await db.rpa_credenciais.find_one({
+                        "parceiro_id": pid,
+                        "plataforma": fonte,
+                        "ativo": True
+                    })
+                
                 if credencial:
+                    # TODO: Implementar execução RPA real com Playwright
+                    # Por agora, apenas marcar como agendado
                     resultados[fonte] = {
                         "sucesso": True,
                         "metodo": "rpa",
-                        "mensagem": "Execução RPA agendada"
+                        "credencial_tipo": "central" if "created_by" in credencial else "parceiro",
+                        "mensagem": "Execução RPA agendada - funcionalidade em desenvolvimento"
                     }
                 else:
                     resultados[fonte] = {
