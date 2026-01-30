@@ -43,7 +43,59 @@ const ConfiguracoesAdmin = ({ user, onLogout }) => {
 
   useEffect(() => {
     fetchConfigData();
+    fetchRpaCredenciais();
   }, []);
+
+  const fetchRpaCredenciais = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API}/rpa-central/credenciais`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRpaCredenciais(response.data || []);
+    } catch (error) {
+      console.error('Error fetching RPA credentials:', error);
+    }
+  };
+
+  const handleSaveRpaCredencial = async () => {
+    if (!newRpaCredencial.plataforma || !newRpaCredencial.email || !newRpaCredencial.password) {
+      toast.error('Preencha todos os campos');
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(`${API}/rpa-central/credenciais`, newRpaCredencial, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(`Credenciais ${newRpaCredencial.plataforma} guardadas!`);
+      setNewRpaCredencial({ plataforma: '', email: '', password: '' });
+      fetchRpaCredenciais();
+    } catch (error) {
+      console.error('Error saving RPA credential:', error);
+      toast.error('Erro ao guardar credenciais');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteRpaCredencial = async (plataforma) => {
+    if (!window.confirm(`Tem certeza que deseja remover as credenciais ${plataforma}?`)) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API}/rpa-central/credenciais/${plataforma}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success(`Credenciais ${plataforma} removidas`);
+      fetchRpaCredenciais();
+    } catch (error) {
+      console.error('Error deleting RPA credential:', error);
+      toast.error('Erro ao remover credenciais');
+    }
+  };
 
   const fetchConfigData = async () => {
     try {
