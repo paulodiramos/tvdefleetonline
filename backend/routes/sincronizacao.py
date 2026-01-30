@@ -1084,7 +1084,19 @@ async def executar_sincronizacao_auto(
                                             # Filtrar orders deste motorista
                                             driver_orders = [o for o in bolt_orders if o.get("driver_uuid") == bolt_driver_uuid or o.get("driver_id") == bolt_driver_uuid]
                                             
-                                            total_ganhos = sum(float(o.get("driver_total", 0) or 0) for o in driver_orders)
+                                            # Extrair ganhos de order_price (estrutura: {net_earnings, ride_price, commission, tip})
+                                            total_net_earnings = 0
+                                            total_ride_price = 0
+                                            total_commission = 0
+                                            total_tips = 0
+                                            
+                                            for order in driver_orders:
+                                                price_info = order.get("order_price", {})
+                                                total_net_earnings += float(price_info.get("net_earnings", 0) or 0)
+                                                total_ride_price += float(price_info.get("ride_price", 0) or 0)
+                                                total_commission += float(price_info.get("commission", 0) or 0)
+                                                total_tips += float(price_info.get("tip", 0) or 0)
+                                            
                                             total_viagens = len(driver_orders)
                                             
                                             # Criar ou atualizar registo de ganhos
@@ -1109,9 +1121,11 @@ async def executar_sincronizacao_auto(
                                                 "ano": ano,
                                                 "periodo_semana": semana,
                                                 "periodo_ano": ano,
-                                                "ganhos_brutos_total": total_ganhos,
-                                                "ganhos_liquidos": total_ganhos,  # Campo usado pelo resumo
-                                                "ganhos": total_ganhos,  # Campo alternativo
+                                                "ganhos_brutos_total": total_ride_price,
+                                                "ganhos_liquidos": total_net_earnings,  # Ganhos líquidos do motorista
+                                                "ganhos": total_net_earnings,  # Campo alternativo
+                                                "comissao_bolt": total_commission,
+                                                "gorjetas": total_tips,
                                                 "numero_viagens": total_viagens,
                                                 "parceiro_id": pid,
                                                 "fonte": "bolt_api",
