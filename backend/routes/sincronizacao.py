@@ -986,7 +986,21 @@ async def listar_execucoes_viaverde(
         {"_id": 0, "variaveis.password": 0}
     ).sort("created_at", -1).limit(limit).to_list(limit)
     
-    return execucoes
+    # Converter ObjectIds para strings (se existirem)
+    import json
+    from bson import ObjectId
+    
+    def convert_objectids(obj):
+        if isinstance(obj, dict):
+            return {k: convert_objectids(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [convert_objectids(item) for item in obj]
+        elif isinstance(obj, ObjectId):
+            return str(obj)
+        else:
+            return obj
+    
+    return [convert_objectids(e) for e in execucoes]
 
 
 # ==================================================
