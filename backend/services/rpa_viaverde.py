@@ -13,11 +13,11 @@ import uuid
 logger = logging.getLogger(__name__)
 
 
-def parse_excel_viaverde(filepath: str) -> List[Dict[str, Any]]:
+def parse_viaverde_file(filepath: str) -> List[Dict[str, Any]]:
     """
-    Parser do ficheiro Excel exportado da Via Verde
+    Parser do ficheiro exportado da Via Verde (CSV ou Excel)
     
-    Estrutura esperada do Excel:
+    Estrutura esperada:
     - Data/Hora
     - Matrícula
     - Identificador (Via Verde)
@@ -31,11 +31,29 @@ def parse_excel_viaverde(filepath: str) -> List[Dict[str, Any]]:
     import pandas as pd
     
     try:
-        # Ler Excel
-        df = pd.read_excel(filepath)
+        # Determinar tipo de ficheiro e ler
+        if filepath.endswith('.csv'):
+            # Tentar diferentes encodings comuns em Portugal
+            for encoding in ['utf-8', 'latin-1', 'cp1252', 'iso-8859-1']:
+                try:
+                    df = pd.read_csv(filepath, encoding=encoding, sep=None, engine='python')
+                    logger.info(f"📄 CSV lido com encoding: {encoding}")
+                    break
+                except Exception as e:
+                    continue
+            else:
+                logger.error("❌ Não conseguiu ler o CSV com nenhum encoding")
+                return []
+        else:
+            df = pd.read_excel(filepath)
+            logger.info("📄 Excel lido com sucesso")
+        
+        logger.info(f"📋 Colunas encontradas: {list(df.columns)}")
+        logger.info(f"📋 Primeiras linhas:\n{df.head()}")
         
         # Normalizar nomes das colunas (remover espaços, lowercase)
-        df.columns = [col.strip().lower().replace(' ', '_') for col in df.columns]
+        df.columns = [col.strip().lower().replace(' ', '_').replace('/', '_') for col in df.columns]
+        logger.info(f"📋 Colunas normalizadas: {list(df.columns)}")
         
         movimentos = []
         
@@ -55,7 +73,7 @@ def parse_excel_viaverde(filepath: str) -> List[Dict[str, Any]]:
             }
             
             # Data/Hora
-            for col in ['data/hora', 'data_hora', 'data', 'date', 'datetime']:
+            for col in ['data_hora', 'data__hora', 'data', 'date', 'datetime', 'data_movimento']:
                 if col in df.columns and pd.notna(row.get(col)):
                     dt_value = row.get(col)
                     if isinstance(dt_value, datetime):
@@ -63,43 +81,55 @@ def parse_excel_viaverde(filepath: str) -> List[Dict[str, Any]]:
                         movimento["hora"] = dt_value.strftime("%H:%M:%S")
                         movimento["entry_date"] = dt_value.strftime("%Y-%m-%d")
                     elif isinstance(dt_value, str):
-                        movimento["data"] = dt_value[:10]
-                        movimento["entry_date"] = dt_value[:10]
+                        # Tentar parsear diferentes formatos de data
+                        dt_value = dt_value.strip()
+                        for fmt in ["%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d %H:%M:%S", "%d/%m/%Y %H:%M"]:
+                            try:
+                                dt = datetime.strptime(dt_value[:len(fmt)], fmt)
+                                movimento["data"] = dt.strftime("%Y-%m-%d")
+                                movimento["hora"] = dt.strftime("%H:%M:%S") if len(dt_value) > 10 else "00:00:00"
+                                movimento["entry_date"] = dt.strftime("%Y-%m-%d")
+                                break
+                            except:
+                                continue
+                        else:
+                            movimento["data"] = dt_value[:10]
+                            movimento["entry_date"] = dt_value[:10]
                     break
             
             # Matrícula
-            for col in ['matrícula', 'matricula', 'plate', 'veiculo', 'vehicle']:
+            for col in ['matrícula', 'matricula', 'plate', 'veiculo', 'vehicle', 'viatura']:
                 if col in df.columns and pd.notna(row.get(col)):
                     movimento["matricula"] = str(row.get(col)).strip().upper()
                     break
             
             # Identificador Via Verde
-            for col in ['identificador', 'id_viaverde', 'identifier', 'tag']:
+            for col in ['identificador', 'id_viaverde', 'identifier', 'tag', 'id']:
                 if col in df.columns and pd.notna(row.get(col)):
                     movimento["identificador"] = str(row.get(col)).strip()
                     break
             
             # Local/Descrição
-            for col in ['local', 'descrição', 'descricao', 'description', 'location']:
+            for col in ['local', 'descrição', 'descricao', 'description', 'location', 'ponto']:
                 if col in df.columns and pd.notna(row.get(col)):
                     movimento["local"] = str(row.get(col)).strip()
                     movimento["descricao"] = str(row.get(col)).strip()
                     break
             
             # Valor
-            for col in ['valor', 'value', 'amount', 'total', 'preço', 'preco']:
+            for col in ['valor', 'value', 'amount', 'total', 'preço', 'preco', 'montante']:
                 if col in df.columns and pd.notna(row.get(col)):
                     try:
                         val = row.get(col)
                         if isinstance(val, str):
-                            val = val.replace('€', '').replace(',', '.').strip()
+                            val = val.replace('€', '').replace(',', '.').replace(' ', '').strip()
                         movimento["valor"] = abs(float(val))
                     except:
                         pass
                     break
             
             # Tipo (Portagem, Parque, etc)
-            for col in ['tipo', 'type', 'categoria', 'category']:
+            for col in ['tipo', 'type', 'categoria', 'category', 'produto']:
                 if col in df.columns and pd.notna(row.get(col)):
                     tipo = str(row.get(col)).strip().lower()
                     movimento["tipo"] = tipo
@@ -121,14 +151,20 @@ def parse_excel_viaverde(filepath: str) -> List[Dict[str, Any]]:
             if movimento["data"] and movimento["valor"] > 0:
                 movimentos.append(movimento)
         
-        logger.info(f"📊 Parsed {len(movimentos)} movimentos do Excel Via Verde")
+        logger.info(f"📊 Parsed {len(movimentos)} movimentos do ficheiro Via Verde")
         return movimentos
         
     except Exception as e:
-        logger.error(f"❌ Erro ao parsear Excel Via Verde: {e}")
+        logger.error(f"❌ Erro ao parsear ficheiro Via Verde: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         return []
 
 
+# Manter o alias antigo para compatibilidade
+def parse_excel_viaverde(filepath: str) -> List[Dict[str, Any]]:
+    """Alias para parse_viaverde_file para compatibilidade"""
+    return parse_viaverde_file(filepath)
 async def importar_movimentos_viaverde(
     movimentos: List[Dict[str, Any]], 
     parceiro_id: str,
