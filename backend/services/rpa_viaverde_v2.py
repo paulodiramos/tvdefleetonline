@@ -285,6 +285,13 @@ class ViaVerdeRPA:
 def parse_viaverde_excel(filepath: str) -> List[Dict[str, Any]]:
     """
     Parser do ficheiro Excel exportado da Via Verde
+    
+    Colunas esperadas:
+    - License Plate: Matrícula
+    - Entry Date: Data de entrada
+    - Entry Point / Exit Point: Locais
+    - Value / Liquid Value: Valor
+    - Market Description: Tipo (Portagens, etc)
     """
     import pandas as pd
     
@@ -301,10 +308,7 @@ def parse_viaverde_excel(filepath: str) -> List[Dict[str, Any]]:
             df = pd.read_excel(filepath)
         
         logger.info(f"📋 Ficheiro lido: {len(df)} linhas")
-        logger.info(f"📋 Colunas: {list(df.columns)}")
-        
-        # Normalizar colunas
-        df.columns = [col.strip().lower().replace(' ', '_').replace('/', '_') for col in df.columns]
+        logger.info(f"📋 Colunas originais: {list(df.columns)}")
         
         movimentos = []
         
@@ -316,49 +320,93 @@ def parse_viaverde_excel(filepath: str) -> List[Dict[str, Any]]:
                 "matricula": None,
                 "identificador": None,
                 "local": None,
+                "local_entrada": None,
+                "local_saida": None,
                 "descricao": None,
                 "valor": 0.0,
+                "valor_liquido": 0.0,
                 "tipo": "portagem",
-                "market_description": "portagens"
+                "market_description": "portagens",
+                "servico": None,
+                "meio_pagamento": None
             }
             
-            # Data
-            for col in ['data', 'data_hora', 'date', 'data_movimento']:
-                if col in df.columns and pd.notna(row.get(col)):
-                    dt_value = row.get(col)
-                    if isinstance(dt_value, datetime):
-                        movimento["data"] = dt_value.strftime("%Y-%m-%d")
-                        movimento["hora"] = dt_value.strftime("%H:%M:%S")
-                    elif isinstance(dt_value, str):
-                        movimento["data"] = dt_value[:10]
-                    break
+            # License Plate → Matrícula
+            if 'License Plate' in df.columns and pd.notna(row.get('License Plate')):
+                movimento["matricula"] = str(row['License Plate']).strip().upper()
             
-            # Matrícula
-            for col in ['matrícula', 'matricula', 'plate', 'viatura']:
-                if col in df.columns and pd.notna(row.get(col)):
-                    movimento["matricula"] = str(row.get(col)).strip().upper()
-                    break
+            # IAI → Identificador
+            if 'IAI' in df.columns and pd.notna(row.get('IAI')):
+                movimento["identificador"] = str(row['IAI'])
             
-            # Local/Descrição
-            for col in ['descrição', 'descricao', 'local', 'description']:
-                if col in df.columns and pd.notna(row.get(col)):
-                    movimento["local"] = str(row.get(col)).strip()
-                    movimento["descricao"] = str(row.get(col)).strip()
-                    break
-            
-            # Valor
-            for col in ['valor', 'value', 'amount', 'total']:
-                if col in df.columns and pd.notna(row.get(col)):
+            # Entry Date → Data
+            if 'Entry Date' in df.columns and pd.notna(row.get('Entry Date')):
+                dt_value = row['Entry Date']
+                if isinstance(dt_value, datetime):
+                    movimento["data"] = dt_value.strftime("%Y-%m-%d")
+                    movimento["hora"] = dt_value.strftime("%H:%M:%S")
+                elif isinstance(dt_value, str):
+                    # Formato: 2026-01-29 23:56:08
                     try:
-                        val = row.get(col)
-                        if isinstance(val, str):
-                            val = val.replace('€', '').replace(',', '.').strip()
-                        movimento["valor"] = abs(float(val))
+                        dt = datetime.strptime(dt_value[:19], "%Y-%m-%d %H:%M:%S")
+                        movimento["data"] = dt.strftime("%Y-%m-%d")
+                        movimento["hora"] = dt.strftime("%H:%M:%S")
                     except:
-                        pass
-                    break
+                        movimento["data"] = dt_value[:10]
             
-            # Calcular semana
+            # Entry Point / Exit Point → Locais
+            entry_point = row.get('Entry Point', '') if 'Entry Point' in df.columns else ''
+            exit_point = row.get('Exit Point', '') if 'Exit Point' in df.columns else ''
+            
+            if pd.notna(entry_point):
+                movimento["local_entrada"] = str(entry_point)
+            if pd.notna(exit_point):
+                movimento["local_saida"] = str(exit_point)
+            
+            # Descrição combinada
+            if movimento["local_entrada"] and movimento["local_saida"]:
+                movimento["local"] = f"{movimento['local_entrada']} → {movimento['local_saida']}"
+                movimento["descricao"] = movimento["local"]
+            elif movimento["local_entrada"]:
+                movimento["local"] = movimento["local_entrada"]
+                movimento["descricao"] = movimento["local_entrada"]
+            
+            # Value → Valor
+            if 'Value' in df.columns and pd.notna(row.get('Value')):
+                try:
+                    movimento["valor"] = abs(float(row['Value']))
+                except:
+                    pass
+            
+            # Liquid Value → Valor Líquido
+            if 'Liquid Value' in df.columns and pd.notna(row.get('Liquid Value')):
+                try:
+                    movimento["valor_liquido"] = abs(float(row['Liquid Value']))
+                except:
+                    pass
+            
+            # Usar valor líquido se disponível
+            if movimento["valor_liquido"] > 0:
+                movimento["valor"] = movimento["valor_liquido"]
+            
+            # Market Description → Tipo
+            if 'Market Description' in df.columns and pd.notna(row.get('Market Description')):
+                market = str(row['Market Description']).lower()
+                movimento["market_description"] = market
+                if 'parque' in market or 'estacionamento' in market:
+                    movimento["tipo"] = "parque"
+                else:
+                    movimento["tipo"] = "portagem"
+            
+            # Service Description → Serviço
+            if 'Service Description' in df.columns and pd.notna(row.get('Service Description')):
+                movimento["servico"] = str(row['Service Description'])
+            
+            # Payment Method → Meio de Pagamento
+            if 'Payment Method' in df.columns and pd.notna(row.get('Payment Method')):
+                movimento["meio_pagamento"] = str(row['Payment Method'])
+            
+            # Calcular semana/ano
             if movimento["data"]:
                 try:
                     dt = datetime.strptime(movimento["data"], "%Y-%m-%d")
@@ -368,14 +416,17 @@ def parse_viaverde_excel(filepath: str) -> List[Dict[str, Any]]:
                 except:
                     pass
             
+            # Só adicionar se tiver dados válidos
             if movimento["valor"] > 0:
                 movimentos.append(movimento)
         
-        logger.info(f"📊 Parseados {len(movimentos)} movimentos")
+        logger.info(f"📊 Parseados {len(movimentos)} movimentos com valor > 0")
         return movimentos
         
     except Exception as e:
         logger.error(f"❌ Erro ao parsear Excel: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
         return []
 
 
