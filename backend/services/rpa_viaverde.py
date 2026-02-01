@@ -209,6 +209,7 @@ class ViaVerdeRPA:
     """Classe para automação de extração de dados da Via Verde"""
     
     BASE_URL = "https://www.viaverde.pt/empresas"
+    LOGIN_URL = "https://www.viaverde.pt/empresas/minha-via-verde"
     
     def __init__(self, email: str, password: str):
         self.email = email
