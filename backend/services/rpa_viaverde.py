@@ -249,65 +249,58 @@ class ViaVerdeRPA:
         try:
             logger.info(f"🔐 A fazer login com {self.email}...")
             
-            # Aceder à página inicial
-            await self.page.goto(self.BASE_URL, wait_until="networkidle")
+            # Aceder directamente à URL que força o login
+            await self.page.goto(self.LOGIN_URL, wait_until="networkidle")
             await self.page.wait_for_timeout(3000)
             
             # Aceitar cookies se aparecer o banner
             try:
-                accept_cookies = self.page.get_by_role('button', name='Accept All Cookies')
+                accept_cookies = self.page.locator('button:has-text("Accept All"), button:has-text("Aceitar")')
                 if await accept_cookies.count() > 0:
-                    await accept_cookies.click()
+                    await accept_cookies.first.click()
                     await self.page.wait_for_timeout(1000)
             except:
                 pass
             
-            # Clicar no botão Login no header para abrir o modal
-            try:
-                # Tentar diferentes selectores para o botão de login
-                login_triggers = [
-                    self.page.get_by_role('button', name='Login'),
-                    self.page.get_by_role('link', name='Login'),
-                    self.page.locator('a:has-text("Login")'),
-                    self.page.locator('button:has-text("Login")'),
-                    self.page.locator('[data-testid="login-button"]'),
-                    self.page.locator('.login-button'),
-                    self.page.locator('text=Aceder à área reservada')
-                ]
-                
-                for trigger in login_triggers:
-                    if await trigger.count() > 0:
-                        await trigger.first.click()
-                        await self.page.wait_for_timeout(2000)
-                        break
-            except Exception as e:
-                logger.warning(f"Não encontrou botão login inicial: {e}")
+            # O formulário de login deve aparecer automaticamente
+            # Aguardar campos de login
+            await self.page.wait_for_selector('input[type="email"], input[type="password"]', timeout=10000)
             
-            # Aguardar o modal de login aparecer
-            await self.page.wait_for_timeout(2000)
-            
-            # Preencher email - procurar pelo placeholder ou label
+            # Preencher email - procurar pelo placeholder ou tipo
             email_filled = False
             email_selectors = [
-                'input[placeholder="Email"]',
                 'input[type="email"]',
-                'input[name="email"]',
-                'input[id="email"]',
-                '#email',
-                'input[placeholder*="mail"]'
+                'input[placeholder="Email"]',
+                'input[name*="user"]',
+                'input[id*="user"]',
+                '#txtUsername'
             ]
             
             for selector in email_selectors:
-                email_field = self.page.locator(selector)
+                email_field = self.page.locator(selector).first
                 if await email_field.count() > 0:
-                    await email_field.first.click()
-                    await email_field.first.fill(self.email)
-                    email_filled = True
-                    logger.info("✅ Email preenchido")
-                    break
+                    try:
+                        is_visible = await email_field.is_visible()
+                        if is_visible:
+                            await email_field.click()
+                            await email_field.fill(self.email)
+                            email_filled = True
+                            logger.info("✅ Email preenchido")
+                            break
+                    except:
+                        continue
             
             if not email_filled:
-                logger.error("❌ Não encontrou campo de email")
+                # Tentar preencher qualquer input de email visível
+                all_emails = await self.page.locator('input[type="email"]').all()
+                for ef in all_emails:
+                    if await ef.is_visible():
+                        await ef.fill(self.email)
+                        email_filled = True
+                        break
+            
+            if not email_filled:
+                logger.error("❌ Não encontrou campo de email visível")
                 return False
             
             await self.page.wait_for_timeout(500)
@@ -315,48 +308,63 @@ class ViaVerdeRPA:
             # Preencher password
             password_filled = False
             password_selectors = [
-                'input[placeholder="Palavra-passe"]',
                 'input[type="password"]',
-                'input[name="password"]',
-                'input[id="password"]',
-                '#password',
                 'input[placeholder*="passe"]',
-                'input[placeholder*="senha"]'
+                'input[placeholder*="senha"]',
+                '#txtPassword'
             ]
             
             for selector in password_selectors:
-                password_field = self.page.locator(selector)
+                password_field = self.page.locator(selector).first
                 if await password_field.count() > 0:
-                    await password_field.first.click()
-                    await password_field.first.fill(self.password)
-                    password_filled = True
-                    logger.info("✅ Password preenchida")
-                    break
+                    try:
+                        is_visible = await password_field.is_visible()
+                        if is_visible:
+                            await password_field.click()
+                            await password_field.fill(self.password)
+                            password_filled = True
+                            logger.info("✅ Password preenchida")
+                            break
+                    except:
+                        continue
             
             if not password_filled:
-                logger.error("❌ Não encontrou campo de password")
+                # Tentar preencher qualquer input de password visível
+                all_pwds = await self.page.locator('input[type="password"]').all()
+                for pf in all_pwds:
+                    if await pf.is_visible():
+                        await pf.fill(self.password)
+                        password_filled = True
+                        break
+            
+            if not password_filled:
+                logger.error("❌ Não encontrou campo de password visível")
                 return False
             
             await self.page.wait_for_timeout(500)
             
-            # Clicar no botão de submit do login (dentro do modal)
+            # Clicar no botão de submit do login
             submit_clicked = False
             submit_selectors = [
                 'button[type="submit"]',
                 'button:has-text("Login")',
+                'button:has-text("Entrar")',
                 'input[type="submit"]',
-                '.login-form button',
-                'form button'
+                '#dnn_UserLogin_cmdLogin'
             ]
             
             for selector in submit_selectors:
                 submit_button = self.page.locator(selector)
                 if await submit_button.count() > 0:
-                    # Pegar o último botão "Login" (o do form, não o do header)
-                    await submit_button.last.click()
-                    submit_clicked = True
-                    logger.info("✅ Botão Login clicado")
-                    break
+                    try:
+                        visible_btn = submit_button.first
+                        if await visible_btn.is_visible():
+                            await visible_btn.click()
+                            submit_clicked = True
+                            logger.info("✅ Botão Login clicado")
+                            break
+                    except:
+                        continue
             
             if not submit_clicked:
                 logger.error("❌ Não encontrou botão de submit")
@@ -371,26 +379,31 @@ class ViaVerdeRPA:
             
             # Verificar indicadores de login bem sucedido
             success_indicators = [
-                'minha-via-verde' in current_url,
+                'minha-via-verde' in current_url and 'returnurl' not in current_url.lower(),
                 'dashboard' in current_url,
                 'area-reservada' in current_url,
                 await self.page.locator('text=Extratos').count() > 0,
                 await self.page.locator('text=Sair').count() > 0,
                 await self.page.locator('text=Logout').count() > 0,
-                await self.page.locator('text=Minha Via Verde').count() > 0
+                await self.page.locator('text=A Minha Via Verde').count() > 0
             ]
             
             if any(success_indicators):
                 logger.info("✅ Login bem sucedido!")
                 return True
             
-            # Verificar se há mensagem de erro
-            error_messages = await self.page.locator('.error, .alert-error, .login-error, [class*="error"]').all_text_contents()
-            if error_messages:
-                logger.error(f"❌ Erro de login: {error_messages}")
+            # Verificar se ainda está na página de login (falha)
+            if 'returnurl' in current_url.lower():
+                # Verificar mensagens de erro
+                error_text = await self.page.locator('.error, .alert, .validation-summary-errors').all_text_contents()
+                if error_text:
+                    logger.error(f"❌ Erro de login: {error_text}")
+                else:
+                    logger.error("❌ Login falhou - credenciais podem estar incorretas")
+                return False
             
-            logger.error("❌ Login falhou - não conseguiu verificar sucesso")
-            return False
+            logger.info("✅ Login aparentemente bem sucedido!")
+            return True
                 
         except Exception as e:
             logger.error(f"❌ Erro no login: {e}")
