@@ -601,13 +601,13 @@ class ViaVerdeRPA:
     
     async def exportar_excel(self) -> Optional[str]:
         """
-        Exportar os dados filtrados para Excel
+        Exportar os dados filtrados para CSV (Via Verde não oferece Excel diretamente)
         
         Returns:
             Caminho do ficheiro exportado ou None se falhar
         """
         try:
-            logger.info("📥 A exportar para Excel...")
+            logger.info("📥 A exportar dados...")
             
             await self.capturar_screenshot("11_antes_export")
             
@@ -619,69 +619,77 @@ class ViaVerdeRPA:
                 await exportar_detalhes.click()
                 await self.page.wait_for_timeout(1000)
                 
-                # Procurar opção Excel no menu dropdown
                 await self.capturar_screenshot("12_dropdown_export")
                 
-                excel_selectors = [
-                    'text=Excel',
-                    'a:has-text("Excel")',
-                    'li:has-text("Excel")',
-                    '[role="menuitem"]:has-text("Excel")'
+                # Via Verde oferece: PDF, XML, CSV, HTML (não Excel!)
+                # Usar CSV que é facilmente convertível
+                csv_selectors = [
+                    'text=CSV',
+                    'a:has-text("CSV")',
+                    'li:has-text("CSV")',
+                    '[role="menuitem"]:has-text("CSV")'
                 ]
                 
-                excel_found = False
-                for selector in excel_selectors:
+                for selector in csv_selectors:
                     try:
-                        excel_option = self.page.locator(selector).first
-                        if await excel_option.count() > 0:
+                        csv_option = self.page.locator(selector).first
+                        if await csv_option.count() > 0 and await csv_option.is_visible():
+                            logger.info(f"✅ Opção CSV encontrada: {selector}")
+                            
                             # Configurar listener para download
                             async with self.page.expect_download(timeout=30000) as download_info:
-                                await excel_option.click()
+                                await csv_option.click()
                             
                             download = await download_info.value
                             
                             # Guardar ficheiro
                             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                            filename = f"viaverde_movimentos_{timestamp}.xlsx"
+                            filename = f"viaverde_movimentos_{timestamp}.csv"
                             filepath = self.downloads_path / filename
                             
                             await download.save_as(str(filepath))
                             
-                            logger.info(f"✅ Ficheiro exportado: {filepath}")
+                            logger.info(f"✅ Ficheiro CSV exportado: {filepath}")
                             return str(filepath)
                     except Exception as e:
                         logger.warning(f"⚠️ Tentativa de exportar via {selector} falhou: {e}")
                         continue
             
-            # Alternativa: Tentar clicar diretamente num botão de Exportar da tabela
-            logger.info("⚠️ A tentar exportação alternativa...")
+            # Alternativa: Procurar por dropdown de Exportar em cada linha da tabela
+            logger.info("⚠️ A tentar exportação alternativa via tabela...")
             
-            # Procurar pela primeira linha da tabela e seu botão de exportar
-            export_btns = await self.page.locator('a.dropdown-link:has-text("Exportar")').all()
-            if len(export_btns) > 0:
-                # Clicar no primeiro que aparece na tabela (que exporta detalhes)
-                async with self.page.expect_download(timeout=30000) as download_info:
-                    await export_btns[0].click()
-                    await self.page.wait_for_timeout(1000)
-                    
-                    # Verificar se abriu dropdown
-                    excel_option = self.page.locator('text=Excel').first
-                    if await excel_option.count() > 0:
-                        await excel_option.click()
-                
-                download = await download_info.value
-                
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                filename = f"viaverde_movimentos_{timestamp}.xlsx"
-                filepath = self.downloads_path / filename
-                
-                await download.save_as(str(filepath))
-                
-                logger.info(f"✅ Ficheiro exportado (alternativo): {filepath}")
-                return str(filepath)
+            # Encontrar um botão de Exportar na tabela de extratos
+            export_btns = await self.page.locator('a.dropdown-link:has-text("Exportar"), button:has-text("Exportar")').all()
+            logger.info(f"📋 Encontrados {len(export_btns)} botões de Exportar")
+            
+            for i, btn in enumerate(export_btns[:3]):
+                try:
+                    if await btn.is_visible():
+                        await btn.click()
+                        await self.page.wait_for_timeout(1000)
+                        
+                        # Ver se apareceu dropdown com CSV
+                        csv_option = self.page.locator('text=CSV').first
+                        if await csv_option.count() > 0 and await csv_option.is_visible():
+                            async with self.page.expect_download(timeout=30000) as download_info:
+                                await csv_option.click()
+                            
+                            download = await download_info.value
+                            
+                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                            filename = f"viaverde_movimentos_{timestamp}.csv"
+                            filepath = self.downloads_path / filename
+                            
+                            await download.save_as(str(filepath))
+                            
+                            logger.info(f"✅ Ficheiro CSV exportado (alternativo): {filepath}")
+                            return str(filepath)
+                except Exception as e:
+                    logger.warning(f"⚠️ Botão {i} falhou: {e}")
+                    continue
             
             await self.capturar_screenshot("export_erro")
-            logger.error("❌ Não conseguiu exportar - nenhum botão de Excel encontrado")
+            logger.error("❌ Não conseguiu exportar - nenhuma opção CSV encontrada")
             return None
             
         except Exception as e:
