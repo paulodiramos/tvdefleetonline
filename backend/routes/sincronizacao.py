@@ -833,7 +833,13 @@ async def executar_rpa_viaverde(
         "created_by": pid
     }
     
-    await db.execucoes_rpa_viaverde.insert_one(execucao)
+    # Inserir execução na BD
+    try:
+        result = await db.execucoes_rpa_viaverde.insert_one(execucao)
+        logger.info(f"✅ Execução inserida na BD: {result.inserted_id}")
+    except Exception as insert_err:
+        logger.error(f"❌ Erro ao inserir execução: {insert_err}")
+        raise HTTPException(status_code=500, detail=f"Erro ao criar execução: {str(insert_err)}")
     
     logger.info(f"🛣️ RPA Via Verde agendado: {execucao_id} - {periodo_descricao}")
     
