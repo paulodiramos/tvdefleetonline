@@ -24,6 +24,17 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
   const [selectedPlatform, setSelectedPlatform] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   
+  // Via Verde RPA - estado para datas
+  const [viaVerdeDialog, setViaVerdeDialog] = useState(false);
+  const [viaVerdeConfig, setViaVerdeConfig] = useState({
+    tipo_periodo: 'ultima_semana',
+    data_inicio: '',
+    data_fim: '',
+    semana: '',
+    ano: new Date().getFullYear()
+  });
+  const [viaVerdeSyncing, setViaVerdeSyncing] = useState(false);
+  
   // Dashboard stats for parceiro
   const [dashboardStats, setDashboardStats] = useState({
     ganhos: 0,
