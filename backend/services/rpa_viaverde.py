@@ -629,21 +629,6 @@ class ViaVerdeRPA:
             logger.error(f"❌ Erro ao selecionar datas: {e}")
             await self.capturar_screenshot("datas_erro")
             return False
-            await ate_input.click()
-            await ate_input.fill('')
-            await ate_input.type(data_fim)
-            await self.page.wait_for_timeout(500)
-            
-            # Fechar calendário se aberto (pressionar Escape)
-            await self.page.keyboard.press('Escape')
-            await self.page.wait_for_timeout(500)
-            
-            logger.info("✅ Datas selecionadas")
-            return True
-            
-        except Exception as e:
-            logger.error(f"❌ Erro ao selecionar datas: {e}")
-            return False
     
     async def aplicar_filtro(self) -> bool:
         """Clicar no botão Filtrar para aplicar os filtros"""
