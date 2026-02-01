@@ -141,23 +141,35 @@ class ViaVerdeRPA:
         try:
             logger.info(f"📅 A selecionar período: {data_inicio} a {data_fim}")
             
-            # Clicar em "Filtrar por" para expandir o filtro
-            filtrar_por = self.page.locator('text=Filtrar por').first
-            if await filtrar_por.count() > 0:
-                await filtrar_por.click()
-                await self.page.wait_for_timeout(2000)
-                logger.info("✅ Filtro expandido")
+            await self.screenshot("antes_filtro")
             
-            await self.screenshot("filtro_expandido")
+            # O título "Filtrar por:" não é clicável
+            # Os campos de data devem estar visíveis ou precisamos expandir
             
-            # Preencher data início (De:)
+            # Tentar preencher data início (De:)
             de_input = self.page.locator('input[ng-model="vm.fromDateExtracts"]').first
+            
             if await de_input.count() > 0:
+                # Verificar se está visível
+                if not await de_input.is_visible():
+                    # Tentar expandir filtro clicando noutra área
+                    try:
+                        expand_btn = self.page.locator('[ng-click*="filter"], .filter-toggle, .expand-filter').first
+                        if await expand_btn.count() > 0:
+                            await expand_btn.click()
+                            await self.page.wait_for_timeout(1000)
+                    except:
+                        pass
+                
+                # Preencher data início
                 await de_input.click()
+                await self.page.wait_for_timeout(300)
                 await self.page.keyboard.press('Control+a')
                 await self.page.keyboard.type(data_inicio)
                 await self.page.keyboard.press('Tab')
                 logger.info(f"✅ Data início: {data_inicio}")
+            else:
+                logger.warning("⚠️ Campo de data início não encontrado")
             
             await self.page.wait_for_timeout(500)
             
@@ -165,16 +177,19 @@ class ViaVerdeRPA:
             ate_input = self.page.locator('input[ng-model="vm.toDateExtracts"]').first
             if await ate_input.count() > 0:
                 await ate_input.click()
+                await self.page.wait_for_timeout(300)
                 await self.page.keyboard.press('Control+a')
                 await self.page.keyboard.type(data_fim)
                 await self.page.keyboard.press('Escape')
                 logger.info(f"✅ Data fim: {data_fim}")
+            else:
+                logger.warning("⚠️ Campo de data fim não encontrado")
             
             await self.page.wait_for_timeout(500)
             await self.screenshot("datas_preenchidas")
             
             # Clicar em Filtrar
-            filtrar_btn = self.page.locator('button:has-text("Filtrar")').first
+            filtrar_btn = self.page.locator('button:has-text("Filtrar"), a:has-text("Filtrar")').first
             if await filtrar_btn.count() > 0:
                 await filtrar_btn.click()
                 await self.page.wait_for_timeout(3000)
@@ -185,6 +200,7 @@ class ViaVerdeRPA:
             
         except Exception as e:
             logger.error(f"❌ Erro ao selecionar datas: {e}")
+            await self.screenshot("erro_datas")
             return False
     
     async def exportar_excel_direto(self) -> Optional[str]:
