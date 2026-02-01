@@ -15,7 +15,7 @@ import base64
 from pathlib import Path
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://drivesync-9.preview.emergentagent.com/api"
+BACKEND_URL = "https://bolt-via-sync.preview.emergentagent.com/api"
 
 # Test credentials from review request
 ADMIN_CREDENTIALS = {"email": "admin@tvdefleet.com", "password": "o72ocUHy"}

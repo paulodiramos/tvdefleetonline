@@ -7,7 +7,7 @@ import requests
 import json
 
 # Get backend URL from frontend .env
-BACKEND_URL = "https://drivesync-9.preview.emergentagent.com/api"
+BACKEND_URL = "https://bolt-via-sync.preview.emergentagent.com/api"
 
 # Test credentials
 ADMIN_CREDS = {"email": "admin@tvdefleet.com", "password": "o72ocUHy"}
