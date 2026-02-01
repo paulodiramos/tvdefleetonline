@@ -633,6 +633,126 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
             </form>
           </DialogContent>
         </Dialog>
+
+        {/* Dialog Via Verde RPA */}
+        <Dialog open={viaVerdeDialog} onOpenChange={setViaVerdeDialog}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <span className="text-2xl">🛣️</span>
+                Sincronizar Via Verde
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium">Tipo de Período</Label>
+                <select
+                  className="w-full p-2 border rounded-md mt-1"
+                  value={viaVerdeConfig.tipo_periodo}
+                  onChange={(e) => setViaVerdeConfig({...viaVerdeConfig, tipo_periodo: e.target.value})}
+                >
+                  <option value="ultima_semana">Última Semana Completa</option>
+                  <option value="semana_especifica">Semana Específica</option>
+                  <option value="datas_personalizadas">Datas Personalizadas</option>
+                </select>
+              </div>
+
+              {viaVerdeConfig.tipo_periodo === 'semana_especifica' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-sm">Semana (1-53)</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max="53"
+                      placeholder="Ex: 51"
+                      value={viaVerdeConfig.semana}
+                      onChange={(e) => setViaVerdeConfig({...viaVerdeConfig, semana: e.target.value})}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Ano</Label>
+                    <Input
+                      type="number"
+                      min="2020"
+                      max="2030"
+                      value={viaVerdeConfig.ano}
+                      onChange={(e) => setViaVerdeConfig({...viaVerdeConfig, ano: parseInt(e.target.value)})}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {viaVerdeConfig.tipo_periodo === 'datas_personalizadas' && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label className="text-sm">Data Início</Label>
+                    <Input
+                      type="date"
+                      value={viaVerdeConfig.data_inicio}
+                      onChange={(e) => setViaVerdeConfig({...viaVerdeConfig, data_inicio: e.target.value})}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-sm">Data Fim</Label>
+                    <Input
+                      type="date"
+                      value={viaVerdeConfig.data_fim}
+                      onChange={(e) => setViaVerdeConfig({...viaVerdeConfig, data_fim: e.target.value})}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {viaVerdeConfig.tipo_periodo === 'ultima_semana' && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-700">
+                    Vai buscar os dados da última semana completa (segunda a domingo).
+                  </p>
+                </div>
+              )}
+
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                <p className="text-sm text-amber-700">
+                  <strong>Nota:</strong> As credenciais Via Verde devem estar configuradas em Configurações → Plataformas.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setViaVerdeDialog(false)}
+                  className="flex-1"
+                  disabled={viaVerdeSyncing}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleViaVerdeRPA}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  disabled={viaVerdeSyncing}
+                >
+                  {viaVerdeSyncing ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      A processar...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-4 h-4 mr-2" />
+                      Executar
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
