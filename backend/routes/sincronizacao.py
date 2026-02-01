@@ -837,20 +837,82 @@ async def executar_rpa_viaverde(
     
     logger.info(f"🛣️ RPA Via Verde agendado: {execucao_id} - {periodo_descricao}")
     
-    # TODO: Executar RPA em background (implementação real com Playwright)
-    # Por agora, apenas simular a resposta
+    # Executar RPA em background
+    import asyncio
+    from services.rpa_viaverde import executar_rpa_viaverde
+    
+    async def executar_rpa_background():
+        """Executar RPA em background e atualizar status"""
+        try:
+            # Atualizar status para "em_execucao"
+            await db.execucoes_rpa_viaverde.update_one(
+                {"id": execucao_id},
+                {"$set": {"status": "em_execucao", "started_at": datetime.now(timezone.utc).isoformat()}}
+            )
+            
+            # Decriptar password
+            from cryptography.fernet import Fernet
+            import os
+            ENCRYPTION_KEY = os.environ.get("ENCRYPTION_KEY")
+            password = credenciais.get("password", "")
+            
+            if ENCRYPTION_KEY and password:
+                try:
+                    cipher_suite = Fernet(ENCRYPTION_KEY.encode() if isinstance(ENCRYPTION_KEY, str) else ENCRYPTION_KEY)
+                    password = cipher_suite.decrypt(password.encode()).decode()
+                except:
+                    pass  # Password não está encriptada
+            
+            # Executar RPA
+            resultado = await executar_rpa_viaverde(
+                email=credenciais.get("email"),
+                password=password,
+                data_inicio=data_inicio,
+                data_fim=data_fim,
+                headless=True
+            )
+            
+            # Atualizar resultado na BD
+            await db.execucoes_rpa_viaverde.update_one(
+                {"id": execucao_id},
+                {"$set": {
+                    "status": "concluido" if resultado.get("sucesso") else "erro",
+                    "resultado": resultado,
+                    "ficheiro": resultado.get("ficheiro"),
+                    "screenshots": resultado.get("screenshots", []),
+                    "logs": resultado.get("logs", []),
+                    "erro": resultado.get("erro"),
+                    "finished_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            logger.info(f"✅ RPA Via Verde {execucao_id} concluído: {resultado.get('sucesso')}")
+            
+        except Exception as e:
+            logger.error(f"❌ Erro no RPA Via Verde {execucao_id}: {e}")
+            await db.execucoes_rpa_viaverde.update_one(
+                {"id": execucao_id},
+                {"$set": {
+                    "status": "erro",
+                    "erro": str(e),
+                    "finished_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+    
+    # Iniciar execução em background (não bloqueia a resposta)
+    asyncio.create_task(executar_rpa_background())
     
     return {
         "success": True,
         "execucao_id": execucao_id,
-        "status": "agendado",
+        "status": "em_execucao",
         "periodo": {
             "tipo": request.tipo_periodo,
             "data_inicio": data_inicio,
             "data_fim": data_fim,
             "descricao": periodo_descricao
         },
-        "mensagem": f"Extração Via Verde agendada para {periodo_descricao}"
+        "mensagem": f"Extração Via Verde iniciada para {periodo_descricao}"
     }
 
 
