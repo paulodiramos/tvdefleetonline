@@ -516,7 +516,7 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
                       <Settings className="w-3 h-3 mr-1" />
                       Config
                     </Button>
-                    {isConfigured && (
+                    {isConfigured && platform.id !== 'via_verde' && (
                       <Button
                         size="sm"
                         className={`flex-1 ${platform.color}`}
@@ -528,6 +528,18 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
                         ) : (
                           <Play className="w-3 h-3 mr-1" />
                         )}
+                        Sincronizar
+                      </Button>
+                    )}
+                    {/* Via Verde - Botão especial com opções de datas */}
+                    {isConfigured && platform.id === 'via_verde' && (
+                      <Button
+                        size="sm"
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                        onClick={() => setViaVerdeDialog(true)}
+                        disabled={isSyncing}
+                      >
+                        <Play className="w-3 h-3 mr-1" />
                         Sincronizar
                       </Button>
                     )}
