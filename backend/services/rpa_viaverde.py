@@ -779,6 +779,121 @@ class ViaVerdeRPA:
         logger.info(f"📸 Screenshot guardado: {filepath}")
         return filepath
     
+    async def extrair_movimentos_tabela(self, data_inicio: str, data_fim: str) -> List[Dict[str, Any]]:
+        """
+        Extrair movimentos diretamente da tabela HTML (scraping)
+        
+        Esta é uma alternativa ao download de CSV, já que a Via Verde 
+        só permite exportação por email.
+        
+        Args:
+            data_inicio: Data início no formato DD/MM/YYYY
+            data_fim: Data fim no formato DD/MM/YYYY
+            
+        Returns:
+            Lista de movimentos extraídos
+        """
+        try:
+            logger.info(f"📊 A extrair movimentos da tabela ({data_inicio} a {data_fim})...")
+            
+            # Converter datas para comparação
+            from datetime import datetime as dt
+            dt_inicio = dt.strptime(data_inicio, "%d/%m/%Y")
+            dt_fim = dt.strptime(data_fim, "%d/%m/%Y")
+            
+            movimentos = []
+            
+            # Navegar para o tab Movimentos
+            movimentos_tab = self.page.locator('a:has-text("Movimentos"), button:has-text("Movimentos")').first
+            if await movimentos_tab.count() > 0:
+                await movimentos_tab.click()
+                await self.page.wait_for_timeout(3000)
+            
+            await self.capturar_screenshot("scraping_movimentos")
+            
+            # Encontrar todas as linhas da tabela de movimentos
+            rows = await self.page.locator('table tbody tr').all()
+            logger.info(f"📋 Encontradas {len(rows)} linhas na tabela")
+            
+            for row in rows:
+                try:
+                    cells = await row.locator('td').all()
+                    if len(cells) >= 5:
+                        # Extrair dados de cada célula
+                        # Colunas típicas: Identificador, Matrícula, Descrição, Serviço, Meio Pag., Valor, Estado
+                        identificador = await cells[0].inner_text() if len(cells) > 0 else ""
+                        matricula = await cells[1].inner_text() if len(cells) > 1 else ""
+                        descricao = await cells[2].inner_text() if len(cells) > 2 else ""
+                        servico = await cells[3].inner_text() if len(cells) > 3 else ""
+                        meio_pagamento = await cells[4].inner_text() if len(cells) > 4 else ""
+                        valor_str = await cells[5].inner_text() if len(cells) > 5 else "0"
+                        
+                        # Limpar valores
+                        identificador = identificador.strip()
+                        matricula = matricula.strip()
+                        descricao = descricao.strip()
+                        servico = servico.strip()
+                        meio_pagamento = meio_pagamento.strip()
+                        
+                        # Extrair data da descrição (formato: YYYY-MM-DD HH:MM:SS)
+                        data_movimento = None
+                        import re
+                        date_match = re.search(r'(\d{4}-\d{2}-\d{2})', descricao)
+                        if date_match:
+                            try:
+                                data_movimento = dt.strptime(date_match.group(1), "%Y-%m-%d")
+                            except:
+                                pass
+                        
+                        # Verificar se está dentro do intervalo de datas
+                        if data_movimento:
+                            if not (dt_inicio <= data_movimento <= dt_fim):
+                                continue  # Pular movimentos fora do intervalo
+                        
+                        # Extrair valor numérico
+                        valor = 0.0
+                        try:
+                            valor_str = valor_str.replace('€', '').replace(',', '.').replace(' ', '').strip()
+                            valor = abs(float(valor_str)) if valor_str else 0.0
+                        except:
+                            pass
+                        
+                        # Criar registo do movimento
+                        movimento = {
+                            "id": str(uuid.uuid4()),
+                            "identificador": identificador,
+                            "matricula": matricula,
+                            "descricao": descricao,
+                            "local": descricao.split('>>')[-1].strip() if '>>' in descricao else descricao,
+                            "servico": servico,
+                            "meio_pagamento": meio_pagamento,
+                            "valor": valor,
+                            "data": data_movimento.strftime("%Y-%m-%d") if data_movimento else None,
+                            "tipo": "portagem",
+                            "market_description": "portagens"
+                        }
+                        
+                        # Calcular semana/ano
+                        if data_movimento:
+                            iso_cal = data_movimento.isocalendar()
+                            movimento["semana"] = iso_cal[1]
+                            movimento["ano"] = iso_cal[0]
+                        
+                        if movimento["valor"] > 0:
+                            movimentos.append(movimento)
+                            logger.info(f"  ✅ {movimento['data']}: {movimento['local'][:30]} = €{movimento['valor']:.2f}")
+                
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro ao processar linha: {e}")
+                    continue
+            
+            logger.info(f"📊 Extraídos {len(movimentos)} movimentos no período")
+            return movimentos
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao extrair movimentos da tabela: {e}")
+            return []
+    
     async def extrair_movimentos(
         self, 
         data_inicio: str, 
