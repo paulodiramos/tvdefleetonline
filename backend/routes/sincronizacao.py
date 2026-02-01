@@ -720,7 +720,9 @@ async def listar_logs_sincronizacao(
 # SINCRONIZAÇÃO RPA VIA VERDE (COM DATAS)
 # ==================================================
 
-class ViaVerdeRPARequest(BaseModel):
+from pydantic import BaseModel as PydanticModel
+
+class ViaVerdeRPARequest(PydanticModel):
     """Request para sincronização RPA Via Verde"""
     tipo_periodo: str = "ultima_semana"  # ultima_semana, semana_especifica, datas_personalizadas
     data_inicio: Optional[str] = None  # YYYY-MM-DD
