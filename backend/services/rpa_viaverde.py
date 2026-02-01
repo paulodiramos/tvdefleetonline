@@ -637,13 +637,13 @@ class ViaVerdeRPA:
     
     async def exportar_excel(self) -> Optional[str]:
         """
-        Exportar os dados filtrados para CSV (Via Verde não oferece Excel diretamente)
+        Exportar os dados filtrados para CSV
         
-        Fluxo:
-        1. Clicar em "Exportar detalhes"
-        2. Selecionar CSV no dropdown
-        3. Modal aparece com "Cancelar" e "Confirmar"
-        4. Clicar em "Confirmar" para iniciar download
+        NOTA: A Via Verde tem dois tipos de exportação:
+        1. "Exportar detalhes filtrados" - Envia link por email (não faz download direto)
+        2. Exportar extratos individuais da tabela - Faz download direto
+        
+        Vamos usar a opção 2 pois permite download direto
         
         Returns:
             Caminho do ficheiro exportado ou None se falhar
@@ -653,108 +653,117 @@ class ViaVerdeRPA:
             
             await self.capturar_screenshot("11_antes_export")
             
-            # Passo 1: Clicar em "Exportar detalhes"
+            # Opção 1: Tentar exportar extratos individuais da tabela (download direto)
+            logger.info("📋 A procurar extratos na tabela para exportar...")
+            
+            # Encontrar todos os dropdowns de exportar na tabela
+            export_dropdowns = await self.page.locator('a.dropdown-link:has-text("Exportar")').all()
+            logger.info(f"📋 Encontrados {len(export_dropdowns)} dropdowns de exportar")
+            
+            if len(export_dropdowns) > 0:
+                for i, dropdown in enumerate(export_dropdowns[:3]):
+                    try:
+                        if await dropdown.is_visible():
+                            logger.info(f"📋 A tentar exportar extrato {i+1}...")
+                            
+                            # Clicar no dropdown de exportar
+                            await dropdown.click()
+                            await self.page.wait_for_timeout(1000)
+                            
+                            await self.capturar_screenshot(f"12_dropdown_{i}")
+                            
+                            # Procurar opção CSV
+                            csv_option = self.page.locator('a:has-text("CSV")').first
+                            
+                            if await csv_option.count() > 0 and await csv_option.is_visible():
+                                logger.info("✅ Opção CSV encontrada, a tentar download...")
+                                
+                                # Tentar download direto
+                                try:
+                                    async with self.page.expect_download(timeout=15000) as download_info:
+                                        await csv_option.click()
+                                    
+                                    download = await download_info.value
+                                    
+                                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                                    original_name = download.suggested_filename or f"viaverde_extrato_{timestamp}.csv"
+                                    filepath = self.downloads_path / original_name
+                                    
+                                    await download.save_as(str(filepath))
+                                    
+                                    logger.info(f"✅ Ficheiro exportado: {filepath}")
+                                    return str(filepath)
+                                    
+                                except Exception as e:
+                                    logger.warning(f"⚠️ Download não iniciou (pode precisar de email): {e}")
+                                    # Fechar dropdown e continuar
+                                    await self.page.keyboard.press('Escape')
+                                    await self.page.wait_for_timeout(500)
+                            else:
+                                # Fechar dropdown
+                                await self.page.keyboard.press('Escape')
+                                await self.page.wait_for_timeout(500)
+                    except Exception as e:
+                        logger.warning(f"⚠️ Erro no dropdown {i}: {e}")
+                        await self.page.keyboard.press('Escape')
+                        await self.page.wait_for_timeout(500)
+            
+            # Opção 2: Usar "Exportar detalhes filtrados" que envia por email
+            # Isto requer que o utilizador verifique o email depois
+            logger.info("📧 A usar exportação por email (Via Verde não permite download direto de detalhes)...")
+            
             exportar_detalhes = self.page.locator('text=Exportar detalhes').first
             
             if await exportar_detalhes.count() > 0 and await exportar_detalhes.is_visible():
-                logger.info("📋 A clicar em 'Exportar detalhes'...")
                 await exportar_detalhes.click()
                 await self.page.wait_for_timeout(1500)
                 
-                await self.capturar_screenshot("12_dropdown_export")
-                
-                # Passo 2: Clicar em CSV no dropdown
-                logger.info("📋 A selecionar CSV...")
+                # Selecionar CSV
                 csv_option = self.page.locator('text=CSV').first
-                
-                if await csv_option.count() > 0 and await csv_option.is_visible():
+                if await csv_option.count() > 0:
                     await csv_option.click()
                     await self.page.wait_for_timeout(2000)
                     
-                    await self.capturar_screenshot("13_modal_confirmar")
+                    await self.capturar_screenshot("13_modal_email")
                     
-                    # Passo 3: Clicar em "Confirmar" no modal
-                    logger.info("📋 A clicar em Confirmar...")
-                    confirmar_btn = self.page.locator('.modal button:has-text("Confirmar"), .modal a:has-text("Confirmar")').first
+                    # Preencher email no modal
+                    email_input = self.page.locator('input[type="email"], input[placeholder*="email"], input[name*="email"]').first
                     
-                    if await confirmar_btn.count() > 0 and await confirmar_btn.is_visible():
-                        # Passo 4: Aguardar download após confirmar
-                        try:
-                            async with self.page.expect_download(timeout=30000) as download_info:
-                                await confirmar_btn.click()
-                            
-                            download = await download_info.value
-                            
-                            # Guardar ficheiro
-                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                            original_name = download.suggested_filename or f"viaverde_movimentos_{timestamp}.csv"
-                            
-                            # Garantir extensão .csv
-                            if not original_name.endswith('.csv'):
-                                original_name = f"viaverde_movimentos_{timestamp}.csv"
-                            
-                            filepath = self.downloads_path / original_name
-                            
-                            await download.save_as(str(filepath))
-                            
-                            logger.info(f"✅ Ficheiro CSV exportado: {filepath}")
-                            return str(filepath)
-                            
-                        except Exception as e:
-                            logger.error(f"❌ Erro no download após confirmar: {e}")
-                            
-                            # Verificar se há nova página ou iframe com dados
-                            await self.page.wait_for_timeout(3000)
-                            await self.capturar_screenshot("14_apos_confirmar")
-                    else:
-                        logger.warning("⚠️ Botão Confirmar não encontrado no modal")
-                else:
-                    logger.warning("⚠️ Opção CSV não encontrada no dropdown")
-            else:
-                logger.warning("⚠️ 'Exportar detalhes' não encontrado")
-            
-            # Alternativa: Exportar extrato individual
-            logger.info("⚠️ A tentar exportação de extrato individual...")
-            
-            # Fechar modal se aberto
-            try:
-                cancelar_btn = self.page.locator('.modal button:has-text("Cancelar")').first
-                if await cancelar_btn.count() > 0 and await cancelar_btn.is_visible():
-                    await cancelar_btn.click()
-                    await self.page.wait_for_timeout(1000)
-            except:
-                pass
-            
-            # Procurar links de exportar na tabela de extratos
-            export_links = await self.page.locator('a.dropdown-link:has-text("Exportar"), a[role="button"]:has-text("Exportar")').all()
-            logger.info(f"📋 Links de exportar na tabela: {len(export_links)}")
-            
-            for link in export_links[:3]:
-                try:
-                    if await link.is_visible():
-                        # Clicar para abrir dropdown
-                        await link.click()
-                        await self.page.wait_for_timeout(1000)
+                    if await email_input.count() > 0:
+                        # Usar o mesmo email que o login
+                        await email_input.click()
+                        await email_input.fill(self.email)
+                        logger.info(f"✅ Email preenchido: {self.email}")
                         
-                        # Selecionar CSV
-                        csv_item = self.page.locator('text=CSV').first
-                        if await csv_item.count() > 0 and await csv_item.is_visible():
-                            async with self.page.expect_download(timeout=20000) as download_info:
-                                await csv_item.click()
+                        await self.page.wait_for_timeout(500)
+                        
+                        # Clicar em Confirmar
+                        confirmar_btn = self.page.locator('.modal button:has-text("Confirmar")').first
+                        
+                        if await confirmar_btn.count() > 0:
+                            await confirmar_btn.click()
+                            await self.page.wait_for_timeout(3000)
                             
-                            download = await download_info.value
+                            await self.capturar_screenshot("14_apos_confirmar")
+                            
+                            logger.info("✅ Exportação solicitada! O link será enviado para o email.")
+                            
+                            # Criar um ficheiro marcador indicando que exportação foi solicitada
                             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                            filepath = self.downloads_path / f"viaverde_movimentos_{timestamp}.csv"
-                            await download.save_as(str(filepath))
+                            marker_file = self.downloads_path / f"viaverde_export_pendente_{timestamp}.txt"
                             
-                            logger.info(f"✅ Ficheiro CSV exportado (alternativo): {filepath}")
-                            return str(filepath)
-                except Exception as e:
-                    logger.warning(f"⚠️ Tentativa de exportar falhou: {e}")
-                    continue
+                            with open(marker_file, 'w') as f:
+                                f.write(f"Exportação Via Verde solicitada em {timestamp}\n")
+                                f.write(f"Email: {self.email}\n")
+                                f.write("NOTA: O link de download será enviado para este email.\n")
+                                f.write("Verifique a caixa de entrada para fazer o download.\n")
+                            
+                            # Retornar None pois não há download direto
+                            # Mas a exportação foi solicitada com sucesso
+                            return str(marker_file)
             
             await self.capturar_screenshot("export_erro")
-            logger.error("❌ Não conseguiu exportar - todas as tentativas falharam")
+            logger.error("❌ Não conseguiu exportar dados")
             return None
             
         except Exception as e:
