@@ -146,28 +146,69 @@ class ViaVerdeRPA:
                     
                     await self.screenshot("modal_email")
                     
-                    # Preencher email no modal
-                    email_input = self.page.locator('input[type="email"], input[placeholder*="email"]').first
-                    if await email_input.count() > 0:
-                        await email_input.fill(self.email)
-                        await self.page.wait_for_timeout(500)
+                    # O campo de email no modal tem label "Email de recepção:"
+                    # Procurar por input dentro do modal
+                    email_selectors = [
+                        '.modal input[type="text"]',
+                        '.modal input:not([type="hidden"])',
+                        'input[ng-model*="email"]',
+                        'input[ng-model*="Email"]'
+                    ]
+                    
+                    email_filled = False
+                    for selector in email_selectors:
+                        try:
+                            email_input = self.page.locator(selector).first
+                            if await email_input.count() > 0:
+                                is_visible = await email_input.is_visible()
+                                if is_visible:
+                                    await email_input.click()
+                                    await email_input.fill(self.email)
+                                    logger.info(f"✅ Email preenchido com {selector}")
+                                    email_filled = True
+                                    break
+                        except Exception as e:
+                            logger.warning(f"⚠️ Seletor {selector} falhou: {e}")
+                            continue
+                    
+                    if not email_filled:
+                        # Tentar encontrar qualquer input visível no modal
+                        try:
+                            modal_inputs = await self.page.locator('.modal input:visible').all()
+                            logger.info(f"📋 Inputs visíveis no modal: {len(modal_inputs)}")
+                            for i, inp in enumerate(modal_inputs):
+                                try:
+                                    inp_type = await inp.get_attribute('type')
+                                    if inp_type != 'hidden':
+                                        await inp.click()
+                                        await inp.fill(self.email)
+                                        email_filled = True
+                                        logger.info(f"✅ Email preenchido no input {i}")
+                                        break
+                                except:
+                                    continue
+                        except:
+                            pass
+                    
+                    await self.page.wait_for_timeout(500)
+                    await self.screenshot("email_preenchido")
+                    
+                    # Confirmar
+                    confirmar = self.page.locator('.modal button:has-text("Confirmar")').first
+                    if await confirmar.count() > 0:
+                        await confirmar.click()
+                        await self.page.wait_for_timeout(3000)
                         
-                        # Confirmar
-                        confirmar = self.page.locator('.modal button:has-text("Confirmar")').first
-                        if await confirmar.count() > 0:
-                            await confirmar.click()
-                            await self.page.wait_for_timeout(3000)
-                            
-                            await self.screenshot("confirmado")
-                            
-                            resultado["sucesso"] = True
-                            resultado["mensagem"] = (
-                                f"Exportação solicitada com sucesso!\n"
-                                f"Um email será enviado para {self.email} com o link de download.\n"
-                                f"Período: {data_inicio} a {data_fim}"
-                            )
-                            logger.info("✅ Exportação solicitada!")
-                            return resultado
+                        await self.screenshot("confirmado")
+                        
+                        resultado["sucesso"] = True
+                        resultado["mensagem"] = (
+                            f"Exportação solicitada com sucesso!\n"
+                            f"Um email será enviado para {self.email} com o link de download.\n"
+                            f"Período: {data_inicio} a {data_fim}"
+                        )
+                        logger.info("✅ Exportação solicitada!")
+                        return resultado
             
             resultado["mensagem"] = "Não foi possível solicitar exportação"
             return resultado
