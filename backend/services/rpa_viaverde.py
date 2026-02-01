@@ -6,10 +6,203 @@ Extrai movimentos/portagens entre datas específicas
 import asyncio
 import logging
 from datetime import datetime, timedelta
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from pathlib import Path
+import uuid
 
 logger = logging.getLogger(__name__)
+
+
+def parse_excel_viaverde(filepath: str) -> List[Dict[str, Any]]:
+    """
+    Parser do ficheiro Excel exportado da Via Verde
+    
+    Estrutura esperada do Excel:
+    - Data/Hora
+    - Matrícula
+    - Identificador (Via Verde)
+    - Local/Descrição
+    - Valor
+    - Tipo (Portagem, Parque, etc)
+    
+    Returns:
+        Lista de movimentos parseados
+    """
+    import pandas as pd
+    
+    try:
+        # Ler Excel
+        df = pd.read_excel(filepath)
+        
+        # Normalizar nomes das colunas (remover espaços, lowercase)
+        df.columns = [col.strip().lower().replace(' ', '_') for col in df.columns]
+        
+        movimentos = []
+        
+        for _, row in df.iterrows():
+            # Tentar extrair dados com vários nomes possíveis de colunas
+            movimento = {
+                "id": str(uuid.uuid4()),
+                "data": None,
+                "hora": None,
+                "matricula": None,
+                "identificador": None,
+                "local": None,
+                "descricao": None,
+                "valor": 0.0,
+                "tipo": None,
+                "market_description": "portagens"
+            }
+            
+            # Data/Hora
+            for col in ['data/hora', 'data_hora', 'data', 'date', 'datetime']:
+                if col in df.columns and pd.notna(row.get(col)):
+                    dt_value = row.get(col)
+                    if isinstance(dt_value, datetime):
+                        movimento["data"] = dt_value.strftime("%Y-%m-%d")
+                        movimento["hora"] = dt_value.strftime("%H:%M:%S")
+                        movimento["entry_date"] = dt_value.strftime("%Y-%m-%d")
+                    elif isinstance(dt_value, str):
+                        movimento["data"] = dt_value[:10]
+                        movimento["entry_date"] = dt_value[:10]
+                    break
+            
+            # Matrícula
+            for col in ['matrícula', 'matricula', 'plate', 'veiculo', 'vehicle']:
+                if col in df.columns and pd.notna(row.get(col)):
+                    movimento["matricula"] = str(row.get(col)).strip().upper()
+                    break
+            
+            # Identificador Via Verde
+            for col in ['identificador', 'id_viaverde', 'identifier', 'tag']:
+                if col in df.columns and pd.notna(row.get(col)):
+                    movimento["identificador"] = str(row.get(col)).strip()
+                    break
+            
+            # Local/Descrição
+            for col in ['local', 'descrição', 'descricao', 'description', 'location']:
+                if col in df.columns and pd.notna(row.get(col)):
+                    movimento["local"] = str(row.get(col)).strip()
+                    movimento["descricao"] = str(row.get(col)).strip()
+                    break
+            
+            # Valor
+            for col in ['valor', 'value', 'amount', 'total', 'preço', 'preco']:
+                if col in df.columns and pd.notna(row.get(col)):
+                    try:
+                        val = row.get(col)
+                        if isinstance(val, str):
+                            val = val.replace('€', '').replace(',', '.').strip()
+                        movimento["valor"] = abs(float(val))
+                    except:
+                        pass
+                    break
+            
+            # Tipo (Portagem, Parque, etc)
+            for col in ['tipo', 'type', 'categoria', 'category']:
+                if col in df.columns and pd.notna(row.get(col)):
+                    tipo = str(row.get(col)).strip().lower()
+                    movimento["tipo"] = tipo
+                    if 'parque' in tipo or 'estacionamento' in tipo:
+                        movimento["market_description"] = "parques"
+                    break
+            
+            # Calcular semana/ano da data
+            if movimento["data"]:
+                try:
+                    dt = datetime.strptime(movimento["data"], "%Y-%m-%d")
+                    iso_cal = dt.isocalendar()
+                    movimento["semana"] = iso_cal[1]
+                    movimento["ano"] = iso_cal[0]
+                except:
+                    pass
+            
+            # Só adicionar se tiver dados válidos
+            if movimento["data"] and movimento["valor"] > 0:
+                movimentos.append(movimento)
+        
+        logger.info(f"📊 Parsed {len(movimentos)} movimentos do Excel Via Verde")
+        return movimentos
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao parsear Excel Via Verde: {e}")
+        return []
+
+
+async def importar_movimentos_viaverde(
+    movimentos: List[Dict[str, Any]], 
+    parceiro_id: str,
+    db
+) -> Dict[str, Any]:
+    """
+    Importar movimentos parseados para a coleção portagens_viaverde
+    
+    Args:
+        movimentos: Lista de movimentos do parser
+        parceiro_id: ID do parceiro
+        db: Conexão MongoDB
+        
+    Returns:
+        Resultado da importação
+    """
+    resultado = {
+        "sucesso": True,
+        "importados": 0,
+        "duplicados": 0,
+        "erros": 0,
+        "por_semana": {}
+    }
+    
+    for mov in movimentos:
+        try:
+            # Adicionar parceiro_id
+            mov["parceiro_id"] = parceiro_id
+            mov["fonte"] = "rpa_viaverde"
+            mov["imported_at"] = datetime.now().isoformat()
+            
+            # Tentar encontrar veículo pela matrícula
+            if mov.get("matricula"):
+                veiculo = await db.vehicles.find_one({
+                    "parceiro_id": parceiro_id,
+                    "$or": [
+                        {"matricula": mov["matricula"]},
+                        {"matricula": mov["matricula"].replace("-", "")},
+                        {"matricula": {"$regex": mov["matricula"].replace("-", ""), "$options": "i"}}
+                    ]
+                }, {"_id": 0, "id": 1})
+                
+                if veiculo:
+                    mov["veiculo_id"] = veiculo["id"]
+            
+            # Verificar duplicado (mesma data, matrícula e valor)
+            existing = await db.portagens_viaverde.find_one({
+                "parceiro_id": parceiro_id,
+                "entry_date": mov.get("entry_date") or mov.get("data"),
+                "matricula": mov.get("matricula"),
+                "valor": mov.get("valor")
+            })
+            
+            if existing:
+                resultado["duplicados"] += 1
+                continue
+            
+            # Inserir
+            await db.portagens_viaverde.insert_one(mov)
+            resultado["importados"] += 1
+            
+            # Contar por semana
+            semana_key = f"{mov.get('semana', '?')}/{mov.get('ano', '?')}"
+            if semana_key not in resultado["por_semana"]:
+                resultado["por_semana"][semana_key] = {"count": 0, "total": 0}
+            resultado["por_semana"][semana_key]["count"] += 1
+            resultado["por_semana"][semana_key]["total"] += mov.get("valor", 0)
+            
+        except Exception as e:
+            logger.error(f"Erro ao importar movimento: {e}")
+            resultado["erros"] += 1
+    
+    logger.info(f"✅ Importação Via Verde: {resultado['importados']} novos, {resultado['duplicados']} duplicados, {resultado['erros']} erros")
+    return resultado
 
 
 class ViaVerdeRPA:
