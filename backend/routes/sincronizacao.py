@@ -839,7 +839,7 @@ async def executar_rpa_viaverde(
     
     # Executar RPA em background
     import asyncio
-    from services.rpa_viaverde_v2 import executar_rpa_viaverde_v2
+    from services.rpa_viaverde_v2 import executar_rpa_viaverde_v2, parse_viaverde_excel
     
     async def executar_rpa_background():
         """Executar RPA em background e atualizar status"""
@@ -863,7 +863,7 @@ async def executar_rpa_viaverde(
                 except:
                     pass  # Password não está encriptada
             
-            # Executar RPA V2 (solicita exportação por email)
+            # Executar RPA V2 (download direto de Excel)
             resultado = await executar_rpa_viaverde_v2(
                 email=credenciais.get("email"),
                 password=password,
@@ -872,8 +872,49 @@ async def executar_rpa_viaverde(
                 headless=True
             )
             
-            # NOTA: Via Verde só permite exportação por email
-            # O utilizador receberá um email com o link de download
+            # Se teve sucesso e tem movimentos, importar para a BD
+            importacao_resultado = None
+            if resultado.get("sucesso") and resultado.get("movimentos"):
+                try:
+                    movimentos = resultado["movimentos"]
+                    
+                    # Importar movimentos para a coleção portagens_viaverde
+                    importados = 0
+                    duplicados = 0
+                    
+                    for mov in movimentos:
+                        # Verificar se já existe (evitar duplicados)
+                        existing = await db.portagens_viaverde.find_one({
+                            "parceiro_id": pid,
+                            "data": mov.get("data"),
+                            "matricula": mov.get("matricula"),
+                            "valor": mov.get("valor"),
+                            "local": mov.get("local")
+                        })
+                        
+                        if not existing:
+                            mov["parceiro_id"] = pid
+                            mov["importado_em"] = datetime.now(timezone.utc).isoformat()
+                            mov["execucao_id"] = execucao_id
+                            await db.portagens_viaverde.insert_one(mov)
+                            importados += 1
+                        else:
+                            duplicados += 1
+                    
+                    importacao_resultado = {
+                        "importados": importados,
+                        "duplicados": duplicados,
+                        "total": len(movimentos)
+                    }
+                    
+                    resultado["importacao"] = importacao_resultado
+                    resultado["logs"].append(f"Importados {importados} movimentos para a BD")
+                    
+                    logger.info(f"📊 Via Verde: Importados {importados} movimentos, {duplicados} duplicados")
+                    
+                except Exception as import_err:
+                    logger.error(f"Erro ao importar movimentos Via Verde: {import_err}")
+                    resultado["logs"].append(f"Erro na importação: {str(import_err)}")
             
             # Atualizar resultado na BD
             await db.execucoes_rpa_viaverde.update_one(
@@ -881,13 +922,14 @@ async def executar_rpa_viaverde(
                 {"$set": {
                     "status": "concluido" if resultado.get("sucesso") else "erro",
                     "resultado": resultado,
+                    "ficheiro": resultado.get("ficheiro"),
+                    "total_movimentos": resultado.get("total_movimentos", 0),
+                    "importacao": importacao_resultado,
                     "mensagem": resultado.get("mensagem"),
-                    "instrucoes": resultado.get("instrucoes"),
-                    "email_destino": resultado.get("email_destino"),
                     "screenshots": resultado.get("screenshots", []),
+                    "logs": resultado.get("logs", []),
                     "erro": resultado.get("mensagem") if not resultado.get("sucesso") else None,
-                    "finished_at": datetime.now(timezone.utc).isoformat(),
-                    "export_por_email": True  # Indicar que exportação foi solicitada por email
+                    "finished_at": datetime.now(timezone.utc).isoformat()
                 }}
             )
             
