@@ -1,21 +1,23 @@
 """
-RPA Via Verde V2 - Versão Simplificada
-Solicita exportação de dados por email (limitação do site Via Verde)
+RPA Via Verde V2 - Versão com Download Direto de Excel
+Usa o botão "Exportar" na página de Movimentos para download direto
 """
 
 import asyncio
 import logging
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from pathlib import Path
+import uuid
 
 logger = logging.getLogger(__name__)
 
 
 class ViaVerdeRPA:
-    """Automação Via Verde - Solicita exportação por email"""
+    """Automação Via Verde - Download direto de Excel via página de Movimentos"""
     
     LOGIN_URL = "https://www.viaverde.pt/empresas/minha-via-verde/extratos-movimentos"
+    MOVIMENTOS_URL = "https://www.viaverde.pt/empresas/minha-via-verde/extratos-movimentos"
     
     # Seletores do formulário de login
     EMAIL_SELECTOR = "#txtUsername"
@@ -26,7 +28,8 @@ class ViaVerdeRPA:
         self.password = password
         self.browser = None
         self.page = None
-        self.screenshots_path = Path("/tmp")
+        self.downloads_path = Path("/tmp/viaverde_downloads")
+        self.downloads_path.mkdir(exist_ok=True)
     
     async def iniciar_browser(self, headless: bool = True):
         """Iniciar browser Playwright"""
@@ -89,7 +92,7 @@ class ViaVerdeRPA:
             
             await self.screenshot("campos_preenchidos")
             
-            # Clicar em Login (botão ou Enter)
+            # Clicar em Login
             try:
                 login_btn = self.page.locator('button.login-btn, button:has-text("Login")').first
                 if await login_btn.count() > 0:
@@ -114,109 +117,238 @@ class ViaVerdeRPA:
             logger.error(f"❌ Erro no login: {e}")
             return False
     
-    async def solicitar_exportacao(self, data_inicio: str, data_fim: str) -> Dict[str, Any]:
-        """
-        Solicitar exportação de dados por email
-        
-        NOTA: A Via Verde não permite download direto - apenas envia link por email
-        """
-        resultado = {
-            "sucesso": False,
-            "mensagem": None,
-            "email_destino": self.email
-        }
-        
+    async def ir_para_movimentos(self) -> bool:
+        """Navegar para o tab Movimentos"""
         try:
-            logger.info(f"📧 A solicitar exportação para {self.email}...")
+            logger.info("📑 A navegar para Movimentos...")
             
-            await self.page.wait_for_timeout(2000)
-            await self.screenshot("pagina_extratos")
+            # Clicar no tab "Movimentos"
+            movimentos_tab = self.page.locator('a:has-text("Movimentos"), li:has-text("Movimentos")').first
+            if await movimentos_tab.count() > 0:
+                await movimentos_tab.click()
+                await self.page.wait_for_timeout(3000)
+                logger.info("✅ Tab Movimentos clicado")
             
-            # Clicar em "Exportar detalhes"
-            exportar = self.page.locator('text=Exportar detalhes').first
-            if await exportar.count() > 0:
-                await exportar.click()
-                await self.page.wait_for_timeout(1500)
-                
-                # Selecionar CSV
-                csv_opt = self.page.locator('text=CSV').first
-                if await csv_opt.count() > 0:
-                    await csv_opt.click()
-                    await self.page.wait_for_timeout(2000)
-                    
-                    await self.screenshot("modal_email")
-                    
-                    # O campo de email no modal tem label "Email de recepção:"
-                    # Procurar por input dentro do modal
-                    email_selectors = [
-                        '.modal input[type="text"]',
-                        '.modal input:not([type="hidden"])',
-                        'input[ng-model*="email"]',
-                        'input[ng-model*="Email"]'
-                    ]
-                    
-                    email_filled = False
-                    for selector in email_selectors:
-                        try:
-                            email_input = self.page.locator(selector).first
-                            if await email_input.count() > 0:
-                                is_visible = await email_input.is_visible()
-                                if is_visible:
-                                    await email_input.click()
-                                    await email_input.fill(self.email)
-                                    logger.info(f"✅ Email preenchido com {selector}")
-                                    email_filled = True
-                                    break
-                        except Exception as e:
-                            logger.warning(f"⚠️ Seletor {selector} falhou: {e}")
-                            continue
-                    
-                    if not email_filled:
-                        # Tentar encontrar qualquer input visível no modal
-                        try:
-                            modal_inputs = await self.page.locator('.modal input:visible').all()
-                            logger.info(f"📋 Inputs visíveis no modal: {len(modal_inputs)}")
-                            for i, inp in enumerate(modal_inputs):
-                                try:
-                                    inp_type = await inp.get_attribute('type')
-                                    if inp_type != 'hidden':
-                                        await inp.click()
-                                        await inp.fill(self.email)
-                                        email_filled = True
-                                        logger.info(f"✅ Email preenchido no input {i}")
-                                        break
-                                except:
-                                    continue
-                        except:
-                            pass
-                    
-                    await self.page.wait_for_timeout(500)
-                    await self.screenshot("email_preenchido")
-                    
-                    # Confirmar
-                    confirmar = self.page.locator('.modal button:has-text("Confirmar")').first
-                    if await confirmar.count() > 0:
-                        await confirmar.click()
-                        await self.page.wait_for_timeout(3000)
-                        
-                        await self.screenshot("confirmado")
-                        
-                        resultado["sucesso"] = True
-                        resultado["mensagem"] = (
-                            f"Exportação solicitada com sucesso!\n"
-                            f"Um email será enviado para {self.email} com o link de download.\n"
-                            f"Período: {data_inicio} a {data_fim}"
-                        )
-                        logger.info("✅ Exportação solicitada!")
-                        return resultado
-            
-            resultado["mensagem"] = "Não foi possível solicitar exportação"
-            return resultado
+            await self.screenshot("tab_movimentos")
+            return True
             
         except Exception as e:
-            resultado["mensagem"] = f"Erro: {str(e)}"
-            logger.error(f"❌ Erro: {e}")
-            return resultado
+            logger.error(f"❌ Erro ao navegar para Movimentos: {e}")
+            return False
+    
+    async def expandir_filtro_e_selecionar_datas(self, data_inicio: str, data_fim: str) -> bool:
+        """Expandir filtro e selecionar datas"""
+        try:
+            logger.info(f"📅 A selecionar período: {data_inicio} a {data_fim}")
+            
+            # Clicar em "Filtrar por" para expandir o filtro
+            filtrar_por = self.page.locator('text=Filtrar por').first
+            if await filtrar_por.count() > 0:
+                await filtrar_por.click()
+                await self.page.wait_for_timeout(2000)
+                logger.info("✅ Filtro expandido")
+            
+            await self.screenshot("filtro_expandido")
+            
+            # Preencher data início (De:)
+            de_input = self.page.locator('input[ng-model="vm.fromDateExtracts"]').first
+            if await de_input.count() > 0:
+                await de_input.click()
+                await self.page.keyboard.press('Control+a')
+                await self.page.keyboard.type(data_inicio)
+                await self.page.keyboard.press('Tab')
+                logger.info(f"✅ Data início: {data_inicio}")
+            
+            await self.page.wait_for_timeout(500)
+            
+            # Preencher data fim (Até:)
+            ate_input = self.page.locator('input[ng-model="vm.toDateExtracts"]').first
+            if await ate_input.count() > 0:
+                await ate_input.click()
+                await self.page.keyboard.press('Control+a')
+                await self.page.keyboard.type(data_fim)
+                await self.page.keyboard.press('Escape')
+                logger.info(f"✅ Data fim: {data_fim}")
+            
+            await self.page.wait_for_timeout(500)
+            await self.screenshot("datas_preenchidas")
+            
+            # Clicar em Filtrar
+            filtrar_btn = self.page.locator('button:has-text("Filtrar")').first
+            if await filtrar_btn.count() > 0:
+                await filtrar_btn.click()
+                await self.page.wait_for_timeout(3000)
+                logger.info("✅ Filtro aplicado")
+            
+            await self.screenshot("resultados_filtrados")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao selecionar datas: {e}")
+            return False
+    
+    async def exportar_excel_direto(self) -> Optional[str]:
+        """
+        Exportar Excel usando o botão "Exportar" na página de Movimentos
+        Este botão faz download direto sem precisar de email!
+        """
+        try:
+            logger.info("📥 A exportar Excel diretamente...")
+            
+            await self.screenshot("antes_export")
+            
+            # Procurar o botão "Exportar" na página de movimentos
+            # Seletor: a.link-download.dropdown-link ou text="Exportar"
+            exportar_btn_selectors = [
+                'a.link-download.dropdown-link:has-text("Exportar")',
+                'a.dropdown-link:has-text("Exportar")',
+                'text=Exportar excel',
+                'a:has-text("Exportar")'
+            ]
+            
+            for selector in exportar_btn_selectors:
+                try:
+                    exportar_btn = self.page.locator(selector).first
+                    if await exportar_btn.count() > 0 and await exportar_btn.is_visible():
+                        logger.info(f"✅ Botão Exportar encontrado: {selector}")
+                        await exportar_btn.click()
+                        await self.page.wait_for_timeout(1500)
+                        
+                        await self.screenshot("dropdown_exportar")
+                        
+                        # Selecionar Excel no dropdown
+                        excel_option = self.page.locator('a:has-text("Excel"), li:has-text("Excel"), text=Excel').first
+                        
+                        if await excel_option.count() > 0 and await excel_option.is_visible():
+                            logger.info("✅ Opção Excel encontrada, a iniciar download...")
+                            
+                            # Aguardar download
+                            async with self.page.expect_download(timeout=30000) as download_info:
+                                await excel_option.click()
+                            
+                            download = await download_info.value
+                            
+                            # Guardar ficheiro
+                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                            original_name = download.suggested_filename or f"viaverde_{timestamp}.xlsx"
+                            filepath = self.downloads_path / original_name
+                            
+                            await download.save_as(str(filepath))
+                            
+                            logger.info(f"🎉 Excel exportado com sucesso: {filepath}")
+                            return str(filepath)
+                        
+                        break
+                except Exception as e:
+                    logger.warning(f"⚠️ Tentativa com {selector} falhou: {e}")
+                    continue
+            
+            # Se não encontrou o botão de exportar, tentar alternativa
+            logger.warning("⚠️ Botão de exportar não encontrado, a tentar alternativa...")
+            await self.screenshot("export_erro")
+            return None
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao exportar Excel: {e}")
+            await self.screenshot("export_erro")
+            return None
+
+
+def parse_viaverde_excel(filepath: str) -> List[Dict[str, Any]]:
+    """
+    Parser do ficheiro Excel exportado da Via Verde
+    """
+    import pandas as pd
+    
+    try:
+        # Ler Excel
+        if filepath.endswith('.csv'):
+            for encoding in ['utf-8', 'latin-1', 'cp1252']:
+                try:
+                    df = pd.read_csv(filepath, encoding=encoding, sep=None, engine='python')
+                    break
+                except:
+                    continue
+        else:
+            df = pd.read_excel(filepath)
+        
+        logger.info(f"📋 Ficheiro lido: {len(df)} linhas")
+        logger.info(f"📋 Colunas: {list(df.columns)}")
+        
+        # Normalizar colunas
+        df.columns = [col.strip().lower().replace(' ', '_').replace('/', '_') for col in df.columns]
+        
+        movimentos = []
+        
+        for _, row in df.iterrows():
+            movimento = {
+                "id": str(uuid.uuid4()),
+                "data": None,
+                "hora": None,
+                "matricula": None,
+                "identificador": None,
+                "local": None,
+                "descricao": None,
+                "valor": 0.0,
+                "tipo": "portagem",
+                "market_description": "portagens"
+            }
+            
+            # Data
+            for col in ['data', 'data_hora', 'date', 'data_movimento']:
+                if col in df.columns and pd.notna(row.get(col)):
+                    dt_value = row.get(col)
+                    if isinstance(dt_value, datetime):
+                        movimento["data"] = dt_value.strftime("%Y-%m-%d")
+                        movimento["hora"] = dt_value.strftime("%H:%M:%S")
+                    elif isinstance(dt_value, str):
+                        movimento["data"] = dt_value[:10]
+                    break
+            
+            # Matrícula
+            for col in ['matrícula', 'matricula', 'plate', 'viatura']:
+                if col in df.columns and pd.notna(row.get(col)):
+                    movimento["matricula"] = str(row.get(col)).strip().upper()
+                    break
+            
+            # Local/Descrição
+            for col in ['descrição', 'descricao', 'local', 'description']:
+                if col in df.columns and pd.notna(row.get(col)):
+                    movimento["local"] = str(row.get(col)).strip()
+                    movimento["descricao"] = str(row.get(col)).strip()
+                    break
+            
+            # Valor
+            for col in ['valor', 'value', 'amount', 'total']:
+                if col in df.columns and pd.notna(row.get(col)):
+                    try:
+                        val = row.get(col)
+                        if isinstance(val, str):
+                            val = val.replace('€', '').replace(',', '.').strip()
+                        movimento["valor"] = abs(float(val))
+                    except:
+                        pass
+                    break
+            
+            # Calcular semana
+            if movimento["data"]:
+                try:
+                    dt = datetime.strptime(movimento["data"], "%Y-%m-%d")
+                    iso_cal = dt.isocalendar()
+                    movimento["semana"] = iso_cal[1]
+                    movimento["ano"] = iso_cal[0]
+                except:
+                    pass
+            
+            if movimento["valor"] > 0:
+                movimentos.append(movimento)
+        
+        logger.info(f"📊 Parseados {len(movimentos)} movimentos")
+        return movimentos
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao parsear Excel: {e}")
+        return []
 
 
 async def executar_rpa_viaverde_v2(
@@ -227,53 +359,77 @@ async def executar_rpa_viaverde_v2(
     headless: bool = True
 ) -> Dict[str, Any]:
     """
-    Executar RPA Via Verde - Solicita exportação por email
+    Executar RPA Via Verde - Download direto de Excel
     
-    IMPORTANTE: A Via Verde não permite download direto.
-    Os dados serão enviados para o email fornecido.
+    Usa o botão "Exportar" na página de Movimentos para download direto,
+    sem necessidade de receber email.
     """
     resultado = {
         "sucesso": False,
+        "ficheiro": None,
+        "movimentos": [],
+        "total_movimentos": 0,
         "mensagem": None,
-        "email_destino": email,
-        "periodo": f"{data_inicio} a {data_fim}",
-        "screenshots": []
+        "screenshots": [],
+        "logs": []
     }
     
     rpa = ViaVerdeRPA(email, password)
     
     try:
         await rpa.iniciar_browser(headless=headless)
+        resultado["logs"].append("Browser iniciado")
         
+        # Login
         if not await rpa.fazer_login():
             resultado["mensagem"] = "Falha no login. Verifique as credenciais."
+            resultado["logs"].append("Login falhou")
             return resultado
+        resultado["logs"].append("Login bem sucedido")
         
-        # Converter datas
+        # Ir para Movimentos
+        await rpa.ir_para_movimentos()
+        resultado["logs"].append("Navegou para Movimentos")
+        
+        # Converter datas para formato DD/MM/YYYY
         from datetime import datetime as dt
         dt_inicio = dt.strptime(data_inicio, "%Y-%m-%d")
         dt_fim = dt.strptime(data_fim, "%Y-%m-%d")
         data_inicio_fmt = dt_inicio.strftime("%d/%m/%Y")
         data_fim_fmt = dt_fim.strftime("%d/%m/%Y")
         
-        export_result = await rpa.solicitar_exportacao(data_inicio_fmt, data_fim_fmt)
+        # Selecionar datas e filtrar
+        await rpa.expandir_filtro_e_selecionar_datas(data_inicio_fmt, data_fim_fmt)
+        resultado["logs"].append(f"Período selecionado: {data_inicio_fmt} a {data_fim_fmt}")
         
-        resultado["sucesso"] = export_result["sucesso"]
-        resultado["mensagem"] = export_result["mensagem"]
+        # Exportar Excel diretamente
+        ficheiro = await rpa.exportar_excel_direto()
         
-        if export_result["sucesso"]:
-            resultado["instrucoes"] = (
-                "Os dados da Via Verde serão enviados para o seu email.\n"
-                "1. Verifique a caixa de entrada do email\n"
-                "2. Clique no link de download\n"
-                "3. Importe o ficheiro CSV no sistema"
-            )
+        if ficheiro:
+            resultado["ficheiro"] = ficheiro
+            resultado["logs"].append(f"Excel exportado: {ficheiro}")
+            
+            # Parsear o Excel
+            movimentos = parse_viaverde_excel(ficheiro)
+            
+            if movimentos:
+                resultado["movimentos"] = movimentos
+                resultado["total_movimentos"] = len(movimentos)
+                resultado["logs"].append(f"Parseados {len(movimentos)} movimentos")
+            
+            resultado["sucesso"] = True
+            resultado["mensagem"] = f"Excel exportado com sucesso! {len(movimentos)} movimentos encontrados."
+        else:
+            resultado["mensagem"] = "Não foi possível exportar o Excel"
+            resultado["logs"].append("Exportação falhou")
         
     except Exception as e:
         resultado["mensagem"] = f"Erro: {str(e)}"
+        resultado["logs"].append(f"Erro: {str(e)}")
         logger.error(f"❌ Erro geral: {e}")
         
     finally:
         await rpa.fechar_browser()
     
     return resultado
+
