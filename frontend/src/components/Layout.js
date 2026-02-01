@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { 
   Users, Car, Truck, FileText, DollarSign, MessageSquare, 
   Building, ClipboardCheck, Package, Settings, LogOut, ChevronDown, 
-  Shield, Bell, Menu, X, Home, User, HardDrive, Building2, MessageCircle
+  Shield, Bell, Menu, X, Home, User, HardDrive, Building2, MessageCircle, Zap
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
