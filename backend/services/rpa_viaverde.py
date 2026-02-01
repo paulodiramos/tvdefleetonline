@@ -276,11 +276,11 @@ class ViaVerdeRPA:
         logger.info("🌐 Browser fechado")
     
     async def fazer_login(self) -> bool:
-        """Fazer login na Via Verde Empresas usando os seletores DNN específicos"""
+        """Fazer login na Via Verde Empresas usando o modal de login"""
         try:
             logger.info(f"🔐 A fazer login com {self.email}...")
             
-            # Aceder directamente à URL de extratos (força redirect para login)
+            # Aceder directamente à URL de extratos (força o modal de login)
             await self.page.goto(self.LOGIN_URL, wait_until="networkidle")
             await self.page.wait_for_timeout(3000)
             
@@ -289,11 +289,19 @@ class ViaVerdeRPA:
             
             # Aceitar cookies se aparecer
             try:
-                accept_cookies = self.page.locator('button:has-text("Accept All"), button:has-text("Aceitar"), button:has-text("Aceito")')
-                if await accept_cookies.count() > 0:
-                    await accept_cookies.first.click()
-                    await self.page.wait_for_timeout(1000)
-                    logger.info("✅ Cookies aceites")
+                cookie_selectors = [
+                    'button:has-text("Aceitar")',
+                    'button:has-text("Accept")',
+                    'button:has-text("Accept All")',
+                    '#onetrust-accept-btn-handler'
+                ]
+                for selector in cookie_selectors:
+                    cookie_btn = self.page.locator(selector)
+                    if await cookie_btn.count() > 0:
+                        await cookie_btn.first.click()
+                        await self.page.wait_for_timeout(1000)
+                        logger.info("✅ Cookies aceites")
+                        break
             except:
                 pass
             
@@ -303,72 +311,191 @@ class ViaVerdeRPA:
             
             # Se já estiver na página de extratos após login, sucesso
             if "extratos" in current_url.lower() and "returnurl" not in current_url.lower():
-                logger.info("✅ Já está logado!")
-                return True
-            
-            # Aguardar formulário de login DNN específico da Via Verde
-            logger.info("⏳ A aguardar formulário de login...")
-            
-            # Os seletores específicos do DNN da Via Verde
-            try:
-                # Aguardar que o campo de username esteja visível
-                await self.page.wait_for_selector(self.USERNAME_SELECTOR, timeout=15000)
-                logger.info("✅ Formulário de login encontrado")
-            except:
-                # Tentar scroll para mostrar o formulário (está no rodapé)
-                logger.info("⚠️ A fazer scroll para encontrar formulário...")
-                await self.page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-                await self.page.wait_for_timeout(2000)
-                await self.capturar_screenshot("02_apos_scroll")
-                
+                # Verificar se não tem modal de login visível
+                modal_visible = False
                 try:
-                    await self.page.wait_for_selector(self.USERNAME_SELECTOR, timeout=10000)
+                    modal = self.page.locator('.modal, [class*="Modal"], [class*="modal"]')
+                    if await modal.count() > 0 and await modal.first.is_visible():
+                        modal_visible = True
                 except:
-                    logger.error("❌ Formulário de login não encontrado")
-                    return False
+                    pass
+                
+                if not modal_visible:
+                    logger.info("✅ Já está logado!")
+                    return True
             
-            # Screenshot antes de preencher
-            await self.capturar_screenshot("03_formulario_login")
+            # O modal de login deve aparecer automaticamente
+            logger.info("⏳ A aguardar modal de login...")
+            await self.page.wait_for_timeout(2000)
+            await self.capturar_screenshot("02_modal_login")
             
-            # Preencher Username (email)
-            logger.info(f"📝 A preencher username: {self.email}")
-            username_field = self.page.locator(self.USERNAME_SELECTOR)
-            await username_field.scroll_into_view_if_needed()
-            await username_field.click()
-            await username_field.fill("")  # Limpar
-            await username_field.fill(self.email)
+            # ===== PREENCHER EMAIL =====
+            logger.info(f"📝 A preencher email: {self.email}")
+            email_filled = False
+            
+            # Estratégia 1: Procurar por placeholder "Email"
+            try:
+                email_input = self.page.locator('input[placeholder="Email"]')
+                if await email_input.count() > 0 and await email_input.first.is_visible():
+                    await email_input.first.click()
+                    await email_input.first.fill(self.email)
+                    email_filled = True
+                    logger.info("✅ Email preenchido (placeholder)")
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao preencher email por placeholder: {e}")
+            
+            # Estratégia 2: Procurar por label "Email"
+            if not email_filled:
+                try:
+                    # Procurar input perto do label "Email"
+                    email_input = self.page.locator('label:has-text("Email") ~ input, label:has-text("Email") + input')
+                    if await email_input.count() > 0:
+                        await email_input.first.click()
+                        await email_input.first.fill(self.email)
+                        email_filled = True
+                        logger.info("✅ Email preenchido (label)")
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro ao preencher email por label: {e}")
+            
+            # Estratégia 3: Procurar por type="email" dentro de modal
+            if not email_filled:
+                try:
+                    all_email_inputs = await self.page.locator('input[type="email"], input[type="text"]').all()
+                    for inp in all_email_inputs:
+                        if await inp.is_visible():
+                            placeholder = await inp.get_attribute('placeholder')
+                            if placeholder and 'email' in placeholder.lower():
+                                await inp.click()
+                                await inp.fill(self.email)
+                                email_filled = True
+                                logger.info("✅ Email preenchido (type)")
+                                break
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro ao preencher email por type: {e}")
+            
+            # Estratégia 4: Preencher o primeiro input visível no modal
+            if not email_filled:
+                try:
+                    all_inputs = await self.page.locator('input:visible').all()
+                    logger.info(f"📋 Encontrados {len(all_inputs)} inputs visíveis")
+                    if len(all_inputs) >= 1:
+                        # O primeiro input geralmente é o email
+                        await all_inputs[0].click()
+                        await all_inputs[0].fill(self.email)
+                        email_filled = True
+                        logger.info("✅ Email preenchido (primeiro input)")
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro ao preencher primeiro input: {e}")
+            
+            if not email_filled:
+                logger.error("❌ Não conseguiu preencher o campo de email")
+                await self.capturar_screenshot("03_erro_email")
+                return False
+            
             await self.page.wait_for_timeout(500)
-            logger.info("✅ Username preenchido")
             
-            # Preencher Password
+            # ===== PREENCHER PASSWORD =====
             logger.info("📝 A preencher password...")
-            password_field = self.page.locator(self.PASSWORD_SELECTOR)
-            await password_field.scroll_into_view_if_needed()
-            await password_field.click()
-            await password_field.fill("")  # Limpar
-            await password_field.fill(self.password)
+            password_filled = False
+            
+            # Estratégia 1: Procurar por type="password"
+            try:
+                pwd_input = self.page.locator('input[type="password"]')
+                if await pwd_input.count() > 0 and await pwd_input.first.is_visible():
+                    await pwd_input.first.click()
+                    await pwd_input.first.fill(self.password)
+                    password_filled = True
+                    logger.info("✅ Password preenchida (type=password)")
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao preencher password: {e}")
+            
+            # Estratégia 2: Procurar por placeholder
+            if not password_filled:
+                try:
+                    pwd_selectors = ['input[placeholder="Palavra-passe"]', 'input[placeholder="Password"]']
+                    for sel in pwd_selectors:
+                        pwd_input = self.page.locator(sel)
+                        if await pwd_input.count() > 0:
+                            await pwd_input.first.click()
+                            await pwd_input.first.fill(self.password)
+                            password_filled = True
+                            logger.info("✅ Password preenchida (placeholder)")
+                            break
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro ao preencher password por placeholder: {e}")
+            
+            if not password_filled:
+                logger.error("❌ Não conseguiu preencher o campo de password")
+                await self.capturar_screenshot("03_erro_password")
+                return False
+            
             await self.page.wait_for_timeout(500)
-            logger.info("✅ Password preenchida")
             
             # Screenshot após preencher campos
             await self.capturar_screenshot("04_campos_preenchidos")
             
-            # Clicar no botão Login
+            # ===== CLICAR NO BOTÃO LOGIN =====
             logger.info("🔘 A clicar no botão Login...")
-            login_button = self.page.locator(self.LOGIN_BUTTON_SELECTOR)
-            await login_button.scroll_into_view_if_needed()
-            await login_button.click()
-            logger.info("✅ Botão de login clicado")
+            login_clicked = False
+            
+            # Estratégia 1: Botão com texto "Login" (mais específico)
+            try:
+                login_btns = [
+                    self.page.get_by_role('button', name='Login', exact=True),
+                    self.page.locator('button:has-text("Login")'),
+                    self.page.locator('.login-btn, .btn-login'),
+                    self.page.locator('button[type="submit"]')
+                ]
+                
+                for btn in login_btns:
+                    if await btn.count() > 0:
+                        first_btn = btn.first
+                        if await first_btn.is_visible():
+                            await first_btn.click()
+                            login_clicked = True
+                            logger.info("✅ Botão de login clicado")
+                            break
+            except Exception as e:
+                logger.warning(f"⚠️ Erro ao clicar no botão: {e}")
+            
+            # Estratégia 2: Pressionar Enter
+            if not login_clicked:
+                try:
+                    await self.page.keyboard.press('Enter')
+                    login_clicked = True
+                    logger.info("✅ Login via Enter")
+                except:
+                    pass
+            
+            if not login_clicked:
+                logger.error("❌ Não conseguiu clicar no botão de login")
+                await self.capturar_screenshot("05_erro_login_btn")
+                return False
             
             # Aguardar navegação/resposta
+            logger.info("⏳ A aguardar resposta do login...")
             await self.page.wait_for_timeout(5000)
             
             # Screenshot após login
-            await self.capturar_screenshot("05_apos_login")
+            await self.capturar_screenshot("06_apos_login")
             
             # Verificar se o login foi bem sucedido
             current_url = self.page.url
             logger.info(f"📍 URL após login: {current_url}")
+            
+            # Verificar se o modal fechou
+            modal_gone = True
+            try:
+                modal = self.page.locator('.modal:visible, [class*="Modal"]:visible')
+                if await modal.count() > 0:
+                    # Modal ainda visível - verificar se há erro
+                    error_text = await self.page.locator('.error, .alert-danger, [class*="error"]').all_text_contents()
+                    if error_text and any(t.strip() for t in error_text):
+                        logger.error(f"❌ Erro no login: {error_text}")
+                        return False
+                    modal_gone = False
+            except:
+                pass
             
             # Verificar por elementos que indicam login bem sucedido
             login_indicators = [
@@ -377,7 +504,8 @@ class ViaVerdeRPA:
                 'text=Sair',
                 'text=Logout',
                 '.user-logged',
-                '#dnn_dnnUSER_userNameLink'  # Link com nome do utilizador após login
+                'text=Filtrar',
+                'text=Exportar'
             ]
             
             for indicator in login_indicators:
@@ -389,31 +517,16 @@ class ViaVerdeRPA:
                 except:
                     continue
             
-            # Verificar se há mensagem de erro
-            error_selectors = [
-                '.dnnFormValidationSummary',
-                '.validation-summary-errors',
-                '.error-message',
-                'span[id*="Error"]',
-                '.alert-danger'
-            ]
+            # Se o modal fechou, assumir sucesso
+            if modal_gone:
+                logger.info("✅ Modal de login fechou - assumindo login bem sucedido")
+                return True
             
-            for selector in error_selectors:
-                try:
-                    error_elem = self.page.locator(selector)
-                    if await error_elem.count() > 0:
-                        error_text = await error_elem.all_text_contents()
-                        if error_text and any(t.strip() for t in error_text):
-                            logger.error(f"❌ Erro no login: {error_text}")
-                            return False
-                except:
-                    continue
-            
-            # Se não encontrou indicadores mas também não há erro, tentar navegar
+            # Se chegamos aqui, tentar navegar para extratos para confirmar
             logger.warning("⚠️ Não foi possível confirmar login, a tentar navegar para extratos...")
             await self.page.goto(self.EXTRATOS_URL, wait_until="networkidle")
             await self.page.wait_for_timeout(3000)
-            await self.capturar_screenshot("06_tentativa_extratos")
+            await self.capturar_screenshot("07_tentativa_extratos")
             
             # Verificar novamente
             if "returnurl" not in self.page.url.lower():
