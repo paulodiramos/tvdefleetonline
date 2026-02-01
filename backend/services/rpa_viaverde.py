@@ -958,18 +958,42 @@ class ViaVerdeRPA:
             resultado["logs"].append("Filtro aplicado")
             resultado["screenshots"].append(await self.capturar_screenshot("resultados"))
             
-            # 6. Exportar Excel
-            ficheiro = await self.exportar_excel()
-            if not ficheiro:
-                resultado["erro"] = "Falha ao exportar Excel"
-                resultado["screenshots"].append(await self.capturar_screenshot("export_erro"))
-                return resultado
+            # 6. Tentar exportar ou fazer scraping
+            # Primeiro tentamos o scraping direto da tabela (mais fiável)
+            logger.info("📊 A tentar extrair movimentos diretamente da tabela...")
+            movimentos = await self.extrair_movimentos_tabela(data_inicio, data_fim)
             
-            resultado["ficheiro"] = ficheiro
-            resultado["logs"].append(f"Ficheiro exportado: {ficheiro}")
-            resultado["sucesso"] = True
+            if movimentos and len(movimentos) > 0:
+                # Guardar movimentos em ficheiro JSON
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                json_file = self.downloads_path / f"viaverde_movimentos_{timestamp}.json"
+                
+                import json
+                with open(json_file, 'w', encoding='utf-8') as f:
+                    json.dump(movimentos, f, ensure_ascii=False, indent=2)
+                
+                resultado["ficheiro"] = str(json_file)
+                resultado["movimentos"] = movimentos
+                resultado["total_movimentos"] = len(movimentos)
+                resultado["logs"].append(f"Extraídos {len(movimentos)} movimentos via scraping")
+                resultado["sucesso"] = True
+                
+                logger.info(f"🎉 Extração por scraping concluída! {len(movimentos)} movimentos")
+            else:
+                # Se scraping falhou, tentar exportação por email
+                logger.info("⚠️ Scraping não encontrou movimentos, a tentar exportação por email...")
+                ficheiro = await self.exportar_excel()
+                
+                if ficheiro:
+                    resultado["ficheiro"] = ficheiro
+                    resultado["logs"].append(f"Exportação solicitada: {ficheiro}")
+                    resultado["sucesso"] = True
+                    resultado["export_por_email"] = True
+                else:
+                    resultado["erro"] = "Não foram encontrados movimentos no período especificado"
+                    resultado["screenshots"].append(await self.capturar_screenshot("sem_dados"))
             
-            logger.info("🎉 Extração concluída com sucesso!")
+            logger.info("🎉 Extração concluída!")
             
         except Exception as e:
             resultado["erro"] = str(e)
