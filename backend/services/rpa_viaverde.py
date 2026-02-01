@@ -435,7 +435,7 @@ class ViaVerdeRPA:
             return False
     
     async def navegar_para_extratos(self) -> bool:
-        """Navegar para a página de Extratos e Movimentos"""
+        """Navegar para a página de Extratos e Movimentos e ir ao tab Movimentos"""
         try:
             logger.info("📄 A navegar para Extratos e Movimentos...")
             
@@ -443,32 +443,43 @@ class ViaVerdeRPA:
             current_url = self.page.url
             if "extratos" in current_url.lower() or "movimentos" in current_url.lower():
                 logger.info("✅ Já está na página de extratos")
-                await self.capturar_screenshot("07_ja_em_extratos")
-                return True
+            else:
+                # Se não estamos, navegar diretamente
+                await self.page.goto(self.EXTRATOS_URL, wait_until="networkidle")
+                await self.page.wait_for_timeout(3000)
             
-            # Se não estamos, navegar diretamente
-            await self.page.goto(self.EXTRATOS_URL, wait_until="networkidle")
-            await self.page.wait_for_timeout(3000)
-            
-            # Verificar se carregou corretamente
             await self.capturar_screenshot("07_pagina_extratos")
             
-            # Verificar se há elementos da página de extratos
-            extratos_indicators = [
+            # Clicar no tab "Movimentos" para poder filtrar por datas
+            logger.info("📑 A clicar no tab Movimentos...")
+            
+            movimentos_tab_selectors = [
                 'text=Movimentos',
-                'text=Filtrar',
-                'text=Exportar',
-                'text=De',
-                'text=Até'
+                'a:has-text("Movimentos")',
+                'button:has-text("Movimentos")',
+                '[role="tab"]:has-text("Movimentos")'
             ]
             
-            for indicator in extratos_indicators:
-                if await self.page.locator(indicator).count() > 0:
-                    logger.info(f"✅ Página de extratos confirmada: {indicator}")
-                    return True
+            tab_clicked = False
+            for selector in movimentos_tab_selectors:
+                try:
+                    tab = self.page.locator(selector).first
+                    if await tab.count() > 0:
+                        is_visible = await tab.is_visible()
+                        if is_visible:
+                            await tab.click()
+                            tab_clicked = True
+                            logger.info(f"✅ Tab Movimentos clicado: {selector}")
+                            break
+                except:
+                    continue
             
-            # Se não encontrou indicadores, pode ainda assim estar correto
-            logger.warning("⚠️ Indicadores de extratos não encontrados, continuando...")
+            if not tab_clicked:
+                logger.warning("⚠️ Tab Movimentos não encontrado, continuando na página atual")
+            
+            await self.page.wait_for_timeout(2000)
+            await self.capturar_screenshot("08_tab_movimentos")
+            
             return True
             
         except Exception as e:
@@ -486,38 +497,138 @@ class ViaVerdeRPA:
         try:
             logger.info(f"📅 A selecionar datas: {data_inicio} a {data_fim}")
             
-            # Limpar filtros existentes primeiro
-            limpar_button = self.page.get_by_role('button', name='Limpar')
-            if await limpar_button.count() > 0:
-                await limpar_button.click()
-                await self.page.wait_for_timeout(1000)
+            await self.capturar_screenshot("09_antes_datas")
             
-            # Campo "De" (data início)
-            # Tentar encontrar o campo de data início
-            de_input = self.page.locator('input').filter(has_text='').nth(0)  # Primeiro input de data
+            # Primeiro, encontrar os campos de data
+            # Na página de Movimentos, os campos costumam ter formatos diferentes
             
-            # Alternativa: procurar pelo label "De"
-            de_container = self.page.locator('label:has-text("De")').locator('..')
-            de_input = de_container.locator('input').first
+            # Estratégia 1: Procurar inputs de tipo date ou datepicker
+            date_inputs = await self.page.locator('input[type="date"], input.datepicker, input[ng-model*="Date"], input[uib-datepicker-popup]').all()
+            logger.info(f"📋 Encontrados {len(date_inputs)} inputs de data")
             
-            if await de_input.count() == 0:
-                # Tentar outro seletor
-                de_input = self.page.locator('[placeholder*="DD/MM"]').first
+            # Estratégia 2: Procurar por labels/placeholders
+            if len(date_inputs) < 2:
+                # Tentar encontrar todos os inputs visíveis na secção de filtros
+                all_visible_inputs = await self.page.locator('input:visible').all()
+                logger.info(f"📋 Inputs visíveis totais: {len(all_visible_inputs)}")
+                
+                for i, inp in enumerate(all_visible_inputs[:10]):
+                    try:
+                        inp_type = await inp.get_attribute('type')
+                        placeholder = await inp.get_attribute('placeholder')
+                        ng_model = await inp.get_attribute('ng-model')
+                        logger.info(f"  Input {i}: type={inp_type}, placeholder={placeholder}, ng-model={ng_model}")
+                    except:
+                        pass
             
-            # Limpar e preencher data início
-            await de_input.click()
-            await de_input.fill('')
-            await de_input.type(data_inicio)
+            # Procurar especificamente pelos campos de data "De" e "Até"
+            de_input = None
+            ate_input = None
+            
+            # Tentar encontrar pelo ng-model (Angular)
+            try:
+                de_input = self.page.locator('input[ng-model*="fromDate"], input[ng-model*="startDate"]').first
+                if await de_input.count() == 0:
+                    de_input = None
+            except:
+                pass
+            
+            try:
+                ate_input = self.page.locator('input[ng-model*="toDate"], input[ng-model*="endDate"]').first
+                if await ate_input.count() == 0:
+                    ate_input = None
+            except:
+                pass
+            
+            # Se não encontrou pelo ng-model, tentar pelo placeholder ou posição
+            if not de_input or not ate_input:
+                # Procurar inputs com placeholder de data
+                date_placeholder_inputs = await self.page.locator('input[placeholder*="DD/MM"], input[placeholder*="dd/mm"], input[placeholder*="MM/YYYY"], input[placeholder*="mm/yyyy"]').all()
+                logger.info(f"📋 Inputs com placeholder de data: {len(date_placeholder_inputs)}")
+                
+                if len(date_placeholder_inputs) >= 2:
+                    de_input = date_placeholder_inputs[0]
+                    ate_input = date_placeholder_inputs[1]
+                elif len(date_placeholder_inputs) == 1:
+                    de_input = date_placeholder_inputs[0]
+            
+            # Se ainda não temos os inputs, procurar por posição/container
+            if not de_input:
+                try:
+                    # Procurar container de filtro
+                    filter_container = self.page.locator('.filter-container, .filters, [class*="filter"]')
+                    if await filter_container.count() > 0:
+                        inputs_in_filter = await filter_container.locator('input').all()
+                        if len(inputs_in_filter) >= 2:
+                            de_input = inputs_in_filter[0]
+                            ate_input = inputs_in_filter[1]
+                except:
+                    pass
+            
+            # Se temos os inputs, preencher as datas
+            if de_input:
+                logger.info("📝 A preencher data início...")
+                try:
+                    # Verificar se o input é readonly (datepicker)
+                    is_readonly = await de_input.get_attribute('readonly')
+                    
+                    if is_readonly:
+                        # Datepicker - precisamos clicar para abrir o calendário
+                        await de_input.click()
+                        await self.page.wait_for_timeout(1000)
+                        
+                        # Tentar digitar a data diretamente ou usar o calendário
+                        # Pressionar Ctrl+A e digitar a data
+                        await self.page.keyboard.press('Control+a')
+                        await self.page.keyboard.type(data_inicio)
+                        await self.page.keyboard.press('Escape')
+                    else:
+                        await de_input.click()
+                        await de_input.fill('')
+                        await de_input.fill(data_inicio)
+                    
+                    logger.info(f"✅ Data início preenchida: {data_inicio}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro ao preencher data início: {e}")
+            else:
+                logger.warning("⚠️ Campo de data início não encontrado")
+            
             await self.page.wait_for_timeout(500)
             
-            # Campo "Até" (data fim)
-            ate_container = self.page.locator('label:has-text("Até")').locator('..')
-            ate_input = ate_container.locator('input').first
+            if ate_input:
+                logger.info("📝 A preencher data fim...")
+                try:
+                    is_readonly = await ate_input.get_attribute('readonly')
+                    
+                    if is_readonly:
+                        await ate_input.click()
+                        await self.page.wait_for_timeout(1000)
+                        await self.page.keyboard.press('Control+a')
+                        await self.page.keyboard.type(data_fim)
+                        await self.page.keyboard.press('Escape')
+                    else:
+                        await ate_input.click()
+                        await ate_input.fill('')
+                        await ate_input.fill(data_fim)
+                    
+                    logger.info(f"✅ Data fim preenchida: {data_fim}")
+                except Exception as e:
+                    logger.warning(f"⚠️ Erro ao preencher data fim: {e}")
+            else:
+                logger.warning("⚠️ Campo de data fim não encontrado")
             
-            if await ate_input.count() == 0:
-                ate_input = self.page.locator('[placeholder*="DD/MM"]').last
+            await self.page.wait_for_timeout(500)
+            await self.page.keyboard.press('Escape')  # Fechar calendário se aberto
             
-            # Limpar e preencher data fim
+            await self.capturar_screenshot("10_datas_preenchidas")
+            
+            logger.info("✅ Datas selecionadas")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao selecionar datas: {e}")
+            await self.capturar_screenshot("datas_erro")
+            return False
             await ate_input.click()
             await ate_input.fill('')
             await ate_input.type(data_fim)
