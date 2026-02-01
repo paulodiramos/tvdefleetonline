@@ -274,6 +274,30 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
     return credenciais.find(c => c.plataforma === platformId);
   };
 
+  // Função para executar RPA Via Verde com datas
+  const handleViaVerdeRPA = async () => {
+    setViaVerdeSyncing(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.post(`${API}/viaverde/executar-rpa`, viaVerdeConfig, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.data.success) {
+        toast.success(`Via Verde agendado: ${response.data.periodo.descricao}`);
+        setViaVerdeDialog(false);
+        fetchLogs();
+      } else {
+        toast.error(response.data.mensagem || 'Erro ao agendar Via Verde');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || 'Erro ao executar RPA Via Verde');
+    } finally {
+      setViaVerdeSyncing(false);
+    }
+  };
+
   const getPlatformLogs = (platformId) => {
     return logs.filter(l => l.plataforma === platformId).slice(0, 3);
   };
