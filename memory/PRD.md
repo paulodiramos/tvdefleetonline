@@ -10,6 +10,34 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 
 ---
 
+## ✅ Sincronização RPA Via Verde (Corrigido: 01/02/2026)
+
+### Descrição
+Automação para solicitar exportação de dados da Via Verde. **IMPORTANTE:** A Via Verde não permite download direto - apenas envia link por email.
+
+### Fluxo de Funcionamento
+1. Login automático no portal Via Verde Empresas
+2. Navegação para "Extratos e Movimentos"
+3. Seleção de "Exportar detalhes" > CSV
+4. Preenchimento do email de destino
+5. Confirmação da exportação
+6. **Utilizador recebe email** com link de download
+
+### Ficheiros Relevantes
+- `/app/backend/services/rpa_viaverde_v2.py` - Versão simplificada e funcional
+- `/app/backend/routes/sincronizacao.py` - Endpoints da API
+
+### Limitações Conhecidas
+- Via Verde só permite exportação por email (não há download direto)
+- Utilizador deve verificar email e clicar no link manualmente
+- Download do CSV é feito pelo utilizador fora da aplicação
+
+### Credenciais de Teste
+- **Email:** geral@zmbusines.com
+- **Password Via Verde:** 5+?n74vi%*8GJ3e
+
+---
+
 ## ✅ Sistema de Agendamento RPA (Implementado: 25/01/2025)
 
 ### Descrição
