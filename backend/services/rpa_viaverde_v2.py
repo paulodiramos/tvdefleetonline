@@ -198,12 +198,11 @@ class ViaVerdeRPA:
             await self.screenshot("antes_export")
             
             # Procurar o botão "Exportar" na página de movimentos
-            # Seletor: a.link-download.dropdown-link ou text="Exportar"
             exportar_btn_selectors = [
-                'a.link-download.dropdown-link:has-text("Exportar")',
+                'a.link-download.dropdown-link',
                 'a.dropdown-link:has-text("Exportar")',
-                'text=Exportar excel',
-                'a:has-text("Exportar")'
+                'a:has-text("Exportar excel")',
+                'text=Exportar excel'
             ]
             
             for selector in exportar_btn_selectors:
@@ -217,26 +216,39 @@ class ViaVerdeRPA:
                         await self.screenshot("dropdown_exportar")
                         
                         # Selecionar Excel no dropdown
-                        excel_option = self.page.locator('a:has-text("Excel"), li:has-text("Excel"), text=Excel').first
+                        # O dropdown mostra "Excel" e "PDF"
+                        excel_selectors = [
+                            'a:has-text("Excel")',
+                            'li a:has-text("Excel")',
+                            '.dropdown-menu a:has-text("Excel")',
+                            'ul.dropdown-menu a:text("Excel")'
+                        ]
                         
-                        if await excel_option.count() > 0 and await excel_option.is_visible():
-                            logger.info("✅ Opção Excel encontrada, a iniciar download...")
-                            
-                            # Aguardar download
-                            async with self.page.expect_download(timeout=30000) as download_info:
-                                await excel_option.click()
-                            
-                            download = await download_info.value
-                            
-                            # Guardar ficheiro
-                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                            original_name = download.suggested_filename or f"viaverde_{timestamp}.xlsx"
-                            filepath = self.downloads_path / original_name
-                            
-                            await download.save_as(str(filepath))
-                            
-                            logger.info(f"🎉 Excel exportado com sucesso: {filepath}")
-                            return str(filepath)
+                        for excel_sel in excel_selectors:
+                            try:
+                                excel_option = self.page.locator(excel_sel).first
+                                
+                                if await excel_option.count() > 0 and await excel_option.is_visible():
+                                    logger.info(f"✅ Opção Excel encontrada: {excel_sel}")
+                                    
+                                    # Aguardar download
+                                    async with self.page.expect_download(timeout=30000) as download_info:
+                                        await excel_option.click()
+                                    
+                                    download = await download_info.value
+                                    
+                                    # Guardar ficheiro
+                                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                                    original_name = download.suggested_filename or f"viaverde_{timestamp}.xlsx"
+                                    filepath = self.downloads_path / original_name
+                                    
+                                    await download.save_as(str(filepath))
+                                    
+                                    logger.info(f"🎉 Excel exportado com sucesso: {filepath}")
+                                    return str(filepath)
+                            except Exception as e:
+                                logger.warning(f"⚠️ Excel selector {excel_sel} falhou: {e}")
+                                continue
                         
                         break
                 except Exception as e:
