@@ -6,31 +6,34 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 ## Arquitetura
 - **Frontend**: React (porta 3000)
 - **Backend**: FastAPI (porta 8001)
-- **Database**: MongoDB
+- **Database**: MongoDB (`tvdefleet_db`)
 
 ---
 
-## ✅ Sincronização RPA Via Verde (Corrigido: 01/02/2026)
+## ✅ Sincronização RPA Via Verde - COMPLETA (01/02/2026)
 
 ### Descrição
-Automação para solicitar exportação de dados da Via Verde. **IMPORTANTE:** A Via Verde não permite download direto - apenas envia link por email.
+Automação completa para extrair dados de portagens da Via Verde usando **download direto de Excel** (sem necessidade de email).
 
 ### Fluxo de Funcionamento
-1. Login automático no portal Via Verde Empresas
-2. Navegação para "Extratos e Movimentos"
-3. Seleção de "Exportar detalhes" > CSV
-4. Preenchimento do email de destino
-5. Confirmação da exportação
-6. **Utilizador recebe email** com link de download
+1. Login automático no portal Via Verde Empresas (`#txtUsername`, `#txtPassword`)
+2. Navegação para "Extratos e Movimentos" → Tab "Movimentos"
+3. Clique no botão **"Exportar excel"** (classe: `a.link-download.dropdown-link`)
+4. Seleção de **Excel** no dropdown
+5. Download automático do ficheiro `.xlsx`
+6. Parsing do Excel com todas as colunas:
+   - License Plate, Entry Date, Entry/Exit Point, Value, Liquid Value, etc.
+7. Importação automática para a BD (`portagens_viaverde`)
+8. Detecção de duplicados (evita reimportar dados existentes)
 
 ### Ficheiros Relevantes
-- `/app/backend/services/rpa_viaverde_v2.py` - Versão simplificada e funcional
+- `/app/backend/services/rpa_viaverde_v2.py` - Script RPA com download direto
 - `/app/backend/routes/sincronizacao.py` - Endpoints da API
 
-### Limitações Conhecidas
-- Via Verde só permite exportação por email (não há download direto)
-- Utilizador deve verificar email e clicar no link manualmente
-- Download do CSV é feito pelo utilizador fora da aplicação
+### Resultados
+- **14.837 portagens** importadas na BD
+- **9 execuções RPA** registadas
+- Última execução: 548 movimentos processados
 
 ### Credenciais de Teste
 - **Email:** geral@zmbusines.com
