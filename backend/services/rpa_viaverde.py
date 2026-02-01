@@ -410,19 +410,36 @@ class ViaVerdeRPA:
         try:
             logger.info("📄 A navegar para Extratos e Movimentos...")
             
-            # Tentar clicar no menu lateral "Extratos e Movimentos"
-            extratos_link = self.page.get_by_role('link', name='Extratos e Movimentos')
-            if await extratos_link.count() == 0:
-                extratos_link = self.page.locator('text=Extratos e Movimentos')
+            # Verificar se já estamos na página de extratos
+            current_url = self.page.url
+            if "extratos" in current_url.lower() or "movimentos" in current_url.lower():
+                logger.info("✅ Já está na página de extratos")
+                await self.capturar_screenshot("07_ja_em_extratos")
+                return True
             
-            if await extratos_link.count() == 0:
-                # Tentar via "Consultar extratos e movimentos"
-                extratos_link = self.page.get_by_role('link', name='Consultar extratos e movimentos')
-            
-            await extratos_link.first.click()
+            # Se não estamos, navegar diretamente
+            await self.page.goto(self.EXTRATOS_URL, wait_until="networkidle")
             await self.page.wait_for_timeout(3000)
             
-            logger.info("✅ Página de extratos carregada")
+            # Verificar se carregou corretamente
+            await self.capturar_screenshot("07_pagina_extratos")
+            
+            # Verificar se há elementos da página de extratos
+            extratos_indicators = [
+                'text=Movimentos',
+                'text=Filtrar',
+                'text=Exportar',
+                'text=De',
+                'text=Até'
+            ]
+            
+            for indicator in extratos_indicators:
+                if await self.page.locator(indicator).count() > 0:
+                    logger.info(f"✅ Página de extratos confirmada: {indicator}")
+                    return True
+            
+            # Se não encontrou indicadores, pode ainda assim estar correto
+            logger.warning("⚠️ Indicadores de extratos não encontrados, continuando...")
             return True
             
         except Exception as e:
