@@ -419,7 +419,7 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
               {/* Info sobre dados semanais */}
               <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-sm text-blue-800">
-                  ℹ️ Os dados são guardados semanalmente. Use o botão "Sincronizar Agora" para atualizar com os dados mais recentes das plataformas.
+                  ℹ️ Os dados são guardados semanalmente. Use o botão &quot;Sincronizar Agora&quot; para atualizar com os dados mais recentes das plataformas.
                 </p>
               </div>
             </CardContent>
