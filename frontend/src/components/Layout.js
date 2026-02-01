@@ -301,7 +301,7 @@ const Layout = ({ children, user, onLogout }) => {
                       <User className="w-5 h-5 text-slate-600" />
                     </div>
                     <span className="text-sm font-medium hidden sm:inline-block">
-                      Painel de Perfil
+                      {user?.name?.split(' ')[0] || 'Utilizador'}
                     </span>
                     <ChevronDown className="w-4 h-4" />
                   </Button>
@@ -335,12 +335,6 @@ const Layout = ({ children, user, onLogout }) => {
                         <Link to="/admin/gestao-funcionalidades" className="flex items-center space-x-2 cursor-pointer">
                           <Settings className="w-4 h-4" />
                           <span>Permissões Parceiros</span>
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/rpa-designer" className="flex items-center space-x-2 cursor-pointer">
-                          <Zap className="w-4 h-4" />
-                          <span>RPA Designer</span>
                         </Link>
                       </DropdownMenuItem>
                       
