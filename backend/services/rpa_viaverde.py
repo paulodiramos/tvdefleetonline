@@ -213,31 +213,12 @@ class ViaVerdeRPA:
     LOGIN_URL = "https://www.viaverde.pt/empresas/minha-via-verde/extratos-movimentos"
     EXTRATOS_URL = "https://www.viaverde.pt/empresas/minha-via-verde/extratos-movimentos"
     
-    # Seletores para o MODAL de login (pop-up "A Minha Via Verde")
-    # Este é o formulário principal que aparece quando se acede à área reservada
-    MODAL_EMAIL_SELECTORS = [
-        'input[placeholder="Email"]',
-        '.modal input[type="email"]',
-        'input[name="email"]',
-        '#email',
-        '[data-testid="login-email"]'
-    ]
-    MODAL_PASSWORD_SELECTORS = [
-        'input[placeholder="Palavra-passe"]',
-        'input[placeholder="Password"]',
-        '.modal input[type="password"]',
-        'input[name="password"]',
-        '#password',
-        '[data-testid="login-password"]'
-    ]
-    MODAL_LOGIN_BUTTON_SELECTORS = [
-        'button:has-text("Login")',
-        '.modal button[type="submit"]',
-        'button.login-btn',
-        '[data-testid="login-button"]'
-    ]
+    # Seletores CORRETOS do modal de login (encontrados via análise)
+    # Os campos visíveis do formulário de login são:
+    MODAL_EMAIL_ID = "#txtUsername"
+    MODAL_PASSWORD_ID = "#txtPassword"
     
-    # Seletores antigos do DNN (formulário no rodapé - backup)
+    # Seletores antigos do DNN (formulário no rodapé - não visível)
     DNN_USERNAME_SELECTOR = "#dnn_ctr4019_Login_Login_DNN_txtUsername"
     DNN_PASSWORD_SELECTOR = "#dnn_ctr4019_Login_Login_DNN_txtPassword"
     DNN_LOGIN_BUTTON_SELECTOR = "#dnn_ctr4019_Login_Login_DNN_cmdLogin"
