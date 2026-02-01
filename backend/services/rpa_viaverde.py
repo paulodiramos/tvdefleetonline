@@ -252,168 +252,157 @@ class ViaVerdeRPA:
         logger.info("🌐 Browser fechado")
     
     async def fazer_login(self) -> bool:
-        """Fazer login na Via Verde Empresas"""
+        """Fazer login na Via Verde Empresas usando os seletores DNN específicos"""
         try:
             logger.info(f"🔐 A fazer login com {self.email}...")
             
-            # Aceder directamente à URL que força o login
+            # Aceder directamente à URL de extratos (força redirect para login)
             await self.page.goto(self.LOGIN_URL, wait_until="networkidle")
             await self.page.wait_for_timeout(3000)
             
-            # Aceitar cookies se aparecer o banner
+            # Screenshot inicial para debug
+            await self.capturar_screenshot("01_pagina_inicial")
+            
+            # Aceitar cookies se aparecer
             try:
-                accept_cookies = self.page.locator('button:has-text("Accept All"), button:has-text("Aceitar")')
+                accept_cookies = self.page.locator('button:has-text("Accept All"), button:has-text("Aceitar"), button:has-text("Aceito")')
                 if await accept_cookies.count() > 0:
                     await accept_cookies.first.click()
                     await self.page.wait_for_timeout(1000)
+                    logger.info("✅ Cookies aceites")
             except:
                 pass
             
-            # O formulário de login deve aparecer automaticamente
-            # Aguardar campos de login
-            await self.page.wait_for_selector('input[type="email"], input[type="password"]', timeout=10000)
-            
-            # Preencher email - procurar pelo placeholder ou tipo
-            email_filled = False
-            email_selectors = [
-                'input[type="email"]',
-                'input[placeholder="Email"]',
-                'input[name*="user"]',
-                'input[id*="user"]',
-                '#txtUsername'
-            ]
-            
-            for selector in email_selectors:
-                email_field = self.page.locator(selector).first
-                if await email_field.count() > 0:
-                    try:
-                        is_visible = await email_field.is_visible()
-                        if is_visible:
-                            await email_field.click()
-                            await email_field.fill(self.email)
-                            email_filled = True
-                            logger.info("✅ Email preenchido")
-                            break
-                    except:
-                        continue
-            
-            if not email_filled:
-                # Tentar preencher qualquer input de email visível
-                all_emails = await self.page.locator('input[type="email"]').all()
-                for ef in all_emails:
-                    if await ef.is_visible():
-                        await ef.fill(self.email)
-                        email_filled = True
-                        break
-            
-            if not email_filled:
-                logger.error("❌ Não encontrou campo de email visível")
-                return False
-            
-            await self.page.wait_for_timeout(500)
-            
-            # Preencher password
-            password_filled = False
-            password_selectors = [
-                'input[type="password"]',
-                'input[placeholder*="passe"]',
-                'input[placeholder*="senha"]',
-                '#txtPassword'
-            ]
-            
-            for selector in password_selectors:
-                password_field = self.page.locator(selector).first
-                if await password_field.count() > 0:
-                    try:
-                        is_visible = await password_field.is_visible()
-                        if is_visible:
-                            await password_field.click()
-                            await password_field.fill(self.password)
-                            password_filled = True
-                            logger.info("✅ Password preenchida")
-                            break
-                    except:
-                        continue
-            
-            if not password_filled:
-                # Tentar preencher qualquer input de password visível
-                all_pwds = await self.page.locator('input[type="password"]').all()
-                for pf in all_pwds:
-                    if await pf.is_visible():
-                        await pf.fill(self.password)
-                        password_filled = True
-                        break
-            
-            if not password_filled:
-                logger.error("❌ Não encontrou campo de password visível")
-                return False
-            
-            await self.page.wait_for_timeout(500)
-            
-            # Clicar no botão de submit do login
-            submit_clicked = False
-            submit_selectors = [
-                'button[type="submit"]',
-                'button:has-text("Login")',
-                'button:has-text("Entrar")',
-                'input[type="submit"]',
-                '#dnn_UserLogin_cmdLogin'
-            ]
-            
-            for selector in submit_selectors:
-                submit_button = self.page.locator(selector)
-                if await submit_button.count() > 0:
-                    try:
-                        visible_btn = submit_button.first
-                        if await visible_btn.is_visible():
-                            await visible_btn.click()
-                            submit_clicked = True
-                            logger.info("✅ Botão Login clicado")
-                            break
-                    except:
-                        continue
-            
-            if not submit_clicked:
-                logger.error("❌ Não encontrou botão de submit")
-                return False
-            
-            # Aguardar navegação após login
-            await self.page.wait_for_timeout(8000)
-            
-            # Verificar se login foi bem sucedido
+            # Verificar se já está logado (redirect não aconteceu)
             current_url = self.page.url
-            logger.info(f"URL após login: {current_url}")
+            logger.info(f"📍 URL atual: {current_url}")
             
-            # Verificar indicadores de login bem sucedido
-            success_indicators = [
-                'minha-via-verde' in current_url and 'returnurl' not in current_url.lower(),
-                'dashboard' in current_url,
-                'area-reservada' in current_url,
-                await self.page.locator('text=Extratos').count() > 0,
-                await self.page.locator('text=Sair').count() > 0,
-                await self.page.locator('text=Logout').count() > 0,
-                await self.page.locator('text=A Minha Via Verde').count() > 0
-            ]
-            
-            if any(success_indicators):
-                logger.info("✅ Login bem sucedido!")
+            # Se já estiver na página de extratos após login, sucesso
+            if "extratos" in current_url.lower() and "returnurl" not in current_url.lower():
+                logger.info("✅ Já está logado!")
                 return True
             
-            # Verificar se ainda está na página de login (falha)
-            if 'returnurl' in current_url.lower():
-                # Verificar mensagens de erro
-                error_text = await self.page.locator('.error, .alert, .validation-summary-errors').all_text_contents()
-                if error_text:
-                    logger.error(f"❌ Erro de login: {error_text}")
-                else:
-                    logger.error("❌ Login falhou - credenciais podem estar incorretas")
-                return False
+            # Aguardar formulário de login DNN específico da Via Verde
+            logger.info("⏳ A aguardar formulário de login...")
             
-            logger.info("✅ Login aparentemente bem sucedido!")
-            return True
+            # Os seletores específicos do DNN da Via Verde
+            try:
+                # Aguardar que o campo de username esteja visível
+                await self.page.wait_for_selector(self.USERNAME_SELECTOR, timeout=15000)
+                logger.info("✅ Formulário de login encontrado")
+            except:
+                # Tentar scroll para mostrar o formulário (está no rodapé)
+                logger.info("⚠️ A fazer scroll para encontrar formulário...")
+                await self.page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                await self.page.wait_for_timeout(2000)
+                await self.capturar_screenshot("02_apos_scroll")
+                
+                try:
+                    await self.page.wait_for_selector(self.USERNAME_SELECTOR, timeout=10000)
+                except:
+                    logger.error("❌ Formulário de login não encontrado")
+                    return False
+            
+            # Screenshot antes de preencher
+            await self.capturar_screenshot("03_formulario_login")
+            
+            # Preencher Username (email)
+            logger.info(f"📝 A preencher username: {self.email}")
+            username_field = self.page.locator(self.USERNAME_SELECTOR)
+            await username_field.scroll_into_view_if_needed()
+            await username_field.click()
+            await username_field.fill("")  # Limpar
+            await username_field.fill(self.email)
+            await self.page.wait_for_timeout(500)
+            logger.info("✅ Username preenchido")
+            
+            # Preencher Password
+            logger.info("📝 A preencher password...")
+            password_field = self.page.locator(self.PASSWORD_SELECTOR)
+            await password_field.scroll_into_view_if_needed()
+            await password_field.click()
+            await password_field.fill("")  # Limpar
+            await password_field.fill(self.password)
+            await self.page.wait_for_timeout(500)
+            logger.info("✅ Password preenchida")
+            
+            # Screenshot após preencher campos
+            await self.capturar_screenshot("04_campos_preenchidos")
+            
+            # Clicar no botão Login
+            logger.info("🔘 A clicar no botão Login...")
+            login_button = self.page.locator(self.LOGIN_BUTTON_SELECTOR)
+            await login_button.scroll_into_view_if_needed()
+            await login_button.click()
+            logger.info("✅ Botão de login clicado")
+            
+            # Aguardar navegação/resposta
+            await self.page.wait_for_timeout(5000)
+            
+            # Screenshot após login
+            await self.capturar_screenshot("05_apos_login")
+            
+            # Verificar se o login foi bem sucedido
+            current_url = self.page.url
+            logger.info(f"📍 URL após login: {current_url}")
+            
+            # Verificar por elementos que indicam login bem sucedido
+            login_indicators = [
+                'text=Extratos e Movimentos',
+                'text=A Minha Via Verde',
+                'text=Sair',
+                'text=Logout',
+                '.user-logged',
+                '#dnn_dnnUSER_userNameLink'  # Link com nome do utilizador após login
+            ]
+            
+            for indicator in login_indicators:
+                try:
+                    count = await self.page.locator(indicator).count()
+                    if count > 0:
+                        logger.info(f"✅ Login confirmado! Indicador encontrado: {indicator}")
+                        return True
+                except:
+                    continue
+            
+            # Verificar se há mensagem de erro
+            error_selectors = [
+                '.dnnFormValidationSummary',
+                '.validation-summary-errors',
+                '.error-message',
+                'span[id*="Error"]',
+                '.alert-danger'
+            ]
+            
+            for selector in error_selectors:
+                try:
+                    error_elem = self.page.locator(selector)
+                    if await error_elem.count() > 0:
+                        error_text = await error_elem.all_text_contents()
+                        if error_text and any(t.strip() for t in error_text):
+                            logger.error(f"❌ Erro no login: {error_text}")
+                            return False
+                except:
+                    continue
+            
+            # Se não encontrou indicadores mas também não há erro, tentar navegar
+            logger.warning("⚠️ Não foi possível confirmar login, a tentar navegar para extratos...")
+            await self.page.goto(self.EXTRATOS_URL, wait_until="networkidle")
+            await self.page.wait_for_timeout(3000)
+            await self.capturar_screenshot("06_tentativa_extratos")
+            
+            # Verificar novamente
+            if "returnurl" not in self.page.url.lower():
+                logger.info("✅ Login parece bem sucedido (acesso a área restrita)")
+                return True
+            
+            logger.error("❌ Login falhou - redirect para página de login")
+            return False
                 
         except Exception as e:
-            logger.error(f"❌ Erro no login: {e}")
+            logger.error(f"❌ Erro ao fazer login: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return False
     
     async def navegar_para_extratos(self) -> bool:
