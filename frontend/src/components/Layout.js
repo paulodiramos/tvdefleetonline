@@ -361,6 +361,11 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>📥 Importação Dados</span>
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/rpa-designer" className="flex items-center space-x-2 cursor-pointer pl-4">
+                          <span>⚡ RPA Designer</span>
+                        </Link>
+                      </DropdownMenuItem>
                       
                       <DropdownMenuSeparator />
                       
