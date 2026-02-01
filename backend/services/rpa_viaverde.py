@@ -562,8 +562,32 @@ class ViaVerdeRPA:
         try:
             logger.info("🔍 A aplicar filtro...")
             
-            filtrar_button = self.page.get_by_role('button', name='Filtrar')
-            await filtrar_button.click()
+            # Procurar botão Filtrar (não o dropdown "Filtrar por")
+            filtrar_selectors = [
+                'button:has-text("Filtrar"):not(:has-text("por"))',
+                'button.btn-filter',
+                'a.btn:has-text("Filtrar")',
+                'input[value="Filtrar"]'
+            ]
+            
+            clicked = False
+            for selector in filtrar_selectors:
+                try:
+                    btn = self.page.locator(selector).first
+                    if await btn.count() > 0 and await btn.is_visible():
+                        await btn.click()
+                        clicked = True
+                        logger.info(f"✅ Botão Filtrar clicado: {selector}")
+                        break
+                except:
+                    continue
+            
+            if not clicked:
+                # Tentar pelo role
+                filtrar_button = self.page.get_by_role('button', name='Filtrar', exact=True)
+                if await filtrar_button.count() > 0:
+                    await filtrar_button.first.click()
+                    clicked = True
             
             # Aguardar carregamento dos resultados
             await self.page.wait_for_timeout(3000)
@@ -585,34 +609,84 @@ class ViaVerdeRPA:
         try:
             logger.info("📥 A exportar para Excel...")
             
-            # Clicar no botão Exportar
-            exportar_button = self.page.get_by_role('button', name='Exportar')
-            await exportar_button.click()
-            await self.page.wait_for_timeout(1000)
+            await self.capturar_screenshot("11_antes_export")
             
-            # Selecionar opção Excel no menu dropdown
-            excel_option = self.page.get_by_role('menuitem', name='Excel')
-            if await excel_option.count() == 0:
-                excel_option = self.page.locator('text=Excel')
+            # Procurar especificamente por "Exportar detalhes" que tem dropdown
+            exportar_detalhes = self.page.locator('text=Exportar detalhes').first
             
-            # Configurar listener para download
-            async with self.page.expect_download() as download_info:
-                await excel_option.click()
+            if await exportar_detalhes.count() > 0 and await exportar_detalhes.is_visible():
+                logger.info("📋 A clicar em 'Exportar detalhes'...")
+                await exportar_detalhes.click()
+                await self.page.wait_for_timeout(1000)
+                
+                # Procurar opção Excel no menu dropdown
+                await self.capturar_screenshot("12_dropdown_export")
+                
+                excel_selectors = [
+                    'text=Excel',
+                    'a:has-text("Excel")',
+                    'li:has-text("Excel")',
+                    '[role="menuitem"]:has-text("Excel")'
+                ]
+                
+                excel_found = False
+                for selector in excel_selectors:
+                    try:
+                        excel_option = self.page.locator(selector).first
+                        if await excel_option.count() > 0:
+                            # Configurar listener para download
+                            async with self.page.expect_download(timeout=30000) as download_info:
+                                await excel_option.click()
+                            
+                            download = await download_info.value
+                            
+                            # Guardar ficheiro
+                            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                            filename = f"viaverde_movimentos_{timestamp}.xlsx"
+                            filepath = self.downloads_path / filename
+                            
+                            await download.save_as(str(filepath))
+                            
+                            logger.info(f"✅ Ficheiro exportado: {filepath}")
+                            return str(filepath)
+                    except Exception as e:
+                        logger.warning(f"⚠️ Tentativa de exportar via {selector} falhou: {e}")
+                        continue
             
-            download = await download_info.value
+            # Alternativa: Tentar clicar diretamente num botão de Exportar da tabela
+            logger.info("⚠️ A tentar exportação alternativa...")
             
-            # Guardar ficheiro
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            filename = f"viaverde_movimentos_{timestamp}.xlsx"
-            filepath = self.downloads_path / filename
+            # Procurar pela primeira linha da tabela e seu botão de exportar
+            export_btns = await self.page.locator('a.dropdown-link:has-text("Exportar")').all()
+            if len(export_btns) > 0:
+                # Clicar no primeiro que aparece na tabela (que exporta detalhes)
+                async with self.page.expect_download(timeout=30000) as download_info:
+                    await export_btns[0].click()
+                    await self.page.wait_for_timeout(1000)
+                    
+                    # Verificar se abriu dropdown
+                    excel_option = self.page.locator('text=Excel').first
+                    if await excel_option.count() > 0:
+                        await excel_option.click()
+                
+                download = await download_info.value
+                
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                filename = f"viaverde_movimentos_{timestamp}.xlsx"
+                filepath = self.downloads_path / filename
+                
+                await download.save_as(str(filepath))
+                
+                logger.info(f"✅ Ficheiro exportado (alternativo): {filepath}")
+                return str(filepath)
             
-            await download.save_as(str(filepath))
-            
-            logger.info(f"✅ Ficheiro exportado: {filepath}")
-            return str(filepath)
+            await self.capturar_screenshot("export_erro")
+            logger.error("❌ Não conseguiu exportar - nenhum botão de Excel encontrado")
+            return None
             
         except Exception as e:
             logger.error(f"❌ Erro ao exportar: {e}")
+            await self.capturar_screenshot("export_erro")
             return None
     
     async def capturar_screenshot(self, nome: str = "screenshot") -> str:
