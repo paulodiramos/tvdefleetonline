@@ -839,7 +839,7 @@ async def executar_rpa_viaverde(
     
     # Executar RPA em background
     import asyncio
-    from services.rpa_viaverde import executar_rpa_viaverde
+    from services.rpa_viaverde_v2 import executar_rpa_viaverde_v2
     
     async def executar_rpa_background():
         """Executar RPA em background e atualizar status"""
@@ -863,8 +863,8 @@ async def executar_rpa_viaverde(
                 except:
                     pass  # Password não está encriptada
             
-            # Executar RPA
-            resultado = await executar_rpa_viaverde(
+            # Executar RPA V2 (solicita exportação por email)
+            resultado = await executar_rpa_viaverde_v2(
                 email=credenciais.get("email"),
                 password=password,
                 data_inicio=data_inicio,
@@ -872,28 +872,8 @@ async def executar_rpa_viaverde(
                 headless=True
             )
             
-            # Se teve sucesso e há ficheiro, importar para a BD
-            importacao_resultado = None
-            if resultado.get("sucesso") and resultado.get("ficheiro"):
-                try:
-                    from services.rpa_viaverde import parse_excel_viaverde, importar_movimentos_viaverde
-                    
-                    # Parsear o Excel
-                    movimentos = parse_excel_viaverde(resultado["ficheiro"])
-                    
-                    if movimentos:
-                        # Importar para a BD
-                        importacao_resultado = await importar_movimentos_viaverde(movimentos, pid, db)
-                        resultado["importacao"] = importacao_resultado
-                        resultado["logs"].append(f"Importados {importacao_resultado['importados']} movimentos para o Resumo Semanal")
-                        
-                        logger.info(f"📊 Via Verde: Importados {importacao_resultado['importados']} movimentos, {importacao_resultado['duplicados']} duplicados")
-                    else:
-                        resultado["logs"].append("Nenhum movimento encontrado no ficheiro Excel")
-                        
-                except Exception as import_err:
-                    logger.error(f"Erro ao importar Excel Via Verde: {import_err}")
-                    resultado["logs"].append(f"Erro na importação: {str(import_err)}")
+            # NOTA: Via Verde só permite exportação por email
+            # O utilizador receberá um email com o link de download
             
             # Atualizar resultado na BD
             await db.execucoes_rpa_viaverde.update_one(
@@ -901,12 +881,13 @@ async def executar_rpa_viaverde(
                 {"$set": {
                     "status": "concluido" if resultado.get("sucesso") else "erro",
                     "resultado": resultado,
-                    "ficheiro": resultado.get("ficheiro"),
-                    "importacao": importacao_resultado,
+                    "mensagem": resultado.get("mensagem"),
+                    "instrucoes": resultado.get("instrucoes"),
+                    "email_destino": resultado.get("email_destino"),
                     "screenshots": resultado.get("screenshots", []),
-                    "logs": resultado.get("logs", []),
-                    "erro": resultado.get("erro"),
-                    "finished_at": datetime.now(timezone.utc).isoformat()
+                    "erro": resultado.get("mensagem") if not resultado.get("sucesso") else None,
+                    "finished_at": datetime.now(timezone.utc).isoformat(),
+                    "export_por_email": True  # Indicar que exportação foi solicitada por email
                 }}
             )
             
