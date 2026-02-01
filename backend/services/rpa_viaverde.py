@@ -209,7 +209,14 @@ class ViaVerdeRPA:
     """Classe para automação de extração de dados da Via Verde"""
     
     BASE_URL = "https://www.viaverde.pt/empresas"
-    LOGIN_URL = "https://www.viaverde.pt/empresas/minha-via-verde"
+    # Aceder diretamente à página de extratos força o redirect para login
+    LOGIN_URL = "https://www.viaverde.pt/empresas/minha-via-verde/extratos-movimentos"
+    EXTRATOS_URL = "https://www.viaverde.pt/empresas/minha-via-verde/extratos-movimentos"
+    
+    # Seletores específicos do formulário DNN da Via Verde
+    USERNAME_SELECTOR = "#dnn_ctr4019_Login_Login_DNN_txtUsername"
+    PASSWORD_SELECTOR = "#dnn_ctr4019_Login_Login_DNN_txtPassword"
+    LOGIN_BUTTON_SELECTOR = "#dnn_ctr4019_Login_Login_DNN_cmdLogin"
     
     def __init__(self, email: str, password: str):
         self.email = email
