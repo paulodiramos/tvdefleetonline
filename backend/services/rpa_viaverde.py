@@ -250,43 +250,146 @@ class ViaVerdeRPA:
             
             # Aceder à página inicial
             await self.page.goto(self.BASE_URL, wait_until="networkidle")
+            await self.page.wait_for_timeout(3000)
+            
+            # Aceitar cookies se aparecer o banner
+            try:
+                accept_cookies = self.page.get_by_role('button', name='Accept All Cookies')
+                if await accept_cookies.count() > 0:
+                    await accept_cookies.click()
+                    await self.page.wait_for_timeout(1000)
+            except:
+                pass
+            
+            # Clicar no botão Login no header para abrir o modal
+            try:
+                # Tentar diferentes selectores para o botão de login
+                login_triggers = [
+                    self.page.get_by_role('button', name='Login'),
+                    self.page.get_by_role('link', name='Login'),
+                    self.page.locator('a:has-text("Login")'),
+                    self.page.locator('button:has-text("Login")'),
+                    self.page.locator('[data-testid="login-button"]'),
+                    self.page.locator('.login-button'),
+                    self.page.locator('text=Aceder à área reservada')
+                ]
+                
+                for trigger in login_triggers:
+                    if await trigger.count() > 0:
+                        await trigger.first.click()
+                        await self.page.wait_for_timeout(2000)
+                        break
+            except Exception as e:
+                logger.warning(f"Não encontrou botão login inicial: {e}")
+            
+            # Aguardar o modal de login aparecer
             await self.page.wait_for_timeout(2000)
             
-            # Clicar no botão Login (pode estar no header)
-            login_button = self.page.get_by_role('button', name='Login')
-            if await login_button.count() == 0:
-                # Tentar encontrar link de login
-                login_button = self.page.get_by_role('link', name='Login')
+            # Preencher email - procurar pelo placeholder ou label
+            email_filled = False
+            email_selectors = [
+                'input[placeholder="Email"]',
+                'input[type="email"]',
+                'input[name="email"]',
+                'input[id="email"]',
+                '#email',
+                'input[placeholder*="mail"]'
+            ]
             
-            await login_button.first.click()
-            await self.page.wait_for_timeout(2000)
+            for selector in email_selectors:
+                email_field = self.page.locator(selector)
+                if await email_field.count() > 0:
+                    await email_field.first.click()
+                    await email_field.first.fill(self.email)
+                    email_filled = True
+                    logger.info("✅ Email preenchido")
+                    break
             
-            # Preencher email
-            email_field = self.page.locator('input[placeholder="Email"]')
-            if await email_field.count() == 0:
-                email_field = self.page.locator('input[type="email"]')
-            await email_field.fill(self.email)
+            if not email_filled:
+                logger.error("❌ Não encontrou campo de email")
+                return False
+            
+            await self.page.wait_for_timeout(500)
             
             # Preencher password
-            password_field = self.page.locator('input[placeholder="Palavra-passe"]')
-            if await password_field.count() == 0:
-                password_field = self.page.locator('input[type="password"]')
-            await password_field.fill(self.password)
+            password_filled = False
+            password_selectors = [
+                'input[placeholder="Palavra-passe"]',
+                'input[type="password"]',
+                'input[name="password"]',
+                'input[id="password"]',
+                '#password',
+                'input[placeholder*="passe"]',
+                'input[placeholder*="senha"]'
+            ]
             
-            # Clicar no botão de submit do login
-            submit_button = self.page.get_by_role('button', name='Login').last
-            await submit_button.click()
+            for selector in password_selectors:
+                password_field = self.page.locator(selector)
+                if await password_field.count() > 0:
+                    await password_field.first.click()
+                    await password_field.first.fill(self.password)
+                    password_filled = True
+                    logger.info("✅ Password preenchida")
+                    break
+            
+            if not password_filled:
+                logger.error("❌ Não encontrou campo de password")
+                return False
+            
+            await self.page.wait_for_timeout(500)
+            
+            # Clicar no botão de submit do login (dentro do modal)
+            submit_clicked = False
+            submit_selectors = [
+                'button[type="submit"]',
+                'button:has-text("Login")',
+                'input[type="submit"]',
+                '.login-form button',
+                'form button'
+            ]
+            
+            for selector in submit_selectors:
+                submit_button = self.page.locator(selector)
+                if await submit_button.count() > 0:
+                    # Pegar o último botão "Login" (o do form, não o do header)
+                    await submit_button.last.click()
+                    submit_clicked = True
+                    logger.info("✅ Botão Login clicado")
+                    break
+            
+            if not submit_clicked:
+                logger.error("❌ Não encontrou botão de submit")
+                return False
             
             # Aguardar navegação após login
-            await self.page.wait_for_timeout(5000)
+            await self.page.wait_for_timeout(8000)
             
-            # Verificar se login foi bem sucedido (procurar menu de utilizador)
-            if "minha-via-verde" in self.page.url or await self.page.locator('text=Extratos').count() > 0:
+            # Verificar se login foi bem sucedido
+            current_url = self.page.url
+            logger.info(f"URL após login: {current_url}")
+            
+            # Verificar indicadores de login bem sucedido
+            success_indicators = [
+                'minha-via-verde' in current_url,
+                'dashboard' in current_url,
+                'area-reservada' in current_url,
+                await self.page.locator('text=Extratos').count() > 0,
+                await self.page.locator('text=Sair').count() > 0,
+                await self.page.locator('text=Logout').count() > 0,
+                await self.page.locator('text=Minha Via Verde').count() > 0
+            ]
+            
+            if any(success_indicators):
                 logger.info("✅ Login bem sucedido!")
                 return True
-            else:
-                logger.error("❌ Login falhou - não foi redirecionado")
-                return False
+            
+            # Verificar se há mensagem de erro
+            error_messages = await self.page.locator('.error, .alert-error, .login-error, [class*="error"]').all_text_contents()
+            if error_messages:
+                logger.error(f"❌ Erro de login: {error_messages}")
+            
+            logger.error("❌ Login falhou - não conseguiu verificar sucesso")
+            return False
                 
         except Exception as e:
             logger.error(f"❌ Erro no login: {e}")
