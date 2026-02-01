@@ -716,6 +716,161 @@ async def listar_logs_sincronizacao(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ==================================================
+# SINCRONIZAÇÃO RPA VIA VERDE (COM DATAS)
+# ==================================================
+
+class ViaVerdeRPARequest(BaseModel):
+    """Request para sincronização RPA Via Verde"""
+    tipo_periodo: str = "ultima_semana"  # ultima_semana, semana_especifica, datas_personalizadas
+    data_inicio: Optional[str] = None  # YYYY-MM-DD
+    data_fim: Optional[str] = None  # YYYY-MM-DD
+    semana: Optional[int] = None  # Número da semana (1-53)
+    ano: Optional[int] = None  # Ano
+
+
+@router.post("/viaverde/executar-rpa")
+async def executar_rpa_viaverde(
+    request: ViaVerdeRPARequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Executar RPA da Via Verde com parâmetros de data flexíveis.
+    
+    Tipos de período suportados:
+    - ultima_semana: Busca dados da última semana completa
+    - semana_especifica: Busca dados de uma semana específica (semana + ano)
+    - datas_personalizadas: Busca dados entre data_inicio e data_fim
+    """
+    from datetime import timedelta
+    
+    pid = current_user['id']
+    
+    # Verificar se parceiro tem credenciais Via Verde
+    credenciais = await db.credenciais_plataforma.find_one({
+        "parceiro_id": pid,
+        "plataforma": "viaverde"
+    })
+    
+    if not credenciais or not credenciais.get("email") or not credenciais.get("password"):
+        raise HTTPException(
+            status_code=400, 
+            detail="Credenciais Via Verde não configuradas. Vá a Configurações → Plataformas para configurar."
+        )
+    
+    now = datetime.now(timezone.utc)
+    
+    # Calcular datas baseado no tipo de período
+    if request.tipo_periodo == "ultima_semana":
+        # Última semana completa (segunda a domingo)
+        today = now.date()
+        # Encontrar o último domingo
+        days_since_sunday = (today.weekday() + 1) % 7
+        last_sunday = today - timedelta(days=days_since_sunday)
+        last_monday = last_sunday - timedelta(days=6)
+        
+        data_inicio = last_monday.strftime("%Y-%m-%d")
+        data_fim = last_sunday.strftime("%Y-%m-%d")
+        periodo_descricao = f"Última semana ({data_inicio} a {data_fim})"
+        
+    elif request.tipo_periodo == "semana_especifica":
+        if not request.semana or not request.ano:
+            raise HTTPException(status_code=400, detail="Semana e ano são obrigatórios para semana_especifica")
+        
+        # Calcular datas da semana específica (ISO week)
+        from datetime import date
+        # Primeiro dia do ano
+        jan1 = date(request.ano, 1, 1)
+        # Encontrar a segunda-feira da semana 1
+        days_to_monday = (7 - jan1.weekday()) % 7
+        if jan1.weekday() <= 3:  # Se jan1 é antes de quinta, está na semana 1
+            first_monday = jan1 - timedelta(days=jan1.weekday())
+        else:
+            first_monday = jan1 + timedelta(days=days_to_monday)
+        
+        # Calcular segunda-feira da semana desejada
+        target_monday = first_monday + timedelta(weeks=request.semana - 1)
+        target_sunday = target_monday + timedelta(days=6)
+        
+        data_inicio = target_monday.strftime("%Y-%m-%d")
+        data_fim = target_sunday.strftime("%Y-%m-%d")
+        periodo_descricao = f"Semana {request.semana}/{request.ano} ({data_inicio} a {data_fim})"
+        
+    elif request.tipo_periodo == "datas_personalizadas":
+        if not request.data_inicio or not request.data_fim:
+            raise HTTPException(status_code=400, detail="data_inicio e data_fim são obrigatórios")
+        
+        data_inicio = request.data_inicio
+        data_fim = request.data_fim
+        periodo_descricao = f"Período personalizado ({data_inicio} a {data_fim})"
+        
+    else:
+        raise HTTPException(status_code=400, detail="Tipo de período inválido")
+    
+    # Criar execução RPA
+    execucao_id = str(uuid.uuid4())
+    
+    execucao = {
+        "id": execucao_id,
+        "parceiro_id": pid,
+        "plataforma": "viaverde",
+        "tipo": "rpa",
+        "status": "pendente",
+        "tipo_periodo": request.tipo_periodo,
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "periodo_descricao": periodo_descricao,
+        "variaveis": {
+            "email": credenciais.get("email"),
+            "data_inicio": data_inicio,
+            "data_fim": data_fim
+        },
+        "logs": [],
+        "screenshots": [],
+        "created_at": now.isoformat(),
+        "created_by": pid
+    }
+    
+    await db.execucoes_rpa_viaverde.insert_one(execucao)
+    
+    logger.info(f"🛣️ RPA Via Verde agendado: {execucao_id} - {periodo_descricao}")
+    
+    # TODO: Executar RPA em background (implementação real com Playwright)
+    # Por agora, apenas simular a resposta
+    
+    return {
+        "success": True,
+        "execucao_id": execucao_id,
+        "status": "agendado",
+        "periodo": {
+            "tipo": request.tipo_periodo,
+            "data_inicio": data_inicio,
+            "data_fim": data_fim,
+            "descricao": periodo_descricao
+        },
+        "mensagem": f"Extração Via Verde agendada para {periodo_descricao}"
+    }
+
+
+@router.get("/viaverde/execucoes")
+async def listar_execucoes_viaverde(
+    limit: int = 20,
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar execuções RPA da Via Verde do parceiro"""
+    pid = current_user['id'] if current_user['role'] not in ['admin', 'gestao'] else None
+    
+    query = {}
+    if pid:
+        query['parceiro_id'] = pid
+    
+    execucoes = await db.execucoes_rpa_viaverde.find(
+        query, 
+        {"_id": 0, "variaveis.password": 0}
+    ).sort("created_at", -1).limit(limit).to_list(limit)
+    
+    return execucoes
+
 
 # ==================================================
 # SISTEMA DE SINCRONIZAÇÃO AUTOMÁTICA AVANÇADO
