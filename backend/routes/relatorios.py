@@ -801,7 +801,12 @@ async def get_resumo_semanal_parceiro(
                 ]},
                 {"$or": [
                     {"ativo": True},
-                    {"status_motorista": "ativo"}
+                    {"status_motorista": "ativo"},
+                    # Incluir motoristas desativados se a data_desativacao for depois do início da semana
+                    {"$and": [
+                        {"ativo": False},
+                        {"data_desativacao": {"$gt": data_inicio}}
+                    ]}
                 ]}
             ]
         }
@@ -810,10 +815,36 @@ async def get_resumo_semanal_parceiro(
         motoristas_query, 
         {"_id": 0, "id": 1, "name": 1, "email": 1, "veiculo_atribuido": 1, 
          "uuid_motorista_uber": 1, "identificador_motorista_bolt": 1,
-         "valor_aluguer_semanal": 1, "config_financeira": 1}
+         "valor_aluguer_semanal": 1, "config_financeira": 1,
+         "ativo": 1, "data_desativacao": 1}
     ).to_list(1000)
     
-    logger.info(f"📊 Encontrados {len(motoristas)} motoristas")
+    # Filtrar motoristas desativados antes do início da semana
+    motoristas_filtrados = []
+    for m in motoristas:
+        # Se motorista está ativo, incluir sempre
+        if m.get("ativo") == True:
+            motoristas_filtrados.append(m)
+        # Se motorista está inativo, verificar data_desativacao
+        elif m.get("data_desativacao"):
+            try:
+                # Tentar parsear a data de desativação
+                data_desativ = m.get("data_desativacao")
+                if isinstance(data_desativ, str):
+                    # Se a data de desativação for depois do início da semana, incluir
+                    if data_desativ >= data_inicio:
+                        motoristas_filtrados.append(m)
+                        logger.info(f"  {m.get('name')}: Motorista desativado em {data_desativ}, incluído para semana {data_inicio}")
+                    else:
+                        logger.info(f"  {m.get('name')}: Motorista desativado em {data_desativ}, excluído (antes de {data_inicio})")
+            except:
+                pass
+        # Se não tem data_desativacao mas está inativo, incluir (compatibilidade)
+        elif m.get("ativo") is None or m.get("status_motorista") == "ativo":
+            motoristas_filtrados.append(m)
+    
+    motoristas = motoristas_filtrados
+    logger.info(f"📊 Encontrados {len(motoristas)} motoristas (após filtro de desativação)")
     
     # Set para rastrear matrículas já processadas (evitar duplicação Via Verde)
     matriculas_processadas_viaverde = set()
