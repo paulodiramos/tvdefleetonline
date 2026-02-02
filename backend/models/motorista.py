@@ -210,6 +210,7 @@ class Motorista(BaseModel):
     approved: bool = False
     senha_provisoria: bool = False
     campos_customizados: Dict[str, Any] = {}
-    created_at: datetime
+    created_at: Optional[datetime] = None
     approved_by: Optional[str] = None
     approved_at: Optional[datetime] = None
+    data_desativacao: Optional[str] = None  # Data em que o motorista foi desativado
