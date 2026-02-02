@@ -261,93 +261,78 @@ class ViaVerdeRPA:
             
             # PASSO 3: Preencher os campos de data
             
-            de_input = None
-            ate_input = None
-            
-            # Procurar inputs que tenham valor com formato de data ou ícone de calendário
-            # Na Via Verde, os inputs estão dentro de divs com ícone de calendário
-            
-            date_input_selectors = [
-                # Inputs com valor de data visível
-                'input[value*="/"]',
-                # Inputs dentro de containers com ícone de calendário
-                'div:has(svg[class*="calendar"]) input',
-                'div:has([class*="calendar-icon"]) input',
-                # Inputs com placeholders de data
-                'input[placeholder*="dd/mm"]',
-                'input[placeholder*="DD/MM"]',
-                # Inputs tipo date ou datetime
-                'input[type="date"]',
-                'input[type="text"][class*="date"]',
-            ]
-            
-            # Primeiro, tirar screenshot para debug
-            await self.screenshot("procurando_inputs")
-            
-            # Procurar todos os inputs visíveis e verificar quais têm formato de data
-            all_visible_inputs = self.page.locator('input:visible')
-            input_count = await all_visible_inputs.count()
-            logger.info(f"📋 Total de inputs visíveis: {input_count}")
-            
-            date_inputs_found = []
-            for i in range(min(input_count, 20)):
+            # Função para preencher data no formato MM/YYYY
+            async def preencher_data_mmyyyy(input_element, data_mmyyyy: str) -> bool:
+                """Preencher data no formato MM/YYYY"""
                 try:
-                    inp = all_visible_inputs.nth(i)
-                    value = await inp.get_attribute('value') or ''
-                    placeholder = await inp.get_attribute('placeholder') or ''
-                    inp_type = await inp.get_attribute('type') or ''
-                    inp_class = await inp.get_attribute('class') or ''
-                    
-                    # Verificar se parece um campo de data
-                    is_date_field = False
-                    
-                    # Formato DD/MM/YYYY
-                    import re
-                    if re.match(r'\d{2}/\d{2}/\d{4}', value):
-                        is_date_field = True
-                    # Formato mm/dd/yyyy
-                    elif re.match(r'\d{1,2}/\d{1,2}/\d{4}', value):
-                        is_date_field = True
-                    # Placeholder de data
-                    elif 'data' in placeholder.lower() or 'date' in placeholder.lower():
-                        is_date_field = True
-                    elif 'mm/dd' in placeholder.lower() or 'dd/mm' in placeholder.lower():
-                        is_date_field = True
-                    
-                    if is_date_field:
-                        date_inputs_found.append({
-                            'index': i,
-                            'input': inp,
-                            'value': value,
-                            'placeholder': placeholder
-                        })
-                        logger.info(f"📋 Input data encontrado [{i}]: value='{value}', placeholder='{placeholder}'")
-                except Exception as e:
-                    pass
-            
-            logger.info(f"📋 Encontrados {len(date_inputs_found)} inputs de data")
-            
-            # Se encontrámos pelo menos 2 inputs de data, usar o primeiro para "De" e segundo para "Até"
-            if len(date_inputs_found) >= 2:
-                de_input = date_inputs_found[0]['input']
-                ate_input = date_inputs_found[1]['input']
-                logger.info(f"✅ Usando inputs de data: De='{date_inputs_found[0]['value']}', Até='{date_inputs_found[1]['value']}'")
-            elif len(date_inputs_found) == 1:
-                de_input = date_inputs_found[0]['input']
-                logger.info(f"⚠️ Apenas 1 input de data encontrado")
-            
-            # PASSO 3: Preencher as datas
-            
-            # Método de seleção de data via calendário popup
-            async def selecionar_data_calendario(input_element, dia: int, mes: int, ano: int) -> bool:
-                """Selecionar uma data específica usando o calendário popup"""
-                try:
-                    # Clicar no input para abrir o calendário
                     await input_element.click()
-                    await self.page.wait_for_timeout(500)
+                    await self.page.wait_for_timeout(300)
                     
-                    # Esperar que o calendário popup apareça
-                    calendar_popup = self.page.locator('table.calendar, .datepicker, .calendar-popup, [class*="calendar"], div:has(table):has(button:has-text("<"))')
+                    # Limpar campo
+                    await self.page.keyboard.press('Control+a')
+                    await self.page.wait_for_timeout(100)
+                    
+                    # Digitar a data
+                    await input_element.fill(data_mmyyyy)
+                    await self.page.wait_for_timeout(300)
+                    
+                    # Pressionar Tab para confirmar
+                    await self.page.keyboard.press('Tab')
+                    await self.page.wait_for_timeout(300)
+                    
+                    logger.info(f"✅ Data preenchida: {data_mmyyyy}")
+                    return True
+                except Exception as e:
+                    logger.error(f"❌ Erro ao preencher data: {e}")
+                    return False
+            
+            # Preencher campo "De:"
+            if de_input and await de_input.count() > 0:
+                sucesso_de = await preencher_data_mmyyyy(de_input, data_inicio_mmyyyy)
+                if sucesso_de:
+                    logger.info(f"✅ Campo 'De:' configurado: {data_inicio_mmyyyy}")
+                else:
+                    logger.warning(f"⚠️ Não foi possível configurar campo 'De:'")
+            else:
+                logger.warning("⚠️ Campo 'De:' não encontrado")
+            
+            await self.page.wait_for_timeout(500)
+            
+            # Preencher campo "Até:"
+            if ate_input and await ate_input.count() > 0:
+                sucesso_ate = await preencher_data_mmyyyy(ate_input, data_fim_mmyyyy)
+                if sucesso_ate:
+                    logger.info(f"✅ Campo 'Até:' configurado: {data_fim_mmyyyy}")
+                else:
+                    logger.warning(f"⚠️ Não foi possível configurar campo 'Até:'")
+            else:
+                logger.warning("⚠️ Campo 'Até:' não encontrado")
+            
+            await self.page.wait_for_timeout(500)
+            await self.screenshot("datas_preenchidas")
+            
+            # Fechar qualquer calendário aberto
+            await self.page.keyboard.press('Escape')
+            await self.page.wait_for_timeout(300)
+            
+            # PASSO 4: Clicar no botão "Filtrar"
+            filtrar_btn = self.page.locator('button:has-text("Filtrar"), a:has-text("Filtrar"), input[value="Filtrar"]').first
+            if await filtrar_btn.count() > 0:
+                await filtrar_btn.click()
+                await self.page.wait_for_timeout(3000)
+                logger.info("✅ Filtro aplicado")
+            else:
+                logger.warning("⚠️ Botão Filtrar não encontrado")
+            
+            await self.screenshot("resultados_filtrados")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao selecionar datas: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            await self.screenshot("erro_datas")
+            return False
                     await calendar_popup.first.wait_for(timeout=3000)
                     
                     await self.screenshot(f"calendario_aberto_{dia}_{mes}")
