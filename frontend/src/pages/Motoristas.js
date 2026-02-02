@@ -2229,6 +2229,81 @@ const Motoristas = ({ user, onLogout }) => {
           </DialogContent>
         </Dialog>
       </div>
+      
+      {/* Diálogo de Desativação de Motorista */}
+      {showDesativarDialog && (
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50"
+          onClick={() => setShowDesativarDialog(false)}
+          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9999 }}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="border-b p-6 pb-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold flex items-center gap-2">
+                  <Ban className="w-5 h-5 text-red-500" />
+                  Desativar Motorista
+                </h2>
+                <button
+                  onClick={() => setShowDesativarDialog(false)}
+                  className="text-slate-400 hover:text-slate-600"
+                >
+                  <XCircle className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <p className="text-slate-600">
+                Tem certeza que deseja desativar o motorista <span className="font-semibold">{desativarMotoristaData.nome}</span>?
+              </p>
+              
+              <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <p className="text-sm text-amber-800">
+                  A partir da data selecionada, este motorista não aparecerá nos Resumos Semanais futuros.
+                </p>
+              </div>
+              
+              <div>
+                <Label htmlFor="dataDesativacao">Data de Desativação</Label>
+                <Input
+                  id="dataDesativacao"
+                  type="date"
+                  value={desativarMotoristaData.dataDesativacao}
+                  onChange={(e) => setDesativarMotoristaData(prev => ({
+                    ...prev,
+                    dataDesativacao: e.target.value
+                  }))}
+                  className="mt-1"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  O motorista não aparecerá nos resumos das semanas após esta data.
+                </p>
+              </div>
+            </div>
+            
+            <div className="border-t p-6 pt-4 flex justify-end gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowDesativarDialog(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmarDesativacao}
+              >
+                <Ban className="w-4 h-4 mr-2" />
+                Desativar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Import CSV Modal */}
       {showImportDialog && (
       <div 
