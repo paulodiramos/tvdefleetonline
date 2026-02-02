@@ -678,7 +678,7 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
                       type="number"
                       min="1"
                       max="53"
-                      placeholder="Ex: 51"
+                      placeholder="Ex: 3"
                       value={viaVerdeConfig.semana}
                       onChange={(e) => setViaVerdeConfig({...viaVerdeConfig, semana: e.target.value})}
                       className="mt-1"
@@ -721,17 +721,43 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
                 </div>
               )}
 
-              {viaVerdeConfig.tipo_periodo === 'ultima_semana' && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                  <p className="text-sm text-blue-700">
-                    Vai buscar os dados da última semana completa (segunda a domingo).
-                  </p>
+              {/* Confirmação da Semana */}
+              <div className="bg-green-50 border-2 border-green-300 rounded-lg p-4">
+                <p className="text-sm font-semibold text-green-800 mb-2">
+                  📋 Confirme a importação:
+                </p>
+                <div className="text-sm text-green-700">
+                  {viaVerdeConfig.tipo_periodo === 'ultima_semana' && (
+                    <>
+                      <p className="font-medium">Última Semana Completa</p>
+                      <p className="text-xs mt-1">Segunda a Domingo da semana anterior</p>
+                    </>
+                  )}
+                  {viaVerdeConfig.tipo_periodo === 'semana_especifica' && viaVerdeConfig.semana && (
+                    <>
+                      <p className="font-medium">Semana {viaVerdeConfig.semana} de {viaVerdeConfig.ano}</p>
+                      <p className="text-xs mt-1">Os dados serão importados para o Resumo Semanal S{viaVerdeConfig.semana}/{viaVerdeConfig.ano}</p>
+                    </>
+                  )}
+                  {viaVerdeConfig.tipo_periodo === 'datas_personalizadas' && viaVerdeConfig.data_inicio && (
+                    <>
+                      <p className="font-medium">{viaVerdeConfig.data_inicio} a {viaVerdeConfig.data_fim || viaVerdeConfig.data_inicio}</p>
+                      <p className="text-xs mt-1">Os dados serão associados à semana correspondente de cada data</p>
+                    </>
+                  )}
                 </div>
-              )}
+              </div>
+
+              {/* Aviso Resumo Semanal */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <p className="text-sm text-blue-700">
+                  <strong>💡 Nota:</strong> Os dados importados aparecerão automaticamente no campo <strong>"Via Verde"</strong> do Resumo Semanal correspondente.
+                </p>
+              </div>
 
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
                 <p className="text-sm text-amber-700">
-                  <strong>Nota:</strong> As credenciais Via Verde devem estar configuradas em Configurações → Plataformas.
+                  <strong>⚠️</strong> As credenciais Via Verde devem estar configuradas em Configurações → Plataformas.
                 </p>
               </div>
 
