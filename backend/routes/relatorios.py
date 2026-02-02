@@ -940,28 +940,34 @@ async def get_resumo_semanal_parceiro(
         
         # ============ VIA VERDE ============
         via_verde_total = 0.0
-        vv_query_conditions = [{"motorista_id": motorista_id}]
-        if via_verde_id:
-            vv_query_conditions.append({"via_verde_id": via_verde_id})
-        if obu:
-            vv_query_conditions.append({"obu": obu})
-        if veiculo_id:
-            vv_query_conditions.append({"vehicle_id": veiculo_id})
-        if veiculo and veiculo.get("matricula"):
-            vv_query_conditions.append({"matricula": veiculo.get("matricula")})
         
-        vv_query = {
-            "$or": vv_query_conditions,
-            "$and": [
-                {"$or": [
+        # Via Verde: Buscar apenas pela matrícula do veículo atribuído ao motorista
+        # Isso evita duplicação quando múltiplos motoristas têm a mesma matrícula
+        vv_query = None
+        if veiculo and veiculo.get("matricula"):
+            matricula_veiculo = veiculo.get("matricula", "").upper().strip()
+            vv_query = {
+                "matricula": matricula_veiculo,
+                "$or": [
                     {"semana": semana, "ano": ano},
                     {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}},
                     {"data": {"$gte": data_inicio, "$lte": data_fim}}
-                ]}
-            ]
-        }
+                ]
+            }
+        elif motorista_id:
+            # Fallback: buscar por motorista_id se não tiver veículo
+            vv_query = {
+                "motorista_id": motorista_id,
+                "$or": [
+                    {"semana": semana, "ano": ano},
+                    {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}},
+                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                ]
+            }
         
-        vv_records = await db.portagens_viaverde.find(vv_query, {"_id": 0}).to_list(1000)
+        vv_records = []
+        if vv_query:
+            vv_records = await db.portagens_viaverde.find(vv_query, {"_id": 0}).to_list(1000)
         # Incluir:
         # 1. Registos com market_description = "portagens" ou "parques" (novos dados)
         # 2. Registos sem market_description (dados antigos) - assumir que são portagens
