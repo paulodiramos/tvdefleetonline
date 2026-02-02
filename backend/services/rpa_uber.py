@@ -198,10 +198,29 @@ class UberRPA:
                     logger.warning("💡 Sugestão: Fazer login manual primeiro e usar sessão guardada")
             
             # VERIFICAR SE PEDE SMS
-            # Procurar opção "Enviar códigos por SMS"
-            enviar_sms_btn = self.page.locator('text=/Enviar códigos por SMS|Send codes via SMS/').first
+            # Procurar opção "Enviar códigos por SMS" ou campo de código
+            enviar_sms_btn = self.page.locator('text=/Enviar códigos por SMS|Send codes via SMS|Enviar código/').first
+            sms_input_direto = self.page.locator('input[placeholder*="digit"], input[placeholder*="código"], input[placeholder*="code"]').first
             
-            if await enviar_sms_btn.count() > 0 and await enviar_sms_btn.is_visible():
+            # Se há campo de código direto (SMS já enviado)
+            if await sms_input_direto.count() > 0 and await sms_input_direto.is_visible():
+                logger.info("📱 Campo de código SMS detectado diretamente")
+                if self.sms_code:
+                    await sms_input_direto.fill(self.sms_code)
+                    await self.page.wait_for_timeout(500)
+                    logger.info(f"✅ Código SMS inserido: {self.sms_code}")
+                    await self.screenshot("sms_preenchido")
+                    
+                    # Clicar em Verificar/Continuar/Seguinte
+                    verificar_btn = self.page.locator('button:has-text("Verificar"), button:has-text("Verify"), button:has-text("Continuar"), button:has-text("Continue"), button:has-text("Seguinte"), button:has-text("Next"), button[type="submit"]').first
+                    if await verificar_btn.count() > 0:
+                        await verificar_btn.click()
+                        await self.page.wait_for_timeout(5000)
+                        logger.info("✅ Clicou Verificar SMS")
+                else:
+                    logger.warning("⚠️ Campo SMS detectado mas código não fornecido!")
+                    
+            elif await enviar_sms_btn.count() > 0 and await enviar_sms_btn.is_visible():
                 logger.info("📱 Opção SMS detectada")
                 
                 # Se temos código SMS, clicar para enviar
@@ -213,7 +232,7 @@ class UberRPA:
                     await self.screenshot("aguardando_sms")
                     
                     # Aguardar campo de código SMS
-                    sms_input = self.page.locator('input[type="text"], input[type="number"], input[name="code"], input[placeholder*="código"], input[placeholder*="code"]').first
+                    sms_input = self.page.locator('input[type="text"], input[type="tel"], input[type="number"], input[placeholder*="digit"], input[placeholder*="código"], input[placeholder*="code"]').first
                     
                     if await sms_input.count() > 0:
                         await sms_input.wait_for(timeout=10000)
@@ -224,7 +243,7 @@ class UberRPA:
                         await self.screenshot("sms_preenchido")
                         
                         # Clicar em Verificar/Continuar
-                        verificar_btn = self.page.locator('button:has-text("Verificar"), button:has-text("Verify"), button:has-text("Continuar"), button:has-text("Continue"), button[type="submit"]').first
+                        verificar_btn = self.page.locator('button:has-text("Verificar"), button:has-text("Verify"), button:has-text("Continuar"), button:has-text("Continue"), button:has-text("Seguinte"), button[type="submit"]').first
                         if await verificar_btn.count() > 0:
                             await verificar_btn.click()
                             await self.page.wait_for_timeout(5000)
@@ -247,7 +266,28 @@ class UberRPA:
             
             await self.screenshot("apos_sms_ou_opcoes")
             
-            # Procurar campo de password
+            # VERIFICAR SE PEDE PIN/CÓDIGO DE ACESSO ADICIONAL
+            pin_input = self.page.locator('input[placeholder*="PIN"], input[placeholder*="pin"], input[placeholder*="acesso"], input[type="password"][maxlength="4"], input[type="password"][maxlength="6"]').first
+            if await pin_input.count() > 0 and await pin_input.is_visible():
+                logger.info("🔢 Campo de PIN/código de acesso detectado")
+                if self.pin_code:
+                    await pin_input.fill(self.pin_code)
+                    await self.page.wait_for_timeout(500)
+                    logger.info(f"✅ PIN inserido")
+                    await self.screenshot("pin_preenchido")
+                    
+                    # Clicar para continuar
+                    continuar_btn = self.page.locator('button:has-text("Continuar"), button:has-text("Continue"), button:has-text("Verificar"), button[type="submit"]').first
+                    if await continuar_btn.count() > 0:
+                        await continuar_btn.click()
+                        await self.page.wait_for_timeout(5000)
+                elif self.password:
+                    # Tentar usar a password como PIN
+                    await pin_input.fill(self.password)
+                    await self.page.wait_for_timeout(500)
+                    logger.info("✅ Tentou usar password como PIN")
+            
+            # Procurar campo de password normal
             password_input = self.page.locator('input[type="password"]').first
             
             if await password_input.count() > 0 and await password_input.is_visible():
