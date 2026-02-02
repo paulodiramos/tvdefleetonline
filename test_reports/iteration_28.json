@@ -1,0 +1,101 @@
+{
+  "summary": "User Management Testing - Iteration 28. All features tested and working correctly: Admin login, User listing, Role filtering, User creation (Parceiro, Gestor, Motorista), and Parceiro login to dashboard.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "features_tested": {
+    "admin_login": {
+      "status": "PASS",
+      "details": "Admin login with admin@tvdefleet.com / 123456 works correctly. Redirects to /dashboard."
+    },
+    "user_management_page": {
+      "status": "PASS",
+      "details": "Page /utilizadores loads correctly with user cards, search input, role filter dropdown, and 'Novo Utilizador' button."
+    },
+    "user_list_loading": {
+      "status": "PASS",
+      "details": "GET /api/users/all returns all users with correct structure (id, email, name, role, approved status)."
+    },
+    "role_filter": {
+      "status": "PASS",
+      "details": "Role filter dropdown works correctly. Filtering by 'Parceiro' shows only Parceiro users."
+    },
+    "create_parceiro_ui": {
+      "status": "PASS",
+      "details": "Creating Parceiro via modal works. Form fields: Nome, Email, Password, Tipo de Utilizador. Toast shows 'Utilizador criado com sucesso!'"
+    },
+    "create_gestor_ui": {
+      "status": "PASS",
+      "details": "Creating Gestor via modal works. Shows 'Parceiros Associados' section with checkboxes when Gestor role selected. Validation requires at least one parceiro."
+    },
+    "parceiro_login": {
+      "status": "PASS",
+      "details": "Parceiro login with parceiro.criado.ui@example.com / parceiro123 works. Redirects to dashboard with 'Resumo Semanal do Parceiro'."
+    },
+    "api_auth_login": {
+      "status": "PASS",
+      "details": "POST /api/auth/login returns access_token and user object with correct role."
+    },
+    "api_auth_register": {
+      "status": "PASS",
+      "details": "POST /api/auth/register creates users with all roles (admin, gestao, parceiro, motorista). Supports parceiros_associados for gestores."
+    },
+    "api_users_all": {
+      "status": "PASS",
+      "details": "GET /api/users/all returns list of all users. Requires admin/gestao authentication."
+    },
+    "api_users_pending": {
+      "status": "PASS",
+      "details": "GET /api/users/pending returns users with approved=false."
+    },
+    "api_parceiros": {
+      "status": "PASS",
+      "details": "GET /api/parceiros returns list of parceiros for gestor association."
+    },
+    "api_planos": {
+      "status": "PASS",
+      "details": "GET /api/planos returns available subscription plans."
+    },
+    "duplicate_email_validation": {
+      "status": "PASS",
+      "details": "Creating user with existing email returns 400 'Email already registered'."
+    }
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_user_management.py",
+    "/app/test_reports/pytest/pytest_user_management_iter28.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "User creation flow is well implemented with proper validation",
+    "Gestor role correctly requires parceiros_associados selection",
+    "Role-based access control working correctly (admin/gestao can access /api/users/all)",
+    "Toast notifications provide good user feedback"
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_user_management.py"
+  ],
+  "success_rate": {
+    "backend": "100% (13/13 tests passed)",
+    "frontend": "100% (all UI flows working)"
+  },
+  "test_credentials": {
+    "admin": "admin@tvdefleet.com / 123456",
+    "parceiro_existing": "parceiro.criado.ui@example.com / parceiro123",
+    "parceiro_zeny": "geral@zmbusines.com / zeny123"
+  },
+  "seed_data_creation": "Created test users during testing: parceiro.test.{timestamp}@example.com, gestor.test2.{timestamp}@example.com",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "User management features fully tested. All CRUD operations for users working. Role filter, search, and user creation modal all functional. Gestor creation requires selecting at least one parceiro.",
+  "mocked_integrations": {
+    "has_mocked_apis": false,
+    "mocked_apis_list": []
+  }
+}
