@@ -289,7 +289,7 @@ function App() {
             }
           />
           <Route
-            path="/utilizadores"
+            path="/usuarios"
             element={
               user && user.role === 'admin' ? (
                 <GestaoUtilizadores user={user} onLogout={handleLogout} />
