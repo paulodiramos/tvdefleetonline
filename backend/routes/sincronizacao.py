@@ -801,10 +801,209 @@ async def listar_logs_sincronizacao(
 
 
 # ==================================================
-# SINCRONIZAÇÃO RPA VIA VERDE (COM DATAS)
+# SINCRONIZAÇÃO RPA UBER
 # ==================================================
 
 from pydantic import BaseModel as PydanticModel
+
+class UberRPARequest(PydanticModel):
+    """Request para sincronização RPA Uber"""
+    tipo_periodo: str = "ultima_semana"  # ultima_semana, semana_especifica, datas_personalizadas
+    data_inicio: Optional[str] = None  # YYYY-MM-DD
+    data_fim: Optional[str] = None  # YYYY-MM-DD
+    semana: Optional[int] = None  # Número da semana (1-53)
+    ano: Optional[int] = None  # Ano
+
+
+@router.post("/uber/executar-rpa")
+async def executar_rpa_uber(
+    request: UberRPARequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Executar RPA da Uber para extrair rendimentos dos motoristas.
+    
+    Tipos de período suportados:
+    - ultima_semana: Busca dados da última semana completa
+    - semana_especifica: Busca dados de uma semana específica (semana + ano)
+    - datas_personalizadas: Busca dados entre data_inicio e data_fim
+    """
+    from datetime import timedelta
+    from routes.rpa_automacao import calcular_periodo_semana
+    
+    pid = current_user['id']
+    
+    # Verificar se parceiro tem credenciais Uber
+    credenciais = await db.credenciais_plataforma.find_one({
+        "parceiro_id": pid,
+        "plataforma": "uber"
+    })
+    
+    if not credenciais or not credenciais.get("email") or not credenciais.get("password"):
+        raise HTTPException(
+            status_code=400, 
+            detail="Credenciais Uber não configuradas. Vá a Configurações → Plataformas para configurar."
+        )
+    
+    now = datetime.now(timezone.utc)
+    
+    # Calcular datas baseado no tipo de período
+    if request.tipo_periodo == "ultima_semana":
+        today = now.date()
+        last_sunday = today - timedelta(days=(today.weekday() + 1))
+        last_monday = last_sunday - timedelta(days=6)
+        
+        data_inicio = last_monday.strftime("%Y-%m-%d")
+        data_fim = last_sunday.strftime("%Y-%m-%d")
+        periodo_descricao = f"Última semana ({data_inicio} a {data_fim})"
+        
+    elif request.tipo_periodo == "semana_especifica":
+        if not request.semana or not request.ano:
+            raise HTTPException(status_code=400, detail="Semana e ano são obrigatórios para semana_especifica")
+        
+        data_inicio, data_fim = calcular_periodo_semana(request.semana, request.ano)
+        periodo_descricao = f"Semana {request.semana}/{request.ano} ({data_inicio} a {data_fim})"
+        
+    elif request.tipo_periodo == "datas_personalizadas":
+        if not request.data_inicio or not request.data_fim:
+            raise HTTPException(status_code=400, detail="data_inicio e data_fim são obrigatórios para datas_personalizadas")
+        
+        data_inicio = request.data_inicio
+        data_fim = request.data_fim
+        periodo_descricao = f"Personalizado ({data_inicio} a {data_fim})"
+    else:
+        raise HTTPException(status_code=400, detail=f"Tipo de período inválido: {request.tipo_periodo}")
+    
+    # Criar registo de execução
+    execucao_id = str(uuid.uuid4())
+    execucao = {
+        "id": execucao_id,
+        "parceiro_id": pid,
+        "plataforma": "uber",
+        "tipo_periodo": request.tipo_periodo,
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "periodo_descricao": periodo_descricao,
+        "status": "em_execucao",
+        "started_at": now.isoformat(),
+        "resultado": None,
+        "logs": []
+    }
+    
+    await db.execucoes_rpa_uber.insert_one(execucao)
+    logger.info(f"✅ Execução RPA Uber {execucao_id} criada: {periodo_descricao}")
+    
+    # Executar RPA em background
+    async def run_uber_rpa():
+        try:
+            from services.rpa_uber import executar_rpa_uber
+            
+            resultado = await executar_rpa_uber(
+                email=credenciais["email"],
+                password=credenciais["password"],
+                data_inicio=data_inicio,
+                data_fim=data_fim,
+                headless=True
+            )
+            
+            # Atualizar execução com resultado
+            await db.execucoes_rpa_uber.update_one(
+                {"id": execucao_id},
+                {"$set": {
+                    "status": "concluido" if resultado.get("sucesso") else "erro",
+                    "resultado": resultado,
+                    "logs": resultado.get("logs", []),
+                    "total_motoristas": resultado.get("total_motoristas", 0),
+                    "total_rendimentos": resultado.get("total_rendimentos", 0),
+                    "completed_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            
+            # Se teve sucesso e tem motoristas, importar para a BD
+            if resultado.get("sucesso") and resultado.get("motoristas"):
+                motoristas = resultado["motoristas"]
+                importados = 0
+                
+                for mot in motoristas:
+                    # Criar ou atualizar registo de rendimento Uber
+                    rendimento = {
+                        "parceiro_id": pid,
+                        "nome_motorista": mot.get("nome"),
+                        "data_inicio": data_inicio,
+                        "data_fim": data_fim,
+                        "rendimentos_totais": mot.get("rendimentos_totais", 0),
+                        "reembolsos_despesas": mot.get("reembolsos_despesas", 0),
+                        "ajustes": mot.get("ajustes", 0),
+                        "pagamento": mot.get("pagamento", 0),
+                        "rendimentos_liquidos": mot.get("rendimentos_liquidos", 0),
+                        "fonte": "rpa",
+                        "execucao_id": execucao_id,
+                        "importado_em": datetime.now(timezone.utc).isoformat()
+                    }
+                    
+                    # Evitar duplicados
+                    existe = await db.rendimentos_uber.find_one({
+                        "parceiro_id": pid,
+                        "nome_motorista": mot.get("nome"),
+                        "data_inicio": data_inicio,
+                        "data_fim": data_fim
+                    })
+                    
+                    if not existe:
+                        await db.rendimentos_uber.insert_one(rendimento)
+                        importados += 1
+                
+                logger.info(f"📊 Uber: Importados {importados} rendimentos de motoristas")
+            
+            logger.info(f"✅ RPA Uber {execucao_id} concluído: {resultado.get('sucesso')}")
+            
+        except Exception as e:
+            logger.error(f"❌ Erro no RPA Uber: {e}")
+            await db.execucoes_rpa_uber.update_one(
+                {"id": execucao_id},
+                {"$set": {
+                    "status": "erro",
+                    "resultado": {"sucesso": False, "mensagem": str(e)},
+                    "completed_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+    
+    # Executar em background
+    asyncio.create_task(run_uber_rpa())
+    
+    return {
+        "success": True,
+        "execucao_id": execucao_id,
+        "status": "em_execucao",
+        "periodo": {
+            "tipo": request.tipo_periodo,
+            "data_inicio": data_inicio,
+            "data_fim": data_fim,
+            "descricao": periodo_descricao
+        },
+        "mensagem": f"Extração Uber iniciada para {periodo_descricao}"
+    }
+
+
+@router.get("/uber/execucoes")
+async def listar_execucoes_uber(
+    limit: int = 20,
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar execuções RPA Uber do parceiro"""
+    pid = current_user['id']
+    
+    execucoes = await db.execucoes_rpa_uber.find(
+        {"parceiro_id": pid},
+        {"_id": 0}
+    ).sort("started_at", -1).limit(limit).to_list(limit)
+    
+    return execucoes
+
+
+# ==================================================
+# SINCRONIZAÇÃO RPA VIA VERDE (COM DATAS)
+# ==================================================
 
 class ViaVerdeRPARequest(PydanticModel):
     """Request para sincronização RPA Via Verde"""
