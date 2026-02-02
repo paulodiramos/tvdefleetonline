@@ -123,35 +123,101 @@ class ViaVerdeRPA:
             logger.info("📑 A navegar para Movimentos...")
             
             # A página tem dois tabs: "Extratos" e "Movimentos"
-            # Precisamos clicar no tab "Movimentos" que NÃO está ativo (verde)
+            # Os tabs estão numa lista horizontal, não no sidebar
+            # Precisamos clicar no tab "Movimentos" que está JUNTO ao "Extratos"
             
-            # Primeiro, verificar se já estamos na página correta
             await self.page.wait_for_timeout(2000)
+            await self.screenshot("antes_movimentos")
             
-            # Procurar o tab "Movimentos" - pode ser um link ou botão
-            movimentos_selectors = [
-                'a:text-is("Movimentos")',
-                'button:text-is("Movimentos")',
-                'li:has-text("Movimentos") a',
-                'div[role="tab"]:has-text("Movimentos")',
-                '.nav-tabs a:has-text("Movimentos")',
-                'ul.nav a:has-text("Movimentos")',
-                # Tab não selecionado (sem fundo verde)
+            # Primeiro tentar seletores específicos para tabs (não sidebar)
+            tab_selectors = [
+                # Tabs diretos - procurar dentro do contexto de tabs horizontal
+                'ul.nav-tabs >> a:has-text("Movimentos")',
+                '.nav-tabs >> li:has-text("Movimentos")',
+                # Tab junto ao "Extratos" - mais específico
+                'a[role="tab"]:has-text("Movimentos")',
+                # Tabs baseados em classe
+                '.tab:has-text("Movimentos")',
+                '.nav-link:has-text("Movimentos")',
+                # Tabs em lista
+                'li.nav-item >> a:has-text("Movimentos")',
+                # Tab que não está ativo (não tem classe active/selected)
                 'a:has-text("Movimentos"):not(.active)',
+                # Último recurso - qualquer link com "Movimentos" que não esteja no sidebar
+                'main a:has-text("Movimentos")',
+                '.content a:has-text("Movimentos")',
             ]
             
-            for selector in movimentos_selectors:
-                movimentos_tab = self.page.locator(selector).first
-                if await movimentos_tab.count() > 0:
-                    is_visible = await movimentos_tab.is_visible()
-                    if is_visible:
-                        await movimentos_tab.click()
-                        await self.page.wait_for_timeout(3000)
-                        logger.info(f"✅ Tab Movimentos clicado via: {selector}")
-                        break
+            clicked = False
+            for selector in tab_selectors:
+                try:
+                    tab = self.page.locator(selector).first
+                    if await tab.count() > 0:
+                        is_visible = await tab.is_visible()
+                        if is_visible:
+                            await tab.click()
+                            await self.page.wait_for_timeout(3000)
+                            logger.info(f"✅ Tab Movimentos clicado via: {selector}")
+                            clicked = True
+                            break
+                except Exception as e:
+                    logger.debug(f"Seletor {selector} falhou: {e}")
+            
+            # Se nenhum seletor funcionou, tentar método alternativo
+            if not clicked:
+                # Procurar pelo texto "Movimentos" que esteja próximo de "Extratos"
+                # (para evitar o sidebar)
+                try:
+                    # Encontrar "Extratos" primeiro
+                    extratos = self.page.locator('a:has-text("Extratos"), li:has-text("Extratos")').first
+                    if await extratos.count() > 0:
+                        # O "Movimentos" deve estar logo a seguir
+                        # Usar parent para encontrar o container dos tabs
+                        parent = extratos.locator('..')
+                        movimentos_tab = parent.locator('a:has-text("Movimentos"), li:has-text("Movimentos")').first
+                        if await movimentos_tab.count() > 0:
+                            await movimentos_tab.click()
+                            await self.page.wait_for_timeout(3000)
+                            logger.info("✅ Tab Movimentos clicado via método de proximidade")
+                            clicked = True
+                except Exception as e:
+                    logger.debug(f"Método de proximidade falhou: {e}")
+            
+            # Se ainda não clicou, tentar clicar por coordenadas
+            if not clicked:
+                try:
+                    # Procurar todos os elementos com "Movimentos"
+                    all_movimentos = self.page.locator('text=Movimentos')
+                    count = await all_movimentos.count()
+                    logger.info(f"📋 Encontrados {count} elementos com 'Movimentos'")
+                    
+                    # O primeiro "Movimentos" na página geralmente é o tab
+                    # (o sidebar aparece depois)
+                    if count >= 1:
+                        first_movimentos = all_movimentos.first
+                        box = await first_movimentos.bounding_box()
+                        if box:
+                            # Se está na parte superior da página (y < 300), é provavelmente o tab
+                            if box['y'] < 300:
+                                await first_movimentos.click()
+                                await self.page.wait_for_timeout(3000)
+                                logger.info(f"✅ Tab Movimentos clicado (primeiro elemento, y={box['y']})")
+                                clicked = True
+                            else:
+                                # Tentar o segundo se o primeiro está muito abaixo
+                                if count >= 2:
+                                    second = all_movimentos.nth(1)
+                                    box2 = await second.bounding_box()
+                                    if box2 and box2['y'] < 300:
+                                        await second.click()
+                                        await self.page.wait_for_timeout(3000)
+                                        logger.info(f"✅ Tab Movimentos clicado (segundo elemento, y={box2['y']})")
+                                        clicked = True
+                except Exception as e:
+                    logger.debug(f"Método de coordenadas falhou: {e}")
             
             await self.screenshot("tab_movimentos")
-            return True
+            return clicked
             
         except Exception as e:
             logger.error(f"❌ Erro ao navegar para Movimentos: {e}")
