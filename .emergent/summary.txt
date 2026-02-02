@@ -1,72 +1,63 @@
 <analysis>**original_problem_statement:**
-O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas com as seguintes funcionalidades:
-1.  **Gestão de Turnos de Veículos.**
-2.  **Sistema de Sincronização Automática:** Recolha de dados da Uber, Bolt, Via Verde, etc.
-3.  **Refatoração do Backend:** Mover lógica do  monolítico.
-4.  **Sistema de Exportação e Importação de Dados:** Exportar/Importar dados via CSV.
-5.  **Páginas Meu Plano e Loja:** Para gestão de subscrições.
-6.  **Consolidação de Menus de Configuração.**
-7.  **Integração com a API oficial da Bolt.**
-8.  **Refinamento da Lógica de Sincronização:** Associar dados, criar registos de ganhos/despesas e permitir agendamento.
-9.  **Prevenção de Criação de Dados:** Garantir que a sincronização não cria/move motoristas entre parceiros.
-10. **Correção do Resumo Semanal:** Assegurar que os valores sincronizados aparecem corretamente.
-11. **Implementação de RPA (Automação Robótica de Processos):** Para extrair dados de plataformas sem API, como a Via Verde.
-12. **Refatoração do Painel de Admin:** Simplificar e reorganizar o menu de navegação do administrador.
+O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas com as seguintes funcionalidades principais:
+1.  Sincronização automática de dados de plataformas como Uber, Bolt e Via Verde.
+2.  Um resumo semanal financeiro que consolide ganhos e despesas por motorista.
+3.  Gestão de motoristas, incluindo a capacidade de os desativar.
+4.  Refatoração geral da aplicação para maior escalabilidade.
+
+Os requisitos mais recentes focam-se na sincronização com a Via Verde:
+-   O parceiro deve poder acionar a sincronização RPA (Automação Robótica de Processos) a partir da página do Resumo Semanal para a semana específica que está a visualizar.
+-   O sistema deve permitir o upload manual de ficheiros Excel da Via Verde.
+-   Foram reportadas discrepâncias nos valores importados e problemas com o botão Limpar do resumo semanal.
+-   O RPA da Via Verde não está a filtrar corretamente as transações por data no site.
+-   O processo de desativação de motoristas precisa de ser melhorado com um pop-up para definir a data de desativação.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
 -   Uma aplicação full-stack (React + FastAPI + MongoDB) funcional.
--   A integração com a **API da Bolt** está operacional, sincronizando motoristas, veículos e ganhos.
--   A estrutura para **sincronização RPA da Uber** está configurada, onde o Admin cria templates e os parceiros usam as suas próprias credenciais.
--   A **sincronização RPA da Via Verde via Playwright está totalmente funcional no backend**. O script () consegue fazer login, navegar para a secção Movimentos, aplicar filtros de data, descarregar o ficheiro Excel diretamente (sem depender de email) e um parser robusto () processa o ficheiro, extrai as transações e calcula a semana correta para cada uma.
--   O painel de administração foi reorganizado para uma melhor experiência de utilizador.
--   A página de Sincronização do parceiro foi atualizada para incluir a funcionalidade da Via Verde, mas está atualmente quebrada.
+-   A integração com a API da Bolt está operacional.
+-   A sincronização RPA da Via Verde está parcialmente implementada. O backend consegue fazer login e descarregar o ficheiro Excel, mas a filtragem por data está com erros.
+-   A página do Resumo Semanal () possui um botão Sincronizar com um menu que inclui opções para acionar o RPA da Via Verde e para fazer o upload manual de um ficheiro Excel.
+-   A funcionalidade para desativar motoristas foi adicionada ao backend, incluindo uma  para os impedir de aparecer em relatórios futuros.
+-   O botão Limpar no resumo semanal foi corrigido para eliminar dados de múltiplas fontes (Bolt, Via Verde, etc.), mantendo o aluguer.
 
 **Last working item**:
--   **Last item agent was working:** O agente estava a corrigir um erro no frontend na página  (). Após implementar uma alteração para adicionar um diálogo de confirmação, a página ficou em branco. A análise dos logs do navegador revelou um erro de React Router: , indicando que o caminho da rota está incorreto.
+-   **Last item agent was working:** O agente estava a diagnosticar a razão pela qual o RPA da Via Verde falha ao filtrar transações por um período de datas específico. Após analisar um screenshot fornecido pelo utilizador, o agente concluiu que o script Playwright () não interage corretamente com a interface do calendário (campos De e Até) no site da Via Verde, resultando no download de todas as transações do mês em vez de apenas a semana selecionada.
 -   **Status:** IN PROGRESS
 -   **Agent Testing Done:** N
--   **Which testing method agent to use?** Frontend testing agent para verificar se a página  carrega, se o novo diálogo de confirmação da Via Verde funciona e se a sincronização pode ser iniciada.
+-   **Which testing method agent to use?** Backend testing. O agente deve modificar o script RPA, acionar o endpoint () via  e depois inspecionar o ficheiro Excel gerado em  para confirmar que apenas as transações do período solicitado estão presentes.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: (P0) Página de Sincronização em Branco**
-    -   **Attempted fixes:** O agente corrigiu um erro de linting, mas a página permaneceu em branco. A causa raiz foi identificada como um erro de roteamento no React.
+-   **Issue 1: (P0) Falha na Filtragem de Datas do RPA da Via Verde**
+    -   **Attempted fixes:** O agente identificou a causa raiz (interação incorreta com o calendário no site) mas ainda não implementou a correção no código.
     -   **Next debug checklist:**
-        1.  Verificar o ficheiro de configuração de rotas principal do frontend (provavelmente  ou similar).
-        2.  Identificar o caminho correto para o componente .
-        3.  Corrigir o link de navegação ou a definição da rota para que correspondam.
-        4.  Após a correção, usar a ferramenta de screenshot para confirmar que a página renderiza corretamente.
-    -   **Why fix this issue and what will be achieved with the fix?** É um bloqueador crítico. A principal funcionalidade de sincronização está inacessível. A correção restaurará o acesso e permitirá que o utilizador utilize a nova automação da Via Verde.
+        1.  Editar o ficheiro .
+        2.  Implementar a lógica de interação com o calendário: limpar os campos de data, clicar para abrir o calendário, navegar para o mês correto, selecionar os dias de início e fim, e clicar no botão Filtrar.
+        3.  Testar o endpoint do RPA para garantir que o ficheiro Excel descarregado contém apenas os dados do período correto.
+    -   **Why fix this issue and what will be achieved with the fix?** É um bloqueador para a automação da Via Verde. A correção tornará a sincronização automática fiável, eliminando a necessidade de uploads manuais e garantindo a precisão dos dados.
     -   **Status:** IN PROGRESS
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** frontend
+    -   **Is recurring issue?** Y
+    -   **Should Test frontend/backend/both after fix?** Backend
     -   **Blocked on other issue:** N/A
 
--   **Issue 2: (P1) Associação de Dados da Via Verde no Resumo Semanal**
-    -   **Description:** O resumo semanal pode não estar a agregar corretamente as despesas de portagens, pois a sua consulta baseia-se em , enquanto os dados da Via Verde são importados com  e .
+-   **Issue 2: (P1) Implementação da UI para Desativação de Motorista**
+    -   **Description:** O utilizador solicitou que, ao desativar um motorista na página , apareça um pop-up para selecionar a data de desativação. A lógica de backend está implementada, mas a UI precisa de ser finalizada e testada.
     -   **Next debug checklist:**
-        1.  Rever .
-        2.  Ajustar a consulta que busca  para agregar dados com base nos veículos associados ao .
-    -   **Why fix this issue and what will be achieved with the fix?** Garante a precisão dos relatórios financeiros para os parceiros.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** backend
-    -   **Blocked on other issue:** Issue 1: Página de Sincronização em Branco.
-
-**In progress Task List**:
--   **Task 1: (P0) Finalizar e Validar a Sincronização RPA da Via Verde**
-    -   **Where to resume:** Começar por corrigir a página em branco em .
-    -   **What will be achieved with this?** Um fluxo ponta a ponta funcional: o parceiro poderá selecionar uma semana, confirmar, acionar o RPA, que descarrega e processa um ficheiro Excel, com os dados a serem refletidos corretamente no resumo semanal.
+        1.  Verificar o ficheiro  para garantir que o novo diálogo de desativação está a ser chamado corretamente.
+        2.  Testar o fluxo completo na UI: clicar para desativar, selecionar uma data no pop-up e confirmar.
+        3.  Verificar no Resumo Semanal se o motorista desativado deixa de aparecer nas semanas posteriores à data de desativação.
+    -   **Why fix this issue and what will be achieved with the fix?** Melhora a usabilidade da gestão de motoristas e garante a precisão dos relatórios financeiros.
     -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** both
-    -   **Blocked on something:** Issue 1: Página de Sincronização em Branco.
+    -   **Is recurring issue?** N
+    -   **Should Test frontend/backend/both after fix?** Both
+    -   **Blocked on other issue:** N/A
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
     -   **(P1) Criar Script Playwright para a Uber:** Aguardando um vídeo de demonstração do utilizador.
-    -   **(P2) Criar página de Histórico de Sincronizações:** Uma página para parceiros/admins verem o histórico de todas as execuções de sincronização (API e RPA).
+    -   **(P2) Criar página de Histórico de Sincronizações:** Para visualizar o estado e os logs de todas as execuções de sincronização.
 -   **Future Tasks:**
     -   **(P1) Implementar Integração Ifthenpay:** (Adiado pelo utilizador).
     -   **(P1) Implementar Integração Moloni:** (Adiado pelo utilizador).
@@ -75,16 +66,16 @@ O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas
     -   **(P3) Decidir o futuro do módulo de Comissões.**
 
 **Completed work in this session**
--   **RPA da Via Verde com Download Direto de Excel:**
-    -   Superou desafios complexos na UI dinâmica do site da Via Verde, implementando um login robusto e navegação precisa.
-    -   Criou um script Playwright () que automatiza o processo de login, navegação, aplicação de filtros e download direto de um ficheiro Excel.
-    -   Desenvolveu um parser () que processa o Excel, mapeia corretamente as colunas e calcula a semana e o ano de cada transação.
-    -   Integrou o fluxo completo numa API de backend que executa o RPA como uma tarefa em segundo plano.
--   **Resolução de Problemas Críticos de Base de Dados:**
-    -   Diagnosticou e resolveu uma discrepância entre a base de dados usada pela aplicação () e a usada em testes manuais, garantindo a persistência correta dos dados.
-    -   Corrigiu um erro de serialização de  no endpoint que lista as execuções de RPA.
--   **Início da Melhoria da UI de Sincronização:**
-    -   Começou a implementar um diálogo de confirmação em  a pedido do utilizador, o que levou ao problema atual da página em branco.
+-   **Correção de Erros na API e UI:** Resolvidos múltiplos erros, incluindo um de Unprocessable Entity ao guardar credenciais, bugs na UI que mostravam undefined, e erros de validação Pydantic no endpoint de motoristas.
+-   **Melhoria da Agregação no Resumo Semanal:** A consulta de dados da Via Verde foi corrigida para usar o campo  correto, incluir mensalidades e evitar a dupla contagem de custos quando um veículo está atribuído a múltiplos motoristas.
+-   **Implementação de Upload Manual de Excel:** Foi criado um endpoint e uma opção na UI para que o utilizador possa importar manualmente ficheiros Excel da Via Verde, resolvendo temporariamente as discrepâncias de dados.
+-   **Correção do Botão Limpar:** A funcionalidade foi ajustada para eliminar corretamente os dados de múltiplas fontes (Bolt, Via Verde) para a semana selecionada no Resumo Semanal, conforme solicitado.
+-   **Implementação da Lógica de Desativação de Motoristas:** O backend foi modificado para filtrar motoristas com base numa nova , impedindo que apareçam em relatórios de semanas futuras.
+-   **Integração do RPA na Página de Resumo Semanal:** O botão Sincronizar na página de Resumo Semanal agora aciona corretamente o RPA da Via Verde para a semana visualizada.
+
+**Earlier issues found/mentioned but not fixed**
+-   **Problema de Integridade de Dados:** A base de dados contém inconsistências, como o mesmo veículo atribuído a múltiplos motoristas ativos. Foi implementada uma solução paliativa no backend para evitar a dupla contagem nos relatórios, mas o problema de dados subjacente persiste.
+-   **Dados de Portagens Órfãos:** Existem registos de portagens para matrículas que não correspondem a nenhum veículo registado no sistema (ex: ). Estes custos são atualmente ignorados no resumo semanal.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Refatoração do Backend ( monolítico).
@@ -95,53 +86,60 @@ O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas
 
 
 **Key Technical Concepts**
--   **RPA Avançado com Playwright:** Superou UIs dinâmicas, múltiplos formulários de login e fluxos de exportação complexos.
--   **Download de Ficheiros vs. Web Scraping:** A estratégia foi alterada para um fluxo de download e parsing de ficheiros, que se mostrou mais fiável.
--   **Parsing de Dados (Excel):** Utilização da biblioteca  para processar ficheiros Excel de forma resiliente.
--   **Tarefas Assíncronas em Background (FastAPI):** Para executar o processo RPA sem bloquear a API.
--   **Debugging de Base de Dados:** Diagnóstico de um problema subtil envolvendo múltiplas instâncias da base de dados.
+-   **RPA com Playwright:** A tecnologia central para a automação da Via Verde, que requer manipulação avançada da UI para a seleção de datas.
+-   **FastAPI & Background Tasks:** Utilizado para executar o processo RPA demorado sem bloquear a interface do utilizador.
+-   **Agregação de Dados em MongoDB:** As consultas complexas no ficheiro  são cruciais para a precisão do Resumo Semanal e foram uma fonte significativa de bugs.
+-   **React com State Hooks:** Usado para gerir a complexidade da UI, como diálogos de confirmação e estados de carregamento.
 
 **key DB schema**
--   ****: Regista cada execução do RPA, o seu status e resultados.
--   ****: Armazena as transações de portagens individuais processadas, agora incluindo os campos  e .
+-   ****: Foi adicionado o campo opcional .
+-   ****: Foi identificado que o campo  pode conter valores diferentes de portagens (ex: mensalidade...), o que necessitou de ajustes nas consultas.
 
 **All files of reference**
--   : **(QUEBRADO)** A página do frontend que precisa de correção.
--   : (ou ficheiro de configuração de rotas equivalente) Deve ser verificado para corrigir o problema de roteamento.
--   : O script Playwright funcional para a Via Verde.
--   : A rota do backend que aciona o RPA.
--   : O endpoint do Resumo Semanal que pode precisar de ajustes na agregação de dados.
+-   : **(PRECISA DE CORREÇÃO)** O script Playwright com a falha na filtragem de datas.
+-   : Contém a lógica do Resumo Semanal e da função Limpar.
+-   : Contém a nova lógica de desativação de motoristas.
+-   : Contém a nova UI para a desativação de motoristas.
+-   : Contém a UI para o upload manual e para acionar o RPA.
 
 **Critical Info for New Agent**
--   **PRIORIDADE MÁXIMA (P0):** A página de sincronização () está em branco devido a um erro de roteamento no React (). Investigue a configuração do React Router para encontrar o caminho correto e corrigir a navegação.
--   O RPA da Via Verde está **100% funcional no backend**. O script  faz o download e processamento do Excel com sucesso.
--   Foi resolvido um problema crítico de dupla base de dados. A base de dados correta é .
--   Após corrigir a UI, valide se os dados da Via Verde são corretamente refletidos no Resumo Semanal. Pode ser necessário ajustar a consulta no relatório para agregar por  ou .
+-   **PRIORIDADE MÁXIMA (P0):** A filtragem de datas do RPA da Via Verde está quebrada. O script descarrega dados de um mês inteiro em vez da semana selecionada. É imperativo corrigir o script Playwright () para interagir corretamente com o calendário do site, conforme o screenshot do utilizador.
+-   A funcionalidade de desativação de motoristas precisa de ser validada ponta a ponta. A lógica de backend está implementada, mas o fluxo da UI (pop-up com data) requer testes.
+-   Esteja ciente dos problemas de integridade de dados na base de dados do utilizador (ex: veículos duplicados em motoristas). O código atual contém soluções paliativas, mas a causa raiz pode originar novos bugs.
 
 **documents and test reports created in this job**
 -    (atualizado)
--   Vários screenshots de depuração em  que foram essenciais para o desenvolvimento.
+-    (desatualizado em relação aos últimos problemas)
+-   Ficheiros de teste do utilizador: , 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** Fornece um screenshot mostrando um botão Exportar excel que permite o download direto, o que foi uma pista crucial que mudou a estratégia do RPA. **(Implementado)**
-2.  **User:** Pede que os dados das portagens sejam refletidos no campo Via Verde do resumo semanal e solicita uma confirmação da semana a ser importada antes da sincronização. **(Em Progresso)**
+1.  **User:** Reporta que a sincronização para a semana 2 não funciona e o diálogo não permite selecionar a semana.
+2.  **User:** Esclarece que a sincronização operacional deve estar no Resumo Semanal, enquanto a página de Sincronização Automática deve mostrar logs e um botão de sincronizar tudo.
+3.  **User:** Envia ficheiros Excel para as semanas 2 e 3, aponta discrepâncias de valores e informa que o botão Limpar não apaga os dados da Via Verde.
+4.  **User:** Confirma que o upload manual funciona, mas o RPA não importa valores. Esclarece que o botão Limpar deve manter os dados de aluguer.
+5.  **User:** Solicita que motoristas desativados deixem de aparecer nos relatórios após a sua data de desativação.
+6.  **User:** Detalha o requisito da UI de desativação (pop-up com data) e reporta um erro Not Found no botão de desativar. Informa que o RPA para a semana 3 continua sem carregar valores.
+7.  **User:** Envia um screenshot do seletor de datas do site da Via Verde e pede ao agente para o analisar e corrigir o RPA.
+8.  **User:** Reporta que o RPA continua a não sincronizar valores e que o botão de desativar motorista na página de motoristas dá Not Found.
+9.  **User:** Informa que, ao limpar o resumo semanal, o sistema elimina dados de todas as fontes (Uber, Bolt, etc.), mas não o aluguer, o que está correto. No entanto, o RPA da Via Verde continua a não importar os dados.
+10. **User:** Reitera o pedido sobre a desativação de motoristas e a falha do RPA da Via Verde, mesmo após agendado.
 
 **Project Health Check:**
 -   **Broken:**
-    -   A página de Sincronização () está inacessível (ecrã em branco), bloqueando uma funcionalidade central.
+    -   A funcionalidade principal de sincronização automática com a Via Verde está inutilizável devido à falha na filtragem de datas, o que leva à importação de dados incorretos.
 
 **3rd Party Integrations**
 -   **Bolt API (Official):** Ativa, a funcionar.
 -   **WhatsApp Cloud API (Meta):** Ativa.
--   **Playwright:** Ativa (usada para automação RPA).
+-   **Playwright:** Ativa, usada para a automação RPA da Via Verde (com bug).
 -   **Ifthenpay:** Planeada.
 -   **Moloni:** Planeada.
 
 **Testing status**
--   **Testing agent used after significant changes:** NO
+-   **Testing agent used after significant changes:** YES (mas os testes estão desatualizados em relação aos problemas atuais).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** N/A
--   **Known regressions:** A página de frontend  está inacessível.
+-   **Known regressions:** A funcionalidade de RPA da Via Verde regrediu ou revelou-se mais problemática do que se pensava, não filtrando corretamente as datas.
 
 **Credentials to test flow:**
 -   **Admin:**  / 
@@ -149,4 +147,4 @@ O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas
 -   **Credenciais Via Verde (para teste RPA):**  / 
 
 **What agent forgot to execute**
-- O agente introduziu uma regressão (página em branco) ao implementar a última solicitação do utilizador e não conseguiu identificar a causa raiz do erro de roteamento antes do final da sessão.</analysis>
+-   O agente identificou corretamente a causa da falha do RPA da Via Verde (filtragem de datas), mas não chegou a implementar a correção no script Playwright ().</analysis>
