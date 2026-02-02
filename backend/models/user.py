@@ -1,7 +1,7 @@
 """User models for FleeTrack application"""
 
 from pydantic import BaseModel, EmailStr, ConfigDict
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from datetime import datetime
 
 
