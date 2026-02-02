@@ -1,6 +1,6 @@
 """Motoristas routes"""
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, Body
 from fastapi.responses import FileResponse
 from typing import List, Dict, Optional
 from datetime import datetime, timezone
