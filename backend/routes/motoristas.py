@@ -567,6 +567,72 @@ async def update_motorista(
     return {"message": "Motorista updated successfully"}
 
 
+@router.put("/motoristas/{motorista_id}/desativar")
+async def desativar_motorista(
+    motorista_id: str,
+    data_desativacao: Optional[str] = Body(None, embed=True),
+    current_user: Dict = Depends(get_current_user)
+):
+    """Desativar motorista com data específica"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Usar data fornecida ou data atual
+    if data_desativacao:
+        data_desativ = data_desativacao
+    else:
+        data_desativ = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    
+    # Atualizar motorista
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        {"$set": {
+            "ativo": False,
+            "status_motorista": "desativo",
+            "data_desativacao": data_desativ,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    logger.info(f"Motorista {motorista_id} desativado em {data_desativ}")
+    
+    return {
+        "message": "Motorista desativado com sucesso",
+        "data_desativacao": data_desativ
+    }
+
+
+@router.put("/motoristas/{motorista_id}/reativar")
+async def reativar_motorista(
+    motorista_id: str,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Reativar motorista"""
+    if current_user["role"] not in [UserRole.ADMIN, UserRole.GESTAO, UserRole.PARCEIRO]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    motorista = await db.motoristas.find_one({"id": motorista_id})
+    if not motorista:
+        raise HTTPException(status_code=404, detail="Motorista não encontrado")
+    
+    # Atualizar motorista
+    await db.motoristas.update_one(
+        {"id": motorista_id},
+        {"$set": {
+            "ativo": True,
+            "status_motorista": "ativo",
+            "data_desativacao": None,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": "Motorista reativado com sucesso"}
+
+
 @router.delete("/motoristas/{motorista_id}")
 async def delete_motorista(
     motorista_id: str,
