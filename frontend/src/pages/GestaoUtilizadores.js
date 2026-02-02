@@ -160,6 +160,81 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
     }
   };
 
+  const handleOpenNovoUserDialog = () => {
+    setNovoUserForm({
+      name: '',
+      email: '',
+      password: '',
+      role: 'motorista',
+      parceiros_associados: []
+    });
+    setShowNovoUserDialog(true);
+  };
+
+  const handleCreateUser = async () => {
+    // Validações
+    if (!novoUserForm.name || !novoUserForm.email || !novoUserForm.password) {
+      toast.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    if (novoUserForm.password.length < 6) {
+      toast.error('A password deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    if (novoUserForm.role === 'gestao' && novoUserForm.parceiros_associados.length === 0) {
+      toast.error('Selecione pelo menos um parceiro para o gestor');
+      return;
+    }
+
+    try {
+      setSaving(true);
+      const token = localStorage.getItem('token');
+
+      const payload = {
+        name: novoUserForm.name,
+        email: novoUserForm.email,
+        password: novoUserForm.password,
+        role: novoUserForm.role,
+        approved: true
+      };
+
+      // Adicionar parceiros associados se for gestor
+      if (novoUserForm.role === 'gestao') {
+        payload.parceiros_associados = novoUserForm.parceiros_associados;
+      }
+
+      await axios.post(
+        `${API}/auth/register`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success('Utilizador criado com sucesso!');
+      setShowNovoUserDialog(false);
+      fetchData();
+    } catch (error) {
+      console.error('Error creating user:', error);
+      const msg = error.response?.data?.detail || 'Erro ao criar utilizador';
+      toast.error(msg);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggleParceiro = (parceiroId) => {
+    setNovoUserForm(prev => {
+      const isSelected = prev.parceiros_associados.includes(parceiroId);
+      return {
+        ...prev,
+        parceiros_associados: isSelected
+          ? prev.parceiros_associados.filter(id => id !== parceiroId)
+          : [...prev.parceiros_associados, parceiroId]
+      };
+    });
+  };
+
   const getRoleBadge = (role) => {
     const roleConfig = {
       admin: { label: 'Admin', icon: Shield, color: 'bg-red-100 text-red-800' },
