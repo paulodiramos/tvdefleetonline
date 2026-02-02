@@ -347,72 +347,72 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
           </CardContent>
         </Card>
 
-        {/* Users Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredUsers.map((usuario) => (
-            <Card key={usuario.id} className="hover:shadow-lg transition-shadow">
-              <CardHeader>
-                <div className="flex items-start space-x-4">
-                  <Avatar className="w-12 h-12">
-                    <AvatarFallback className="bg-blue-100 text-blue-700 text-sm font-semibold">
-                      {getInitials(usuario.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <CardTitle className="text-lg">{usuario.name}</CardTitle>
-                    <p className="text-sm text-slate-500">{usuario.email}</p>
-                    <div className="flex flex-wrap gap-2 mt-2">
+        {/* Users Table */}
+        <Card>
+          <CardContent className="p-0">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b">
+                <tr>
+                  <th className="text-left p-4 font-medium text-slate-600">Usuário</th>
+                  <th className="text-left p-4 font-medium text-slate-600">Tipo</th>
+                  <th className="text-left p-4 font-medium text-slate-600">Estado</th>
+                  <th className="text-left p-4 font-medium text-slate-600">Plano</th>
+                  <th className="text-right p-4 font-medium text-slate-600">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredUsers.map((usuario) => (
+                  <tr key={usuario.id} className="border-b last:border-0 hover:bg-slate-50">
+                    <td className="p-4">
+                      <div className="flex items-center space-x-3">
+                        <Avatar className="w-9 h-9">
+                          <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-semibold">
+                            {getInitials(usuario.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="font-medium text-slate-800">{usuario.name}</p>
+                          <p className="text-sm text-slate-500">{usuario.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
                       {getRoleBadge(usuario.role)}
+                    </td>
+                    <td className="p-4">
                       {getStatusBadge(usuario)}
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {/* Plano Ativo */}
-                <div className="bg-slate-50 rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-slate-700">Plano Ativo:</span>
-                    {usuario.plano_ativo ? (
-                      <Badge className="bg-purple-100 text-purple-800">
-                        <Package className="w-3 h-3 mr-1" />
-                        {usuario.plano_ativo.nome}
-                      </Badge>
-                    ) : (
-                      <Badge className="bg-gray-100 text-gray-600">
-                        Sem plano
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  {usuario.modulos_ativos.length > 0 && (
-                    <div className="text-xs text-slate-600">
-                      <span className="font-medium">Módulos:</span> {usuario.modulos_ativos.length}
-                    </div>
-                  )}
-                </div>
-
-                {/* Action Button */}
-                <Button
-                  onClick={() => handleOpenPlanoDialog(usuario)}
-                  variant="outline"
-                  className="w-full"
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Alterar Plano
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {filteredUsers.length === 0 && (
-          <Card>
-            <CardContent className="py-12 text-center text-slate-500">
-              Nenhum usuário encontrado
-            </CardContent>
-          </Card>
-        )}
+                    </td>
+                    <td className="p-4">
+                      {usuario.plano_ativo ? (
+                        <Badge className="bg-purple-100 text-purple-800">
+                          <Package className="w-3 h-3 mr-1" />
+                          {usuario.plano_ativo.nome}
+                        </Badge>
+                      ) : (
+                        <span className="text-sm text-slate-400">Sem plano</span>
+                      )}
+                    </td>
+                    <td className="p-4 text-right">
+                      <Button
+                        onClick={() => handleOpenPlanoDialog(usuario)}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Edit className="w-3 h-3 mr-1" />
+                        Plano
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filteredUsers.length === 0 && (
+              <div className="py-12 text-center text-slate-500">
+                Nenhum usuário encontrado
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Plano Dialog */}
         <Dialog open={showPlanoDialog} onOpenChange={setShowPlanoDialog}>
