@@ -443,6 +443,7 @@ async def executar_rpa_uber(
     password: str,
     data_inicio: str,
     data_fim: str,
+    sms_code: str = None,
     headless: bool = True
 ) -> Dict[str, Any]:
     """
@@ -453,6 +454,7 @@ async def executar_rpa_uber(
         password: Password Uber
         data_inicio: Data início (YYYY-MM-DD)
         data_fim: Data fim (YYYY-MM-DD)
+        sms_code: Código SMS para autenticação (opcional)
         headless: Executar sem interface gráfica
     
     Returns:
@@ -468,7 +470,7 @@ async def executar_rpa_uber(
         "logs": []
     }
     
-    rpa = UberRPA(email, password)
+    rpa = UberRPA(email, password, sms_code)
     
     try:
         await rpa.iniciar_browser(headless=headless)
