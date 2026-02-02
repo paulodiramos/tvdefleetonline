@@ -318,7 +318,23 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
         toast.error(response.data.mensagem || 'Erro ao agendar Via Verde');
       }
     } catch (error) {
-      toast.error(error.response?.data?.detail || 'Erro ao executar RPA Via Verde');
+      // Handle error properly - extract message from various error formats
+      let errorMessage = 'Erro ao executar RPA Via Verde';
+      if (error.response?.data?.detail) {
+        // FastAPI validation error format
+        const detail = error.response.data.detail;
+        if (typeof detail === 'string') {
+          errorMessage = detail;
+        } else if (Array.isArray(detail)) {
+          // Pydantic validation errors come as array
+          errorMessage = detail.map(e => e.msg || e.message || JSON.stringify(e)).join(', ');
+        } else if (typeof detail === 'object') {
+          errorMessage = detail.msg || detail.message || JSON.stringify(detail);
+        }
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      toast.error(errorMessage);
     } finally {
       setViaVerdeSyncing(false);
     }
