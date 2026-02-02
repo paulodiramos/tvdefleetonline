@@ -175,6 +175,34 @@ class ViaVerdeRPA:
             
             await self.screenshot("antes_filtro")
             
+            # PASSO 1: Expandir o filtro se estiver colapsado
+            # Procurar por "Filtrar por:" ou área de filtro colapsável
+            filtrar_section = self.page.locator('text=/Filtrar por/', 'text=Filtrar', '[class*="filter"]').first
+            
+            # Verificar se há uma seta para baixo (indica filtro colapsado)
+            expand_selectors = [
+                'text=/Filtrar por:/ >> svg',
+                '[class*="filter"] >> button',
+                '[class*="filter-header"]',
+                'div:has-text("Filtrar por:") >> [class*="arrow"]',
+                'div:has-text("Filtrar por:") >> svg',
+                'div:has-text("Filtrar por:")',
+            ]
+            
+            for selector in expand_selectors:
+                try:
+                    expand_btn = self.page.locator(selector).first
+                    if await expand_btn.count() > 0 and await expand_btn.is_visible():
+                        await expand_btn.click()
+                        await self.page.wait_for_timeout(1500)
+                        logger.info(f"✅ Filtro expandido via: {selector}")
+                        await self.screenshot("filtro_expandido")
+                        break
+                except:
+                    pass
+            
+            await self.page.wait_for_timeout(1000)
+            
             # Parse das datas
             from datetime import datetime as dt
             dia_inicio, mes_inicio, ano_inicio = data_inicio.split('/')
@@ -191,63 +219,87 @@ class ViaVerdeRPA:
             logger.info(f"📅 Data início: {dia_inicio}/{mes_inicio}/{ano_inicio}")
             logger.info(f"📅 Data fim: {dia_fim}/{mes_fim}/{ano_fim}")
             
-            # Método 1: Tentar preencher diretamente os campos de input
-            # Os campos de data estão dentro de um div com ícone de calendário
-            date_inputs = self.page.locator('input[type="text"]')
-            date_input_count = await date_inputs.count()
-            logger.info(f"📋 Encontrados {date_input_count} inputs de texto")
-            
-            # Tentar encontrar os campos de data por diferentes seletores
-            de_input_selectors = [
-                'input[placeholder*="De"]',
-                'input[placeholder*="Início"]',
-                'input[placeholder*="data"]',
-                'input.datepicker',
-                'input.date-input',
-                '[data-testid*="from"]',
-                '[data-testid*="start"]',
-            ]
+            # PASSO 2: Encontrar os campos de data
+            # Os campos têm ícones de calendário e mostram datas no formato DD/MM/YYYY
             
             de_input = None
             ate_input = None
             
-            # Tentar encontrar campos de data com ícone de calendário
-            calendar_containers = self.page.locator('div:has(> input):has(svg), div.input-group:has(input)')
-            container_count = await calendar_containers.count()
-            logger.info(f"📋 Encontrados {container_count} containers com calendário")
+            # Procurar inputs que tenham valor com formato de data ou ícone de calendário
+            # Na Via Verde, os inputs estão dentro de divs com ícone de calendário
             
-            if container_count >= 2:
-                # Assumir que o primeiro é "De" e o segundo é "Até"
-                first_container = calendar_containers.nth(0)
-                second_container = calendar_containers.nth(1)
-                
-                de_input = first_container.locator('input').first
-                ate_input = second_container.locator('input').first
+            date_input_selectors = [
+                # Inputs com valor de data visível
+                'input[value*="/"]',
+                # Inputs dentro de containers com ícone de calendário
+                'div:has(svg[class*="calendar"]) input',
+                'div:has([class*="calendar-icon"]) input',
+                # Inputs com placeholders de data
+                'input[placeholder*="dd/mm"]',
+                'input[placeholder*="DD/MM"]',
+                # Inputs tipo date ou datetime
+                'input[type="date"]',
+                'input[type="text"][class*="date"]',
+            ]
             
-            # Fallback: procurar por inputs que contenham padrão de data
-            if de_input is None or await de_input.count() == 0:
-                # Procurar todos os inputs visíveis
-                all_inputs = self.page.locator('input:visible')
-                input_count = await all_inputs.count()
-                logger.info(f"📋 Encontrados {input_count} inputs visíveis")
-                
-                date_pattern_inputs = []
-                for i in range(min(input_count, 10)):
-                    inp = all_inputs.nth(i)
-                    try:
-                        value = await inp.get_attribute('value') or ''
-                        placeholder = await inp.get_attribute('placeholder') or ''
-                        
-                        # Verificar se parece um campo de data (tem / ou formato DD/MM/YYYY)
-                        if '/' in value or 'data' in placeholder.lower() or 'date' in placeholder.lower():
-                            date_pattern_inputs.append(inp)
-                            logger.info(f"📋 Input {i}: value='{value}', placeholder='{placeholder}'")
-                    except:
-                        pass
-                
-                if len(date_pattern_inputs) >= 2:
-                    de_input = date_pattern_inputs[0]
-                    ate_input = date_pattern_inputs[1]
+            # Primeiro, tirar screenshot para debug
+            await self.screenshot("procurando_inputs")
+            
+            # Procurar todos os inputs visíveis e verificar quais têm formato de data
+            all_visible_inputs = self.page.locator('input:visible')
+            input_count = await all_visible_inputs.count()
+            logger.info(f"📋 Total de inputs visíveis: {input_count}")
+            
+            date_inputs_found = []
+            for i in range(min(input_count, 20)):
+                try:
+                    inp = all_visible_inputs.nth(i)
+                    value = await inp.get_attribute('value') or ''
+                    placeholder = await inp.get_attribute('placeholder') or ''
+                    inp_type = await inp.get_attribute('type') or ''
+                    inp_class = await inp.get_attribute('class') or ''
+                    
+                    # Verificar se parece um campo de data
+                    is_date_field = False
+                    
+                    # Formato DD/MM/YYYY
+                    import re
+                    if re.match(r'\d{2}/\d{2}/\d{4}', value):
+                        is_date_field = True
+                    # Formato mm/dd/yyyy
+                    elif re.match(r'\d{1,2}/\d{1,2}/\d{4}', value):
+                        is_date_field = True
+                    # Placeholder de data
+                    elif 'data' in placeholder.lower() or 'date' in placeholder.lower():
+                        is_date_field = True
+                    elif 'mm/dd' in placeholder.lower() or 'dd/mm' in placeholder.lower():
+                        is_date_field = True
+                    
+                    if is_date_field:
+                        date_inputs_found.append({
+                            'index': i,
+                            'input': inp,
+                            'value': value,
+                            'placeholder': placeholder
+                        })
+                        logger.info(f"📋 Input data encontrado [{i}]: value='{value}', placeholder='{placeholder}'")
+                except Exception as e:
+                    pass
+            
+            logger.info(f"📋 Encontrados {len(date_inputs_found)} inputs de data")
+            
+            # Se encontrámos pelo menos 2 inputs de data, usar o primeiro para "De" e segundo para "Até"
+            if len(date_inputs_found) >= 2:
+                de_input = date_inputs_found[0]['input']
+                ate_input = date_inputs_found[1]['input']
+                logger.info(f"✅ Usando inputs de data: De='{date_inputs_found[0]['value']}', Até='{date_inputs_found[1]['value']}'")
+            elif len(date_inputs_found) == 1:
+                de_input = date_inputs_found[0]['input']
+                logger.info(f"⚠️ Apenas 1 input de data encontrado")
+            
+            # PASSO 3: Preencher as datas
+            
+            # Função para preencher uma data directamente no input
                 elif len(date_pattern_inputs) == 1:
                     de_input = date_pattern_inputs[0]
             
