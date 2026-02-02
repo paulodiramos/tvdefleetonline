@@ -86,9 +86,28 @@ async def register(user_data: UserCreate):
     user_dict["password"] = hash_password(user_data.password)
     user_dict["id"] = str(uuid.uuid4())
     user_dict["created_at"] = datetime.now(timezone.utc).isoformat()
-    user_dict["approved"] = user_data.role == UserRole.ADMIN
+    
+    # Definir aprovação baseada no role ou no campo approved
+    if user_data.approved:
+        user_dict["approved"] = True
+    else:
+        user_dict["approved"] = user_data.role == UserRole.ADMIN
+    
+    # Tratar parceiros associados para gestores
+    parceiros_associados = user_dict.pop("parceiros_associados", None)
     
     await db.users.insert_one(user_dict)
+    
+    # Se for gestor, criar associações com parceiros
+    if user_data.role == UserRole.GESTAO and parceiros_associados:
+        for parceiro_id in parceiros_associados:
+            # Criar associação gestor-parceiro
+            await db.gestor_parceiro.insert_one({
+                "id": str(uuid.uuid4()),
+                "gestor_id": user_dict["id"],
+                "parceiro_id": parceiro_id,
+                "created_at": datetime.now(timezone.utc).isoformat()
+            })
     
     # Send welcome email
     await enviar_email_boas_vindas(user_dict)
