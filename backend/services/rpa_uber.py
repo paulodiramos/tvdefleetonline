@@ -20,9 +20,10 @@ logger = logging.getLogger(__name__)
 class UberRPA:
     """Classe para automação do portal Uber Fleet"""
     
-    def __init__(self, email: str, password: str):
+    def __init__(self, email: str, password: str, sms_code: str = None):
         self.email = email
         self.password = password
+        self.sms_code = sms_code  # Código SMS para autenticação
         self.browser = None
         self.context = None
         self.page = None
