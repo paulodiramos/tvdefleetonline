@@ -814,6 +814,7 @@ class UberRPARequest(PydanticModel):
     semana: Optional[int] = None  # Número da semana (1-53)
     ano: Optional[int] = None  # Ano
     sms_code: Optional[str] = None  # Código SMS para autenticação
+    pin_code: Optional[str] = None  # PIN/código de acesso adicional
 
 
 @router.post("/uber/executar-rpa")
