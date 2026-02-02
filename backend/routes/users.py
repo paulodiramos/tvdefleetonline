@@ -330,3 +330,57 @@ async def revoke_user(
     return {"message": "Utilizador revogado com sucesso"}
 
 
+
+class AcessoUpdate(BaseModel):
+    acesso_gratis: bool = False
+    acesso_gratis_inicio: Optional[str] = None
+    acesso_gratis_fim: Optional[str] = None
+    modulos_ativos: List[str] = []
+
+
+@router.put("/users/{user_id}/acesso")
+async def update_user_acesso(
+    user_id: str,
+    acesso_data: AcessoUpdate,
+    current_user: Dict = Depends(get_current_user)
+):
+    """Atualizar acesso de um utilizador - período grátis e módulos"""
+    if current_user["role"] != UserRole.ADMIN:
+        raise HTTPException(status_code=403, detail="Apenas Admin")
+    
+    user = await db.users.find_one({"id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilizador não encontrado")
+    
+    # Preparar dados de atualização
+    update_data = {
+        "acesso_gratis": acesso_data.acesso_gratis,
+        "acesso_gratis_inicio": acesso_data.acesso_gratis_inicio,
+        "acesso_gratis_fim": acesso_data.acesso_gratis_fim,
+        "modulos_manuais": acesso_data.modulos_ativos,
+        "acesso_atualizado_por": current_user["id"],
+        "acesso_atualizado_em": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Atualizar na coleção users
+    await db.users.update_one(
+        {"id": user_id},
+        {"$set": update_data}
+    )
+    
+    # Se for parceiro, atualizar também na coleção parceiros
+    if user.get("role") == "parceiro":
+        await db.parceiros.update_one(
+            {"$or": [{"id": user_id}, {"email": user.get("email")}]},
+            {"$set": update_data}
+        )
+    
+    logger.info(f"Acesso updated for user {user_id} by {current_user['id']}: gratis={acesso_data.acesso_gratis}, modulos={acesso_data.modulos_ativos}")
+    
+    return {
+        "message": "Acesso atualizado com sucesso",
+        "acesso_gratis": acesso_data.acesso_gratis,
+        "modulos_ativos": acesso_data.modulos_ativos
+    }
+
+
