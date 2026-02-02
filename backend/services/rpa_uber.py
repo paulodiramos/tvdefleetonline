@@ -70,8 +70,10 @@ class UberRPA:
         1. Ir para página de login
         2. Inserir email
         3. Clicar "Continuar"
-        4. Inserir password (se necessário)
-        5. Clicar "Seguinte"
+        4. Selecionar "Enviar códigos por SMS" ou "Mais opções"
+        5. Inserir código SMS (se fornecido)
+        6. Inserir password (se necessário)
+        7. Clicar "Seguinte"
         """
         try:
             logger.info(f"🔐 A fazer login Uber: {self.email}")
@@ -110,13 +112,55 @@ class UberRPA:
             
             await self.screenshot("apos_continuar")
             
-            # Verificar se aparece opção de password ou SSO
-            # Clicar em "Mais opções" se disponível
-            mais_opcoes = self.page.locator('text=/Mais opções|More options/').first
-            if await mais_opcoes.count() > 0 and await mais_opcoes.is_visible():
-                await mais_opcoes.click()
-                await self.page.wait_for_timeout(2000)
-                logger.info("✅ Clicou Mais opções")
+            # VERIFICAR SE PEDE SMS
+            # Procurar opção "Enviar códigos por SMS"
+            enviar_sms_btn = self.page.locator('text=/Enviar códigos por SMS|Send codes via SMS/').first
+            
+            if await enviar_sms_btn.count() > 0 and await enviar_sms_btn.is_visible():
+                logger.info("📱 Opção SMS detectada")
+                
+                # Se temos código SMS, clicar para enviar
+                if self.sms_code:
+                    await enviar_sms_btn.click()
+                    await self.page.wait_for_timeout(3000)
+                    logger.info("✅ Clicou em Enviar códigos por SMS")
+                    
+                    await self.screenshot("aguardando_sms")
+                    
+                    # Aguardar campo de código SMS
+                    sms_input = self.page.locator('input[type="text"], input[type="number"], input[name="code"], input[placeholder*="código"], input[placeholder*="code"]').first
+                    
+                    if await sms_input.count() > 0:
+                        await sms_input.wait_for(timeout=10000)
+                        await sms_input.fill(self.sms_code)
+                        await self.page.wait_for_timeout(500)
+                        logger.info(f"✅ Código SMS inserido: {self.sms_code}")
+                        
+                        await self.screenshot("sms_preenchido")
+                        
+                        # Clicar em Verificar/Continuar
+                        verificar_btn = self.page.locator('button:has-text("Verificar"), button:has-text("Verify"), button:has-text("Continuar"), button:has-text("Continue"), button[type="submit"]').first
+                        if await verificar_btn.count() > 0:
+                            await verificar_btn.click()
+                            await self.page.wait_for_timeout(5000)
+                            logger.info("✅ Clicou Verificar SMS")
+                else:
+                    logger.warning("⚠️ Código SMS necessário mas não fornecido. A tentar alternativa...")
+                    # Tentar "Mais opções" para usar password
+                    mais_opcoes = self.page.locator('text=/Mais opções|More options/').first
+                    if await mais_opcoes.count() > 0:
+                        await mais_opcoes.click()
+                        await self.page.wait_for_timeout(2000)
+                        logger.info("✅ Clicou Mais opções")
+            else:
+                # Clicar em "Mais opções" se disponível
+                mais_opcoes = self.page.locator('text=/Mais opções|More options/').first
+                if await mais_opcoes.count() > 0 and await mais_opcoes.is_visible():
+                    await mais_opcoes.click()
+                    await self.page.wait_for_timeout(2000)
+                    logger.info("✅ Clicou Mais opções")
+            
+            await self.screenshot("apos_sms_ou_opcoes")
             
             # Procurar campo de password
             password_input = self.page.locator('input[type="password"]').first
