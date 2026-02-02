@@ -895,6 +895,8 @@ async def executar_rpa_uber(
     logger.info(f"✅ Execução RPA Uber {execucao_id} criada: {periodo_descricao}")
     
     # Executar RPA em background
+    sms_code = request.sms_code  # Guardar código SMS para usar no background task
+    
     async def run_uber_rpa():
         try:
             from services.rpa_uber import executar_rpa_uber
@@ -904,6 +906,7 @@ async def executar_rpa_uber(
                 password=credenciais["password"],
                 data_inicio=data_inicio,
                 data_fim=data_fim,
+                sms_code=sms_code,  # Passar código SMS
                 headless=True
             )
             
