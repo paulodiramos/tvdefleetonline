@@ -299,10 +299,6 @@ class ViaVerdeRPA:
             
             # PASSO 3: Preencher as datas
             
-            # Função para preencher uma data directamente no input
-                elif len(date_pattern_inputs) == 1:
-                    de_input = date_pattern_inputs[0]
-            
             # Método de seleção de data via calendário popup
             async def selecionar_data_calendario(input_element, dia: int, mes: int, ano: int) -> bool:
                 """Selecionar uma data específica usando o calendário popup"""
