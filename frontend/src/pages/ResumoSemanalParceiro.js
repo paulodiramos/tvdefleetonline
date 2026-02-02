@@ -617,15 +617,33 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     
     try {
       const token = localStorage.getItem('token');
+      
+      // Executar sincronização geral
       const response = await axios.post(
         `${API}/api/sincronizacao-auto/executar`,
         { semana, ano },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
+      // Também executar Via Verde RPA separadamente
+      try {
+        await axios.post(
+          `${API}/api/viaverde/executar-rpa`,
+          { 
+            tipo_periodo: 'semana_especifica',
+            semana: semana,
+            ano: ano
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } catch (vvError) {
+        console.warn('Via Verde RPA não executado:', vvError.response?.data?.detail || vvError.message);
+      }
+      
       if (response.data.sucesso) {
-        toast.success('Sincronização completa executada!');
-        fetchResumo();
+        toast.success(`Sincronização completa executada para Semana ${semana}/${ano}!`);
+        // Recarregar dados após alguns segundos para dar tempo ao RPA
+        setTimeout(() => fetchResumo(), 5000);
       } else {
         toast.error('Algumas fontes falharam na sincronização');
       }
