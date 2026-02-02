@@ -178,6 +178,59 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
     }
   };
 
+  const handleOpenAcessoDialog = (usuario) => {
+    setSelectedUser(usuario);
+    // Preencher com dados existentes
+    const hoje = new Date().toISOString().split('T')[0];
+    const emUmMes = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    setAcessoForm({
+      acesso_gratis: usuario.acesso_gratis || false,
+      data_inicio: usuario.acesso_gratis_inicio || hoje,
+      data_fim: usuario.acesso_gratis_fim || emUmMes,
+      modulos_ativos: usuario.modulos_ativos?.map(m => m.codigo || m) || []
+    });
+    setShowAcessoDialog(true);
+  };
+
+  const handleToggleModulo = (moduloCodigo) => {
+    setAcessoForm(prev => {
+      const isSelected = prev.modulos_ativos.includes(moduloCodigo);
+      return {
+        ...prev,
+        modulos_ativos: isSelected
+          ? prev.modulos_ativos.filter(m => m !== moduloCodigo)
+          : [...prev.modulos_ativos, moduloCodigo]
+      };
+    });
+  };
+
+  const handleSaveAcesso = async () => {
+    try {
+      setSaving(true);
+      const token = localStorage.getItem('token');
+
+      await axios.put(
+        `${API}/users/${selectedUser.id}/acesso`,
+        {
+          acesso_gratis: acessoForm.acesso_gratis,
+          acesso_gratis_inicio: acessoForm.acesso_gratis ? acessoForm.data_inicio : null,
+          acesso_gratis_fim: acessoForm.acesso_gratis ? acessoForm.data_fim : null,
+          modulos_ativos: acessoForm.modulos_ativos
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast.success('Acesso atualizado com sucesso!');
+      setShowAcessoDialog(false);
+      fetchData();
+    } catch (error) {
+      console.error('Error saving acesso:', error);
+      toast.error('Erro ao atualizar acesso');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleOpenNovoUserDialog = () => {
     setNovoUserForm({
       name: '',
