@@ -540,22 +540,44 @@ O RPA da Via Verde não consegue filtrar por semana específica no site. A inter
 ### Solução Implementada
 1. **Filtragem pós-download**: O sistema agora descarrega todos os dados e filtra por semana no código Python
 2. **Exportação CSV**: Alterado para usar CSV em vez de Excel (opção disponível no site)
-3. **Robustez**: A função de seleção de datas não bloqueia se falhar (a filtragem é feita depois)
+3. **Via Verde Mensal**: Conforme decisão do utilizador, a Via Verde será versão mensal
 
 ### Estado Atual
 - ✅ Login funciona
-- ✅ Navegação para tab Extratos funciona
-- ✅ Botão Exportar é encontrado
-- ✅ Dropdown abre e CSV é encontrado
+- ✅ Navegação funciona
 - ❌ Download do CSV está com timeout (precisa de investigação adicional)
 
-### Próximos Passos
-1. Testar o download do CSV manualmente no site
-2. Verificar se há popup de confirmação ou redirecionamento
-3. Se necessário, usar outra abordagem (ex: copiar dados da tabela diretamente)
+---
 
-### Ficheiros Modificados
-- `/app/backend/services/rpa_viaverde_v2.py` - Script RPA atualizado
+## ✅ NOVO: Script RPA Uber (02/02/2026)
+
+### Descrição
+Implementado script RPA para extração de dados do portal Uber Fleet.
+
+### Funcionalidades
+1. **Login automático** com email e password
+2. **Navegação** para secção "Rendimentos"
+3. **Seleção de período** (última semana, semana específica, personalizado)
+4. **Extração de dados** da tabela de motoristas
+5. **Download de relatório** (se disponível)
+
+### Dados Extraídos por Motorista
+- Nome do motorista
+- Rendimentos totais
+- Reembolsos e despesas
+- Ajustes
+- Pagamento
+- Rendimentos líquidos
+
+### Endpoint
+`POST /api/uber/executar-rpa`
+
+### Ficheiros
+- `/app/backend/services/rpa_uber.py` - Script RPA
+- `/app/backend/routes/sincronizacao.py` - Endpoint adicionado
+
+### Requisitos
+O parceiro precisa de configurar credenciais Uber em Configurações → Plataformas
 
 ### Descrição
 Sistema completo de sincronização automática de portagens Via Verde que:
