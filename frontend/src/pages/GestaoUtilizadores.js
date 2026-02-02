@@ -756,6 +756,116 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Acesso Dialog */}
+        <Dialog open={showAcessoDialog} onOpenChange={setShowAcessoDialog}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <Key className="w-5 h-5 text-green-600" />
+                <span>Gerir Acesso - {selectedUser?.name}</span>
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-6 py-4">
+              {/* Acesso Grátis */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex items-center space-x-3 mb-4">
+                  <Checkbox
+                    checked={acessoForm.acesso_gratis}
+                    onCheckedChange={(checked) => setAcessoForm(prev => ({ ...prev, acesso_gratis: checked }))}
+                  />
+                  <div>
+                    <Label className="font-semibold text-green-800">Acesso Grátis</Label>
+                    <p className="text-xs text-green-600">Dar acesso gratuito por período limitado</p>
+                  </div>
+                </div>
+
+                {acessoForm.acesso_gratis && (
+                  <div className="grid grid-cols-2 gap-4 mt-3">
+                    <div>
+                      <Label className="text-sm">Data Início</Label>
+                      <Input
+                        type="date"
+                        value={acessoForm.data_inicio}
+                        onChange={(e) => setAcessoForm(prev => ({ ...prev, data_inicio: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <Label className="text-sm">Data Fim</Label>
+                      <Input
+                        type="date"
+                        value={acessoForm.data_fim}
+                        onChange={(e) => setAcessoForm(prev => ({ ...prev, data_fim: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Módulos */}
+              <div>
+                <Label className="font-semibold mb-3 block">Módulos Ativos</Label>
+                <p className="text-xs text-slate-500 mb-3">Selecione os módulos que este usuário pode aceder</p>
+                <div className="max-h-64 overflow-y-auto border rounded-lg p-3 space-y-2">
+                  {modulos.length === 0 ? (
+                    <p className="text-sm text-slate-500 text-center py-4">
+                      Nenhum módulo disponível
+                    </p>
+                  ) : (
+                    modulos.map((modulo) => (
+                      <div 
+                        key={modulo.codigo}
+                        className="flex items-center space-x-3 p-2 hover:bg-slate-50 rounded cursor-pointer"
+                        onClick={() => handleToggleModulo(modulo.codigo)}
+                      >
+                        <Checkbox
+                          checked={acessoForm.modulos_ativos.includes(modulo.codigo)}
+                          onCheckedChange={() => handleToggleModulo(modulo.codigo)}
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{modulo.nome}</p>
+                          {modulo.descricao && (
+                            <p className="text-xs text-slate-500">{modulo.descricao}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                {acessoForm.modulos_ativos.length > 0 && (
+                  <p className="text-xs text-green-600 mt-2">
+                    {acessoForm.modulos_ativos.length} módulo(s) selecionado(s)
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowAcessoDialog(false)}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleSaveAcesso}
+                disabled={saving}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                {saving ? (
+                  <>Salvando...</>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Guardar Acesso
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
