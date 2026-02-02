@@ -526,3 +526,40 @@ Integração com a API oficial da Bolt Fleet usando OAuth2 Client Credentials.
 ## Notas Importantes
 - **Railway foi desativado** - WhatsApp usa API Cloud oficial
 - **Sistema de permissões activo** - Menu filtrado por funcionalidades
+
+---
+
+## ✅ Sincronização Via Verde com Resumo Semanal (02/02/2026)
+
+### Descrição
+Sistema completo de sincronização automática de portagens Via Verde que:
+1. O parceiro clica no botão "Sincronizar" na página de Sincronização
+2. Seleciona o período (última semana, semana específica ou datas personalizadas)
+3. O sistema executa RPA automaticamente: login → filtrar → download Excel → processar → importar
+4. Os dados aparecem automaticamente no Resumo Semanal do motorista
+
+### Funcionalidades Implementadas
+- **RPA Via Verde com Download Direto de Excel** - Script Playwright (`rpa_viaverde_v2.py`)
+- **Parser de Excel robusto** - Suporta todas as colunas do ficheiro Via Verde
+- **Associação automática** - Vincula portagens a veículos/motoristas pela matrícula
+- **Cálculo de semana** - Determina automaticamente a semana ISO de cada transação
+- **Detecção de duplicados** - Evita reimportar dados existentes
+
+### Correções Aplicadas
+- **Bug 422 no frontend** - Strings vazias convertidas para null em campos opcionais
+- **Bug "valor" vs "value"** - Query do resumo semanal agora suporta ambos os campos
+- **Bug de associação** - Via Verde busca por `matricula`, `vehicle_id` e `motorista_id`
+
+### Resultados Testados
+- **Semana 5/2026**: €117.39 em Via Verde distribuídos por 11 motoristas
+- **Taxa de sucesso**: 100% (13/13 testes backend + UI flows frontend)
+
+### Ficheiros Relevantes
+- `/app/backend/services/rpa_viaverde_v2.py` - Script RPA com Playwright
+- `/app/backend/routes/sincronizacao.py` - Endpoint `/viaverde/executar-rpa`
+- `/app/backend/routes/relatorios.py` - Resumo Semanal com agregação Via Verde
+- `/app/frontend/src/pages/SincronizacaoAuto.js` - UI de sincronização
+
+### Credenciais de Teste
+- **Parceiro**: geral@zmbusines.com / zeny123
+- **Via Verde**: geral@zmbusines.com / 5+?n74vi%*8GJ3e
