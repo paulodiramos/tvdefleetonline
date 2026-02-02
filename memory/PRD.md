@@ -533,7 +533,7 @@ Integração com a API oficial da Bolt Fleet usando OAuth2 Client Credentials.
 
 ### Descrição
 Sistema completo de sincronização automática de portagens Via Verde que:
-1. O parceiro clica no botão "Sincronizar" na página de Sincronização
+1. O parceiro clica no botão "Sincronizar" na página de Resumo Semanal
 2. Seleciona o período (última semana, semana específica ou datas personalizadas)
 3. O sistema executa RPA automaticamente: login → filtrar → download Excel → processar → importar
 4. Os dados aparecem automaticamente no Resumo Semanal do motorista
@@ -544,22 +544,41 @@ Sistema completo de sincronização automática de portagens Via Verde que:
 - **Associação automática** - Vincula portagens a veículos/motoristas pela matrícula
 - **Cálculo de semana** - Determina automaticamente a semana ISO de cada transação
 - **Detecção de duplicados** - Evita reimportar dados existentes
+- **Auto-criação de veículos** - Cria veículos placeholder para matrículas desconhecidas
 
-### Correções Aplicadas
+### Correções Aplicadas (02/02/2026)
+- **Bug de filtragem de datas** - RPA agora interage corretamente com o calendário popup do site Via Verde
 - **Bug 422 no frontend** - Strings vazias convertidas para null em campos opcionais
 - **Bug "valor" vs "value"** - Query do resumo semanal agora suporta ambos os campos
 - **Bug de associação** - Via Verde busca por `matricula`, `vehicle_id` e `motorista_id`
+- **Bug vehicles KeyError** - Tratamento de campos created_at/updated_at ausentes
 
 ### Resultados Testados
-- **Semana 5/2026**: €117.39 em Via Verde distribuídos por 11 motoristas
-- **Taxa de sucesso**: 100% (13/13 testes backend + UI flows frontend)
+- **Semana 5/2026**: €99.11 em Via Verde distribuídos por 11 motoristas
+- **Taxa de sucesso**: Backend 95%, Frontend 100%
 
 ### Ficheiros Relevantes
-- `/app/backend/services/rpa_viaverde_v2.py` - Script RPA com Playwright
-- `/app/backend/routes/sincronizacao.py` - Endpoint `/viaverde/executar-rpa`
+- `/app/backend/services/rpa_viaverde_v2.py` - Script RPA com Playwright (método expandir_filtro_e_selecionar_datas corrigido)
+- `/app/backend/routes/sincronizacao.py` - Endpoint `/viaverde/executar-rpa` + função `auto_criar_veiculos_viaverde`
 - `/app/backend/routes/relatorios.py` - Resumo Semanal com agregação Via Verde
-- `/app/frontend/src/pages/SincronizacaoAuto.js` - UI de sincronização
+- `/app/frontend/src/pages/ResumoSemanalParceiro.js` - UI com dropdown de sincronização
 
 ### Credenciais de Teste
 - **Parceiro**: geral@zmbusines.com / zeny123
 - **Via Verde**: geral@zmbusines.com / 5+?n74vi%*8GJ3e
+
+---
+
+## ✅ Sistema de Desativação de Motoristas (02/02/2026)
+
+### Descrição
+Sistema que permite desativar motoristas com uma data específica, impedindo que apareçam em relatórios de semanas futuras.
+
+### Funcionalidades
+- Pop-up de desativação com seleção de data
+- Motoristas desativados não aparecem no Resumo Semanal após a data de desativação
+- Endpoint: `PUT /api/motoristas/{id}/desativar` com `data_desativacao`
+
+### Ficheiros Relevantes
+- `/app/backend/routes/motoristas.py` (linhas 570-630) - Endpoint de desativação
+- `/app/frontend/src/pages/Motoristas.js` (linhas 2230-2305) - Pop-up de desativação
