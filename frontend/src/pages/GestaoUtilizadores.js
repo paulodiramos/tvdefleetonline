@@ -14,7 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { 
   Users, Search, Edit, Package, CheckCircle, XCircle, 
-  Clock, Shield, User, Briefcase, Car, Save, Plus, UserPlus
+  Clock, Shield, User, Briefcase, Car, Save, Plus, UserPlus, Key, Calendar
 } from 'lucide-react';
 
 const GestaoUtilizadores = ({ user, onLogout }) => {
@@ -22,16 +22,24 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [parceiros, setParceiros] = useState([]);
   const [planos, setPlanos] = useState([]);
+  const [modulos, setModulos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
   const [showPlanoDialog, setShowPlanoDialog] = useState(false);
   const [showNovoUserDialog, setShowNovoUserDialog] = useState(false);
+  const [showAcessoDialog, setShowAcessoDialog] = useState(false);
   const [planoForm, setPlanoForm] = useState({
     plano_id: '',
     tipo_pagamento: 'mensal',
     valor_pago: 0
+  });
+  const [acessoForm, setAcessoForm] = useState({
+    acesso_gratis: false,
+    data_inicio: '',
+    data_fim: '',
+    modulos_ativos: []
   });
   const [novoUserForm, setNovoUserForm] = useState({
     name: '',
