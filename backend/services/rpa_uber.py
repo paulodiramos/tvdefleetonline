@@ -34,14 +34,22 @@ class UberRPA:
         self.session_path.mkdir(exist_ok=True)
         
     async def iniciar_browser(self, headless: bool = True, usar_sessao: bool = True):
-        """Iniciar browser Playwright com suporte a sessão persistente"""
+        """Iniciar browser Playwright com suporte a sessão persistente e anti-detecção"""
         from playwright.async_api import async_playwright
         import json
         
         self.playwright = await async_playwright().start()
+        
+        # Usar configurações mais reais para evitar detecção de bot
         self.browser = await self.playwright.chromium.launch(
             headless=headless,
-            args=['--no-sandbox', '--disable-setuid-sandbox']
+            args=[
+                '--no-sandbox', 
+                '--disable-setuid-sandbox',
+                '--disable-blink-features=AutomationControlled',
+                '--disable-infobars',
+                '--window-size=1920,1080'
+            ]
         )
         
         # Tentar carregar sessão guardada
@@ -55,14 +63,28 @@ class UberRPA:
             except Exception as e:
                 logger.warning(f"⚠️ Não foi possível carregar sessão: {e}")
         
+        # User agent real de Chrome no Windows
+        user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        
         self.context = await self.browser.new_context(
             viewport={"width": 1920, "height": 1080},
             accept_downloads=True,
-            storage_state=storage_state if storage_state and Path(storage_state).exists() else None
+            storage_state=storage_state if storage_state and Path(storage_state).exists() else None,
+            user_agent=user_agent,
+            locale='pt-PT',
+            timezone_id='Europe/Lisbon'
         )
+        
+        # Remover sinais de automação
+        await self.context.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+            Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+            Object.defineProperty(navigator, 'languages', {get: () => ['pt-PT', 'pt', 'en']});
+        """)
+        
         self.page = await self.context.new_page()
         self.cookies_file = cookies_file
-        logger.info("✅ Browser Uber iniciado")
+        logger.info("✅ Browser Uber iniciado (com anti-detecção)")
     
     async def guardar_sessao(self):
         """Guardar cookies e storage state para reutilizar"""
