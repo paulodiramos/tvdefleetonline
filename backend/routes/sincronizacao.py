@@ -1004,6 +1004,196 @@ async def listar_execucoes_viaverde(
 
 
 # ==================================================
+# IMPORTAÇÃO MANUAL DE FICHEIRO EXCEL VIA VERDE
+# ==================================================
+
+@router.post("/viaverde/importar-excel")
+async def importar_excel_viaverde(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Importar ficheiro Excel da Via Verde manualmente.
+    O utilizador faz download do Excel diretamente do site Via Verde e carrega aqui.
+    """
+    if current_user['role'] not in ['admin', 'gestao', 'parceiro']:
+        raise HTTPException(status_code=403, detail="Acesso negado")
+    
+    pid = current_user['id']
+    
+    # Verificar extensão do ficheiro
+    filename = file.filename or "upload.xlsx"
+    if not filename.lower().endswith(('.xlsx', '.xls', '.csv')):
+        raise HTTPException(status_code=400, detail="Ficheiro deve ser Excel (.xlsx, .xls) ou CSV (.csv)")
+    
+    try:
+        import tempfile
+        import os
+        from pathlib import Path
+        from services.rpa_viaverde_v2 import parse_viaverde_excel
+        
+        # Guardar ficheiro temporariamente
+        temp_dir = Path(tempfile.gettempdir()) / "viaverde_uploads"
+        temp_dir.mkdir(exist_ok=True)
+        
+        temp_filepath = temp_dir / f"{uuid.uuid4()}_{filename}"
+        
+        # Escrever conteúdo do ficheiro
+        content = await file.read()
+        with open(temp_filepath, "wb") as f:
+            f.write(content)
+        
+        logger.info(f"📁 Ficheiro guardado: {temp_filepath}")
+        
+        # Criar registo de execução
+        execucao_id = str(uuid.uuid4())
+        now = datetime.now(timezone.utc)
+        
+        execucao = {
+            "id": execucao_id,
+            "parceiro_id": pid,
+            "tipo_periodo": "upload_manual",
+            "periodo_descricao": f"Upload manual: {filename}",
+            "ficheiro_original": filename,
+            "status": "a_processar",
+            "total_movimentos": 0,
+            "importacao": None,
+            "created_at": now.isoformat(),
+            "created_by": pid
+        }
+        
+        await db.execucoes_rpa_viaverde.insert_one(execucao)
+        
+        # Processar ficheiro
+        logger.info(f"📊 A processar ficheiro: {temp_filepath}")
+        movimentos = parse_viaverde_excel(str(temp_filepath))
+        
+        if not movimentos:
+            await db.execucoes_rpa_viaverde.update_one(
+                {"id": execucao_id},
+                {"$set": {"status": "erro", "erro": "Nenhum movimento encontrado no ficheiro"}}
+            )
+            raise HTTPException(status_code=400, detail="Nenhum movimento encontrado no ficheiro")
+        
+        logger.info(f"📊 Encontrados {len(movimentos)} movimentos no ficheiro")
+        
+        # Buscar veículos do parceiro para associar por matrícula
+        veiculos = await db.vehicles.find(
+            {"parceiro_id": pid},
+            {"_id": 0, "id": 1, "matricula": 1}
+        ).to_list(1000)
+        
+        # Criar mapa matrícula -> vehicle_id
+        matricula_to_vehicle = {}
+        for v in veiculos:
+            mat = v.get("matricula", "").upper().strip().replace(" ", "")
+            if mat:
+                matricula_to_vehicle[mat] = v["id"]
+        
+        logger.info(f"📊 Veículos mapeados: {len(matricula_to_vehicle)}")
+        
+        # Importar movimentos para a BD
+        importados = 0
+        duplicados = 0
+        
+        for mov in movimentos:
+            # Associar veículo pela matrícula
+            mat = mov.get("matricula", "").upper().strip().replace(" ", "")
+            vehicle_id = matricula_to_vehicle.get(mat)
+            
+            # Verificar duplicado (mesma data, hora, matrícula, valor)
+            existe = await db.portagens_viaverde.find_one({
+                "parceiro_id": pid,
+                "data": mov.get("data"),
+                "hora": mov.get("hora"),
+                "matricula": mat,
+                "valor": mov.get("valor", 0)
+            })
+            
+            if existe:
+                duplicados += 1
+                continue
+            
+            # Calcular semana e ano ISO
+            data_str = mov.get("data")
+            semana = None
+            ano = None
+            if data_str:
+                try:
+                    data_dt = datetime.strptime(data_str, "%Y-%m-%d")
+                    ano, semana, _ = data_dt.isocalendar()
+                except:
+                    pass
+            
+            # Criar registo
+            portagem = {
+                "id": str(uuid.uuid4()),
+                "parceiro_id": pid,
+                "vehicle_id": vehicle_id,
+                "motorista_id": None,
+                "matricula": mat,
+                "data": mov.get("data"),
+                "hora": mov.get("hora"),
+                "local": mov.get("local"),
+                "local_entrada": mov.get("local_entrada"),
+                "local_saida": mov.get("local_saida"),
+                "descricao": mov.get("descricao"),
+                "valor": mov.get("valor", 0),
+                "valor_liquido": mov.get("valor_liquido", 0),
+                "tipo": mov.get("tipo", "portagem"),
+                "market_description": mov.get("market_description", "portagens"),
+                "semana": semana,
+                "ano": ano,
+                "fonte": "upload_manual",
+                "execucao_id": execucao_id,
+                "importado_em": now.isoformat(),
+                "created_by": pid
+            }
+            
+            await db.portagens_viaverde.insert_one(portagem)
+            importados += 1
+        
+        # Atualizar execução com resultado
+        resultado = {
+            "importados": importados,
+            "duplicados": duplicados,
+            "total": len(movimentos)
+        }
+        
+        await db.execucoes_rpa_viaverde.update_one(
+            {"id": execucao_id},
+            {"$set": {
+                "status": "concluido",
+                "total_movimentos": len(movimentos),
+                "importacao": resultado,
+                "ficheiro": str(temp_filepath),
+                "completed_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        # Limpar ficheiro temporário
+        try:
+            os.remove(temp_filepath)
+        except:
+            pass
+        
+        logger.info(f"✅ Importação concluída: {importados} importados, {duplicados} duplicados")
+        
+        return {
+            "success": True,
+            "message": f"Importação concluída: {importados} registos importados, {duplicados} duplicados",
+            "execucao_id": execucao_id,
+            "resultado": resultado
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Erro ao importar Excel Via Verde: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro ao processar ficheiro: {str(e)}")
+
+
+# ==================================================
 # SISTEMA DE SINCRONIZAÇÃO AUTOMÁTICA AVANÇADO
 # ==================================================
 
