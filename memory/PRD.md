@@ -630,3 +630,44 @@ Sistema que permite desativar motoristas com uma data específica, impedindo que
 ### Ficheiros Relevantes
 - `/app/backend/routes/motoristas.py` (linhas 570-630) - Endpoint de desativação
 - `/app/frontend/src/pages/Motoristas.js` (linhas 2230-2305) - Pop-up de desativação
+
+
+---
+
+## ✅ Sistema de Gestão de Utilizadores (02/02/2026)
+
+### Descrição
+Sistema completo para criar e gerir utilizadores com diferentes perfis (Admin, Gestor, Parceiro, Motorista), incluindo associação de gestores a parceiros.
+
+### Funcionalidades
+- **Listagem de Utilizadores**: Página `/utilizadores` com cards de utilizadores
+- **Filtro por Role**: Dropdown para filtrar por Admin, Gestão, Parceiro, Motorista
+- **Busca**: Campo de pesquisa por nome ou email
+- **Criação de Utilizadores**: Modal com formulário para criar novos utilizadores
+- **Tipos de Utilizador**:
+  - **Motorista**: Pode ver ganhos, enviar recibos, aceder área do motorista
+  - **Parceiro**: Gere motoristas, veículos e relatórios financeiros
+  - **Gestor**: Pode gerir múltiplos parceiros associados (requer seleção de parceiros)
+  - **Admin**: Acesso total ao sistema
+- **Associação Gestor-Parceiro**: Tabela `gestor_parceiro` para relacionar gestores a parceiros
+- **Validações**: Email duplicado, password mínima 6 caracteres, gestor requer ≥1 parceiro
+
+### Endpoints
+- `GET /api/users/all` - Listar todos os utilizadores (admin/gestão)
+- `POST /api/auth/register` - Criar novo utilizador com role e parceiros_associados
+- `GET /api/users/pending` - Utilizadores pendentes de aprovação
+- `GET /api/parceiros` - Lista de parceiros para associação
+
+### Ficheiros Relevantes
+- `/app/frontend/src/pages/GestaoUtilizadores.js` - Página de gestão de utilizadores
+- `/app/backend/routes/auth.py` - Endpoint de registo com suporte a roles
+- `/app/backend/routes/users.py` - Endpoints de gestão de utilizadores
+- `/app/backend/models/user.py` - Modelo com roles e parceiros_associados
+
+### Credenciais de Teste
+- **Admin**: admin@tvdefleet.com / 123456
+- **Parceiro (criado via UI)**: parceiro.criado.ui@example.com / parceiro123
+- **Parceiro (Zeny)**: geral@zmbusines.com / zeny123
+
+### Correção Aplicada
+- Corrigido endpoint de `/api/users` para `/api/users/all` no frontend
