@@ -943,20 +943,31 @@ async def get_resumo_semanal_parceiro(
         
         # ============ VIA VERDE ============
         via_verde_total = 0.0
+        matricula_veiculo = None
         
         # Via Verde: Buscar apenas pela matrícula do veículo atribuído ao motorista
-        # Isso evita duplicação quando múltiplos motoristas têm a mesma matrícula
+        # Evitar duplicação: se a matrícula já foi processada para outro motorista, não contar novamente
         vv_query = None
+        vv_records = []
+        
         if veiculo and veiculo.get("matricula"):
             matricula_veiculo = veiculo.get("matricula", "").upper().strip()
-            vv_query = {
-                "matricula": matricula_veiculo,
-                "$or": [
-                    {"semana": semana, "ano": ano},
-                    {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}},
-                    {"data": {"$gte": data_inicio, "$lte": data_fim}}
-                ]
-            }
+            
+            # Verificar se esta matrícula já foi processada
+            if matricula_veiculo in matriculas_processadas_viaverde:
+                logger.info(f"  {motorista.get('name')}: Via Verde matrícula {matricula_veiculo} já processada, ignorando duplicação")
+            else:
+                # Marcar matrícula como processada
+                matriculas_processadas_viaverde.add(matricula_veiculo)
+                
+                vv_query = {
+                    "matricula": matricula_veiculo,
+                    "$or": [
+                        {"semana": semana, "ano": ano},
+                        {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}},
+                        {"data": {"$gte": data_inicio, "$lte": data_fim}}
+                    ]
+                }
         elif motorista_id:
             # Fallback: buscar por motorista_id se não tiver veículo
             vv_query = {
@@ -968,9 +979,9 @@ async def get_resumo_semanal_parceiro(
                 ]
             }
         
-        vv_records = []
         if vv_query:
             vv_records = await db.portagens_viaverde.find(vv_query, {"_id": 0}).to_list(1000)
+        
         # Incluir:
         # 1. Registos com market_description = "portagens" ou "parques" (novos dados)
         # 2. Registos sem market_description (dados antigos) - assumir que são portagens
