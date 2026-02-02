@@ -897,6 +897,7 @@ async def executar_rpa_uber(
     
     # Executar RPA em background
     sms_code = request.sms_code  # Guardar código SMS para usar no background task
+    pin_code = request.pin_code  # Guardar PIN para usar no background task
     
     async def run_uber_rpa():
         try:
@@ -908,6 +909,7 @@ async def executar_rpa_uber(
                 data_inicio=data_inicio,
                 data_fim=data_fim,
                 sms_code=sms_code,  # Passar código SMS
+                pin_code=pin_code,  # Passar PIN
                 headless=True
             )
             
