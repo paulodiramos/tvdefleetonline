@@ -88,6 +88,7 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
   // Estados de sincronização
   const [syncLoading, setSyncLoading] = useState({});
   const [showSyncMenu, setShowSyncMenu] = useState(false);
+  const [uploadingViaVerde, setUploadingViaVerde] = useState(false);
 
   const STATUS_LABELS = {
     pendente: { label: 'Pendente', color: 'bg-slate-100 text-slate-700' },
