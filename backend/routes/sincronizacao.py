@@ -1282,11 +1282,14 @@ async def importar_excel_viaverde(
             
             await db.portagens_viaverde.insert_one(portagem)
             importados += 1
+            if vehicle_id:
+                veiculos_associados += 1
         
         # Atualizar execução com resultado
         resultado = {
             "importados": importados,
             "duplicados": duplicados,
+            "veiculos_associados": veiculos_associados,
             "total": len(movimentos)
         }
         
@@ -1307,11 +1310,11 @@ async def importar_excel_viaverde(
         except:
             pass
         
-        logger.info(f"✅ Importação concluída: {importados} importados, {duplicados} duplicados")
+        logger.info(f"✅ Importação concluída: {importados} importados, {duplicados} duplicados, {veiculos_associados} com veículo")
         
         return {
             "success": True,
-            "message": f"Importação concluída: {importados} registos importados, {duplicados} duplicados",
+            "message": f"Importação concluída: {importados} registos importados, {duplicados} duplicados, {veiculos_associados} com veículo associado",
             "execucao_id": execucao_id,
             "resultado": resultado
         }
