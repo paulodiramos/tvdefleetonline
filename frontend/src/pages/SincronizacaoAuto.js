@@ -175,21 +175,37 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
     
     try {
       const token = localStorage.getItem('token');
-      const formData = new FormData();
-      formData.append('parceiro_id', selectedParceiro.id);
-      formData.append('plataforma', configForm.plataforma);
-      formData.append('email', configForm.email);
-      formData.append('password', configForm.password);
-      formData.append('sincronizacao_automatica', configForm.sincronizacao_automatica);
-      formData.append('horario_sincronizacao', configForm.horario_sincronizacao);
-      formData.append('frequencia_dias', configForm.frequencia_dias);
+      
+      // Verificar se já existe credencial (para decidir se atualiza ou cria)
+      const existingCred = credenciais.find(c => c.plataforma === configForm.plataforma);
+      
+      const payload = {
+        parceiro_id: selectedParceiro.id,
+        plataforma: configForm.plataforma,
+        email: configForm.email,
+        password: configForm.password,
+        sincronizacao_automatica: configForm.sincronizacao_automatica,
+        horario_sincronizacao: configForm.horario_sincronizacao,
+        frequencia_dias: configForm.frequencia_dias
+      };
 
-      await axios.post(`${API}/credenciais-plataforma`, formData, {
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+      if (existingCred) {
+        // Atualizar credencial existente
+        await axios.put(`${API}/credenciais-plataforma/${existingCred.id}`, payload, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      } else {
+        // Criar nova credencial
+        await axios.post(`${API}/credenciais-plataforma`, payload, {
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+      }
 
       toast.success('Configuração salva com sucesso!');
       setShowConfigDialog(false);
