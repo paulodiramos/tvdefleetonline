@@ -536,6 +536,16 @@ async def update_motorista(
     
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
+    # Se está a desativar o motorista, guardar a data de desativação
+    if "ativo" in update_data and update_data["ativo"] == False:
+        # Verificar se já não estava desativado
+        if motorista.get("ativo") != False:
+            update_data["data_desativacao"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            logger.info(f"Motorista {motorista_id} desativado em {update_data['data_desativacao']}")
+    elif "ativo" in update_data and update_data["ativo"] == True:
+        # Se está a reativar, remover a data de desativação
+        update_data["data_desativacao"] = None
+    
     # Update motorista
     await db.motoristas.update_one(
         {"id": motorista_id},
