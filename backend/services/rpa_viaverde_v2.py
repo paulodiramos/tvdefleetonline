@@ -118,16 +118,37 @@ class ViaVerdeRPA:
             return False
     
     async def ir_para_movimentos(self) -> bool:
-        """Navegar para o tab Movimentos"""
+        """Navegar para o tab Movimentos e garantir que estamos na vista correta"""
         try:
             logger.info("📑 A navegar para Movimentos...")
             
-            # Clicar no tab "Movimentos"
-            movimentos_tab = self.page.locator('a:has-text("Movimentos"), li:has-text("Movimentos")').first
-            if await movimentos_tab.count() > 0:
-                await movimentos_tab.click()
-                await self.page.wait_for_timeout(3000)
-                logger.info("✅ Tab Movimentos clicado")
+            # A página tem dois tabs: "Extratos" e "Movimentos"
+            # Precisamos clicar no tab "Movimentos" que NÃO está ativo (verde)
+            
+            # Primeiro, verificar se já estamos na página correta
+            await self.page.wait_for_timeout(2000)
+            
+            # Procurar o tab "Movimentos" - pode ser um link ou botão
+            movimentos_selectors = [
+                'a:text-is("Movimentos")',
+                'button:text-is("Movimentos")',
+                'li:has-text("Movimentos") a',
+                'div[role="tab"]:has-text("Movimentos")',
+                '.nav-tabs a:has-text("Movimentos")',
+                'ul.nav a:has-text("Movimentos")',
+                # Tab não selecionado (sem fundo verde)
+                'a:has-text("Movimentos"):not(.active)',
+            ]
+            
+            for selector in movimentos_selectors:
+                movimentos_tab = self.page.locator(selector).first
+                if await movimentos_tab.count() > 0:
+                    is_visible = await movimentos_tab.is_visible()
+                    if is_visible:
+                        await movimentos_tab.click()
+                        await self.page.wait_for_timeout(3000)
+                        logger.info(f"✅ Tab Movimentos clicado via: {selector}")
+                        break
             
             await self.screenshot("tab_movimentos")
             return True
@@ -141,6 +162,7 @@ class ViaVerdeRPA:
         Expandir filtro e selecionar datas usando interação com calendário popup.
         
         A interface Via Verde tem:
+        - Secção "Filtrar por:" que pode estar colapsada
         - Dois campos de input com ícones de calendário (De e Até)
         - Um calendário popup com navegação por mês (setas < >)
         - Grid de dias para seleção
