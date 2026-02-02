@@ -50,6 +50,11 @@ const Motoristas = ({ user, onLogout }) => {
   const [historicoAtribuicoes, setHistoricoAtribuicoes] = useState([]);
   const [loadingHistorico, setLoadingHistorico] = useState(false);
   const [resumosMotoristas, setResumosMotoristas] = useState({});
+  
+  // Estado para diálogo de desativação
+  const [showDesativarDialog, setShowDesativarDialog] = useState(false);
+  const [desativarMotoristaData, setDesativarMotoristaData] = useState({ id: '', nome: '', dataDesativacao: '' });
+  
   const [newMotorista, setNewMotorista] = useState({
     email: '',
     name: '',
