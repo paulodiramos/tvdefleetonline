@@ -800,9 +800,8 @@ async def get_resumo_semanal_parceiro(
                     {"parceiro_atribuido": current_user["id"]}
                 ]},
                 {"$or": [
-                    {"status_motorista": "ativo"},
-                    {"status_motorista": {"$exists": False}},
-                    {"status_motorista": None}
+                    {"ativo": True},
+                    {"status_motorista": "ativo"}
                 ]}
             ]
         }
