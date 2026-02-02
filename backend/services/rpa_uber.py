@@ -112,6 +112,24 @@ class UberRPA:
             
             await self.screenshot("apos_continuar")
             
+            # VERIFICAR SE HÁ CAPTCHA/PUZZLE
+            puzzle_btn = self.page.locator('button:has-text("Start Puzzle"), button:has-text("Iniciar")').first
+            if await puzzle_btn.count() > 0 and await puzzle_btn.is_visible():
+                logger.info("🧩 CAPTCHA puzzle detectado - a tentar resolver...")
+                await puzzle_btn.click()
+                await self.page.wait_for_timeout(5000)
+                await self.screenshot("apos_puzzle")
+                
+                # Aguardar que o puzzle seja resolvido (pode precisar de interação manual)
+                # Verificar se passou para a próxima página
+                for _ in range(10):
+                    # Verificar se ainda está no puzzle
+                    puzzle_check = self.page.locator('text=/Protecting your account|puzzle/')
+                    if await puzzle_check.count() == 0:
+                        logger.info("✅ CAPTCHA passou!")
+                        break
+                    await self.page.wait_for_timeout(2000)
+            
             # VERIFICAR SE PEDE SMS
             # Procurar opção "Enviar códigos por SMS"
             enviar_sms_btn = self.page.locator('text=/Enviar códigos por SMS|Send codes via SMS/').first
