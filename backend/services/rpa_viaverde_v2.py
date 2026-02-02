@@ -177,15 +177,11 @@ class ViaVerdeRPA:
             
             # PASSO 1: Expandir o filtro se estiver colapsado
             # Procurar por "Filtrar por:" ou área de filtro colapsável
-            filtrar_section = self.page.locator('text=/Filtrar por/', 'text=Filtrar', '[class*="filter"]').first
             
             # Verificar se há uma seta para baixo (indica filtro colapsado)
             expand_selectors = [
-                'text=/Filtrar por:/ >> svg',
-                '[class*="filter"] >> button',
-                '[class*="filter-header"]',
-                'div:has-text("Filtrar por:") >> [class*="arrow"]',
-                'div:has-text("Filtrar por:") >> svg',
+                'text=/Filtrar por:/',
+                '[class*="filter"]',
                 'div:has-text("Filtrar por:")',
             ]
             
