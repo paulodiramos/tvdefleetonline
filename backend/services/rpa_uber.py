@@ -117,18 +117,35 @@ class UberRPA:
             if await puzzle_btn.count() > 0 and await puzzle_btn.is_visible():
                 logger.info("🧩 CAPTCHA puzzle detectado - a tentar resolver...")
                 await puzzle_btn.click()
-                await self.page.wait_for_timeout(5000)
-                await self.screenshot("apos_puzzle")
+                await self.page.wait_for_timeout(3000)
+                await self.screenshot("puzzle_iniciado")
                 
-                # Aguardar que o puzzle seja resolvido (pode precisar de interação manual)
-                # Verificar se passou para a próxima página
-                for _ in range(10):
-                    # Verificar se ainda está no puzzle
-                    puzzle_check = self.page.locator('text=/Protecting your account|puzzle/')
+                # Tentar resolver o puzzle (alguns são simples cliques)
+                # Aguardar o iframe do puzzle
+                for attempt in range(3):
+                    try:
+                        # Procurar elementos interativos no puzzle
+                        puzzle_frame = self.page.frame_locator('iframe').first
+                        
+                        # Tentar clicar em elementos do puzzle
+                        clickable = puzzle_frame.locator('div[role="button"], button, img').first
+                        if await clickable.count() > 0:
+                            await clickable.click()
+                            await self.page.wait_for_timeout(2000)
+                            logger.info(f"🧩 Tentativa {attempt+1}: Clicou em elemento do puzzle")
+                    except Exception as e:
+                        logger.warning(f"⚠️ Tentativa puzzle {attempt+1}: {e}")
+                    
+                    await self.page.wait_for_timeout(3000)
+                    await self.screenshot(f"puzzle_tentativa_{attempt+1}")
+                    
+                    # Verificar se passou
+                    puzzle_check = self.page.locator('text=/Protecting your account|puzzle|Start Puzzle/')
                     if await puzzle_check.count() == 0:
-                        logger.info("✅ CAPTCHA passou!")
+                        logger.info("✅ CAPTCHA parece ter passado!")
                         break
-                    await self.page.wait_for_timeout(2000)
+                
+                await self.screenshot("apos_puzzle")
             
             # VERIFICAR SE PEDE SMS
             # Procurar opção "Enviar códigos por SMS"
