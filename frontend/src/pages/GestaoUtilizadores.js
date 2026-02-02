@@ -295,14 +295,23 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
     <Layout user={user} onLogout={onLogout}>
       <div className="max-w-7xl mx-auto p-6">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-800 flex items-center space-x-3">
-            <Users className="w-8 h-8 text-blue-600" />
-            <span>Gestão de Utilizadores</span>
-          </h1>
-          <p className="text-slate-600 mt-2">
-            Visualizar e gerir planos de todos os utilizadores
-          </p>
+        <div className="mb-6 flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-800 flex items-center space-x-3">
+              <Users className="w-8 h-8 text-blue-600" />
+              <span>Gestão de Utilizadores</span>
+            </h1>
+            <p className="text-slate-600 mt-2">
+              Visualizar e gerir planos de todos os utilizadores
+            </p>
+          </div>
+          <Button 
+            onClick={handleOpenNovoUserDialog}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            <UserPlus className="w-4 h-4 mr-2" />
+            Novo Utilizador
+          </Button>
         </div>
 
         {/* Filters */}
