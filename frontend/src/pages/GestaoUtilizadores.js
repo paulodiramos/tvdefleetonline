@@ -10,25 +10,35 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { 
   Users, Search, Edit, Package, CheckCircle, XCircle, 
-  Clock, Shield, User, Briefcase, Car, Save
+  Clock, Shield, User, Briefcase, Car, Save, Plus, UserPlus
 } from 'lucide-react';
 
 const GestaoUtilizadores = ({ user, onLogout }) => {
   const [utilizadores, setUtilizadores] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
+  const [parceiros, setParceiros] = useState([]);
   const [planos, setPlanos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedUser, setSelectedUser] = useState(null);
   const [showPlanoDialog, setShowPlanoDialog] = useState(false);
+  const [showNovoUserDialog, setShowNovoUserDialog] = useState(false);
   const [planoForm, setPlanoForm] = useState({
     plano_id: '',
     tipo_pagamento: 'mensal',
     valor_pago: 0
+  });
+  const [novoUserForm, setNovoUserForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'motorista',
+    parceiros_associados: []
   });
   const [saving, setSaving] = useState(false);
 
@@ -49,6 +59,16 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
       const usersRes = await axios.get(`${API}/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
+      // Buscar parceiros (para atribuir a gestores)
+      try {
+        const parceirosRes = await axios.get(`${API}/parceiros`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setParceiros(parceirosRes.data || []);
+      } catch {
+        setParceiros([]);
+      }
 
       // Buscar planos de cada usuário
       const usersWithPlanos = await Promise.all(
