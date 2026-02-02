@@ -179,8 +179,30 @@ class ViaVerdeRPA:
             # pois é lá que estão os filtros de data (De/Até)
             # A função ir_para_movimentos agora garante que estamos no tab correto
             
-            # PASSO 1: Procurar os campos de data "De:" e "Até:"
-            # No site Via Verde, os campos estão com formato MM/YYYY
+            # PASSO 1: Esperar pela página carregar completamente
+            await self.page.wait_for_timeout(3000)
+            
+            # PASSO 2: Expandir a secção de filtros se estiver colapsada
+            # Procurar por "Filtrar por:" e clicar para expandir
+            expand_selectors = [
+                'text=/Filtrar por:/',
+                'div:has-text("Filtrar por:")',
+                '[class*="filter"]',
+                'text=Filtrar por:',
+            ]
+            
+            for selector in expand_selectors:
+                try:
+                    expand_elem = self.page.locator(selector).first
+                    if await expand_elem.count() > 0 and await expand_elem.is_visible():
+                        await expand_elem.click()
+                        await self.page.wait_for_timeout(2000)
+                        logger.info(f"✅ Secção de filtros clicada: {selector}")
+                        await self.screenshot("filtro_expandido")
+                        break
+                except:
+                    pass
+            
             await self.page.wait_for_timeout(2000)
             
             # Parse das datas (formato entrada: DD/MM/YYYY)
@@ -203,59 +225,81 @@ class ViaVerdeRPA:
             logger.info(f"📅 Data início (MM/YYYY): {data_inicio_mmyyyy}")
             logger.info(f"📅 Data fim (MM/YYYY): {data_fim_mmyyyy}")
             
-            # PASSO 2: Encontrar os campos "De:" e "Até:"
-            # O site Via Verde tem campos com ícones de calendário
+            # PASSO 3: Encontrar os campos "De:" e "Até:"
             
             de_input = None
             ate_input = None
             
-            # Procurar por labels "De:" e "Até:" e seus inputs associados
-            try:
-                # Método 1: Procurar por inputs próximos de labels
-                de_label = self.page.locator('label:has-text("De:"), span:has-text("De:"), text=De:').first
-                ate_label = self.page.locator('label:has-text("Até:"), span:has-text("Até:"), text=Até:').first
-                
-                if await de_label.count() > 0:
-                    # O input está próximo ou dentro do mesmo container
-                    de_container = de_label.locator('..').first
-                    de_input = de_container.locator('input').first
-                    logger.info("✅ Campo 'De:' encontrado via label")
-                
-                if await ate_label.count() > 0:
-                    ate_container = ate_label.locator('..').first
-                    ate_input = ate_container.locator('input').first
-                    logger.info("✅ Campo 'Até:' encontrado via label")
-            except Exception as e:
-                logger.debug(f"Método label falhou: {e}")
+            # Método 1: Procurar todos os inputs e verificar quais têm formato MM/YYYY
+            all_inputs = self.page.locator('input')
+            input_count = await all_inputs.count()
+            logger.info(f"📋 Total de inputs na página: {input_count}")
             
-            # Método 2: Procurar inputs com valor no formato MM/YYYY
-            if de_input is None or await de_input.count() == 0:
-                all_inputs = self.page.locator('input:visible')
-                input_count = await all_inputs.count()
-                logger.info(f"📋 Total de inputs visíveis: {input_count}")
+            date_inputs = []
+            for i in range(min(input_count, 20)):
+                try:
+                    inp = all_inputs.nth(i)
+                    is_visible = await inp.is_visible()
+                    value = await inp.get_attribute('value') or ''
+                    
+                    # Verificar formato MM/YYYY
+                    import re
+                    if re.match(r'\d{2}/\d{4}', value):
+                        date_inputs.append({'input': inp, 'value': value, 'index': i, 'visible': is_visible})
+                        logger.info(f"📋 Input data [{i}]: value='{value}', visible={is_visible}")
+                except:
+                    pass
+            
+            logger.info(f"📋 Encontrados {len(date_inputs)} inputs com formato MM/YYYY")
+            
+            # Usar os inputs encontrados
+            if len(date_inputs) >= 2:
+                de_input = date_inputs[0]['input']
+                ate_input = date_inputs[1]['input']
+                logger.info(f"✅ Usando De='{date_inputs[0]['value']}', Até='{date_inputs[1]['value']}'")
+            elif len(date_inputs) == 1:
+                de_input = date_inputs[0]['input']
+                logger.info(f"⚠️ Apenas 1 input encontrado: {date_inputs[0]['value']}")
+            
+            # Método 2: Se não encontrou, procurar por placeholder ou tipo
+            if de_input is None:
+                logger.info("📋 A tentar método alternativo para encontrar inputs...")
                 
-                date_inputs = []
-                for i in range(min(input_count, 15)):
-                    try:
-                        inp = all_inputs.nth(i)
-                        value = await inp.get_attribute('value') or ''
-                        placeholder = await inp.get_attribute('placeholder') or ''
-                        
-                        # Verificar formato MM/YYYY
-                        import re
-                        if re.match(r'\d{2}/\d{4}', value):
-                            date_inputs.append({'input': inp, 'value': value, 'index': i})
-                            logger.info(f"📋 Input data encontrado [{i}]: value='{value}'")
-                    except Exception as e:
-                        pass
-                
-                if len(date_inputs) >= 2:
-                    de_input = date_inputs[0]['input']
-                    ate_input = date_inputs[1]['input']
-                    logger.info(f"✅ Inputs de data encontrados via formato MM/YYYY")
-                elif len(date_inputs) == 1:
-                    de_input = date_inputs[0]['input']
-                    logger.info(f"⚠️ Apenas 1 input de data encontrado")
+                # Procurar inputs perto de labels "De" ou "Até"
+                try:
+                    # Usar JavaScript para encontrar inputs
+                    js_find_date_inputs = """
+                        const inputs = [];
+                        document.querySelectorAll('input').forEach((inp, idx) => {
+                            const value = inp.value || '';
+                            const rect = inp.getBoundingClientRect();
+                            if (rect.height > 0 && rect.width > 0) {
+                                // Verificar se tem label próximo com "De" ou "Até"
+                                let label = inp.previousElementSibling;
+                                let labelText = label ? label.textContent : '';
+                                
+                                inputs.push({
+                                    index: idx,
+                                    value: value,
+                                    y: rect.y,
+                                    x: rect.x,
+                                    visible: rect.height > 0,
+                                    label: labelText.substring(0, 20)
+                                });
+                            }
+                        });
+                        return JSON.stringify(inputs);
+                    """
+                    result = await self.page.evaluate(js_find_date_inputs)
+                    import json
+                    inputs_info = json.loads(result)
+                    logger.info(f"📋 JavaScript encontrou {len(inputs_info)} inputs visíveis")
+                    
+                    for inp_info in inputs_info:
+                        if '/' in inp_info['value']:
+                            logger.info(f"   - [{inp_info['index']}] value='{inp_info['value']}', y={inp_info['y']}, label='{inp_info['label']}'")
+                except Exception as e:
+                    logger.warning(f"⚠️ Método JavaScript falhou: {e}")
             
             await self.screenshot("procurando_inputs")
             
