@@ -802,6 +802,30 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
               })}
               
               <DropdownMenuSeparator />
+              {/* Upload manual de ficheiro Excel Via Verde */}
+              <DropdownMenuItem 
+                asChild
+                className="cursor-pointer"
+              >
+                <label className="flex items-center cursor-pointer">
+                  <div className="w-6 h-6 rounded bg-teal-500 text-white flex items-center justify-center mr-2">
+                    {uploadingViaVerde ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <Upload className="w-3 h-3" />
+                    )}
+                  </div>
+                  <span className="font-medium">Upload Via Verde (Excel)</span>
+                  <input
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleUploadViaVerdeExcel}
+                    className="hidden"
+                    disabled={uploadingViaVerde}
+                  />
+                </label>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
               <DropdownMenuItem 
                 onClick={handleSyncAll}
                 disabled={syncLoading.all}
