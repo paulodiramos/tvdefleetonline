@@ -459,11 +459,25 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                           <Package className="w-3 h-3 mr-1" />
                           {usuario.plano_ativo.nome}
                         </Badge>
+                      ) : usuario.acesso_gratis ? (
+                        <Badge className="bg-green-100 text-green-800">
+                          <Calendar className="w-3 h-3 mr-1" />
+                          Grátis
+                        </Badge>
                       ) : (
                         <span className="text-sm text-slate-400">Sem plano</span>
                       )}
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="p-4 text-right space-x-2">
+                      <Button
+                        onClick={() => handleOpenAcessoDialog(usuario)}
+                        variant="outline"
+                        size="sm"
+                        className="text-green-600 border-green-200 hover:bg-green-50"
+                      >
+                        <Key className="w-3 h-3 mr-1" />
+                        Acesso
+                      </Button>
                       <Button
                         onClick={() => handleOpenPlanoDialog(usuario)}
                         variant="outline"
