@@ -29,25 +29,54 @@ class UberRPA:
         self.page = None
         self.downloads_path = Path("/tmp/uber_downloads")
         self.downloads_path.mkdir(exist_ok=True)
+        self.session_path = Path("/tmp/uber_session")
+        self.session_path.mkdir(exist_ok=True)
         
-    async def iniciar_browser(self, headless: bool = True):
-        """Iniciar browser Playwright"""
+    async def iniciar_browser(self, headless: bool = True, usar_sessao: bool = True):
+        """Iniciar browser Playwright com suporte a sessão persistente"""
         from playwright.async_api import async_playwright
+        import json
         
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(
             headless=headless,
             args=['--no-sandbox', '--disable-setuid-sandbox']
         )
+        
+        # Tentar carregar sessão guardada
+        cookies_file = self.session_path / f"cookies_{self.email.replace('@','_').replace('.','_')}.json"
+        storage_state = None
+        
+        if usar_sessao and cookies_file.exists():
+            try:
+                storage_state = str(cookies_file)
+                logger.info(f"📂 A carregar sessão guardada: {cookies_file}")
+            except Exception as e:
+                logger.warning(f"⚠️ Não foi possível carregar sessão: {e}")
+        
         self.context = await self.browser.new_context(
             viewport={"width": 1920, "height": 1080},
-            accept_downloads=True
+            accept_downloads=True,
+            storage_state=storage_state if storage_state and Path(storage_state).exists() else None
         )
         self.page = await self.context.new_page()
+        self.cookies_file = cookies_file
         logger.info("✅ Browser Uber iniciado")
+    
+    async def guardar_sessao(self):
+        """Guardar cookies e storage state para reutilizar"""
+        try:
+            await self.context.storage_state(path=str(self.cookies_file))
+            logger.info(f"💾 Sessão guardada: {self.cookies_file}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Erro ao guardar sessão: {e}")
+            return False
         
-    async def fechar_browser(self):
-        """Fechar browser"""
+    async def fechar_browser(self, guardar: bool = True):
+        """Fechar browser, opcionalmente guardando a sessão"""
+        if guardar and hasattr(self, 'context'):
+            await self.guardar_sessao()
         if self.browser:
             await self.browser.close()
         if hasattr(self, 'playwright'):
