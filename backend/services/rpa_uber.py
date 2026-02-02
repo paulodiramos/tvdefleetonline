@@ -195,18 +195,6 @@ class UberRPA:
                 if captcha_detectado:
                     logger.warning("⚠️ CAPTCHA não foi possível resolver automaticamente")
                     logger.warning("💡 Sugestão: Fazer login manual primeiro e usar sessão guardada")
-                        logger.warning(f"⚠️ Tentativa puzzle {attempt+1}: {e}")
-                    
-                    await self.page.wait_for_timeout(3000)
-                    await self.screenshot(f"puzzle_tentativa_{attempt+1}")
-                    
-                    # Verificar se passou
-                    puzzle_check = self.page.locator('text=/Protecting your account|puzzle|Start Puzzle/')
-                    if await puzzle_check.count() == 0:
-                        logger.info("✅ CAPTCHA parece ter passado!")
-                        break
-                
-                await self.screenshot("apos_puzzle")
             
             # VERIFICAR SE PEDE SMS
             # Procurar opção "Enviar códigos por SMS"
