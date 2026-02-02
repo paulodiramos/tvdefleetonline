@@ -78,9 +78,9 @@ class UberRPA:
         try:
             logger.info(f"🔐 A fazer login Uber: {self.email}")
             
-            # Navegar para o portal Uber Fleet
-            await self.page.goto("https://fleet.uber.com/", wait_until="networkidle", timeout=60000)
-            await self.page.wait_for_timeout(3000)
+            # Navegar para o portal Uber Fleet - usar domcontentloaded em vez de networkidle
+            await self.page.goto("https://fleet.uber.com/", wait_until="domcontentloaded", timeout=90000)
+            await self.page.wait_for_timeout(5000)
             
             await self.screenshot("pagina_inicial")
             
