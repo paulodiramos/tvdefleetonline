@@ -748,10 +748,10 @@ async def executar_rpa_viaverde(
     
     pid = current_user['id']
     
-    # Verificar se parceiro tem credenciais Via Verde
+    # Verificar se parceiro tem credenciais Via Verde (aceitar ambos os formatos)
     credenciais = await db.credenciais_plataforma.find_one({
         "parceiro_id": pid,
-        "plataforma": "viaverde"
+        "plataforma": {"$in": ["viaverde", "via_verde"]}
     })
     
     if not credenciais or not credenciais.get("email") or not credenciais.get("password"):
