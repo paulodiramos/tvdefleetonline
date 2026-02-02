@@ -563,23 +563,45 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API}/api/sincronizacao-auto/executar`,
-        { fontes: [fonte], semana, ano },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
       
-      if (response.data.sucesso) {
-        const resultado = response.data.resultados?.[fonte];
-        if (resultado?.sucesso) {
-          toast.success(`${fonte.charAt(0).toUpperCase() + fonte.slice(1)} sincronizado com sucesso!`);
-          // Recarregar dados do resumo
-          fetchResumo();
+      // Via Verde usa endpoint específico de RPA
+      if (fonte === 'viaverde') {
+        const response = await axios.post(
+          `${API}/api/viaverde/executar-rpa`,
+          { 
+            tipo_periodo: 'semana_especifica',
+            semana: semana,
+            ano: ano
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        if (response.data.success) {
+          toast.success(`Via Verde: RPA agendado para Semana ${semana}/${ano}`);
+          // O RPA executa em background, recarregar dados após alguns segundos
+          setTimeout(() => fetchResumo(), 5000);
         } else {
-          toast.error(resultado?.erro || `Erro ao sincronizar ${fonte}`);
+          toast.error(response.data.error || 'Erro ao agendar Via Verde');
         }
       } else {
-        toast.error(response.data.erros?.[0] || 'Erro na sincronização');
+        // Outras fontes usam o endpoint geral
+        const response = await axios.post(
+          `${API}/api/sincronizacao-auto/executar`,
+          { fontes: [fonte], semana, ano },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        
+        if (response.data.sucesso) {
+          const resultado = response.data.resultados?.[fonte];
+          if (resultado?.sucesso) {
+            toast.success(`${fonte.charAt(0).toUpperCase() + fonte.slice(1)} sincronizado com sucesso!`);
+            fetchResumo();
+          } else {
+            toast.error(resultado?.erro || `Erro ao sincronizar ${fonte}`);
+          }
+        } else {
+          toast.error(response.data.erros?.[0] || 'Erro na sincronização');
+        }
       }
     } catch (error) {
       console.error(`Erro ao sincronizar ${fonte}:`, error);
