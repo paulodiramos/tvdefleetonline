@@ -34,6 +34,8 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     """Model for creating a new user"""
     password: str
+    approved: bool = False
+    parceiros_associados: Optional[List[str]] = None  # Para gestores
 
 
 class UserLogin(BaseModel):
