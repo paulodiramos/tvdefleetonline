@@ -104,6 +104,16 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
       });
       setPlanos(planosRes.data);
 
+      // Buscar módulos disponíveis
+      try {
+        const modulosRes = await axios.get(`${API}/gestao-planos/modulos`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setModulos(modulosRes.data || []);
+      } catch {
+        setModulos([]);
+      }
+
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Erro ao carregar dados');
