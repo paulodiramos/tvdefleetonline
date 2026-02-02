@@ -488,7 +488,7 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-slate-600">Auto Sync:</span>
                           <span className={`font-medium ${cred.sincronizacao_automatica ? 'text-green-600' : 'text-slate-400'}`}>
-                            {cred.sincronizacao_automatica ? `✓ ${cred.horario_sincronizacao}` : '✗ Desativado'}
+                            {cred.sincronizacao_automatica ? `✓ ${cred.horario_sincronizacao || 'Ativo'}` : '✗ Desativado'}
                           </span>
                         </div>
                       </>
