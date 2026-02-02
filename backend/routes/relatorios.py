@@ -2473,18 +2473,37 @@ async def delete_all_weekly_data(
     deleted_counts["ganhos_uber"] = result.deleted_count
     
     # Eliminar ganhos Bolt (de ganhos_bolt)
+    # Bolt pode ter motorista_id, identificador_motorista_bolt, ou nome_motorista
+    bolt_motorista_ids = []
+    bolt_nomes = []
+    for m in await db.motoristas.find(motoristas_query, {"_id": 0, "id": 1, "name": 1, "bolt_driver_id": 1}).to_list(1000):
+        bolt_motorista_ids.append(m.get("id"))
+        if m.get("bolt_driver_id"):
+            bolt_motorista_ids.append(m.get("bolt_driver_id"))
+        if m.get("name"):
+            bolt_nomes.append(m.get("name"))
+    
     result = await db.ganhos_bolt.delete_many({
-        "motorista_id": {"$in": motorista_ids},
         "$or": [
-            {"periodo_semana": semana, "periodo_ano": ano},
-            {"semana": semana, "ano": ano}
+            {"motorista_id": {"$in": motorista_ids}},
+            {"identificador_motorista_bolt": {"$in": bolt_motorista_ids}},
+            {"nome_motorista": {"$in": bolt_nomes}}
+        ],
+        "$and": [
+            {"$or": [
+                {"periodo_semana": semana, "periodo_ano": ano},
+                {"semana": semana, "ano": ano}
+            ]}
         ]
     })
     deleted_counts["ganhos_bolt"] = result.deleted_count
     
     # Eliminar ganhos Bolt (de viagens_bolt - coleção alternativa)
     result = await db.viagens_bolt.delete_many({
-        "motorista_id": {"$in": motorista_ids},
+        "$or": [
+            {"motorista_id": {"$in": motorista_ids}},
+            {"nome_motorista": {"$in": bolt_nomes}}
+        ],
         "semana": semana,
         "ano": ano
     })
