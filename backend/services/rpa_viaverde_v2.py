@@ -241,27 +241,49 @@ class ViaVerdeRPA:
             
             await self.screenshot("antes_filtro")
             
-            # PASSO 1: Expandir o filtro se estiver colapsado
-            # Procurar por "Filtrar por:" ou área de filtro colapsável
+            # PASSO 1: Verificar se estamos no tab "Movimentos" (não "Extratos")
+            # Se o tab Extratos estiver ativo (verde), precisamos clicar em Movimentos
+            extratos_active = self.page.locator('a.active:has-text("Extratos"), li.active:has-text("Extratos"), [class*="selected"]:has-text("Extratos")')
+            if await extratos_active.count() > 0:
+                logger.warning("⚠️ Tab Extratos está ativo, precisamos ir para Movimentos")
+                await self.ir_para_movimentos()
+                await self.page.wait_for_timeout(2000)
             
-            # Verificar se há uma seta para baixo (indica filtro colapsado)
-            expand_selectors = [
-                'text=/Filtrar por:/',
-                '[class*="filter"]',
-                'div:has-text("Filtrar por:")',
-            ]
+            # PASSO 2: Expandir o filtro se estiver colapsado
+            # Procurar por "Filtrar por:" e clicar para expandir
             
-            for selector in expand_selectors:
-                try:
-                    expand_btn = self.page.locator(selector).first
-                    if await expand_btn.count() > 0 and await expand_btn.is_visible():
-                        await expand_btn.click()
-                        await self.page.wait_for_timeout(1500)
-                        logger.info(f"✅ Filtro expandido via: {selector}")
-                        await self.screenshot("filtro_expandido")
-                        break
-                except:
-                    pass
+            # Primeiro, verificar se os campos de data já estão visíveis
+            date_inputs_visible = self.page.locator('input[value*="/"], input[placeholder*="data"]')
+            if await date_inputs_visible.count() < 2:
+                logger.info("📋 Campos de data não visíveis, a expandir filtro...")
+                
+                expand_selectors = [
+                    # Clicar no texto "Filtrar por:" ou na área do filtro
+                    'text=/Filtrar por:/',
+                    'div:has-text("Filtrar por:")',
+                    '[class*="filter-header"]',
+                    '[class*="filter-toggle"]',
+                    # Seta/ícone de expandir
+                    'text=/Filtrar por:/ >> ..',
+                ]
+                
+                for selector in expand_selectors:
+                    try:
+                        expand_btn = self.page.locator(selector).first
+                        if await expand_btn.count() > 0 and await expand_btn.is_visible():
+                            await expand_btn.click()
+                            await self.page.wait_for_timeout(2000)
+                            logger.info(f"✅ Filtro expandido via: {selector}")
+                            await self.screenshot("filtro_expandido")
+                            
+                            # Verificar se agora os inputs estão visíveis
+                            if await date_inputs_visible.count() >= 2:
+                                logger.info("✅ Campos de data agora visíveis")
+                                break
+                    except Exception as e:
+                        logger.debug(f"Selector {selector} failed: {e}")
+            else:
+                logger.info("✅ Campos de data já estão visíveis")
             
             await self.page.wait_for_timeout(1000)
             
