@@ -362,42 +362,8 @@ class ViaVerdeRPA:
             logger.error(traceback.format_exc())
             await self.screenshot("erro_datas")
             return False
-            
-            # PASSO 3: Preencher os campos de data
-            
-            # Função para preencher data no formato MM/YYYY
-            async def preencher_data_mmyyyy(input_element, data_mmyyyy: str) -> bool:
-                """Preencher data no formato MM/YYYY"""
-                try:
-                    await input_element.click()
-                    await self.page.wait_for_timeout(300)
-                    
-                    # Limpar campo
-                    await self.page.keyboard.press('Control+a')
-                    await self.page.wait_for_timeout(100)
-                    
-                    # Digitar a data
-                    await input_element.fill(data_mmyyyy)
-                    await self.page.wait_for_timeout(300)
-                    
-                    # Pressionar Tab para confirmar
-                    await self.page.keyboard.press('Tab')
-                    await self.page.wait_for_timeout(300)
-                    
-                    logger.info(f"✅ Data preenchida: {data_mmyyyy}")
-                    return True
-                except Exception as e:
-                    logger.error(f"❌ Erro ao preencher data: {e}")
-                    return False
-            
-            # Preencher campo "De:"
-            if de_input and await de_input.count() > 0:
-                sucesso_de = await preencher_data_mmyyyy(de_input, data_inicio_mmyyyy)
-                if sucesso_de:
-                    logger.info(f"✅ Campo 'De:' configurado: {data_inicio_mmyyyy}")
-                else:
-                    logger.warning(f"⚠️ Não foi possível configurar campo 'De:'")
-            else:
+    
+    async def exportar_excel_direto(self) -> Optional[str]:
                 logger.warning("⚠️ Campo 'De:' não encontrado")
             
             await self.page.wait_for_timeout(500)
