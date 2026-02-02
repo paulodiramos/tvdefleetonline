@@ -364,47 +364,6 @@ class ViaVerdeRPA:
             return False
     
     async def exportar_excel_direto(self) -> Optional[str]:
-                logger.warning("⚠️ Campo 'De:' não encontrado")
-            
-            await self.page.wait_for_timeout(500)
-            
-            # Preencher campo "Até:"
-            if ate_input and await ate_input.count() > 0:
-                sucesso_ate = await preencher_data_mmyyyy(ate_input, data_fim_mmyyyy)
-                if sucesso_ate:
-                    logger.info(f"✅ Campo 'Até:' configurado: {data_fim_mmyyyy}")
-                else:
-                    logger.warning(f"⚠️ Não foi possível configurar campo 'Até:'")
-            else:
-                logger.warning("⚠️ Campo 'Até:' não encontrado")
-            
-            await self.page.wait_for_timeout(500)
-            await self.screenshot("datas_preenchidas")
-            
-            # Fechar qualquer calendário aberto
-            await self.page.keyboard.press('Escape')
-            await self.page.wait_for_timeout(300)
-            
-            # PASSO 4: Clicar no botão "Filtrar"
-            filtrar_btn = self.page.locator('button:has-text("Filtrar"), a:has-text("Filtrar"), input[value="Filtrar"]').first
-            if await filtrar_btn.count() > 0:
-                await filtrar_btn.click()
-                await self.page.wait_for_timeout(3000)
-                logger.info("✅ Filtro aplicado")
-            else:
-                logger.warning("⚠️ Botão Filtrar não encontrado")
-            
-            await self.screenshot("resultados_filtrados")
-            return True
-            
-        except Exception as e:
-            logger.error(f"❌ Erro ao selecionar datas: {e}")
-            import traceback
-            logger.error(traceback.format_exc())
-            await self.screenshot("erro_datas")
-            return False
-    
-    async def exportar_excel_direto(self) -> Optional[str]:
         """
         Exportar Excel usando o botão "Exportar" na página de Movimentos
         Este botão faz download direto sem precisar de email!
