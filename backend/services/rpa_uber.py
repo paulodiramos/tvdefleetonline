@@ -569,6 +569,7 @@ async def executar_rpa_uber(
     data_inicio: str,
     data_fim: str,
     sms_code: str = None,
+    pin_code: str = None,
     headless: bool = True
 ) -> Dict[str, Any]:
     """
@@ -580,6 +581,7 @@ async def executar_rpa_uber(
         data_inicio: Data início (YYYY-MM-DD)
         data_fim: Data fim (YYYY-MM-DD)
         sms_code: Código SMS para autenticação (opcional)
+        pin_code: PIN/código de acesso adicional (opcional)
         headless: Executar sem interface gráfica
     
     Returns:
