@@ -529,7 +529,33 @@ Integração com a API oficial da Bolt Fleet usando OAuth2 Client Credentials.
 
 ---
 
-## ✅ Sincronização Via Verde com Resumo Semanal (02/02/2026)
+## 🔄 Em Progresso: Correção RPA Via Verde (02/02/2026)
+
+### Problema Principal
+O RPA da Via Verde não consegue filtrar por semana específica no site. A interface real difere do esperado:
+1. Os campos de data "De:" e "Até:" não são facilmente acessíveis
+2. O formato do site é MM/YYYY (não DD/MM/YYYY)
+3. O dropdown de exportar oferece: PDF, XML, CSV, HTML (não Excel)
+
+### Solução Implementada
+1. **Filtragem pós-download**: O sistema agora descarrega todos os dados e filtra por semana no código Python
+2. **Exportação CSV**: Alterado para usar CSV em vez de Excel (opção disponível no site)
+3. **Robustez**: A função de seleção de datas não bloqueia se falhar (a filtragem é feita depois)
+
+### Estado Atual
+- ✅ Login funciona
+- ✅ Navegação para tab Extratos funciona
+- ✅ Botão Exportar é encontrado
+- ✅ Dropdown abre e CSV é encontrado
+- ❌ Download do CSV está com timeout (precisa de investigação adicional)
+
+### Próximos Passos
+1. Testar o download do CSV manualmente no site
+2. Verificar se há popup de confirmação ou redirecionamento
+3. Se necessário, usar outra abordagem (ex: copiar dados da tabela diretamente)
+
+### Ficheiros Modificados
+- `/app/backend/services/rpa_viaverde_v2.py` - Script RPA atualizado
 
 ### Descrição
 Sistema completo de sincronização automática de portagens Via Verde que:
