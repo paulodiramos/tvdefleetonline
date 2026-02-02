@@ -968,39 +968,73 @@ async def executar_rpa_viaverde(
                 try:
                     movimentos = resultado["movimentos"]
                     
+                    # Buscar veículos existentes do parceiro
+                    veiculos = await db.vehicles.find(
+                        {"parceiro_id": pid},
+                        {"_id": 0, "id": 1, "matricula": 1}
+                    ).to_list(1000)
+                    
+                    # Criar mapa matrícula -> vehicle_id
+                    matricula_to_vehicle = {}
+                    for v in veiculos:
+                        mat = v.get("matricula", "").upper().strip().replace(" ", "").replace("-", "")
+                        if mat:
+                            matricula_to_vehicle[mat] = v["id"]
+                    
+                    # Extrair todas as matrículas dos movimentos
+                    matriculas_movimentos = [
+                        mov.get("matricula", "").upper().strip().replace(" ", "").replace("-", "")
+                        for mov in movimentos if mov.get("matricula")
+                    ]
+                    
+                    # Auto-criar veículos para matrículas não existentes
+                    matricula_to_vehicle = await auto_criar_veiculos_viaverde(
+                        pid, matriculas_movimentos, matricula_to_vehicle
+                    )
+                    
                     # Importar movimentos para a coleção portagens_viaverde
                     importados = 0
                     duplicados = 0
+                    veiculos_associados = 0
                     
                     for mov in movimentos:
+                        mat = mov.get("matricula", "").upper().strip().replace(" ", "").replace("-", "")
+                        vehicle_id = matricula_to_vehicle.get(mat)
+                        
                         # Verificar se já existe (evitar duplicados)
                         existing = await db.portagens_viaverde.find_one({
                             "parceiro_id": pid,
                             "data": mov.get("data"),
-                            "matricula": mov.get("matricula"),
+                            "matricula": mat,
                             "valor": mov.get("valor"),
-                            "local": mov.get("local")
+                            "hora": mov.get("hora")
                         })
                         
                         if not existing:
                             mov["parceiro_id"] = pid
+                            mov["vehicle_id"] = vehicle_id
+                            mov["matricula"] = mat  # Normalizada
                             mov["importado_em"] = datetime.now(timezone.utc).isoformat()
                             mov["execucao_id"] = execucao_id
+                            mov["fonte"] = "rpa"
                             await db.portagens_viaverde.insert_one(mov)
                             importados += 1
+                            if vehicle_id:
+                                veiculos_associados += 1
                         else:
                             duplicados += 1
                     
                     importacao_resultado = {
                         "importados": importados,
                         "duplicados": duplicados,
+                        "veiculos_associados": veiculos_associados,
                         "total": len(movimentos)
                     }
                     
                     resultado["importacao"] = importacao_resultado
-                    resultado["logs"].append(f"Importados {importados} movimentos para a BD")
+                    resultado["logs"].append(f"Importados {importados} movimentos para a BD ({veiculos_associados} com veículo associado)")
                     
-                    logger.info(f"📊 Via Verde: Importados {importados} movimentos, {duplicados} duplicados")
+                    logger.info(f"📊 Via Verde: Importados {importados} movimentos, {duplicados} duplicados, {veiculos_associados} com veículo")
                     
                 except Exception as import_err:
                     logger.error(f"Erro ao importar movimentos Via Verde: {import_err}")
