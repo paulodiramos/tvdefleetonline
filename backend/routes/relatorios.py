@@ -983,11 +983,12 @@ async def get_resumo_semanal_parceiro(
         
         # Incluir:
         # 1. Registos com market_description = "portagens" ou "parques" (novos dados)
-        # 2. Registos sem market_description (dados antigos) - assumir que são portagens
+        # 2. Registos com "mensalidade" ou "mobilidade" (taxas mensais)
+        # 3. Registos sem market_description (dados antigos) - assumir que são portagens
         for r in vv_records:
             market_desc = str(r.get("market_description", "")).strip().lower()
-            # Se não tem market_description ou é portagens/parques, incluir
-            if not market_desc or market_desc in ["portagens", "parques"]:
+            # Se não tem market_description ou é portagens/parques/mensalidade, incluir
+            if not market_desc or market_desc in ["portagens", "parques"] or "mensalidade" in market_desc or "mobilidade" in market_desc:
                 via_verde_total += float(r.get("valor") or r.get("value") or 0)
         
         logger.info(f"  {motorista.get('name')}: Via Verde query returned {len(vv_records)} records, total €{via_verde_total:.2f}")
