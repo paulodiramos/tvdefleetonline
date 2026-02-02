@@ -519,22 +519,31 @@ const Motoristas = ({ user, onLogout }) => {
   };
 
   const handleDesativarMotorista = async (motoristaId, motoristaNome) => {
-    if (!window.confirm(`Tem certeza que deseja desativar o motorista ${motoristaNome}?`)) {
-      return;
-    }
-
+    // Abrir diálogo de confirmação com data
+    const hoje = new Date().toISOString().split('T')[0];
+    setDesativarMotoristaData({
+      id: motoristaId,
+      nome: motoristaNome,
+      dataDesativacao: hoje
+    });
+    setShowDesativarDialog(true);
+  };
+  
+  const confirmarDesativacao = async () => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API}/motoristas/${motoristaId}/desativar`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axios.put(`${API}/motoristas/${desativarMotoristaData.id}/desativar`, 
+        { data_desativacao: desativarMotoristaData.dataDesativacao },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       
-      toast.success('Motorista desativado com sucesso!');
+      toast.success(`Motorista desativado a partir de ${desativarMotoristaData.dataDesativacao}`);
+      setShowDesativarDialog(false);
       fetchMotoristas();
       
       // Update selected motorista if in detail dialog
-      if (selectedMotorista && selectedMotorista.id === motoristaId) {
-        const response = await axios.get(`${API}/motoristas/${motoristaId}`, {
+      if (selectedMotorista && selectedMotorista.id === desativarMotoristaData.id) {
+        const response = await axios.get(`${API}/motoristas/${desativarMotoristaData.id}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setSelectedMotorista(response.data);
