@@ -655,6 +655,52 @@ const ResumoSemanalParceiro = ({ user, onLogout }) => {
     }
   };
 
+  // Upload manual de ficheiro Excel Via Verde
+  const handleUploadViaVerdeExcel = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    // Validar extensão
+    if (!file.name.match(/\.(xlsx|xls|csv)$/i)) {
+      toast.error('Ficheiro deve ser Excel (.xlsx, .xls) ou CSV (.csv)');
+      return;
+    }
+    
+    setUploadingViaVerde(true);
+    
+    try {
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await axios.post(
+        `${API}/api/viaverde/importar-excel`,
+        formData,
+        { 
+          headers: { 
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
+        }
+      );
+      
+      if (response.data.success) {
+        const { importados, duplicados, total } = response.data.resultado;
+        toast.success(`Via Verde importado: ${importados} novos, ${duplicados} duplicados (total: ${total})`);
+        fetchResumo();
+      } else {
+        toast.error(response.data.error || 'Erro ao importar ficheiro');
+      }
+    } catch (error) {
+      console.error('Erro ao importar Via Verde:', error);
+      toast.error(error.response?.data?.detail || 'Erro ao importar ficheiro');
+    } finally {
+      setUploadingViaVerde(false);
+      // Limpar input
+      e.target.value = '';
+    }
+  };
+
   // Configuração das fontes de sincronização
   const SYNC_SOURCES = [
     { id: 'uber', name: 'Uber', icon: Car, color: 'bg-black text-white' },
