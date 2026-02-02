@@ -218,10 +218,24 @@ async def get_vehicles(current_user: Dict = Depends(get_current_user)):
     
     vehicles = await db.vehicles.find(query, {"_id": 0}).to_list(1000)
     for v in vehicles:
-        if isinstance(v["created_at"], str):
-            v["created_at"] = datetime.fromisoformat(v["created_at"])
-        if isinstance(v["updated_at"], str):
-            v["updated_at"] = datetime.fromisoformat(v["updated_at"])
+        # Handle missing or invalid created_at
+        if "created_at" not in v or v["created_at"] is None:
+            v["created_at"] = datetime.now(timezone.utc)
+        elif isinstance(v["created_at"], str):
+            try:
+                v["created_at"] = datetime.fromisoformat(v["created_at"])
+            except:
+                v["created_at"] = datetime.now(timezone.utc)
+        
+        # Handle missing or invalid updated_at
+        if "updated_at" not in v or v["updated_at"] is None:
+            v["updated_at"] = datetime.now(timezone.utc)
+        elif isinstance(v["updated_at"], str):
+            try:
+                v["updated_at"] = datetime.fromisoformat(v["updated_at"])
+            except:
+                v["updated_at"] = datetime.now(timezone.utc)
+        
         if "km_atual" in v:
             if isinstance(v["km_atual"], str):
                 v["km_atual"] = int(v["km_atual"]) if v["km_atual"].strip().isdigit() else 0
