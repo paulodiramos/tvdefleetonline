@@ -816,6 +816,9 @@ async def get_resumo_semanal_parceiro(
     
     logger.info(f"📊 Encontrados {len(motoristas)} motoristas")
     
+    # Set para rastrear matrículas já processadas (evitar duplicação Via Verde)
+    matriculas_processadas_viaverde = set()
+    
     # Build consolidated view
     resumo_motoristas = []
     totais = {
