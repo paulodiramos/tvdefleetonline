@@ -211,12 +211,12 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      toast.success('Utilizador criado com sucesso!');
+      toast.success('Usuário criado com sucesso!');
       setShowNovoUserDialog(false);
       fetchData();
     } catch (error) {
       console.error('Error creating user:', error);
-      const msg = error.response?.data?.detail || 'Erro ao criar utilizador';
+      const msg = error.response?.data?.detail || 'Erro ao criar usuário';
       toast.error(msg);
     } finally {
       setSaving(false);
@@ -409,7 +409,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
         {filteredUsers.length === 0 && (
           <Card>
             <CardContent className="py-12 text-center text-slate-500">
-              Nenhum utilizador encontrado
+              Nenhum usuário encontrado
             </CardContent>
           </Card>
         )}
@@ -508,7 +508,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
           </DialogContent>
         </Dialog>
 
-        {/* Novo Utilizador Dialog */}
+        {/* Novo Usuário Dialog */}
         <Dialog open={showNovoUserDialog} onOpenChange={setShowNovoUserDialog}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
@@ -641,7 +641,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                   <p>📊 <strong>Gestor:</strong> Pode gerir múltiplos parceiros associados.</p>
                 )}
                 {novoUserForm.role === 'admin' && (
-                  <p>🛡️ <strong>Admin:</strong> Acesso total ao sistema, incluindo gestão de utilizadores.</p>
+                  <p>🛡️ <strong>Admin:</strong> Acesso total ao sistema, incluindo gestão de usuários.</p>
                 )}
               </div>
             </div>
