@@ -118,130 +118,42 @@ class ViaVerdeRPA:
             return False
     
     async def ir_para_movimentos(self) -> bool:
-        """Navegar para o tab Movimentos e garantir que estamos na vista correta"""
+        """
+        Ficar no tab Extratos (onde estão os filtros de data).
+        
+        NOTA: Após análise do site Via Verde, descobrimos que:
+        - Tab "Extratos" = Tem filtros de data (De/Até) em formato MM/YYYY
+        - Tab "Movimentos" = Lista de extratos SEM filtros de data
+        
+        Portanto, devemos FICAR no tab "Extratos" para poder filtrar por data.
+        """
         try:
-            logger.info("📑 A navegar para Movimentos...")
-            
-            # A página tem dois tabs visuais: "Extratos" (verde quando ativo) e "Movimentos"
-            # Estes tabs estão na parte superior da página, não no sidebar
+            logger.info("📑 A verificar se estamos no tab Extratos (onde estão os filtros)...")
             
             await self.page.wait_for_timeout(2000)
-            await self.screenshot("antes_movimentos")
+            await self.screenshot("verificando_tab")
             
-            # Método 1: Usar JavaScript para encontrar e clicar no tab
-            # Os tabs estão tipicamente numa estrutura <ul><li><a>...</a></li></ul>
-            try:
-                # Primeiro identificar todos os elementos "Movimentos" e suas posições
-                js_code = """
-                    const elements = document.querySelectorAll('a, li, span, button');
-                    const movimentos = [];
-                    elements.forEach((el, index) => {
-                        const text = el.textContent.trim();
-                        if (text === 'Movimentos' || text.includes('Movimentos')) {
-                            const rect = el.getBoundingClientRect();
-                            movimentos.push({
-                                index: index,
-                                text: text,
-                                y: rect.y,
-                                x: rect.x,
-                                width: rect.width,
-                                tagName: el.tagName,
-                                className: el.className,
-                                parentTag: el.parentElement ? el.parentElement.tagName : 'none'
-                            });
-                        }
-                    });
-                    return JSON.stringify(movimentos);
-                """
-                result = await self.page.evaluate(js_code)
-                import json
-                movimentos_elements = json.loads(result)
-                logger.info(f"📋 Encontrados {len(movimentos_elements)} elementos 'Movimentos'")
+            # Verificar se já estamos no tab Extratos
+            # Se o tab Movimentos estiver ativo, clicar em Extratos
+            movimentos_active = self.page.locator('a.active:has-text("Movimentos"), li.active:has-text("Movimentos"), [class*="selected"]:has-text("Movimentos")')
+            
+            if await movimentos_active.count() > 0:
+                logger.info("📋 Tab Movimentos está ativo, a mudar para Extratos...")
                 
-                for el in movimentos_elements:
-                    logger.info(f"   - y={el['y']}, x={el['x']}, tag={el['tagName']}, parent={el['parentTag']}, class={el['className'][:50] if el['className'] else 'none'}")
-                
-                # Procurar o elemento que está mais acima (menor y) que não seja do sidebar
-                # O sidebar geralmente tem y > 200, os tabs têm y < 200
-                tab_candidates = [el for el in movimentos_elements if el['y'] < 250 and el['y'] > 50]
-                
-                if tab_candidates:
-                    # Ordenar por y (mais acima primeiro)
-                    tab_candidates.sort(key=lambda x: x['y'])
-                    best_candidate = tab_candidates[0]
-                    logger.info(f"📋 Melhor candidato: y={best_candidate['y']}, tag={best_candidate['tagName']}")
-                    
-                    # Clicar via JavaScript para maior fiabilidade
-                    click_js = f"""
-                        const elements = document.querySelectorAll('a, li, span, button');
-                        let clicked = false;
-                        elements.forEach((el, index) => {{
-                            const text = el.textContent.trim();
-                            const rect = el.getBoundingClientRect();
-                            if ((text === 'Movimentos' || text.includes('Movimentos')) && 
-                                Math.abs(rect.y - {best_candidate['y']}) < 5 &&
-                                Math.abs(rect.x - {best_candidate['x']}) < 5) {{
-                                el.click();
-                                clicked = true;
-                            }}
-                        }});
-                        return clicked;
-                    """
-                    clicked = await self.page.evaluate(click_js)
-                    if clicked:
-                        await self.page.wait_for_timeout(3000)
-                        logger.info("✅ Tab Movimentos clicado via JavaScript")
-                        await self.screenshot("apos_click_movimentos")
-                        return True
-            except Exception as e:
-                logger.warning(f"⚠️ Método JavaScript falhou: {e}")
+                # Clicar no tab Extratos
+                extratos_tab = self.page.locator('a:has-text("Extratos"):not(.active), li a:has-text("Extratos")').first
+                if await extratos_tab.count() > 0:
+                    await extratos_tab.click()
+                    await self.page.wait_for_timeout(3000)
+                    logger.info("✅ Tab Extratos clicado")
+            else:
+                logger.info("✅ Já estamos no tab Extratos (correto)")
             
-            # Método 2: Clicar directamente no texto "Movimentos" mais próximo de "Extratos"
-            try:
-                # Encontrar "Extratos" primeiro
-                extratos = await self.page.query_selector('text=Extratos')
-                if extratos:
-                    extratos_box = await extratos.bounding_box()
-                    logger.info(f"📋 Extratos encontrado em y={extratos_box['y']}")
-                    
-                    # O tab "Movimentos" deve estar na mesma linha (mesmo y)
-                    all_movimentos = await self.page.query_selector_all('text=Movimentos')
-                    for mov in all_movimentos:
-                        mov_box = await mov.bounding_box()
-                        if mov_box:
-                            # Se está na mesma linha (y similar) é provavelmente o tab
-                            if abs(mov_box['y'] - extratos_box['y']) < 30:
-                                await mov.click()
-                                await self.page.wait_for_timeout(3000)
-                                logger.info(f"✅ Tab Movimentos clicado (próximo de Extratos, y={mov_box['y']})")
-                                await self.screenshot("apos_click_movimentos")
-                                return True
-            except Exception as e:
-                logger.warning(f"⚠️ Método de proximidade falhou: {e}")
-            
-            # Método 3: Usar keyboard navigation
-            try:
-                # Pressionar Tab até chegar ao elemento Movimentos e depois Enter
-                await self.page.keyboard.press('Tab')
-                await self.page.wait_for_timeout(200)
-                for i in range(10):
-                    focused = await self.page.evaluate("document.activeElement ? document.activeElement.textContent : ''")
-                    if 'Movimentos' in focused:
-                        await self.page.keyboard.press('Enter')
-                        await self.page.wait_for_timeout(3000)
-                        logger.info("✅ Tab Movimentos clicado via keyboard")
-                        return True
-                    await self.page.keyboard.press('Tab')
-                    await self.page.wait_for_timeout(200)
-            except Exception as e:
-                logger.warning(f"⚠️ Método keyboard falhou: {e}")
-            
-            await self.screenshot("tab_movimentos")
-            logger.warning("⚠️ Não foi possível clicar no tab Movimentos")
-            return False
+            await self.screenshot("tab_extratos")
+            return True
             
         except Exception as e:
-            logger.error(f"❌ Erro ao navegar para Movimentos: {e}")
+            logger.error(f"❌ Erro ao navegar para Extratos: {e}")
             return False
     
     async def expandir_filtro_e_selecionar_datas(self, data_inicio: str, data_fim: str) -> bool:
