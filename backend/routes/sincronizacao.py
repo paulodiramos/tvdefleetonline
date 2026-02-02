@@ -1,7 +1,7 @@
 """Sincronização e Credenciais routes"""
 
 from fastapi import APIRouter, Depends, HTTPException, Body, UploadFile, File
-from typing import Optional, Dict
+from typing import Optional, Dict, List, Set
 from datetime import datetime, timezone
 import uuid
 import logging
@@ -14,6 +14,90 @@ from utils.database import get_database
 router = APIRouter()
 db = get_database()
 logger = logging.getLogger(__name__)
+
+
+# ==================================================
+# FUNÇÃO AUXILIAR: CRIAR VEÍCULOS AUTOMATICAMENTE
+# ==================================================
+
+async def auto_criar_veiculos_viaverde(
+    parceiro_id: str,
+    matriculas: List[str],
+    matricula_to_vehicle: Dict[str, str]
+) -> Dict[str, str]:
+    """
+    Cria automaticamente veículos placeholder para matrículas não existentes.
+    
+    Args:
+        parceiro_id: ID do parceiro
+        matriculas: Lista de matrículas encontradas nos dados Via Verde
+        matricula_to_vehicle: Mapa existente de matrícula -> vehicle_id
+    
+    Returns:
+        Mapa atualizado de matrícula -> vehicle_id (incluindo novos veículos)
+    """
+    veiculos_criados = 0
+    now = datetime.now(timezone.utc)
+    
+    # Normalizar matrículas
+    matriculas_unicas = set()
+    for mat in matriculas:
+        mat_normalizada = mat.upper().strip().replace(" ", "").replace("-", "")
+        if mat_normalizada and mat_normalizada not in matricula_to_vehicle:
+            matriculas_unicas.add(mat_normalizada)
+    
+    for mat in matriculas_unicas:
+        # Formatar matrícula para exibição (ex: AA00AA -> AA-00-AA)
+        mat_formatada = mat
+        if len(mat) == 6:
+            mat_formatada = f"{mat[:2]}-{mat[2:4]}-{mat[4:6]}"
+        
+        # Verificar novamente se já não existe com formato diferente
+        existe = await db.vehicles.find_one({
+            "parceiro_id": parceiro_id,
+            "$or": [
+                {"matricula": mat},
+                {"matricula": mat_formatada},
+                {"matricula": mat.replace("-", "")},
+                {"matricula": {"$regex": f"^{mat}$", "$options": "i"}}
+            ]
+        }, {"_id": 0, "id": 1})
+        
+        if existe:
+            matricula_to_vehicle[mat] = existe["id"]
+            continue
+        
+        # Criar veículo placeholder
+        vehicle_id = str(uuid.uuid4())
+        novo_veiculo = {
+            "id": vehicle_id,
+            "parceiro_id": parceiro_id,
+            "matricula": mat_formatada,
+            "marca": "A Completar",
+            "modelo": "A Completar",
+            "ano": None,
+            "cor": None,
+            "tipo_combustivel": None,
+            "capacidade": None,
+            "status": "pendente_dados",  # Status especial para veículos auto-criados
+            "notas": f"Veículo criado automaticamente via importação Via Verde em {now.strftime('%d/%m/%Y %H:%M')}. Por favor, complete os dados.",
+            "auto_criado": True,
+            "auto_criado_fonte": "viaverde",
+            "auto_criado_em": now.isoformat(),
+            "created_at": now.isoformat(),
+            "updated_at": now.isoformat()
+        }
+        
+        await db.vehicles.insert_one(novo_veiculo)
+        matricula_to_vehicle[mat] = vehicle_id
+        veiculos_criados += 1
+        
+        logger.info(f"🚗 Veículo auto-criado: {mat_formatada} (ID: {vehicle_id})")
+    
+    if veiculos_criados > 0:
+        logger.info(f"🚗 Total de {veiculos_criados} veículos criados automaticamente")
+    
+    return matricula_to_vehicle
 
 
 # ==================================================
