@@ -384,26 +384,36 @@ async def gerar_relatorio_semanal(
         }
         
         # Também buscar por veículo se o motorista estiver atribuído
+        # Construir condições de associação: motorista_id OU vehicle_id OU matrícula do veículo
+        associacao_conditions = [{"motorista_id": motorista_id}]
         if veiculo_id:
-            portagens_vv_query = {
-                "$or": [
-                    {"motorista_id": motorista_id},
-                    {"vehicle_id": veiculo_id}
-                ],
-                "$and": [
-                    {
-                        "$or": [
-                            {"semana": semana_via_verde, "ano": ano_via_verde},
-                            {
-                                "entry_date": {"$gte": data_inicio_via_verde, "$lte": data_fim_via_verde}
-                            },
-                            {
-                                "data": {"$gte": data_inicio_via_verde, "$lte": data_fim_via_verde}
-                            }
-                        ]
-                    }
-                ]
-            }
+            associacao_conditions.append({"vehicle_id": veiculo_id})
+        
+        # Se temos veículo, buscar também pela matrícula
+        if veiculo and veiculo.get("matricula"):
+            matricula_veiculo = veiculo.get("matricula", "").upper().replace(" ", "")
+            associacao_conditions.append({"matricula": matricula_veiculo})
+            # Também aceitar variações da matrícula (com/sem traços)
+            matricula_sem_tracos = matricula_veiculo.replace("-", "")
+            if matricula_sem_tracos != matricula_veiculo:
+                associacao_conditions.append({"matricula": matricula_sem_tracos})
+        
+        portagens_vv_query = {
+            "$or": associacao_conditions,
+            "$and": [
+                {
+                    "$or": [
+                        {"semana": semana_via_verde, "ano": ano_via_verde},
+                        {
+                            "entry_date": {"$gte": data_inicio_via_verde, "$lte": data_fim_via_verde}
+                        },
+                        {
+                            "data": {"$gte": data_inicio_via_verde, "$lte": data_fim_via_verde}
+                        }
+                    ]
+                }
+            ]
+        }
         
         logger.info(f"📍 Via Verde query: motorista={motorista_id}, semana={semana_via_verde}, ano={ano_via_verde}, veiculo={veiculo_id}")
         
