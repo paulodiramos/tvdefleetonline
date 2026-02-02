@@ -2470,14 +2470,37 @@ async def delete_all_weekly_data(
     })
     deleted_counts["viagens_bolt"] = result.deleted_count
     
-    # Eliminar Via Verde
-    result = await db.portagens_viaverde.delete_many({
-        "motorista_id": {"$in": motorista_ids},
+    # Eliminar Via Verde - CORRIGIDO: Usar parceiro_id pois os registos Via Verde são por veículo/parceiro
+    parceiro_id = current_user["id"] if current_user["role"] == UserRole.PARCEIRO else None
+    
+    # Buscar veículos do parceiro para associar
+    veiculos_query = {}
+    if parceiro_id:
+        veiculos_query["parceiro_id"] = parceiro_id
+    
+    veiculos = await db.vehicles.find(veiculos_query, {"_id": 0, "id": 1}).to_list(1000)
+    vehicle_ids = [v["id"] for v in veiculos]
+    
+    # Construir query Via Verde
+    vv_query = {
         "$or": [
             {"semana": semana, "ano": ano},
-            {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}
+            {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}},
+            {"data": {"$gte": data_inicio, "$lte": data_fim}}
         ]
-    })
+    }
+    
+    # Filtrar por parceiro ou veículos
+    if parceiro_id:
+        vv_query["$and"] = [
+            {"$or": [
+                {"parceiro_id": parceiro_id},
+                {"vehicle_id": {"$in": vehicle_ids}},
+                {"motorista_id": {"$in": motorista_ids}}
+            ]}
+        ]
+    
+    result = await db.portagens_viaverde.delete_many(vv_query)
     deleted_counts["via_verde"] = result.deleted_count
     
     # Eliminar combustível
