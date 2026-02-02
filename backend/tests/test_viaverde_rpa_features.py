@@ -448,7 +448,7 @@ class TestSyncDropdownOptions:
         """Test Uber sync endpoint exists"""
         # This tests that the sync infrastructure is in place
         response = requests.get(
-            f"{BASE_URL}/api/credenciais-plataforma?parceiro_id=c693c9ec-ddd5-400c-b79d-61b651e7b3fd",
+            f"{BASE_URL}/api/credenciais-plataforma?parceiro_id=fleet-manager-295",
             headers=parceiro_headers
         )
         
