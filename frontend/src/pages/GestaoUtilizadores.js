@@ -507,6 +507,170 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Novo Utilizador Dialog */}
+        <Dialog open={showNovoUserDialog} onOpenChange={setShowNovoUserDialog}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <UserPlus className="w-5 h-5 text-green-600" />
+                <span>Criar Novo Utilizador</span>
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              {/* Nome */}
+              <div>
+                <Label>Nome *</Label>
+                <Input
+                  placeholder="Nome completo"
+                  value={novoUserForm.name}
+                  onChange={(e) => setNovoUserForm({ ...novoUserForm, name: e.target.value })}
+                />
+              </div>
+
+              {/* Email */}
+              <div>
+                <Label>Email *</Label>
+                <Input
+                  type="email"
+                  placeholder="email@exemplo.com"
+                  value={novoUserForm.email}
+                  onChange={(e) => setNovoUserForm({ ...novoUserForm, email: e.target.value })}
+                />
+              </div>
+
+              {/* Password */}
+              <div>
+                <Label>Password *</Label>
+                <Input
+                  type="password"
+                  placeholder="Mínimo 6 caracteres"
+                  value={novoUserForm.password}
+                  onChange={(e) => setNovoUserForm({ ...novoUserForm, password: e.target.value })}
+                />
+              </div>
+
+              {/* Tipo/Role */}
+              <div>
+                <Label>Tipo de Utilizador *</Label>
+                <Select
+                  value={novoUserForm.role}
+                  onValueChange={(value) => setNovoUserForm({ ...novoUserForm, role: value, parceiros_associados: [] })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="motorista">
+                      <div className="flex items-center">
+                        <Car className="w-4 h-4 mr-2 text-green-600" />
+                        Motorista
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="parceiro">
+                      <div className="flex items-center">
+                        <Briefcase className="w-4 h-4 mr-2 text-purple-600" />
+                        Parceiro
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="gestao">
+                      <div className="flex items-center">
+                        <Briefcase className="w-4 h-4 mr-2 text-blue-600" />
+                        Gestor
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="admin">
+                      <div className="flex items-center">
+                        <Shield className="w-4 h-4 mr-2 text-red-600" />
+                        Administrador
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Parceiros Associados (apenas para Gestores) */}
+              {novoUserForm.role === 'gestao' && (
+                <div>
+                  <Label className="mb-2 block">Parceiros Associados *</Label>
+                  <p className="text-xs text-slate-500 mb-3">
+                    Selecione os parceiros que este gestor poderá gerir
+                  </p>
+                  <div className="max-h-48 overflow-y-auto border rounded-lg p-3 space-y-2">
+                    {parceiros.length === 0 ? (
+                      <p className="text-sm text-slate-500 text-center py-4">
+                        Nenhum parceiro disponível
+                      </p>
+                    ) : (
+                      parceiros.map((parceiro) => (
+                        <div 
+                          key={parceiro.id}
+                          className="flex items-center space-x-3 p-2 hover:bg-slate-50 rounded cursor-pointer"
+                          onClick={() => handleToggleParceiro(parceiro.id)}
+                        >
+                          <Checkbox
+                            checked={novoUserForm.parceiros_associados.includes(parceiro.id)}
+                            onCheckedChange={() => handleToggleParceiro(parceiro.id)}
+                          />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium">{parceiro.empresa || parceiro.name}</p>
+                            <p className="text-xs text-slate-500">{parceiro.email}</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                  {novoUserForm.parceiros_associados.length > 0 && (
+                    <p className="text-xs text-green-600 mt-2">
+                      {novoUserForm.parceiros_associados.length} parceiro(s) selecionado(s)
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Info boxes */}
+              <div className="bg-slate-50 border rounded-lg p-3 text-sm text-slate-600">
+                {novoUserForm.role === 'motorista' && (
+                  <p>👤 <strong>Motorista:</strong> Pode ver seus ganhos, enviar recibos e acessar área do motorista.</p>
+                )}
+                {novoUserForm.role === 'parceiro' && (
+                  <p>🏢 <strong>Parceiro:</strong> Gere motoristas, veículos e relatórios financeiros.</p>
+                )}
+                {novoUserForm.role === 'gestao' && (
+                  <p>📊 <strong>Gestor:</strong> Pode gerir múltiplos parceiros associados.</p>
+                )}
+                {novoUserForm.role === 'admin' && (
+                  <p>🛡️ <strong>Admin:</strong> Acesso total ao sistema, incluindo gestão de utilizadores.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => setShowNovoUserDialog(false)}
+                className="flex-1"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleCreateUser}
+                disabled={saving}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                {saving ? (
+                  <>Criando...</>
+                ) : (
+                  <>
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Criar Utilizador
+                  </>
+                )}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );
