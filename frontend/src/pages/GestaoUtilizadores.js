@@ -56,7 +56,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
       const token = localStorage.getItem('token');
 
       // Buscar utilizadores
-      const usersRes = await axios.get(`${API}/users`, {
+      const usersRes = await axios.get(`${API}/users/all`, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
