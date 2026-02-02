@@ -1,6 +1,6 @@
 """Sincronização e Credenciais routes"""
 
-from fastapi import APIRouter, Depends, HTTPException, Body
+from fastapi import APIRouter, Depends, HTTPException, Body, UploadFile, File
 from typing import Optional, Dict
 from datetime import datetime, timezone
 import uuid
