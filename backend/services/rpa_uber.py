@@ -594,21 +594,30 @@ async def executar_rpa_uber(
         "total_motoristas": 0,
         "total_rendimentos": 0.0,
         "mensagem": None,
-        "logs": []
+        "logs": [],
+        "precisa_sms": False,
+        "precisa_captcha": False
     }
     
-    rpa = UberRPA(email, password, sms_code)
+    rpa = UberRPA(email, password, sms_code, pin_code)
     
     try:
-        await rpa.iniciar_browser(headless=headless)
+        await rpa.iniciar_browser(headless=headless, usar_sessao=True)
         resultado["logs"].append("Browser iniciado")
         
         # Login
         if not await rpa.fazer_login():
-            resultado["mensagem"] = "Falha no login Uber. Verifique as credenciais."
-            resultado["logs"].append("Login falhou")
+            # Verificar se é problema de CAPTCHA ou SMS
+            resultado["mensagem"] = "Falha no login Uber. Pode ser necessário código SMS ou resolver CAPTCHA."
+            resultado["logs"].append("Login falhou - verificar se precisa SMS ou CAPTCHA")
+            resultado["precisa_sms"] = True
+            resultado["precisa_captcha"] = True
             return resultado
         resultado["logs"].append("Login bem sucedido")
+        
+        # Guardar sessão após login bem sucedido
+        await rpa.guardar_sessao()
+        resultado["logs"].append("Sessão guardada para uso futuro")
         
         # Ir para Rendimentos
         await rpa.ir_para_rendimentos()
