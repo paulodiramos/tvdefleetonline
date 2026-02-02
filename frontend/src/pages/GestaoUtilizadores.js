@@ -299,10 +299,10 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
           <div>
             <h1 className="text-3xl font-bold text-slate-800 flex items-center space-x-3">
               <Users className="w-8 h-8 text-blue-600" />
-              <span>Gestão de Utilizadores</span>
+              <span>Gestão de Usuários</span>
             </h1>
             <p className="text-slate-600 mt-2">
-              Visualizar e gerir planos de todos os utilizadores
+              Visualizar e gerir planos de todos os usuários
             </p>
           </div>
           <Button 
@@ -310,7 +310,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
             className="bg-green-600 hover:bg-green-700"
           >
             <UserPlus className="w-4 h-4 mr-2" />
-            Novo Utilizador
+            Novo Usuário
           </Button>
         </div>
 
@@ -514,7 +514,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
             <DialogHeader>
               <DialogTitle className="flex items-center space-x-2">
                 <UserPlus className="w-5 h-5 text-green-600" />
-                <span>Criar Novo Utilizador</span>
+                <span>Criar Novo Usuário</span>
               </DialogTitle>
             </DialogHeader>
 
@@ -553,7 +553,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
 
               {/* Tipo/Role */}
               <div>
-                <Label>Tipo de Utilizador *</Label>
+                <Label>Tipo de Usuário *</Label>
                 <Select
                   value={novoUserForm.role}
                   onValueChange={(value) => setNovoUserForm({ ...novoUserForm, role: value, parceiros_associados: [] })}
@@ -664,7 +664,7 @@ const GestaoUtilizadores = ({ user, onLogout }) => {
                 ) : (
                   <>
                     <UserPlus className="w-4 h-4 mr-2" />
-                    Criar Utilizador
+                    Criar Usuário
                   </>
                 )}
               </Button>
