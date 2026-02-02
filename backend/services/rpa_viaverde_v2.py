@@ -649,15 +649,33 @@ async def executar_rpa_viaverde_v2(
             resultado["logs"].append(f"Excel exportado: {ficheiro}")
             
             # Parsear o Excel
-            movimentos = parse_viaverde_excel(ficheiro)
+            movimentos_todos = parse_viaverde_excel(ficheiro)
             
-            if movimentos:
-                resultado["movimentos"] = movimentos
-                resultado["total_movimentos"] = len(movimentos)
-                resultado["logs"].append(f"Parseados {len(movimentos)} movimentos")
+            if movimentos_todos:
+                # FILTRAR movimentos pelo período solicitado
+                from datetime import datetime as dt
+                dt_inicio_filter = dt.strptime(data_inicio, "%Y-%m-%d")
+                dt_fim_filter = dt.strptime(data_fim, "%Y-%m-%d")
+                
+                movimentos_filtrados = []
+                for mov in movimentos_todos:
+                    if mov.get("data"):
+                        try:
+                            mov_data = dt.strptime(mov["data"], "%Y-%m-%d")
+                            # Incluir se a data está dentro do período
+                            if dt_inicio_filter <= mov_data <= dt_fim_filter:
+                                movimentos_filtrados.append(mov)
+                        except:
+                            pass
+                
+                logger.info(f"📊 Filtrados {len(movimentos_filtrados)} de {len(movimentos_todos)} movimentos para o período {data_inicio} a {data_fim}")
+                resultado["logs"].append(f"Filtrados {len(movimentos_filtrados)} de {len(movimentos_todos)} movimentos")
+                
+                resultado["movimentos"] = movimentos_filtrados
+                resultado["total_movimentos"] = len(movimentos_filtrados)
             
             resultado["sucesso"] = True
-            resultado["mensagem"] = f"Excel exportado com sucesso! {len(movimentos)} movimentos encontrados."
+            resultado["mensagem"] = f"Excel exportado com sucesso! {resultado['total_movimentos']} movimentos no período {data_inicio} a {data_fim}."
         else:
             resultado["mensagem"] = "Não foi possível exportar o Excel"
             resultado["logs"].append("Exportação falhou")
