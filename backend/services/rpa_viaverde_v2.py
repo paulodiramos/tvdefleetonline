@@ -167,60 +167,23 @@ class ViaVerdeRPA:
         - Grid de dias para seleção
         - Botões "Limpar" e "Filtrar"
         
-        Formato esperado: DD/MM/YYYY
+        IMPORTANTE: O site Via Verde usa formato MM/YYYY para filtros de data (não DD/MM/YYYY)
+        Entrada esperada: DD/MM/YYYY (será convertido para MM/YYYY)
         """
         try:
             logger.info(f"📅 A selecionar período: {data_inicio} a {data_fim}")
             
             await self.screenshot("antes_filtro")
             
-            # PASSO 1: Verificar se estamos no tab "Movimentos" (não "Extratos")
-            # Se o tab Extratos estiver ativo (verde), precisamos clicar em Movimentos
-            extratos_active = self.page.locator('a.active:has-text("Extratos"), li.active:has-text("Extratos"), [class*="selected"]:has-text("Extratos")')
-            if await extratos_active.count() > 0:
-                logger.warning("⚠️ Tab Extratos está ativo, precisamos ir para Movimentos")
-                await self.ir_para_movimentos()
-                await self.page.wait_for_timeout(2000)
+            # NOTA: Após análise do site, descobrimos que devemos FICAR no tab "Extratos"
+            # pois é lá que estão os filtros de data (De/Até)
+            # A função ir_para_movimentos agora garante que estamos no tab correto
             
-            # PASSO 2: Expandir o filtro se estiver colapsado
-            # Procurar por "Filtrar por:" e clicar para expandir
+            # PASSO 1: Procurar os campos de data "De:" e "Até:"
+            # No site Via Verde, os campos estão com formato MM/YYYY
+            await self.page.wait_for_timeout(2000)
             
-            # Primeiro, verificar se os campos de data já estão visíveis
-            date_inputs_visible = self.page.locator('input[value*="/"], input[placeholder*="data"]')
-            if await date_inputs_visible.count() < 2:
-                logger.info("📋 Campos de data não visíveis, a expandir filtro...")
-                
-                expand_selectors = [
-                    # Clicar no texto "Filtrar por:" ou na área do filtro
-                    'text=/Filtrar por:/',
-                    'div:has-text("Filtrar por:")',
-                    '[class*="filter-header"]',
-                    '[class*="filter-toggle"]',
-                    # Seta/ícone de expandir
-                    'text=/Filtrar por:/ >> ..',
-                ]
-                
-                for selector in expand_selectors:
-                    try:
-                        expand_btn = self.page.locator(selector).first
-                        if await expand_btn.count() > 0 and await expand_btn.is_visible():
-                            await expand_btn.click()
-                            await self.page.wait_for_timeout(2000)
-                            logger.info(f"✅ Filtro expandido via: {selector}")
-                            await self.screenshot("filtro_expandido")
-                            
-                            # Verificar se agora os inputs estão visíveis
-                            if await date_inputs_visible.count() >= 2:
-                                logger.info("✅ Campos de data agora visíveis")
-                                break
-                    except Exception as e:
-                        logger.debug(f"Selector {selector} failed: {e}")
-            else:
-                logger.info("✅ Campos de data já estão visíveis")
-            
-            await self.page.wait_for_timeout(1000)
-            
-            # Parse das datas
+            # Parse das datas (formato entrada: DD/MM/YYYY)
             from datetime import datetime as dt
             dia_inicio, mes_inicio, ano_inicio = data_inicio.split('/')
             dia_fim, mes_fim, ano_fim = data_fim.split('/')
@@ -233,11 +196,70 @@ class ViaVerdeRPA:
             mes_fim = int(mes_fim)
             ano_fim = int(ano_fim)
             
-            logger.info(f"📅 Data início: {dia_inicio}/{mes_inicio}/{ano_inicio}")
-            logger.info(f"📅 Data fim: {dia_fim}/{mes_fim}/{ano_fim}")
+            # Converter para formato MM/YYYY (formato do site Via Verde)
+            data_inicio_mmyyyy = f"{mes_inicio:02d}/{ano_inicio}"
+            data_fim_mmyyyy = f"{mes_fim:02d}/{ano_fim}"
             
-            # PASSO 2: Encontrar os campos de data
-            # Os campos têm ícones de calendário e mostram datas no formato DD/MM/YYYY
+            logger.info(f"📅 Data início (MM/YYYY): {data_inicio_mmyyyy}")
+            logger.info(f"📅 Data fim (MM/YYYY): {data_fim_mmyyyy}")
+            
+            # PASSO 2: Encontrar os campos "De:" e "Até:"
+            # O site Via Verde tem campos com ícones de calendário
+            
+            de_input = None
+            ate_input = None
+            
+            # Procurar por labels "De:" e "Até:" e seus inputs associados
+            try:
+                # Método 1: Procurar por inputs próximos de labels
+                de_label = self.page.locator('label:has-text("De:"), span:has-text("De:"), text=De:').first
+                ate_label = self.page.locator('label:has-text("Até:"), span:has-text("Até:"), text=Até:').first
+                
+                if await de_label.count() > 0:
+                    # O input está próximo ou dentro do mesmo container
+                    de_container = de_label.locator('..').first
+                    de_input = de_container.locator('input').first
+                    logger.info("✅ Campo 'De:' encontrado via label")
+                
+                if await ate_label.count() > 0:
+                    ate_container = ate_label.locator('..').first
+                    ate_input = ate_container.locator('input').first
+                    logger.info("✅ Campo 'Até:' encontrado via label")
+            except Exception as e:
+                logger.debug(f"Método label falhou: {e}")
+            
+            # Método 2: Procurar inputs com valor no formato MM/YYYY
+            if de_input is None or await de_input.count() == 0:
+                all_inputs = self.page.locator('input:visible')
+                input_count = await all_inputs.count()
+                logger.info(f"📋 Total de inputs visíveis: {input_count}")
+                
+                date_inputs = []
+                for i in range(min(input_count, 15)):
+                    try:
+                        inp = all_inputs.nth(i)
+                        value = await inp.get_attribute('value') or ''
+                        placeholder = await inp.get_attribute('placeholder') or ''
+                        
+                        # Verificar formato MM/YYYY
+                        import re
+                        if re.match(r'\d{2}/\d{4}', value):
+                            date_inputs.append({'input': inp, 'value': value, 'index': i})
+                            logger.info(f"📋 Input data encontrado [{i}]: value='{value}'")
+                    except Exception as e:
+                        pass
+                
+                if len(date_inputs) >= 2:
+                    de_input = date_inputs[0]['input']
+                    ate_input = date_inputs[1]['input']
+                    logger.info(f"✅ Inputs de data encontrados via formato MM/YYYY")
+                elif len(date_inputs) == 1:
+                    de_input = date_inputs[0]['input']
+                    logger.info(f"⚠️ Apenas 1 input de data encontrado")
+            
+            await self.screenshot("procurando_inputs")
+            
+            # PASSO 3: Preencher os campos de data
             
             de_input = None
             ate_input = None
