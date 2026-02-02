@@ -1204,19 +1204,31 @@ async def importar_excel_viaverde(
         # Criar mapa matrícula -> vehicle_id
         matricula_to_vehicle = {}
         for v in veiculos:
-            mat = v.get("matricula", "").upper().strip().replace(" ", "")
+            mat = v.get("matricula", "").upper().strip().replace(" ", "").replace("-", "")
             if mat:
                 matricula_to_vehicle[mat] = v["id"]
         
         logger.info(f"📊 Veículos mapeados: {len(matricula_to_vehicle)}")
         
+        # Extrair todas as matrículas dos movimentos
+        matriculas_movimentos = [
+            mov.get("matricula", "").upper().strip().replace(" ", "").replace("-", "")
+            for mov in movimentos if mov.get("matricula")
+        ]
+        
+        # Auto-criar veículos para matrículas não existentes
+        matricula_to_vehicle = await auto_criar_veiculos_viaverde(
+            pid, matriculas_movimentos, matricula_to_vehicle
+        )
+        
         # Importar movimentos para a BD
         importados = 0
         duplicados = 0
+        veiculos_associados = 0
         
         for mov in movimentos:
             # Associar veículo pela matrícula
-            mat = mov.get("matricula", "").upper().strip().replace(" ", "")
+            mat = mov.get("matricula", "").upper().strip().replace(" ", "").replace("-", "")
             vehicle_id = matricula_to_vehicle.get(mat)
             
             # Verificar duplicado (mesma data, hora, matrícula, valor)
