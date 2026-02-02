@@ -817,6 +817,132 @@ class UberRPARequest(PydanticModel):
     pin_code: Optional[str] = None  # PIN/código de acesso adicional
 
 
+class UberAPIRequest(PydanticModel):
+    """Request para sincronização via API oficial da Uber"""
+    org_id: Optional[str] = None  # Organization ID encriptado (se não fornecido, usa das credenciais)
+
+
+@router.post("/uber/sincronizar-api")
+async def sincronizar_uber_api(
+    request: UberAPIRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Sincronizar pagamentos via API oficial da Uber.
+    
+    Usa a API Get Driver Payments para obter dados das últimas 24 horas.
+    Requer credenciais API (client_id, client_secret) configuradas nas credenciais do parceiro.
+    """
+    from services.uber_api import UberAPI, sincronizar_pagamentos_uber
+    
+    pid = current_user['id']
+    
+    # Buscar credenciais API da Uber
+    credenciais = await db.credenciais_plataformas.find_one({
+        "parceiro_id": pid,
+        "plataforma": "uber_api"
+    })
+    
+    if not credenciais:
+        # Tentar buscar das configurações globais
+        credenciais = await db.configuracoes_api.find_one({"plataforma": "uber"})
+    
+    if not credenciais or not credenciais.get("client_id"):
+        raise HTTPException(
+            status_code=400,
+            detail="Credenciais API da Uber não configuradas. Configure client_id, client_secret e org_id."
+        )
+    
+    client_id = credenciais.get("client_id")
+    client_secret = credenciais.get("client_secret")
+    org_id = request.org_id or credenciais.get("org_id")
+    
+    if not org_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Organization ID (org_id) não fornecido. Configure nas credenciais ou passe no request."
+        )
+    
+    # Criar registo de execução
+    execucao_id = str(uuid.uuid4())
+    execucao = {
+        "id": execucao_id,
+        "parceiro_id": pid,
+        "tipo": "uber_api",
+        "status": "em_progresso",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "org_id": org_id
+    }
+    await db.execucoes_sincronizacao.insert_one(execucao)
+    
+    try:
+        # Executar sincronização
+        resultado = await sincronizar_pagamentos_uber(
+            client_id=client_id,
+            client_secret=client_secret,
+            org_id=org_id,
+            parceiro_id=pid
+        )
+        
+        # Atualizar execução
+        await db.execucoes_sincronizacao.update_one(
+            {"id": execucao_id},
+            {"$set": {
+                "status": "concluido" if resultado["sucesso"] else "erro",
+                "resultado": resultado,
+                "completed_at": datetime.now(timezone.utc).isoformat()
+            }}
+        )
+        
+        # Se teve sucesso, guardar motoristas na BD
+        if resultado["sucesso"] and resultado.get("motoristas"):
+            for motorista in resultado["motoristas"]:
+                # Guardar/atualizar rendimento
+                rendimento = {
+                    "parceiro_id": pid,
+                    "plataforma": "uber",
+                    "motorista_uuid": motorista.get("uuid"),
+                    "motorista_nome": motorista.get("nome"),
+                    "motorista_email": motorista.get("email"),
+                    "motorista_telefone": motorista.get("telefone"),
+                    "total_ganhos": motorista.get("total_ganhos", 0),
+                    "valor_liquido": motorista.get("valor_liquido", 0),
+                    "moeda": motorista.get("moeda", "EUR"),
+                    "data_sincronizacao": datetime.now(timezone.utc).isoformat(),
+                    "periodo": resultado.get("periodo"),
+                    "fonte": "api"
+                }
+                
+                # Upsert por motorista_uuid e período
+                await db.rendimentos_uber.update_one(
+                    {
+                        "parceiro_id": pid,
+                        "motorista_uuid": motorista.get("uuid"),
+                        "periodo.start": resultado.get("periodo", {}).get("start")
+                    },
+                    {"$set": rendimento},
+                    upsert=True
+                )
+        
+        return {
+            "sucesso": resultado["sucesso"],
+            "execucao_id": execucao_id,
+            "total_motoristas": resultado.get("total_motoristas", 0),
+            "total_ganhos": resultado.get("total_ganhos", 0),
+            "periodo": resultado.get("periodo"),
+            "mensagem": resultado.get("mensagem"),
+            "motoristas": resultado.get("motoristas", [])[:10]  # Limitar resposta
+        }
+        
+    except Exception as e:
+        logger.error(f"Erro na sincronização Uber API: {e}")
+        await db.execucoes_sincronizacao.update_one(
+            {"id": execucao_id},
+            {"$set": {"status": "erro", "erro": str(e)}}
+        )
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/uber/executar-rpa")
 async def executar_rpa_uber(
     request: UberRPARequest,
