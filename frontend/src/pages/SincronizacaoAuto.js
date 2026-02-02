@@ -751,7 +751,7 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
               {/* Aviso Resumo Semanal */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <p className="text-sm text-blue-700">
-                  <strong>💡 Nota:</strong> Os dados importados aparecerão automaticamente no campo <strong>"Via Verde"</strong> do Resumo Semanal correspondente.
+                  <strong>💡 Nota:</strong> Os dados importados aparecerão automaticamente no campo <strong>&quot;Via Verde&quot;</strong> do Resumo Semanal correspondente.
                 </p>
               </div>
 
