@@ -296,7 +296,17 @@ const SincronizacaoAuto = ({ user, onLogout }) => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(`${API}/viaverde/executar-rpa`, viaVerdeConfig, {
+      
+      // Clean up config - convert empty strings to null for optional integer fields
+      const cleanConfig = {
+        tipo_periodo: viaVerdeConfig.tipo_periodo,
+        data_inicio: viaVerdeConfig.data_inicio || null,
+        data_fim: viaVerdeConfig.data_fim || null,
+        semana: viaVerdeConfig.semana ? parseInt(viaVerdeConfig.semana) : null,
+        ano: viaVerdeConfig.ano ? parseInt(viaVerdeConfig.ano) : null
+      };
+      
+      const response = await axios.post(`${API}/viaverde/executar-rpa`, cleanConfig, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
