@@ -275,21 +275,42 @@ class ViaVerdeRPA:
                                 if await csv_option.count() > 0 and await csv_option.is_visible():
                                     logger.info(f"✅ Opção CSV encontrada: {csv_sel}")
                                     
-                                    # Aguardar download
-                                    async with self.page.expect_download(timeout=30000) as download_info:
-                                        await csv_option.click()
-                                    
-                                    download = await download_info.value
-                                    
-                                    # Guardar ficheiro
-                                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                                    original_name = download.suggested_filename or f"viaverde_{timestamp}.csv"
-                                    filepath = self.downloads_path / original_name
-                                    
-                                    await download.save_as(str(filepath))
-                                    
-                                    logger.info(f"🎉 CSV exportado com sucesso: {filepath}")
-                                    return str(filepath)
+                                    # Tentar com expect_download (pode falhar)
+                                    try:
+                                        async with self.page.expect_download(timeout=10000) as download_info:
+                                            await csv_option.click()
+                                        
+                                        download = await download_info.value
+                                        
+                                        # Guardar ficheiro
+                                        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                                        original_name = download.suggested_filename or f"viaverde_{timestamp}.csv"
+                                        filepath = self.downloads_path / original_name
+                                        
+                                        await download.save_as(str(filepath))
+                                        
+                                        logger.info(f"🎉 CSV exportado com sucesso: {filepath}")
+                                        return str(filepath)
+                                    except Exception as download_error:
+                                        logger.warning(f"⚠️ Download direto falhou: {download_error}")
+                                        
+                                        # Alternativa: clicar e verificar ficheiro depois
+                                        await csv_option.click(force=True)
+                                        await self.page.wait_for_timeout(5000)
+                                        
+                                        # Verificar se há ficheiro CSV na pasta de downloads
+                                        import os
+                                        import glob
+                                        csv_files = glob.glob(str(self.downloads_path / "*.csv"))
+                                        csv_files.sort(key=os.path.getmtime, reverse=True)
+                                        
+                                        if csv_files:
+                                            latest_csv = csv_files[0]
+                                            logger.info(f"🎉 CSV encontrado na pasta: {latest_csv}")
+                                            return latest_csv
+                                        
+                                        logger.warning("⚠️ Nenhum CSV encontrado após clicar")
+                                        break
                             except Exception as e:
                                 logger.warning(f"⚠️ CSV selector {csv_sel} falhou: {e}")
                                 continue
