@@ -258,39 +258,40 @@ class ViaVerdeRPA:
                         
                         await self.screenshot("dropdown_exportar")
                         
-                        # Selecionar Excel no dropdown
-                        # O dropdown mostra "Excel" e "PDF"
-                        excel_selectors = [
-                            'a:has-text("Excel")',
-                            'li a:has-text("Excel")',
-                            '.dropdown-menu a:has-text("Excel")',
-                            'ul.dropdown-menu a:text("Excel")'
+                        # Selecionar CSV no dropdown (Via Verde não tem opção Excel direta)
+                        # O dropdown mostra: PDF, XML, CSV, HTML
+                        csv_selectors = [
+                            'a:has-text("CSV")',
+                            'li a:has-text("CSV")',
+                            '.dropdown-menu a:has-text("CSV")',
+                            'ul.dropdown-menu a:text("CSV")',
+                            'a:text-is("CSV")',
                         ]
                         
-                        for excel_sel in excel_selectors:
+                        for csv_sel in csv_selectors:
                             try:
-                                excel_option = self.page.locator(excel_sel).first
+                                csv_option = self.page.locator(csv_sel).first
                                 
-                                if await excel_option.count() > 0 and await excel_option.is_visible():
-                                    logger.info(f"✅ Opção Excel encontrada: {excel_sel}")
+                                if await csv_option.count() > 0 and await csv_option.is_visible():
+                                    logger.info(f"✅ Opção CSV encontrada: {csv_sel}")
                                     
                                     # Aguardar download
                                     async with self.page.expect_download(timeout=30000) as download_info:
-                                        await excel_option.click()
+                                        await csv_option.click()
                                     
                                     download = await download_info.value
                                     
                                     # Guardar ficheiro
                                     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                                    original_name = download.suggested_filename or f"viaverde_{timestamp}.xlsx"
+                                    original_name = download.suggested_filename or f"viaverde_{timestamp}.csv"
                                     filepath = self.downloads_path / original_name
                                     
                                     await download.save_as(str(filepath))
                                     
-                                    logger.info(f"🎉 Excel exportado com sucesso: {filepath}")
+                                    logger.info(f"🎉 CSV exportado com sucesso: {filepath}")
                                     return str(filepath)
                             except Exception as e:
-                                logger.warning(f"⚠️ Excel selector {excel_sel} falhou: {e}")
+                                logger.warning(f"⚠️ CSV selector {csv_sel} falhou: {e}")
                                 continue
                         
                         break
