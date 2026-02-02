@@ -158,150 +158,210 @@ class ViaVerdeRPA:
     
     async def expandir_filtro_e_selecionar_datas(self, data_inicio: str, data_fim: str) -> bool:
         """
-        Expandir filtro e selecionar datas usando interação com calendário popup.
+        Selecionar datas usando os calendários popup do site Via Verde.
         
-        A interface Via Verde tem:
-        - Secção "Filtrar por:" que pode estar colapsada
-        - Dois campos de input com ícones de calendário (De e Até)
-        - Um calendário popup com navegação por mês (setas < >)
-        - Grid de dias para seleção
-        - Botões "Limpar" e "Filtrar"
+        Processo descoberto via vídeo do utilizador:
+        1. Clicar no ícone de calendário ao lado do campo "De"
+        2. O calendário abre com mês/ano no topo (ex: "janeiro 2026")
+        3. Navegar com setas < > para o mês correto
+        4. Clicar no dia específico para selecionar
+        5. Repetir para o campo "Até"
+        6. Clicar em "Filtrar" para aplicar
         
-        IMPORTANTE: O site Via Verde usa formato MM/YYYY para filtros de data (não DD/MM/YYYY)
-        Entrada esperada: DD/MM/YYYY (será convertido para MM/YYYY)
+        Formato entrada: DD/MM/YYYY
         """
         try:
             logger.info(f"📅 A selecionar período: {data_inicio} a {data_fim}")
             
             await self.screenshot("antes_filtro")
-            
-            # NOTA: Após análise do site, descobrimos que devemos FICAR no tab "Extratos"
-            # pois é lá que estão os filtros de data (De/Até)
-            # A função ir_para_movimentos agora garante que estamos no tab correto
-            
-            # PASSO 1: Esperar pela página carregar completamente
-            await self.page.wait_for_timeout(3000)
-            
-            # PASSO 2: Expandir a secção de filtros se estiver colapsada
-            # Procurar por "Filtrar por:" e clicar para expandir
-            expand_selectors = [
-                'text=/Filtrar por:/',
-                'div:has-text("Filtrar por:")',
-                '[class*="filter"]',
-                'text=Filtrar por:',
-            ]
-            
-            for selector in expand_selectors:
-                try:
-                    expand_elem = self.page.locator(selector).first
-                    if await expand_elem.count() > 0 and await expand_elem.is_visible():
-                        await expand_elem.click()
-                        await self.page.wait_for_timeout(2000)
-                        logger.info(f"✅ Secção de filtros clicada: {selector}")
-                        await self.screenshot("filtro_expandido")
-                        break
-                except:
-                    pass
-            
             await self.page.wait_for_timeout(2000)
             
-            # Parse das datas (formato entrada: DD/MM/YYYY)
-            from datetime import datetime as dt
-            dia_inicio, mes_inicio, ano_inicio = data_inicio.split('/')
-            dia_fim, mes_fim, ano_fim = data_fim.split('/')
+            # Parse das datas
+            dia_inicio, mes_inicio, ano_inicio = map(int, data_inicio.split('/'))
+            dia_fim, mes_fim, ano_fim = map(int, data_fim.split('/'))
             
-            # Converter para inteiros
-            dia_inicio = int(dia_inicio)
-            mes_inicio = int(mes_inicio)
-            ano_inicio = int(ano_inicio)
-            dia_fim = int(dia_fim)
-            mes_fim = int(mes_fim)
-            ano_fim = int(ano_fim)
+            logger.info(f"📅 De: {dia_inicio}/{mes_inicio}/{ano_inicio}")
+            logger.info(f"📅 Até: {dia_fim}/{mes_fim}/{ano_fim}")
             
-            # Converter para formato MM/YYYY (formato do site Via Verde)
-            data_inicio_mmyyyy = f"{mes_inicio:02d}/{ano_inicio}"
-            data_fim_mmyyyy = f"{mes_fim:02d}/{ano_fim}"
+            # Mapa de meses em português
+            meses_pt = {
+                1: 'janeiro', 2: 'fevereiro', 3: 'março', 4: 'abril',
+                5: 'maio', 6: 'junho', 7: 'julho', 8: 'agosto',
+                9: 'setembro', 10: 'outubro', 11: 'novembro', 12: 'dezembro'
+            }
             
-            logger.info(f"📅 Data início (MM/YYYY): {data_inicio_mmyyyy}")
-            logger.info(f"📅 Data fim (MM/YYYY): {data_fim_mmyyyy}")
-            
-            # PASSO 3: Encontrar os campos "De:" e "Até:"
-            
-            de_input = None
-            ate_input = None
-            
-            # Método 1: Procurar todos os inputs e verificar quais têm formato MM/YYYY
-            all_inputs = self.page.locator('input')
-            input_count = await all_inputs.count()
-            logger.info(f"📋 Total de inputs na página: {input_count}")
-            
-            date_inputs = []
-            for i in range(min(input_count, 20)):
+            async def selecionar_data_via_calendario(campo_label: str, dia: int, mes: int, ano: int) -> bool:
+                """Selecionar uma data específica clicando no ícone de calendário"""
                 try:
-                    inp = all_inputs.nth(i)
-                    is_visible = await inp.is_visible()
-                    value = await inp.get_attribute('value') or ''
+                    logger.info(f"📅 A selecionar {campo_label}: {dia}/{mes}/{ano}")
                     
-                    # Verificar formato MM/YYYY
-                    import re
-                    if re.match(r'\d{2}/\d{4}', value):
-                        date_inputs.append({'input': inp, 'value': value, 'index': i, 'visible': is_visible})
-                        logger.info(f"📋 Input data [{i}]: value='{value}', visible={is_visible}")
-                except:
-                    pass
-            
-            logger.info(f"📋 Encontrados {len(date_inputs)} inputs com formato MM/YYYY")
-            
-            # Usar os inputs encontrados
-            if len(date_inputs) >= 2:
-                de_input = date_inputs[0]['input']
-                ate_input = date_inputs[1]['input']
-                logger.info(f"✅ Usando De='{date_inputs[0]['value']}', Até='{date_inputs[1]['value']}'")
-            elif len(date_inputs) == 1:
-                de_input = date_inputs[0]['input']
-                logger.info(f"⚠️ Apenas 1 input encontrado: {date_inputs[0]['value']}")
-            
-            # Método 2: Se não encontrou, procurar por placeholder ou tipo
-            if de_input is None:
-                logger.info("📋 A tentar método alternativo para encontrar inputs...")
-                
-                # Procurar inputs perto de labels "De" ou "Até"
-                try:
-                    # Usar JavaScript para encontrar inputs
-                    js_find_date_inputs = """
-                        const inputs = [];
-                        document.querySelectorAll('input').forEach((inp, idx) => {
-                            const value = inp.value || '';
-                            const rect = inp.getBoundingClientRect();
-                            if (rect.height > 0 && rect.width > 0) {
-                                // Verificar se tem label próximo com "De" ou "Até"
-                                let label = inp.previousElementSibling;
-                                let labelText = label ? label.textContent : '';
+                    # Encontrar o ícone de calendário próximo ao campo
+                    # Os ícones estão próximos dos inputs com formato MM/YYYY ou DD/MM/YYYY
+                    
+                    # Procurar por todos os ícones de calendário (SVG ou imagem)
+                    calendar_icons = self.page.locator('svg[class*="calendar"], [class*="calendar-icon"], img[src*="calendar"], button:has(svg)')
+                    icon_count = await calendar_icons.count()
+                    logger.info(f"📋 Encontrados {icon_count} ícones de calendário")
+                    
+                    # O primeiro ícone é para "De", o segundo para "Até"
+                    icon_index = 0 if campo_label == "De" else 1
+                    
+                    if icon_count > icon_index:
+                        calendar_icon = calendar_icons.nth(icon_index)
+                        await calendar_icon.click()
+                        await self.page.wait_for_timeout(1000)
+                        logger.info(f"✅ Ícone de calendário {campo_label} clicado")
+                    else:
+                        # Alternativa: clicar diretamente no input de data
+                        date_inputs = self.page.locator('input[value*="/"]')
+                        input_count = await date_inputs.count()
+                        if input_count > icon_index:
+                            await date_inputs.nth(icon_index).click()
+                            await self.page.wait_for_timeout(1000)
+                            logger.info(f"✅ Input de data {campo_label} clicado")
+                        else:
+                            logger.warning(f"⚠️ Não encontrou campo {campo_label}")
+                            return False
+                    
+                    await self.screenshot(f"calendario_{campo_label}_aberto")
+                    
+                    # Agora o calendário deve estar aberto
+                    # Verificar o mês/ano atual no cabeçalho do calendário
+                    
+                    # O cabeçalho mostra algo como "janeiro 2026"
+                    max_navegacoes = 24
+                    for nav in range(max_navegacoes):
+                        # Procurar o cabeçalho do calendário
+                        header = self.page.locator('text=/[a-zA-Záéíóúç]+ \\d{4}/')
+                        header_text = ""
+                        
+                        if await header.count() > 0:
+                            header_text = await header.first.inner_text()
+                            header_text = header_text.lower().strip()
+                            logger.info(f"📅 Cabeçalho calendário: {header_text}")
+                        
+                        # Extrair mês e ano do cabeçalho
+                        mes_atual = None
+                        ano_atual = None
+                        
+                        for mes_num, mes_nome in meses_pt.items():
+                            if mes_nome in header_text:
+                                mes_atual = mes_num
+                                # Extrair ano
+                                import re
+                                ano_match = re.search(r'(\d{4})', header_text)
+                                if ano_match:
+                                    ano_atual = int(ano_match.group(1))
+                                break
+                        
+                        if mes_atual is None or ano_atual is None:
+                            logger.warning(f"⚠️ Não conseguiu extrair mês/ano de: {header_text}")
+                            break
+                        
+                        logger.info(f"📅 Calendário atual: {mes_atual}/{ano_atual}, destino: {mes}/{ano}")
+                        
+                        # Verificar se estamos no mês/ano correto
+                        if mes_atual == mes and ano_atual == ano:
+                            logger.info(f"✅ Mês/ano correto!")
+                            break
+                        
+                        # Navegar para o mês correto
+                        if ano_atual > ano or (ano_atual == ano and mes_atual > mes):
+                            # Navegar para trás
+                            prev_btn = self.page.locator('button:has-text("<"), a:has-text("<"), [class*="prev"]').first
+                            if await prev_btn.count() > 0:
+                                await prev_btn.click()
+                                await self.page.wait_for_timeout(500)
+                                logger.info("📅 Navegou para mês anterior")
+                        else:
+                            # Navegar para frente
+                            next_btn = self.page.locator('button:has-text(">"), a:has-text(">"), [class*="next"]').first
+                            if await next_btn.count() > 0:
+                                await next_btn.click()
+                                await self.page.wait_for_timeout(500)
+                                logger.info("📅 Navegou para próximo mês")
+                    
+                    await self.screenshot(f"calendario_{campo_label}_mes_correto")
+                    
+                    # Agora selecionar o dia
+                    # Os dias estão numa grid, procurar pelo número do dia
+                    
+                    # Procurar células com o dia específico
+                    day_selectors = [
+                        f'td:text-is("{dia}")',
+                        f'button:text-is("{dia}")',
+                        f'div.day:text-is("{dia}")',
+                        f'span:text-is("{dia}")',
+                    ]
+                    
+                    day_clicked = False
+                    for selector in day_selectors:
+                        try:
+                            day_elements = self.page.locator(selector)
+                            count = await day_elements.count()
+                            
+                            for i in range(count):
+                                day_el = day_elements.nth(i)
                                 
-                                inputs.push({
-                                    index: idx,
-                                    value: value,
-                                    y: rect.y,
-                                    x: rect.x,
-                                    visible: rect.height > 0,
-                                    label: labelText.substring(0, 20)
-                                });
-                            }
-                        });
-                        return JSON.stringify(inputs);
-                    """
-                    result = await self.page.evaluate(js_find_date_inputs)
-                    import json
-                    inputs_info = json.loads(result)
-                    logger.info(f"📋 JavaScript encontrou {len(inputs_info)} inputs visíveis")
+                                # Verificar se está visível e não é de outro mês
+                                if await day_el.is_visible():
+                                    class_attr = await day_el.get_attribute('class') or ''
+                                    
+                                    # Evitar dias desabilitados ou de outros meses
+                                    if 'disabled' not in class_attr and 'other' not in class_attr and 'outside' not in class_attr:
+                                        await day_el.click()
+                                        await self.page.wait_for_timeout(500)
+                                        logger.info(f"✅ Dia {dia} selecionado via {selector}")
+                                        day_clicked = True
+                                        break
+                            
+                            if day_clicked:
+                                break
+                        except Exception as e:
+                            continue
                     
-                    for inp_info in inputs_info:
-                        if '/' in inp_info['value']:
-                            logger.info(f"   - [{inp_info['index']}] value='{inp_info['value']}', y={inp_info['y']}, label='{inp_info['label']}'")
+                    if not day_clicked:
+                        logger.warning(f"⚠️ Não conseguiu selecionar dia {dia}")
+                    
+                    await self.screenshot(f"calendario_{campo_label}_dia_selecionado")
+                    return day_clicked
+                    
                 except Exception as e:
-                    logger.warning(f"⚠️ Método JavaScript falhou: {e}")
+                    logger.error(f"❌ Erro ao selecionar data {campo_label}: {e}")
+                    return False
             
-            await self.screenshot("procurando_inputs")
+            # Selecionar data "De"
+            sucesso_de = await selecionar_data_via_calendario("De", dia_inicio, mes_inicio, ano_inicio)
+            await self.page.wait_for_timeout(1000)
+            
+            # Selecionar data "Até"
+            sucesso_ate = await selecionar_data_via_calendario("Até", dia_fim, mes_fim, ano_fim)
+            await self.page.wait_for_timeout(1000)
+            
+            await self.screenshot("datas_preenchidas")
+            
+            # Fechar qualquer calendário aberto
+            await self.page.keyboard.press('Escape')
+            await self.page.wait_for_timeout(500)
+            
+            # Clicar no botão "Filtrar"
+            filtrar_btn = self.page.locator('button:has-text("Filtrar"), a:has-text("Filtrar"), input[value="Filtrar"]').first
+            if await filtrar_btn.count() > 0:
+                await filtrar_btn.click()
+                await self.page.wait_for_timeout(3000)
+                logger.info("✅ Filtro aplicado")
+            else:
+                logger.warning("⚠️ Botão Filtrar não encontrado")
+            
+            await self.screenshot("resultados_filtrados")
+            return sucesso_de and sucesso_ate
+            
+        except Exception as e:
+            logger.error(f"❌ Erro ao selecionar datas: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            await self.screenshot("erro_datas")
+            return False
             
             # PASSO 3: Preencher os campos de data
             
