@@ -14683,6 +14683,11 @@ async def enviar_relatorio_email(
 # Mount static files for uploads (PDFs, documents, etc.)
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
+# Mount static files for mobile app code
+STATIC_DIR = ROOT_DIR / "static"
+STATIC_DIR.mkdir(exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
