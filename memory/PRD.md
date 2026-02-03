@@ -671,3 +671,99 @@ Sistema completo para criar e gerir utilizadores com diferentes perfis (Admin, G
 
 ### Correção Aplicada
 - Corrigido endpoint de `/api/users` para `/api/users/all` no frontend
+
+
+---
+
+## ✅ App Móvel - Funcionalidades Expandidas (03/02/2026)
+
+### Descrição
+Expansão da app móvel TVDEFleet Drivers com novas funcionalidades para motoristas.
+
+### Funcionalidades Implementadas
+
+#### 1. Relógio de Ponto (já existente)
+- Check-in / Check-out
+- Pausas
+- Resumo semanal
+
+#### 2. Ganhos e Relatórios Semanais (NOVO)
+- Visualização de ganhos Uber e Bolt
+- Despesas (Via Verde, Combustível, Elétrico, Aluguer)
+- Valor líquido
+- Horas trabalhadas
+- Histórico das últimas semanas
+
+#### 3. Upload de Documentos com Histórico (NOVO)
+- Tipos: Recibo, Registo Criminal, Carta Condução, Certificado TVDE, CC, IBAN
+- Histórico automático: documento anterior é arquivado quando se faz upload de um novo
+- Validação por parceiro/gestor/admin
+- Histórico completo visível para parceiros
+
+#### 4. Sistema de Tickets/Suporte com Chat (NOVO)
+- Criação de tickets por categoria
+- Chat em tempo real entre motorista e suporte
+- Estados: Aberto, Em Análise, A Processar, Aguardar Resposta, Resolvido, Fechado
+- Auto-fechamento após 7 dias sem resposta
+- Anexos de ficheiros
+- Hierarquia: Motorista → Parceiro/Gestor → Admin
+
+### Endpoints Backend (Novos)
+
+#### Ponto (expandido)
+- `GET /api/ponto/relatorio-diario` - Relatório diário de horas
+- `GET /api/ponto/ganhos-semana` - Ganhos e despesas da semana
+- `GET /api/ponto/historico-semanas` - Histórico das últimas N semanas
+
+#### Tickets
+- `POST /api/tickets/criar` - Criar ticket
+- `GET /api/tickets/meus` - Listar tickets do utilizador
+- `GET /api/tickets/para-gerir` - Tickets para gestão (admin/gestor/parceiro)
+- `GET /api/tickets/{id}` - Detalhes do ticket
+- `POST /api/tickets/{id}/mensagem` - Adicionar mensagem (chat)
+- `POST /api/tickets/{id}/anexo` - Adicionar anexo
+- `PATCH /api/tickets/{id}/status` - Atualizar status
+- `POST /api/tickets/{id}/fechar` - Fechar ticket
+- `GET /api/tickets/estatisticas/resumo` - Estatísticas
+
+#### Documentos Motorista
+- `POST /api/documentos-motorista/upload` - Upload de documento
+- `GET /api/documentos-motorista/meus` - Documentos do motorista
+- `GET /api/documentos-motorista/motorista/{id}` - Documentos de um motorista (parceiro/admin)
+- `GET /api/documentos-motorista/ficheiro/{id}` - Download do ficheiro
+- `POST /api/documentos-motorista/{id}/validar` - Validar documento
+- `POST /api/documentos-motorista/{id}/rejeitar` - Rejeitar documento
+- `GET /api/documentos-motorista/historico/{motorista_id}/{tipo}` - Histórico de um tipo
+- `GET /api/documentos-motorista/pendentes` - Documentos pendentes de validação
+
+### Ficheiros Criados
+- `/app/backend/routes/tickets.py` - Sistema de tickets completo
+- `/app/backend/routes/documentos_motorista.py` - Gestão de documentos
+- `/app/mobile/tvdefleet-drivers/ExpoSnackCode.js` - Código completo para Expo Snack
+
+### Como Testar (Expo Snack)
+1. Aceder a https://snack.expo.dev
+2. Colar o código de `/app/mobile/tvdefleet-drivers/ExpoSnackCode.js`
+3. Escanear QR code com Expo Go
+4. Login: admin@tvdefleet.com / 123456
+
+---
+
+## 📋 Tarefas Pendentes
+
+### P0 - Críticas
+1. **Via Verde RPA - Filtragem de Datas**: Ainda não filtra por semana específica (descarrega tudo)
+
+### P1 - Importantes
+2. **UI Desativação de Motorista**: Adicionar botão e modal na página de motoristas
+3. **API Uber**: Aguarda aprovação de scopes pela Uber
+
+### P2 - Próximas
+4. **WebApp - Página de Tickets**: Interface para parceiros/admins gerirem tickets
+5. **WebApp - Histórico Documentos**: Visualizar histórico de documentos dos motoristas
+6. **Vistorias de Veículos na App Móvel**
+
+### Backlog
+- Integração Ifthenpay
+- Integração Moloni
+- Simulação CSV para Admins
