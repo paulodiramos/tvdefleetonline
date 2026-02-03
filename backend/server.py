@@ -112,6 +112,8 @@ from routes.import_ganhos import router as import_ganhos_router
 from routes.bolt_integration import router as bolt_integration_router
 from routes.exportacao import router as exportacao_router
 from routes.ponto import router as ponto_router
+from routes.tickets import router as tickets_router
+from routes.documentos_motorista import router as documentos_motorista_router
 
 # Import utilities from refactored modules
 from utils.file_handlers import (
