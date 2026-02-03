@@ -317,3 +317,246 @@ async def get_resumo_semanal(current_user: dict = Depends(get_current_user)):
         "media_diaria": media_diaria,
         "semana_inicio": inicio_semana.isoformat()
     }
+
+
+@router.get("/relatorio-diario")
+async def get_relatorio_diario(
+    data: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter relatório diário de horas trabalhadas"""
+    
+    if data:
+        dia = datetime.fromisoformat(data)
+    else:
+        dia = datetime.now(timezone.utc)
+    
+    inicio_dia = dia.replace(hour=0, minute=0, second=0, microsecond=0)
+    fim_dia = dia.replace(hour=23, minute=59, second=59, microsecond=999999)
+    
+    registos = await db.registos_ponto.find({
+        "user_id": current_user["id"],
+        "check_in": {
+            "$gte": inicio_dia.isoformat(),
+            "$lte": fim_dia.isoformat()
+        }
+    }, {"_id": 0}).sort("check_in", 1).to_list(50)
+    
+    total_minutos = sum(r.get("tempo_trabalho_minutos", 0) for r in registos)
+    total_pausas = sum(r.get("total_pausas_minutos", 0) for r in registos)
+    
+    return {
+        "data": dia.strftime("%Y-%m-%d"),
+        "registos": registos,
+        "total_turnos": len(registos),
+        "total_minutos_trabalhados": total_minutos,
+        "total_minutos_pausas": total_pausas,
+        "horas_formatadas": f"{total_minutos // 60}h {total_minutos % 60}m"
+    }
+
+
+@router.get("/ganhos-semana")
+async def get_ganhos_semana(
+    semana: Optional[int] = None,
+    ano: Optional[int] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter ganhos e despesas da semana (igual ao relatório semanal)"""
+    
+    # Calcular semana atual se não especificada
+    hoje = datetime.now(timezone.utc)
+    if not semana:
+        semana = hoje.isocalendar()[1]
+    if not ano:
+        ano = hoje.year
+    
+    # Calcular datas da semana
+    primeiro_dia_ano = datetime(ano, 1, 1)
+    if primeiro_dia_ano.weekday() <= 3:
+        primeira_segunda = primeiro_dia_ano - timedelta(days=primeiro_dia_ano.weekday())
+    else:
+        primeira_segunda = primeiro_dia_ano + timedelta(days=(7 - primeiro_dia_ano.weekday()))
+    
+    inicio_semana = primeira_segunda + timedelta(weeks=semana - 1)
+    fim_semana = inicio_semana + timedelta(days=6)
+    
+    data_inicio = inicio_semana.strftime("%Y-%m-%d")
+    data_fim = fim_semana.strftime("%Y-%m-%d")
+    
+    motorista_id = current_user["id"]
+    
+    # Buscar motorista para obter IDs das plataformas
+    motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+    if not motorista:
+        # Tentar buscar user e verificar se é motorista
+        motorista = await db.users.find_one({"id": motorista_id}, {"_id": 0})
+    
+    # Ganhos Uber
+    ganhos_uber = 0.0
+    uber_records = await db.ganhos_uber.find({
+        "$or": [
+            {"motorista_id": motorista_id},
+            {"email_motorista": current_user.get("email")}
+        ],
+        "$and": [{"$or": [
+            {"semana": semana, "ano": ano},
+            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+        ]}]
+    }, {"_id": 0}).to_list(100)
+    
+    for r in uber_records:
+        ganhos_uber += float(r.get("rendimentos") or r.get("pago_total") or 0)
+    
+    # Ganhos Bolt
+    ganhos_bolt = 0.0
+    bolt_records = await db.ganhos_bolt.find({
+        "$or": [
+            {"motorista_id": motorista_id},
+            {"email_motorista": current_user.get("email")}
+        ],
+        "$and": [{"$or": [
+            {"semana": semana, "ano": ano},
+            {"periodo_semana": semana, "periodo_ano": ano}
+        ]}]
+    }, {"_id": 0}).to_list(100)
+    
+    for r in bolt_records:
+        ganhos_bolt += float(r.get("ganhos_liquidos") or r.get("ganhos") or 0)
+    
+    # Buscar veículo atribuído
+    veiculo_id = motorista.get("veiculo_atribuido") if motorista else None
+    veiculo = None
+    if veiculo_id:
+        veiculo = await db.vehicles.find_one({"id": veiculo_id}, {"_id": 0})
+    
+    # Via Verde
+    via_verde_total = 0.0
+    if veiculo and veiculo.get("matricula"):
+        vv_records = await db.portagens_viaverde.find({
+            "matricula": veiculo.get("matricula"),
+            "$or": [
+                {"semana": semana, "ano": ano},
+                {"entry_date": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}}
+            ]
+        }, {"_id": 0}).to_list(500)
+        
+        for r in vv_records:
+            market_desc = str(r.get("market_description", "")).strip().lower()
+            if not market_desc or market_desc in ["portagens", "parques"]:
+                via_verde_total += float(r.get("valor") or r.get("value") or 0)
+    
+    # Combustível
+    combustivel_total = 0.0
+    comb_records = await db.abastecimentos_combustivel.find({
+        "$or": [
+            {"motorista_id": motorista_id},
+            {"vehicle_id": veiculo_id} if veiculo_id else {"vehicle_id": None}
+        ],
+        "$and": [{"$or": [
+            {"data": {"$gte": data_inicio, "$lte": data_fim}},
+            {"semana": semana, "ano": ano}
+        ]}]
+    }, {"_id": 0}).to_list(100)
+    
+    for r in comb_records:
+        valor = float(r.get("valor_liquido") or r.get("valor") or 0)
+        iva = float(r.get("iva") or 0)
+        combustivel_total += valor + iva
+    
+    # Carregamento elétrico
+    eletrico_total = 0.0
+    elet_records = await db.despesas_combustivel.find({
+        "motorista_id": motorista_id,
+        "$or": [
+            {"semana": semana, "ano": ano},
+            {"data": {"$gte": data_inicio, "$lte": data_fim}}
+        ]
+    }, {"_id": 0}).to_list(100)
+    
+    for r in elet_records:
+        eletrico_total += float(r.get("valor_total") or 0)
+    
+    # Valor aluguer
+    valor_aluguer = 0.0
+    if veiculo:
+        valor_aluguer = float(veiculo.get("valor_semanal") or 0)
+    
+    # Horas trabalhadas
+    registos_ponto = await db.registos_ponto.find({
+        "user_id": motorista_id,
+        "check_in": {"$gte": data_inicio, "$lte": data_fim + "T23:59:59"}
+    }, {"_id": 0}).to_list(100)
+    
+    total_minutos = sum(r.get("tempo_trabalho_minutos", 0) for r in registos_ponto)
+    
+    # Calcular totais
+    total_ganhos = ganhos_uber + ganhos_bolt
+    total_despesas = via_verde_total + combustivel_total + eletrico_total + valor_aluguer
+    valor_liquido = total_ganhos - total_despesas
+    
+    return {
+        "semana": semana,
+        "ano": ano,
+        "periodo": f"Semana {semana}/{ano}",
+        "data_inicio": data_inicio,
+        "data_fim": data_fim,
+        "ganhos": {
+            "uber": round(ganhos_uber, 2),
+            "bolt": round(ganhos_bolt, 2),
+            "total": round(total_ganhos, 2)
+        },
+        "despesas": {
+            "via_verde": round(via_verde_total, 2),
+            "combustivel": round(combustivel_total, 2),
+            "eletrico": round(eletrico_total, 2),
+            "aluguer": round(valor_aluguer, 2),
+            "total": round(total_despesas, 2)
+        },
+        "valor_liquido": round(valor_liquido, 2),
+        "horas_trabalhadas": {
+            "total_minutos": total_minutos,
+            "formatado": f"{total_minutos // 60}h {total_minutos % 60}m",
+            "total_turnos": len(registos_ponto)
+        },
+        "veiculo": {
+            "matricula": veiculo.get("matricula") if veiculo else None,
+            "marca_modelo": f"{veiculo.get('marca')} {veiculo.get('modelo')}" if veiculo else None
+        } if veiculo else None
+    }
+
+
+@router.get("/historico-semanas")
+async def get_historico_semanas(
+    num_semanas: int = 6,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter histórico das últimas N semanas"""
+    
+    hoje = datetime.now(timezone.utc)
+    semana_atual = hoje.isocalendar()[1]
+    ano_atual = hoje.year
+    
+    historico = []
+    
+    for i in range(num_semanas):
+        semana = semana_atual - i
+        ano = ano_atual
+        
+        while semana <= 0:
+            semana += 52
+            ano -= 1
+        
+        # Buscar resumo simplificado
+        ganhos_semana = await get_ganhos_semana(semana, ano, current_user)
+        
+        historico.append({
+            "semana": semana,
+            "ano": ano,
+            "periodo": f"S{semana}/{ano}",
+            "total_ganhos": ganhos_semana["ganhos"]["total"],
+            "total_despesas": ganhos_semana["despesas"]["total"],
+            "valor_liquido": ganhos_semana["valor_liquido"],
+            "horas": ganhos_semana["horas_trabalhadas"]["formatado"]
+        })
+    
+    return {"historico": historico}
