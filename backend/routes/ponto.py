@@ -9,11 +9,12 @@ from datetime import datetime, timezone, timedelta
 import uuid
 import logging
 
-from database import db
-from routes.auth import get_current_user
+from utils.database import get_database
+from utils.auth import get_current_user
 
 router = APIRouter(prefix="/ponto", tags=["Relógio de Ponto"])
 logger = logging.getLogger(__name__)
+db = get_database()
 
 
 class CheckInRequest(BaseModel):
