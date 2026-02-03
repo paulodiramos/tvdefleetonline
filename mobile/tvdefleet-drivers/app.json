@@ -11,41 +11,24 @@
       "resizeMode": "contain",
       "backgroundColor": "#1e40af"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.tvdefleet.drivers",
-      "infoPlist": {
-        "NSCameraUsageDescription": "A app precisa de acesso à câmara para fotografar veículos e documentos.",
-        "NSLocationWhenInUseUsageDescription": "A app precisa de acesso à localização para registar o ponto.",
-        "NSPhotoLibraryUsageDescription": "A app precisa de acesso à galeria para carregar documentos."
-      }
+      "bundleIdentifier": "com.tvdefleet.drivers"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1e40af"
       },
-      "package": "com.tvdefleet.drivers",
-      "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.ACCESS_FINE_LOCATION",
-        "android.permission.ACCESS_COARSE_LOCATION",
-        "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE"
-      ]
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
+      "package": "com.tvdefleet.drivers"
     },
     "plugins": [
-      "expo-camera",
-      "expo-location",
-      "expo-image-picker",
-      "expo-document-picker",
-      "expo-secure-store"
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow TVDEFleet Drivers to use your location."
+        }
+      ]
     ]
   }
 }
