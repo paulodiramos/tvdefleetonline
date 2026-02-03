@@ -3,6 +3,7 @@
     "name": "TVDEFleet Drivers",
     "slug": "tvdefleet-drivers",
     "version": "1.0.0",
+    "sdkVersion": "54.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -21,14 +22,6 @@
         "backgroundColor": "#1e40af"
       },
       "package": "com.tvdefleet.drivers"
-    },
-    "plugins": [
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Allow TVDEFleet Drivers to use your location."
-        }
-      ]
-    ]
+    }
   }
 }
