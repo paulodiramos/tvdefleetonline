@@ -1,7 +1,7 @@
 {
   "name": "tvdefleet-drivers",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "App.js",
   "scripts": {
     "start": "expo start",
     "android": "expo run:android",
@@ -9,22 +9,12 @@
     "web": "expo start --web"
   },
   "dependencies": {
-    "@react-navigation/bottom-tabs": "^7.12.0",
-    "@react-navigation/native": "^7.1.28",
-    "@react-navigation/native-stack": "^7.12.0",
-    "axios": "^1.13.4",
-    "expo": "~54.0.33",
-    "expo-camera": "^17.0.10",
-    "expo-document-picker": "^14.0.8",
-    "expo-image-picker": "^17.0.10",
-    "expo-location": "^19.0.8",
-    "expo-secure-store": "^15.0.8",
-    "expo-status-bar": "~3.0.9",
-    "react": "19.1.0",
-    "react-native": "0.81.5",
-    "react-native-safe-area-context": "^5.6.2",
-    "react-native-screens": "^4.22.0",
-    "react-native-svg": "^15.15.2"
+    "axios": "^1.6.0",
+    "expo": "~52.0.0",
+    "expo-location": "~18.0.0",
+    "expo-status-bar": "~2.0.0",
+    "react": "18.3.1",
+    "react-native": "0.76.5"
   },
   "private": true
 }
