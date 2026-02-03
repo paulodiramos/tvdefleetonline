@@ -14680,6 +14680,19 @@ async def enviar_relatorio_email(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/mobile-app-code")
+async def get_mobile_app_code():
+    """Retorna o código da app móvel para copiar no Expo Snack"""
+    code_file = ROOT_DIR / "static" / "ExpoSnackCode.js"
+    if code_file.exists():
+        return FileResponse(
+            path=str(code_file),
+            filename="ExpoSnackCode.js",
+            media_type="text/plain"
+        )
+    raise HTTPException(status_code=404, detail="Ficheiro não encontrado")
+
+
 # Mount static files for uploads (PDFs, documents, etc.)
 app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
