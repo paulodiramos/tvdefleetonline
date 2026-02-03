@@ -8,6 +8,7 @@ import {
   Alert,
   ActivityIndicator,
   RefreshControl,
+  Platform,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { pontoService } from '../services/api';
