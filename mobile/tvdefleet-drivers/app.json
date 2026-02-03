@@ -1,29 +1,51 @@
 {
   "expo": {
-    "name": "tvdefleet-drivers",
+    "name": "TVDEFleet Drivers",
     "slug": "tvdefleet-drivers",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1e40af"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": false,
+      "bundleIdentifier": "com.tvdefleet.drivers",
+      "infoPlist": {
+        "NSCameraUsageDescription": "A app precisa de acesso à câmara para fotografar veículos e documentos.",
+        "NSLocationWhenInUseUsageDescription": "A app precisa de acesso à localização para registar o ponto.",
+        "NSPhotoLibraryUsageDescription": "A app precisa de acesso à galeria para carregar documentos."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#1e40af"
       },
-      "edgeToEdgeEnabled": true
+      "package": "com.tvdefleet.drivers",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-camera",
+      "expo-location",
+      "expo-image-picker",
+      "expo-document-picker",
+      "expo-secure-store"
+    ]
   }
 }
