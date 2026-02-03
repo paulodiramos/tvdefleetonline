@@ -58,7 +58,7 @@
 
 ### Login via Frontend
 ```
-1. Acesse: https://fleet-manager-295.preview.emergentagent.com/login
+1. Acesse: https://fleetmanager-37.preview.emergentagent.com/login
 2. Use qualquer credencial acima
 3. Navegue conforme as permissões do role
 ```
