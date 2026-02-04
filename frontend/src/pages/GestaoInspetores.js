@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { toast } from 'sonner';
 import { 
   UserCheck, Plus, Search, Eye, Edit, Trash2, 
-  Phone, Mail, Calendar, ClipboardCheck, Building
+  Phone, Mail, Calendar, ClipboardCheck, Building, Key
 } from 'lucide-react';
 
 const GestaoInspetores = ({ user, onLogout }) => {
@@ -20,12 +20,19 @@ const GestaoInspetores = ({ user, onLogout }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedInspetor, setSelectedInspetor] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     password: ''
+  });
+  const [editData, setEditData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    newPassword: ''
   });
   const [submitting, setSubmitting] = useState(false);
 
