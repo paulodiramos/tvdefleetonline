@@ -1910,7 +1910,7 @@ const VistoriasScreen = ({ user }) => {
     setShowNovaVistoria(true);
   };
 
-  const tirarFoto = async (fotoId) => {
+  const tirarFoto = async (fotoId, adicional = false) => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') { Alert.alert('Erro', 'Permissão de câmara necessária'); return; }
     
@@ -1921,8 +1921,62 @@ const VistoriasScreen = ({ user }) => {
     });
     
     if (!result.canceled && result.assets[0]) {
-      setFotos(prev => ({ ...prev, [fotoId]: result.assets[0] }));
+      if (adicional) {
+        // Adicionar foto extra ao array
+        setFotos(prev => {
+          const atual = prev[fotoId];
+          if (Array.isArray(atual)) {
+            return { ...prev, [fotoId]: [...atual, result.assets[0]] };
+          } else if (atual) {
+            return { ...prev, [fotoId]: [atual, result.assets[0]] };
+          } else {
+            return { ...prev, [fotoId]: [result.assets[0]] };
+          }
+        });
+      } else {
+        // Se já existe foto e não é adicional, pergunta se quer substituir ou adicionar
+        if (fotos[fotoId]) {
+          Alert.alert(
+            'Foto Existente',
+            'O que deseja fazer?',
+            [
+              { text: 'Substituir', onPress: () => setFotos(prev => ({ ...prev, [fotoId]: result.assets[0] })) },
+              { text: 'Adicionar', onPress: () => {
+                setFotos(prev => {
+                  const atual = prev[fotoId];
+                  if (Array.isArray(atual)) {
+                    return { ...prev, [fotoId]: [...atual, result.assets[0]] };
+                  } else {
+                    return { ...prev, [fotoId]: [atual, result.assets[0]] };
+                  }
+                });
+              }},
+              { text: 'Cancelar', style: 'cancel' }
+            ]
+          );
+        } else {
+          setFotos(prev => ({ ...prev, [fotoId]: result.assets[0] }));
+        }
+      }
     }
+  };
+
+  const removerFotoExtra = (fotoId, index) => {
+    setFotos(prev => {
+      const atual = prev[fotoId];
+      if (Array.isArray(atual)) {
+        const novoArray = atual.filter((_, i) => i !== index);
+        return { ...prev, [fotoId]: novoArray.length === 1 ? novoArray[0] : (novoArray.length === 0 ? null : novoArray) };
+      }
+      return { ...prev, [fotoId]: null };
+    });
+  };
+
+  const getFotoCount = (fotoId) => {
+    const foto = fotos[fotoId];
+    if (!foto) return 0;
+    if (Array.isArray(foto)) return foto.length;
+    return 1;
   };
 
   const fotosCompletas = () => {
