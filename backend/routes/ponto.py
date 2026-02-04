@@ -56,15 +56,21 @@ class EditarRegistoRequest(BaseModel):
 async def calcular_horas_ultimas_24h(motorista_id: str) -> dict:
     """
     Calcula o tempo trabalhado nas últimas 24 horas (período rolante).
+    Exclui registos marcados como "pessoal".
     Retorna tempo trabalhado e se pode iniciar novo turno.
     """
     now = datetime.now(timezone.utc)
     limite_24h = now - timedelta(hours=24)
     
-    # Buscar todos os registos das últimas 24h
+    # Buscar todos os registos das últimas 24h (apenas tipo "trabalho" ou sem tipo)
     registos = await db.registos_ponto.find({
         "user_id": motorista_id,
-        "check_in": {"$gte": limite_24h.isoformat()}
+        "check_in": {"$gte": limite_24h.isoformat()},
+        "$or": [
+            {"tipo": {"$exists": False}},
+            {"tipo": "trabalho"},
+            {"tipo": None}
+        ]
     }, {"_id": 0}).to_list(100)
     
     total_minutos = 0
