@@ -336,13 +336,31 @@ const PontoScreen = ({ user, status, setStatus }) => {
         </View>
       </View>
 
-      {/* Resumo */}
+      {/* Resumo Semanal */}
       {resumo && (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Esta Semana</Text>
-          <View style={styles.statsRow}>
-            <View style={styles.stat}><Text style={styles.statValue}>{formatMin(resumo.total_minutos)}</Text><Text style={styles.statLabel}>Total</Text></View>
-            <View style={styles.stat}><Text style={styles.statValue}>{resumo.total_turnos}</Text><Text style={styles.statLabel}>Turnos</Text></View>
+          <Text style={styles.cardTitle}>📊 Esta Semana</Text>
+          <View style={styles.weekSummary}>
+            <View style={styles.weekMainStat}>
+              <Text style={styles.weekHours}>{Math.floor(resumo.total_minutos / 60)}</Text>
+              <Text style={styles.weekHoursLabel}>h</Text>
+              <Text style={styles.weekMinutes}>{(resumo.total_minutos % 60).toString().padStart(2, '0')}</Text>
+              <Text style={styles.weekMinutesLabel}>m</Text>
+            </View>
+            <Text style={styles.weekSubLabel}>tempo total</Text>
+          </View>
+          <View style={styles.weekStats}>
+            <View style={styles.weekStatItem}>
+              <Text style={styles.weekStatValue}>{resumo.total_turnos}</Text>
+              <Text style={styles.weekStatLabel}>turnos</Text>
+            </View>
+            <View style={styles.weekStatDivider} />
+            <View style={styles.weekStatItem}>
+              <Text style={styles.weekStatValue}>
+                {resumo.total_turnos > 0 ? formatMin(Math.round(resumo.total_minutos / resumo.total_turnos)) : '-'}
+              </Text>
+              <Text style={styles.weekStatLabel}>média/turno</Text>
+            </View>
           </View>
         </View>
       )}
