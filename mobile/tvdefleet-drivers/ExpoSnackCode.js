@@ -1603,10 +1603,16 @@ const VistoriasScreen = ({ user }) => {
           <Text style={styles.vistoriaStep}>Passo {step}/5</Text>
         </View>
 
-        {/* Progresso */}
+        {/* Progresso - Clicável para navegar entre passos */}
         <View style={styles.progressBar}>
           {[1,2,3,4,5].map(s => (
-            <View key={s} style={[styles.progressDot, s <= step && styles.progressDotActive, s === step && styles.progressDotCurrent]} />
+            <TouchableOpacity 
+              key={s} 
+              style={[styles.progressDot, s <= step && styles.progressDotActive, s === step && styles.progressDotCurrent]} 
+              onPress={() => s < step && setStep(s)}
+            >
+              <Text style={styles.progressDotText}>{s}</Text>
+            </TouchableOpacity>
           ))}
         </View>
 
