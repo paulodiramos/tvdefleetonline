@@ -39,12 +39,21 @@ Aplicação móvel para motoristas TVDE com funcionalidades de relógio de ponto
 
 3. **Suporte (Tickets)**
    - Criação de tickets por categoria
-   - **NOVO:** Categorias expandidas: Pagamentos, Técnico, Esclarecimentos, Relatórios, Acidente, Avaria
+   - **Categorias expandidas:** Pagamentos, Técnico, Esclarecimentos, Relatórios, Acidente, Avaria
+   - **NOVO:** Upload de múltiplas fotos ao criar ticket
+   - Destaque para fotos em categorias Acidente/Avaria
    - Botões rápidos para categorias
    - Chat com mensagens
-   - Suporte para anexos (fotos/PDF)
+   - Visualização de fotos anexadas
 
-4. **Configurações**
+4. **Turnos (NOVO)**
+   - Visualização do horário de trabalho atual
+   - Calendário semanal com turnos
+   - Indicação do dia atual
+   - Informação do veículo atribuído
+   - Histórico de horários anteriores
+
+5. **Configurações**
    - Perfil do utilizador
    - Limite de horas (configurável com permissão)
    - Período de descanso
