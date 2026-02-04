@@ -951,7 +951,7 @@ const FichaMotorista = ({ user }) => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="flex flex-wrap gap-1 h-auto p-1">
             <TabsTrigger value="dados-pessoais" data-testid="tab-dados-pessoais">
               <User className="w-4 h-4 mr-2" /> Dados Pessoais
             </TabsTrigger>
