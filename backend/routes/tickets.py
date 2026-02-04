@@ -122,6 +122,31 @@ async def criar_ticket(
                     destinatario_id = gestor["id"]
                     destinatario_nome = gestor.get("name")
     
+    # Processar fotos em base64
+    fotos_salvas = []
+    if data.fotos:
+        import base64
+        for idx, foto in enumerate(data.fotos):
+            if foto.base64:
+                try:
+                    # Decodificar base64 e salvar ficheiro
+                    foto_data = base64.b64decode(foto.base64)
+                    foto_id = str(uuid.uuid4())
+                    foto_filename = f"{foto_id}.jpg"
+                    foto_path = TICKETS_UPLOAD_DIR / foto_filename
+                    
+                    with open(foto_path, 'wb') as f:
+                        f.write(foto_data)
+                    
+                    fotos_salvas.append({
+                        "id": foto_id,
+                        "filename": foto_filename,
+                        "url": f"/uploads/tickets/{foto_filename}",
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    })
+                except Exception as e:
+                    logger.warning(f"Erro ao salvar foto {idx}: {e}")
+    
     # Criar ticket
     ticket = {
         "id": str(uuid.uuid4()),
@@ -131,7 +156,8 @@ async def criar_ticket(
         "descricao": data.descricao,
         "prioridade": "urgente" if data.categoria in CATEGORIAS_COM_FOTOS else data.prioridade,
         "requer_fotos": data.categoria in CATEGORIAS_COM_FOTOS,
-        "fotos": [],
+        "fotos": fotos_salvas,
+        "tem_anexos": len(fotos_salvas) > 0,
         "status": "aberto",
         "criado_por_id": current_user["id"],
         "criado_por_nome": current_user.get("name"),
@@ -156,7 +182,7 @@ async def criar_ticket(
     }
     
     await db.tickets.insert_one(ticket)
-    logger.info(f"Ticket {ticket['numero']} criado por {current_user['id']}")
+    logger.info(f"Ticket {ticket['numero']} criado por {current_user['id']} com {len(fotos_salvas)} fotos")
     
     return {
         "success": True,
