@@ -106,6 +106,38 @@ class UberRPA:
             await self.playwright.stop()
         logger.info("🔒 Browser Uber fechado")
     
+    async def _inserir_codigo_sms(self):
+        """Método auxiliar para inserir código SMS"""
+        if not self.sms_code:
+            logger.warning("⚠️ Código SMS não fornecido")
+            return False
+        
+        # Procurar campos de input para código (podem ser 4 campos separados ou 1)
+        inputs = await self.page.locator('input[type="text"], input[type="tel"], input[type="number"]').all()
+        
+        if len(inputs) >= 4:
+            # 4 campos separados - inserir um dígito em cada
+            for i, digit in enumerate(self.sms_code[:4]):
+                if i < len(inputs):
+                    await inputs[i].fill(digit)
+                    await self.page.wait_for_timeout(100)
+            logger.info(f"✅ Código SMS inserido (4 campos): {self.sms_code}")
+        elif len(inputs) > 0:
+            # Campo único
+            await inputs[0].fill(self.sms_code)
+            logger.info(f"✅ Código SMS inserido: {self.sms_code}")
+        
+        await self.screenshot("sms_preenchido")
+        
+        # Clicar botão seguinte/verificar
+        seguinte_btn = self.page.locator('button:has-text("Seguinte"), button:has-text("Verificar"), button:has-text("Next"), button[type="submit"]').first
+        if await seguinte_btn.count() > 0:
+            await seguinte_btn.click()
+            await self.page.wait_for_timeout(5000)
+            logger.info("✅ Clicou Seguinte após SMS")
+        
+        return True
+
     async def screenshot(self, name: str):
         """Tirar screenshot para debug"""
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
