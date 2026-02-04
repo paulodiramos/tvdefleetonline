@@ -252,18 +252,30 @@ const MotoristaDetailDialog = ({ open, onClose, motoristaId, userRole }) => {
           </div>
         ) : (
           <Tabs defaultValue="dados" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="dados">
-                <UserCircle className="w-4 h-4 mr-2" />
-                Dados
+                <UserCircle className="w-4 h-4 mr-1" />
+                <span className="hidden sm:inline">Dados</span>
+              </TabsTrigger>
+              <TabsTrigger value="config">
+                <Settings className="w-4 h-4 mr-1" />
+                <span className="hidden sm:inline">App</span>
+              </TabsTrigger>
+              <TabsTrigger value="ponto">
+                <Clock className="w-4 h-4 mr-1" />
+                <span className="hidden sm:inline">Ponto</span>
+              </TabsTrigger>
+              <TabsTrigger value="turnos">
+                <Calendar className="w-4 h-4 mr-1" />
+                <span className="hidden sm:inline">Turnos</span>
               </TabsTrigger>
               <TabsTrigger value="documentos">
-                <FileText className="w-4 h-4 mr-2" />
-                Documentos
+                <FileText className="w-4 h-4 mr-1" />
+                <span className="hidden sm:inline">Docs</span>
               </TabsTrigger>
               <TabsTrigger value="observacoes">
-                <Shield className="w-4 h-4 mr-2" />
-                Observações
+                <Shield className="w-4 h-4 mr-1" />
+                <span className="hidden sm:inline">Notas</span>
               </TabsTrigger>
             </TabsList>
 
