@@ -970,6 +970,15 @@ const FichaMotorista = ({ user }) => {
             <TabsTrigger value="extras" data-testid="tab-extras">
               <Banknote className="w-4 h-4 mr-2" /> Extras
             </TabsTrigger>
+            <TabsTrigger value="app-config" data-testid="tab-app-config">
+              <Shield className="w-4 h-4 mr-2" /> App
+            </TabsTrigger>
+            <TabsTrigger value="ponto" data-testid="tab-ponto">
+              <Clock className="w-4 h-4 mr-2" /> Ponto
+            </TabsTrigger>
+            <TabsTrigger value="turnos" data-testid="tab-turnos">
+              <Calendar className="w-4 h-4 mr-2" /> Turnos
+            </TabsTrigger>
           </TabsList>
 
           {/* Tab Dados Pessoais */}
