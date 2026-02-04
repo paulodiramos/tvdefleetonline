@@ -28,6 +28,7 @@ import RelatoriosSemanais from "@/pages/RelatoriosSemanaisNovo";
 import GestaoPagamentosRecibos from "@/pages/GestaoPagamentosRecibos";
 import ConfiguracaoSincronizacao from "@/pages/ConfiguracaoSincronizacao";
 import CredenciaisParceiros from "@/pages/CredenciaisParceiros";
+import ConfiguracaoUber from "@/pages/ConfiguracaoUber";
 import ImportarDados from "@/pages/ImportarDados";
 import ImportarPlataformas from "@/pages/ImportarPlataformas";
 import ImportarMotoristasVeiculos from "@/pages/ImportarMotoristasVeiculos";
