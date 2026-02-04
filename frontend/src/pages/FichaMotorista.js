@@ -2407,6 +2407,258 @@ const FichaMotorista = ({ user }) => {
               </DialogContent>
             </Dialog>
           </TabsContent>
+
+          {/* Tab Configurações App */}
+          <TabsContent value="app-config" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Shield className="w-5 h-5 mr-2" />
+                  Permissões da App Motorista
+                </CardTitle>
+                <CardDescription>Configure os limites e permissões do motorista na aplicação móvel</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {configApp && (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Limite de Horas (24h rolante)</Label>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Input
+                            type="number"
+                            min="1"
+                            max="24"
+                            value={configApp.limite_horas_diarias}
+                            onChange={(e) => setConfigApp({...configApp, limite_horas_diarias: parseInt(e.target.value) || 10})}
+                            className="w-20 text-center"
+                          />
+                          <span className="text-sm text-slate-500">horas</span>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label>Período de Descanso Mínimo</Label>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Input
+                            type="number"
+                            min="1"
+                            max="24"
+                            value={configApp.periodo_descanso_minimo}
+                            onChange={(e) => setConfigApp({...configApp, periodo_descanso_minimo: parseInt(e.target.value) || 8})}
+                            className="w-20 text-center"
+                          />
+                          <span className="text-sm text-slate-500">horas</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="text-sm font-medium">Permitir Edição de Registos</Label>
+                          <p className="text-xs text-slate-500">Motorista pode editar horas de início/fim</p>
+                        </div>
+                        <Switch
+                          checked={configApp.permitir_edicao_registos}
+                          onCheckedChange={(checked) => setConfigApp({...configApp, permitir_edicao_registos: checked})}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="text-sm font-medium">Permitir Alterar Limite de Horas</Label>
+                          <p className="text-xs text-slate-500">Motorista pode ajustar o seu limite</p>
+                        </div>
+                        <Switch
+                          checked={configApp.pode_alterar_limite}
+                          onCheckedChange={(checked) => setConfigApp({...configApp, pode_alterar_limite: checked})}
+                        />
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      onClick={handleSaveConfigApp} 
+                      disabled={savingConfig}
+                      className="w-full"
+                    >
+                      {savingConfig ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                      {savingConfig ? 'A guardar...' : 'Guardar Configurações'}
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab Relógio de Ponto */}
+          <TabsContent value="ponto" className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <Clock className="w-8 h-8 mx-auto mb-2 text-blue-500" />
+                  <p className="text-xs text-slate-500">Últimas 24h</p>
+                  <p className="text-2xl font-bold text-blue-600">{dadosPonto?.horas_24h || '0h 0m'}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6 text-center">
+                  <TrendingUp className="w-8 h-8 mx-auto mb-2 text-green-500" />
+                  <p className="text-xs text-slate-500">Esta Semana</p>
+                  <p className="text-2xl font-bold text-green-600">{dadosPonto?.horas_semana || '0h 0m'}</p>
+                </CardContent>
+              </Card>
+            </div>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Estado Atual</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center space-x-3">
+                  <div className={`w-3 h-3 rounded-full ${dadosPonto?.estado === 'working' ? 'bg-green-500 animate-pulse' : dadosPonto?.estado === 'paused' ? 'bg-yellow-500' : 'bg-slate-400'}`} />
+                  <span className="font-medium">
+                    {dadosPonto?.estado === 'working' ? 'A Trabalhar' : dadosPonto?.estado === 'paused' ? 'Em Pausa' : 'Offline'}
+                  </span>
+                  {dadosPonto?.turno_inicio && (
+                    <span className="text-sm text-slate-500">desde {dadosPonto.turno_inicio}</span>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Últimos Registos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {dadosPonto?.ultimos_registos && dadosPonto.ultimos_registos.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Início</TableHead>
+                        <TableHead>Fim</TableHead>
+                        <TableHead>Duração</TableHead>
+                        <TableHead>Tipo</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {dadosPonto.ultimos_registos.map((reg, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell>{reg.data}</TableCell>
+                          <TableCell>{reg.hora_inicio}</TableCell>
+                          <TableCell>{reg.hora_fim || 'Em curso'}</TableCell>
+                          <TableCell>{reg.duracao}</TableCell>
+                          <TableCell>
+                            <Badge variant={reg.tipo === 'pessoal' ? 'outline' : 'default'}>
+                              {reg.tipo === 'pessoal' ? 'Pessoal' : 'Trabalho'}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <p className="text-center text-slate-500 py-6">Sem registos recentes</p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Tab Turnos */}
+          <TabsContent value="turnos" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Calendar className="w-5 h-5 mr-2" />
+                  Horário de Turnos
+                </CardTitle>
+                <CardDescription>Configure o horário de trabalho semanal do motorista</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label>Veículo Atribuído para os Turnos</Label>
+                  <Select value={turnoVeiculoId} onValueChange={setTurnoVeiculoId}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecionar veículo..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Sem veículo específico</SelectItem>
+                      {veiculosDisponiveis.map(v => (
+                        <SelectItem key={v.id} value={v.id}>
+                          <Car className="w-4 h-4 inline mr-2" />
+                          {v.matricula} - {v.marca} {v.modelo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-2">
+                  {DIAS_SEMANA_LABELS.map((dia, idx) => {
+                    const turno = turnosForm.find(t => t.dia_semana === idx);
+                    const isActive = !!turno;
+                    
+                    return (
+                      <div key={idx} className={`flex items-center justify-between p-3 rounded-lg border ${isActive ? 'bg-white border-blue-200' : 'bg-slate-50 border-slate-200'}`}>
+                        <div className="flex items-center space-x-3">
+                          <Switch
+                            checked={isActive}
+                            onCheckedChange={() => toggleDiaTurno(idx)}
+                          />
+                          <span className={`text-sm font-medium ${isActive ? 'text-slate-800' : 'text-slate-500'}`}>
+                            {dia}
+                          </span>
+                        </div>
+                        
+                        {isActive && (
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              type="time"
+                              value={turno.hora_inicio}
+                              onChange={(e) => updateTurnoHora(idx, 'hora_inicio', e.target.value)}
+                              className="w-28 text-center"
+                            />
+                            <span className="text-slate-400">→</span>
+                            <Input
+                              type="time"
+                              value={turno.hora_fim}
+                              onChange={(e) => updateTurnoHora(idx, 'hora_fim', e.target.value)}
+                              className="w-28 text-center"
+                            />
+                          </div>
+                        )}
+                        
+                        {!isActive && (
+                          <Badge variant="outline" className="text-slate-400">Folga</Badge>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                <Button 
+                  onClick={handleSaveTurnos} 
+                  disabled={savingTurnos}
+                  className="w-full"
+                >
+                  {savingTurnos ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                  {savingTurnos ? 'A guardar...' : 'Guardar Turnos'}
+                </Button>
+                
+                {turnos?.valido_desde && (
+                  <p className="text-xs text-slate-500 text-center">
+                    Válido desde: {turnos.valido_desde}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
     </Layout>
