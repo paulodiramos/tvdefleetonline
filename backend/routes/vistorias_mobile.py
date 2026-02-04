@@ -80,7 +80,7 @@ async def criar_vistoria(
     data: VistoriaCreate,
     current_user: dict = Depends(get_current_user)
 ):
-    """Criar nova vistoria de entrada ou saída"""
+    """Criar nova vistoria de entrada ou saída com análise IA"""
     
     if current_user["role"] != "motorista":
         raise HTTPException(status_code=403, detail="Apenas motoristas podem criar vistorias")
@@ -91,7 +91,7 @@ async def criar_vistoria(
     # Buscar info do motorista e veículo
     motorista = await db.motoristas.find_one(
         {"id": motorista_id},
-        {"_id": 0, "name": 1, "veiculo_atribuido": 1}
+        {"_id": 0, "name": 1, "veiculo_atribuido": 1, "telefone": 1}
     )
     
     veiculo_matricula = None
@@ -111,6 +111,9 @@ async def criar_vistoria(
     vistoria_dir = VISTORIAS_UPLOAD_DIR / vistoria_id
     vistoria_dir.mkdir(parents=True, exist_ok=True)
     
+    # Análise IA
+    analise_ia = {"danos_detetados": [], "matricula_lida": None}
+    
     for foto_tipo, foto_base64 in data.fotos.items():
         if foto_base64:
             try:
@@ -126,6 +129,30 @@ async def criar_vistoria(
                     "url": f"/uploads/vistorias/{vistoria_id}/{foto_filename}",
                     "created_at": now.isoformat()
                 }
+                
+                # Análise IA das fotos exteriores
+                if foto_tipo in ['frente', 'traseira', 'lateral_esq', 'lateral_dir']:
+                    try:
+                        from services.vistoria_ia import analisar_danos_imagem
+                        resultado_ia = await analisar_danos_imagem(foto_base64, f"Foto: {foto_tipo}")
+                        if resultado_ia.get('danos_encontrados'):
+                            for dano in resultado_ia['danos_encontrados']:
+                                dano['foto_origem'] = foto_tipo
+                                analise_ia['danos_detetados'].append(dano)
+                        fotos_salvas[foto_tipo]['analise_ia'] = resultado_ia
+                    except Exception as e:
+                        logger.warning(f"Erro na análise IA de {foto_tipo}: {e}")
+                
+                # OCR da matrícula
+                if foto_tipo == 'frente' and not analise_ia.get('matricula_lida'):
+                    try:
+                        from services.vistoria_ia import ler_matricula_imagem
+                        resultado_ocr = await ler_matricula_imagem(foto_base64)
+                        if resultado_ocr.get('matricula'):
+                            analise_ia['matricula_lida'] = resultado_ocr
+                    except Exception as e:
+                        logger.warning(f"Erro no OCR: {e}")
+                        
             except Exception as e:
                 logger.warning(f"Erro ao salvar foto {foto_tipo}: {e}")
     
