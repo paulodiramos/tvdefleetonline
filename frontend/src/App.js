@@ -58,6 +58,7 @@ import VehiclePhotos from "@/pages/VehiclePhotos";
 import VehicleVistorias from "@/pages/VehicleVistorias";
 import Vistorias from "@/pages/Vistorias";
 import VistoriasMobile from "@/pages/VistoriasMobile";
+import GestaoInspetores from "@/pages/GestaoInspetores";
 import EditParceiro from "@/pages/EditParceiro";
 import RecibosPagamentos from "@/pages/RecibosPagamentos";
 import FichaVeiculo from "@/pages/FichaVeiculo";
