@@ -222,17 +222,28 @@ const PontoScreen = ({ user, status, setStatus }) => {
       return;
     }
     setEditingRegisto(reg);
-    setEditForm({ horaInicio: reg.hora_inicio, horaFim: reg.hora_fim === 'Em curso' ? '' : reg.hora_fim, justificacao: '' });
+    setEditForm({ 
+      horaInicio: reg.hora_inicio, 
+      horaFim: reg.hora_fim === 'Em curso' ? '' : reg.hora_fim, 
+      justificacao: '',
+      tipo: reg.tipo || 'trabalho'
+    });
     setShowEditModal(true);
   };
 
   const submitEdit = async () => {
     if (!editForm.horaInicio || !editForm.horaFim || !editForm.justificacao) { Alert.alert('Erro', 'Preencha todos os campos'); return; }
     try {
-      await api.post(`/ponto/registos/${editingRegisto.id}/editar`, { hora_inicio_real: editForm.horaInicio, hora_fim_real: editForm.horaFim, justificacao: editForm.justificacao });
+      await api.post(`/ponto/registos/${editingRegisto.id}/editar`, { 
+        hora_inicio_real: editForm.horaInicio, 
+        hora_fim_real: editForm.horaFim, 
+        justificacao: editForm.justificacao,
+        tipo: editForm.tipo
+      });
       Alert.alert('Sucesso', 'Registo atualizado');
       setShowEditModal(false);
       loadDiaRegistos(selectedDate);
+      loadData();
     } catch (e) { Alert.alert('Erro', e.message); }
   };
 
@@ -406,13 +417,17 @@ const PontoScreen = ({ user, status, setStatus }) => {
             <ScrollView style={{ maxHeight: 400 }}>
               {diaRegistos?.registos?.length === 0 && <Text style={styles.emptyText}>Sem registos</Text>}
               {diaRegistos?.registos?.map((reg, idx) => (
-                <View key={idx} style={styles.registoItem}>
+                <View key={idx} style={[styles.registoItem, reg.tipo === 'pessoal' && styles.registoItemPessoal]}>
                   <View style={styles.registoHeader}>
                     <Text style={styles.registoHoras}>{reg.hora_inicio} - {reg.hora_fim}</Text>
+                    {reg.tipo === 'pessoal' && <View style={[styles.badge, styles.badgePessoal]}><Text style={styles.badgeText}>Pessoal</Text></View>}
                     {reg.editado && <View style={styles.badge}><Text style={styles.badgeText}>Editado</Text></View>}
                     {reg.matricula && <Text style={styles.registoMatricula}>🚗 {reg.matricula}</Text>}
                   </View>
-                  <Text style={styles.registoTempo}>{reg.tempo_trabalho_formatado}</Text>
+                  <Text style={styles.registoTempo}>
+                    {reg.tempo_trabalho_formatado}
+                    {reg.tipo === 'pessoal' && <Text style={styles.registoPessoalNote}> (não conta)</Text>}
+                  </Text>
                   {reg.editado && <Text style={styles.registoEdit}>Real: {reg.hora_inicio_real} - {reg.hora_fim_real}</Text>}
                   {!reg.em_curso && definicoes?.permitir_edicao_registos && (
                     <TouchableOpacity style={styles.editBtn} onPress={() => handleEditRegisto(reg)}>
@@ -434,6 +449,27 @@ const PontoScreen = ({ user, status, setStatus }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Editar Registo</Text>
+            
+            {/* Tipo de Registo */}
+            <Text style={styles.inputLabel}>Tipo de Registo</Text>
+            <View style={styles.tipoSelector}>
+              <TouchableOpacity 
+                style={[styles.tipoBtn, editForm.tipo === 'trabalho' && styles.tipoBtnActive]} 
+                onPress={() => setEditForm({...editForm, tipo: 'trabalho'})}
+              >
+                <Text style={[styles.tipoBtnText, editForm.tipo === 'trabalho' && styles.tipoBtnTextActive]}>💼 Trabalho</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.tipoBtn, editForm.tipo === 'pessoal' && styles.tipoBtnPessoalActive]} 
+                onPress={() => setEditForm({...editForm, tipo: 'pessoal'})}
+              >
+                <Text style={[styles.tipoBtnText, editForm.tipo === 'pessoal' && styles.tipoBtnTextActive]}>🏠 Pessoal</Text>
+              </TouchableOpacity>
+            </View>
+            {editForm.tipo === 'pessoal' && (
+              <Text style={styles.tipoHint}>⚠️ Tempo pessoal não conta para horas de trabalho</Text>
+            )}
+            
             <View style={styles.timeRow}>
               <View style={styles.timeCol}>
                 <Text style={styles.inputLabel}>Início</Text>
@@ -465,11 +501,36 @@ const GanhosScreen = () => {
   const [ganhos, setGanhos] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [enviandoRecibo, setEnviandoRecibo] = useState(false);
+
+  const loadGanhos = async () => {
+    if (sel) {
+      const g = await api.get(`/ponto/ganhos-semana?semana=${sel.semana}&ano=${sel.ano}`);
+      setGanhos(g);
+    }
+  };
 
   useEffect(() => { (async () => { const d = await api.get('/ponto/semanas-disponiveis?num_semanas=12'); setSemanas(d.semanas); if (d.semanas.length) setSel(d.semanas[0]); })(); }, []);
-  useEffect(() => { if (sel) { setLoading(true); (async () => { const g = await api.get(`/ponto/ganhos-semana?semana=${sel.semana}&ano=${sel.ano}`); setGanhos(g); setLoading(false); })(); } }, [sel]);
+  useEffect(() => { if (sel) { setLoading(true); loadGanhos().then(() => setLoading(false)); } }, [sel]);
+
+  const enviarRecibo = async () => {
+    setEnviandoRecibo(true);
+    try {
+      await api.post('/documentos-motorista/recibo-semanal', { 
+        semana: sel.semana, 
+        ano: sel.ano,
+        valor_liquido: ganhos.valor_liquido
+      });
+      Alert.alert('Sucesso', 'Recibo enviado para aprovação!');
+      loadGanhos();
+    } catch (e) { Alert.alert('Erro', e.message); }
+    setEnviandoRecibo(false);
+  };
 
   if (loading && !ganhos) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
+
+  const reciboStatus = ganhos?.recibo_status || 'nao_enviado';
+  const podeMudar = reciboStatus === 'nao_enviado' || reciboStatus === 'rejeitado';
 
   return (
     <ScrollView style={styles.screen}>
@@ -479,22 +540,73 @@ const GanhosScreen = () => {
         <Text style={styles.semanaSelectorArrow}>▼</Text>
       </TouchableOpacity>
       {ganhos && (
-        <View style={styles.card}>
-          <View style={styles.ganhoBox}>
-            <Text style={styles.ganhoLabel}>Líquido</Text>
-            <Text style={[styles.ganhoValor, ganhos.valor_liquido >= 0 ? styles.positive : styles.negative]}>€{ganhos.valor_liquido.toFixed(2)}</Text>
+        <>
+          <View style={styles.card}>
+            <View style={styles.ganhoBox}>
+              <Text style={styles.ganhoLabel}>Líquido</Text>
+              <Text style={[styles.ganhoValor, ganhos.valor_liquido >= 0 ? styles.positive : styles.negative]}>€{ganhos.valor_liquido.toFixed(2)}</Text>
+            </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>💰 Ganhos: €{ganhos.ganhos.total.toFixed(2)}</Text>
+              <View style={styles.row}><Text style={styles.label}>Uber</Text><Text style={styles.value}>€{ganhos.ganhos.uber.toFixed(2)}</Text></View>
+              <View style={styles.row}><Text style={styles.label}>Bolt</Text><Text style={styles.value}>€{ganhos.ganhos.bolt.toFixed(2)}</Text></View>
+            </View>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>📉 Despesas: €{ganhos.despesas.total.toFixed(2)}</Text>
+              <View style={styles.row}><Text style={styles.label}>Via Verde</Text><Text style={styles.value}>€{ganhos.despesas.via_verde.toFixed(2)}</Text></View>
+              <View style={styles.row}><Text style={styles.label}>Combustível</Text><Text style={styles.value}>€{ganhos.despesas.combustivel.toFixed(2)}</Text></View>
+            </View>
           </View>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>💰 Ganhos: €{ganhos.ganhos.total.toFixed(2)}</Text>
-            <View style={styles.row}><Text style={styles.label}>Uber</Text><Text style={styles.value}>€{ganhos.ganhos.uber.toFixed(2)}</Text></View>
-            <View style={styles.row}><Text style={styles.label}>Bolt</Text><Text style={styles.value}>€{ganhos.ganhos.bolt.toFixed(2)}</Text></View>
+          
+          {/* Secção Recibo */}
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>📄 Recibo Semanal</Text>
+            
+            {reciboStatus === 'nao_enviado' && (
+              <View style={styles.reciboSection}>
+                <Text style={styles.reciboInfo}>Envie o recibo para confirmação do parceiro</Text>
+                <TouchableOpacity 
+                  style={[styles.reciboBtn, enviandoRecibo && styles.btnDisabled]} 
+                  onPress={enviarRecibo}
+                  disabled={enviandoRecibo}
+                >
+                  <Text style={styles.reciboBtnText}>{enviandoRecibo ? 'A enviar...' : '📤 Enviar Recibo'}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+            
+            {reciboStatus === 'pendente' && (
+              <View style={[styles.reciboStatus, styles.reciboStatusPendente]}>
+                <Text style={styles.reciboStatusIcon}>⏳</Text>
+                <Text style={styles.reciboStatusText}>Recibo enviado - Aguarda aprovação</Text>
+              </View>
+            )}
+            
+            {reciboStatus === 'aprovado' && (
+              <View style={[styles.reciboStatus, styles.reciboStatusAprovado]}>
+                <Text style={styles.reciboStatusIcon}>✅</Text>
+                <Text style={styles.reciboStatusText}>Recibo aprovado e pago</Text>
+              </View>
+            )}
+            
+            {reciboStatus === 'rejeitado' && (
+              <View style={styles.reciboSection}>
+                <View style={[styles.reciboStatus, styles.reciboStatusRejeitado]}>
+                  <Text style={styles.reciboStatusIcon}>❌</Text>
+                  <Text style={styles.reciboStatusText}>Recibo rejeitado</Text>
+                </View>
+                {ganhos.recibo_motivo && <Text style={styles.reciboMotivo}>Motivo: {ganhos.recibo_motivo}</Text>}
+                <TouchableOpacity 
+                  style={[styles.reciboBtn, enviandoRecibo && styles.btnDisabled]} 
+                  onPress={enviarRecibo}
+                  disabled={enviandoRecibo}
+                >
+                  <Text style={styles.reciboBtnText}>{enviandoRecibo ? 'A enviar...' : '🔄 Reenviar Recibo'}</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>📉 Despesas: €{ganhos.despesas.total.toFixed(2)}</Text>
-            <View style={styles.row}><Text style={styles.label}>Via Verde</Text><Text style={styles.value}>€{ganhos.despesas.via_verde.toFixed(2)}</Text></View>
-            <View style={styles.row}><Text style={styles.label}>Combustível</Text><Text style={styles.value}>€{ganhos.despesas.combustivel.toFixed(2)}</Text></View>
-          </View>
-        </View>
+        </>
       )}
       <Modal visible={showModal} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
@@ -516,13 +628,24 @@ const GanhosScreen = () => {
 };
 
 // ===== TICKETS SCREEN =====
+const CATEGORIAS = [
+  { id: 'pagamentos', icon: '💳', label: 'Pagamentos', color: '#3b82f6' },
+  { id: 'tecnico', icon: '🔧', label: 'Técnico', color: '#8b5cf6' },
+  { id: 'esclarecimentos', icon: '❓', label: 'Esclarecimentos', color: '#06b6d4' },
+  { id: 'relatorios', icon: '📊', label: 'Relatórios', color: '#10b981' },
+  { id: 'acidente', icon: '🚨', label: 'Acidente', color: '#dc2626' },
+  { id: 'avaria', icon: '🛠️', label: 'Avaria', color: '#d97706' },
+  { id: 'outro', icon: '📝', label: 'Outro', color: '#64748b' },
+];
+
 const TicketsScreen = ({ user }) => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
-  const [form, setForm] = useState({ titulo: '', categoria: 'outro', descricao: '' });
+  const [form, setForm] = useState({ titulo: '', categoria: 'esclarecimentos', descricao: '', anexos: [] });
   const [sel, setSel] = useState(null);
   const [msg, setMsg] = useState('');
+  const [showCategorias, setShowCategorias] = useState(false);
 
   useEffect(() => { (async () => { setTickets(await api.get('/tickets/meus')); setLoading(false); })(); }, []);
 
@@ -530,8 +653,11 @@ const TicketsScreen = ({ user }) => {
     if (!form.titulo || !form.descricao) { Alert.alert('Erro', 'Preencha os campos'); return; }
     await api.post('/tickets/criar', form);
     setModal(false);
+    setForm({ titulo: '', categoria: 'esclarecimentos', descricao: '', anexos: [] });
     setTickets(await api.get('/tickets/meus'));
   };
+
+  const getCategoriaInfo = (catId) => CATEGORIAS.find(c => c.id === catId) || CATEGORIAS[CATEGORIAS.length - 1];
 
   if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#3b82f6" /></View>;
 
@@ -542,6 +668,7 @@ const TicketsScreen = ({ user }) => {
         {sel.mensagens?.map((m, i) => (
           <View key={i} style={[styles.message, m.autor_id === user.id ? styles.messageOwn : styles.messageOther]}>
             <Text style={styles.messageText}>{m.conteudo}</Text>
+            {m.anexo && <Text style={styles.messageAnexo}>📎 Anexo</Text>}
           </View>
         ))}
       </ScrollView>
@@ -562,30 +689,91 @@ const TicketsScreen = ({ user }) => {
         <Text style={styles.screenTitle}>Suporte</Text>
         <TouchableOpacity style={styles.addBtn} onPress={() => setModal(true)}><Text style={styles.addBtnText}>+ Novo</Text></TouchableOpacity>
       </View>
+      
+      {/* Botões Urgentes */}
       <View style={styles.urgentBtns}>
-        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#dc2626' }]} onPress={() => { setForm({ titulo: 'Acidente', categoria: 'acidente', descricao: '' }); setModal(true); }}>
+        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#dc2626' }]} onPress={() => { setForm({ ...form, titulo: 'Acidente', categoria: 'acidente' }); setModal(true); }}>
           <Text style={styles.urgentBtnText}>🚨 Acidente</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#d97706' }]} onPress={() => { setForm({ titulo: 'Avaria', categoria: 'avaria', descricao: '' }); setModal(true); }}>
-          <Text style={styles.urgentBtnText}>🔧 Avaria</Text>
+        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#d97706' }]} onPress={() => { setForm({ ...form, titulo: 'Avaria', categoria: 'avaria' }); setModal(true); }}>
+          <Text style={styles.urgentBtnText}>🛠️ Avaria</Text>
         </TouchableOpacity>
       </View>
-      <ScrollView>
-        {tickets.map(t => (
-          <TouchableOpacity key={t.id} style={styles.ticketCard} onPress={() => setSel(t)}>
-            <Text style={styles.ticketNumero}>#{t.numero}</Text>
-            <Text style={styles.ticketTitulo}>{t.titulo}</Text>
+      
+      {/* Categorias Rápidas */}
+      <View style={styles.categoriasGrid}>
+        {CATEGORIAS.filter(c => !['acidente', 'avaria'].includes(c.id)).map(cat => (
+          <TouchableOpacity 
+            key={cat.id} 
+            style={[styles.categoriaQuick, { borderColor: cat.color }]}
+            onPress={() => { setForm({ ...form, categoria: cat.id }); setModal(true); }}
+          >
+            <Text style={styles.categoriaQuickIcon}>{cat.icon}</Text>
+            <Text style={styles.categoriaQuickLabel}>{cat.label}</Text>
           </TouchableOpacity>
         ))}
+      </View>
+      
+      {/* Lista de Tickets */}
+      <Text style={styles.ticketListTitle}>Meus Tickets</Text>
+      <ScrollView>
+        {tickets.length === 0 && <Text style={styles.emptyText}>Sem tickets</Text>}
+        {tickets.map(t => {
+          const cat = getCategoriaInfo(t.categoria);
+          return (
+            <TouchableOpacity key={t.id} style={styles.ticketCard} onPress={() => setSel(t)}>
+              <View style={styles.ticketHeader}>
+                <View style={[styles.ticketCategoria, { backgroundColor: cat.color }]}>
+                  <Text style={styles.ticketCategoriaText}>{cat.icon} {cat.label}</Text>
+                </View>
+                <Text style={styles.ticketNumero}>#{t.numero}</Text>
+              </View>
+              <Text style={styles.ticketTitulo}>{t.titulo}</Text>
+              {t.tem_anexos && <Text style={styles.ticketAnexos}>📎 Com anexos</Text>}
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
+      
+      {/* Modal Novo Ticket */}
       <Modal visible={modal} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { maxHeight: '90%' }]}>
             <Text style={styles.modalTitle}>Novo Ticket</Text>
+            
+            {/* Selector de Categoria */}
+            <Text style={styles.inputLabel}>Categoria</Text>
+            <TouchableOpacity style={styles.categoriaSelector} onPress={() => setShowCategorias(!showCategorias)}>
+              <Text style={styles.categoriaSelectorText}>
+                {getCategoriaInfo(form.categoria).icon} {getCategoriaInfo(form.categoria).label}
+              </Text>
+              <Text style={styles.categoriaSelectorArrow}>{showCategorias ? '▲' : '▼'}</Text>
+            </TouchableOpacity>
+            
+            {showCategorias && (
+              <View style={styles.categoriasList}>
+                {CATEGORIAS.map(cat => (
+                  <TouchableOpacity 
+                    key={cat.id} 
+                    style={[styles.categoriaItem, form.categoria === cat.id && { backgroundColor: cat.color + '20' }]}
+                    onPress={() => { setForm({...form, categoria: cat.id}); setShowCategorias(false); }}
+                  >
+                    <Text style={styles.categoriaItemText}>{cat.icon} {cat.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+            
             <TextInput style={styles.input} placeholder="Título" placeholderTextColor="#64748b" value={form.titulo} onChangeText={t => setForm({...form, titulo: t})} />
-            <TextInput style={[styles.input, { height: 100 }]} placeholder="Descrição..." placeholderTextColor="#64748b" value={form.descricao} onChangeText={t => setForm({...form, descricao: t})} multiline />
+            <TextInput style={[styles.input, { height: 100 }]} placeholder="Descrição detalhada..." placeholderTextColor="#64748b" value={form.descricao} onChangeText={t => setForm({...form, descricao: t})} multiline />
+            
+            {/* Info sobre anexos */}
+            <View style={styles.anexoInfo}>
+              <Text style={styles.anexoInfoText}>📎 Pode anexar fotos/PDF após criar o ticket</Text>
+            </View>
+            
             <View style={styles.modalButtons}>
-              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => setModal(false)}><Text style={styles.modalBtnCancelText}>Cancelar</Text></TouchableOpacity>
+              <TouchableOpacity style={[styles.modalBtn, styles.modalBtnCancel]} onPress={() => { setModal(false); setShowCategorias(false); }}><Text style={styles.modalBtnCancelText}>Cancelar</Text></TouchableOpacity>
               <TouchableOpacity style={[styles.modalBtn, styles.modalBtnConfirm]} onPress={criar}><Text style={styles.modalBtnConfirmText}>Criar</Text></TouchableOpacity>
             </View>
           </View>
@@ -902,4 +1090,47 @@ const styles = StyleSheet.create({
   gpsNoText: { color: '#94a3b8', fontWeight: '600' },
   gpsYes: { flex: 1, padding: 16, borderRadius: 12, backgroundColor: '#3b82f6', alignItems: 'center' },
   gpsYesText: { color: '#fff', fontWeight: '600' },
+  // Tipo selector styles
+  tipoSelector: { flexDirection: 'row', gap: 12, marginBottom: 16 },
+  tipoBtn: { flex: 1, padding: 14, borderRadius: 12, backgroundColor: '#0f172a', alignItems: 'center', borderWidth: 2, borderColor: '#334155' },
+  tipoBtnActive: { borderColor: '#22c55e', backgroundColor: '#22c55e20' },
+  tipoBtnPessoalActive: { borderColor: '#f59e0b', backgroundColor: '#f59e0b20' },
+  tipoBtnText: { color: '#94a3b8', fontWeight: '600' },
+  tipoBtnTextActive: { color: '#fff' },
+  tipoHint: { color: '#f59e0b', fontSize: 12, marginBottom: 16, textAlign: 'center' },
+  // Registo pessoal styles
+  registoItemPessoal: { backgroundColor: '#1c1917', borderLeftWidth: 3, borderLeftColor: '#f59e0b' },
+  badgePessoal: { backgroundColor: '#f59e0b' },
+  registoPessoalNote: { color: '#f59e0b', fontSize: 12 },
+  // Recibo styles
+  reciboSection: { alignItems: 'center' },
+  reciboInfo: { color: '#94a3b8', fontSize: 13, marginBottom: 12, textAlign: 'center' },
+  reciboBtn: { backgroundColor: '#3b82f6', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 12 },
+  reciboBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  reciboStatus: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, width: '100%', justifyContent: 'center' },
+  reciboStatusPendente: { backgroundColor: '#78350f' },
+  reciboStatusAprovado: { backgroundColor: '#14532d' },
+  reciboStatusRejeitado: { backgroundColor: '#7f1d1d' },
+  reciboStatusIcon: { fontSize: 24, marginRight: 12 },
+  reciboStatusText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  reciboMotivo: { color: '#fca5a5', fontSize: 12, marginTop: 8, marginBottom: 12, textAlign: 'center' },
+  // Ticket categorias styles
+  categoriasGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  categoriaQuick: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 8, backgroundColor: '#1e293b', borderWidth: 1, flexDirection: 'row', alignItems: 'center' },
+  categoriaQuickIcon: { fontSize: 14, marginRight: 6 },
+  categoriaQuickLabel: { color: '#fff', fontSize: 12, fontWeight: '500' },
+  ticketListTitle: { color: '#64748b', fontSize: 12, fontWeight: '600', marginBottom: 8, textTransform: 'uppercase' },
+  ticketHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  ticketCategoria: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
+  ticketCategoriaText: { color: '#fff', fontSize: 11, fontWeight: '600' },
+  ticketAnexos: { color: '#64748b', fontSize: 11, marginTop: 4 },
+  categoriaSelector: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f172a', padding: 14, borderRadius: 12, marginBottom: 12 },
+  categoriaSelectorText: { color: '#fff', fontSize: 16 },
+  categoriaSelectorArrow: { color: '#64748b' },
+  categoriasList: { backgroundColor: '#0f172a', borderRadius: 12, marginBottom: 16, maxHeight: 200 },
+  categoriaItem: { padding: 14, borderBottomWidth: 1, borderBottomColor: '#1e293b' },
+  categoriaItemText: { color: '#fff', fontSize: 14 },
+  anexoInfo: { backgroundColor: '#0f172a', padding: 12, borderRadius: 8, marginBottom: 8 },
+  anexoInfoText: { color: '#64748b', fontSize: 12, textAlign: 'center' },
+  messageAnexo: { color: '#93c5fd', fontSize: 11, marginTop: 4 },
 });
