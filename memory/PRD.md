@@ -5,30 +5,29 @@ Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de ges
 
 ## ✅ Extração CSV Rendimentos Uber (04/02/2026)
 
-### Funcionalidades Implementadas
-1. **Página ConfiguracaoUber.js atualizada**
-   - Dropdown para selecionar semana (atual, passada, 2-4 semanas atrás)
-   - Botão "Extrair Rendimentos Uber" 
-   - Exibição de resultados: total motoristas, valor total, lista detalhada
-   - Histórico das últimas 5 importações
+### Separação de Responsabilidades (Segurança)
 
-2. **Novo Endpoint Backend**
-   - `POST /api/rpa/uber/extrair-rendimentos/{parceiro_id}` 
-   - Parâmetros: data_inicio, data_fim, semana_index
-   - Navega para página Rendimentos, clica no botão "Fazer o download do relatório"
-   - Processa CSV e guarda na coleção `importacoes_uber`
+**Parceiro** → Nova página `/minha-configuracao-uber`:
+- Configurar credenciais Uber (email, password, telefone)
+- Fazer login manual quando houver CAPTCHA
+- Ver status da sessão (ativa/expirada)
+- Testar sessão
 
-3. **Endpoint de Histórico**
-   - `GET /api/rpa/uber/historico/{parceiro_id}` - últimas 20 importações
+**Admin** → Página `/configuracao-uber`:
+- Ver todos os parceiros e status das sessões
+- Executar extração de rendimentos (CSV)
+- Ver histórico de importações
 
-### Fluxo de Uso
-1. Admin acede a Configuração Uber
-2. Seleciona parceiro (ex: Conde Fernando)
-3. Faz login manual se sessão expirada
-4. Seleciona semana desejada
-5. Clica "Extrair Rendimentos Uber"
-6. Sistema navega no portal, descarrega CSV, processa dados
-7. Resultados mostrados na interface
+### Endpoints Backend para Parceiros
+- `GET /api/rpa/uber/minhas-credenciais` - Obtém credenciais próprias
+- `POST /api/rpa/uber/minhas-credenciais` - Guarda credenciais
+- `GET /api/rpa/uber/minha-sessao-status` - Estado da sessão
+- `POST /api/rpa/uber/meu-login` - Iniciar login
+- `POST /api/rpa/uber/meu-confirmar-sms` - Confirmar SMS
+- `POST /api/rpa/uber/meu-testar` - Testar sessão
+
+### Ficheiros Criados
+- `/app/frontend/src/pages/ConfiguracaoUberParceiro.js` - Nova página parceiros
 
 ## ✅ Correção Menu Configuração Uber (04/02/2026)
 
