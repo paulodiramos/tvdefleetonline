@@ -1151,6 +1151,180 @@ async def verificar_pode_iniciar(
     return await verificar_pode_iniciar_turno(current_user["id"])
 
 
+# ============ ENDPOINTS PARA PARCEIROS/GESTORES ============
+
+@router.get("/definicoes/{motorista_id}")
+async def get_definicoes_motorista(
+    motorista_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter definições de ponto de um motorista específico (para parceiro/gestor)"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Verificar acesso do parceiro
+    if current_user["role"] == "parceiro":
+        motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+        if not motorista or motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Motorista não pertence a este parceiro")
+    
+    # Buscar definições
+    definicoes = await db.definicoes_motorista.find_one(
+        {"motorista_id": motorista_id},
+        {"_id": 0}
+    )
+    
+    if not definicoes:
+        definicoes = {
+            "motorista_id": motorista_id,
+            "limite_horas_diarias": DEFAULT_HORAS_MAXIMAS,
+            "periodo_descanso_minimo": DEFAULT_ESPACAMENTO_HORAS,
+            "permitir_edicao_registos": True,
+            "pode_alterar_limite": False
+        }
+    else:
+        # Mapear campos para o frontend
+        definicoes = {
+            "motorista_id": motorista_id,
+            "limite_horas_diarias": definicoes.get("horas_maximas", DEFAULT_HORAS_MAXIMAS),
+            "periodo_descanso_minimo": definicoes.get("espacamento_horas", DEFAULT_ESPACAMENTO_HORAS),
+            "permitir_edicao_registos": definicoes.get("permitir_edicao_registos", True),
+            "pode_alterar_limite": definicoes.get("pode_alterar_limite", False)
+        }
+    
+    return definicoes
+
+
+@router.get("/resumo-motorista/{motorista_id}")
+async def get_resumo_ponto_motorista(
+    motorista_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter resumo de ponto de um motorista específico (para parceiro/gestor)"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Verificar acesso
+    if current_user["role"] == "parceiro":
+        motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+        if not motorista or motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Motorista não pertence a este parceiro")
+    
+    now = datetime.now(timezone.utc)
+    
+    # Calcular horas 24h
+    horas_24h = await calcular_horas_ultimas_24h(motorista_id)
+    
+    # Calcular horas da semana
+    inicio_semana = now - timedelta(days=now.weekday())
+    inicio_semana = inicio_semana.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    registos_semana = await db.registos_ponto.find({
+        "user_id": motorista_id,
+        "check_in": {"$gte": inicio_semana.isoformat()},
+        "$or": [{"tipo": {"$exists": False}}, {"tipo": "trabalho"}, {"tipo": None}]
+    }, {"_id": 0}).to_list(100)
+    
+    total_minutos_semana = 0
+    for reg in registos_semana:
+        if reg.get("check_out"):
+            tempo = reg.get("tempo_trabalho_minutos_editado") or reg.get("tempo_trabalho_minutos", 0)
+            total_minutos_semana += tempo
+    
+    # Verificar estado atual
+    registo_ativo = await db.registos_ponto.find_one({
+        "user_id": motorista_id,
+        "check_out": None
+    }, {"_id": 0})
+    
+    estado = "offline"
+    turno_inicio = None
+    if registo_ativo:
+        estado = "paused" if registo_ativo.get("pausas") and any(p.get("fim") is None for p in registo_ativo.get("pausas", [])) else "working"
+        check_in = datetime.fromisoformat(registo_ativo["check_in"].replace("Z", "+00:00"))
+        turno_inicio = check_in.strftime("%H:%M")
+    
+    # Últimos 5 registos
+    ultimos = await db.registos_ponto.find({
+        "user_id": motorista_id
+    }, {"_id": 0}).sort("check_in", -1).limit(5).to_list(5)
+    
+    ultimos_formatados = []
+    for reg in ultimos:
+        check_in = datetime.fromisoformat(reg["check_in"].replace("Z", "+00:00"))
+        duracao = reg.get("tempo_trabalho_minutos_editado") or reg.get("tempo_trabalho_minutos", 0)
+        ultimos_formatados.append({
+            "data": check_in.strftime("%d/%m"),
+            "hora_inicio": check_in.strftime("%H:%M"),
+            "hora_fim": datetime.fromisoformat(reg["check_out"].replace("Z", "+00:00")).strftime("%H:%M") if reg.get("check_out") else None,
+            "duracao": f"{int(duracao // 60)}h {int(duracao % 60)}m",
+            "tipo": reg.get("tipo", "trabalho")
+        })
+    
+    return {
+        "horas_24h": horas_24h["total_formatado"],
+        "horas_semana": f"{int(total_minutos_semana // 60)}h {int(total_minutos_semana % 60)}m",
+        "estado": estado,
+        "turno_inicio": turno_inicio,
+        "ultimos_registos": ultimos_formatados
+    }
+
+
+@router.post("/parceiro/configurar-permissoes")
+async def configurar_permissoes_motorista(
+    data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Parceiro/gestor configura permissões de um motorista"""
+    
+    if current_user["role"] not in ["admin", "gestao", "parceiro"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    motorista_id = data.get("motorista_id")
+    if not motorista_id:
+        raise HTTPException(status_code=400, detail="motorista_id é obrigatório")
+    
+    # Verificar acesso
+    if current_user["role"] == "parceiro":
+        motorista = await db.motoristas.find_one({"id": motorista_id}, {"_id": 0})
+        if not motorista or motorista.get("parceiro_atribuido") != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Motorista não pertence a este parceiro")
+    
+    now = datetime.now(timezone.utc)
+    
+    # Preparar dados para atualizar
+    update_data = {
+        "motorista_id": motorista_id,
+        "updated_at": now.isoformat(),
+        "updated_by": current_user["id"]
+    }
+    
+    if "limite_horas_diarias" in data:
+        update_data["horas_maximas"] = data["limite_horas_diarias"]
+    if "periodo_descanso_minimo" in data:
+        update_data["espacamento_horas"] = data["periodo_descanso_minimo"]
+    if "permitir_edicao_registos" in data:
+        update_data["permitir_edicao_registos"] = data["permitir_edicao_registos"]
+    if "pode_alterar_limite" in data:
+        update_data["pode_alterar_limite"] = data["pode_alterar_limite"]
+    
+    # Upsert
+    await db.definicoes_motorista.update_one(
+        {"motorista_id": motorista_id},
+        {"$set": update_data, "$setOnInsert": {"created_at": now.isoformat()}},
+        upsert=True
+    )
+    
+    logger.info(f"Permissões atualizadas para motorista {motorista_id} por {current_user['id']}")
+    
+    return {
+        "success": True,
+        "message": "Configurações guardadas"
+    }
+
+
 # ============ CONSULTA DETALHADA DE REGISTOS ============
 
 @router.get("/registos-dia/{data}")
