@@ -1144,6 +1144,109 @@ const TicketsScreen = ({ user }) => {
     </KeyboardAvoidingView>
   );
 
+  // Aceitar ou rejeitar vistoria
+  const handleAceitarVistoria = async (vistoriaId, aceitar) => {
+    try {
+      await api.post(`/vistorias/${vistoriaId}/confirmar-motorista`, { aceitar });
+      Alert.alert('Sucesso', aceitar ? 'Vistoria aceite!' : 'Vistoria rejeitada');
+      setVistoriaSelecionada(null);
+      loadData();
+    } catch (e) { Alert.alert('Erro', e.message); }
+  };
+
+  // Modal de detalhe da vistoria para aceitar
+  if (vistoriaSelecionada) {
+    return (
+      <ScrollView style={styles.screen}>
+        <TouchableOpacity onPress={() => setVistoriaSelecionada(null)}>
+          <Text style={styles.backBtn}>← Voltar</Text>
+        </TouchableOpacity>
+        
+        <Text style={styles.screenTitle}>📋 Relatório de Vistoria</Text>
+        <Text style={styles.vistoriaInfo}>
+          {vistoriaSelecionada.tipo === 'entrada' ? '📥 Entrada' : '📤 Saída'} - {vistoriaSelecionada.data}
+        </Text>
+        
+        {/* Info do Veículo */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>🚗 Veículo</Text>
+          <Text style={styles.vistoriaDetalhe}>Matrícula: {vistoriaSelecionada.veiculo_matricula || 'N/A'}</Text>
+          <Text style={styles.vistoriaDetalhe}>Quilometragem: {vistoriaSelecionada.km?.toLocaleString()} km</Text>
+          <Text style={styles.vistoriaDetalhe}>Combustível: {vistoriaSelecionada.nivel_combustivel}%</Text>
+        </View>
+        
+        {/* Danos Detetados */}
+        {vistoriaSelecionada.danos && vistoriaSelecionada.danos.length > 0 && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>⚠️ Danos Registados ({vistoriaSelecionada.danos.length})</Text>
+            {vistoriaSelecionada.danos.map((d, i) => (
+              <View key={i} style={styles.danoItem}>
+                <Text style={styles.danoTipo}>{d.tipo}</Text>
+                <Text style={styles.danoDesc}>{d.descricao || 'Sem descrição'}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+        
+        {/* Análise IA */}
+        {vistoriaSelecionada.analise_ia && (
+          <View style={[styles.card, { borderLeftWidth: 3, borderLeftColor: '#8b5cf6' }]}>
+            <Text style={styles.cardTitle}>🤖 Análise Automática (IA)</Text>
+            {vistoriaSelecionada.analise_ia.danos_detetados?.length > 0 ? (
+              vistoriaSelecionada.analise_ia.danos_detetados.map((d, i) => (
+                <Text key={i} style={styles.vistoriaDetalhe}>• {d.tipo}: {d.descricao}</Text>
+              ))
+            ) : (
+              <Text style={[styles.vistoriaDetalhe, { color: '#22c55e' }]}>✅ Sem danos detetados</Text>
+            )}
+          </View>
+        )}
+        
+        {/* Observações */}
+        {vistoriaSelecionada.observacoes && (
+          <View style={styles.card}>
+            <Text style={styles.cardTitle}>📝 Observações</Text>
+            <Text style={styles.vistoriaDetalhe}>{vistoriaSelecionada.observacoes}</Text>
+          </View>
+        )}
+        
+        {/* Inspetor */}
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>👤 Inspetor</Text>
+          <Text style={styles.vistoriaDetalhe}>{vistoriaSelecionada.inspetor_nome || 'N/A'}</Text>
+          <Text style={styles.vistoriaDetalhe}>{vistoriaSelecionada.created_at}</Text>
+        </View>
+        
+        {/* Botões de Ação */}
+        <View style={styles.vistoriaActions}>
+          <TouchableOpacity 
+            style={[styles.actionBtnLarge, { backgroundColor: '#ef4444' }]}
+            onPress={() => Alert.alert(
+              'Rejeitar Vistoria',
+              'Tem a certeza que deseja rejeitar esta vistoria? Será notificado o parceiro.',
+              [
+                { text: 'Cancelar', style: 'cancel' },
+                { text: 'Rejeitar', style: 'destructive', onPress: () => handleAceitarVistoria(vistoriaSelecionada.id, false) }
+              ]
+            )}
+          >
+            <Text style={styles.actionBtnLargeText}>✗ Rejeitar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.actionBtnLarge, { backgroundColor: '#22c55e' }]}
+            onPress={() => handleAceitarVistoria(vistoriaSelecionada.id, true)}
+          >
+            <Text style={styles.actionBtnLargeText}>✓ Aceitar</Text>
+          </TouchableOpacity>
+        </View>
+        
+        <Text style={styles.aceitarAviso}>
+          Ao aceitar, confirma que concorda com os dados da vistoria. O relatório será enviado para o seu email.
+        </Text>
+      </ScrollView>
+    );
+  }
+
   return (
     <View style={styles.screen}>
       <View style={styles.headerRow}>
@@ -1151,50 +1254,106 @@ const TicketsScreen = ({ user }) => {
         <TouchableOpacity style={styles.addBtn} onPress={() => setModal(true)}><Text style={styles.addBtnText}>+ Novo</Text></TouchableOpacity>
       </View>
       
-      {/* Botões Urgentes */}
-      <View style={styles.urgentBtns}>
-        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#dc2626' }]} onPress={() => { setForm({ titulo: 'Acidente', categoria: 'acidente', descricao: '', fotos: [] }); setModal(true); }}>
-          <Text style={styles.urgentBtnText}>🚨 Acidente</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#d97706' }]} onPress={() => { setForm({ titulo: 'Avaria', categoria: 'avaria', descricao: '', fotos: [] }); setModal(true); }}>
-          <Text style={styles.urgentBtnText}>🛠️ Avaria</Text>
-        </TouchableOpacity>
-      </View>
-      
-      {/* Categorias Rápidas */}
-      <View style={styles.categoriasGrid}>
-        {CATEGORIAS.filter(c => !['acidente', 'avaria'].includes(c.id)).map(cat => (
+      {/* Tabs para Motorista: Vistorias Pendentes / Tickets */}
+      {user.role === 'motorista' && vistoriasPendentes.length > 0 && (
+        <View style={styles.sectionTabs}>
           <TouchableOpacity 
-            key={cat.id} 
-            style={[styles.categoriaQuick, { borderColor: cat.color }]}
-            onPress={() => { setForm({ ...form, categoria: cat.id }); setModal(true); }}
+            style={[styles.sectionTab, activeSection === 'vistorias' && styles.sectionTabActive]}
+            onPress={() => setActiveSection('vistorias')}
           >
-            <Text style={styles.categoriaQuickIcon}>{cat.icon}</Text>
-            <Text style={styles.categoriaQuickLabel}>{cat.label}</Text>
+            <Text style={[styles.sectionTabText, activeSection === 'vistorias' && styles.sectionTabTextActive]}>
+              🔍 Vistorias ({vistoriasPendentes.length})
+            </Text>
           </TouchableOpacity>
-        ))}
-      </View>
+          <TouchableOpacity 
+            style={[styles.sectionTab, activeSection === 'tickets' && styles.sectionTabActive]}
+            onPress={() => setActiveSection('tickets')}
+          >
+            <Text style={[styles.sectionTabText, activeSection === 'tickets' && styles.sectionTabTextActive]}>
+              🎫 Tickets ({tickets.length})
+            </Text>
+          </TouchableOpacity>
+        </View>
+      )}
       
-      {/* Lista de Tickets */}
-      <Text style={styles.ticketListTitle}>Meus Tickets</Text>
-      <ScrollView>
-        {tickets.length === 0 && <Text style={styles.emptyText}>Sem tickets</Text>}
-        {tickets.map(t => {
-          const cat = getCategoriaInfo(t.categoria);
-          return (
-            <TouchableOpacity key={t.id} style={styles.ticketCard} onPress={() => setSel(t)}>
-              <View style={styles.ticketHeader}>
-                <View style={[styles.ticketCategoria, { backgroundColor: cat.color }]}>
-                  <Text style={styles.ticketCategoriaText}>{cat.icon} {cat.label}</Text>
+      {/* Vistorias Pendentes de Aceitação */}
+      {user.role === 'motorista' && activeSection === 'vistorias' && vistoriasPendentes.length > 0 && (
+        <View style={styles.vistoriasPendentesSection}>
+          <Text style={styles.vistoriasPendentesTitle}>⚠️ Vistorias a Confirmar</Text>
+          <Text style={styles.vistoriasPendentesSubtitle}>Reveja e aceite as vistorias realizadas ao seu veículo</Text>
+          <ScrollView>
+            {vistoriasPendentes.map(v => (
+              <TouchableOpacity 
+                key={v.id} 
+                style={styles.vistoriaPendenteCard}
+                onPress={() => setVistoriaSelecionada(v)}
+              >
+                <View style={styles.vistoriaPendenteHeader}>
+                  <Text style={styles.vistoriaPendenteTipo}>
+                    {v.tipo === 'entrada' ? '📥 Entrada' : '📤 Saída'}
+                  </Text>
+                  <Text style={styles.vistoriaPendenteData}>{v.data}</Text>
                 </View>
-                <Text style={styles.ticketNumero}>#{t.numero}</Text>
-              </View>
-              <Text style={styles.ticketTitulo}>{t.titulo}</Text>
-              {t.tem_anexos && <Text style={styles.ticketAnexos}>📎 Com anexos</Text>}
+                <Text style={styles.vistoriaPendenteVeiculo}>🚗 {v.veiculo_matricula || 'Veículo'}</Text>
+                {v.danos && v.danos.length > 0 && (
+                  <Text style={styles.vistoriaPendenteDanos}>⚠️ {v.danos.length} dano(s) registado(s)</Text>
+                )}
+                <Text style={styles.vistoriaPendenteAction}>Toque para ver relatório →</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+      
+      {/* Conteúdo de Tickets (apenas se secção ativa for tickets ou não houver vistorias) */}
+      {(activeSection === 'tickets' || vistoriasPendentes.length === 0) && (
+        <>
+          {/* Botões Urgentes */}
+          <View style={styles.urgentBtns}>
+            <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#dc2626' }]} onPress={() => { setForm({ titulo: 'Acidente', categoria: 'acidente', descricao: '', fotos: [] }); setModal(true); }}>
+              <Text style={styles.urgentBtnText}>🚨 Acidente</Text>
             </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+            <TouchableOpacity style={[styles.urgentBtn, { backgroundColor: '#d97706' }]} onPress={() => { setForm({ titulo: 'Avaria', categoria: 'avaria', descricao: '', fotos: [] }); setModal(true); }}>
+              <Text style={styles.urgentBtnText}>🛠️ Avaria</Text>
+            </TouchableOpacity>
+          </View>
+          
+          {/* Categorias Rápidas */}
+          <View style={styles.categoriasGrid}>
+            {CATEGORIAS.filter(c => !['acidente', 'avaria'].includes(c.id)).map(cat => (
+              <TouchableOpacity 
+                key={cat.id} 
+                style={[styles.categoriaQuick, { borderColor: cat.color }]}
+                onPress={() => { setForm({ ...form, categoria: cat.id }); setModal(true); }}
+              >
+                <Text style={styles.categoriaQuickIcon}>{cat.icon}</Text>
+                <Text style={styles.categoriaQuickLabel}>{cat.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          
+          {/* Lista de Tickets */}
+          <Text style={styles.ticketListTitle}>Meus Tickets</Text>
+          <ScrollView>
+            {tickets.length === 0 && <Text style={styles.emptyText}>Sem tickets</Text>}
+            {tickets.map(t => {
+              const cat = getCategoriaInfo(t.categoria);
+              return (
+                <TouchableOpacity key={t.id} style={styles.ticketCard} onPress={() => setSel(t)}>
+                  <View style={styles.ticketHeader}>
+                    <View style={[styles.ticketCategoria, { backgroundColor: cat.color }]}>
+                      <Text style={styles.ticketCategoriaText}>{cat.icon} {cat.label}</Text>
+                    </View>
+                    <Text style={styles.ticketNumero}>#{t.numero}</Text>
+                  </View>
+                  <Text style={styles.ticketTitulo}>{t.titulo}</Text>
+                  {t.tem_anexos && <Text style={styles.ticketAnexos}>📎 Com anexos</Text>}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </>
+      )}
       
       {/* Modal Novo Ticket */}
       <Modal visible={modal} animationType="slide" transparent={true}>
