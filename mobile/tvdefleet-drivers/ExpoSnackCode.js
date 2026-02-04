@@ -236,18 +236,70 @@ const PontoScreen = ({ user, status, setStatus }) => {
     } catch (e) { Alert.alert('Erro', e.message); }
   };
 
-  const formatMin = (m) => `${Math.floor(m / 60)}h ${m % 60}m`;
+  const formatMin = (m) => {
+    const h = Math.floor(m / 60);
+    const min = m % 60;
+    return `${h}h ${min.toString().padStart(2, '0')}m`;
+  };
+
+  // Calcular progresso das 24h
+  const getHoras24h = () => {
+    if (!definicoes) return { worked: 0, limit: 10, percent: 0 };
+    const worked = parseFloat(definicoes.horas_trabalhadas_24h) || 0;
+    const limit = definicoes.horas_maximas || 10;
+    const percent = Math.min((worked / limit) * 100, 100);
+    return { worked, limit, percent };
+  };
+
+  const horas24h = getHoras24h();
 
   return (
     <ScrollView style={styles.screen} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={async () => { setRefreshing(true); await loadData(); setRefreshing(false); }} />}>
       <Text style={styles.screenTitle}>Relógio de Ponto</Text>
 
-      {/* Info 24h */}
+      {/* Timer em tempo real quando a trabalhar */}
+      {status === 'working' && (
+        <View style={styles.timerCard}>
+          <Text style={styles.timerLabel}>TURNO ATUAL</Text>
+          <Text style={styles.timerValue}>{formatTimer(currentTime)}</Text>
+          <View style={styles.timerPulse} />
+        </View>
+      )}
+
+      {/* Barra de progresso 24h */}
       {definicoes && (
-        <View style={styles.info24h}>
-          <Text style={styles.info24hText}>📊 Últimas 24h: {definicoes.horas_trabalhadas_24h} / {definicoes.horas_maximas}h</Text>
+        <View style={styles.progressCard}>
+          <View style={styles.progressHeader}>
+            <Text style={styles.progressTitle}>⏱️ Últimas 24 horas</Text>
+            <Text style={styles.progressValue}>
+              <Text style={styles.progressWorked}>{horas24h.worked.toFixed(1)}</Text>
+              <Text style={styles.progressSep}> / </Text>
+              <Text style={styles.progressLimit}>{horas24h.limit}h</Text>
+            </Text>
+          </View>
+          <View style={styles.progressBarBg}>
+            <View style={[
+              styles.progressBarFill, 
+              { width: `${horas24h.percent}%` },
+              horas24h.percent >= 90 ? styles.progressBarDanger : 
+              horas24h.percent >= 70 ? styles.progressBarWarning : 
+              styles.progressBarNormal
+            ]} />
+          </View>
+          <View style={styles.progressFooter}>
+            <Text style={styles.progressRemaining}>
+              {horas24h.limit - horas24h.worked > 0 
+                ? `Restam ${(horas24h.limit - horas24h.worked).toFixed(1)}h` 
+                : '⚠️ Limite atingido'}
+            </Text>
+            {horas24h.percent >= 90 && (
+              <Text style={styles.progressAlert}>Aproximando do limite!</Text>
+            )}
+          </View>
           {podeIniciar && !podeIniciar.pode_iniciar && (
-            <Text style={styles.info24hAlert}>⚠️ {podeIniciar.mensagem}</Text>
+            <View style={styles.blockedAlert}>
+              <Text style={styles.blockedAlertText}>🚫 {podeIniciar.mensagem}</Text>
+            </View>
           )}
         </View>
       )}
