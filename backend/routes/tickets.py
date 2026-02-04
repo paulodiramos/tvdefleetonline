@@ -53,12 +53,18 @@ CATEGORIAS_COM_FOTOS = ["acidente", "avaria"]
 AUTO_CLOSE_DAYS = 7
 
 
+class FotoBase64(BaseModel):
+    base64: Optional[str] = None
+    uri: Optional[str] = None
+
+
 class TicketCreate(BaseModel):
     titulo: str
     categoria: str
     descricao: str
     prioridade: Optional[str] = "normal"  # baixa, normal, alta, urgente
     destinatario_tipo: Optional[str] = "admin"  # admin, gestor, parceiro
+    fotos: Optional[List[FotoBase64]] = []
 
 
 class TicketUpdate(BaseModel):
