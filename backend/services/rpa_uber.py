@@ -238,65 +238,74 @@ class UberRPA:
                     logger.warning("💡 Sugestão: Fazer login manual no browser, depois guardar sessão")
                     return False  # Retornar falso se CAPTCHA não resolvido
             
-            # VERIFICAR SE PEDE SMS
-            # Procurar opção "Enviar códigos por SMS" ou campo de código
-            enviar_sms_btn = self.page.locator('text=/Enviar códigos por SMS|Send codes via SMS|Enviar código/').first
-            sms_input_direto = self.page.locator('input[placeholder*="digit"], input[placeholder*="código"], input[placeholder*="code"]').first
+            # VERIFICAR SE PEDE SMS OU PODEMOS USAR PASSWORD
+            await self.screenshot("apos_sms_ou_opcoes")
             
-            # Se há campo de código direto (SMS já enviado)
-            if await sms_input_direto.count() > 0 and await sms_input_direto.is_visible():
-                logger.info("📱 Campo de código SMS detectado diretamente")
-                if self.sms_code:
-                    await sms_input_direto.fill(self.sms_code)
-                    await self.page.wait_for_timeout(500)
-                    logger.info(f"✅ Código SMS inserido: {self.sms_code}")
-                    await self.screenshot("sms_preenchido")
-                    
-                    # Clicar em Verificar/Continuar/Seguinte
-                    verificar_btn = self.page.locator('button:has-text("Verificar"), button:has-text("Verify"), button:has-text("Continuar"), button:has-text("Continue"), button:has-text("Seguinte"), button:has-text("Next"), button[type="submit"]').first
-                    if await verificar_btn.count() > 0:
-                        await verificar_btn.click()
-                        await self.page.wait_for_timeout(5000)
-                        logger.info("✅ Clicou Verificar SMS")
-                else:
-                    logger.warning("⚠️ Campo SMS detectado mas código não fornecido!")
-                    
-            elif await enviar_sms_btn.count() > 0 and await enviar_sms_btn.is_visible():
-                logger.info("📱 Opção SMS detectada")
+            # Verificar se estamos na página de SMS (4 dígitos)
+            page_text = await self.page.content()
+            
+            # Se estamos na página de código SMS
+            if "código de 4 dígitos" in page_text or "4-digit code" in page_text or "4 dígitos" in page_text:
+                logger.info("📱 Página de código SMS detectada")
                 
-                # Se temos código SMS, clicar para enviar
-                if self.sms_code:
-                    await enviar_sms_btn.click()
-                    await self.page.wait_for_timeout(3000)
-                    logger.info("✅ Clicou em Enviar códigos por SMS")
+                # Primeiro, tentar "Mais opções" para usar palavra-passe em vez de SMS
+                mais_opcoes_btn = self.page.locator('button:has-text("Mais opções"), text=Mais opções').first
+                
+                if await mais_opcoes_btn.count() > 0 and await mais_opcoes_btn.is_visible():
+                    logger.info("🔧 A tentar usar Palavra-passe em vez de SMS...")
+                    await mais_opcoes_btn.click()
+                    await self.page.wait_for_timeout(2000)
+                    await self.screenshot("mais_opcoes_aberto")
                     
-                    await self.screenshot("aguardando_sms")
-                    
-                    # Aguardar campo de código SMS
-                    sms_input = self.page.locator('input[type="text"], input[type="tel"], input[type="number"], input[placeholder*="digit"], input[placeholder*="código"], input[placeholder*="code"]').first
-                    
-                    if await sms_input.count() > 0:
-                        await sms_input.wait_for(timeout=10000)
-                        await sms_input.fill(self.sms_code)
-                        await self.page.wait_for_timeout(500)
-                        logger.info(f"✅ Código SMS inserido: {self.sms_code}")
-                        
-                        await self.screenshot("sms_preenchido")
-                        
-                        # Clicar em Verificar/Continuar
-                        verificar_btn = self.page.locator('button:has-text("Verificar"), button:has-text("Verify"), button:has-text("Continuar"), button:has-text("Continue"), button:has-text("Seguinte"), button[type="submit"]').first
-                        if await verificar_btn.count() > 0:
-                            await verificar_btn.click()
-                            await self.page.wait_for_timeout(5000)
-                            logger.info("✅ Clicou Verificar SMS")
-                else:
-                    logger.warning("⚠️ Código SMS necessário mas não fornecido. A tentar alternativa...")
-                    # Tentar "Mais opções" para usar password
-                    mais_opcoes = self.page.locator('text=/Mais opções|More options/').first
-                    if await mais_opcoes.count() > 0:
-                        await mais_opcoes.click()
+                    # Clicar em "Palavra-passe"
+                    password_option = self.page.locator('text=Palavra-passe').first
+                    if await password_option.count() > 0:
+                        await password_option.click()
                         await self.page.wait_for_timeout(2000)
-                        logger.info("✅ Clicou Mais opções")
+                        logger.info("✅ Selecionou opção Palavra-passe")
+                        await self.screenshot("opcao_password_selecionada")
+                        
+                        # Inserir password
+                        password_input = self.page.locator('input[type="password"]').first
+                        if await password_input.count() > 0 and await password_input.is_visible():
+                            await password_input.fill(self.password)
+                            logger.info("✅ Password inserida")
+                            await self.screenshot("password_preenchida")
+                            
+                            # Clicar Seguinte
+                            seguinte_btn = self.page.locator('button:has-text("Seguinte"), button:has-text("Next"), button[type="submit"]').first
+                            if await seguinte_btn.count() > 0:
+                                await seguinte_btn.click()
+                                await self.page.wait_for_timeout(5000)
+                                logger.info("✅ Clicou Seguinte após password")
+                                await self.screenshot("apos_password_submit")
+                        else:
+                            logger.warning("⚠️ Campo de password não encontrado após selecionar opção")
+                    else:
+                        logger.warning("⚠️ Opção Palavra-passe não encontrada no menu")
+                        # Se não há opção password, tentar usar código SMS
+                        if self.sms_code:
+                            await self._inserir_codigo_sms()
+                
+                elif self.sms_code:
+                    # Não tem opção "Mais opções", usar SMS diretamente
+                    await self._inserir_codigo_sms()
+                else:
+                    logger.warning("⚠️ Precisa de código SMS ou opção de password")
+            
+            # Verificar se estamos na página de password diretamente
+            elif "Palavra-passe" in page_text or "Password" in page_text:
+                password_input = self.page.locator('input[type="password"]').first
+                if await password_input.count() > 0 and await password_input.is_visible():
+                    await password_input.fill(self.password)
+                    logger.info("✅ Password inserida diretamente")
+                    await self.screenshot("password_direta")
+                    
+                    seguinte_btn = self.page.locator('button:has-text("Seguinte"), button:has-text("Next"), button[type="submit"]').first
+                    if await seguinte_btn.count() > 0:
+                        await seguinte_btn.click()
+                        await self.page.wait_for_timeout(5000)
+                        logger.info("✅ Clicou Seguinte")
             else:
                 # Clicar em "Mais opções" se disponível
                 mais_opcoes = self.page.locator('text=/Mais opções|More options/').first
