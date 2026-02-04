@@ -330,6 +330,114 @@ async def adicionar_mensagem(
     }
 
 
+@router.post("/{ticket_id}/foto")
+async def adicionar_foto_ticket(
+    ticket_id: str,
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Adicionar foto ao ticket (especialmente para acidentes e avarias)
+    Suporta múltiplas fotos por ticket
+    """
+    
+    ticket = await db.tickets.find_one({"id": ticket_id}, {"_id": 0})
+    
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket não encontrado")
+    
+    # Verificar se é o criador do ticket
+    if ticket["criado_por_id"] != current_user["id"] and current_user["role"] not in ["admin", "gestao"]:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Validar tipo de ficheiro (apenas imagens)
+    allowed_extensions = [".jpg", ".jpeg", ".png", ".heic", ".heif"]
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    if file_ext not in allowed_extensions:
+        raise HTTPException(status_code=400, detail=f"Apenas imagens são permitidas: {allowed_extensions}")
+    
+    # Criar diretório para fotos do ticket
+    ticket_fotos_dir = TICKETS_UPLOAD_DIR / "fotos" / ticket_id
+    ticket_fotos_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Guardar foto
+    foto_id = str(uuid.uuid4())
+    file_name = f"{foto_id}{file_ext}"
+    file_path = ticket_fotos_dir / file_name
+    
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    
+    foto = {
+        "id": foto_id,
+        "nome": file.filename,
+        "path": str(file_path),
+        "url": f"/api/tickets/{ticket_id}/foto/{foto_id}",
+        "enviado_por": current_user["id"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    # Adicionar foto ao ticket
+    await db.tickets.update_one(
+        {"id": ticket_id},
+        {
+            "$push": {"fotos": foto},
+            "$set": {"updated_at": datetime.now(timezone.utc).isoformat()}
+        }
+    )
+    
+    logger.info(f"Foto adicionada ao ticket {ticket['numero']} por {current_user['id']}")
+    
+    return {
+        "success": True,
+        "foto_id": foto_id,
+        "url": foto["url"],
+        "message": "Foto adicionada com sucesso"
+    }
+
+
+@router.get("/{ticket_id}/foto/{foto_id}")
+async def get_foto_ticket(
+    ticket_id: str,
+    foto_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Obter foto de um ticket"""
+    from fastapi.responses import FileResponse
+    
+    ticket = await db.tickets.find_one({"id": ticket_id}, {"_id": 0})
+    
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket não encontrado")
+    
+    # Verificar permissões
+    pode_ver = (
+        ticket["criado_por_id"] == current_user["id"] or
+        ticket.get("destinatario_id") == current_user["id"] or
+        current_user["role"] in ["admin", "gestao", "parceiro"]
+    )
+    
+    if not pode_ver:
+        raise HTTPException(status_code=403, detail="Não autorizado")
+    
+    # Encontrar foto
+    foto = next((f for f in ticket.get("fotos", []) if f["id"] == foto_id), None)
+    
+    if not foto:
+        raise HTTPException(status_code=404, detail="Foto não encontrada")
+    
+    file_path = Path(foto["path"])
+    
+    if not file_path.exists():
+        raise HTTPException(status_code=404, detail="Ficheiro não encontrado")
+    
+    return FileResponse(
+        path=str(file_path),
+        filename=foto["nome"],
+        media_type="image/jpeg"
+    )
+
+
 @router.post("/{ticket_id}/anexo")
 async def adicionar_anexo(
     ticket_id: str,
