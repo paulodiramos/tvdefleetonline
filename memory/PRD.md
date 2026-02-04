@@ -3,6 +3,18 @@
 ## Visão Geral
 Sistema de gestão de frotas TVDE completo com funcionalidades avançadas de gestão de motoristas, veículos, financeiro, automações RPA, sistema de permissões granular, e **App Móvel para Motoristas**.
 
+## ✅ Correção Menu Configuração Uber (04/02/2026)
+
+### Bug Corrigido
+- **Issue:** Link "Configuração Uber" não aparecia no menu admin
+- **Causa:** O link estava incorretamente colocado dentro da secção de parceiros com condição impossível (`user.role === 'parceiro'` E `user.role === 'admin'`)
+- **Solução:** Movido para a secção correta de admin em `Layout.js`, após "RPA Designer"
+
+### Estado Atual
+- ✅ Menu visível para utilizadores admin
+- ✅ Página `/configuracao-uber` carrega corretamente
+- ✅ Lista de parceiros com status de sessão exibida
+
 ## Arquitetura
 - **Frontend Web**: React (porta 3000)
 - **Backend**: FastAPI (porta 8001)
