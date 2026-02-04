@@ -164,14 +164,25 @@ class UberRPA:
             
             await self.screenshot("apos_continuar")
             
+            # Aguardar um pouco para elementos carregarem
+            await self.page.wait_for_timeout(2000)
+            
             # VERIFICAR SE HÁ CAPTCHA/PUZZLE - Uber usa "Protecting your account" ou "Proteger a sua conta"
             captcha_detectado = False
             
-            # Verificar se há texto de proteção de conta (PT e EN)
+            # Verificar se há texto de proteção de conta (PT e EN) - verificar texto visível
+            page_text = await self.page.content()
+            
+            if "Proteger a sua conta" in page_text or "Protecting your account" in page_text or "Iniciar desafio" in page_text:
+                captcha_detectado = True
+                logger.info("🧩 CAPTCHA/desafio de segurança detectado pelo conteúdo da página!")
+                await self.screenshot("captcha_detectado")
+            
+            # Verificar também por locators
             protecting_text = self.page.locator('text=/Protecting your account|Proteger a sua conta|Resolva este desafio/')
             puzzle_btn = self.page.locator('button:has-text("Start Puzzle"), button:has-text("Iniciar desafio"), button:has-text("Iniciar Puzzle")')
             
-            if await protecting_text.count() > 0 or await puzzle_btn.count() > 0:
+            if not captcha_detectado and (await protecting_text.count() > 0 or await puzzle_btn.count() > 0):
                 captcha_detectado = True
                 logger.info("🧩 CAPTCHA/desafio de segurança detectado!")
                 await self.screenshot("captcha_detectado")
