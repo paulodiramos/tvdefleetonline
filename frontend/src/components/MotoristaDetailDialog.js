@@ -366,6 +366,224 @@ const MotoristaDetailDialog = ({ open, onClose, motoristaId, userRole }) => {
               </div>
             </TabsContent>
 
+            {/* Aba Configurações App */}
+            <TabsContent value="config" className="space-y-4">
+              <div className="bg-slate-50 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center">
+                  <Settings className="w-4 h-4 mr-2" />
+                  Permissões da App Motorista
+                </h3>
+                
+                {configApp && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-xs text-slate-600">Limite de Horas (24h rolante)</Label>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Input
+                            type="number"
+                            min="1"
+                            max="24"
+                            value={configApp.limite_horas_diarias}
+                            onChange={(e) => setConfigApp({...configApp, limite_horas_diarias: parseInt(e.target.value) || 10})}
+                            className="w-20 text-center"
+                          />
+                          <span className="text-sm text-slate-500">horas</span>
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label className="text-xs text-slate-600">Período de Descanso Mínimo</Label>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Input
+                            type="number"
+                            min="1"
+                            max="24"
+                            value={configApp.periodo_descanso_minimo}
+                            onChange={(e) => setConfigApp({...configApp, periodo_descanso_minimo: parseInt(e.target.value) || 8})}
+                            className="w-20 text-center"
+                          />
+                          <span className="text-sm text-slate-500">horas</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="border-t pt-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="text-sm">Permitir Edição de Registos</Label>
+                          <p className="text-xs text-slate-500">Motorista pode editar horas de início/fim</p>
+                        </div>
+                        <Switch
+                          checked={configApp.permitir_edicao_registos}
+                          onCheckedChange={(checked) => setConfigApp({...configApp, permitir_edicao_registos: checked})}
+                        />
+                      </div>
+                      
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="text-sm">Permitir Alterar Limite de Horas</Label>
+                          <p className="text-xs text-slate-500">Motorista pode ajustar o seu limite</p>
+                        </div>
+                        <Switch
+                          checked={configApp.pode_alterar_limite}
+                          onCheckedChange={(checked) => setConfigApp({...configApp, pode_alterar_limite: checked})}
+                        />
+                      </div>
+                    </div>
+                    
+                    <Button 
+                      onClick={handleSaveConfig} 
+                      disabled={savingConfig}
+                      className="w-full mt-4"
+                    >
+                      {savingConfig ? 'A guardar...' : 'Guardar Configurações'}
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            {/* Aba Relógio de Ponto */}
+            <TabsContent value="ponto" className="space-y-4">
+              {dadosPonto ? (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-blue-50 rounded-lg p-4 text-center">
+                      <p className="text-xs text-blue-600 font-medium">Últimas 24h</p>
+                      <p className="text-2xl font-bold text-blue-700">{dadosPonto.horas_24h || '0h 0m'}</p>
+                    </div>
+                    <div className="bg-green-50 rounded-lg p-4 text-center">
+                      <p className="text-xs text-green-600 font-medium">Esta Semana</p>
+                      <p className="text-2xl font-bold text-green-700">{dadosPonto.horas_semana || '0h 0m'}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-slate-700 mb-3">Estado Atual</h4>
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-3 h-3 rounded-full ${dadosPonto.estado === 'working' ? 'bg-green-500 animate-pulse' : dadosPonto.estado === 'paused' ? 'bg-yellow-500' : 'bg-slate-400'}`} />
+                      <span className="text-sm font-medium">
+                        {dadosPonto.estado === 'working' ? 'A Trabalhar' : dadosPonto.estado === 'paused' ? 'Em Pausa' : 'Offline'}
+                      </span>
+                      {dadosPonto.turno_inicio && (
+                        <span className="text-xs text-slate-500">desde {dadosPonto.turno_inicio}</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-slate-50 rounded-lg p-4">
+                    <h4 className="text-sm font-semibold text-slate-700 mb-3">Últimos Registos</h4>
+                    {dadosPonto.ultimos_registos && dadosPonto.ultimos_registos.length > 0 ? (
+                      <div className="space-y-2">
+                        {dadosPonto.ultimos_registos.map((reg, idx) => (
+                          <div key={idx} className="flex justify-between items-center text-sm py-2 border-b last:border-0">
+                            <span className="text-slate-600">{reg.data}</span>
+                            <span className="font-medium">{reg.hora_inicio} - {reg.hora_fim || 'Em curso'}</span>
+                            <Badge variant={reg.tipo === 'pessoal' ? 'outline' : 'default'} className="text-xs">
+                              {reg.duracao}
+                            </Badge>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-500 text-center py-4">Sem registos recentes</p>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12 text-slate-500">
+                  <Clock className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+                  <p>Sem dados de relógio de ponto</p>
+                </div>
+              )}
+            </TabsContent>
+
+            {/* Aba Turnos */}
+            <TabsContent value="turnos" className="space-y-4">
+              <div className="bg-slate-50 rounded-lg p-4">
+                <h3 className="text-sm font-semibold text-slate-700 mb-4 flex items-center">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  Horário de Turnos
+                </h3>
+                
+                <div className="mb-4">
+                  <Label className="text-xs text-slate-600">Veículo Atribuído</Label>
+                  <Select value={turnoVeiculoId} onValueChange={setTurnoVeiculoId}>
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Selecionar veículo..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Sem veículo</SelectItem>
+                      {veiculos.map(v => (
+                        <SelectItem key={v.id} value={v.id}>
+                          <Car className="w-4 h-4 inline mr-2" />
+                          {v.matricula} - {v.marca} {v.modelo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  {DIAS_SEMANA.map((dia, idx) => {
+                    const turno = turnosForm.find(t => t.dia_semana === idx);
+                    const isActive = !!turno;
+                    
+                    return (
+                      <div key={idx} className={`flex items-center justify-between p-3 rounded-lg border ${isActive ? 'bg-white border-blue-200' : 'bg-slate-100 border-slate-200'}`}>
+                        <div className="flex items-center space-x-3">
+                          <Switch
+                            checked={isActive}
+                            onCheckedChange={() => toggleDiaTurno(idx)}
+                          />
+                          <span className={`text-sm font-medium ${isActive ? 'text-slate-800' : 'text-slate-500'}`}>
+                            {dia}
+                          </span>
+                        </div>
+                        
+                        {isActive && (
+                          <div className="flex items-center space-x-2">
+                            <Input
+                              type="time"
+                              value={turno.hora_inicio}
+                              onChange={(e) => updateTurnoHora(idx, 'hora_inicio', e.target.value)}
+                              className="w-28 text-center text-sm"
+                            />
+                            <span className="text-slate-400">→</span>
+                            <Input
+                              type="time"
+                              value={turno.hora_fim}
+                              onChange={(e) => updateTurnoHora(idx, 'hora_fim', e.target.value)}
+                              className="w-28 text-center text-sm"
+                            />
+                          </div>
+                        )}
+                        
+                        {!isActive && (
+                          <Badge variant="outline" className="text-xs text-slate-400">Folga</Badge>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                
+                <Button 
+                  onClick={handleSaveTurnos} 
+                  disabled={savingTurnos}
+                  className="w-full mt-4"
+                >
+                  {savingTurnos ? 'A guardar...' : 'Guardar Turnos'}
+                </Button>
+                
+                {turnos?.valido_desde && (
+                  <p className="text-xs text-slate-500 text-center mt-2">
+                    Válido desde: {turnos.valido_desde}
+                  </p>
+                )}
+              </div>
+            </TabsContent>
+
             {/* Aba Documentos */}
             <TabsContent value="documentos" className="space-y-3">
               {motorista?.documents && Object.keys(motorista.documents).length > 0 ? (
