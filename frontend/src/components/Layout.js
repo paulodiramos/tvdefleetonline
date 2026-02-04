@@ -368,6 +368,11 @@ const Layout = ({ children, user, onLogout }) => {
                           <span>⚡ RPA Designer</span>
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/configuracao-uber" className="flex items-center space-x-2 cursor-pointer pl-4" data-testid="configuracao-uber-link">
+                          <span>🚗 Configuração Uber</span>
+                        </Link>
+                      </DropdownMenuItem>
                       
                       <DropdownMenuSeparator />
                       
