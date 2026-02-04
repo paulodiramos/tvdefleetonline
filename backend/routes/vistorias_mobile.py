@@ -47,28 +47,44 @@ class VistoriaCreate(BaseModel):
 async def get_minhas_vistorias(
     current_user: dict = Depends(get_current_user)
 ):
-    """Listar vistorias do motorista atual"""
+    """Listar vistorias - para inspetor mostra as que criou, para motorista as do seu veículo"""
     
-    motorista_id = current_user["id"]
+    user_id = current_user["id"]
+    user_role = current_user["role"]
+    
+    # Determinar query baseado no role
+    if user_role == "inspetor":
+        query = {"inspetor_id": user_id}
+    elif user_role in ["gestao", "parceiro"]:
+        query = {"inspetor_id": user_id}
+    else:
+        query = {"motorista_id": user_id}
     
     vistorias = await db.vistorias_mobile.find(
-        {"motorista_id": motorista_id},
+        query,
         {"_id": 0, "fotos_base64": 0, "assinatura_base64": 0}
-    ).sort("created_at", -1).limit(20).to_list(20)
+    ).sort("created_at", -1).limit(50).to_list(50)
     
     # Formatar dados
     resultado = []
     for v in vistorias:
-        created = datetime.fromisoformat(v["created_at"].replace("Z", "+00:00"))
+        try:
+            created = datetime.fromisoformat(v["created_at"].replace("Z", "+00:00"))
+            data_str = created.strftime("%d/%m/%Y %H:%M")
+        except:
+            data_str = v.get("created_at", "N/A")
+        
         resultado.append({
             "id": v["id"],
             "tipo": v["tipo"],
-            "data": created.strftime("%d/%m/%Y %H:%M"),
+            "data": data_str,
             "km": v.get("km", 0),
             "nivel_combustivel": v.get("nivel_combustivel", 0),
             "total_danos": len(v.get("danos", [])),
             "status": v.get("status", "pendente"),
-            "veiculo_matricula": v.get("veiculo_matricula")
+            "veiculo_matricula": v.get("veiculo_matricula"),
+            "motorista_nome": v.get("motorista_nome"),
+            "motorista_aceite": v.get("motorista_aceite")
         })
     
     return {
