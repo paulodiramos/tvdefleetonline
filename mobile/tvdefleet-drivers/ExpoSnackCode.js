@@ -1673,22 +1673,69 @@ export default function App() {
     setTimeout(() => { shown.current = { start: false, stop: false }; }, 300000);
   };
 
-  if (!user) return <LoginScreen onLogin={(u, t) => { setUser(u); api.setToken(t); }} />;
+  // Quando user faz login, definir tab inicial baseado no role
+  const handleLogin = (u, t) => {
+    setUser(u);
+    api.setToken(t);
+    // Definir tab inicial baseado no role
+    if (u.role === 'inspetor') {
+      setTab('vistorias');
+    } else if (u.role === 'gestao' || u.role === 'parceiro') {
+      setTab('vistorias');
+    } else {
+      setTab('ponto'); // motorista
+    }
+  };
+
+  if (!user) return <LoginScreen onLogin={handleLogin} />;
+
+  // Determinar título baseado no role
+  const getRoleTitle = () => {
+    if (user.role === 'inspetor') return '🔍 Inspetor';
+    if (user.role === 'gestao') return '👔 Gestor';
+    if (user.role === 'parceiro') return '🏢 Parceiro';
+    return '🚗 Motorista';
+  };
+
+  // Renderizar ecrãs baseados no role
+  const renderScreen = () => {
+    const role = user.role;
+    
+    // INSPETOR: Apenas vistorias
+    if (role === 'inspetor') {
+      if (tab === 'vistorias') return <VistoriasScreen user={user} canCreate={true} />;
+      return null;
+    }
+    
+    // GESTOR/PARCEIRO: Vistorias, Recibos, Resumo, Extras, Alertas
+    if (role === 'gestao' || role === 'parceiro') {
+      if (tab === 'vistorias') return <VistoriasScreen user={user} canCreate={true} />;
+      if (tab === 'recibos') return <RecibosGestaoScreen user={user} />;
+      if (tab === 'resumo') return <ResumoSemanalGestaoScreen user={user} />;
+      if (tab === 'extras') return <ExtrasGestaoScreen user={user} />;
+      if (tab === 'alertas') return <AlertasGestaoScreen user={user} />;
+      return null;
+    }
+    
+    // MOTORISTA: Ponto, Turnos, Vistorias (consulta), Ganhos, Tickets
+    if (tab === 'ponto') return <PontoScreen user={user} status={status} setStatus={setStatus} />;
+    if (tab === 'turnos') return <TurnosScreen user={user} />;
+    if (tab === 'vistorias') return <VistoriasScreen user={user} canCreate={false} />;
+    if (tab === 'ganhos') return <GanhosScreen />;
+    if (tab === 'tickets') return <TicketsScreen user={user} />;
+    return null;
+  };
 
   return (
     <View style={styles.appContainer}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>TVDEFleet</Text>
+        <Text style={styles.headerTitle}>TVDEFleet {getRoleTitle()}</Text>
         {isMoving && <Text>📍</Text>}
       </View>
       <View style={{ flex: 1 }}>
-        {tab === 'ponto' && <PontoScreen user={user} status={status} setStatus={setStatus} />}
-        {tab === 'turnos' && <TurnosScreen user={user} />}
-        {tab === 'vistorias' && <VistoriasScreen user={user} />}
-        {tab === 'ganhos' && <GanhosScreen />}
-        {tab === 'tickets' && <TicketsScreen user={user} />}
+        {renderScreen()}
       </View>
-      <TabBar activeTab={tab} onTabChange={setTab} />
+      <TabBar activeTab={tab} onTabChange={setTab} userRole={user.role} />
       <GPSPopup visible={gps.visible} type={gps.type} onYes={() => handleGPS(true)} onNo={() => handleGPS(false)} />
     </View>
   );
