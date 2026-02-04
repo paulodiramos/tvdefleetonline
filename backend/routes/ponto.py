@@ -48,6 +48,7 @@ class EditarRegistoRequest(BaseModel):
     hora_inicio_real: str  # HH:MM
     hora_fim_real: str  # HH:MM
     justificacao: str
+    tipo: Optional[str] = "trabalho"  # "trabalho" ou "pessoal"
 
 
 # ============ FUNÇÕES AUXILIARES ============
