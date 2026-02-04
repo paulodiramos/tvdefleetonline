@@ -607,8 +607,15 @@ async def confirmar_vistoria_motorista(
     if current_user["role"] != "motorista":
         raise HTTPException(status_code=403, detail="Apenas motoristas podem confirmar vistorias")
     
+    # Buscar motorista pelo email para obter o ID correto
+    motorista = await db.motoristas.find_one(
+        {"email": current_user["email"]},
+        {"_id": 0, "id": 1}
+    )
+    motorista_id = motorista["id"] if motorista else current_user["id"]
+    
     vistoria = await db.vistorias_mobile.find_one(
-        {"id": vistoria_id, "motorista_id": current_user["id"]},
+        {"id": vistoria_id, "motorista_id": {"$in": [motorista_id, current_user["id"]]}},
         {"_id": 0}
     )
     
@@ -617,9 +624,13 @@ async def confirmar_vistoria_motorista(
     
     now = datetime.now(timezone.utc)
     
+    # Atualizar status baseado na decisão do motorista
+    novo_status = "aprovada" if data.aceitar else "rejeitada_motorista"
+    
     update_data = {
         "motorista_aceite": data.aceitar,
         "motorista_aceite_em": now.isoformat(),
+        "status": novo_status,
         "updated_at": now.isoformat()
     }
     
