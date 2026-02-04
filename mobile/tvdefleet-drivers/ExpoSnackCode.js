@@ -1975,7 +1975,7 @@ const ConfigScreen = ({ user, onLogout }) => {
 };
 
 // ===== GPS POPUP =====
-const GPSPopup = ({ visible, type, onYes, onNo }) => visible ? (
+const GPSPopup = ({ visible, type, onYes, onNo, onDoNotDisturb }) => visible ? (
   <Modal visible={visible} animationType="fade" transparent={true}>
     <View style={styles.gpsOverlay}>
       <View style={styles.gpsBox}>
@@ -1986,6 +1986,11 @@ const GPSPopup = ({ visible, type, onYes, onNo }) => visible ? (
           <TouchableOpacity style={styles.gpsNo} onPress={onNo}><Text style={styles.gpsNoText}>Não</Text></TouchableOpacity>
           <TouchableOpacity style={styles.gpsYes} onPress={onYes}><Text style={styles.gpsYesText}>Sim</Text></TouchableOpacity>
         </View>
+        {type === 'stop' && (
+          <TouchableOpacity style={styles.dndBtn} onPress={onDoNotDisturb}>
+            <Text style={styles.dndText}>🔕 Não incomodar (30 min)</Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   </Modal>
@@ -1997,6 +2002,7 @@ export default function App() {
   const [tab, setTab] = useState('ponto');
   const [status, setStatus] = useState('off');
   const [gps, setGps] = useState({ visible: false, type: null });
+  const [doNotDisturb, setDoNotDisturb] = useState(false);
   const shown = useRef({ start: false, stop: false });
 
   const { isMoving } = useGPS(
