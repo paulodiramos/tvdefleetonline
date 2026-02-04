@@ -110,12 +110,16 @@ async def listar_vistorias_pendentes_aceitacao(
     
     motorista_id = motorista["id"] if motorista else current_user["id"]
     
-    # Buscar vistorias pendentes de aceitação
+    # Buscar vistorias pendentes de aceitação pelo motorista
+    # Vistorias com status=pendente e motorista_aceite=None são as que aguardam aceitação
     vistorias = await db.vistorias_mobile.find(
         {
             "motorista_id": {"$in": [motorista_id, current_user["id"]]},
-            "status": "aprovada",
-            "motorista_aceite": None
+            "status": "pendente",
+            "$or": [
+                {"motorista_aceite": None},
+                {"motorista_aceite": {"$exists": False}}
+            ]
         },
         {"_id": 0}
     ).sort("created_at", -1).to_list(50)
