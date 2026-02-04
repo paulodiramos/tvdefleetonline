@@ -490,3 +490,122 @@ async def rejeitar_vistoria(
     )
     
     return {"success": True, "message": "Vistoria rejeitada"}
+
+
+# ============ ENDPOINTS PARA MOTORISTA ACEITAR/REJEITAR VISTORIA ============
+
+@router.get("/pendentes-aceitacao")
+async def listar_vistorias_pendentes_aceitacao(
+    current_user: dict = Depends(get_current_user)
+):
+    """Listar vistorias pendentes de aceitação pelo motorista"""
+    
+    if current_user["role"] != "motorista":
+        raise HTTPException(status_code=403, detail="Apenas motoristas podem ver vistorias pendentes de aceitação")
+    
+    # Buscar vistorias associadas ao motorista que ainda não foram aceites
+    motorista_id = current_user["id"]
+    
+    vistorias = await db.vistorias_mobile.find(
+        {
+            "motorista_id": motorista_id,
+            "status": "aprovada",  # Já aprovada pelo parceiro
+            "motorista_aceite": {"$exists": False}  # Ainda não confirmada pelo motorista
+        },
+        {"_id": 0}
+    ).sort("created_at", -1).to_list(50)
+    
+    resultado = []
+    for v in vistorias:
+        try:
+            created = datetime.fromisoformat(v["created_at"].replace("Z", "+00:00"))
+            data_str = created.strftime("%d/%m/%Y %H:%M")
+        except:
+            data_str = v.get("created_at", "N/A")
+        
+        resultado.append({
+            "id": v["id"],
+            "tipo": v["tipo"],
+            "veiculo_matricula": v.get("veiculo_matricula"),
+            "data": data_str,
+            "km": v.get("km"),
+            "nivel_combustivel": v.get("nivel_combustivel"),
+            "danos": v.get("danos", []),
+            "observacoes": v.get("observacoes"),
+            "analise_ia": v.get("analise_ia"),
+            "inspetor_nome": v.get("inspetor_nome"),
+            "created_at": v.get("created_at")
+        })
+    
+    return {
+        "vistorias": resultado,
+        "total": len(resultado)
+    }
+
+
+class ConfirmarMotoristaSchema(BaseModel):
+    aceitar: bool
+
+
+@router.post("/{vistoria_id}/confirmar-motorista")
+async def confirmar_vistoria_motorista(
+    vistoria_id: str,
+    data: ConfirmarMotoristaSchema,
+    current_user: dict = Depends(get_current_user)
+):
+    """Motorista confirma ou rejeita a vistoria"""
+    
+    if current_user["role"] != "motorista":
+        raise HTTPException(status_code=403, detail="Apenas motoristas podem confirmar vistorias")
+    
+    vistoria = await db.vistorias_mobile.find_one(
+        {"id": vistoria_id, "motorista_id": current_user["id"]},
+        {"_id": 0}
+    )
+    
+    if not vistoria:
+        raise HTTPException(status_code=404, detail="Vistoria não encontrada")
+    
+    now = datetime.now(timezone.utc)
+    
+    update_data = {
+        "motorista_aceite": data.aceitar,
+        "motorista_aceite_em": now.isoformat(),
+        "updated_at": now.isoformat()
+    }
+    
+    await db.vistorias_mobile.update_one(
+        {"id": vistoria_id},
+        {"$set": update_data}
+    )
+    
+    # Se aceite, enviar email com relatório (simulado)
+    if data.aceitar:
+        try:
+            # Buscar email do motorista
+            motorista = await db.users.find_one(
+                {"id": current_user["id"]},
+                {"_id": 0, "email": 1, "name": 1}
+            )
+            
+            if motorista and motorista.get("email"):
+                # Em produção, aqui enviaria o email real
+                logger.info(f"[EMAIL SIMULADO] Relatório de vistoria enviado para {motorista['email']}")
+                
+                # Registar envio
+                await db.vistorias_mobile.update_one(
+                    {"id": vistoria_id},
+                    {"$set": {
+                        "relatorio_enviado": True,
+                        "relatorio_enviado_em": now.isoformat(),
+                        "relatorio_enviado_para": motorista["email"]
+                    }}
+                )
+        except Exception as e:
+            logger.error(f"Erro ao simular envio de email: {e}")
+    
+    return {
+        "success": True, 
+        "message": "Vistoria aceite! Relatório enviado para o seu email." if data.aceitar else "Vistoria rejeitada. O parceiro será notificado."
+    }
+
