@@ -1,191 +1,205 @@
 <analysis>**original_problem_statement:**
 O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas.
 
-Requisitos Originais:
+Requisitos Iniciais:
 1.  Corrigir a sincronização com a Via Verde (falha na filtragem de datas).
-2.  Finalizar a funcionalidade de desativação de motoristas.
+2.  Finalizar a funcionalidade de desativação de motoristas (UI pendente).
 3.  Implementar a sincronização com a Uber (via API oficial, pendente de aprovação).
 4.  Implementar um sistema de gestão de utilizadores com diferentes perfis (Concluído).
 5.  Adicionar a capacidade de criar veículos automaticamente durante a sincronização da Via Verde.
 
-Requisitos Adicionados nesta Sessão (App Móvel):
-1.  **Relógio de Ponto:** Check-in/out, pausas, histórico diário, e consulta de registos.
-2.  **Ganhos e Relatórios:** Visualização de ganhos semanais (Bolt/Uber), despesas, e upload de recibos.
-3.  **Gestão de Documentos:** Upload de documentos (ex: carta de condução, registo criminal) pelo motorista.
-4.  **Sistema de Suporte (Tickets):** Comunicação com parceiro/admin, com categorias (incluindo Acidente/Avaria com fotos) e estados.
-5.  **Lógica de Negócio Avançada para Ponto:**
-    *   Deteção de movimento por GPS para sugerir check-in/out.
-    *   Limite de horas de trabalho num período de 24h rolante (não diário).
-    *   Bloqueio automático do motorista após atingir o limite de horas.
-    *   Permissões configuráveis pelo parceiro (ex: autorizar edição de registos, alterar limite de horas).
-    *   Registo opcional da matrícula do veículo no check-in.
+Requisitos da App Móvel:
+1.  **Relógio de Ponto:** Check-in/out, pausas, histórico, e edição de registos com tipo trabalho vs pessoal. Lógica de 24h rolante.
+2.  **Ganhos e Relatórios:** Visualização de ganhos semanais e upload de recibos.
+3.  **Gestão de Documentos:** Upload de documentos.
+4.  **Sistema de Suporte (Tickets):** Comunicação com parceiro, com várias categorias e upload de múltiplas fotos.
+5.  **Sistema de Turnos:** Visualização na app móvel de horários configurados na webapp.
+6.  **Sistema de Vistorias (Tipo WeProov):**
+    *   Perfil de Inspetor específico.
+    *   Processo de vistoria guiado na app móvel (fotos, notas, assinatura).
+    *   Uso de IA (GPT-4 Vision) para leitura automática de matrícula (OCR) e deteção de novos danos por comparação com vistorias anteriores.
+    *   Geração de relatório e envio simulado por WhatsApp/Email para confirmação do motorista.
+    *   Consulta dos relatórios e apontamentos na webapp pelo parceiro.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
 - Uma aplicação full-stack (React + FastAPI + MongoDB).
-- A funcionalidade de Gestão de Usuários na webapp está completa.
-- **Protótipo de App Móvel via Expo Snack:** Devido a problemas persistentes com o ambiente local do utilizador, o desenvolvimento da app móvel foi transferido para um único ficheiro () que o utilizador copia e cola no site  para testar.
-- **Backend Extensivo para App Móvel:** Foram criados múltiplos endpoints novos para suportar todas as funcionalidades da app móvel, incluindo tickets, documentos, relatórios de ganhos, e uma complexa lógica de relógio de ponto com permissões.
+- O desenvolvimento da app móvel é feito num único ficheiro () e testado pelo utilizador através do site  para contornar problemas de ambiente local.
+- Foram implementadas extensas funcionalidades na app móvel: autenticação, relógio de ponto com timer e progresso, ganhos, documentos, tickets de suporte e um ecrã de turnos.
+- A aplicação web () foi significativamente melhorada. A página de detalhe do motorista () agora possui abas dedicadas onde os parceiros podem:
+    - Configurar permissões da app móvel (limite de horas, permissão de edição).
+    - Consultar um resumo dos dados do relógio de ponto.
+    - Definir e gerir os turnos semanais de trabalho para cada motorista.
+- Foi iniciada a implementação do sistema de vistorias, com a criação do serviço de IA () no backend para análise de imagens.
 
 **Last working item**:
--   **Last item agent was working:** O agente estava a finalizar a implementação da lógica de negócio mais complexa para o relógio de ponto, conforme as últimas especificações do utilizador. Isto incluiu:
-    1.  Cálculo do limite de horas de trabalho numa janela de 24 horas rolante.
-    2.  Sistema de permissões para parceiros controlarem se os motoristas podem editar registos ou alterar o seu próprio limite de horas.
-    3.  Lógica para bloquear um motorista que excede o limite de horas, impedindo-o de fazer check-in até que um período de descanso seja cumprido.
-    4.  Adição de um campo opcional para a matrícula do veículo no check-in.
--   **Status:** IN PROGRESS
--   **Agent Testing Done:** Y (O agente testou os novos endpoints de backend com  e confirmou que funcionam).
--   **Which testing method agent to use?** Manual testing by user via Expo Snack. O próximo agente deve fornecer ao utilizador o link para o ficheiro  e instruí-lo a copiar o conteúdo para  para testar a última versão.
--   **User Testing Done:** N
+- **Last item agent was working:** O agente estava a implementar o backend para o sistema de vistorias com IA, conforme solicitado pelo utilizador. O objetivo era usar IA (GPT-4 Vision) para analisar as fotos das vistorias, ler a matrícula (OCR) e comparar com vistorias anteriores para detetar novos danos. O agente criou o serviço de IA () e começou a integrá-lo no endpoint de criação de vistorias móveis ().
+- **Status:** IN PROGRESS
+- **Agent Testing Done:** N
+- **Which testing method agent to use?** both. O backend necessitará de testes via  para validar a integração com o serviço de IA. A app móvel, após ser atualizada, precisará de testes via Expo Snack. A webapp precisará de testes com a ferramenta de screenshot quando a página de relatórios for criada.
+- **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
--   **Issue 1: (P0) Falha na Filtragem de Datas do RPA da Via Verde**
-    -   **Attempted fixes:** A abordagem atual é descarregar o ficheiro CSV completo e filtrá-lo no backend.
-    -   **Next debug checklist:** Modificar o script em  para implementar a filtragem via Pandas após o download.
-    -   **Why fix this issue and what will be achieved with the fix?** É um bloqueador crítico para a automação da Via Verde.
-    -   **Status:** NOT STARTED (nesta sessão)
-    -   **Is recurring issue?** Y
-    -   **Should Test frontend/backend/both after fix?** Backend
-    -   **Blocked on other issue:** N/A
+- **Issue 1: (P0) Falha na Filtragem de Datas do RPA da Via Verde**
+    - **Description:** Problema crítico e recorrente que impede a sincronização correta das transações da Via Verde. A automação descarrega todas as transações em vez de apenas as do período selecionado.
+    - **Attempted fixes:** A abordagem atual é descarregar o ficheiro CSV completo e filtrá-lo no backend.
+    - **Next debug checklist:** Modificar o script em  para implementar a filtragem de datas via Pandas após o download do CSV.
+    - **Why fix this issue and what will be achieved with the fix?** É um bloqueador para uma funcionalidade central da aplicação web.
+    - **Status:** NOT STARTED
+    - **Is recurring issue?** Y
+    - **Should Test frontend/backend/both after fix?** Backend
+    - **Blocked on other issue:** N/A
 
--   **Issue 2: (P1) Implementação da UI para Desativação de Motorista**
-    -   **Attempted fixes:** N/A
-    -   **Next debug checklist:** Adicionar um botão e modal na página de gestão de motoristas na webapp para definir a .
-    -   **Why fix this issue and what will be achieved with the fix?** Requisito original pendente para melhorar a gestão de motoristas.
-    -   **Status:** NOT STARTED
-    -   **Is recurring issue?** N
-    -   **Should Test frontend/backend/both after fix?** Both
-    -   **Blocked on other issue:** N/A
+- **Issue 2: (P1) Implementação da UI para Desativação de Motorista**
+    - **Description:** Requisito original para permitir que parceiros desativem motoristas através da interface web. A UI para esta ação ainda não foi criada.
+    - **Attempted fixes:** N/A
+    - **Next debug checklist:** Adicionar um botão e um modal de confirmação na página de gestão de motoristas na webapp ( ou ) para definir a  do motorista.
+    - **Why fix this issue and what will be achieved with the fix?** Completa um requisito original e melhora a gestão do ciclo de vida dos motoristas.
+    - **Status:** NOT STARTED
+    - **Is recurring issue?** N
+    - **Should Test frontend/backend/both after fix?** Frontend
+    - **Blocked on other issue:** N/A
 
 **In progress Task List**:
--   **Task 1: (P0) Validar a Implementação da App Móvel com o Utilizador**
-    -   **Where to resume:** O agente acabou de implementar a última leva de funcionalidades complexas no  e no backend. O próximo passo é o utilizador testar.
-    -   **What will be achieved with this?** Confirmar que todas as funcionalidades da app móvel, especialmente a lógica do relógio de ponto de 24h, funcionam conforme esperado pelo utilizador.
-    -   **Status:** USER VERIFICATION PENDING
-    -   **Should Test frontend/backend/both after fix?** Frontend (Mobile App via Expo Snack)
-    -   **Blocked on something:** Ação do utilizador.
-
--   **Task 2: (P1) Implementar UI para Parceiros Gerirem Permissões**
-    -   **Where to resume:** O agente criou os endpoints de backend () para que parceiros possam autorizar/bloquear a edição de registos e a alteração do limite de horas pelos motoristas. Falta a interface na webapp.
-    -   **What will be achieved with this?** Permitir que os parceiros utilizem as permissões que foram implementadas no backend.
-    -   **Status:** NOT STARTED
-    -   **Should Test frontend/backend/both after fix?** Frontend (WebApp)
-    -   **Blocked on something:** N/A
+- **Task 1: (P0) Implementar Sistema de Vistorias com IA**
+    - **Description:** Finalizar a implementação do sistema de vistorias tipo WeProov, que é a prioridade atual do utilizador.
+    - **Where to resume:** O agente já criou o serviço  e o endpoint em . Os próximos passos são:
+        1.  Implementar a lógica em  para chamar a API do GPT-4 Vision usando  para realizar OCR da matrícula e análise de danos.
+        2.  Finalizar o endpoint  para processar as imagens, chamar o serviço de IA, comparar os resultados com a vistoria anterior do veículo e guardar o relatório completo na base de dados.
+        3.  Atualizar a app móvel () para suportar o novo fluxo de vistoria guiado por IA.
+        4.  Criar a página na webapp para que os parceiros possam consultar os relatórios de vistoria gerados.
+    - **What will be achieved with this?** Uma funcionalidade de vistorias avançada e diferenciadora, com automação de análise de danos.
+    - **Status:** IN PROGRESS
+    - **Should Test frontend/backend/both after fix?** Both
+    - **Blocked on something:** N/A
 
 **Upcoming and Future Tasks**
--   **Upcoming Tasks:**
-    -   (P0) Corrigir o problema de filtragem do RPA da Via Verde.
-    -   (P1) Implementar a UI para desativar motoristas.
-    -   (P1) Finalizar a integração com a API da Uber (atualmente bloqueada pela aprovação da Uber).
-    -   (P2) Criar página de Histórico de Sincronizações na webapp.
--   **Future Tasks:**
-    -   (P1) Implementar Integração Ifthenpay (adiado pelo utilizador).
-    -   (P1) Implementar Integração Moloni (adiado pelo utilizador).
-    -   (P2) App Móvel: Implementar funcionalidade de **Vistorias de Veículos**.
-    -   (P3) Refatoração Contínua do  para modularizar as rotas.
+- **Upcoming Tasks:**
+    - (P0) Corrigir o problema de filtragem do RPA da Via Verde.
+    - (P1) Criar a página na webapp para visualização dos relatórios de vistoria.
+    - (P1) Implementar a UI para desativar motoristas.
+    - (P2) Criar uma página na webapp para parceiros gerirem e aprovarem/rejeitarem os recibos de ganhos enviados pelos motoristas.
+    - (P2) Criar o perfil de Inspetor na webapp, associado a um parceiro.
+- **Future Tasks:**
+    - (P1) Finalizar a integração com a API da Uber (atualmente bloqueada pela aprovação da Uber).
+    - (P1) Implementar Integração Ifthenpay e Moloni (adiado pelo utilizador).
+    - (P2) Implementar o envio de relatórios de vistoria via WhatsApp e o fluxo de confirmação pelo motorista.
+    - (P3) Refatorar o  para uma estrutura de projeto React Native modular.
+    - (P3) Refatorar  para decompor as abas em componentes mais pequenos.
 
 **Completed work in this session**
--   **Mudança de Estratégia para Teste da App Móvel:** Abandonou-se a tentativa de fazer o build local na máquina do utilizador e adotou-se o **Expo Snack** como método de prototipagem e teste, o que desbloqueou completamente o desenvolvimento da app móvel.
--   **Implementação Massiva de Funcionalidades na App Móvel:** Todo o protótipo da app foi criado num único ficheiro () e inclui:
-    -   Autenticação e navegação por tabs.
-    -   **Relógio de Ponto:** Check-in/out, pausas, consulta de histórico, e edição de registos.
-    -   **Ganhos:** Consulta de ganhos semanais com seletor de semana e upload de recibos.
-    -   **Documentos:** Upload de ficheiros.
-    -   **Suporte:** Sistema de tickets com categorias, chat e upload de imagens.
-    -   **GPS e Alertas:** Deteção de movimento para popups de check-in/out e alertas de excesso de horas.
--   **Criação de Endpoints de Backend:** Desenvolvidos todos os endpoints necessários em , , e  para suportar a app.
--   **Criação de Endpoint para Servir Código:** Criado um endpoint estático para o utilizador poder aceder e copiar facilmente o código da app para o Expo Snack.
+- **WebApp - Gestão Avançada de Motoristas:**
+  - A página  foi transformada num centro de controlo para parceiros, com novas abas para gerir:
+    - **Configurações da App:** Definir limites de horas e permissões de edição para cada motorista.
+    - **Relógio de Ponto:** Visualizar resumos de horas trabalhadas.
+    - **Turnos:** Configurar horários de trabalho semanais para os motoristas.
+- **App Móvel - Melhorias de UI/UX e Novas Funcionalidades:**
+  - O ecrã principal do relógio de ponto foi melhorado com um temporizador em tempo real e uma barra de progresso.
+  - Implementada a distinção entre tempo de trabalho e pessoal nas edições de registos.
+  - Adicionada a funcionalidade de upload de recibos no ecrã de ganhos.
+  - Expandidas as categorias de tickets de suporte, com upload de múltiplas fotos na criação.
+  - Criado um novo ecrã Turnos para os motoristas verem os seus horários.
+  - Iniciada a construção do ecrã de Vistorias, com a estrutura básica.
+- **Backend - Suporte às Novas Funcionalidades:**
+  - Criados endpoints em  para suportar as novas abas da  e a lógica de tempo pessoal.
+  - Criado o ficheiro e rotas em  para gerir os horários dos motoristas.
+  - Atualizado  para aceitar múltiplas fotos.
+  - Iniciada a arquitetura do sistema de vistorias com a criação de  e do serviço de IA .
 
 **Earlier issues found/mentioned but not fixed**
--   **Integridade de Dados:** A base de dados pode conter inconsistências, como o mesmo veículo atribuído a múltiplos motoristas ativos.
--   **Dados de Portagens Órfãos:** Registos de portagens para matrículas não existentes são ignorados durante a importação.
+- **Integridade de Dados:** A base de dados pode conter inconsistências, como o mesmo veículo atribuído a múltiplos motoristas ativos.
+- **Dados de Portagens Órfãos:** Registos de portagens para matrículas não existentes são ignorados durante a importação.
 
 **Known issue recurrence from previous fork**
--   **Issue recurrence in previous fork:** Falha na Filtragem de Datas do RPA da Via Verde.
--   **Recurrence count:** HIGH.
--   **Status:** IN PROGRESS (mas não trabalhado nesta sessão).
+- **Issue recurrence in previous fork:** Falha na Filtragem de Datas do RPA da Via Verde.
+- **Recurrence count:** HIGH
+- **Status:** NOT STARTED
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **Expo Snack Prototyping:** Utilização do  como principal ferramenta de desenvolvimento e teste da app React Native para contornar problemas de ambiente local do utilizador.
--   **Backend-Driven UI Logic:** Muitas permissões e configurações da app móvel (ex: pode editar registos, limite de horas) são controladas por endpoints no backend.
--   **Rolling Time Window Logic:** Implementação de uma lógica de contagem de horas de trabalho numa janela móvel de 24 horas, em vez de um reset diário.
--   **React Native Location API:** Uso do  para monitorizar a localização e velocidade do dispositivo para acionar eventos na app.
+- **Expo Snack Prototyping:** Uso contínuo do  como principal ferramenta de teste da app React Native.
+- **Backend-Driven UI Logic:** A webapp () agora configura dinamicamente o comportamento da app móvel.
+- **AI-Powered Inspections:** Utilização de GPT-4 Vision (via ) para OCR de matrículas e deteção de danos em vistorias.
+- **Modular Web UI with Tabs:** A página  foi expandida usando o componente  da Shadcn UI para organizar a crescente quantidade de funcionalidades de gestão.
 
 **key DB schema**
--   ****: (nova) armazena tickets de suporte com uid=0(root) gid=0(root) groups=0(root), , , , , .
--   ****: (nova) armazena mensagens de chat dentro de um ticket.
--   ****: (nova) armazena uploads de documentos com metadados.
--   ****: (nova) armazena o recibo de uma semana específica para um motorista.
--   ****: (nova) armazena configurações por motorista, como , , .
--   ****: atualizado para incluir  (opcional) e  (histórico de edições).
+- ****: (nova) armazena a configuração de turnos semanais por motorista, com dias, horários e veículo associado.
+- ****: (a ser expandida) irá armazenar os relatórios de vistoria, incluindo fotos, notas, assinatura e os resultados da análise de IA (danos detetados, comparação).
+- ****: atualizado para incluir  (trabalho ou pessoal).
+- ****: atualizado para incluir  ('nao_enviado', 'pendente', 'aprovado').
 
 **All files of reference**
--   : O ficheiro central que contém todo o código da aplicação móvel.
--   : Cópia do ficheiro acima, servido estaticamente para o utilizador.
--   : Contém a lógica mais complexa, incluindo o relógio de ponto, relatórios e permissões.
--   : Endpoints para o sistema de suporte.
--   : Endpoints para upload de documentos e recibos.
+- : Ficheiro central da aplicação móvel, contém todas as novas funcionalidades.
+- : Página da webapp onde foram adicionadas as abas de gestão de App, Ponto e Turnos.
+- : Contém a lógica de backend para as novas funcionalidades de gestão de ponto e permissões.
+- : Novo ficheiro com os endpoints para gestão de turnos.
+- : Novo ficheiro com os endpoints para a funcionalidade de vistorias móveis.
+- : Novo serviço para integrar a análise de imagens com IA.
+- : Cópia pública do código da app móvel para o utilizador testar.
 
-**Areas that need refactoring**:
-- A aplicação móvel está contida num único ficheiro de >2000 linhas (). Embora isto seja funcional para o workflow com o Expo Snack, se o projeto se tornar um build nativo real, precisará de ser decomposto em componentes, ecrãs e serviços, seguindo as melhores práticas de React Native.
+**Areas that need refactoring**
+- O ficheiro  já ultrapassou as 3500 linhas e precisa urgentemente de ser decomposto numa estrutura de projeto React Native padrão (ecrãs, componentes, serviços).
+- O ficheiro  também está a ficar muito grande e complexo. As lógicas de cada aba deveriam ser extraídas para componentes filhos dedicados.
 
 **key api endpoints**
--   : Inicia um turno (agora com  opcional).
--   : Obtém as configurações e permissões do motorista.
--   : Endpoint para parceiros definirem permissões para os seus motoristas.
--   : Cria um novo ticket de suporte.
--   : Adiciona fotos a um ticket.
--   : Faz o upload de um recibo para uma semana específica.
--   : Obtém o resumo de ganhos (agora com  e  como parâmetros).
+- : (Novo) Permite a um parceiro definir as permissões da app para um motorista.
+- : (Novo) Obtém o resumo do relógio de ponto para a ficha do motorista.
+- : (Novo) Endpoint para a app móvel obter os turnos do motorista.
+- : (Novo) Endpoint para a webapp guardar a configuração de turnos de um motorista.
+- : (Novo) Endpoint para a app móvel submeter uma nova vistoria para análise com IA.
+- : (Novo) Endpoint para a app móvel listar as vistorias do motorista.
 
 **Critical Info for New Agent**
--   **O workflow da app móvel é via Expo Snack.** Não tente fazer builds locais (, ) pois o utilizador enfrentou múltiplos problemas. O fluxo de trabalho é: editar , copiar o conteúdo para , e instruir o utilizador a copiar o texto do link  para .
--   **A última implementação é complexa e não foi validada pelo utilizador.** A prioridade máxima é guiar o utilizador no teste da última versão da app, focando na lógica de 24h rolantes e nas permissões.
--   **As tarefas críticas do handoff anterior (RPA da Via Verde, UI de desativação) foram ignoradas.** Após a validação da app móvel, estas devem ser as próximas prioridades para abater a dívida técnica.
--   **Falta a UI para o parceiro.** O backend para as permissões dos motoristas está pronto, mas a interface na webapp para o parceiro as configurar não existe. Esta é uma tarefa pendente importante para completar o fluxo.
+- **O workflow da app móvel continua a ser via Expo Snack.** Edite , copie para  e instrua o utilizador a testar em .
+- **A prioridade máxima é a tarefa em progresso: o sistema de vistorias com IA.** O utilizador especificou que a interface complexa de vistoria é na app móvel, enquanto a webapp serve apenas para consultar os relatórios.
+- **Use  para a IA.** O playbook para GPT-4 Vision foi obtido e a implementação deve seguir esse guia, utilizando a .
+- **Atenção à confusão de componentes na webapp.** O agente anterior identificou corretamente que as modificações devem ser feitas em  (a página de detalhe) e não no .
+- As tarefas críticas mais antigas (RPA da Via Verde, UI de desativação) continuam pendentes e devem ser abordadas após a conclusão da funcionalidade de vistorias.
 
 **documents and test reports created in this job**
 - 
 - 
 - 
-- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User (Message 179):** Refinou os requisitos para o relógio de ponto: limite de horas só pode ser alterado com permissão; edição é autorizada por defeito; o limite de 10h é numa janela de 24h rolante; o motorista fica bloqueado após atingir o limite; matrícula é opcional. (PENDING IMPLEMENTATION)
-2.  **Agent (Message 180):** Confirmou o entendimento e começou a implementar a nova lógica. (IN PROGRESS)
-3.  **... (Messages 181-215):** Agente implementa a lógica complexa no backend e atualiza o ficheiro da app móvel (). (COMPLETED)
-4.  **Agent (Message 216):** Finaliza a implementação. (COMPLETED)
-
-**A próxima ação é apresentar a nova versão da app móvel ao utilizador para teste.**
+1. **User (msg 351):** Pede para criar um perfil de inspeção na app móvel, idêntico ao sistema WeProov.
+2. **Agent (msg 352-354):** Pesquisa sobre o WeProov e propõe um plano de implementação detalhado, incluindo guia de fotos, marcação de danos, assinatura e relatório PDF.
+3. **User (msg 398):** Refina os requisitos para o sistema de vistorias: perfil de inspetor, IA para análise de danos, OCR de matrícula, comparação entre vistorias e relatório por WhatsApp.
+4. **Agent (msg 399):** Pede esclarecimentos sobre custos de IA, simulação de envio e interface de confirmação.
+5. **User (msg 401):** Confirma o uso da Emergent LLM Key, concorda com a simulação de envio e especifica que a interface de vistoria do inspetor deve ser na webapp.
+6. **Agent (msg 402-407):** Confirma o entendimento, obtém o playbook da integração GPT-4 Vision e começa a implementação na webapp.
+7. **User (msg 408):** **CORRIGE O AGENTE.** Esclarece que a interface de *realização* da vistoria é na **app móvel**, e a **webapp** deve apenas mostrar os relatórios e apontamentos.
+8. **Agent (msg 409):** Entende a correção e muda o plano: vai melhorar a app móvel com IA e criar uma página de relatórios na webapp. Começa pelo backend, criando o serviço de IA.
+9. **Agent (msg 410-418):** Cria o ficheiro  e começa a integrar a chamada ao serviço de IA no endpoint de criação de vistorias. (IN PROGRESS)
+10. **(No pending user messages)** O agente está a meio da implementação da última instrução do utilizador.
 
 **Project Health Check:**
--   **Broken:**
-    -   Sincronização com a Via Verde (filtragem de datas).
-    -   Sincronização com a Uber (RPA abandonado, API pendente).
--   **Mocked:** A aplicação móvel inteira está a ser prototipada via Expo Snack e não é um build de produção.
+- **Broken:**
+    - Sincronização com a Via Verde (filtragem de datas).
+- **Mocked:**
+    - Toda a aplicação móvel, que é um protótipo no Expo Snack.
+    - A análise de danos por IA e o envio de relatórios por WhatsApp (ainda não implementados).
 
 **3rd Party Integrations**
--   **Bolt API:** Ativa.
--   **WhatsApp Cloud API:** Ativa.
--   **Playwright:** Usado para Via Verde (com bug).
--   **Uber Pay API:** Integração bloqueada, pendente de aprovação.
--   **Expo (React Native):** Utilizado para o desenvolvimento da app móvel (via Expo Snack).
--   **Expo Location:** Utilizado na app móvel para deteção de movimento por GPS.
+- **Bolt API:** Ativa.
+- **WhatsApp Cloud API:** Ativa (usada para notificações, não para os relatórios de vistoria ainda).
+- **Playwright:** Usado para o RPA da Via Verde (com bug).
+- **Uber Pay API:** Integração bloqueada, pendente de aprovação.
+- **Expo (React Native):** Utilizado para o desenvolvimento da app móvel (via Expo Snack).
+- **OpenAI GPT-4 Vision:** A ser implementado para análise de vistorias, usa **Emergent LLM Key**.
 
 **Testing status**
--   **Testing agent used after significant changes:** NO (o agente fez os testes manualmente).
--   **Troubleshoot agent used after agent stuck in loop:** NO
--   **Test files created:** N/A
--   **Known regressions:** A automação da Via Verde continua por resolver.
+- **Testing agent used after significant changes:** NO
+- **Troubleshoot agent used after agent stuck in loop:** NO
+- **Test files created:** N/A
+- **Known regressions:** A automação da Via Verde continua por resolver.
 
 **Credentials to test flow:**
--   **Admin:**  / 
--   **Parceiro de teste (Zeny):**  / 
+- **Admin:**  / 
+- **Parceiro de teste (Zeny):**  / 
 
 **What agent forgot to execute**
--   O agente concentrou-se totalmente nas novas funcionalidades da app móvel a pedido do utilizador, mas não abordou as duas tarefas de alta prioridade do handoff anterior: **corrigir o RPA da Via Verde** e implementar a **UI de desativação de motorista**.
--   O agente criou os endpoints de backend para que os parceiros configurem as permissões dos motoristas, mas esqueceu-se de criar a interface correspondente na aplicação web, tornando a funcionalidade inutilizável para os parceiros.</analysis>
+- O agente seguiu corretamente as prioridades do utilizador, adiando tarefas mais antigas. No entanto, o plano de criar a página na webapp para **visualizar os relatórios de vistoria**, que fazia parte da última instrução do utilizador, ainda não foi iniciado.</analysis>
