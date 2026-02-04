@@ -1723,7 +1723,10 @@ const VistoriasScreen = ({ user }) => {
     setKm('');
     setCombustivel('50');
     setAssinatura(null);
-    setStep(1);
+    setSelectedMotorista(null);
+    // Para inspetor/parceiro, começar com seleção de motorista (step 0)
+    // Para motorista, ir direto para fotos (step 1)
+    setStep(user.role === 'motorista' ? 1 : 0);
     setShowNovaVistoria(true);
   };
 
