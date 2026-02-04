@@ -12656,6 +12656,7 @@ app.include_router(tickets_router, prefix="/api")
 app.include_router(documentos_motorista_router, prefix="/api")
 app.include_router(turnos_router, prefix="/api")
 app.include_router(vistorias_mobile_router, prefix="/api")
+app.include_router(inspetores_router, prefix="/api")
 
 # api_router will be included at the very end of the file, after all routes are defined
 # ==================== DOCUMENTO VALIDATION SYSTEM ====================
