@@ -1,168 +1,183 @@
 <analysis>**original_problem_statement:**
-O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas. Os requisitos incluem:
+O utilizador solicitou o desenvolvimento de uma aplicação de gestão de frotas.
+
+Requisitos Originais:
 1.  Corrigir a sincronização com a Via Verde (falha na filtragem de datas).
 2.  Finalizar a funcionalidade de desativação de motoristas.
-3.  Implementar a sincronização com a Uber (inicialmente via RPA, agora via API oficial).
-4.  Implementar um sistema de gestão de utilizadores com diferentes perfis.
+3.  Implementar a sincronização com a Uber (via API oficial, pendente de aprovação).
+4.  Implementar um sistema de gestão de utilizadores com diferentes perfis (Concluído).
 5.  Adicionar a capacidade de criar veículos automaticamente durante a sincronização da Via Verde.
-6.  Criar uma aplicação móvel para motoristas com Relógio de Ponto, Upload de Documentos e Vistorias de Veículos.
 
-PRODUCT REQUIREMENTS:
-- **Gestão de Utilizadores:** Admins podem criar e gerir utilizadores (Admin, Gestor, Parceiro, Motorista). Gestores podem ser associados a parceiros. Admins podem conceder acesso gratuito por um período e habilitar/desabilitar módulos específicos por utilizador.
-- **Integração Uber:** Automatizar a extração de rendimentos semanais. Após a falha do RPA, a abordagem mudou para a utilização da API oficial da Uber (Uber Pay API).
-- **App Nativa (TVDEFleet Drivers):** Uma aplicação para motoristas (Android/iOS) que partilha o login com a plataforma web. As funcionalidades iniciais são: Relógio de Ponto (check-in, pausa, check-out), Upload de Documentos e Vistorias de Veículos.
-- **Integração Via Verde:** Automatizar a extração de transações. O problema de filtragem de datas no RPA persiste.
+Requisitos Adicionados nesta Sessão (App Móvel):
+1.  **Relógio de Ponto:** Check-in/out, pausas, histórico diário, e consulta de registos.
+2.  **Ganhos e Relatórios:** Visualização de ganhos semanais (Bolt/Uber), despesas, e upload de recibos.
+3.  **Gestão de Documentos:** Upload de documentos (ex: carta de condução, registo criminal) pelo motorista.
+4.  **Sistema de Suporte (Tickets):** Comunicação com parceiro/admin, com categorias (incluindo Acidente/Avaria com fotos) e estados.
+5.  **Lógica de Negócio Avançada para Ponto:**
+    *   Deteção de movimento por GPS para sugerir check-in/out.
+    *   Limite de horas de trabalho num período de 24h rolante (não diário).
+    *   Bloqueio automático do motorista após atingir o limite de horas.
+    *   Permissões configuráveis pelo parceiro (ex: autorizar edição de registos, alterar limite de horas).
+    *   Registo opcional da matrícula do veículo no check-in.
 
 **User's preferred language**: Portuguese (português)
 
 **what currently exists?**
-- Uma aplicação full-stack (React + FastAPI + MongoDB) com integrações funcionais para a Bolt e WhatsApp.
-- Uma página de Gestão de Usuários () totalmente funcional, onde administradores podem criar utilizadores com diferentes perfis, associar gestores a parceiros, e gerir acessos (período gratuito e módulos específicos). A interface foi refinada para uma visualização em tabela.
-- A API da Uber foi investigada. Após o fracasso do RPA devido a CAPTCHAs, o utilizador foi guiado no processo de solicitação de acesso à API Uber Pay. O pedido está pendente de aprovação por parte da Uber. Um ficheiro de serviço () foi criado para a futura implementação.
-- Uma nova aplicação móvel em React Native (Expo) chamada  foi criada na diretoria . A estrutura inicial, ecrãs (Login, Relógio de Ponto) e os endpoints de backend para a funcionalidade de Relógio de Ponto foram implementados e testados.
+- Uma aplicação full-stack (React + FastAPI + MongoDB).
+- A funcionalidade de Gestão de Usuários na webapp está completa.
+- **Protótipo de App Móvel via Expo Snack:** Devido a problemas persistentes com o ambiente local do utilizador, o desenvolvimento da app móvel foi transferido para um único ficheiro () que o utilizador copia e cola no site  para testar.
+- **Backend Extensivo para App Móvel:** Foram criados múltiplos endpoints novos para suportar todas as funcionalidades da app móvel, incluindo tickets, documentos, relatórios de ganhos, e uma complexa lógica de relógio de ponto com permissões.
 
 **Last working item**:
--   **Last item agent was working:** O agente estava a ajudar o utilizador a executar a nova aplicação móvel  no seu computador local usando o Expo Go. O utilizador estava a enfrentar problemas com a instalação de dependências (). O agente corrigiu erros no código e problemas de dependências, gerou um novo ficheiro ZIP com o código-fonte e instruiu o utilizador a executar .
--   **Status:** BLOCKED
--   **Agent Testing Done:** N (para a app móvel no ambiente do utilizador)
--   **Which testing method agent to use?** Manual testing by user. O agente precisa de fornecer instruções claras para que o utilizador consiga iniciar a aplicação e testá-la com o Expo Go no seu telemóvel.
+-   **Last item agent was working:** O agente estava a finalizar a implementação da lógica de negócio mais complexa para o relógio de ponto, conforme as últimas especificações do utilizador. Isto incluiu:
+    1.  Cálculo do limite de horas de trabalho numa janela de 24 horas rolante.
+    2.  Sistema de permissões para parceiros controlarem se os motoristas podem editar registos ou alterar o seu próprio limite de horas.
+    3.  Lógica para bloquear um motorista que excede o limite de horas, impedindo-o de fazer check-in até que um período de descanso seja cumprido.
+    4.  Adição de um campo opcional para a matrícula do veículo no check-in.
+-   **Status:** IN PROGRESS
+-   **Agent Testing Done:** Y (O agente testou os novos endpoints de backend com  e confirmou que funcionam).
+-   **Which testing method agent to use?** Manual testing by user via Expo Snack. O próximo agente deve fornecer ao utilizador o link para o ficheiro  e instruí-lo a copiar o conteúdo para  para testar a última versão.
 -   **User Testing Done:** N
 
 **All Pending/In progress Issue list**:
 -   **Issue 1: (P0) Falha na Filtragem de Datas do RPA da Via Verde**
-    -   **Attempted fixes:** Várias tentativas de interagir com a UI do site falharam. A estratégia atual, ainda por finalizar, é descarregar o ficheiro CSV completo e filtrá-lo no backend.
-    -   **Next debug checklist:**
-        1.  Modificar o script em  para descarregar o ficheiro sem filtrar por data na UI.
-        2.  Adicionar lógica Python (usando Pandas) para ler o CSV/Excel e filtrar as transações que pertencem à semana solicitada.
-        3.  Testar o endpoint  para garantir que apenas os dados corretos são importados.
-    -   **Why fix this issue and what will be achieved with the fix?** É um bloqueador crítico para a automação da Via Verde, que é uma funcionalidade central. A correção tornará a sincronização fiável.
-    -   **Status:** IN PROGRESS
+    -   **Attempted fixes:** A abordagem atual é descarregar o ficheiro CSV completo e filtrá-lo no backend.
+    -   **Next debug checklist:** Modificar o script em  para implementar a filtragem via Pandas após o download.
+    -   **Why fix this issue and what will be achieved with the fix?** É um bloqueador crítico para a automação da Via Verde.
+    -   **Status:** NOT STARTED (nesta sessão)
     -   **Is recurring issue?** Y
     -   **Should Test frontend/backend/both after fix?** Backend
     -   **Blocked on other issue:** N/A
 
 -   **Issue 2: (P1) Implementação da UI para Desativação de Motorista**
     -   **Attempted fixes:** N/A
-    -   **Next debug checklist:**
-        1.  Adicionar um botão na página de motoristas para acionar um modal de desativação.
-        2.  Implementar o modal com um seletor de data.
-        3.  Ligar o modal ao endpoint de backend existente para definir a .
-    -   **Why fix this issue and what will be achieved with the fix?** Melhora a usabilidade da gestão de motoristas, um requisito pendente.
+    -   **Next debug checklist:** Adicionar um botão e modal na página de gestão de motoristas na webapp para definir a .
+    -   **Why fix this issue and what will be achieved with the fix?** Requisito original pendente para melhorar a gestão de motoristas.
     -   **Status:** NOT STARTED
     -   **Is recurring issue?** N
     -   **Should Test frontend/backend/both after fix?** Both
     -   **Blocked on other issue:** N/A
 
 **In progress Task List**:
--   **Task 1: (P0) Ajudar o Utilizador a Testar a App Móvel**
-    -   **Where to resume:** O utilizador executou  com sucesso, mas depois executou  como um comando separado, o que falhou. O agente precisa de o instruir a executar o próximo comando correto.
-    -   **Next step:** Instruir o utilizador a executar  dentro da diretoria do projeto (). Depois, explicar como escanear o QR code com a app Expo Go no telemóvel.
-    -   **What will be achieved with this?** O utilizador poderá finalmente testar a primeira versão da aplicação móvel com a funcionalidade de Relógio de Ponto.
-    -   **Status:** IN PROGRESS
-    -   **Should Test frontend/backend/both after fix?** Frontend (Mobile App)
-    -   **Blocked on something:** Aguardando ação do utilizador no seu ambiente local.
+-   **Task 1: (P0) Validar a Implementação da App Móvel com o Utilizador**
+    -   **Where to resume:** O agente acabou de implementar a última leva de funcionalidades complexas no  e no backend. O próximo passo é o utilizador testar.
+    -   **What will be achieved with this?** Confirmar que todas as funcionalidades da app móvel, especialmente a lógica do relógio de ponto de 24h, funcionam conforme esperado pelo utilizador.
+    -   **Status:** USER VERIFICATION PENDING
+    -   **Should Test frontend/backend/both after fix?** Frontend (Mobile App via Expo Snack)
+    -   **Blocked on something:** Ação do utilizador.
 
--   **Task 2: (P1) Finalizar Integração com API da Uber**
-    -   **Where to resume:** O pedido de acesso aos scopes da API Uber Pay foi submetido e está pendente de aprovação pela Uber. A implementação está em pausa.
-    -   **What will be achieved with this?** Uma sincronização de rendimentos da Uber fiável e automática.
-    -   **Status:** BLOCKED
-    -   **Should Test frontend/backend/both after fix?** Backend
-    -   **Blocked on something:** Aprovação da Uber para os scopes da API.
+-   **Task 2: (P1) Implementar UI para Parceiros Gerirem Permissões**
+    -   **Where to resume:** O agente criou os endpoints de backend () para que parceiros possam autorizar/bloquear a edição de registos e a alteração do limite de horas pelos motoristas. Falta a interface na webapp.
+    -   **What will be achieved with this?** Permitir que os parceiros utilizem as permissões que foram implementadas no backend.
+    -   **Status:** NOT STARTED
+    -   **Should Test frontend/backend/both after fix?** Frontend (WebApp)
+    -   **Blocked on something:** N/A
 
 **Upcoming and Future Tasks**
 -   **Upcoming Tasks:**
-    -   (P1) App Móvel: Implementar funcionalidade de **Upload de Documentos**.
-    -   (P2) App Móvel: Implementar funcionalidade de **Vistorias de Veículos**.
-    -   (P2) Criar página de Histórico de Sincronizações para visualizar o estado e os logs de todas as execuções (Bolt, Via Verde, Uber).
+    -   (P0) Corrigir o problema de filtragem do RPA da Via Verde.
+    -   (P1) Implementar a UI para desativar motoristas.
+    -   (P1) Finalizar a integração com a API da Uber (atualmente bloqueada pela aprovação da Uber).
+    -   (P2) Criar página de Histórico de Sincronizações na webapp.
 -   **Future Tasks:**
     -   (P1) Implementar Integração Ifthenpay (adiado pelo utilizador).
     -   (P1) Implementar Integração Moloni (adiado pelo utilizador).
-    -   (P2) Implementar simulação de extração de CSV para Admins.
+    -   (P2) App Móvel: Implementar funcionalidade de **Vistorias de Veículos**.
     -   (P3) Refatoração Contínua do  para modularizar as rotas.
 
 **Completed work in this session**
-- **Gestão de Utilizadores (Completo):**
-    - Finalizado e testado o fluxo de criação de utilizadores (Admin, Gestor, Parceiro, Motorista) via UI.
-    - Unificada a terminologia de Utilizadores para Usuários em toda a interface.
-    - Refatorada a visualização de cartões para uma tabela compacta e resumida.
-    - Implementada a funcionalidade para admins concederem acesso gratuito por um período e gerirem módulos por utilizador.
-- **RPA da Uber (Abandonado):**
-    - Tentativas exaustivas de contornar o CAPTCHA da Uber falharam. A abordagem de RPA foi corretamente identificada como inviável e abandonada.
-- **API da Uber (Iniciado e Bloqueado):**
-    - O agente guiou o utilizador com sucesso através do complexo processo de solicitação de acesso à API Uber Pay no dashboard da Uber. O pedido está pendente de aprovação.
-- **App Nativa (Estrutura Criada):**
-    - Criado um novo projeto React Native () com Expo.
-    - Implementada a estrutura base, navegação e ecrãs de Login e Relógio de Ponto.
-    - Criados e testados os endpoints de backend necessários para a funcionalidade de Relógio de Ponto ().
-    - Criado um guia de instalação e um ficheiro ZIP do código-fonte para o utilizador testar localmente.
+-   **Mudança de Estratégia para Teste da App Móvel:** Abandonou-se a tentativa de fazer o build local na máquina do utilizador e adotou-se o **Expo Snack** como método de prototipagem e teste, o que desbloqueou completamente o desenvolvimento da app móvel.
+-   **Implementação Massiva de Funcionalidades na App Móvel:** Todo o protótipo da app foi criado num único ficheiro () e inclui:
+    -   Autenticação e navegação por tabs.
+    -   **Relógio de Ponto:** Check-in/out, pausas, consulta de histórico, e edição de registos.
+    -   **Ganhos:** Consulta de ganhos semanais com seletor de semana e upload de recibos.
+    -   **Documentos:** Upload de ficheiros.
+    -   **Suporte:** Sistema de tickets com categorias, chat e upload de imagens.
+    -   **GPS e Alertas:** Deteção de movimento para popups de check-in/out e alertas de excesso de horas.
+-   **Criação de Endpoints de Backend:** Desenvolvidos todos os endpoints necessários em , , e  para suportar a app.
+-   **Criação de Endpoint para Servir Código:** Criado um endpoint estático para o utilizador poder aceder e copiar facilmente o código da app para o Expo Snack.
 
 **Earlier issues found/mentioned but not fixed**
 -   **Integridade de Dados:** A base de dados pode conter inconsistências, como o mesmo veículo atribuído a múltiplos motoristas ativos.
--   **Dados de Portagens Órfãos:** Registos de portagens para matrículas não existentes são ignorados.
+-   **Dados de Portagens Órfãos:** Registos de portagens para matrículas não existentes são ignorados durante a importação.
 
 **Known issue recurrence from previous fork**
 -   **Issue recurrence in previous fork:** Falha na Filtragem de Datas do RPA da Via Verde.
 -   **Recurrence count:** HIGH.
--   **Status:** IN PROGRESS.
+-   **Status:** IN PROGRESS (mas não trabalhado nesta sessão).
 
 **Code Architecture**
 
 
 **Key Technical Concepts**
--   **React Native (Expo):** Criação de uma aplicação móvel para Android/iOS.
--   **Gestão de Acessos e Módulos:** Implementação de um sistema de permissões dinâmicas por utilizador.
--   **Depuração de RPA vs. API:** A sessão demonstrou a superioridade e a necessidade de migrar de um RPA instável (bloqueado por CAPTCHA) para uma API oficial.
+-   **Expo Snack Prototyping:** Utilização do  como principal ferramenta de desenvolvimento e teste da app React Native para contornar problemas de ambiente local do utilizador.
+-   **Backend-Driven UI Logic:** Muitas permissões e configurações da app móvel (ex: pode editar registos, limite de horas) são controladas por endpoints no backend.
+-   **Rolling Time Window Logic:** Implementação de uma lógica de contagem de horas de trabalho numa janela móvel de 24 horas, em vez de um reset diário.
+-   **React Native Location API:** Uso do  para monitorizar a localização e velocidade do dispositivo para acionar eventos na app.
 
 **key DB schema**
--   ****: Atualizado para incluir  (objeto com , , ) e  (lista de strings).
--   ****: Nova coleção para armazenar os eventos de check-in/out e pausas dos motoristas.
+-   ****: (nova) armazena tickets de suporte com uid=0(root) gid=0(root) groups=0(root), , , , , .
+-   ****: (nova) armazena mensagens de chat dentro de um ticket.
+-   ****: (nova) armazena uploads de documentos com metadados.
+-   ****: (nova) armazena o recibo de uma semana específica para um motorista.
+-   ****: (nova) armazena configurações por motorista, como , , .
+-   ****: atualizado para incluir  (opcional) e  (histórico de edições).
 
 **All files of reference**
--   : Ficheiro principal da funcionalidade de gestão de utilizadores.
--   : Contém a nova lógica para atualizar o acesso dos utilizadores.
--   : Novo serviço para interagir com a API oficial da Uber.
--   : Diretoria completa do novo projeto da aplicação móvel.
--   : Novos endpoints para a funcionalidade de relógio de ponto da app móvel.
+-   : O ficheiro central que contém todo o código da aplicação móvel.
+-   : Cópia do ficheiro acima, servido estaticamente para o utilizador.
+-   : Contém a lógica mais complexa, incluindo o relógio de ponto, relatórios e permissões.
+-   : Endpoints para o sistema de suporte.
+-   : Endpoints para upload de documentos e recibos.
+
+**Areas that need refactoring**:
+- A aplicação móvel está contida num único ficheiro de >2000 linhas (). Embora isto seja funcional para o workflow com o Expo Snack, se o projeto se tornar um build nativo real, precisará de ser decomposto em componentes, ecrãs e serviços, seguindo as melhores práticas de React Native.
+
+**key api endpoints**
+-   : Inicia um turno (agora com  opcional).
+-   : Obtém as configurações e permissões do motorista.
+-   : Endpoint para parceiros definirem permissões para os seus motoristas.
+-   : Cria um novo ticket de suporte.
+-   : Adiciona fotos a um ticket.
+-   : Faz o upload de um recibo para uma semana específica.
+-   : Obtém o resumo de ganhos (agora com  e  como parâmetros).
 
 **Critical Info for New Agent**
--   **PRIORIDADE MÁXIMA (P0): Ajudar o utilizador a testar a app móvel.** O utilizador está bloqueado no seu ambiente local. Forneça instruções passo a passo claras para que ele possa executar  e testar a app.
--   **Integração Uber está BLOQUEADA.** Não tente trabalhar nela até que o utilizador confirme que a Uber aprovou o acesso à API.
--   **O problema do RPA da Via Verde ainda é um P0 crítico** e não foi abordado nesta sessão. Deve ser a próxima tarefa de desenvolvimento principal após o desbloqueio da app móvel.
--   O utilizador é colaborativo, mas o seu ambiente de desenvolvimento local é propenso a erros. Seja muito explícito e simples nas instruções que envolvem comandos de terminal. Forneça os comandos exatos para copiar e colar.
+-   **O workflow da app móvel é via Expo Snack.** Não tente fazer builds locais (, ) pois o utilizador enfrentou múltiplos problemas. O fluxo de trabalho é: editar , copiar o conteúdo para , e instruir o utilizador a copiar o texto do link  para .
+-   **A última implementação é complexa e não foi validada pelo utilizador.** A prioridade máxima é guiar o utilizador no teste da última versão da app, focando na lógica de 24h rolantes e nas permissões.
+-   **As tarefas críticas do handoff anterior (RPA da Via Verde, UI de desativação) foram ignoradas.** Após a validação da app móvel, estas devem ser as próximas prioridades para abater a dívida técnica.
+-   **Falta a UI para o parceiro.** O backend para as permissões dos motoristas está pronto, mas a interface na webapp para o parceiro as configurar não existe. Esta é uma tarefa pendente importante para completar o fluxo.
 
 **documents and test reports created in this job**
--   : Relatório de teste bem-sucedido para a funcionalidade de Gestão de Utilizadores.
--   : Documento de planeamento inicial para as integrações.
--   : Guia de instalação para o utilizador.
--   : Código-fonte da aplicação móvel para o utilizador descarregar.
+- 
+- 
+- 
+- 
 
 **Last 10 User Messages and any pending HUMAN messages**
-1.  **User:** *[Envia log de erro do  com ERESOLVE].* (COMPLETED)
-2.  **Agent:** Sugere usar . (COMPLETED)
-3.  **User:** *[Envia log do  com sucesso, mas depois tenta executar  como um comando, que falha].* (PENDING)
-4.  **Agent:** *[Pergunta o que fazer a seguir].* (PENDING)
-5.  **User:**  (What to do next?). (PENDING)
-6.  **Agent:** *[Pergunta o que fazer a seguir].* (PENDING)
-7.  **User:**  *[Envia imagem do erro de  na app Expo Go].* (COMPLETED)
-8.  **Agent:** Corrige o código, cria novo ZIP e pede para tentar novamente. (COMPLETED)
-9.  **User:**  *[Envia imagem de um novo erro de compatibilidade do Expo].* (COMPLETED)
-10. **Agent:** Simplifica a app, cria novo ZIP e pede para tentar novamente. (COMPLETED)
+1.  **User (Message 179):** Refinou os requisitos para o relógio de ponto: limite de horas só pode ser alterado com permissão; edição é autorizada por defeito; o limite de 10h é numa janela de 24h rolante; o motorista fica bloqueado após atingir o limite; matrícula é opcional. (PENDING IMPLEMENTATION)
+2.  **Agent (Message 180):** Confirmou o entendimento e começou a implementar a nova lógica. (IN PROGRESS)
+3.  **... (Messages 181-215):** Agente implementa a lógica complexa no backend e atualiza o ficheiro da app móvel (). (COMPLETED)
+4.  **Agent (Message 216):** Finaliza a implementação. (COMPLETED)
+
+**A próxima ação é apresentar a nova versão da app móvel ao utilizador para teste.**
 
 **Project Health Check:**
 -   **Broken:**
     -   Sincronização com a Via Verde (filtragem de datas).
-    -   Sincronização com a Uber (RPA abandonado, API pendente de aprovação).
--   **Mocked:** N/A
+    -   Sincronização com a Uber (RPA abandonado, API pendente).
+-   **Mocked:** A aplicação móvel inteira está a ser prototipada via Expo Snack e não é um build de produção.
 
 **3rd Party Integrations**
 -   **Bolt API:** Ativa.
 -   **WhatsApp Cloud API:** Ativa.
--   **Playwright:** Usado para Via Verde (com bug), obsoleto para Uber.
--   **Uber Pay API:** Integração iniciada, pendente de aprovação de scopes.
--   **Expo (React Native):** Utilizado para o desenvolvimento da nova aplicação móvel.
+-   **Playwright:** Usado para Via Verde (com bug).
+-   **Uber Pay API:** Integração bloqueada, pendente de aprovação.
+-   **Expo (React Native):** Utilizado para o desenvolvimento da app móvel (via Expo Snack).
+-   **Expo Location:** Utilizado na app móvel para deteção de movimento por GPS.
 
 **Testing status**
--   **Testing agent used after significant changes:** YES (para a funcionalidade de Gestão de Utilizadores).
+-   **Testing agent used after significant changes:** NO (o agente fez os testes manualmente).
 -   **Troubleshoot agent used after agent stuck in loop:** NO
 -   **Test files created:** N/A
 -   **Known regressions:** A automação da Via Verde continua por resolver.
@@ -170,11 +185,7 @@ PRODUCT REQUIREMENTS:
 **Credentials to test flow:**
 -   **Admin:**  / 
 -   **Parceiro de teste (Zeny):**  / 
--   **Parceiro de teste (Conde):**  / 
--   **Credenciais Via Verde:**  / 
--   **Credenciais API Uber (para quando for aprovada):**
-    -   Client ID: 
-    -   Client Secret: 
 
 **What agent forgot to execute**
-- O agente esteve focado nas novas solicitações do utilizador (Gestão de Utilizadores, API Uber, App Nativa) e não deu seguimento às tarefas pendentes de alta prioridade do handoff anterior, nomeadamente a **correção do RPA da Via Verde** e a **UI de desativação de motorista**.</analysis>
+-   O agente concentrou-se totalmente nas novas funcionalidades da app móvel a pedido do utilizador, mas não abordou as duas tarefas de alta prioridade do handoff anterior: **corrigir o RPA da Via Verde** e implementar a **UI de desativação de motorista**.
+-   O agente criou os endpoints de backend para que os parceiros configurem as permissões dos motoristas, mas esqueceu-se de criar a interface correspondente na aplicação web, tornando a funcionalidade inutilizável para os parceiros.</analysis>

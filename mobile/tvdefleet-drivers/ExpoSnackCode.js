@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import * as Location from 'expo-location';
 
-const API_URL = 'https://fleetmanager-37.preview.emergentagent.com/api';
+const API_URL = 'https://fleetmanager-38.preview.emergentagent.com/api';
 
 // ===== API SERVICE =====
 const api = {
