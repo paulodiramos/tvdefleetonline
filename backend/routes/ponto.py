@@ -16,6 +16,9 @@ router = APIRouter(prefix="/ponto", tags=["Relógio de Ponto"])
 logger = logging.getLogger(__name__)
 db = get_database()
 
+# Configuração padrão de alertas
+DEFAULT_ALERTA_HORAS = 10  # 10 horas por defeito
+
 
 class CheckInRequest(BaseModel):
     latitude: Optional[float] = None
@@ -32,6 +35,17 @@ class CheckOutRequest(BaseModel):
 class PausaRequest(BaseModel):
     tipo: str  # 'iniciar' ou 'retomar'
     hora: Optional[str] = None
+
+
+class DefinicoesPontoRequest(BaseModel):
+    alerta_horas_maximas: Optional[int] = None  # Horas máximas antes de alerta
+    permitir_edicao_registos: Optional[bool] = None  # Se motorista pode editar
+
+
+class EditarRegistoRequest(BaseModel):
+    hora_inicio_real: str  # HH:MM
+    hora_fim_real: str  # HH:MM
+    justificacao: str  # Motivo da edição
 
 
 @router.get("/estado-atual")
