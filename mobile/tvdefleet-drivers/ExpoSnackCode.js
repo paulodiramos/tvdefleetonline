@@ -449,6 +449,27 @@ const PontoScreen = ({ user, status, setStatus }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Editar Registo</Text>
+            
+            {/* Tipo de Registo */}
+            <Text style={styles.inputLabel}>Tipo de Registo</Text>
+            <View style={styles.tipoSelector}>
+              <TouchableOpacity 
+                style={[styles.tipoBtn, editForm.tipo === 'trabalho' && styles.tipoBtnActive]} 
+                onPress={() => setEditForm({...editForm, tipo: 'trabalho'})}
+              >
+                <Text style={[styles.tipoBtnText, editForm.tipo === 'trabalho' && styles.tipoBtnTextActive]}>💼 Trabalho</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.tipoBtn, editForm.tipo === 'pessoal' && styles.tipoBtnPessoalActive]} 
+                onPress={() => setEditForm({...editForm, tipo: 'pessoal'})}
+              >
+                <Text style={[styles.tipoBtnText, editForm.tipo === 'pessoal' && styles.tipoBtnTextActive]}>🏠 Pessoal</Text>
+              </TouchableOpacity>
+            </View>
+            {editForm.tipo === 'pessoal' && (
+              <Text style={styles.tipoHint}>⚠️ Tempo pessoal não conta para horas de trabalho</Text>
+            )}
+            
             <View style={styles.timeRow}>
               <View style={styles.timeCol}>
                 <Text style={styles.inputLabel}>Início</Text>
