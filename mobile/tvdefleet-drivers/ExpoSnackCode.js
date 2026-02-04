@@ -2074,6 +2074,24 @@ const VistoriasScreen = ({ user }) => {
                   {v.total_danos > 0 ? `⚠️ ${v.total_danos} danos` : '✓ Sem danos'}
                 </Text>
               </View>
+              {/* Estado de aceitação do motorista */}
+              <View style={styles.vistoriaAceitacaoStatus}>
+                {v.motorista_aceite === true && (
+                  <View style={[styles.aceitacaoBadge, { backgroundColor: '#22c55e' }]}>
+                    <Text style={styles.aceitacaoBadgeText}>✓ Motorista Aceitou</Text>
+                  </View>
+                )}
+                {v.motorista_aceite === false && (
+                  <View style={[styles.aceitacaoBadge, { backgroundColor: '#ef4444' }]}>
+                    <Text style={styles.aceitacaoBadgeText}>✗ Motorista Rejeitou</Text>
+                  </View>
+                )}
+                {v.motorista_aceite === null || v.motorista_aceite === undefined && (
+                  <View style={[styles.aceitacaoBadge, { backgroundColor: '#f59e0b' }]}>
+                    <Text style={styles.aceitacaoBadgeText}>⏳ Aguarda Aceitação</Text>
+                  </View>
+                )}
+              </View>
             </TouchableOpacity>
           ))
         )}
