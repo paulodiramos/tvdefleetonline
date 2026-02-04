@@ -2324,7 +2324,7 @@ const VistoriasScreen = ({ user }) => {
           {step === 4 && (
             <View style={styles.stepContent}>
               <Text style={styles.stepTitle}>✍️ Assinatura</Text>
-              <Text style={styles.stepSubtitle}>Assine para confirmar a vistoria</Text>
+              <Text style={styles.stepSubtitle}>Assine com o dedo no campo abaixo</Text>
               
               <View style={styles.assinaturaBox}>
                 {assinatura ? (
@@ -2337,20 +2337,7 @@ const VistoriasScreen = ({ user }) => {
                 ) : (
                   <TouchableOpacity 
                     style={styles.assinaturaBtn}
-                    onPress={async () => {
-                      // Simular assinatura com foto (em produção usaria biblioteca de signature)
-                      Alert.alert(
-                        'Assinatura',
-                        'Em produção, aqui apareceria uma área para desenhar. Por agora, tire uma foto da sua assinatura.',
-                        [
-                          { text: 'Cancelar' },
-                          { text: 'Fotografar', onPress: async () => {
-                            const result = await ImagePicker.launchCameraAsync({ mediaTypes: ImagePicker.MediaTypeOptions.Images, quality: 0.5, base64: true });
-                            if (!result.canceled) setAssinatura(result.assets[0]);
-                          }}
-                        ]
-                      );
-                    }}
+                    onPress={() => setShowAssinaturaModal(true)}
                   >
                     <Text style={styles.assinaturaBtnIcon}>✍️</Text>
                     <Text style={styles.assinaturaBtnText}>Toque para assinar</Text>
@@ -2363,6 +2350,84 @@ const VistoriasScreen = ({ user }) => {
               </TouchableOpacity>
             </View>
           )}
+
+          {/* Modal de Assinatura - Canvas com dedo */}
+          <Modal visible={showAssinaturaModal} transparent animationType="slide">
+            <View style={styles.assinaturaModalOverlay}>
+              <View style={styles.assinaturaModalContent}>
+                <Text style={styles.assinaturaModalTitle}>Assine com o dedo</Text>
+                <View 
+                  style={styles.assinaturaCanvas}
+                  onTouchStart={(e) => {
+                    const touch = e.nativeEvent;
+                    setAssinaturaPath(prev => [...prev, { x: touch.locationX, y: touch.locationY, new: true }]);
+                  }}
+                  onTouchMove={(e) => {
+                    const touch = e.nativeEvent;
+                    setAssinaturaPath(prev => [...prev, { x: touch.locationX, y: touch.locationY }]);
+                  }}
+                >
+                  {/* Renderizar linhas da assinatura */}
+                  <Svg width="100%" height="100%">
+                    <SvgPath
+                      d={assinaturaPath.reduce((acc, point, i) => {
+                        if (point.new || i === 0) {
+                          return acc + `M${point.x},${point.y} `;
+                        }
+                        return acc + `L${point.x},${point.y} `;
+                      }, '')}
+                      stroke="#000"
+                      strokeWidth="3"
+                      fill="none"
+                    />
+                  </Svg>
+                </View>
+                <View style={styles.assinaturaModalActions}>
+                  <TouchableOpacity 
+                    style={[styles.cancelBtn, { flex: 1 }]} 
+                    onPress={() => {
+                      setAssinaturaPath([]);
+                      setShowAssinaturaModal(false);
+                    }}
+                  >
+                    <Text style={styles.cancelBtnText}>Cancelar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.cancelBtn, { flex: 1, marginHorizontal: 8 }]} 
+                    onPress={() => setAssinaturaPath([])}
+                  >
+                    <Text style={styles.cancelBtnText}>Limpar</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={[styles.btn, { flex: 1 }]} 
+                    onPress={async () => {
+                      if (assinaturaPath.length > 5) {
+                        // Capturar como imagem (simulado - em produção usaria react-native-view-shot)
+                        // Por enquanto, tirar foto como fallback
+                        const result = await ImagePicker.launchCameraAsync({ 
+                          mediaTypes: ImagePicker.MediaTypeOptions.Images, 
+                          quality: 0.5, 
+                          base64: true 
+                        });
+                        if (!result.canceled) {
+                          setAssinatura(result.assets[0]);
+                        }
+                        setShowAssinaturaModal(false);
+                        setAssinaturaPath([]);
+                      } else {
+                        Alert.alert('Atenção', 'Por favor, assine no campo acima');
+                      }
+                    }}
+                  >
+                    <Text style={styles.btnText}>Confirmar</Text>
+                  </TouchableOpacity>
+                </View>
+                <Text style={{ color: '#64748b', fontSize: 12, marginTop: 8, textAlign: 'center' }}>
+                  Nota: Após assinar, será solicitada uma foto da assinatura para confirmação
+                </Text>
+              </View>
+            </View>
+          </Modal>
 
           {/* Step 5: Resumo */}
           {step === 5 && (
