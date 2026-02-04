@@ -1286,30 +1286,6 @@ async def alterar_estado_resumo(
     
     return {"success": True, "message": f"Estado alterado para {estado}"}
 
-            )
-        if data.espacamento_horas < 12 or data.espacamento_horas > 48:
-            raise HTTPException(status_code=400, detail="Espaçamento deve ser entre 12 e 48 horas")
-        update_data["espacamento_horas"] = data.espacamento_horas
-    
-    # Atualizar ou criar definições
-    await db.definicoes_motorista.update_one(
-        {"motorista_id": motorista_id},
-        {
-            "$set": update_data,
-            "$setOnInsert": {
-                "motorista_id": motorista_id,
-                "horas_maximas": DEFAULT_HORAS_MAXIMAS,
-                "espacamento_horas": DEFAULT_ESPACAMENTO_HORAS,
-                "created_at": now.isoformat()
-            }
-        },
-        upsert=True
-    )
-    
-    logger.info(f"Definições de ponto atualizadas para motorista {motorista_id}")
-    
-    return {"success": True, "message": "Definições atualizadas"}
-
 
 @router.get("/verificar-alerta-horas")
 async def verificar_alerta_horas(
