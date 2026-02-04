@@ -996,40 +996,6 @@ const ExtrasGestaoScreen = ({ user }) => {
     </ScrollView>
   );
 };
-              value={extraForm.descricao}
-              onChangeText={(t) => setExtraForm({ ...extraForm, descricao: t })}
-            />
-            <TextInput 
-              style={styles.input} 
-              placeholder="Valor (€)" 
-              placeholderTextColor="#64748b"
-              keyboardType="numeric"
-              value={extraForm.valor}
-              onChangeText={(t) => setExtraForm({ ...extraForm, valor: t })}
-            />
-            <TextInput 
-              style={styles.input} 
-              placeholder="Email para notificação (opcional)" 
-              placeholderTextColor="#64748b"
-              keyboardType="email-address"
-              value={extraForm.email}
-              onChangeText={(t) => setExtraForm({ ...extraForm, email: t })}
-            />
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowModal(false)}>
-                <Text style={styles.cancelBtnText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.btn} onPress={handleAddExtra}>
-                <Text style={styles.btnText}>Adicionar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </ScrollView>
-  );
-};
 
 // Ecrã de Alertas (Gestor/Parceiro)
 const AlertasGestaoScreen = ({ user }) => {
